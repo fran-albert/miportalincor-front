@@ -25,13 +25,14 @@ import { Button } from "@/components/ui/button";
 import ResetDefaultPasswordDialog from "@/components/Button/Reset-Default-Password";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import useUserRole from "@/hooks/useRoles";
 const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
   const registerByText =
     patient?.registeredByName +
     " " +
     "- " +
     formatDateWithTime(String(patient?.registrationDate));
-
+  const { isSecretary } = useUserRole();
   return (
     <Card className="w-full max-w-sm border-2">
       <CardHeader className="pb-2">
@@ -112,7 +113,9 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
+        {isSecretary && (
+          <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
+        )}
       </CardFooter>
     </Card>
   );

@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { useSpecialityMutations } from "@/hooks/Speciality/useHealthInsuranceMutation";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface AddSpecialityDialogProps {
   isOpen: boolean;
@@ -33,9 +36,9 @@ export default function AddSpecialityDialog({
     try {
       const specialityCreationPromise = addSpecialityMutation.mutateAsync(data);
       toast.promise(specialityCreationPromise, {
-        loading: "Creando especialidad...",
-        success: "Especialidad creada con éxito!",
-        error: "Error al crear la Especialidad",
+        loading: <LoadingToast message="Creando especialidad..." />,
+        success: <SuccessToast message="Especialidad creada con exito!" />,
+        error: <ErrorToast message="Hubo un error al crear la Especialidad." />,
       });
       specialityCreationPromise
         .then(() => {

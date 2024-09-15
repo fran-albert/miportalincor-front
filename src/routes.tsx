@@ -38,6 +38,14 @@ function App() {
               }
             />
             <Route
+              path="/"
+              element={
+                <Private_Routes>
+                  <HomePage />
+                </Private_Routes>
+              }
+            />
+            <Route
               path="/pacientes"
               element={
                 <Private_Routes allowedRoles={["Secretaria"]}>

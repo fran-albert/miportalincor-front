@@ -12,6 +12,9 @@ import {
 import { toast } from "sonner";
 import { SubmitHandler } from "react-hook-form";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 interface Props {
   idUser: number;
 }
@@ -23,13 +26,16 @@ export default function ResetDefaultPasswordDialog({ idUser }: Props) {
   const onSubmit: SubmitHandler<any> = async () => {
     try {
       toast.promise(resetDefaultPasswordMutation.mutateAsync(idUser), {
-        loading: "Subiendo estudio...",
-        success: "Estudio subido con éxito!",
-        error: "Error al agregar el estudio",
+        loading: (
+          <LoadingToast message="Restableciendo contraseña del paciente..." />
+        ),
+        success: <SuccessToast message="Contraseña restablecida con exito!" />,
+        error: (
+          <ErrorToast message="Hubo un error al restablecer la contraseña." />
+        ),
       });
     } catch (error) {
-      console.error("Error al agregar el estudio", error);
-      toast.error("Error al agregar el estudio");
+      console.error("Hubo un error al restablecer la contraseña", error);
     } finally {
       setIsOpen(false);
     }
