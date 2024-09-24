@@ -58,7 +58,7 @@ export function DataTable<TData, TValue>({
     pageSize: 16,
   });
   const [searchInput, setSearchInput] = React.useState("");
-    // @ts-ignore
+  // @ts-ignore
   const [isAdding, setIsAdding] = React.useState(false);
   const filteredData = React.useMemo(() => {
     if (customFilter && searchInput) {
@@ -114,7 +114,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      {isLoading ? null : ( // <Loading isLoading={true} />
+      {isLoading ? null : (
         <>
           {showSearch && (
             <div className="flex items-center mb-4">
@@ -213,7 +213,7 @@ export function DataTable<TData, TValue>({
                 data.length
               )} de ${data.length} elementos`}
             </div>
-            <Pagination className="mt-6 justify-end px-4 py-2 shadow-lg rounded-lg bg-white">
+            <Pagination className="mt-6 justify-end px-4 py-2 shadow-lg rounded-lg">
               <PaginationContent>
                 {/* Botón para la página anterior */}
                 <PaginationPrevious

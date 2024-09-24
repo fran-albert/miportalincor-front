@@ -7,10 +7,8 @@ const HomePage = () => {
   return (
     <div>
       {isSecretary && <HomeComponent name={String(session?.FirstName)} />}
-      {isDoctor && <p>Bienvenido Doctor</p>}
+      {isDoctor && <HomeComponent name={String(session?.FirstName)} />}
       {isPatient && <PatientHomePage name={String(session?.FirstName)} />}
-
-      {!session && <p>No tiene acceso</p>}
     </div>
   );
 };

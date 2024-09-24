@@ -12,6 +12,12 @@ import CreatePatientPage from "./pages/protected/Patient/Create";
 import CreateDoctorPage from "./pages/protected/Doctor/Create";
 import DoctorProfilePage from "./pages/protected/Doctor/Profile";
 import PatientProfilePage from "./pages/protected/Patient/Profile";
+import HealthInsurancesPage from "./pages/protected/Health-Insurance";
+import MyProfilePage from "./pages/protected/Profile/page";
+import MyStudiesPage from "./pages/protected/My-Studies";
+import LaboratoriesPage from "./pages/protected/Laboratories";
+import RequestEmailPassword from "./components/Request-Mail-Password";
+import ResetPaswordPage from "./pages/auth/Reset-Password";
 
 function App() {
   return (
@@ -48,25 +54,58 @@ function App() {
             <Route
               path="/pacientes"
               element={
-                <Private_Routes allowedRoles={["Secretaria"]}>
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <PatientsComponent />
                 </Private_Routes>
               }
             />
-            {/* <Route
+            <Route
               path="/mi-perfil"
               element={
                 <Private_Routes>
-                  <ProfilePage />
+                  <MyProfilePage />
                 </Private_Routes>
               }
-            /> */}
+            />
+            <Route
+              path="/mis-estudios"
+              element={
+                <Private_Routes>
+                  <MyStudiesPage />
+                </Private_Routes>
+              }
+            />
 
             <Route
               path="/pacientes/:slug"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <PatientPage />
+                </Private_Routes>
+              }
+            />
+
+            <Route
+              path="/pacientes/:slug/laboratorios"
+              element={
+                <Private_Routes allowedRoles={["Medico"]}>
+                  <LaboratoriesPage role="paciente" />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/medicos/:slug/laboratorios"
+              element={
+                <Private_Routes allowedRoles={["Medico"]}>
+                  <LaboratoriesPage role="medico" />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/obras-sociales"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <HealthInsurancesPage />
                 </Private_Routes>
               }
             />
@@ -86,6 +125,11 @@ function App() {
                 </Private_Routes>
               }
             />
+            <Route
+              path="/restablecer-contraseña"
+              element={<RequestEmailPassword />}
+            />
+            <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
             <Route
               path="/medicos/:slug/perfil"
               element={

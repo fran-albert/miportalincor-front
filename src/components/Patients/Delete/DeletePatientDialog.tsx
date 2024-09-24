@@ -68,7 +68,7 @@ export default function DeletePatientDialog({
             Cancelar
           </Button>
           <Button
-            variant="incor"
+            className="bg-greenPrimary hover:bg-green-900"
             onClick={handleConfirmDelete}
             disabled={deletePatientMutation.isPending}
           >

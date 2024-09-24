@@ -34,6 +34,9 @@ import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import { HealthInsuranceDoctorSelect } from "@/components/Select/HealthInsurace/Doctor/select";
 import { Edit2, Save, X } from "lucide-react";
 import CustomDatePicker from "@/components/Date-Picker";
+import SuccessToast from "@/components/Toast/Success";
+import LoadingToast from "@/components/Toast/Loading";
+import ErrorToast from "@/components/Toast/Error";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
@@ -137,9 +140,9 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
       });
 
       toast.promise(doctorCreationPromise, {
-        loading: "Actualizando médico...",
-        success: "Médico actualizado con éxito!",
-        error: "Error al actualizar el médico",
+        loading: <LoadingToast message="Actualizando médico..." />,
+        success: <SuccessToast message="Médico actualizado con éxito!" />,
+        error: <ErrorToast message="Error al actualizar el médico" />,
       });
 
       doctorCreationPromise
@@ -203,7 +206,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar nombre..."
-                              defaultValue={doctor?.firstName}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -223,7 +225,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar apellido..."
-                              defaultValue={doctor?.lastName}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -247,7 +248,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar correo electrónico..."
-                              defaultValue={doctor?.email}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -269,7 +269,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresarmatrícula..."
-                              defaultValue={doctor?.matricula}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -291,7 +290,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar D.N.I..."
-                              defaultValue={formatDni(String(doctor?.dni))}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -337,7 +335,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                               {...field}
                               disabled={!isEditing}
                               placeholder="Ingresar teléfono..."
-                              defaultValue={doctor?.phoneNumber}
                             />
                           </FormControl>
                           <FormMessage />
@@ -357,7 +354,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <Input
                               {...field}
-                              defaultValue={doctor?.phoneNumber2}
                               disabled={!isEditing}
                               placeholder="Ingresar teléfono..."
                             />
@@ -379,7 +375,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <BloodSelect
                               control={control}
-                              defaultValue={String(doctor?.bloodType) || ""}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -400,7 +395,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <RHFactorSelect
                               control={control}
-                              defaultValue={String(doctor?.rhFactor) || ""}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -422,7 +416,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <GenderSelect
                               control={control}
                               disabled={!isEditing}
-                              defaultValue={String(doctor?.gender) || ""}
                             />
                           </FormControl>
                           <FormMessage />
@@ -442,7 +435,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <MaritalStatusSelect
                               control={control}
-                              defaultValue={String(doctor?.maritalStatus) || ""}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -531,7 +523,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar observaciones..."
-                              defaultValue={doctor?.observations || undefined}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -554,7 +545,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <StateSelect
                               control={control}
-                              defaultValue={doctor?.address?.city?.state}
                               onStateChange={handleStateChange}
                               disabled={!isEditing}
                             />
@@ -574,7 +564,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <CitySelect
                               control={control}
-                              defaultValue={selectedCity}
                               idState={selectedState ? selectedState.id : 0}
                               onCityChange={handleCityChange}
                               disabled={!isEditing}
@@ -598,7 +587,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar calle"
-                              defaultValue={doctor?.address?.street}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -618,7 +606,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar número"
-                              defaultValue={doctor?.address?.number}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -638,7 +625,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar número"
-                              defaultValue={doctor?.address?.description}
                               disabled={!isEditing}
                             />
                           </FormControl>
@@ -660,7 +646,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                             <Input
                               {...field}
                               placeholder="Ingresar departamento"
-                              defaultValue={doctor?.address?.phoneNumber}
                               disabled={!isEditing}
                             />
                           </FormControl>

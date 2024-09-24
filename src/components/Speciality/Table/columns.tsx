@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 // import { EditButtonIcon } from "@/components/Button/Edit/button";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { EditButtonIcon } from "@/components/Button/Edit/button";
+import DeleteSpecialityDialog from "../Delete";
 
 export const getColumns = (
   isDoctor: boolean,
@@ -29,11 +30,8 @@ export const getColumns = (
         <div className="flex items-center justify-end">
           {!isDoctor && (
             <>
-              <EditButtonIcon
-                onClick={() => onEditSpeciality(row.original)}
-                className="mr-2"
-              />
-              {/* <DeleteSpecialityDialog speciality={row.original} /> */}
+              <EditButtonIcon onClick={() => onEditSpeciality(row.original)} />
+              <DeleteSpecialityDialog speciality={row.original} />
             </>
           )}
         </div>

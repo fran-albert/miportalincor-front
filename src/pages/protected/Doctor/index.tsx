@@ -26,6 +26,8 @@ function DoctorPage() {
     studiesByUserId
   );
 
+  
+
   return (
     <>
       {error && (

@@ -30,6 +30,9 @@ import { Patient } from "@/types/Patient/Patient";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import CustomDatePicker from "@/components/Date-Picker";
 import { Edit2, Save, X } from "lucide-react";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
+import LoadingToast from "@/components/Toast/Loading";
 type FormValues = z.infer<typeof PatientSchema>;
 
 function PatientProfileComponent({ patient }: { patient: Patient }) {
@@ -144,9 +147,9 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
       });
 
       toast.promise(patientCreationPromise, {
-        loading: "Actualizando datos del paciente...",
-        success: "Paciente actualizado con éxito!",
-        error: "Error al actualizar el Paciente",
+        loading: <LoadingToast message="Actualizando datos del paciente..."/>,
+        success: <SuccessToast message="Paciente actualizado con éxito!"/>,
+        error: <ErrorToast message="Error al actualizar el Paciente"/>,
       });
 
       patientCreationPromise

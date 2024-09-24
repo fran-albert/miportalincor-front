@@ -117,7 +117,7 @@ export const LabPatientTable = ({
             placeholder="Buscar análisis..."
             className="w-full px-4 py-2 border rounded-md"
             value={searchTerm}
-            color="#01A9A4"
+            color="#187B80"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>

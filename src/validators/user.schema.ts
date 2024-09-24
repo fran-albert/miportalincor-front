@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const UserSchema = z.object({
     firstName: z.string({ required_error: "Este campo es obligatorio." }).max(255),
     lastName: z.string({ required_error: "Este campo es obligatorio." }).max(255),
-    email: z.string().email().optional(),
+    email: z.string().optional(),
     userName: z.string({ required_error: "Este campo es obligatorio." }),
     phoneNumber: z.string({ required_error: "Este campo es obligatorio." },),
     photo: z.string().optional(),

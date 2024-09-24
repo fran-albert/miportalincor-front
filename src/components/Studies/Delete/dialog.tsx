@@ -14,6 +14,9 @@ import { Study } from "@/types/Study/Study";
 import ActionIcon from "@/components/Icons/action";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface DeleteStudyDialogProps {
   idStudy: number;
@@ -30,13 +33,12 @@ export default function DeleteStudyDialog({
   const handleConfirmDelete = async () => {
     try {
       toast.promise(deleteStudyMutation.mutateAsync(idStudy), {
-        loading: "Eliminando estudio...",
-        success: "Estudio eliminado con éxito!",
-        error: "Error al eliminar el estudio",
+        loading: <LoadingToast message="Eliminando estudio..." />,
+        success: <SuccessToast message="Estudio eliminado con éxito!" />,
+        error: <ErrorToast message="Error al eliminar el estudio" />,
       });
     } catch (error) {
       console.error("Error al eliminar el estudio", error);
-      toast.error("Error al eliminar el estudio");
     } finally {
       setIsOpen(false);
     }

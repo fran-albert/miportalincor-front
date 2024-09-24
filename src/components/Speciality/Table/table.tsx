@@ -3,8 +3,9 @@ import { useState } from "react";
 import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
 import { Speciality } from "@/types/Speciality/Speciality";
-import AddSpecialityDialog from "@/components/Button/Add/Speciality/button";
 import EditSpecialityDialog from "../Edit";
+import BreadcrumbComponent from "@/components/Breadcrumb";
+import AddSpecialityDialog from "../Add/button";
 
 export const SpecialityTable = ({
   specialities,
@@ -27,15 +28,21 @@ export const SpecialityTable = ({
 
   const specialityColumns = getColumns(isDoctor, handleEditSpeciality);
 
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Especialidades", href: "/especialidades" },
+  ];
+
   const customFilterFunction = (speciality: Speciality, query: string) =>
     speciality.name.toLowerCase().includes(query.toLowerCase());
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-center mt-6 text-greenPrimary">
+    <div className="space-y-2 mt-2">
+      <BreadcrumbComponent items={breadcrumbItems} />
+      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
         Lista de Especialidades
       </h2>
-      <div className="overflow-hidden sm:rounded-lg p-4 ">
+      <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={specialityColumns}
           data={specialities}

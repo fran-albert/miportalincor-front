@@ -1,5 +1,5 @@
 export interface HealthInsurance {
-    id: number;
+    id?: number;
     name: string;
   }
   

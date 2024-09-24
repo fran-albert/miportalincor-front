@@ -39,6 +39,9 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
         <h2 className="text-xl font-bold text-greenPrimary">
           {patient?.firstName} {patient?.lastName}
         </h2>
+        <p className="text-sm text-gray-900 font-bold">
+          {patient?.healthPlans?.[0]?.healthInsurance.name ?? "Obra Social No Asignada"}
+        </p>
         <p className="text-sm text-gray-500">
           Ingresado por {registerByText || "Desconocido"}
         </p>

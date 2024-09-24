@@ -1,4 +1,5 @@
 import ActionIcon from "@/components/Icons/action";
+import { Button } from "@/components/ui/button";
 import { FaPencilAlt } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
@@ -31,15 +32,15 @@ export const EditButtonIcon: React.FC<EditButtonIconProps> = ({
       <button
         {...props}
         onClick={handleEdit}
-        className="p-1 border border-transparent  hover:bg-gray-200 rounded transition-colors duration-200"
+        className="p-1 border border-transparent rounded transition-colors duration-200"
       >
         {onClick ? (
-          <button>
+          <Button variant={"ghost"} size="icon">
             <ActionIcon
               tooltip="Editar"
               icon={<FaPencilAlt className="text-gray-600 w-4 h-4" />}
             />
-          </button>
+          </Button>
         ) : (
           <Link to={`/${path}/${slug}/editar`}>
             <div className="flex items-center">Editar Datos</div>

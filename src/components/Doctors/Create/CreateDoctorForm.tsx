@@ -123,16 +123,16 @@ function CreateDoctorComponent() {
   }
 
   return (
-    <div key="1" className="container mt-2">
+    <div key="1">
       <Card>
         <CardHeader>
           <CardTitle>
             <button
-              className="flex items-center justify-start w-full"
+              className="flex items-center justify-start w-full text-greenPrimary"
               onClick={goBack}
               type="button"
             >
-              <IoMdArrowRoundBack className="text-black mr-2" size={25} />
+              <IoMdArrowRoundBack className="text-greenPrimary mr-2" size={25} />
               Agregar Médico
             </button>
           </CardTitle>

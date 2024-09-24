@@ -3,28 +3,35 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Speciality } from "@/types/Speciality/Speciality";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { FaPencil } from "react-icons/fa6";
-import ActionIcon from "@/components/Icons/action";
 import { useSpecialityMutations } from "@/hooks/Speciality/useHealthInsuranceMutation";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
+import { specialitySchema } from "@/validators/speciality.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 interface EditSpecialityDialogProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   speciality: Speciality;
 }
-
-interface Inputs extends Speciality {}
 
 export default function EditSpecialityDialog({
   isOpen,
@@ -33,28 +40,30 @@ export default function EditSpecialityDialog({
 }: EditSpecialityDialogProps) {
   const { updateSpecialityMutation } = useSpecialityMutations();
   const toggleDialog = () => setIsOpen(!isOpen);
-  const {
-    register,
-    handleSubmit,
-    reset,
-  } = useForm<Inputs>();
+  const form = useForm<z.infer<typeof specialitySchema>>({
+    resolver: zodResolver(specialitySchema),
+    defaultValues: speciality,
+  });
 
   useEffect(() => {
     if (isOpen && speciality) {
-      reset(speciality);
+      form.reset(speciality);
     }
-  }, [isOpen, speciality, reset]);
+  }, [isOpen, speciality]);
 
-  const onSubmit: SubmitHandler<Inputs> = async (data: Speciality) => {
+  async function onSubmit(values: z.infer<typeof specialitySchema>) {
     try {
       const specialityCreationPromise = updateSpecialityMutation.mutateAsync({
         id: Number(speciality.id),
-        speciality: data,
+        speciality: {
+          id: Number(speciality.id),
+          name: values.name,
+        },
       });
       toast.promise(specialityCreationPromise, {
-        loading: "Editando especialidad...",
-        success: "Especialidad editada con éxito!",
-        error: "Error al editar la Especialidad",
+        loading: <LoadingToast message="Editando especialidad..." />,
+        success: <SuccessToast message="Especialidad editada con éxito!" />,
+        error: <ErrorToast message="Error al editar la Especialidad" />,
       });
       specialityCreationPromise
         .then(() => {
@@ -66,46 +75,49 @@ export default function EditSpecialityDialog({
     } catch (error) {
       console.error("Error al editar la Especialidad", error);
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={toggleDialog}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" onClick={toggleDialog}>
-          <ActionIcon
-            icon={<FaPencil size={20} />}
-            tooltip="Editar"
-            color="text-gray-600"
-          />
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Editar Especialidad</DialogTitle>
+          <DialogTitle>Editar {speciality.name}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogDescription>
-            <div className="flex flex-row mt-2">
-              <div className="flex-1 pr-1">
-                <div className="mb-2 block ">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input
-                    {...register("name", { required: true })}
-                    className="bg-gray-200 text-gray-700"
-                  />
-                </div>
-              </div>
-            </div>
-          </DialogDescription>
-          <DialogFooter>
-            <Button variant="outline" onClick={toggleDialog}>
-              Cancelar
-            </Button>
-            <Button variant="incor" type="submit"  disabled={updateSpecialityMutation.isPending}>
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-black capitalize">
+                    Nombre
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter className="flex items-center justify-between mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="capitalize"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className=" bg-greenPrimary capitalize hover:bg-greenPrimary text-white font-bold py-2 px-4 rounded-md transition duration-300"
+                variant="default"
+              >
+                Confirmar
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

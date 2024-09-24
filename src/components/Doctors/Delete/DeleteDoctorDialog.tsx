@@ -13,6 +13,9 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface DeleteDoctorDialogProps {
   idDoctor: number;
@@ -28,9 +31,9 @@ export default function DeleteDoctorDialog({
     try {
       const doctorDeletionPromise = deleteDoctorMutation.mutateAsync(idDoctor);
       toast.promise(doctorDeletionPromise, {
-        loading: "Eliminando médico...",
-        success: "Médico eliminado con éxito!",
-        error: "Error al eliminar el médico",
+        loading: <LoadingToast message="Eliminando médico..." />,
+        success: <SuccessToast message="Médico eliminado con éxito!" />,
+        error: <ErrorToast message="Error al eliminar el médico" />,
         duration: 3000,
       });
     } catch (error) {
@@ -63,7 +66,7 @@ export default function DeleteDoctorDialog({
             Cancelar
           </Button>
           <Button
-            variant="incor"
+            className="bg-greenPrimary hover:bg-green-900"
             onClick={handleConfirmDelete}
             disabled={deleteDoctorMutation.isPending}
           >
