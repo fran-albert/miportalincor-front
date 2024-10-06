@@ -19,6 +19,7 @@ const MyProfilePage = () => {
     auth: isPatient && userId !== undefined,
     id: userId !== undefined ? userId : -1,
   });
+  
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: isDoctor && userId !== undefined,
