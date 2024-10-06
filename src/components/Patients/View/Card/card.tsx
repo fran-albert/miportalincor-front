@@ -40,7 +40,8 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
           {patient?.firstName} {patient?.lastName}
         </h2>
         <p className="text-sm text-gray-900 font-bold">
-          {patient?.healthPlans?.[0]?.healthInsurance.name ?? "Obra Social No Asignada"}
+          {patient?.healthPlans?.[0]?.healthInsurance.name ??
+            "Obra Social No Asignada"}
         </p>
         <p className="text-sm text-gray-500">
           Ingresado por {registerByText || "Desconocido"}
@@ -91,7 +92,9 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
               {patient?.address?.description
                 ? `, ${patient.address.description}`
                 : ""}
-              {patient?.phoneNumber2 ? ` - ${patient.phoneNumber2}` : ""}
+              {patient?.address.phoneNumber
+                ? ` - ${patient?.address.phoneNumber}`
+                : ""}
             </span>
           </div>
         </div>
@@ -106,7 +109,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
         <div className="flex items-start space-x-2">
           <Info className="h-4 w-4 text-gray-500 mt-1" />
           <p className="text-sm text-gray-500">
-            {patient?.observations ?? "Sin observaciones"}
+            {patient?.observations ? patient.observations : "Sin observaciones"}
           </p>
         </div>
       </CardContent>

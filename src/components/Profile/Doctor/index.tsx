@@ -1,14 +1,5 @@
-import {
-  CardTitle,
-  CardDescription,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  Card,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { StateSelect } from "@/components/Select/State/select";
+import { useEffect, useState } from "react";
+import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -17,155 +8,233 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import moment from "moment-timezone";
-import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
-import { State } from "@/types/State/State";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { IoMdArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
-import { goBack } from "@/common/helpers/helpers";
+import { BloodSelect } from "@/components/Select/Blood/select";
 import { RHFactorSelect } from "@/components/Select/RHFactor/select";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { MaritalStatusSelect } from "@/components/Select/MaritalStatus/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { CitySelect } from "@/components/Select/City/select";
-import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
-import { BloodSelect } from "@/components/Select/Blood/select";
+import { StateSelect } from "@/components/Select/State/select";
+import { formatDni } from "@/common/helpers/helpers";
+import { State } from "@/types/State/State";
+import { Doctor } from "@/types/Doctor/Doctor";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { toast } from "sonner";
+import { DoctorSchema } from "@/validators/doctor.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { PatientSchema } from "@/validators/patient.schema";
-import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import { City } from "@/types/City/City";
-import useUserRole from "@/hooks/useRoles";
-import { HealthPlans } from "@/types/Health-Plans/HealthPlan";
+import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import CustomDatePicker from "@/components/Date-Picker";
-import SuccessToast from "@/components/Toast/Success";
+import ChangePasswordDialog from "../Change-Password";
+import { Edit2, Save, X } from "lucide-react";
 import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 
-type FormValues = z.infer<typeof PatientSchema>;
-export function CreatePatientComponent() {
-  const { session } = useUserRole();
-  const { addPatientMutation } = usePatientMutations();
+type FormValues = z.infer<typeof DoctorSchema>;
+export default function ProfileDoctorCardComponent({
+  data,
+}: {
+  data: Doctor | undefined;
+}) {
+  const { updateDoctorMutation } = useDoctorMutations();
   const form = useForm<FormValues>({
-    resolver: zodResolver(PatientSchema),
+    resolver: zodResolver(DoctorSchema),
   });
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
-    undefined
+    data?.address?.city?.state
   );
-  const [selectedCity, setSelectedCity] = useState<City | undefined>(undefined);
-  const [selectedPlan, setSelectedPlan] = useState<HealthPlans | null>(null);
-  const [selectedHealthInsurance, setSelectedHealthInsurance] = useState<
-    HealthInsurance | undefined
-  >(undefined);
-
-  const handleCityChange = (city: City) => {
-    if (selectedState) {
-      const cityWithState = { ...city, state: selectedState };
-      setSelectedCity(cityWithState);
-      setValue("address.city", cityWithState);
-    }
-  };
-
-  const [startDate, setStartDate] = useState<Date | undefined>();
-
-  const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
-    if (healthInsurance.id !== undefined) {
-      const selectedPlan: HealthPlans = {
-        id: healthInsurance.id,
-        name: healthInsurance.name,
-      };
-      setSelectedHealthInsurance(healthInsurance);
-      setSelectedPlan(selectedPlan);
-    } else {
-      console.error("Health insurance does not have a valid ID");
-    }
-  };
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<City | undefined>(
+    data?.address?.city
+  );
+  const [startDate, setStartDate] = useState<Date | undefined>(() =>
+    data?.birthDate ? new Date(data.birthDate.toString()) : undefined
+  );
+  const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
-    setValue("address.city.state", state);
+    setSelectedCity(undefined);
   };
+  const handleCityChange = (city: City) => {
+    setSelectedCity(city);
+  };
+  useEffect(() => {
+    if (data) {
+      setValue("firstName", data.firstName);
+      setValue("lastName", data.lastName);
+      setValue("email", data.email);
+      setValue("userName", formatDni(String(data.dni)));
+      if (data?.birthDate) {
+        setStartDate(new Date(data.birthDate.toString()));
+        setValue("birthDate", data.birthDate.toString());
+      }
+      setValue("phoneNumber", data.phoneNumber);
+      setValue("phoneNumber2", data.phoneNumber2 || "");
+      setValue("bloodType", String(data.bloodType) || "");
+      setValue("matricula", data.matricula || "");
+      setValue("rhFactor", String(data.rhFactor) || "");
+      setValue("gender", String(data.gender) || "");
+      setValue("maritalStatus", String(data.maritalStatus) || "");
+      setValue("observations", data.observations || "");
+      setValue("address.city.state", data?.address?.city?.state);
+      setValue("address.city", data?.address?.city);
+      setValue("address.street", data?.address.street);
+      setValue("address.number", data?.address.number);
+      setValue("address.description", data?.address.description || "");
+      setValue("address.phoneNumber", data?.address.phoneNumber || "");
+      setSelectedState(data?.address?.city?.state);
+      setSelectedCity(data?.address?.city);
+    }
+  }, [data, setValue]);
+  const onSubmit: SubmitHandler<any> = async (formData) => {
+    const specialitiesToSend = data?.specialities.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }));
+    const healthInsuranceToSend = data?.healthInsurances.map((h) => ({
+      id: h.id,
+      name: h.name,
+    }));
 
-  // const handlePlanChange = (plan: HealthPlans | null) => {
-  //   setSelectedPlan(plan ? plan : null);
-  // };
-
-  async function onSubmit(data: z.infer<typeof PatientSchema>) {
-    const dateInArgentina = moment(data.birthDate).tz(
-      "America/Argentina/Buenos_Aires"
-    );
-
-    const payload: any = {
-      ...data,
-      email: data.email || "",
-      address: {
-        ...data.address,
-        city: selectedCity,
+    const { address, ...rest } = formData;
+    const formattedUserName = removeDotsFromDni(formData.userName);
+    const addressToSend = {
+      ...address,
+      id: data?.address?.id,
+      city: {
+        ...selectedCity,
+        state: selectedState,
       },
-      healthPlans: selectedPlan
-        ? [
-            {
-              id: selectedPlan.id,
-              name: selectedPlan.name,
-              healthInsurance: {
-                id: selectedHealthInsurance?.id || 0,
-                name: selectedHealthInsurance?.name || "",
-              },
-            },
-          ]
-        : [],
-      photo: "",
-      birthDate: dateInArgentina.format(),
-      registeredById: Number(session?.id),
     };
 
-    console.log("Payload", payload);
+    const dataToSend: any = {
+      ...rest,
+      userName: formattedUserName,
+      address: addressToSend,
+      specialities: specialitiesToSend,
+      healthInsurances: healthInsuranceToSend,
+      photo: data?.photo,
+      registeredById: data?.registeredById,
+    };
 
     try {
-      const patientCreationPromise = addPatientMutation.mutateAsync(payload);
-      toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Creando Paciente..." />,
-        success: <SuccessToast message="Paciente creado con éxito" />,
-        error: (err) => {
-          if (err.response && err.response.status === 409) {
-            return <ErrorToast message="El paciente ya existe" />;
-          }
-          return <ErrorToast message="Error al crear el paciente" />;
-        },
+      const doctorCreationPromise = updateDoctorMutation.mutateAsync({
+        id: Number(data?.userId),
+        doctor: dataToSend,
       });
-      patientCreationPromise.then(() => {
-        goBack();
+
+      toast.promise(doctorCreationPromise, {
+        loading: "Actualizando médico...",
+        success: "Médico actualizado con éxito!",
+        error: "Error al actualizar el médico",
+      });
+
+      doctorCreationPromise.catch((error) => {
+        console.error("Error al actualizar el médico", error);
       });
     } catch (error) {
-      console.error("Error al crear el paciente", error);
-      throw error;
+      console.error("Error al actualizar el médico", error);
     }
-  }
+  };
+
+  const handleSave = async () => {
+    const isValid = await form.trigger(); // Valida el formulario antes de enviar
+    if (!isValid) return;
+    const specialitiesToSend = data?.specialities.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }));
+    const healthInsuranceToSend = data?.healthInsurances.map((h) => ({
+      id: h.id,
+      name: h.name,
+    }));
+
+    const { address, ...rest } = form.getValues();
+    const formattedUserName = removeDotsFromDni(form.getValues("userName"));
+    const addressToSend = {
+      ...address,
+      id: data?.address?.id,
+      city: {
+        ...selectedCity,
+        state: selectedState,
+      },
+    };
+
+    const dataToSend: any = {
+      ...rest,
+      userName: formattedUserName,
+      address: addressToSend,
+      specialities: specialitiesToSend,
+      healthInsurances: healthInsuranceToSend,
+      photo: data?.photo,
+      registeredById: data?.registeredById,
+    };
+    try {
+      const dataCreationPromise = updateDoctorMutation.mutateAsync({
+        id: Number(data?.userId),
+        doctor: dataToSend,
+      });
+
+      toast.promise(dataCreationPromise, {
+        loading: <LoadingToast message="Actualizando datos del paciente..." />,
+        success: <SuccessToast message="Paciente actualizado con éxito!" />,
+        error: <ErrorToast message="Error al actualizar el Paciente" />,
+      });
+
+      dataCreationPromise
+        .then(() => {
+          setIsEditing(false);
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el paciente", error);
+        });
+    } catch (error) {
+      console.error("Error al actualizar el paciente", error);
+    }
+  };
 
   return (
-    <div key="1">
+    <div key="1" className="w-full container px-4 sm:px-6 lg:px-8 mt-2">
       <Card>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <CardHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} id="profileForm">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>
-                <button
-                  className="flex items-center justify-start w-full text-greenPrimary"
-                  onClick={goBack}
-                  type="button"
-                >
-                  <IoMdArrowRoundBack
-                    className="text-greenPrimary mr-2"
-                    size={25}
-                  />
-                  Agregar Paciente
-                </button>
+                <p className="flex items-center justify-start w-full text-greenPrimary font-bold">
+                  Mi Perfil
+                </p>
               </CardTitle>
-              <CardDescription>
-                Completa los campos para agregar un nuevo paciente.
-              </CardDescription>
+              {!isEditing ? (
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
+                    type="button"
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" /> Editar
+                  </Button>
+                  <ChangePasswordDialog idUser={Number(data?.userId)} />
+                </div>
+              ) : (
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleSave}
+                    type="button"
+                    className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
+                  >
+                    <Save className="mr-2 h-4 w-4" /> Guardar
+                  </Button>
+                  <Button onClick={() => setIsEditing(false)} variant="outline">
+                    <X className="mr-2 h-4 w-4" /> Cancelar
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="grid gap-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -181,6 +250,7 @@ export function CreatePatientComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar nombre..."
+                              defaultValue={data?.firstName}
                             />
                           </FormControl>
                           <FormMessage />
@@ -199,6 +269,7 @@ export function CreatePatientComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar apellido..."
+                              defaultValue={data?.lastName}
                             />
                           </FormControl>
                           <FormMessage />
@@ -221,6 +292,7 @@ export function CreatePatientComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar correo electrónico..."
+                              defaultValue={data?.email}
                             />
                           </FormControl>
                           <FormMessage />
@@ -238,7 +310,13 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">D.N.I.</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Ingresar D.N.I..." />
+                            <Input
+                              {...field}
+                              placeholder="Ingresar D.N.I..."
+                              defaultValue={formatDni(String(data?.dni))}
+                              readOnly
+                              className="w-full text-gray-800 cursor-not-allowed"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -247,7 +325,7 @@ export function CreatePatientComponent() {
                   </div>
                   <div className="space-y-2">
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="birthDate"
                       render={({}) => (
                         <FormItem>
@@ -260,6 +338,7 @@ export function CreatePatientComponent() {
                               setValue={setValue}
                               fieldName="birthDate"
                               initialDate={startDate}
+                              //   disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -280,6 +359,7 @@ export function CreatePatientComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar teléfono..."
+                              defaultValue={data?.phoneNumber}
                             />
                           </FormControl>
                           <FormMessage />
@@ -299,6 +379,7 @@ export function CreatePatientComponent() {
                           <FormControl>
                             <Input
                               {...field}
+                              defaultValue={data?.phoneNumber2}
                               placeholder="Ingresar teléfono..."
                             />
                           </FormControl>
@@ -317,7 +398,10 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">Sangre</FormLabel>
                           <FormControl>
-                            <BloodSelect control={control} />
+                            <BloodSelect
+                              control={control}
+                              defaultValue={String(data?.bloodType) || ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -334,7 +418,10 @@ export function CreatePatientComponent() {
                             Factor R.H.
                           </FormLabel>
                           <FormControl>
-                            <RHFactorSelect control={control} />
+                            <RHFactorSelect
+                              control={control}
+                              defaultValue={String(data?.rhFactor) || ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -351,7 +438,10 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">Sexo</FormLabel>
                           <FormControl>
-                            <GenderSelect control={control} />
+                            <GenderSelect
+                              control={control}
+                              defaultValue={String(data?.gender) || ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -368,7 +458,10 @@ export function CreatePatientComponent() {
                             Estado Civil
                           </FormLabel>
                           <FormControl>
-                            <MaritalStatusSelect control={control} />
+                            <MaritalStatusSelect
+                              control={control}
+                              defaultValue={String(data?.maritalStatus) || ""}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -377,24 +470,29 @@ export function CreatePatientComponent() {
                   </div>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="healthPlans"
-                      render={({}) => (
+                      name="observations"
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-black">
                             Obra Social
                           </FormLabel>
                           <FormControl>
-                            <HealthInsuranceSelect
-                              onHealthInsuranceChange={
-                                handleHealthInsuranceChange
-                              }
-                              control={control}
+                            <Input
+                              {...field}
+                              className="w-full text-gray-800 cursor-not-allowed"
+                              value={data?.healthInsurances
+                                .map(
+                                  (item) =>
+                                    item.name.charAt(0).toUpperCase() +
+                                    item.name.slice(1).toLowerCase()
+                                )
+                                .join(", ")}
+                              readOnly
                             />
                           </FormControl>
                           <FormMessage />
@@ -405,16 +503,22 @@ export function CreatePatientComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="affiliationNumber"
+                      name="observations"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-black">
-                            Número de Obra Social
+                            Especialidades
                           </FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="Ingresar Número de Afiliado"
+                              value={
+                                data?.specialities
+                                  .map((speciality) => speciality.name)
+                                  .join(", ") || ""
+                              }
+                              className="w-full text-gray-800 cursor-not-allowed"
+                              readOnly
                             />
                           </FormControl>
                           <FormMessage />
@@ -423,7 +527,18 @@ export function CreatePatientComponent() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="affiliationNumber">
+                      Número de Obra Social
+                    </Label>
+                    <Input
+                      id="affiliationNumber"
+                      className="w-full text-gray-800 cursor-not-allowed"
+                      // defaultValue={data?.affiliationNumber}
+                      readOnly
+                    />
+                  </div>
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
@@ -436,7 +551,9 @@ export function CreatePatientComponent() {
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="Ingresar observaciones"
+                              className="w-full text-gray-800 cursor-not-allowed"
+                              defaultValue={data?.observations}
+                              readOnly
                             />
                           </FormControl>
                           <FormMessage />
@@ -445,11 +562,11 @@ export function CreatePatientComponent() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="address.city.state.name"
+                      name="address.city.state"
                       render={({}) => (
                         <FormItem>
                           <FormLabel className="text-black">
@@ -458,6 +575,7 @@ export function CreatePatientComponent() {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              defaultValue={data?.address?.city?.state}
                               onStateChange={handleStateChange}
                             />
                           </FormControl>
@@ -469,18 +587,19 @@ export function CreatePatientComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="address.city.name"
+                      name="address.city"
                       render={({}) => (
                         <FormItem>
                           <FormLabel className="text-black">Ciudad</FormLabel>
                           <FormControl>
-                            <CitySelect
-                              control={control}
-                              idState={
-                                selectedState ? Number(selectedState.id) : 0
-                              }
-                              onCityChange={handleCityChange}
-                            />
+                            {selectedState && (
+                              <CitySelect
+                                control={control}
+                                defaultValue={selectedCity}
+                                idState={selectedState.id}
+                                onCityChange={handleCityChange}
+                              />
+                            )}
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -488,7 +607,7 @@ export function CreatePatientComponent() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
@@ -497,7 +616,11 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">Calle</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Ingresar calle" />
+                            <Input
+                              {...field}
+                              placeholder="Ingresar calle"
+                              defaultValue={data?.address.street}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -512,7 +635,11 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">N°</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Ingresar número" />
+                            <Input
+                              {...field}
+                              placeholder="Ingresar número"
+                              defaultValue={data?.address.number}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -527,7 +654,11 @@ export function CreatePatientComponent() {
                         <FormItem>
                           <FormLabel className="text-black">Piso</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Ingresar número" />
+                            <Input
+                              {...field}
+                              placeholder="Ingresar número"
+                              defaultValue={data?.address.description}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -547,6 +678,7 @@ export function CreatePatientComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar departamento"
+                              defaultValue={data?.address.phoneNumber}
                             />
                           </FormControl>
                           <FormMessage />
@@ -557,18 +689,6 @@ export function CreatePatientComponent() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={goBack}>
-                Cancelar
-              </Button>
-              <Button
-                className="bg-greenPrimary hover:bg-greenSecondary text-white px-4 py-2 rounded-lg"
-                type="submit"
-                disabled={addPatientMutation.isPending}
-              >
-                Confirmar
-              </Button>
-            </CardFooter>
           </form>
         </Form>
       </Card>

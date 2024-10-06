@@ -213,7 +213,7 @@ export function DataTable<TData, TValue>({
                 data.length
               )} de ${data.length} elementos`}
             </div>
-            <Pagination className="mt-6 justify-end px-4 py-2 shadow-lg rounded-lg">
+            <Pagination className="mt-6 justify-end px-4 py-2">
               <PaginationContent>
                 {/* Botón para la página anterior */}
                 <PaginationPrevious

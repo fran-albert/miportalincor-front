@@ -77,7 +77,7 @@ export const SpecialitySelect = ({
                 {specialities.map((speciality) => (
                   <CommandItem
                     key={speciality.id}
-                    value={speciality.id.toString()}
+                    value={(speciality.id ?? "").toString()}
                     onSelect={() => handleSelect(speciality)}
                   >
                     <Check

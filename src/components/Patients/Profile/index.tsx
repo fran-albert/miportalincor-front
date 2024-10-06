@@ -74,17 +74,34 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
       }
       setValue(
         "healthPlans",
-        selectedHealthInsurance ? [selectedHealthInsurance] : []
+        selectedHealthInsurance
+          ? [
+              {
+                id: selectedHealthInsurance.id!,
+                name: selectedHealthInsurance.name,
+              },
+            ]
+          : []
       );
     }
   }, [patient, selectedCity, selectedHealthInsurance, setValue]);
 
   const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
-    setSelectedHealthInsurance(healthInsurance);
-    setValue("healthPlans", healthInsurance ? [healthInsurance] : [], {
-      shouldValidate: true,
-    });
+    if (healthInsurance.id !== undefined) {
+      const healthPlanToSend = {
+        id: healthInsurance.id,
+        name: healthInsurance.name,
+        // Add any other necessary fields here
+      };
+      setSelectedHealthInsurance(healthInsurance);
+      setValue("healthPlans", [healthPlanToSend], {
+        shouldValidate: true,
+      });
+    } else {
+      console.error("Health insurance does not have a valid ID");
+    }
   };
+
   useEffect(() => {
     if (patient) {
       setValue("firstName", patient.firstName);
@@ -147,9 +164,9 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
       });
 
       toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Actualizando datos del paciente..."/>,
-        success: <SuccessToast message="Paciente actualizado con éxito!"/>,
-        error: <ErrorToast message="Error al actualizar el Paciente"/>,
+        loading: <LoadingToast message="Actualizando datos del paciente..." />,
+        success: <SuccessToast message="Paciente actualizado con éxito!" />,
+        error: <ErrorToast message="Error al actualizar el Paciente" />,
       });
 
       patientCreationPromise

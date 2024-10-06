@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/pagination";
 import { Search } from "@/components/ui/search";
 import { formatDate } from "@/common/helpers/helpers";
+import { Button } from "@/components/ui/button";
 
 interface LabData {
   testName: string;
@@ -59,7 +60,7 @@ export const LabPatientTable = ({
   studiesByUser: any[];
 }) => {
   // @ts-ignore
-  const [rowsPerPage, setRowsPerPage] = useState(8);
+  const [rowsPerPage, setRowsPerPage] = useState(60);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [transformedLabs, setTransformedLabs] = useState<LabData[]>([]);
@@ -120,10 +121,15 @@ export const LabPatientTable = ({
             color="#187B80"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <Button
+            className="bg-greenPrimary hover:bg-greenPrimary-700 text-white px-4 py-2 ml-2 rounded-md shadow-lg flex items-center"
+            // onClick={onAddClick}
+          >
+            Agregar Laboratorio
+          </Button>
         </div>
-
         <Table>
-          <TableHeader className="sticky top-0 bg-white z-10 border-b">
+          <TableHeader className="sticky top-0 bg-white border-b">
             <TableRow>
               <TableHead className="whitespace-nowrap w-1">#</TableHead>
               <TableHead className="whitespace-nowrap w-32">Análisis</TableHead>

@@ -36,7 +36,7 @@ export const HealthInsuranceSelect = ({
   return (
     <Controller
       name="healthInsurance"
-      defaultValue={defaultValue ? defaultValue.id.toString() : ""}
+      defaultValue={defaultValue?.id?.toString() || ""}
       control={control}
       // rules={{ required: "Este campo es obligatorio" }}
       render={({ field }) => (

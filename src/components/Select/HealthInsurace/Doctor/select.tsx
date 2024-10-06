@@ -81,7 +81,7 @@ export function HealthInsuranceDoctorSelect({
                 {healthInsurances.map((insurance) => (
                   <CommandItem
                     key={insurance.id}
-                    value={insurance.id.toString()}
+                    value={(insurance.id ?? "").toString()}
                     onSelect={() => handleSelect(insurance)}
                   >
                     <Check

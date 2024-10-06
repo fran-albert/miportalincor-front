@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Form,
   FormControl,
@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -20,12 +18,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { ChangePasswordSchema } from "@/validators/user.schema";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
@@ -86,7 +82,7 @@ export default function ChangePasswordDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-w-[325px] rounded-xl border bg-card text-card-foreground shadow">
         <CardHeader>
-          <CardTitle>Cambiar contraseña</CardTitle>
+          <DialogTitle>Cambiar contraseña</DialogTitle>
           <CardDescription>
             Ingresa tu contraseña actual y la nueva contraseña para actualizar
             tus credenciales.

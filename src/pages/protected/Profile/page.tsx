@@ -1,4 +1,5 @@
 import LoadingAnimation from "@/components/Loading/loading";
+import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
@@ -32,9 +33,9 @@ const MyProfilePage = () => {
     return <LoadingAnimation />;
   }
 
-  //   if (isDoctor && doctor) {
-  //     return <ProfileDoctorCardComponent data={doctor} />;
-  //   }
+    if (isDoctor && doctor) {
+      return <ProfileDoctorCardComponent data={doctor} />;
+    }
 
     if (isSecretary && secretary) {
       return <SecretaryProfileComponent user={secretary} />;

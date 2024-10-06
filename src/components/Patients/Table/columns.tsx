@@ -1,5 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDni } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
 import { ViewButton } from "@/components/Button/View/button";
@@ -30,28 +29,13 @@ export const getColumns = (
             prefetchPatients && prefetchPatients(row.original.userId)
           }
         >
-          <Avatar>
-            <AvatarImage
-              src={
-                row.original.photo
-                  ? `https://incor-healthcare.s3.us-east-1.amazonaws.com/photos/${row.original.photo}`
-                  : "https://incor-ranking.s3.us-east-1.amazonaws.com/storage/avatar/default.png"
-              }
-              alt="@username"
-            />
-            <AvatarFallback>
-              {`${row.original.firstName.charAt(
-                0
-              )}${row.original.lastName.charAt(0)}`}
-            </AvatarFallback>
-          </Avatar>
           <div className="flex flex-col ml-2">
             <p className="text-sm font-medium">
               {row.original.lastName}, {row.original.firstName}
             </p>
             <span
               style={{ fontSize: "0.75rem" }}
-              className="text-gray-800 font-bold"
+              className="text-gray-900 font-bold"
             >
               {row.original.email}
             </span>

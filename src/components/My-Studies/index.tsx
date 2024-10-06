@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -33,7 +33,7 @@ const MyStudiesCardComponent = ({
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const studiesPerPage = 4; // Número de estudios por página
+  const studiesPerPage = 6;
 
   const toggleExpand = (studyId: number) => {
     setExpandedStudies((prev) => {
@@ -53,7 +53,6 @@ const MyStudiesCardComponent = ({
       study.note?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Lógica de paginación
   const indexOfLastStudy = currentPage * studiesPerPage;
   const indexOfFirstStudy = indexOfLastStudy - studiesPerPage;
   const currentStudies = filteredStudies.slice(

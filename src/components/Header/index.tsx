@@ -82,7 +82,7 @@ export function HeaderComponent() {
                     <NavigationMenuTrigger className="bg-transparent text-white">
                       Gestionar
                     </NavigationMenuTrigger>
-                    <NavigationMenuContent>
+                    <NavigationMenuContent className="relative">
                       <div className="grid w-[400px] p-2">
                         <NavigationMenuLink asChild>
                           <Link

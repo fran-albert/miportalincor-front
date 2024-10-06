@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Form,
   FormControl,
@@ -7,44 +7,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  CardTitle,
-  CardDescription,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  Card,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CitySelect } from "@/components/Select/City/select";
 import { StateSelect } from "@/components/Select/State/select";
 import { User } from "@/types/User/User";
-import { formatDni, handleDateChange } from "@/common/helpers/helpers";
-import useRoles from "@/hooks/useRoles";
+import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
-import { es } from "date-fns/locale/es";
-import moment from "moment-timezone";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { PatientSchema } from "@/validators/patient.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IoMdArrowRoundBack } from "react-icons/io";
 import { MaritalStatusSelect } from "@/components/Select/MaritalStatus/select";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { RHFactorSelect } from "@/components/Select/RHFactor/select";
 import { BloodSelect } from "@/components/Select/Blood/select";
 import { z } from "zod";
-import { FaEdit, FaUserEdit } from "react-icons/fa";
-import { Patient } from "@/types/Patient/Patient";
 import { City } from "@/types/City/City";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
 import { UserSchema } from "@/validators/user.schema";
 import CustomDatePicker from "@/components/Date-Picker";
-import TooltipInfo from "@/components/Tooltip";
-import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
-import { Edit2, Lock, Save, X } from "lucide-react";
+import { Edit2, Save, X } from "lucide-react";
 import ChangePasswordDialog from "../Change-Password";
 type FormValues = z.infer<typeof UserSchema>;
 export default function SecretaryProfileComponent({ user }: { user: User }) {
@@ -53,11 +36,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
   const form = useForm<FormValues>({
     resolver: zodResolver(UserSchema),
   });
-  const {
-    setValue,
-    control,
-    formState: { errors },
-  } = form;
+  const { setValue, control } = form;
   const [isEditing, setIsEditing] = useState(false);
   const [selectedState, setSelectedState] = useState<State | undefined>(
     user?.address?.city?.state

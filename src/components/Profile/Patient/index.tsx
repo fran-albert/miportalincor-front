@@ -29,7 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Patient } from "@/types/Patient/Patient";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import CustomDatePicker from "@/components/Date-Picker";
-import { Edit2, Lock, Save, X } from "lucide-react";
+import { Edit2, Save, X } from "lucide-react";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import LoadingToast from "@/components/Toast/Loading";
@@ -212,6 +212,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
       console.error("Error al actualizar el paciente", error);
     }
   };
+  
   return (
     <div key="1" className="w-full mt-2">
       <Card>
