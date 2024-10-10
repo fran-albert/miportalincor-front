@@ -9,6 +9,7 @@ const LaboratoriesPageWrapper = ({
   studiesByUserId,
   entity,
   role,
+  idUser,
 }: any) => {
   if (error) {
     return (
@@ -33,6 +34,7 @@ const LaboratoriesPageWrapper = ({
         labsDetails={labsDetails}
         studiesByUserId={studiesByUserId}
         role={role}
+        idUser={idUser}
       />
     </div>
   );

@@ -1,20 +1,18 @@
-import {
-  CardTitle,
-  CardHeader,
-  CardContent,
-  Card,
-} from "@/components/ui/card";
+import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { GiHypodermicTest } from "react-icons/gi";
 import { LabPatientTable } from "../Table/table";
 import { Lab } from "@/types/Lab/Lab";
+
 const LabCard = ({
   labsDetails,
   role,
   studiesByUserId,
+  idUser,
 }: {
   labsDetails: Lab[] | undefined;
   studiesByUserId: any[];
   role: string;
+  idUser: number;
 }) => {
   return (
     <>
@@ -30,6 +28,7 @@ const LabCard = ({
             <LabPatientTable
               labsDetails={labsDetails}
               studiesByUser={studiesByUserId}
+              idUser={idUser}
             />
           ) : (
             <p className="text-gray-500">

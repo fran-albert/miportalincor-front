@@ -63,6 +63,13 @@ export interface Lab {
   tiempoTromboplastina: string;
 }
 
+export interface LabRequest {
+  userId: number;
+  note: string;
+  date: string;
+  laboratoryDetail: { [key: string]: string };
+}
+
 export const columNames: Lab = {
   globulosRojos: "Glóbulos Rojos",
   globulosBlancos: "Glóbulos Blancos",

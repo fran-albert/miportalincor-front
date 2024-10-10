@@ -38,7 +38,7 @@ const StudiesTable = ({
   // @ts-ignore
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
     "Seleccionar tipo de estudio..."
-  ); 
+  );
   // @ts-ignore
   const [selectedYear, setSelectedYear] = useState<string | null>(
     "Seleccionar año..."
@@ -83,7 +83,7 @@ const StudiesTable = ({
   return (
     <div>
       <Table>
-        <TableHeader className="sticky top-0 bg-white z-10 border-b">
+        <TableHeader className="sticky top-0 bg-white border-b">
           <TableRow>
             <TableHead className="whitespace-nowrap w-[5%] text-center align-middle">
               #
@@ -119,8 +119,9 @@ const StudiesTable = ({
                   ) : (
                     <>
                       <TableCell className="font-medium text-center align-middle">
-                        {index + 1}
+                        {indexOfFirstRow + index + 1}
                       </TableCell>
+
                       <TableCell className="text-center align-middle">
                         <FaRegFilePdf className="text-greenPrimary" size={20} />
                       </TableCell>
@@ -135,10 +136,12 @@ const StudiesTable = ({
                       </TableCell>
                       <TableCell className="align-middle text-base">
                         <div className="flex items-center justify-center gap-2">
-                          <ViewButton
-                            url={urls[study.id]?.pdfUrl || "#"}
-                            text="Ver PDF"
-                          />
+                          {study.locationS3 ? (
+                            <ViewButton
+                              url={urls[study.id]?.pdfUrl || "#"}
+                              text="Ver PDF"
+                            />
+                          ) : null}
                           {study &&
                             study.studyType?.id === 2 &&
                             urls?.[study.id]?.imageUrls?.length > 0 && (
@@ -202,9 +205,10 @@ const StudiesTable = ({
       {filteredStudies.length > 0 && (
         <>
           <div className="text-gray-500 mt-4 text-xs">
-            Mostrando {currentRows.length} de {filteredStudies.length}{" "}
-            resultados encontrados
+            Mostrando {Math.min(indexOfLastRow, filteredStudies.length)} de{" "}
+            {filteredStudies.length} resultados encontrados
           </div>
+
           <Pagination className="mt-4 justify-end">
             <PaginationContent>
               <PaginationPrevious
