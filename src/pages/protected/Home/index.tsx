@@ -4,6 +4,7 @@ import useUserRole from "@/hooks/useRoles";
 
 const HomePage = () => {
   const { isPatient, isDoctor, isSecretary, session } = useUserRole();
+  console.log(session);
   return (
     <div>
       {isSecretary && <HomeComponent name={String(session?.FirstName)} />}
