@@ -1,7 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode'; 
 import { logout } from '@/store/authSlice';
-import { useMemo } from 'react';
 
 interface DecodedToken {
   Id: string;
@@ -20,7 +19,7 @@ const ROLES = {
 
 const useUserRole = () => {
   const dispatch = useDispatch();
-  const token = useSelector((state: any) => state.auth.token) || localStorage.getItem('authToken');
+  const token = useSelector((state: any) => state.auth.token) || (typeof window !== 'undefined' ? localStorage.getItem('authToken') : null);
 
   if (!token) {
     return {
@@ -31,15 +30,12 @@ const useUserRole = () => {
     };
   }
 
-  // Usamos useMemo para evitar decodificaciones innecesarias
-  const decodedToken = useMemo(() => {
-    try {
-      return jwtDecode(token) as DecodedToken;
-    } catch (error) {
-      console.error('Error decodificando el token', error);
-      return null;
-    }
-  }, [token]);
+  let decodedToken: DecodedToken | null = null;
+  try {
+    decodedToken = jwtDecode(token) as DecodedToken;
+  } catch (error) {
+    console.error('Error decodificando el token', error);
+  }
 
   if (!decodedToken) {
     return {
@@ -51,7 +47,7 @@ const useUserRole = () => {
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
-
+  
   if (decodedToken.exp < currentTime) {
     dispatch(logout());
     return {
