@@ -3,9 +3,10 @@ import { useStudyAndImageUrls } from "@/hooks/Study/useStudyAndImageUrls";
 import useUserRole from "@/hooks/useRoles";
 import LoadingAnimation from "@/components/Loading/loading";
 import MyStudiesCardComponent from "@/components/My-Studies";
+import { Helmet } from "react-helmet-async";
 
 function MyStudiesPage() {
-    const { session } = useUserRole();
+  const { session } = useUserRole();
   const userId = session?.id ? Number(session.id) : undefined;
 
   const { studiesByUserId = [], isLoadingStudiesByUserId } = useStudy({
@@ -23,7 +24,15 @@ function MyStudiesPage() {
   }
 
   return (
-    <MyStudiesCardComponent studiesByUserId={studiesByUserId} urls={allUrls} />
+    <>
+      <Helmet>
+        <title>Mis Estudios</title>
+      </Helmet>
+      <MyStudiesCardComponent
+        studiesByUserId={studiesByUserId}
+        urls={allUrls}
+      />
+    </>
   );
 }
 

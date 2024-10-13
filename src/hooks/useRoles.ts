@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; 
 import { logout } from '@/store/authSlice';
+import { useMemo } from 'react';
 
 interface DecodedToken {
   Id: string;
@@ -10,6 +11,12 @@ interface DecodedToken {
   iss: string;
   FirstName: string;
 }
+
+const ROLES = {
+  PATIENT: "Paciente",
+  DOCTOR: "Medico",
+  SECRETARY: "Secretaria",
+};
 
 const useUserRole = () => {
   const dispatch = useDispatch();
@@ -24,11 +31,29 @@ const useUserRole = () => {
     };
   }
 
-  const decodedToken = jwtDecode(token) as DecodedToken;
-  const currentTime = Date.now() / 1000;
+  // Usamos useMemo para evitar decodificaciones innecesarias
+  const decodedToken = useMemo(() => {
+    try {
+      return jwtDecode(token) as DecodedToken;
+    } catch (error) {
+      console.error('Error decodificando el token', error);
+      return null;
+    }
+  }, [token]);
+
+  if (!decodedToken) {
+    return {
+      isPatient: false,
+      isDoctor: false,
+      isSecretary: false,
+      session: null,
+    };
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
 
   if (decodedToken.exp < currentTime) {
-    dispatch(logout()); 
+    dispatch(logout());
     return {
       isPatient: false,
       isDoctor: false,
@@ -50,9 +75,9 @@ const useUserRole = () => {
   };
 
   return {
-    isPatient: userRole === "Paciente",
-    isDoctor: userRole === "Medico",
-    isSecretary: userRole === "Secretaria",
+    isPatient: userRole === ROLES.PATIENT,
+    isDoctor: userRole === ROLES.DOCTOR,
+    isSecretary: userRole === ROLES.SECRETARY,
     session,
   };
 };

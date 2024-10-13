@@ -2,6 +2,7 @@ import { usePrefetchPatient } from "@/hooks/Patient/usePrefetchPatient";
 import { usePatients } from "@/hooks/Patient/usePatients";
 import { PatientsTable } from "@/components/Patients/Table/table";
 import LoadingAnimation from "@/components/Loading/loading";
+import { Helmet } from "react-helmet-async";
 
 const PatientsComponent = () => {
   const { isLoading, patients } = usePatients({
@@ -16,6 +17,9 @@ const PatientsComponent = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Pacientes</title>
+      </Helmet>
       <PatientsTable
         patients={patients || []}
         prefetchPatients={prefetchPatients}

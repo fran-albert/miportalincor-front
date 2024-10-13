@@ -102,15 +102,17 @@ const MyStudiesCardComponent = ({
                     </p>
                     <p className="text-sm mb-4">{study.note}</p>
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        onClick={() =>
-                          window.open(urls[study.id]?.pdfUrl || "#", "_blank")
-                        }
-                        variant="outline"
-                        size="sm"
-                      >
-                        Ver PDF
-                      </Button>
+                      {study.locationS3 ? (
+                        <Button
+                          onClick={() =>
+                            window.open(urls[study.id]?.pdfUrl || "#", "_blank")
+                          }
+                          variant="outline"
+                          size="sm"
+                        >
+                          Ver PDF
+                        </Button>
+                      ) : null}
                       {study.studyType?.id === 2 &&
                         urls?.[study.id]?.imageUrls?.length > 0 && (
                           <Button

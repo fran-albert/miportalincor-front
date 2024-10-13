@@ -4,6 +4,7 @@ import { useStudyAndImageUrls } from "@/hooks/Study/useStudyAndImageUrls";
 import { DoctorComponent } from "@/components/Doctors/Component";
 import { useParams } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
+import { Helmet } from "react-helmet-async";
 
 function DoctorPage() {
   const params = useParams();
@@ -26,8 +27,6 @@ function DoctorPage() {
     studiesByUserId
   );
 
-  
-
   return (
     <>
       {error && (
@@ -35,14 +34,20 @@ function DoctorPage() {
           Hubo un error al cargos los datos del Doctor.
         </div>
       )}
-      {(isLoading || isLoadingStudiesByUserId || isLoadingUrls) ?? (
+      <Helmet>
+        <title>
+          {isLoading ? "Médicos" : `${doctor?.firstName} ${doctor?.lastName}`}
+        </title>
+      </Helmet>
+      {isLoading || isLoadingStudiesByUserId || isLoadingUrls ? (
         <LoadingAnimation />
+      ) : (
+        <DoctorComponent
+          doctor={doctor}
+          urls={allUrls}
+          studiesByUserId={studiesByUserId}
+        />
       )}
-      <DoctorComponent
-        doctor={doctor}
-        urls={allUrls}
-        studiesByUserId={studiesByUserId}
-      />
     </>
   );
 }

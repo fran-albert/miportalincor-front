@@ -121,8 +121,6 @@ export function CreatePatientComponent() {
       registeredById: Number(session?.id),
     };
 
-    console.log("Payload", payload);
-
     try {
       const patientCreationPromise = addPatientMutation.mutateAsync(payload);
       toast.promise(patientCreationPromise, {

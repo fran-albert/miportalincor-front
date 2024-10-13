@@ -31,7 +31,6 @@ import { Edit2, Save, X } from "lucide-react";
 import ChangePasswordDialog from "../Change-Password";
 type FormValues = z.infer<typeof UserSchema>;
 export default function SecretaryProfileComponent({ user }: { user: User }) {
-  console.log(user, "user");
   const { updateUserMutation } = useUserMutations();
   const form = useForm<FormValues>({
     resolver: zodResolver(UserSchema),
@@ -127,12 +126,9 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
         error: "Error al actualizar los datos",
       });
 
-      console.log("Datos a enviar", dataToSend);
-
       await patientUpdatePromise;
 
-      console.log("Datos actualizados", dataToSend);
-      setIsEditing(false); // Desactivar el modo edición después de guardar
+      setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar los datos", error);
     }

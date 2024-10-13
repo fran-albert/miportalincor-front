@@ -6,6 +6,7 @@ import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useUser } from "@/hooks/User/useUser";
 import useUserRole from "@/hooks/useRoles";
+import { Helmet } from "react-helmet-async";
 
 const MyProfilePage = () => {
   const { session, isDoctor, isPatient, isSecretary } = useUserRole();
@@ -19,7 +20,6 @@ const MyProfilePage = () => {
     auth: isPatient && userId !== undefined,
     id: userId !== undefined ? userId : -1,
   });
-  
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: isDoctor && userId !== undefined,
@@ -34,13 +34,20 @@ const MyProfilePage = () => {
     return <LoadingAnimation />;
   }
 
-    if (isDoctor && doctor) {
-      return <ProfileDoctorCardComponent data={doctor} />;
-    }
+  if (isDoctor && doctor) {
+    return (
+      <>
+        <Helmet>
+          <title>{isLoadingDoctor ? "" : `Mi Perfil`}</title>
+        </Helmet>
+        <ProfileDoctorCardComponent data={doctor} />{" "}
+      </>
+    );
+  }
 
-    if (isSecretary && secretary) {
-      return <SecretaryProfileComponent user={secretary} />;
-    }
+  if (isSecretary && secretary) {
+    return <SecretaryProfileComponent user={secretary} />;
+  }
 
   if (isPatient && patient) {
     return <MyProfilePatientComponent patient={patient} />;

@@ -6,6 +6,7 @@ import ClientWrapper from "./components/Wrapper/index.tsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { Toaster } from "sonner";
+import { HelmetProvider } from "react-helmet-async";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -21,7 +22,9 @@ createRoot(document.getElementById("root")!).render(
           }}
         />
 
-        <App />
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
       </Provider>
     </ClientWrapper>
   </StrictMode>
