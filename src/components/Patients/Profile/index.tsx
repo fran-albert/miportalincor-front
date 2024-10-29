@@ -180,9 +180,59 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
       console.error("Error al actualizar el paciente", error);
     }
   };
-  const handleSave = () => {
-    // Aquí iría la lógica para guardar los cambios en el backend
-    setIsEditing(false);
+  const handleSave = async () => {
+    const isValid = await form.trigger(); // Valida el formulario antes de enviar
+    if (!isValid) return;
+    const formattedUserName = removeDotsFromDni(form.getValues("userName"));
+    const { address, ...rest } = form.getValues();
+    const addressToSend = {
+      ...address,
+      id: patient?.address?.id,
+      city: {
+        ...selectedCity,
+        state: selectedState,
+      },
+    };
+    const healthPlansToSend = [
+      {
+        id: selectedHealthInsurance?.id,
+        name: selectedHealthInsurance?.name,
+        healthInsurance: {
+          id: selectedHealthInsurance?.id,
+          name: selectedHealthInsurance?.name,
+        },
+      },
+    ];
+    const dataToSend: any = {
+      ...rest,
+      userName: formattedUserName,
+      address: addressToSend,
+      photo: patient.photo,
+      registeredById: patient.registeredById,
+      healthPlans: healthPlansToSend,
+    };
+    try {
+      const patientCreationPromise = updatePatientMutation.mutateAsync({
+        id: Number(patient?.userId),
+        patient: dataToSend,
+      });
+
+      toast.promise(patientCreationPromise, {
+        loading: <LoadingToast message="Actualizando datos del paciente..." />,
+        success: <SuccessToast message="Paciente actualizado con éxito!" />,
+        error: <ErrorToast message="Error al actualizar el Paciente" />,
+      });
+
+      patientCreationPromise
+        .then(() => {
+          setIsEditing(false);
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el paciente", error);
+        });
+    } catch (error) {
+      console.error("Error al actualizar el paciente", error);
+    }
   };
   return (
     <div key="1" className="w-full">
@@ -198,6 +248,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
               {!isEditing ? (
                 <Button
                   onClick={() => setIsEditing(true)}
+                  type="button"
                   className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                 >
                   <Edit2 className="mr-2 h-4 w-4" /> Editar
@@ -205,6 +256,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
               ) : (
                 <div className="flex space-x-2">
                   <Button
+                    type="button"
                     onClick={handleSave}
                     className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                   >
