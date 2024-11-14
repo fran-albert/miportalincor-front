@@ -254,6 +254,11 @@ export function HeaderComponent() {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+                <div className="grid gap-2 py-6">
+                  <div className="flex w-full items-center py-2 text-lg font-semibold">
+                    <LogoutButton />
+                  </div>
+                </div>
               </>
             </div>
           </SheetContent>
