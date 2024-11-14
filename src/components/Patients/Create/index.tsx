@@ -38,7 +38,6 @@ import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import { City } from "@/types/City/City";
 import useUserRole from "@/hooks/useRoles";
 import { HealthPlans } from "@/types/Health-Plans/HealthPlan";
-import CustomDatePicker from "@/components/Date-Picker";
 import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
 import ErrorToast from "@/components/Toast/Error";
@@ -68,7 +67,6 @@ export function CreatePatientComponent() {
     }
   };
 
-  const [startDate, setStartDate] = useState<Date | undefined>();
 
   const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
     if (healthInsurance.id !== undefined) {
@@ -247,17 +245,26 @@ export function CreatePatientComponent() {
                     <FormField
                       control={form.control}
                       name="birthDate"
-                      render={({}) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-black">
                             Fecha de Nacimiento
                           </FormLabel>
                           <FormControl>
-                            <CustomDatePicker
-                              setStartDate={setStartDate}
-                              setValue={setValue}
-                              fieldName="birthDate"
-                              initialDate={startDate}
+                            <Input
+                              type="date"
+                              {...field}
+                              onChange={(e) => {
+                                const selectedDate = e.target.value; 
+                                field.onChange(selectedDate);
+                              }}
+                              value={
+                                field.value
+                                  ? new Date(field.value)
+                                      .toISOString()
+                                      .split("T")[0] 
+                                  : ""
+                              }
                             />
                           </FormControl>
                           <FormMessage />
