@@ -5,11 +5,10 @@ import { Lab } from "@/types/Lab/Lab";
 
 const LabCard = ({
   labsDetails,
-  role,
   studiesByUserId,
   idUser,
 }: {
-  labsDetails: Lab[] | undefined;
+  labsDetails: Lab[];
   studiesByUserId: any[];
   role: string;
   idUser: number;
@@ -24,17 +23,11 @@ const LabCard = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {labsDetails && labsDetails.length > 0 ? (
-            <LabPatientTable
-              labsDetails={labsDetails}
-              studiesByUser={studiesByUserId}
-              idUser={idUser}
-            />
-          ) : (
-            <p className="text-gray-500">
-              No hay laboratorios disponibles para este {role}.
-            </p>
-          )}
+          <LabPatientTable
+            labsDetails={labsDetails}
+            studiesByUser={studiesByUserId}
+            idUser={idUser}
+          />
         </CardContent>
       </Card>
     </>

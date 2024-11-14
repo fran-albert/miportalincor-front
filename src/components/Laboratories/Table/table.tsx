@@ -109,13 +109,13 @@ export const LabPatientTable = ({
       : false;
   });
 
-  if (!labsDetails || labsDetails.length === 0) {
-    return (
-      <div className="text-gray-900 text-sm">
-        Los laboratorios del paciente no se pudieron insertar en la tabla.
-      </div>
-    );
-  }
+  // if (!labsDetails || labsDetails.length === 0) {
+  //   return (
+  //     <div className="text-gray-900 text-sm">
+  //       Los laboratorios del paciente no se pudieron insertar en la tabla.
+  //     </div>
+  //   );
+  // }
 
   const handleAddNewColumn = () => {
     setNewColumnAdded(true);
