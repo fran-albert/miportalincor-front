@@ -13,7 +13,7 @@ export default function LabChartsGrid({
   labKeys,
 }: LabChartsGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; 
+  const itemsPerPage = 3; 
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
