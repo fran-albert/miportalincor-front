@@ -76,7 +76,7 @@ export function HeaderComponent() {
                   Mis Estudios
                 </Link>
               </NavigationMenuLink>
-              {isDoctor && (
+              {(isDoctor || isSecretary) && (
                 <>
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="bg-transparent text-white">
@@ -116,6 +116,14 @@ export function HeaderComponent() {
                             Obras Sociales
                           </Link>
                         </NavigationMenuLink>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/laboratorios"
+                            className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                          >
+                            Laboratorios
+                          </Link>
+                        </NavigationMenuLink>
                       </div>
                     </NavigationMenuContent>
                     <NavigationMenuLink asChild>
@@ -134,51 +142,7 @@ export function HeaderComponent() {
                   </NavigationMenuItem>
                 </>
               )}
-              {isSecretary && (
-                <>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="bg-transparent text-white">
-                      Gestionar
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid w-[400px] p-2">
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to="/medicos"
-                            className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                          >
-                            Médicos
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to="/pacientes"
-                            className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                          >
-                            Pacientes
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to="/especialidades"
-                            className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                          >
-                            Especialidades
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to="/obras-sociales"
-                            className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-                          >
-                            Obras Sociales
-                          </Link>
-                        </NavigationMenuLink>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </>
-              )}
+
               <NavigationMenuLink asChild>
                 <LogoutButton />
               </NavigationMenuLink>
@@ -249,6 +213,12 @@ export function HeaderComponent() {
                           className="group grid h-auto w-full justify-start gap-1"
                         >
                           Obras Sociales
+                        </Link>
+                        <Link
+                          to="/laboratorios"
+                          className="group grid h-auto w-full justify-start gap-1"
+                        >
+                          Laboratorios
                         </Link>
                       </div>
                     </CollapsibleContent>
