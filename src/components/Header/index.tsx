@@ -118,7 +118,7 @@ export function HeaderComponent() {
                         </NavigationMenuLink>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/laboratorios"
+                            to="/analisis-bioquimicos"
                             className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                           >
                             Laboratorios
@@ -215,7 +215,7 @@ export function HeaderComponent() {
                           Obras Sociales
                         </Link>
                         <Link
-                          to="/laboratorios"
+                          to="/analisis-bioquimicos"
                           className="group grid h-auto w-full justify-start gap-1"
                         >
                           Laboratorios

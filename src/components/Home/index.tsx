@@ -7,9 +7,10 @@ import {
 } from "@/components/ui/card";
 import { FaUsers } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
-import { GiHospitalCross } from "react-icons/gi";
+import { GiHospitalCross, GiHypodermicTest } from "react-icons/gi";
 import { MdHealthAndSafety } from "react-icons/md";
 import { Link } from "react-router-dom";
+import { CiMedicalClipboard } from "react-icons/ci";
 
 export default function HomeComponent({ name }: { name: string }) {
   const cards = [
@@ -39,6 +40,20 @@ export default function HomeComponent({ name }: { name: string }) {
         "Ingrese al módulo de obras sociales para ver la lista de obras sociales.",
       icon: <MdHealthAndSafety className="h-8 w-8 text-greenPrimary" />,
       href: "/obras-sociales",
+    },
+    {
+      title: "Laboratorios",
+      description:
+        "Ingrese al módulo de laboratorios para ver la lista de laboratorios.",
+      icon: <GiHypodermicTest className="h-8 w-8 text-greenPrimary" />,
+      href: "/analisis-bioquimicos",
+    },
+    {
+      title: "Estudios",
+      description:
+        "Ingrese al módulo de estudios para ver la lista de estudios.",
+      icon: <CiMedicalClipboard className="h-8 w-8 text-greenPrimary" />,
+      href: "/estudios",
     },
   ];
 

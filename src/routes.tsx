@@ -18,6 +18,8 @@ import MyStudiesPage from "./pages/protected/My-Studies";
 import LaboratoriesPage from "./pages/protected/Laboratories";
 import RequestEmailPassword from "./components/Request-Mail-Password";
 import ResetPaswordPage from "./pages/auth/Reset-Password";
+import BlodTestPage from "./pages/protected/Blod-Test";
+import StudyTypePage from "./pages/protected/Study-Type";
 
 function App() {
   return (
@@ -106,6 +108,22 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <HealthInsurancesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/analisis-bioquimicos"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <BlodTestPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/estudios"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <StudyTypePage />
                 </Private_Routes>
               }
             />

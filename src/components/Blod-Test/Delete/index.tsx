@@ -11,43 +11,43 @@ import {
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { toast } from "sonner";
-import { Speciality } from "@/types/Speciality/Speciality";
 import ActionIcon from "@/components/Icons/action";
-import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import { BlodTest } from "@/types/Blod-Test/Blod-Test";
+import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
 
-interface DeleteSpecialityDialogProps {
-  speciality: Speciality;
+interface Props {
+  blodTest: BlodTest;
 }
 
-export default function DeleteSpecialityDialog({
-  speciality,
-}: DeleteSpecialityDialogProps) {
+export default function DeleteBlodTestDialog({
+  blodTest,
+}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
-  const { deleteSpecialityMutation } = useSpecialityMutations();
+  const { deleteBlodTestMutation } = useBlodTestMutations();
   const handleConfirmDelete = async () => {
     try {
-      const specialityDeletionPromise = deleteSpecialityMutation.mutateAsync(
-        Number(speciality.id)
+      const blodTestDeletionPromise = deleteBlodTestMutation.mutateAsync(
+        Number(blodTest.id)
       );
-      toast.promise(specialityDeletionPromise, {
-        loading: <LoadingToast message="Eliminando especialidad..." />,
-        success: <SuccessToast message="Especialidad eliminada con éxito!" />,
-        error: <ErrorToast message="Error al eliminar la Especialidad" />,
+      toast.promise(blodTestDeletionPromise, {
+        loading: <LoadingToast message="Eliminando análisis bioquímico..." />,
+        success: <SuccessToast message="Análisis bioquímico eliminado con éxito!" />,
+        error: <ErrorToast message="Error al eliminar el Análisis Bioquímico" />,
         duration: 3000,
       });
-      specialityDeletionPromise
+      blodTestDeletionPromise
         .then(() => {
           setIsOpen(false);
         })
         .catch((error) => {
-          console.error("Error al crear la Especialidad", error);
+          console.error("Error al eliminar el Análisis Bioquímico", error);
         });
     } catch (error) {
-      console.error("Error al crear la Especialidad", error);
+      console.error("Error al eliminar el Análisis Bioquímico", error);
     }
   };
 
@@ -63,11 +63,11 @@ export default function DeleteSpecialityDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Eliminar {speciality.name}</DialogTitle>
+          <DialogTitle>Eliminar {blodTest.name}</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          ¿Estás seguro de que quieres eliminar la especialidad{" "}
-          {speciality.name}?
+          ¿Estás seguro de que quieres eliminar el análisis bioquímico{" "}
+          {blodTest.name}?
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" onClick={toggleDialog}>
@@ -76,7 +76,7 @@ export default function DeleteSpecialityDialog({
           <Button
             className="bg-greenPrimary hover:bg-greenPrimary"
             onClick={handleConfirmDelete}
-            disabled={deleteSpecialityMutation.isPending}
+            disabled={deleteBlodTestMutation.isPending}
           >
             Confirmar
           </Button>

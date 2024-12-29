@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { useSpecialityMutations } from "@/hooks/Speciality/useHealthInsuranceMutation";
+import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";

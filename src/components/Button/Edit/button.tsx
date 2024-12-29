@@ -32,7 +32,7 @@ export const EditButtonIcon: React.FC<EditButtonIconProps> = ({
       <button
         {...props}
         onClick={handleEdit}
-        className="p-1 border border-transparent rounded transition-colors duration-200"
+        className="border border-transparent rounded transition-colors duration-200"
       >
         {onClick ? (
           <Button variant={"ghost"} size="icon">

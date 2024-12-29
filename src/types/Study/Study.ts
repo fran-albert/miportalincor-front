@@ -1,3 +1,4 @@
+import { StudyType } from "../Study-Type/Study-Type";
 import { UltraSoundImages } from "../Ultra-Sound/Ultra-Sound";
 
 export interface Study {
@@ -5,10 +6,7 @@ export interface Study {
   locationS3?: string;
   name?: string;
   date?: Date | string | undefined;
-  studyType?: {
-    id: number | string;
-    name: string;
-  };
+  studyType?: StudyType;
   note?: string;
   ultrasoundImages?: UltraSoundImages[];
   isOptimistic?: boolean;

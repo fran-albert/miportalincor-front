@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Speciality } from "@/types/Speciality/Speciality";
-import { useSpecialityMutations } from "@/hooks/Speciality/useHealthInsuranceMutation";
+import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
@@ -112,6 +112,7 @@ export default function EditSpecialityDialog({
                 type="submit"
                 className=" bg-greenPrimary capitalize hover:bg-greenPrimary text-white font-bold py-2 px-4 rounded-md transition duration-300"
                 variant="default"
+                disabled={updateSpecialityMutation.isPending}
               >
                 Confirmar
               </Button>
