@@ -21,7 +21,7 @@ const LabDialog = ({
 }: {
   setDates: (dates: string[]) => void;
   dates: string[];
-  onAddNewColumn: () => void;
+  onAddNewColumn: (newDate: string) => void;
   onSetDate: (date: string) => void;
   onSetNote: (note: string) => void;
 }) => {
@@ -30,14 +30,16 @@ const LabDialog = ({
   const [note, setNote] = useState<string>("");
   const handleSave = () => {
     if (newDate) {
+      console.log("Saving new date:", newDate); // Verificar duplicados
       setDates([...dates, newDate]);
       setNewDate(null);
       onSetNote(note);
       onSetDate(newDate);
       setIsOpen(false);
-      onAddNewColumn();
+      onAddNewColumn(newDate); // Pasar la fecha solo una vez
     }
   };
+  
 
   return (
     <div>

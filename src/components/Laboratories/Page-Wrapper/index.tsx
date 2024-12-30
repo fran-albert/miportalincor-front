@@ -10,6 +10,8 @@ const LaboratoriesPageWrapper = ({
   entity,
   role,
   idUser,
+  bloodTests,
+  bloodTestsData,
 }: any) => {
   if (error) {
     return (
@@ -32,7 +34,9 @@ const LaboratoriesPageWrapper = ({
       <BreadcrumbComponentGenerator role={role} entity={entity} />
       <LabCard
         labsDetails={labsDetails}
+        bloodTests={bloodTests}
         studiesByUserId={studiesByUserId}
+        bloodTestsData={bloodTestsData}
         role={role}
         idUser={idUser}
       />

@@ -2,7 +2,7 @@ import { Unit } from "../Unit/Unit";
 
 export interface BloodTest {
     id?: number;
-    ParsedName: string;
+    ParsedName?: string;
     originalName: string;
     unit?: Unit;
     idUnit?: number;

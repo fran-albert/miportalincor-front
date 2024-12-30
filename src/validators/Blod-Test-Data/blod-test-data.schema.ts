@@ -1,9 +1,8 @@
 import { z } from "zod";
 
-export const bloodTestSchema = z.object({
-    originalName: z.string({ required_error: "El nombre es obligatorio." }),
-    parsedName: z.string().optional(),
-    unit: z
+export const bloodTestDataSchema = z.object({
+    value: z.string({ required_error: "El valor es obligatorio." }),
+    bloodTest: z
         .object({
             id: z.number({ required_error: "La unidad es obligatoria." }),
             name: z.string().optional(),

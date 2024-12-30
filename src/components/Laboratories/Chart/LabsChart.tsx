@@ -1,39 +1,45 @@
-import { formatDate } from "@/common/helpers/helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import { columNames, Lab, referenceValues, units } from "@/types/Lab/Lab";
+import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
   ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 
 interface LabsChartProps {
-  labKey: keyof Lab;
-  labData: Lab[];
+  testName: string;
+  testData: BloodTestData[];
 }
 
-export default function LabsChart({ labKey, labData }: LabsChartProps) {
-  const chartData = labData
-    .map((lab) => ({
-      date: lab.date || "Fecha no disponible",
-      value: parseFloat(String(lab[labKey])) || 0,
-    }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+export default function LabsChart({ testName, testData }: LabsChartProps) {
+  // Ordenar por fecha descendente y obtener las dos últimas fechas
+  const recentData = testData
+    .sort(
+      (a, b) =>
+        new Date(b.study.date || "").getTime() -
+        new Date(a.study.date || "").getTime()
+    )
+    .slice(0, 2)
+    .map((data) => ({
+      date: data.study.date || "Sin Fecha",
+      value: parseFloat(data.value) || 0,
+      unit: data.bloodTest.unit?.name || "Sin Unidad",
+      reference: data.bloodTest.referenceValue || "Sin Rango",
+    }));
 
-  const title = columNames[labKey] || labKey;
-  const unit = units[labKey] || "";
-  const reference = referenceValues[labKey] || "";
+  const period =
+    recentData.length === 2
+      ? `${recentData[1].date} - ${recentData[0].date}`
+      : "Periodo no disponible";
 
+  const unit = recentData[0]?.unit || "Sin Unidad";
+  const reference = recentData[0]?.reference || "Sin Rango";
+
+  // Parsear rango de referencia
   const parseReferenceRange = (reference: string) => {
     const rangeMatch = reference.match(/(\d+(\.\d+)?)\s*-\s*(\d+(\.\d+)?)/);
     if (rangeMatch) {
@@ -44,148 +50,91 @@ export default function LabsChart({ labKey, labData }: LabsChartProps) {
     return { min: 0, max: 160 };
   };
 
-  const { min, max } = parseReferenceRange(reference as string);
-
+  const { min, max } = parseReferenceRange(reference);
   const adjustedMax = max + (max - min) * 0.1;
-
-  const latestValue = chartData[chartData.length - 1]?.value || "N/A";
 
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="text-lg font-bold flex items-center text-greenPrimary">
-          {title}
+          {testName}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Unidad: {unit}</p>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span>Valor Hallado:</span>
-            <span className="font-semibold">
-              {latestValue} {unit}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Valores de referencia:</span>
-            <span>{reference}</span>
-          </div>
+        <div className="text-sm text-muted-foreground space-y-1 mt-2">
+          <p>
+            Unidad: <span className="font-semibold">{unit}</span>
+          </p>
+          <p>
+            Rango de referencia:{" "}
+            <span className="font-semibold">{reference}</span>
+          </p>
+          <p>
+            Periodo: <span className="font-semibold">{period}</span>
+          </p>
         </div>
-
-        <div className="h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+      </CardHeader>
+      <CardContent>
+        {recentData.length >= 2 ? (
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart
-              data={chartData}
+              data={recentData}
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
-                type="category"
-                tick={{ fontSize: 12 }}
-                tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                tickFormatter={(date) =>
+                  new Date(date).toLocaleDateString("es-ES")
+                }
               />
-              <YAxis domain={[min, adjustedMax]} tick={{ fontSize: 12 }} />
-              <TooltipProvider>
-                {chartData.map((entry, index) => (
-                  <Tooltip key={index}>
-                    <TooltipTrigger>
-                      <circle
-                        cx={entry.date}
-                        cy={entry.value}
-                        r={6}
-                        fill="#0000FF"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Fecha: {entry.date}</p>
-                      <p>
-                        Valor: {entry.value} {unit}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-
-              {/* Línea azul para los valores hallados */}
+              <YAxis domain={[min, adjustedMax]} />
+              <ReferenceLine
+                y={min}
+                label={{
+                  value: `Mín: ${min}`,
+                  position: "left",
+                  fill: "green",
+                  fontSize: 12,
+                }}
+                stroke="green"
+                strokeDasharray="3 3"
+              />
+              <ReferenceLine
+                y={max}
+                label={{
+                  value: `Máx: ${max}`,
+                  position: "left",
+                  fill: "red",
+                  fontSize: 12,
+                }}
+                stroke="red"
+                strokeDasharray="3 3"
+              />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#0000FF"
+                stroke="#8884d8"
                 strokeWidth={2}
-                dot={{ r: 6 }}
+                dot
                 label={({ x, y, value }) => (
                   <text
                     x={x}
-                    y={y - 10} // Ajusta la posición vertical del texto
+                    y={y - 10} // Ajustar la posición vertical del texto
                     textAnchor="middle"
                     fontSize={12}
-                    fill="#0000FF"
+                    className="font-bold"
+                    fill="#000000"
                   >
-                    {value} {unit}
+                    {value}
                   </text>
                 )}
               />
-
-              {/* Líneas de referencia si se encuentran rangos válidos */}
-              {min !== 0 && max !== 160 && (
-                <>
-                  <ReferenceLine
-                    y={min}
-                    label={{
-                      position: "left",
-                      style: {
-                        fontSize: 14,
-                        fill: "green",
-                        backgroundColor: "white",
-                        padding: "4px",
-                        fontWeight: "bold",
-                      },
-                    }}
-                    stroke="green"
-                    strokeDasharray="3 3"
-                    strokeWidth={2}
-                  />
-                  <ReferenceLine
-                    y={max}
-                    label={{
-                      position: "left",
-                      style: {
-                        fontSize: 14,
-                        fill: "red",
-                        backgroundColor: "white",
-                        padding: "4px",
-                        fontWeight: "bold",
-                      },
-                    }}
-                    stroke="red"
-                    strokeDasharray="3 3"
-                    strokeWidth={2}
-                  />
-                </>
-              )}
             </LineChart>
           </ResponsiveContainer>
-        </div>
-
-        <div className="border rounded-lg p-4">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left text-greenPrimary">Periodo</th>
-                <th className="text-right text-greenPrimary">mg/dL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {chartData.map((item) => (
-                <tr key={item.date}>
-                  <td className="text-left">{formatDate(item.date)}</td>
-                  <td className="text-right">{item.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        ) : (
+          <p className="text-center text-gray-500">
+            No hay suficientes datos para comparar.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

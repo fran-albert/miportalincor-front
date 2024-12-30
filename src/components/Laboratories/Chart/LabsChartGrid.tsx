@@ -1,33 +1,45 @@
 import { useState } from "react";
 import LabsChart from "./LabsChart";
-import { Lab } from "@/types/Lab/Lab";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { ChevronLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 interface LabChartsGridProps {
-  labsData: Lab[];
-  labKeys: (keyof Lab)[]; 
+  bloodTestsData: BloodTestData[];
 }
 
-export default function LabChartsGrid({
-  labsData,
-  labKeys,
-}: LabChartsGridProps) {
+export default function LabChartsGrid({ bloodTestsData }: LabChartsGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3; 
+  const itemsPerPage = 3;
 
+  // Agrupar los datos por prueba
+  const groupedTests = bloodTestsData.reduce((acc, test) => {
+    const testName = test.bloodTest.originalName || "Sin Nombre";
+    if (!acc[testName]) acc[testName] = [];
+    acc[testName].push(test);
+    return acc;
+  }, {} as Record<string, BloodTestData[]>);
+
+  // Extraer los nombres de las pruebas
+  const testNames = Object.keys(groupedTests);
+
+  // Paginación
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  const currentTests = testNames.slice(startIndex, endIndex);
 
-  const currentCharts = labKeys.slice(startIndex, endIndex);
-
-  const totalPages = Math.ceil(labKeys.length / itemsPerPage);
+  const totalPages = Math.ceil(testNames.length / itemsPerPage);
 
   return (
     <div className="space-y-6">
       {/* Grid de gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentCharts.map((key) => (
-          <LabsChart key={key as string} labKey={key} labData={labsData} />
+        {currentTests.map((testName) => (
+          <LabsChart
+            key={testName}
+            testName={testName}
+            testData={groupedTests[testName]}
+          />
         ))}
       </div>
 

@@ -2,57 +2,38 @@ import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { GiHypodermicTest } from "react-icons/gi";
 import { LabPatientTable } from "../Table/table";
 import { Lab } from "@/types/Lab/Lab";
-import LabChartsGrid from "../Chart/LabsChartGrid";
+// import LabChartsGrid from "../Chart/LabsChartGrid";
+import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 
 interface Study {
   id: number;
   date: string;
 }
 
-const addDatesToLabResults = (
-  labsDetails: Lab[],
-  studiesByUserId: Study[]
-): Lab[] => {
-  const updatedLabs = labsDetails.map((lab) => {
-    const study = studiesByUserId.find((study) => study.id === lab.idStudy);
-    const date = study?.date || "";
-    if (!date) {
-      console.warn("No date found for lab:", lab);
-    }
-    return {
-      ...lab,
-      date,
-    };
-  });
-
-  return updatedLabs;
-};
-
 const LabCard = ({
-  labsDetails,
-  studiesByUserId,
+  bloodTestsData = [],
   idUser,
+  bloodTests = [],
 }: {
   labsDetails: Lab[];
   studiesByUserId: Study[];
+  bloodTestsData: BloodTestData[];
+  bloodTests: BloodTest[];
   role: string;
   idUser: number;
 }) => {
-  // Añadir las fechas y ordenar los datos por fecha descendente
-  const labsDetailsWithDates = addDatesToLabResults(labsDetails, studiesByUserId).sort(
-    (a, b) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime()
-  );
-
-  // Filtrar las claves de `Lab` relevantes para gráficos
-  const labKeys = Object.keys(labsDetails[0] || {}).filter((key) => {
-    const value = String(labsDetails[0][key as keyof Lab]); // Convertir a string
-    return (
-      key !== "id" && // Excluir campos irrelevantes
-      key !== "idStudy" &&
-      key !== "date" &&
-      !isNaN(parseFloat(value)) // Validar si es un número
-    );
-  });
+  // const labKeys =
+  //   bloodTestsData.length > 0
+  //     ? Object.keys(bloodTestsData[0]).filter((key) => {
+  //         const value = String(
+  //           bloodTestsData[0][key as keyof BloodTestData] || ""
+  //         );
+  //         return (
+  //           key !== "id" && key !== "date" && !isNaN(parseFloat(value)) // Filtrar solo claves numéricas
+  //         );
+  //       })
+  //     : [];
 
   return (
     <>
@@ -65,13 +46,13 @@ const LabCard = ({
         </CardHeader>
         <CardContent>
           <LabPatientTable
-            labsDetails={labsDetails}
-            studiesByUser={studiesByUserId}
+            bloodTests={bloodTests || []}
+            bloodTestsData={bloodTestsData || []}
             idUser={idUser}
           />
         </CardContent>
       </Card>
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-greenPrimary">
             <GiHypodermicTest className="mr-2" />
@@ -79,12 +60,18 @@ const LabCard = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <LabChartsGrid
-            labsData={labsDetailsWithDates}
-            labKeys={labKeys as (keyof Lab)[]}
-          />
+          {bloodTestsData.length > 0 && labKeys.length > 0 ? (
+            <LabChartsGrid bloodTestsData={bloodTestsData} />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <GiHypodermicTest className="text-gray-400 text-4xl" />
+              <p className="text-gray-500 mt-2">
+                Sin datos para mostrar gráficos.
+              </p>
+            </div>
+          )}
         </CardContent>
-      </Card>
+      </Card> */}
     </>
   );
 };

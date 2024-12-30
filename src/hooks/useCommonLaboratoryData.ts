@@ -2,6 +2,7 @@ import { usePatient } from "@/hooks/Patient/usePatient";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useStudy } from "@/hooks/Study/useStudy";
 import { useLab } from "@/hooks/Labs/useLab";
+import { useBloodTestData } from "./Blod-Test-Data/useBlodTestData";
 
 export const useCommonLaboratoryData = ({ id, role }: { id: number, role: "paciente" | "medico" }) => {
   const { patient, isLoading: isLoadingPatient, error: patientError } = role === "paciente"
@@ -24,13 +25,19 @@ export const useCommonLaboratoryData = ({ id, role }: { id: number, role: "pacie
     idStudy: studyIds,
   });
 
-  const isLoading = isLoadingPatient || isLoadingDoctor || isLoadingStudies || isLoadingLabs;
+  const { bloodTestsData, isLoadingBloodTestsData: isLoadingBloodTest } = useBloodTestData({
+    auth: true,
+    idStudies: studyIds,
+  });
+
+  const isLoading = isLoadingPatient || isLoadingDoctor || isLoadingStudies || isLoadingLabs || isLoadingBloodTest;
   const error = patientError || doctorError;
 
   return {
     patient,
     doctor,
     studiesByUserId,
+    bloodTestsData,
     labsDetails,
     isLoading,
     error
