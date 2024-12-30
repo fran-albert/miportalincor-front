@@ -47,11 +47,14 @@ const MyStudiesCardComponent = ({
     });
   };
 
-  const filteredStudies = studiesByUserId.filter(
+  const filteredStudies = studiesByUserId
+  .filter((study) => study.locationS3) 
+  .filter(
     (study) =>
       study.studyType?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       study.note?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
 
   const indexOfLastStudy = currentPage * studiesPerPage;
   const indexOfFirstStudy = indexOfLastStudy - studiesPerPage;
