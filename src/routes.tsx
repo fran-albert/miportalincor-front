@@ -20,6 +20,7 @@ import RequestEmailPassword from "./components/Request-Mail-Password";
 import ResetPaswordPage from "./pages/auth/Reset-Password";
 import BlodTestPage from "./pages/protected/Blod-Test";
 import StudyTypePage from "./pages/protected/Study-Type";
+import AccessDeniedPage from "./pages/protected/Access-Denied";
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
                 </Private_Routes>
               }
             />
+            <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
             <Route
               path="/obras-sociales"
               element={
