@@ -15,11 +15,11 @@ import ActionIcon from "@/components/Icons/action";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
-import { BlodTest } from "@/types/Blod-Test/Blod-Test";
+import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
 
 interface Props {
-  blodTest: BlodTest;
+  blodTest: BloodTest;
 }
 
 export default function DeleteBlodTestDialog({
@@ -63,11 +63,11 @@ export default function DeleteBlodTestDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Eliminar {blodTest.name}</DialogTitle>
+          <DialogTitle>Eliminar {blodTest.originalName}</DialogTitle>
         </DialogHeader>
         <DialogDescription>
           ¿Estás seguro de que quieres eliminar el análisis bioquímico{" "}
-          {blodTest.name}?
+          {blodTest.originalName}?
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" onClick={toggleDialog}>

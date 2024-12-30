@@ -28,7 +28,7 @@ export const getColumns = (
     {
       accessorKey: "unit",
       header: "Unidad",
-      cell: ({ row }) => <div>{row.original.unit?.shortName}</div>,
+      cell: ({ row }) => <div> {row.original.unit?.name} - {row.original.unit?.shortName}</div>,
     },
     {
       header: " ",

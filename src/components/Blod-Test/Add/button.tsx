@@ -24,7 +24,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
 import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
-import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { bloodTestSchema } from "@/validators/Blod-Test/blod-test.schema";
 import { UnitSelect } from "@/components/Select/Unit/select";
 
@@ -50,10 +49,14 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
 
   async function onSubmit(values: z.infer<typeof bloodTestSchema>) {
     try {
-      const blodTestCreationPromise = addBlodTestMutation.mutateAsync(
-        values as BloodTest
-      );
-      console.log("Valores del formulario enviados:", values);
+      const payload = {
+        originalName: values.originalName,
+        parsedName: values.originalName.toLowerCase().replace(/\s+/g, ""), 
+        referenceValue: values.referenceValue,
+        idUnit: values.unit?.id, 
+      };
+
+      const blodTestCreationPromise = addBlodTestMutation.mutateAsync(payload);
       toast.promise(blodTestCreationPromise, {
         loading: <LoadingToast message="Creando análisis bioquímico..." />,
         success: (
@@ -85,7 +88,7 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
-              name="name"
+              name="originalName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-black capitalize">

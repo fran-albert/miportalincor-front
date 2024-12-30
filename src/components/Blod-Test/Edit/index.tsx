@@ -44,7 +44,7 @@ export default function EditBlodTestDialog({
   const form = useForm<z.infer<typeof bloodTestSchema>>({
     resolver: zodResolver(bloodTestSchema),
     defaultValues: {
-      name: blodTest.name,
+      originalName: blodTest.originalName,
       unit: blodTest.unit,
       referenceValue: blodTest.referenceValue,
     },
@@ -53,7 +53,7 @@ export default function EditBlodTestDialog({
   useEffect(() => {
     if (isOpen && blodTest) {
       form.reset({
-        name: blodTest.name,
+        originalName: blodTest.originalName,
         unit: blodTest.unit,
         referenceValue: blodTest.referenceValue,
       });
@@ -66,9 +66,10 @@ export default function EditBlodTestDialog({
         id: Number(blodTest.id),
         blodTest: {
           id: Number(blodTest.id),
-          name: values.name,
+          originalName: values.originalName,
           idUnit: Number(values?.unit?.id),
           referenceValue: values.referenceValue,
+          ParsedName: values.originalName.toLowerCase().replace(/\s+/g, ""),
         },
       });
       toast.promise(specialityCreationPromise, {
@@ -94,13 +95,13 @@ export default function EditBlodTestDialog({
     <Dialog open={isOpen} onOpenChange={toggleDialog}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Editar {blodTest.name}</DialogTitle>
+          <DialogTitle>Editar {blodTest.originalName}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
-              name="name"
+              name="originalName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-black capitalize">
@@ -158,6 +159,7 @@ export default function EditBlodTestDialog({
                 type="submit"
                 className=" bg-greenPrimary capitalize hover:bg-greenPrimary text-white font-bold py-2 px-4 rounded-md transition duration-300"
                 variant="default"
+                disabled={updateBlodTestMutation.isPending}
               >
                 Confirmar
               </Button>
