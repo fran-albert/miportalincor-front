@@ -1,3 +1,4 @@
+import { format, parse } from "date-fns";
 import moment from "moment-timezone";
 import { UseFormSetValue } from "react-hook-form";
 
@@ -86,4 +87,35 @@ export const slugify = (text: string, id: number) => {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')}-${id}`;
+};
+
+export const normalizeDate = (date: string): string => {
+  try {
+    if (!date || date.trim() === "") {
+      throw new Error("Fecha vacía o indefinida");
+    }
+
+    // Si la fecha está en formato ISO (2025-01-06T03:00:00)
+    if (date.includes("T")) {
+      return format(new Date(date), "yyyy-MM-dd"); // Formateamos a YYYY-MM-DD
+    }
+
+    // Si la fecha está en formato DD-MM-YYYY
+    if (date.includes("-")) {
+      const parts = date.split("-");
+      if (parts[0].length === 4) {
+        // Si es YYYY-MM-DD
+        return date;
+      } else if (parts[2].length === 4) {
+        // Si es DD-MM-YYYY
+        const parsedDate = parse(date, "dd-MM-yyyy", new Date());
+        return format(parsedDate, "yyyy-MM-dd");
+      }
+    }
+
+    throw new Error(`Formato de fecha no reconocido: ${date}`);
+  } catch (error) {
+    console.error("Fecha problemática:", date);
+    return ""; 
+  }
 };

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "@/components/ui/search";
-import { formatDate } from "@/common/helpers/helpers";
+import { formatDate, normalizeDate } from "@/common/helpers/helpers";
 import LabDialog from "../Dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,7 +23,6 @@ import {
 } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
-import { format, parse } from "date-fns";
 
 export const LabPatientTable = ({
   bloodTestsData = [],
@@ -81,37 +80,7 @@ export const LabPatientTable = ({
       return updatedDates;
     });
   };
-  const normalizeDate = (date: string): string => {
-    try {
-      if (!date || date.trim() === "") {
-        throw new Error("Fecha vacía o indefinida");
-      }
-
-      // Si la fecha está en formato ISO (2025-01-06T03:00:00)
-      if (date.includes("T")) {
-        return format(new Date(date), "yyyy-MM-dd"); // Formateamos a YYYY-MM-DD
-      }
-
-      // Si la fecha está en formato DD-MM-YYYY
-      if (date.includes("-")) {
-        const parts = date.split("-");
-        if (parts[0].length === 4) {
-          // Si es YYYY-MM-DD
-          return date;
-        } else if (parts[2].length === 4) {
-          // Si es DD-MM-YYYY
-          const parsedDate = parse(date, "dd-MM-yyyy", new Date());
-          return format(parsedDate, "yyyy-MM-dd");
-        }
-      }
-
-      // Si no se reconoce el formato
-      throw new Error(`Formato de fecha no reconocido: ${date}`);
-    } catch (error) {
-      console.error("Fecha problemática:", date);
-      return ""; // Devuelve cadena vacía para evitar errores posteriores
-    }
-  };
+ 
 
   const handleConfirmChanges = async () => {
     try {
@@ -186,9 +155,6 @@ export const LabPatientTable = ({
       });
 
       const newEntries = Object.values(groupedEntries);
-
-      console.log("Actualizaciones agrupadas por idStudy:", updates);
-      console.log("Nuevas entradas agrupadas:", newEntries);
 
       // Procesar actualizaciones
       if (updates.length > 0) {
