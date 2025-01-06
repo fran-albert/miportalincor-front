@@ -17,7 +17,6 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
   const {
     patient,
     doctor,
-    labsDetails,
     studiesByUserId,
     bloodTestsData,
     isLoading,
@@ -39,7 +38,6 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
       <LaboratoriesPageWrapper
         isLoading={isLoading}
         error={error}
-        labsDetails={labsDetails}
         studiesByUserId={studiesByUserId}
         bloodTestsData={bloodTestsData}
         bloodTests={blodTests}

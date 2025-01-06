@@ -19,9 +19,11 @@ import ErrorToast from "@/components/Toast/Error";
 import {
   BloodTestData,
   BloodTestDataRequest,
+  BloodTestDataUpdateRequest,
 } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
+import { format, parse } from "date-fns";
 
 export const LabPatientTable = ({
   bloodTestsData = [],
@@ -32,17 +34,15 @@ export const LabPatientTable = ({
   bloodTestsData: BloodTestData[];
   idUser: number;
 }) => {
-  const [isLabAdded, setIsLabAdded] = useState(false);
-  const { addBlodTestDataMutation } = useBlodTestDataMutations();
+  const { addBlodTestDataMutation, updateBlodTestMutation } =
+    useBlodTestDataMutations();
   const [searchTerm, setSearchTerm] = useState("");
   const [dates, setDates] = useState<string[]>([]);
   const [editedValues, setEditedValues] = useState<{
     [key: string]: { [bloodTestId: string]: string };
   }>({});
   const [note, setNote] = useState<string>("");
-  const [date, setDate] = useState<string>("");
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
-
   useEffect(() => {
     const uniqueDates = Array.from(
       new Set(
@@ -80,39 +80,153 @@ export const LabPatientTable = ({
         : prevDates;
       return updatedDates;
     });
-
-    setIsLabAdded(false);
   };
+  const normalizeDate = (date: string): string => {
+    try {
+      if (!date || date.trim() === "") {
+        throw new Error("Fecha vacía o indefinida");
+      }
+
+      // Si la fecha está en formato ISO (2025-01-06T03:00:00)
+      if (date.includes("T")) {
+        return format(new Date(date), "yyyy-MM-dd"); // Formateamos a YYYY-MM-DD
+      }
+
+      // Si la fecha está en formato DD-MM-YYYY
+      if (date.includes("-")) {
+        const parts = date.split("-");
+        if (parts[0].length === 4) {
+          // Si es YYYY-MM-DD
+          return date;
+        } else if (parts[2].length === 4) {
+          // Si es DD-MM-YYYY
+          const parsedDate = parse(date, "dd-MM-yyyy", new Date());
+          return format(parsedDate, "yyyy-MM-dd");
+        }
+      }
+
+      // Si no se reconoce el formato
+      throw new Error(`Formato de fecha no reconocido: ${date}`);
+    } catch (error) {
+      console.error("Fecha problemática:", date);
+      return ""; // Devuelve cadena vacía para evitar errores posteriores
+    }
+  };
+
   const handleConfirmChanges = async () => {
     try {
-      const bloodTestDatas = Object.entries(editedValues).flatMap(([tests]) =>
-        Object.entries(tests).map(([bloodTestId, value]) => ({
-          id: 0,
-          value,
-          idBloodTest: parseInt(bloodTestId, 10),
-        }))
-      );
-      const payload: BloodTestDataRequest = {
-        userId: idUser,
-        note,
-        date,
-        bloodTestDatas,
-      };
+      const groupedEntries: { [date: string]: BloodTestDataRequest } = {};
+      const updates: {
+        idStudy: number;
+        blodTest: BloodTestDataUpdateRequest[];
+      }[] = [];
 
-      console.log(payload);
-      toast.promise(
-        addBlodTestDataMutation.mutateAsync(payload as BloodTestDataRequest),
-        {
-          loading: <LoadingToast message="Creando laboratorio..." />,
-          success: () => {
-            isLabAdded && setIsLabAdded(true);
-            return <SuccessToast message="Laboratorio creado con éxito" />;
-          },
-          error: () => {
-            return <ErrorToast message="Error al crear el Laboratorio" />;
-          },
-        }
-      );
+      Object.entries(editedValues).forEach(([date, tests]) => {
+        const cleanDate = date.trim();
+
+        Object.entries(tests).forEach(([bloodTestId, value]) => {
+          const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
+
+          // Buscar si el registro ya existe en bloodTestsData
+          const existingData = bloodTestsData.find(
+            (data) =>
+              normalizeDate(String(data.study.date)) ===
+                normalizeDate(cleanDate) &&
+              Number(data.bloodTest.id) === bloodTestIdAsNumber
+          );
+
+          if (existingData) {
+            // Si el valor cambió o estaba vacío, agregar a actualizaciones
+            if (
+              existingData.value === null ||
+              existingData.value === "" ||
+              String(existingData.value).trim() !== String(value).trim()
+            ) {
+              const studyIndex = updates.findIndex(
+                (update) => update.idStudy === existingData.study.id
+              );
+
+              if (studyIndex === -1) {
+                updates.push({
+                  idStudy: existingData.study.id,
+                  blodTest: [
+                    {
+                      id: 0,
+                      value,
+                      idBloodtest: bloodTestIdAsNumber,
+                    },
+                  ],
+                });
+              } else {
+                updates[studyIndex].blodTest.push({
+                  id: 0,
+                  value,
+                  idBloodtest: bloodTestIdAsNumber,
+                });
+              }
+            }
+          } else {
+            // Nueva entrada porque la fecha no existía
+            if (!groupedEntries[cleanDate]) {
+              groupedEntries[cleanDate] = {
+                userId: idUser,
+                note,
+                date: cleanDate,
+                bloodTestDatas: [],
+              };
+            }
+
+            groupedEntries[cleanDate].bloodTestDatas.push({
+              id: 0,
+              idBloodTest: bloodTestIdAsNumber,
+              value,
+            });
+          }
+        });
+      });
+
+      const newEntries = Object.values(groupedEntries);
+
+      console.log("Actualizaciones agrupadas por idStudy:", updates);
+      console.log("Nuevas entradas agrupadas:", newEntries);
+
+      // Procesar actualizaciones
+      if (updates.length > 0) {
+        await Promise.all(
+          updates.map((update) =>
+            toast.promise(
+              updateBlodTestMutation.mutateAsync({
+                idStudy: update.idStudy,
+                bloodTestDataRequests: update.blodTest,
+              }),
+              {
+                loading: <LoadingToast message="Actualizando laboratorio..." />,
+                success: (
+                  <SuccessToast message="Laboratorio actualizado con éxito" />
+                ),
+                error: (
+                  <ErrorToast message="Error al actualizar el laboratorio" />
+                ),
+              }
+            )
+          )
+        );
+      }
+
+      // Procesar nuevas entradas
+      if (newEntries.length > 0) {
+        await Promise.all(
+          newEntries.map((entry) =>
+            toast.promise(addBlodTestDataMutation.mutateAsync(entry), {
+              loading: <LoadingToast message="Creando laboratorio..." />,
+              success: <SuccessToast message="Laboratorio creado con éxito" />,
+              error: <ErrorToast message="Error al crear el laboratorio" />,
+            })
+          )
+        );
+      }
+
+      // Limpiar estado
       setEditedValues({});
       setHasPendingChanges(false);
     } catch (error) {
@@ -136,7 +250,6 @@ export const LabPatientTable = ({
               setDates={setDates}
               dates={dates}
               onSetNote={setNote}
-              onSetDate={setDate}
               onAddNewColumn={handleAddNewColumn}
             />
           </div>

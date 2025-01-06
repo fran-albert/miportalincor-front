@@ -5,7 +5,6 @@ import LabCard from "../Card/card";
 const LaboratoriesPageWrapper = ({
   isLoading,
   error,
-  labsDetails,
   studiesByUserId,
   entity,
   role,
@@ -33,7 +32,6 @@ const LaboratoriesPageWrapper = ({
     <div className="container space-y-2 mt-2">
       <BreadcrumbComponentGenerator role={role} entity={entity} />
       <LabCard
-        labsDetails={labsDetails}
         bloodTests={bloodTests}
         studiesByUserId={studiesByUserId}
         bloodTestsData={bloodTestsData}

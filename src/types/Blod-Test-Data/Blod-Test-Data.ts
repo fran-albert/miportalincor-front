@@ -18,3 +18,9 @@ export interface BloodTestDataRequest {
         idBloodTest: number
     }[]
 }
+
+export interface BloodTestDataUpdateRequest {
+    id: number
+    value: string;
+    idBloodtest: number
+}[]

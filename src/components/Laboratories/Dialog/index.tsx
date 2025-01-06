@@ -15,14 +15,12 @@ import { Label } from "@/components/ui/label";
 const LabDialog = ({
   setDates,
   dates,
-  onSetDate,
   onAddNewColumn,
   onSetNote,
 }: {
   setDates: (dates: string[]) => void;
   dates: string[];
   onAddNewColumn: (newDate: string) => void;
-  onSetDate: (date: string) => void;
   onSetNote: (note: string) => void;
 }) => {
   const [newDate, setNewDate] = useState<string | null>(null);
@@ -30,16 +28,13 @@ const LabDialog = ({
   const [note, setNote] = useState<string>("");
   const handleSave = () => {
     if (newDate) {
-      console.log("Saving new date:", newDate); // Verificar duplicados
       setDates([...dates, newDate]);
       setNewDate(null);
       onSetNote(note);
-      onSetDate(newDate);
       setIsOpen(false);
-      onAddNewColumn(newDate); // Pasar la fecha solo una vez
+      onAddNewColumn(newDate);
     }
   };
-  
 
   return (
     <div>

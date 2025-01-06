@@ -2,10 +2,10 @@ import { StudyType } from "../Study-Type/Study-Type";
 import { UltraSoundImages } from "../Ultra-Sound/Ultra-Sound";
 
 export interface Study {
-  id: number; 
+  id: number;
   locationS3?: string;
   name?: string;
-  date?: Date | string | undefined;
+  date: string;
   studyType?: StudyType;
   note?: string;
   ultrasoundImages?: UltraSoundImages[];

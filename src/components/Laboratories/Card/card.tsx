@@ -1,7 +1,6 @@
 import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { GiHypodermicTest } from "react-icons/gi";
 import { LabPatientTable } from "../Table/table";
-import { Lab } from "@/types/Lab/Lab";
 // import LabChartsGrid from "../Chart/LabsChartGrid";
 import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
@@ -16,7 +15,6 @@ const LabCard = ({
   idUser,
   bloodTests = [],
 }: {
-  labsDetails: Lab[];
   studiesByUserId: Study[];
   bloodTestsData: BloodTestData[];
   bloodTests: BloodTest[];

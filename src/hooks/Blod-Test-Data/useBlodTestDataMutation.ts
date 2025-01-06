@@ -1,6 +1,7 @@
 import { createBlodTestData } from "@/api/Blod-Test-Data/create-blod-test-data.action";
+import { updateBlodTestData } from "@/api/Blod-Test-Data/update-blod-test-data.action";
+import { BloodTestDataUpdateRequest } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 
 export const useBlodTestDataMutations = () => {
     const queryClient = useQueryClient();
@@ -8,7 +9,7 @@ export const useBlodTestDataMutations = () => {
     const addBlodTestDataMutation = useMutation({
         mutationFn: createBlodTestData,
         onSuccess: (blodTest, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['blodTestsData'] });
+            queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
             console.log("blodTest created", blodTest, variables, context);
         },
 
@@ -17,27 +18,22 @@ export const useBlodTestDataMutations = () => {
         },
     });
 
-    // const updateBlodTestMutation = useMutation({
-    //     mutationFn: ({ id, blodTest }: { id: number; blodTest: BloodTest }) => updateBlodTest(id, blodTest),
-    //     onSuccess: (blodTest, variables, context) => {
-    //         queryClient.invalidateQueries({ queryKey: ['blodTests'] });
-    //         console.log("blodTest updated", blodTest, variables, context);
-    //     },
-    //     onError: (error, variables, context) => {
-    //         console.log("Error updating blodTest", error, variables, context);
-    //     },
-    // });
+    const updateBlodTestMutation = useMutation({
+        mutationFn: ({
+            idStudy,
+            bloodTestDataRequests,
+        }: {
+            idStudy: number;
+            bloodTestDataRequests: BloodTestDataUpdateRequest[];
+        }) =>
+            updateBlodTestData(idStudy, bloodTestDataRequests),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
+        },
+        onError: (error) => {
+            console.log("Error updating bloodTest", error);
+        },
+    });
 
-    // const deleteBlodTestMutation = useMutation({
-    //     mutationFn: (id: number) => deleteBlodTest(id),
-    //     onSuccess: (blodTest, variables, context) => {
-    //         queryClient.invalidateQueries({ queryKey: ['blodTests'] })
-    //         console.log("blodTest deleted", blodTest, variables, context);
-    //     },
-    //     onError: (error, variables, context) => {
-    //         console.log("Error deleting blodTest", error, variables, context);
-    //     },
-    // });
-
-    return { addBlodTestDataMutation };
+    return { addBlodTestDataMutation, updateBlodTestMutation };
 };
