@@ -41,7 +41,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
         </h2>
         <p className="text-sm text-gray-900 font-bold">
           {patient?.healthPlans?.[0]?.healthInsurance.name ??
-            "Obra Social No Asignada"}
+            "Obra Social No Asignada"} - {patient?.affiliationNumber ?? 'No tiene número de obra social asignado.'}
         </p>
         <p className="text-sm text-gray-500">
           Ingresado por {registerByText || "Desconocido"}
