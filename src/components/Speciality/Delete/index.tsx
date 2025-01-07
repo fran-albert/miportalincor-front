@@ -13,7 +13,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import { toast } from "sonner";
 import { Speciality } from "@/types/Speciality/Speciality";
 import ActionIcon from "@/components/Icons/action";
-import { useSpecialityMutations } from "@/hooks/Speciality/useHealthInsuranceMutation";
+import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";

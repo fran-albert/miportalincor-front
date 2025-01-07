@@ -61,13 +61,14 @@ export interface Lab {
   tiempoSangria: string;
   tiempoProtrombina: string;
   tiempoTromboplastina: string;
+  otherLaboratoryDetails?: OtherLaboratoryDetails[];
 }
 
-export interface LabRequest {
-  userId: number;
-  note: string;
-  date: string;
-  laboratoryDetail: { [key: string]: string };
+export interface OtherLaboratoryDetails {
+  id?: number;
+  name: string;
+  description: string;
+  value: string;
 }
 
 export const columNames: Lab = {

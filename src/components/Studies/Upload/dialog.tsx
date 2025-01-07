@@ -12,15 +12,14 @@ import { FaUpload } from "react-icons/fa";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
 import moment from "moment-timezone";
-import { Study } from "@/types/Study/Study";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { StudyTypeSelect } from "@/components/Select/Study/select";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import { StudyType } from "@/types/Study-Type/Study-Type";
 interface AddStudyProps {
   idUser: number;
 }
@@ -29,7 +28,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   // @ts-ignore
-  const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
+  const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const { register, handleSubmit, reset, setValue } = useForm();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { uploadStudyMutation } = useStudyMutations();
@@ -66,11 +65,11 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }
-  };
+      };
 
-  const handleStudyChange = (study: Study) => {
-    setSelectedStudy(study);
-    setValue("StudyTypeId", study.id);
+  const handleStudyChange = (studyType: StudyType) => {
+    setSelectedStudy(studyType);
+    setValue("StudyTypeId", studyType.id);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

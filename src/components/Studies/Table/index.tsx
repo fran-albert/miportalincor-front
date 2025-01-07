@@ -33,7 +33,7 @@ const StudiesTable = ({
   idUser: number;
   urls: { [key: number]: { pdfUrl: string; imageUrls: string[] } };
 }) => {
-  const { isSecretary } = useRoles();
+  const { isSecretary, isDoctor } = useRoles();
 
   // @ts-ignore
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
@@ -141,7 +141,16 @@ const StudiesTable = ({
                               url={urls[study.id]?.pdfUrl || "#"}
                               text="Ver PDF"
                             />
-                          ) : null}
+                          ) : (
+                            // Botón de eliminación cuando no hay PDF
+                            isDoctor &&
+                            !study.isOptimistic && (
+                              <DeleteStudyDialog
+                                studies={studiesByUserId}
+                                idStudy={study.id}
+                              />
+                            )
+                          )}
                           {study &&
                             study.studyType?.id === 2 &&
                             urls?.[study.id]?.imageUrls?.length > 0 && (

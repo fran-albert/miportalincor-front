@@ -5,11 +5,12 @@ import LabCard from "../Card/card";
 const LaboratoriesPageWrapper = ({
   isLoading,
   error,
-  labsDetails,
   studiesByUserId,
   entity,
   role,
   idUser,
+  bloodTests,
+  bloodTestsData,
 }: any) => {
   if (error) {
     return (
@@ -31,8 +32,9 @@ const LaboratoriesPageWrapper = ({
     <div className="container space-y-2 mt-2">
       <BreadcrumbComponentGenerator role={role} entity={entity} />
       <LabCard
-        labsDetails={labsDetails}
+        bloodTests={bloodTests}
         studiesByUserId={studiesByUserId}
+        bloodTestsData={bloodTestsData}
         role={role}
         idUser={idUser}
       />

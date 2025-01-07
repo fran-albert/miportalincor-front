@@ -1,6 +1,6 @@
 import { createSpeciality } from "@/api/Speciality/create-speciality.action";
 import { deleteSpeciality } from "@/api/Speciality/delete-speciality.action";
-import { updateSpeciality } from "@/api/Speciality/update-patient.action";
+import { updateSpeciality } from "@/api/Speciality/update-speciality.action";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

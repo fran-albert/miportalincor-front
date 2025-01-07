@@ -1,4 +1,3 @@
-import { getAllStudyType } from "@/api/Study/get-all-study-type.action";
 import { getLastStudies } from "@/api/Study/get-last-studies.action";
 import { getStudiesByUserId } from "@/api/Study/get-studies-by-idUser.action";
 import { getTotalStudies } from "@/api/Study/get-total-studies.action";
@@ -14,7 +13,7 @@ interface Props {
     studyTypeAuth?: boolean;
 }
 
-export const useStudy = ({ auth = true, idUser, fetchTotal = false, fetchStudiesByUserId = false, studyTypeAuth = false, }: Props) => {
+export const useStudy = ({ auth = true, idUser, fetchTotal = false, fetchStudiesByUserId = false, }: Props) => {
 
     const { isLoading: isLoadingStudiesByUserId, isError: isErrorStudiesByUserId, error: errorStudiesByUserId, data: studiesByUserId } = useQuery({
         queryKey: ["studiesByUserId", idUser],
@@ -69,19 +68,11 @@ export const useStudy = ({ auth = true, idUser, fetchTotal = false, fetchStudies
 
 
 
-    const { isLoading: isLoadingStudyType, isError: isErrorStudyType, error: errorStudyType, data: studyType } = useQuery({
-        queryKey: ["studyType"],
-        queryFn: () => getAllStudyType(),
-        staleTime: 1000 * 60,
-        enabled: studyTypeAuth
-    });
-
     return {
         isLoadingTotalStudies, isErrorTotalStudies, errorTotalStudies, totalStudies,
         isLoadingTotalLabs, isErrorTotalLabs, errorTotalLabs, totalLabs,
         isLoadingTotalEcography, isErrorTotalEcography, errorTotalEcography, totalEcography,
         isLoadingStudiesByUserId, isErrorStudiesByUserId, errorStudiesByUserId, studiesByUserId,
-        isLoadingStudyType, isErrorStudyType, errorStudyType, studyType,
         isLoadingLastLabs, isErrorLastLabs, errorLastLabs, lastLabs,
         isLoadingLastStudies, isErrorLastStudies, errorLastStudies, lastStudies,
         isLoadingLastEcography, isErrorLastEcography, errorLastEcography, lastEcography,

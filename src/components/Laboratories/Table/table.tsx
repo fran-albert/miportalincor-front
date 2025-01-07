@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableHeader,
@@ -9,158 +8,202 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  columNames,
-  Lab,
-  LabRequest,
-  referenceValues,
-  units,
-} from "@/types/Lab/Lab";
 import { Search } from "@/components/ui/search";
-import { formatDate } from "@/common/helpers/helpers";
+import { formatDate, normalizeDate } from "@/common/helpers/helpers";
 import LabDialog from "../Dialog";
 import { Button } from "@/components/ui/button";
-import { useLabMutations } from "@/hooks/Labs/useLabMutation";
-import { Study } from "@/types/Study/Study";
 import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
-
-interface LabData {
-  testName: string;
-  [date: string]: string | undefined;
-}
-
-const analysisNames = Object.keys(referenceValues);
-
-const transformLabData = (
-  labsDetails: Lab[],
-  studiesByUser: Study[]
-): LabData[] => {
-  const groupedData: { [testName: string]: LabData } = {};
-
-  labsDetails.forEach((lab) => {
-    const study = studiesByUser.find((study) => study.id === lab.idStudy);
-
-    if (study && study.date) {
-      const formattedDate = formatDate(String(study.date));
-
-      Object.entries(lab).forEach(([testName, value]) => {
-        if (!groupedData[testName]) {
-          groupedData[testName] = { testName };
-        }
-        groupedData[testName][formattedDate] = value?.toString();
-      });
-    }
-  });
-
-  return Object.values(groupedData);
-};
+import {
+  BloodTestData,
+  BloodTestDataRequest,
+  BloodTestDataUpdateRequest,
+} from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { BloodTest } from "@/types/Blod-Test/Blod-Test";
+import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
 
 export const LabPatientTable = ({
-  labsDetails,
-  studiesByUser,
+  bloodTestsData = [],
+  bloodTests = [],
   idUser,
 }: {
-  labsDetails: Lab[];
-  studiesByUser: Study[];
+  bloodTests: BloodTest[];
+  bloodTestsData: BloodTestData[];
   idUser: number;
 }) => {
-  const [isLabAdded, setIsLabAdded] = useState(false);
-  const { addLabMutation } = useLabMutations();
+  const { addBlodTestDataMutation, updateBlodTestMutation } =
+    useBlodTestDataMutations();
   const [searchTerm, setSearchTerm] = useState("");
-  const [transformedLabs, setTransformedLabs] = useState<LabData[]>([]);
   const [dates, setDates] = useState<string[]>([]);
-  const [editedValues, setEditedValues] = useState<{ [key: string]: string }>(
-    {}
-  );
+  const [editedValues, setEditedValues] = useState<{
+    [key: string]: { [bloodTestId: string]: string };
+  }>({});
   const [note, setNote] = useState<string>("");
-  const [date, setDate] = useState<string>("");
-  const [newColumnAdded, setNewColumnAdded] = useState(false);
-  const handleInputChange = (testName: string, date: string, value: string) => {
-    setEditedValues((prevValues) => ({
-      ...prevValues,
-      [`${testName}-${date}`]: value,
-    }));
-  };
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   useEffect(() => {
-    if (
-      labsDetails &&
-      labsDetails.length > 0 &&
-      studiesByUser &&
-      studiesByUser.length > 0
-    ) {
-      const transformed = transformLabData(labsDetails, studiesByUser);
-      setTransformedLabs(transformed);
+    const uniqueDates = Array.from(
+      new Set(
+        bloodTestsData.map((data) => formatDate(String(data.study.date ?? "")))
+      )
+    );
+    setDates(uniqueDates);
+  }, [bloodTestsData]);
 
-      const datesFromStudies = studiesByUser
-        .map((study) => formatDate(String(study.date)))
-        .filter((date, index, self) => self.indexOf(date) === index);
+  const filteredBloodTests = bloodTests.filter((test) =>
+    test.originalName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      setDates(datesFromStudies);
-    }
-  }, [labsDetails, studiesByUser]);
-
-  const filteredAnalysisNames = analysisNames.filter((name) => {
-    const columnName = columNames[name as keyof Lab];
-    return typeof columnName === "string"
-      ? columnName.toLowerCase().includes(searchTerm.toLowerCase())
-      : false;
-  });
-
-  // if (!labsDetails || labsDetails.length === 0) {
-  //   return (
-  //     <div className="text-gray-900 text-sm">
-  //       Los laboratorios del paciente no se pudieron insertar en la tabla.
-  //     </div>
-  //   );
-  // }
-
-  const handleAddNewColumn = () => {
-    setNewColumnAdded(true);
-  };
-  const handleConfirm = async () => {
-    // Aquí estructuramos el objeto que mencionaste:
-    const laboratoryDetail: { [key: string]: string } = {};
-
-    // Rellenamos el objeto con los valores editados
-    filteredAnalysisNames.forEach((name) => {
-      dates.forEach((date) => {
-        const value = editedValues[`${name}-${date}`];
-        if (value) {
-          laboratoryDetail[name] = value;
-        }
-      });
+  const handleInputChange = (
+    date: string,
+    bloodTestId: string,
+    value: string
+  ) => {
+    setEditedValues((prev) => {
+      const updated = {
+        ...prev,
+        [date]: {
+          ...(prev[date] || {}),
+          [bloodTestId]: value,
+        },
+      };
+      setHasPendingChanges(true);
+      return updated;
     });
+  };
+  const handleAddNewColumn = (newDate: string) => {
+    setDates((prevDates) => {
+      const updatedDates = !prevDates.includes(newDate)
+        ? [...prevDates, newDate]
+        : prevDates;
+      return updatedDates;
+    });
+  };
+ 
 
-    const payload: LabRequest = {
-      userId: idUser,
-      note: note,
-      date: date,
-      laboratoryDetail: laboratoryDetail,
-    };
-
+  const handleConfirmChanges = async () => {
     try {
-      toast.promise(addLabMutation.mutateAsync(payload), {
-        loading: <LoadingToast message="Creando laboratorio..." />,
-        success: () => {
-          setIsLabAdded(true);
-          return <SuccessToast message="Laboratorio creado con éxito" />;
-        },
-        error: () => {
-          return <ErrorToast message="Error al crear el Laboratorio" />;
-        },
+      const groupedEntries: { [date: string]: BloodTestDataRequest } = {};
+      const updates: {
+        idStudy: number;
+        blodTest: BloodTestDataUpdateRequest[];
+      }[] = [];
+
+      Object.entries(editedValues).forEach(([date, tests]) => {
+        const cleanDate = date.trim();
+
+        Object.entries(tests).forEach(([bloodTestId, value]) => {
+          const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
+
+          // Buscar si el registro ya existe en bloodTestsData
+          const existingData = bloodTestsData.find(
+            (data) =>
+              normalizeDate(String(data.study.date)) ===
+                normalizeDate(cleanDate) &&
+              Number(data.bloodTest.id) === bloodTestIdAsNumber
+          );
+
+          if (existingData) {
+            // Si el valor cambió o estaba vacío, agregar a actualizaciones
+            if (
+              existingData.value === null ||
+              existingData.value === "" ||
+              String(existingData.value).trim() !== String(value).trim()
+            ) {
+              const studyIndex = updates.findIndex(
+                (update) => update.idStudy === existingData.study.id
+              );
+
+              if (studyIndex === -1) {
+                updates.push({
+                  idStudy: existingData.study.id,
+                  blodTest: [
+                    {
+                      id: 0,
+                      value,
+                      idBloodtest: bloodTestIdAsNumber,
+                    },
+                  ],
+                });
+              } else {
+                updates[studyIndex].blodTest.push({
+                  id: 0,
+                  value,
+                  idBloodtest: bloodTestIdAsNumber,
+                });
+              }
+            }
+          } else {
+            // Nueva entrada porque la fecha no existía
+            if (!groupedEntries[cleanDate]) {
+              groupedEntries[cleanDate] = {
+                userId: idUser,
+                note,
+                date: cleanDate,
+                bloodTestDatas: [],
+              };
+            }
+
+            groupedEntries[cleanDate].bloodTestDatas.push({
+              id: 0,
+              idBloodTest: bloodTestIdAsNumber,
+              value,
+            });
+          }
+        });
       });
+
+      const newEntries = Object.values(groupedEntries);
+
+      // Procesar actualizaciones
+      if (updates.length > 0) {
+        await Promise.all(
+          updates.map((update) =>
+            toast.promise(
+              updateBlodTestMutation.mutateAsync({
+                idStudy: update.idStudy,
+                bloodTestDataRequests: update.blodTest,
+              }),
+              {
+                loading: <LoadingToast message="Actualizando laboratorio..." />,
+                success: (
+                  <SuccessToast message="Laboratorio actualizado con éxito" />
+                ),
+                error: (
+                  <ErrorToast message="Error al actualizar el laboratorio" />
+                ),
+              }
+            )
+          )
+        );
+      }
+
+      // Procesar nuevas entradas
+      if (newEntries.length > 0) {
+        await Promise.all(
+          newEntries.map((entry) =>
+            toast.promise(addBlodTestDataMutation.mutateAsync(entry), {
+              loading: <LoadingToast message="Creando laboratorio..." />,
+              success: <SuccessToast message="Laboratorio creado con éxito" />,
+              error: <ErrorToast message="Error al crear el laboratorio" />,
+            })
+          )
+        );
+      }
+
+      // Limpiar estado
+      setEditedValues({});
+      setHasPendingChanges(false);
     } catch (error) {
       console.error("Error al guardar los datos:", error);
     }
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       <div className="relative overflow-x-auto">
-        <div className="flex justify-end items-center mb-4">
+        <div className="flex justify-between items-center mb-4">
           <Search
             placeholder="Buscar análisis..."
             className="w-full px-4 py-2 border rounded-md"
@@ -168,13 +211,14 @@ export const LabPatientTable = ({
             color="#187B80"
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <LabDialog
-            setDates={setDates}
-            dates={dates}
-            onSetNote={setNote}
-            onSetDate={setDate}
-            onAddNewColumn={handleAddNewColumn}
-          />
+          <div className="flex gap-4">
+            <LabDialog
+              setDates={setDates}
+              dates={dates}
+              onSetNote={setNote}
+              onAddNewColumn={handleAddNewColumn}
+            />
+          </div>
         </div>
 
         <Table className="table-fixed w-full">
@@ -184,50 +228,70 @@ export const LabPatientTable = ({
               <TableHead className="w-3/12">Valor de Referencia</TableHead>
               <TableHead className="w-2/12">Unidad</TableHead>
               {dates.map((date) => (
-                <TableHead key={date} className="w-[100px]">
+                <TableHead key={date} className="w-[100px] text-center">
                   {date}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
         </Table>
-        <ScrollArea className=" h-96">
+
+        <ScrollArea className="h-96">
           <Table className="table-fixed w-full">
             <TableBody>
-              {filteredAnalysisNames.map((name) => (
-                <TableRow key={name}>
-                  <TableCell className="font-medium w-2/12">
-                    {columNames[name as keyof Lab]}
-                  </TableCell>
-                  <TableCell className="whitespace-pre-wrap text-ellipsis w-3/12">
-                    {referenceValues[name as keyof typeof referenceValues]}
-                  </TableCell>
-                  <TableCell className="w-2/12">
-                    {units[name as keyof typeof units]}
-                  </TableCell>
-                  {dates.map((date) => (
-                    <TableCell key={date} className="w-[100px]">
-                      <Input
-                        type="text"
-                        value={editedValues[`${name}-${date}`]}
-                        defaultValue={
-                          transformedLabs.find(
-                            (lab) => lab.testName === name
-                          )?.[date] || ""
-                        }
-                        onChange={(e) =>
-                          handleInputChange(name, date, e.target.value)
-                        }
-                      />
+              {filteredBloodTests.map((bloodTest) => {
+                return (
+                  <TableRow key={bloodTest.id}>
+                    <TableCell className="font-medium w-2/12">
+                      {bloodTest.originalName}
                     </TableCell>
-                  ))}
-                </TableRow>
-              ))}
+                    <TableCell className="whitespace-pre-wrap text-ellipsis w-3/12">
+                      {bloodTest.referenceValue || "N/A"}
+                    </TableCell>
+                    <TableCell className="w-2/12">
+                      {bloodTest.unit?.shortName || "N/A"}
+                    </TableCell>
+                    {dates.map((date) => {
+                      const relatedData = bloodTestsData.find(
+                        (data) =>
+                          data.bloodTest.id === bloodTest.id &&
+                          formatDate(String(data.study.date ?? "")) === date
+                      );
+                      const inputValue =
+                        date && bloodTest.id
+                          ? editedValues[date]?.[bloodTest.id] ??
+                            relatedData?.value ??
+                            ""
+                          : "";
+
+                      return (
+                        <TableCell key={date} className="w-[100px] text-center">
+                          <input
+                            type="text"
+                            value={inputValue}
+                            className="w-1/2 border rounded px-2 text-center"
+                            onChange={(e) =>
+                              date &&
+                              bloodTest.id &&
+                              handleInputChange(
+                                date,
+                                String(bloodTest.id),
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </ScrollArea>
+
         <div className="flex justify-end mt-4">
-          {newColumnAdded && !isLabAdded && (
+          {/* {newColumnAdded && !isLabAdded && (
             <Button
               className="bg-greenPrimary text-white"
               onClick={handleConfirm}
@@ -235,8 +299,19 @@ export const LabPatientTable = ({
             >
               Confirmar
             </Button>
-          )}
+          )} */}
         </div>
+
+        {hasPendingChanges && (
+          <div className="flex justify-end mt-4">
+            <Button
+              className="bg-greenPrimary text-white"
+              onClick={handleConfirmChanges}
+            >
+              Guardar Cambios
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

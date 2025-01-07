@@ -15,14 +15,12 @@ import { Label } from "@/components/ui/label";
 const LabDialog = ({
   setDates,
   dates,
-  onSetDate,
   onAddNewColumn,
   onSetNote,
 }: {
   setDates: (dates: string[]) => void;
   dates: string[];
-  onAddNewColumn: () => void;
-  onSetDate: (date: string) => void;
+  onAddNewColumn: (newDate: string) => void;
   onSetNote: (note: string) => void;
 }) => {
   const [newDate, setNewDate] = useState<string | null>(null);
@@ -33,9 +31,8 @@ const LabDialog = ({
       setDates([...dates, newDate]);
       setNewDate(null);
       onSetNote(note);
-      onSetDate(newDate);
       setIsOpen(false);
-      onAddNewColumn();
+      onAddNewColumn(newDate);
     }
   };
 
