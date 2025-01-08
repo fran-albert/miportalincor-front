@@ -8,13 +8,18 @@ export const useBlodTestDataMutations = () => {
 
     const addBlodTestDataMutation = useMutation({
         mutationFn: createBlodTestData,
-        onSuccess: (blodTest, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
-            console.log("blodTest created", blodTest, variables, context);
+        onSuccess: async (response) => {
+            // Invalidar la query y esperar a que se actualice
+            await queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
+            
+            // Actualizar los datos en caché inmediatamente
+            queryClient.setQueryData(['bloodTestsData'], (oldData: any) => {
+                if (!oldData) return oldData;
+                return [...oldData, response];
+            });
         },
-
-        onError: (error, variables, context) => {
-            console.log("Error creating blodTest", error, variables, context);
+        onError: (error) => {
+            console.error("Error creating blodTest", error);
         },
     });
 
@@ -25,15 +30,16 @@ export const useBlodTestDataMutations = () => {
         }: {
             idStudy: number;
             bloodTestDataRequests: BloodTestDataUpdateRequest[];
-        }) =>
-            updateBlodTestData(idStudy, bloodTestDataRequests),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
+        }) => updateBlodTestData(idStudy, bloodTestDataRequests),
+        onSuccess: async () => {
+            // Invalidar y refetch inmediato
+            await queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
         },
         onError: (error) => {
-            console.log("Error updating bloodTest", error);
+            console.error("Error updating bloodTest", error);
         },
     });
 
     return { addBlodTestDataMutation, updateBlodTestMutation };
 };
+

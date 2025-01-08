@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import useUserRole from "@/hooks/useRoles";
 const DoctorCardComponent = ({ doctor }: { doctor: Doctor | null }) => {
-  const { isSecretary } = useUserRole();
+  const { isSecretary , isAdmin} = useUserRole();
   const registerByText =
     doctor?.registeredByName +
     " " +
@@ -118,7 +118,7 @@ const DoctorCardComponent = ({ doctor }: { doctor: Doctor | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        {isSecretary && (
+        {isSecretary || isAdmin && (
           <ResetDefaultPasswordDialog idUser={Number(doctor?.userId)} />
         )}
       </CardFooter>

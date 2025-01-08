@@ -23,7 +23,7 @@ export function HeaderComponent() {
   const handleLinkClick = (link: string) => {
     setActiveLink(link);
   };
-  const { isDoctor, isSecretary, session } = useUserRole();
+  const { isDoctor, isSecretary, session, isAdmin } = useUserRole();
   return (
     <header className="flex h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
       <Link to="#" className="mr-6 flex items-center">
@@ -76,7 +76,7 @@ export function HeaderComponent() {
                   Mis Estudios
                 </Link>
               </NavigationMenuLink>
-              {(isDoctor || isSecretary) && (
+              {(isDoctor || isSecretary || isAdmin) && (
                 <>
                   <NavigationMenuItem>
                     <NavigationMenuTrigger className="bg-transparent text-white">
@@ -126,7 +126,7 @@ export function HeaderComponent() {
                         </NavigationMenuLink>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/estudios"
+                            to="/tipos-de-estudios"
                             className="group grid h-auto w-full items-center justify-start text-black gap-1 rounded-md p-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
                           >
                             Tipos de Estudios
@@ -190,7 +190,7 @@ export function HeaderComponent() {
                 >
                   Mis Estudios
                 </Link>
-                {(isDoctor || isSecretary) && (
+                {(isDoctor || isSecretary || isAdmin) && (
                   <Collapsible className="grid gap-4">
                     <CollapsibleTrigger className="flex w-full items-center text-lg font-semibold [&[data-state=open]>svg]:rotate-90">
                       Gestionar

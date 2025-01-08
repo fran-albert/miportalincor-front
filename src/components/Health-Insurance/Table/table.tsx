@@ -15,7 +15,7 @@ export const HealthInsuranceTable = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingHealthInsurance, setEditingHealthInsurance] =
     useState<HealthInsurance | null>(null);
-  const { isSecretary, isDoctor } = useRoles();
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
   const [isAddHealthInsuranceDialogOpen, setIsAddHealthInsuranceDialogOpen] =
     useState(false);
   const openAddHealthInsuranceDialog = () =>
@@ -57,7 +57,7 @@ export const HealthInsuranceTable = ({
           addLinkPath=""
           addLinkText="Agregar Obra Social"
           customFilter={customFilterFunction}
-          canAddUser={isSecretary}
+          canAddUser={isSecretary || isAdmin}
         />
         <AddHealthInsuranceDialog
           isOpen={isAddHealthInsuranceDialogOpen}

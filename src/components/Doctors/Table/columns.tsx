@@ -8,7 +8,7 @@ import DeleteDoctorDialog from "../Delete/DeleteDoctorDialog";
 
 export const getColumns = (
   prefetchDoctors: (id: number) => void,
-  roles: { isSecretary: boolean; isDoctor: boolean;  }
+  roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
 ): ColumnDef<Doctor>[] => {
   const columns: ColumnDef<Doctor>[] = [
     {
@@ -112,7 +112,7 @@ export const getColumns = (
       header: " ",
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          {roles.isSecretary && (
+          {roles.isSecretary || roles.isAdmin && (
             <>
               <ViewButton
                 slug={String(row.original.slug)}

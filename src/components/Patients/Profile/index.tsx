@@ -56,7 +56,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
     patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
   );
   const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
-  const { isSecretary} = useUserRole()
+  const { isSecretary, isAdmin } = useUserRole();
   const handleStateChange = (state: State) => {
     setSelectedState(state);
   };
@@ -246,7 +246,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                   Perfil Completo
                 </p>
               </CardTitle>
-              {isSecretary &&
+              {isSecretary || isAdmin &&
                 (!isEditing ? (
                   <Button
                     onClick={() => setIsEditing(true)}

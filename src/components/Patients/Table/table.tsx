@@ -14,11 +14,12 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
   isLoading,
   prefetchPatients,
 }) => {
-  const { isSecretary, isDoctor } = useRoles();
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   const patientColumns = getColumns(prefetchPatients, {
     isSecretary,
     isDoctor,
+    isAdmin,
   });
   const customFilterFunction = (patient: Patient, query: string) =>
     patient.firstName.toLowerCase().includes(query.toLowerCase()) ||
@@ -46,7 +47,7 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
           customFilter={customFilterFunction}
           addLinkText="Agregar Paciente"
           isLoading={isLoading}
-          canAddUser={isSecretary}
+          canAddUser={isSecretary || isAdmin}
         />
       </div>
     </div>

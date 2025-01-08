@@ -4,9 +4,9 @@ import { StudyTypeTable } from "../Table/table";
 import useUserRole from "@/hooks/useRoles";
 
 const StudyTypeComponent = () => {
-  const { isDoctor, isSecretary } = useUserRole();
+  const { isDoctor, isSecretary, isAdmin } = useUserRole();
   const { StudyType, isLoadingStudyType, errorStudyType } = useStudyType({
-    studyTypeAuth: isDoctor || isSecretary,
+    studyTypeAuth: isDoctor || isSecretary || isAdmin,
   });
 
   if (isLoadingStudyType) {

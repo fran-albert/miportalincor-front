@@ -19,10 +19,11 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
     doctor.firstName.toLowerCase().includes(query.toLowerCase()) ||
     doctor.lastName.toLowerCase().includes(query.toLowerCase()) ||
     doctor.dni.toLowerCase().includes(query.toLowerCase());
-  const { isSecretary, isDoctor } = useRoles();
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   const doctorColumns = getColumns(prefetchDoctors, {
     isSecretary,
+    isAdmin,
     isDoctor,
   });
   const breadcrumbItems = [
