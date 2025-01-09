@@ -22,7 +22,7 @@ function LoginPage() {
           content="Inicia sesión en el Portal de Incor Centro Médico."
         />
       </Helmet>
-      <LoginComponent />;
+      <LoginComponent />
     </>
   );
 }
