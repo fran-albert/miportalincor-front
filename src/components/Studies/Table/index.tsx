@@ -245,7 +245,7 @@ const StudiesTable = ({
           </Pagination>
         </>
       )}
-      {isSecretary || isAdmin && (
+      {(isSecretary || isAdmin) && (
         <div className="text-center mt-4">
           <StudyDialog idUser={idUser} />
         </div>
