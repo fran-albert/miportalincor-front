@@ -5,12 +5,14 @@ import BreadcrumbComponent from "@/components/Breadcrumb";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import AddBlodTestDialog from "../Add/button";
 import EditBlodTestDialog from "../Edit";
+import useUserRole from "@/hooks/useRoles";
 
 export const BlodTestTable = ({ blodTests }: { blodTests: BloodTest[] }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBlodTest, setEditingBlodTest] = useState<BloodTest | null>(
     null
   );
+  const { isAdmin } = useUserRole();
   const [isAddBlodTestDialogOpen, setIsAddBlodTestDialogOpen] = useState(false);
   const openAddBlodTestDialog = () => setIsAddBlodTestDialogOpen(true);
 
@@ -19,7 +21,9 @@ export const BlodTestTable = ({ blodTests }: { blodTests: BloodTest[] }) => {
     setIsEditDialogOpen(true);
   };
 
-  const blodTestColumns = getColumns(handleEditBlodTest);
+  const blodTestColumns = getColumns(handleEditBlodTest, {
+    isAdmin,
+  });
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -45,7 +49,7 @@ export const BlodTestTable = ({ blodTests }: { blodTests: BloodTest[] }) => {
           customFilter={customFilterFunction}
           addLinkPath=""
           addLinkText="Agregar Análisis Bioquímico"
-          canAddUser={true}
+          canAddUser={isAdmin}
         />
         <AddBlodTestDialog
           isOpen={isAddBlodTestDialogOpen}

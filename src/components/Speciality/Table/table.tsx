@@ -16,7 +16,7 @@ export const SpecialityTable = ({
   const [editingSpeciality, setEditingSpeciality] = useState<Speciality | null>(
     null
   );
-  const { isSecretary, isDoctor } = useRoles();
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
   const [isAddSpecialityDialogOpen, setIsAddSpecialityDialogOpen] =
     useState(false);
   const openAddSpecialityDialog = () => setIsAddSpecialityDialogOpen(true);
@@ -52,7 +52,7 @@ export const SpecialityTable = ({
           customFilter={customFilterFunction}
           addLinkPath=""
           addLinkText="Agregar Especialidad"
-          canAddUser={isSecretary}
+          canAddUser={isSecretary || isAdmin}
         />
         <AddSpecialityDialog
           isOpen={isAddSpecialityDialogOpen}

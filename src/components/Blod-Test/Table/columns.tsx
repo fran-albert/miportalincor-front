@@ -4,7 +4,8 @@ import { EditButtonIcon } from "@/components/Button/Edit/button";
 import DeleteBlodTestDialog from "../Delete";
 
 export const getColumns = (
-  onEditBlodTest: (blodTest: BloodTest) => void
+  onEditBlodTest: (blodTest: BloodTest) => void,
+  roles: { isAdmin: boolean }
 ): ColumnDef<BloodTest>[] => {
   const columns: ColumnDef<BloodTest>[] = [
     {
@@ -28,16 +29,23 @@ export const getColumns = (
     {
       accessorKey: "unit",
       header: "Unidad",
-      cell: ({ row }) => <div> {row.original.unit?.name} - {row.original.unit?.shortName}</div>,
+      cell: ({ row }) => (
+        <div>
+          {" "}
+          {row.original.unit?.name} - {row.original.unit?.shortName}
+        </div>
+      ),
     },
     {
       header: " ",
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          <>
-            <EditButtonIcon onClick={() => onEditBlodTest(row.original)} />
-            <DeleteBlodTestDialog blodTest={row.original} />
-          </>
+          {roles.isAdmin && (
+            <>
+              <EditButtonIcon onClick={() => onEditBlodTest(row.original)} />
+              <DeleteBlodTestDialog blodTest={row.original} />
+            </>
+          )}
         </div>
       ),
     },

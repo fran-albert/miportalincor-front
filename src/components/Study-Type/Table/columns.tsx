@@ -4,7 +4,7 @@ import { StudyType } from "@/types/Study-Type/Study-Type";
 import DeleteStudyTypeDialog from "../Delete";
 
 export const getColumns = (
-  isDoctor: boolean,
+  isAdmin: boolean,
   onEditStudyType: (studyType: StudyType) => void
 ): ColumnDef<StudyType>[] => {
   const columns: ColumnDef<StudyType>[] = [
@@ -25,7 +25,7 @@ export const getColumns = (
       header: " ",
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          {!isDoctor && (
+          {isAdmin && (
             <>
               <EditButtonIcon onClick={() => onEditStudyType(row.original)} />
               <DeleteStudyTypeDialog studyType={row.original} />

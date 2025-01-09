@@ -1,10 +1,13 @@
 import LoadingAnimation from "@/components/Loading/loading";
 import { BlodTestTable } from "../Table/table";
 import { useBlodTest } from "@/hooks/Blod-Test/useBlodTest";
+import useUserRole from "@/hooks/useRoles";
 
 function BlodTestComponent() {
-  const { blodTests, isLoading, error } = useBlodTest({});
-
+  const { isDoctor, isSecretary, isAdmin } = useUserRole();
+  const { blodTests, isLoading, error } = useBlodTest({
+    auth: isDoctor || isSecretary || isAdmin,
+  });
   if (isLoading) {
     return <LoadingAnimation />;
   }

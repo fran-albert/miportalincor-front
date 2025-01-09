@@ -15,14 +15,21 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   isLoading,
   prefetchDoctors,
 }) => {
-  const customFilterFunction = (doctor: Doctor, query: string) =>
-    doctor.firstName.toLowerCase().includes(query.toLowerCase()) ||
-    doctor.lastName.toLowerCase().includes(query.toLowerCase()) ||
-    doctor.dni.toLowerCase().includes(query.toLowerCase());
-  const { isSecretary, isDoctor } = useRoles();
+  const customFilterFunction = (doctor: Doctor, query: string) => {
+    const fullName = `${doctor.firstName.toLowerCase()} ${doctor.lastName.toLowerCase()}`;
+    const reversedFullName = `${doctor.lastName.toLowerCase()} ${doctor.firstName.toLowerCase()}`; 
+    return (
+      fullName.includes(query.toLowerCase()) ||
+      reversedFullName.includes(query.toLowerCase()) || 
+      doctor.dni.toLowerCase().includes(query.toLowerCase()) 
+    );
+  };
+  
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   const doctorColumns = getColumns(prefetchDoctors, {
     isSecretary,
+    isAdmin,
     isDoctor,
   });
   const breadcrumbItems = [

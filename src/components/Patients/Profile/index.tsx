@@ -33,6 +33,7 @@ import { Edit2, Save, X } from "lucide-react";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import LoadingToast from "@/components/Toast/Loading";
+import useUserRole from "@/hooks/useRoles";
 type FormValues = z.infer<typeof PatientSchema>;
 
 function PatientProfileComponent({ patient }: { patient: Patient }) {
@@ -55,7 +56,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
     patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
   );
   const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
-
+  const { isSecretary, isAdmin } = useUserRole();
   const handleStateChange = (state: State) => {
     setSelectedState(state);
   };
@@ -245,29 +246,34 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                   Perfil Completo
                 </p>
               </CardTitle>
-              {!isEditing ? (
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  type="button"
-                  className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
-                >
-                  <Edit2 className="mr-2 h-4 w-4" /> Editar
-                </Button>
-              ) : (
-                <div className="flex space-x-2">
+              {isSecretary || isAdmin &&
+                (!isEditing ? (
                   <Button
+                    onClick={() => setIsEditing(true)}
                     type="button"
-                    onClick={handleSave}
                     className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                   >
-                    <Save className="mr-2 h-4 w-4" /> Guardar
+                    <Edit2 className="mr-2 h-4 w-4" /> Editar
                   </Button>
-                  <Button onClick={() => setIsEditing(false)} variant="outline">
-                    <X className="mr-2 h-4 w-4" /> Cancelar
-                  </Button>
-                </div>
-              )}
+                ) : (
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      onClick={handleSave}
+                      className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
+                    >
+                      <Save className="mr-2 h-4 w-4" /> Guardar
+                    </Button>
+                    <Button
+                      onClick={() => setIsEditing(false)}
+                      variant="outline"
+                    >
+                      <X className="mr-2 h-4 w-4" /> Cancelar
+                    </Button>
+                  </div>
+                ))}
             </CardHeader>
+
             <CardContent className="grid gap-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

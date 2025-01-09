@@ -53,7 +53,7 @@ export default function HomeComponent({ name }: { name: string }) {
       description:
         "Ingrese al módulo de tipos de estudios para ver la lista de tipos de estudios.",
       icon: <CiMedicalClipboard className="h-8 w-8 text-greenPrimary" />,
-      href: "/estudios",
+      href: "/tipos-de-estudios",
     },
   ];
 

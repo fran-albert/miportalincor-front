@@ -84,77 +84,70 @@ export const LabPatientTable = ({
 
   const handleConfirmChanges = async () => {
     try {
-      const groupedEntries: { [date: string]: BloodTestDataRequest } = {};
       const updates: {
         idStudy: number;
         blodTest: BloodTestDataUpdateRequest[];
       }[] = [];
+      const newEntries: BloodTestDataRequest[] = [];
 
       Object.entries(editedValues).forEach(([date, tests]) => {
         const cleanDate = date.trim();
+        const existingStudyForDate = bloodTestsData.find(
+          (data) => normalizeDate(String(data.study.date)) === normalizeDate(cleanDate)
+        )?.study;
 
-        Object.entries(tests).forEach(([bloodTestId, value]) => {
-          const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
+        // Si existe un estudio para esta fecha, será una actualización
+        if (existingStudyForDate) {
+          const updateGroup = {
+            idStudy: existingStudyForDate.id,
+            blodTest: [] as BloodTestDataUpdateRequest[]
+          };
 
-          // Buscar si el registro ya existe en bloodTestsData
-          const existingData = bloodTestsData.find(
-            (data) =>
-              normalizeDate(String(data.study.date)) ===
-                normalizeDate(cleanDate) &&
-              Number(data.bloodTest.id) === bloodTestIdAsNumber
-          );
+          Object.entries(tests).forEach(([bloodTestId, value]) => {
+            const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
+            const existingData = bloodTestsData.find(
+              (data) => 
+                normalizeDate(String(data.study.date)) === normalizeDate(cleanDate) &&
+                data.bloodTest.id === bloodTestIdAsNumber
+            );
 
-          if (existingData) {
-            // Si el valor cambió o estaba vacío, agregar a actualizaciones
-            if (
-              existingData.value === null ||
-              existingData.value === "" ||
-              String(existingData.value).trim() !== String(value).trim()
-            ) {
-              const studyIndex = updates.findIndex(
-                (update) => update.idStudy === existingData.study.id
-              );
-
-              if (studyIndex === -1) {
-                updates.push({
-                  idStudy: existingData.study.id,
-                  blodTest: [
-                    {
-                      id: 0,
-                      value,
-                      idBloodtest: bloodTestIdAsNumber,
-                    },
-                  ],
-                });
-              } else {
-                updates[studyIndex].blodTest.push({
-                  id: 0,
+            if (existingData?.id) {
+              // Actualizar valor existente
+              if (String(existingData.value).trim() !== String(value).trim()) {
+                updateGroup.blodTest.push({
+                  id: existingData.id,
                   value,
-                  idBloodtest: bloodTestIdAsNumber,
+                  idBloodtest: bloodTestIdAsNumber
                 });
               }
+            } else {
+              // Agregar nuevo valor a estudio existente
+              updateGroup.blodTest.push({
+                id: 0,
+                value,
+                idBloodtest: bloodTestIdAsNumber
+              });
             }
-          } else {
-            // Nueva entrada porque la fecha no existía
-            if (!groupedEntries[cleanDate]) {
-              groupedEntries[cleanDate] = {
-                userId: idUser,
-                note,
-                date: cleanDate,
-                bloodTestDatas: [],
-              };
-            }
+          });
 
-            groupedEntries[cleanDate].bloodTestDatas.push({
-              id: 0,
-              idBloodTest: bloodTestIdAsNumber,
-              value,
-            });
+          if (updateGroup.blodTest.length > 0) {
+            updates.push(updateGroup);
           }
-        });
+        } else {
+          // Crear nuevo estudio con sus valores
+          const newEntry: BloodTestDataRequest = {
+            userId: idUser,
+            note,
+            date: cleanDate,
+            bloodTestDatas: Object.entries(tests).map(([bloodTestId, value]) => ({
+              id: 0,
+              idBloodTest: parseInt(bloodTestId, 10),
+              value
+            }))
+          };
+          newEntries.push(newEntry);
+        }
       });
-
-      const newEntries = Object.values(groupedEntries);
 
       // Procesar actualizaciones
       if (updates.length > 0) {
@@ -167,12 +160,8 @@ export const LabPatientTable = ({
               }),
               {
                 loading: <LoadingToast message="Actualizando laboratorio..." />,
-                success: (
-                  <SuccessToast message="Laboratorio actualizado con éxito" />
-                ),
-                error: (
-                  <ErrorToast message="Error al actualizar el laboratorio" />
-                ),
+                success: <SuccessToast message="Laboratorio actualizado con éxito" />,
+                error: <ErrorToast message="Error al actualizar el laboratorio" />
               }
             )
           )
@@ -183,16 +172,18 @@ export const LabPatientTable = ({
       if (newEntries.length > 0) {
         await Promise.all(
           newEntries.map((entry) =>
-            toast.promise(addBlodTestDataMutation.mutateAsync(entry), {
-              loading: <LoadingToast message="Creando laboratorio..." />,
-              success: <SuccessToast message="Laboratorio creado con éxito" />,
-              error: <ErrorToast message="Error al crear el laboratorio" />,
-            })
+            toast.promise(
+              addBlodTestDataMutation.mutateAsync(entry),
+              {
+                loading: <LoadingToast message="Creando laboratorio..." />,
+                success: <SuccessToast message="Laboratorio creado con éxito" />,
+                error: <ErrorToast message="Error al crear el laboratorio" />
+              }
+            )
           )
         );
       }
 
-      // Limpiar estado
       setEditedValues({});
       setHasPendingChanges(false);
     } catch (error) {

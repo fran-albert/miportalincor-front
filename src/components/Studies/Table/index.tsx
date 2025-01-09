@@ -33,7 +33,7 @@ const StudiesTable = ({
   idUser: number;
   urls: { [key: number]: { pdfUrl: string; imageUrls: string[] } };
 }) => {
-  const { isSecretary, isDoctor } = useRoles();
+  const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   // @ts-ignore
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
@@ -164,7 +164,7 @@ const StudiesTable = ({
                               </Button>
                             )}
 
-                          {isSecretary && !study.isOptimistic && (
+                          {isSecretary || isAdmin && !study.isOptimistic && (
                             <DeleteStudyDialog
                               studies={studiesByUserId}
                               idStudy={study.id}
@@ -245,7 +245,7 @@ const StudiesTable = ({
           </Pagination>
         </>
       )}
-      {isSecretary && (
+      {isSecretary || isAdmin && (
         <div className="text-center mt-4">
           <StudyDialog idUser={idUser} />
         </div>

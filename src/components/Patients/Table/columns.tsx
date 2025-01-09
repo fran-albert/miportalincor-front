@@ -7,7 +7,7 @@ import DeletePatientDialog from "../Delete/DeletePatientDialog";
 
 export const getColumns = (
   prefetchPatients: (id: number) => void,
-  roles: { isSecretary: boolean; isDoctor: boolean }
+  roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
 ): ColumnDef<Patient>[] => {
   const columns: ColumnDef<Patient>[] = [
     {
@@ -79,14 +79,14 @@ export const getColumns = (
       header: " ",
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          {(roles.isSecretary || roles.isDoctor) && (
+          {(roles.isSecretary || roles.isDoctor || roles.isAdmin) && (
             <ViewButton
               slug={String(row.original.slug)}
               text="Ver Paciente"
               path="pacientes"
             />
           )}
-          {roles.isSecretary && (
+          {roles.isSecretary || roles.isAdmin && (
             <DeletePatientDialog idPatient={row.original.userId} />
           )}
         </div>

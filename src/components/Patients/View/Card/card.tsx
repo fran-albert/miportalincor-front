@@ -32,7 +32,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
     " " +
     "- " +
     formatDateWithTime(String(patient?.registrationDate));
-  const { isSecretary } = useUserRole();
+  const { isSecretary, isAdmin } = useUserRole();
   return (
     <Card className="w-full max-w-sm border-2">
       <CardHeader className="pb-2">
@@ -41,7 +41,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
         </h2>
         <p className="text-sm text-gray-900 font-bold">
           {patient?.healthPlans?.[0]?.healthInsurance.name ??
-            "Obra Social No Asignada"}
+            "Obra Social No Asignada"} - {patient?.affiliationNumber ?? 'No tiene número de obra social asignado.'}
         </p>
         <p className="text-sm text-gray-500">
           Ingresado por {registerByText || "Desconocido"}
@@ -119,7 +119,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        {isSecretary && (
+        {isSecretary || isAdmin && (
           <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
         )}
       </CardFooter>

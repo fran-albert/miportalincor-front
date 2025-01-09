@@ -15,7 +15,7 @@ export const StudyTypeTable: React.FC<Props> = ({ studyTypes }) => {
   const [editingStudyType, setEditingStudyType] = useState<StudyType | null>(
     null
   );
-  const { isSecretary, isDoctor } = useRoles();
+  const { isAdmin } = useRoles();
   const [isAddStudyTypeDialogOpen, setIsAddStudyTypeDialogOpen] =
     useState(false);
   const openAddStudyTypeDialog = () => setIsAddStudyTypeDialogOpen(true);
@@ -25,7 +25,7 @@ export const StudyTypeTable: React.FC<Props> = ({ studyTypes }) => {
     setIsEditDialogOpen(true);
   };
 
-  const studyTypeColumns = getColumns(isDoctor, handleEditStudyType);
+  const studyTypeColumns = getColumns(isAdmin, handleEditStudyType);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -49,7 +49,7 @@ export const StudyTypeTable: React.FC<Props> = ({ studyTypes }) => {
           addLinkPath="/tipos-de-estudios/agregar"
           customFilter={customFilterFunction}
           addLinkText="Agregar Tipo de Estudio"
-          canAddUser={isSecretary}
+          canAddUser={isAdmin}
           onAddClick={openAddStudyTypeDialog}
         />
         <AddStudyTypeDialog

@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { jwtDecode } from 'jwt-decode'; 
+import { jwtDecode } from 'jwt-decode';
 import { logout } from '@/store/authSlice';
 
 interface DecodedToken {
@@ -15,6 +15,7 @@ const ROLES = {
   PATIENT: "Paciente",
   DOCTOR: "Medico",
   SECRETARY: "Secretaria",
+  ADMIN: "Administrador"
 };
 
 const useUserRole = () => {
@@ -26,6 +27,7 @@ const useUserRole = () => {
       isPatient: false,
       isDoctor: false,
       isSecretary: false,
+      isAdmin: false,
       session: null,
     };
   }
@@ -42,18 +44,20 @@ const useUserRole = () => {
       isPatient: false,
       isDoctor: false,
       isSecretary: false,
+      isAdmin: false,
       session: null,
     };
   }
 
   const currentTime = Math.floor(Date.now() / 1000);
-  
+
   if (decodedToken.exp < currentTime) {
     dispatch(logout());
     return {
       isPatient: false,
       isDoctor: false,
       isSecretary: false,
+      isAdmin: false,
       session: null,
     };
   }
@@ -74,6 +78,7 @@ const useUserRole = () => {
     isPatient: userRole === ROLES.PATIENT,
     isDoctor: userRole === ROLES.DOCTOR,
     isSecretary: userRole === ROLES.SECRETARY,
+    isAdmin: userRole === ROLES.ADMIN,
     session,
   };
 };
