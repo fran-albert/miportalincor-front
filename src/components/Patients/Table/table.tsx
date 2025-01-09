@@ -21,11 +21,16 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
     isDoctor,
     isAdmin,
   });
-  const customFilterFunction = (patient: Patient, query: string) =>
-    patient.firstName.toLowerCase().includes(query.toLowerCase()) ||
-    patient.lastName.toLowerCase().includes(query.toLowerCase()) ||
-    patient.dni.toLowerCase().includes(query.toLowerCase());
-
+  const customFilterFunction = (patient: Patient, query: string) => {
+    const fullName = `${patient.firstName.toLowerCase()} ${patient.lastName.toLowerCase()}`;
+    const reversedFullName = `${patient.lastName.toLowerCase()} ${patient.firstName.toLowerCase()}`;
+    return (
+      fullName.includes(query.toLowerCase()) ||
+      reversedFullName.includes(query.toLowerCase()) || 
+      patient.dni.toLowerCase().includes(query.toLowerCase()) 
+    );
+  };
+  
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Pacientes", href: "/pacientes" },
