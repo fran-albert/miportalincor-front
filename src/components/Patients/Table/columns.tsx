@@ -86,7 +86,7 @@ export const getColumns = (
               path="pacientes"
             />
           )}
-          {roles.isSecretary || roles.isAdmin && (
+          {(roles.isSecretary || roles.isAdmin) && (
             <DeletePatientDialog idPatient={row.original.userId} />
           )}
         </div>
