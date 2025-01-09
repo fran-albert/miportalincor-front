@@ -1,6 +1,5 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
-import { logout } from '@/store/authSlice';
 
 interface DecodedToken {
   Id: string;
@@ -19,7 +18,6 @@ const ROLES = {
 };
 
 const useUserRole = () => {
-  const dispatch = useDispatch();
   const token = useSelector((state: any) => state.auth.token) || (typeof window !== 'undefined' ? localStorage.getItem('authToken') : null);
 
   if (!token) {
@@ -37,22 +35,6 @@ const useUserRole = () => {
     decodedToken = jwtDecode(token) as DecodedToken;
   } catch (error) {
     console.error('Error decodificando el token', error);
-  }
-
-  if (!decodedToken) {
-    return {
-      isPatient: false,
-      isDoctor: false,
-      isSecretary: false,
-      isAdmin: false,
-      session: null,
-    };
-  }
-
-  const currentTime = Math.floor(Date.now() / 1000);
-
-  if (decodedToken.exp < currentTime) {
-    dispatch(logout());
     return {
       isPatient: false,
       isDoctor: false,
