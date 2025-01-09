@@ -164,7 +164,7 @@ const StudiesTable = ({
                               </Button>
                             )}
 
-                          {isSecretary || isAdmin && !study.isOptimistic && (
+                          {(isSecretary || isAdmin) && !study.isOptimistic && (
                             <DeleteStudyDialog
                               studies={studiesByUserId}
                               idStudy={study.id}
