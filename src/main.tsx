@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { Toaster } from "sonner";
 import { HelmetProvider } from "react-helmet-async";
+import { Analytics } from "@vercel/analytics/react";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -24,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
 
         <HelmetProvider>
           <App />
+          <Analytics />
         </HelmetProvider>
       </Provider>
     </ClientWrapper>
