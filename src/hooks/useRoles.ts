@@ -1,5 +1,7 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
+import { logout } from '@/store/authSlice';
+import { useEffect } from 'react';
 
 interface DecodedToken {
   Id: string;
@@ -18,7 +20,37 @@ const ROLES = {
 };
 
 const useUserRole = () => {
-  const token = useSelector((state: any) => state.auth.token) || (typeof window !== 'undefined' ? localStorage.getItem('authToken') : null);
+  const dispatch = useDispatch();
+  const token = useSelector((state: any) => state.auth.token);
+  const tokenExpiration = useSelector((state: any) => state.auth.tokenExpiration);
+
+  useEffect(() => {
+    if (!token || !tokenExpiration) return;
+
+    const checkAndHandleExpiration = () => {
+      const currentTime = Date.now();
+      const expirationTime = parseInt(tokenExpiration);
+
+      if (currentTime >= expirationTime) {
+        dispatch(logout());
+      }
+    };
+
+    // Verificar inmediatamente
+    checkAndHandleExpiration();
+
+    // Calcular el tiempo restante hasta la expiración
+    const timeUntilExpiration = parseInt(tokenExpiration) - Date.now();
+    if (timeUntilExpiration <= 0) return;
+
+    // Configurar el temporizador para el logout
+    const logoutTimer = setTimeout(() => {
+      dispatch(logout());
+    }, timeUntilExpiration);
+
+    // Limpiar el temporizador cuando el componente se desmonte
+    return () => clearTimeout(logoutTimer);
+  }, [token, tokenExpiration, dispatch]);
 
   if (!token) {
     return {
@@ -35,6 +67,7 @@ const useUserRole = () => {
     decodedToken = jwtDecode(token) as DecodedToken;
   } catch (error) {
     console.error('Error decodificando el token', error);
+    dispatch(logout());
     return {
       isPatient: false,
       isDoctor: false,
