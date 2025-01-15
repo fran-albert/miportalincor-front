@@ -246,7 +246,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                   Perfil Completo
                 </p>
               </CardTitle>
-              {isSecretary || isAdmin &&
+              {(isSecretary || isAdmin) &&
                 (!isEditing ? (
                   <Button
                     onClick={() => setIsEditing(true)}
