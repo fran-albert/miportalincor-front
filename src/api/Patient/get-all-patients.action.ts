@@ -1,9 +1,8 @@
-import { sleep, slugify } from "@/common/helpers/helpers";
+import { slugify } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
 import axiosInstance from "@/services/axiosConfig";
 
 export const getPatients = async (): Promise<Patient[]> => {
-    await sleep(2);
 
     // const params = new URLSearchParams();
     // params.append('page', `${page}`);

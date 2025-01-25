@@ -8,13 +8,14 @@ interface Props {
 
 export const useBloodTestData = ({ auth = true, idStudies }: Props) => {
 
+    const enabled = auth && Array.isArray(idStudies) && idStudies.length > 0;
+
     const { isLoading: isLoadingBloodTestsData, isError: isErrorBloodTestsData, error: errorBloodTestsData, data: bloodTestsData = [], isFetching: isFetchingBloodTestsData } = useQuery({
         queryKey: ['bloodTestsData', idStudies],
         queryFn: () => getBloodTestData(idStudies),
         staleTime: 1000 * 60,
-        enabled: auth && !!idStudies
+        enabled
     });
-
     return {
         isLoadingBloodTestsData, isErrorBloodTestsData, errorBloodTestsData, bloodTestsData, isFetchingBloodTestsData
     }

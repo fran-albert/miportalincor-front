@@ -1,9 +1,7 @@
 import axiosInstance from "@/services/axiosConfig";
-import { sleep } from "@/common/helpers/helpers";
 import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 
 export const getBloodTestData = async (idStudies: number[]) => {
-    await sleep(2);
     const queryString = idStudies.map(id => `studiesIds=${id}`).join('&');
     const url = `BloodTestData/byStudies?${queryString}`;
     
