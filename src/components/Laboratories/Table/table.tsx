@@ -23,6 +23,18 @@ import {
 } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
+import { BloodTestDataResponse } from "@/types/Blod-Test-Data/Blod-Test-Data";
+
+const transformData = (originalData: any[]): BloodTestDataResponse[] => {
+  return originalData.map((item) => ({
+    study: { ...item.study },
+    bloodTestData: item.bloodTestData.map((testData: any) => ({
+      id: testData.id,
+      value: testData.value,
+      bloodTest: { ...testData.bloodTest },
+    })),
+  }));
+};
 
 export const LabPatientTable = ({
   bloodTestsData = [],
@@ -42,10 +54,17 @@ export const LabPatientTable = ({
   }>({});
   const [note, setNote] = useState<string>("");
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [transformedBloodTestsData, setTransformedBloodTestsData] = useState<
+    BloodTestDataResponse[]
+  >([]);
+
   useEffect(() => {
+    const transformedData = transformData(bloodTestsData);
+    setTransformedBloodTestsData(transformedData);
+
     const uniqueDates = Array.from(
       new Set(
-        bloodTestsData.map((data) => formatDate(String(data.study.date ?? "")))
+        transformedData.map((group) => formatDate(group.study.date ?? ""))
       )
     );
     setDates(uniqueDates);
@@ -80,7 +99,6 @@ export const LabPatientTable = ({
       return updatedDates;
     });
   };
- 
 
   const handleConfirmChanges = async () => {
     try {
@@ -93,21 +111,23 @@ export const LabPatientTable = ({
       Object.entries(editedValues).forEach(([date, tests]) => {
         const cleanDate = date.trim();
         const existingStudyForDate = bloodTestsData.find(
-          (data) => normalizeDate(String(data.study.date)) === normalizeDate(cleanDate)
+          (data) =>
+            normalizeDate(String(data.study.date)) === normalizeDate(cleanDate)
         )?.study;
 
         // Si existe un estudio para esta fecha, será una actualización
         if (existingStudyForDate) {
           const updateGroup = {
             idStudy: existingStudyForDate.id,
-            blodTest: [] as BloodTestDataUpdateRequest[]
+            blodTest: [] as BloodTestDataUpdateRequest[],
           };
 
           Object.entries(tests).forEach(([bloodTestId, value]) => {
             const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
             const existingData = bloodTestsData.find(
-              (data) => 
-                normalizeDate(String(data.study.date)) === normalizeDate(cleanDate) &&
+              (data) =>
+                normalizeDate(String(data.study.date)) ===
+                  normalizeDate(cleanDate) &&
                 data.bloodTest.id === bloodTestIdAsNumber
             );
 
@@ -117,7 +137,7 @@ export const LabPatientTable = ({
                 updateGroup.blodTest.push({
                   id: existingData.id,
                   value,
-                  idBloodtest: bloodTestIdAsNumber
+                  idBloodtest: bloodTestIdAsNumber,
                 });
               }
             } else {
@@ -125,7 +145,7 @@ export const LabPatientTable = ({
               updateGroup.blodTest.push({
                 id: 0,
                 value,
-                idBloodtest: bloodTestIdAsNumber
+                idBloodtest: bloodTestIdAsNumber,
               });
             }
           });
@@ -139,11 +159,13 @@ export const LabPatientTable = ({
             userId: idUser,
             note,
             date: cleanDate,
-            bloodTestDatas: Object.entries(tests).map(([bloodTestId, value]) => ({
-              id: 0,
-              idBloodTest: parseInt(bloodTestId, 10),
-              value
-            }))
+            bloodTestDatas: Object.entries(tests).map(
+              ([bloodTestId, value]) => ({
+                id: 0,
+                idBloodTest: parseInt(bloodTestId, 10),
+                value,
+              })
+            ),
           };
           newEntries.push(newEntry);
         }
@@ -160,8 +182,12 @@ export const LabPatientTable = ({
               }),
               {
                 loading: <LoadingToast message="Actualizando laboratorio..." />,
-                success: <SuccessToast message="Laboratorio actualizado con éxito" />,
-                error: <ErrorToast message="Error al actualizar el laboratorio" />
+                success: (
+                  <SuccessToast message="Laboratorio actualizado con éxito" />
+                ),
+                error: (
+                  <ErrorToast message="Error al actualizar el laboratorio" />
+                ),
               }
             )
           )
@@ -172,14 +198,11 @@ export const LabPatientTable = ({
       if (newEntries.length > 0) {
         await Promise.all(
           newEntries.map((entry) =>
-            toast.promise(
-              addBlodTestDataMutation.mutateAsync(entry),
-              {
-                loading: <LoadingToast message="Creando laboratorio..." />,
-                success: <SuccessToast message="Laboratorio creado con éxito" />,
-                error: <ErrorToast message="Error al crear el laboratorio" />
-              }
-            )
+            toast.promise(addBlodTestDataMutation.mutateAsync(entry), {
+              loading: <LoadingToast message="Creando laboratorio..." />,
+              success: <SuccessToast message="Laboratorio creado con éxito" />,
+              error: <ErrorToast message="Error al crear el laboratorio" />,
+            })
           )
         );
       }
@@ -242,18 +265,23 @@ export const LabPatientTable = ({
                     <TableCell className="w-2/12">
                       {bloodTest.unit?.shortName || "N/A"}
                     </TableCell>
+
                     {dates.map((date) => {
-                      const relatedData = bloodTestsData.find(
-                        (data) =>
-                          data.bloodTest.id === bloodTest.id &&
-                          formatDate(String(data.study.date ?? "")) === date
+                      // Encontramos el estudio correspondiente a la fecha
+                      const relatedStudy = transformedBloodTestsData.find(
+                        (studyGroup) =>
+                          formatDate(studyGroup.study.date ?? "") === date
                       );
+
+                      // Si hay un estudio en esta fecha, buscar el análisis de sangre dentro de él
+                      const relatedData = relatedStudy?.bloodTestData.find(
+                        (test) => test.bloodTest.id === bloodTest.id
+                      );
+
+                      // Verificar si se encontró el valor y asignarlo
                       const inputValue =
-                        date && bloodTest.id
-                          ? editedValues[date]?.[bloodTest.id] ??
-                            relatedData?.value ??
-                            ""
-                          : "";
+                        editedValues[date]?.[bloodTest.id as number] ??
+                        (relatedData ? relatedData.value : "");
 
                       return (
                         <TableCell key={date} className="w-[100px] text-center">
@@ -262,8 +290,6 @@ export const LabPatientTable = ({
                             value={inputValue}
                             className="w-1/2 border rounded px-2 text-center"
                             onChange={(e) =>
-                              date &&
-                              bloodTest.id &&
                               handleInputChange(
                                 date,
                                 String(bloodTest.id),
@@ -278,21 +304,9 @@ export const LabPatientTable = ({
                 );
               })}
             </TableBody>
+            ;
           </Table>
         </ScrollArea>
-
-        <div className="flex justify-end mt-4">
-          {/* {newColumnAdded && !isLabAdded && (
-            <Button
-              className="bg-greenPrimary text-white"
-              onClick={handleConfirm}
-              disabled={addLabMutation.isPending}
-            >
-              Confirmar
-            </Button>
-          )} */}
-        </div>
-
         {hasPendingChanges && (
           <div className="flex justify-end mt-4">
             <Button
