@@ -24,3 +24,14 @@ export interface BloodTestDataUpdateRequest {
     value: string;
     idBloodtest: number
 }[]
+
+export interface BloodTestDatum {
+    id: number;
+    value: string;
+    bloodTest: BloodTest;
+}
+
+export interface BloodTestDataResponse {
+    study: Study;
+    bloodTestData: BloodTestDatum[];
+}

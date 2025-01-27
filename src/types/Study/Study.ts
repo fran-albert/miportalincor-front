@@ -11,4 +11,5 @@ export interface Study {
   ultrasoundImages?: UltraSoundImages[];
   isOptimistic?: boolean;
   isUpdating?: boolean;
+  created?: Date | null
 }
