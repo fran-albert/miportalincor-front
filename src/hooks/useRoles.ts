@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 interface DecodedToken {
   Id: string;
   Email: string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string | string[];
   exp: number;
   iss: string;
   FirstName: string;
@@ -36,19 +36,15 @@ const useUserRole = () => {
       }
     };
 
-    // Verificar inmediatamente
     checkAndHandleExpiration();
 
-    // Calcular el tiempo restante hasta la expiración
     const timeUntilExpiration = parseInt(tokenExpiration) - Date.now();
     if (timeUntilExpiration <= 0) return;
 
-    // Configurar el temporizador para el logout
     const logoutTimer = setTimeout(() => {
       dispatch(logout());
     }, timeUntilExpiration);
 
-    // Limpiar el temporizador cuando el componente se desmonte
     return () => clearTimeout(logoutTimer);
   }, [token, tokenExpiration, dispatch]);
 
@@ -77,12 +73,14 @@ const useUserRole = () => {
     };
   }
 
-  const userRole = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+  const userRoles = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+  
+  const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
 
   const session = {
     id: decodedToken.Id,
     email: decodedToken.Email,
-    role: userRole,
+    role: rolesArray,
     exp: decodedToken.exp,
     iss: decodedToken.iss,
     token: token,
@@ -90,10 +88,10 @@ const useUserRole = () => {
   };
 
   return {
-    isPatient: userRole === ROLES.PATIENT,
-    isDoctor: userRole === ROLES.DOCTOR,
-    isSecretary: userRole === ROLES.SECRETARY,
-    isAdmin: userRole === ROLES.ADMIN,
+    isPatient: rolesArray.includes(ROLES.PATIENT),
+    isDoctor: rolesArray.includes(ROLES.DOCTOR),
+    isSecretary: rolesArray.includes(ROLES.SECRETARY),
+    isAdmin: rolesArray.includes(ROLES.ADMIN),
     session,
   };
 };

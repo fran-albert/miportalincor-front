@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 interface DecodedToken {
   Id: string;
   Email: string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string | string[];
   exp: number;
   iss: string;
 }
@@ -26,11 +26,16 @@ export const Private_Routes = ({
     const decodedToken: DecodedToken = jwtDecode(stateUser);
 
     if (allowedRoles && allowedRoles.length > 0) {
-      const userRole =
+      const userRoles =
         decodedToken[
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
-      if (!allowedRoles.includes(userRole)) {
+
+      const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+
+      const hasAccess = rolesArray.some((role) => allowedRoles.includes(role));
+
+      if (!hasAccess) {
         return <Navigate to="/acceso-denegado" />;
       }
     }
