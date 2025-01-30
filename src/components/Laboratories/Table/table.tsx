@@ -304,7 +304,6 @@ export const LabPatientTable = ({
                 );
               })}
             </TableBody>
-            ;
           </Table>
         </ScrollArea>
         {hasPendingChanges && (
