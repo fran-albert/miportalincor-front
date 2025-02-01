@@ -34,6 +34,9 @@ interface DataTableProps<TData, TValue> {
   customFilter?: (data: TData, query: string) => boolean;
   onAddClick?: () => void;
   isLoading?: boolean;
+  isFetching?: boolean;
+  searchQuery: string; 
+  onSearchSubmit: (query: string) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -42,6 +45,9 @@ export function DataTable<TData, TValue>({
   showSearch = false,
   searchPlaceholder = "",
   addLinkPath = "/",
+  searchQuery,
+  onSearchSubmit,
+  isFetching = false,
   addLinkText = "Agregar",
   // searchColumn = "name",
   customFilter,
@@ -57,7 +63,12 @@ export function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: 16,
   });
-  const [searchInput, setSearchInput] = React.useState("");
+  const [searchInput, setSearchInput] = React.useState(searchQuery);
+
+  React.useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
   // @ts-ignore
   const [isAdding, setIsAdding] = React.useState(false);
   const filteredData = React.useMemo(() => {
@@ -81,6 +92,16 @@ export function DataTable<TData, TValue>({
       pagination,
     },
   });
+
+  const handleSearchSubmit = () => {
+    onSearchSubmit(searchInput); 
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSearchSubmit();
+    }
+  };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(event.target.value);
@@ -123,8 +144,15 @@ export function DataTable<TData, TValue>({
                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-greenPrimary"
                 value={searchInput}
                 color="#187B80"
+                onKeyDown={handleKeyPress}
                 onChange={handleSearchChange}
               />
+              {/* <Button
+                onClick={handleSearchSubmit}
+                className="bg-greenPrimary hover:bg-greenPrimary-700 text-white px-4 py-2 rounded-md shadow-lg flex items-center ml-2"
+              >
+                Buscar
+              </Button> */}
               {canAddUser && (
                 <div className="ml-4">
                   {onAddClick ? (
@@ -168,7 +196,31 @@ export function DataTable<TData, TValue>({
                   ))}
                 </thead>
                 <tbody className="text-gray-700">
-                  {table.getRowModel().rows.length ? (
+                  {searchQuery === "" ? (
+                    <tr>
+                      <td
+                        colSpan={columns.length}
+                        className="py-10 text-center text-gray-800"
+                      >
+                        <strong>
+                          Ingrese un criterio de búsqueda para ver los
+                          pacientes.
+                        </strong>{" "}
+                        <br />
+                        Puede filtrar por <strong>nombre</strong>,{" "}
+                        <strong>apellido</strong> o <strong>D.N.I.</strong>
+                      </td>
+                    </tr>
+                  ) : isFetching ? (
+                    <tr>
+                      <td
+                        colSpan={columns.length}
+                        className="py-10 text-center text-gray-900"
+                      >
+                        Buscando paciente: <strong>{searchQuery}</strong>...
+                      </td>
+                    </tr>
+                  ) : table.getRowModel().rows.length ? (
                     table.getRowModel().rows.map((row) => (
                       <tr
                         key={row.id}
@@ -195,7 +247,7 @@ export function DataTable<TData, TValue>({
                     <tr>
                       <td
                         colSpan={columns.length}
-                        className="py-10 text-center text-gray-500"
+                        className="py-10 text-center text-gray-900"
                       >
                         No se encuentran resultados con ese criterio de
                         búsqueda.
