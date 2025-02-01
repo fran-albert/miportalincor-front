@@ -1,19 +1,18 @@
 import { usePrefetchPatient } from "@/hooks/Patient/usePrefetchPatient";
 import { usePatients } from "@/hooks/Patient/usePatients";
 import { PatientsTable } from "@/components/Patients/Table/table";
-import LoadingAnimation from "@/components/Loading/loading";
 import { Helmet } from "react-helmet-async";
+import { useState } from "react";
 
 const PatientsComponent = () => {
-  const { isLoading, patients } = usePatients({
+  const [search, setSearch] = useState("");
+  const { patients, isFetching } = usePatients({
     auth: true,
     fetchPatients: true,
+    search,
   });
-  const prefetchPatients = usePrefetchPatient();
 
-  if (isLoading) {
-    return <LoadingAnimation />;
-  }
+  const prefetchPatients = usePrefetchPatient();
 
   return (
     <>
@@ -23,7 +22,9 @@ const PatientsComponent = () => {
       <PatientsTable
         patients={patients || []}
         prefetchPatients={prefetchPatients}
-        isLoading={isLoading}
+        isFetching={isFetching}
+        searchQuery={search}
+        setSearch={setSearch} 
       />
     </>
   );

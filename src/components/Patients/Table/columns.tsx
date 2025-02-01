@@ -48,7 +48,7 @@ export const getColumns = (
       header: "D.N.I.",
       cell: ({ row }) => (
         <div className="flex items-center">
-          <p className="text-sm font-medium">{formatDni(row.original.dni)}</p>
+          <p className="text-sm font-medium">{formatDni(row.original.userName)}</p>
         </div>
       ),
     },
