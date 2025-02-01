@@ -35,7 +35,7 @@ interface DataTableProps<TData, TValue> {
   onAddClick?: () => void;
   isLoading?: boolean;
   isFetching?: boolean;
-  searchQuery: string; 
+  searchQuery: string;
   onSearchSubmit: (query: string) => void;
 }
 
@@ -94,7 +94,7 @@ export function DataTable<TData, TValue>({
   });
 
   const handleSearchSubmit = () => {
-    onSearchSubmit(searchInput); 
+    onSearchSubmit(searchInput);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -259,12 +259,7 @@ export function DataTable<TData, TValue>({
             </div>
           </div>
           <div className="flex justify-between items-center mt-4">
-            <div className="text-gray-500 text-sm w-full">
-              {`Mostrando ${Math.min(
-                (pagination.pageIndex + 1) * pagination.pageSize,
-                data.length
-              )} de ${data.length} elementos`}
-            </div>
+            <div className="text-gray-500 text-sm w-full"></div>
             <Pagination className="mt-6 justify-end px-4 py-2">
               <PaginationContent>
                 {/* Botón para la página anterior */}
