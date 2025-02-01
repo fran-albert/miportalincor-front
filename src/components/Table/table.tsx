@@ -35,8 +35,8 @@ interface DataTableProps<TData, TValue> {
   onAddClick?: () => void;
   isLoading?: boolean;
   isFetching?: boolean;
-  searchQuery: string;
-  onSearchSubmit: (query: string) => void;
+  searchQuery?: string;
+  onSearchSubmit?: (query: string) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -94,9 +94,11 @@ export function DataTable<TData, TValue>({
   });
 
   const handleSearchSubmit = () => {
-    onSearchSubmit(searchInput);
+    if (onSearchSubmit) { 
+      onSearchSubmit(searchInput ?? "");
+    }
   };
-
+  
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleSearchSubmit();
