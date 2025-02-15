@@ -21,6 +21,9 @@ import ResetPaswordPage from "./pages/auth/Reset-Password";
 import BlodTestPage from "./pages/protected/Blod-Test";
 import StudyTypePage from "./pages/protected/Study-Type";
 import AccessDeniedPage from "./pages/protected/Access-Denied";
+import PreOcuppationalPage from "./pages/protected/Pre-Occupational";
+import CollaboratorPage from "./pages/protected/Pre-Occupational/Colaborator";
+import PreOccupationalPreviewPage from "./pages/protected/Pre-Occupational/Preview";
 
 function App() {
   return (
@@ -32,7 +35,9 @@ function App() {
             <Route
               path="/especialidades"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <SpecialityPage />
                 </Private_Routes>
               }
@@ -57,7 +62,9 @@ function App() {
             <Route
               path="/pacientes"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <PatientsComponent />
                 </Private_Routes>
               }
@@ -82,7 +89,9 @@ function App() {
             <Route
               path="/pacientes/:slug"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <PatientPage />
                 </Private_Routes>
               }
@@ -93,6 +102,30 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico"]}>
                   <LaboratoriesPage role="paciente" />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/colaboradores/:slug"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <CollaboratorPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/colaboradores/:slug/previsualizar-informe"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <PreOccupationalPreviewPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <PreOcuppationalPage />
                 </Private_Routes>
               }
             />
@@ -108,7 +141,9 @@ function App() {
             <Route
               path="/obras-sociales"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <HealthInsurancesPage />
                 </Private_Routes>
               }
@@ -116,7 +151,9 @@ function App() {
             <Route
               path="/analisis-bioquimicos"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <BlodTestPage />
                 </Private_Routes>
               }
@@ -124,7 +161,9 @@ function App() {
             <Route
               path="/tipos-de-estudios"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <StudyTypePage />
                 </Private_Routes>
               }
@@ -132,7 +171,9 @@ function App() {
             <Route
               path="/medicos"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <DoctorsComponent />
                 </Private_Routes>
               }
@@ -140,7 +181,9 @@ function App() {
             <Route
               path="/medicos/:slug"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <DoctorPage />
                 </Private_Routes>
               }
@@ -153,7 +196,9 @@ function App() {
             <Route
               path="/medicos/:slug/perfil"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <DoctorProfilePage />
                 </Private_Routes>
               }
@@ -161,7 +206,9 @@ function App() {
             <Route
               path="/pacientes/:slug/perfil"
               element={
-                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
                   <PatientProfilePage />
                 </Private_Routes>
               }

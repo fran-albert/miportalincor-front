@@ -35,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   onAddClick?: () => void;
   isLoading?: boolean;
   isFetching?: boolean;
+  querySearchFilter?: string;
   searchQuery?: string;
   onSearchSubmit?: (query: string) => void;
 }
@@ -52,6 +53,7 @@ export function DataTable<TData, TValue>({
   // searchColumn = "name",
   customFilter,
   canAddUser = true,
+  querySearchFilter,
   onAddClick,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
@@ -94,11 +96,11 @@ export function DataTable<TData, TValue>({
   });
 
   const handleSearchSubmit = () => {
-    if (onSearchSubmit) { 
+    if (onSearchSubmit) {
       onSearchSubmit(searchInput ?? "");
     }
   };
-  
+
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleSearchSubmit();
@@ -159,14 +161,14 @@ export function DataTable<TData, TValue>({
                 <div className="ml-4">
                   {onAddClick ? (
                     <Button
-                      className="bg-greenPrimary hover:bg-greenPrimary-700 text-white px-4 py-2 rounded-md shadow-lg flex items-center"
+                      className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center"
                       onClick={onAddClick}
                     >
                       {addLinkText}
                     </Button>
                   ) : (
                     <Link to={addLinkPath}>
-                      <Button className="bg-greenPrimary hover:bg-greenPrimary-700 text-white px-4 py-2 rounded-md shadow-lg flex items-center">
+                      <Button className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center">
                         {addLinkText}
                       </Button>
                     </Link>
@@ -206,8 +208,8 @@ export function DataTable<TData, TValue>({
                       >
                         <strong>
                           Ingrese un criterio de búsqueda para ver los
-                          pacientes.
-                        </strong>{" "}
+                          {querySearchFilter ? querySearchFilter : " pacientes"}
+                        </strong>
                         <br />
                         Puede filtrar por <strong>nombre</strong>,{" "}
                         <strong>apellido</strong> o <strong>D.N.I.</strong>
