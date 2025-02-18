@@ -3,6 +3,7 @@
 import { Label } from "@/components/ui/label";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Input } from "@/components/ui/input";
 
 export default function WorkerInformationPreview() {
   const workerInfo = useSelector(
@@ -15,68 +16,94 @@ export default function WorkerInformationPreview() {
         Filiación del trabajador
       </h3>
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Lugar de nacimiento */}
         <div className="space-y-2">
           <Label>Lugar de nacimiento</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.lugarNacimiento || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.lugarNacimiento || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Nacionalidad */}
+
         <div className="space-y-2">
           <Label>Nacionalidad</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.nacionalidad || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.nacionalidad || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Grado de instrucción */}
+
         <div className="space-y-2">
           <Label>Grado de instrucción</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.gradoInstruccion || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.gradoInstruccion || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Domicilio */}
+
         <div className="space-y-2">
           <Label>Domicilio</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.domicilio || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.domicilio || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Seguro ARS */}
+
         <div className="space-y-2">
           <Label>Seguro ARS (Privado)</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.seguro || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.seguro || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Nro. de Afiliación */}
+
         <div className="space-y-2">
           <Label>Nro. de Afiliación</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.nroAfiliacion || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.nroAfiliacion || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* Estado civil */}
+
         <div className="space-y-2">
           <Label>Estado civil</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.estadoCivil || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.estadoCivil || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* N° de hijos */}
+
         <div className="space-y-2">
           <Label>N° de hijos</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.nroHijos || "0"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.nroHijos || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
-        {/* N° de dependientes */}
+        
         <div className="space-y-2">
           <Label>N° de dependientes</Label>
-          <div className="p-2 border rounded bg-gray-50">
-            {workerInfo.nroDependientes || "No definido"}
-          </div>
+          <Input
+            id="puesto"
+            value={workerInfo.nroDependientes || "No definido"}
+            readOnly
+            className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+          />
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { Label } from "@/components/ui/label";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Input } from "@/components/ui/input";
 
 export default function ExamsResultsPreview() {
   const examResults = useSelector(
@@ -27,11 +28,16 @@ export default function ExamsResultsPreview() {
         {exams.map((exam) => (
           <div key={exam.id} className="space-y-2">
             <Label>{exam.label}</Label>
-            <div className="p-2 border rounded bg-gray-50">
-              {examResults && examResults[exam.id as keyof typeof examResults]
-                ? examResults[exam.id as keyof typeof examResults]
-                : "No definido"}
-            </div>
+            <Input
+              id="puesto"
+              value={
+                examResults && examResults[exam.id as keyof typeof examResults]
+                  ? examResults[exam.id as keyof typeof examResults]
+                  : "No definido"
+              }
+              readOnly
+              className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+            />
           </div>
         ))}
       </div>
