@@ -41,13 +41,25 @@ export default function VariousTab() {
     { id: "hepatics-test", title: "Pruebas Hepáticas (TGO; TGP)", files: [] },
     { id: "electro", title: "Electrocardiograma", files: [] },
     { id: "rx-torax", title: "RX de Tórax (F)", files: [] },
-    { id: "rx-columna-lumbosacra", title: "RX de Columna Lumbosacra (F y P)", files: [] },
+    {
+      id: "rx-columna-lumbosacra",
+      title: "RX de Columna Lumbosacra (F y P)",
+      files: [],
+    },
     { id: "audiometria", title: "Audiometría Total", files: [] },
     { id: "espirometria", title: "Espirometría", files: [] },
     { id: "ergometria", title: "Ergometría", files: [] },
-    { id: "rmn-columna-lumbosacra", title: "RMN de Columna Lumbosacra", files: [] },
+    {
+      id: "rmn-columna-lumbosacra",
+      title: "RMN de Columna Lumbosacra",
+      files: [],
+    },
     { id: "electroencefalograma", title: "Electroencefalograma", files: [] },
-    { id: "examen-equilibriometrico", title: "Examen Equilibriométrico", files: [] },
+    {
+      id: "examen-equilibriometrico",
+      title: "Examen Equilibriométrico",
+      files: [],
+    },
     { id: "examen-oftalmologico", title: "Examen Oftalmológico", files: [] },
     { id: "encuesta-del-sueño", title: "Encuenstra del Sueño", files: [] },
     { id: "score-framingham", title: "Score de Framingham", files: [] },
@@ -55,6 +67,7 @@ export default function VariousTab() {
 
   const handleDrop = (sectionId: string, e: React.DragEvent) => {
     e.preventDefault();
+    console.log(sectionId);
     // Handle file drop logic here
   };
 

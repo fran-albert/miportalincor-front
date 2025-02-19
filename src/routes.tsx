@@ -24,6 +24,7 @@ import AccessDeniedPage from "./pages/protected/Access-Denied";
 import PreOcuppationalPage from "./pages/protected/Pre-Occupational";
 import CollaboratorPage from "./pages/protected/Pre-Occupational/Colaborator";
 import PreOccupationalPreviewPage from "./pages/protected/Pre-Occupational/Preview";
+import NutritionPage from "./pages/protected/Nutrition";
 
 function App() {
   return (
@@ -102,6 +103,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico"]}>
                   <LaboratoriesPage role="paciente" />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/pacientes/:slug/control-nutricional"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <NutritionPage />
                 </Private_Routes>
               }
             />

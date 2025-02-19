@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import GeneralTab from "@/components/Tabs/Pre-Occupational/General";
 import MedicalHistoryTab from "@/components/Tabs/Pre-Occupational/Medical-History";
-import VariousTab from "../Various";
+// import VariousTab from "../Various";
 
 interface Props {
   isEditing: boolean;
@@ -44,9 +44,12 @@ export default function NavigationTabs({ isEditing, setIsEditing }: Props) {
                     setIsEditing={setIsEditing}
                   />
                 )}
-                {activeTab === "various" && (
-                  <VariousTab isEditing={isEditing} />
-                )}
+                {/* {activeTab === "various" && (
+                  <VariousTab
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                  />
+                )} */}
               </TabsContent>
             </Tabs>
           </CardContent>
