@@ -28,7 +28,7 @@ export function HeaderComponent() {
     <header className="flex h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
       <Link to="#" className="mr-6 flex items-center">
         <img
-          src="https://incor-ranking.s3.us-east-1.amazonaws.com/storage/images/mi%20portal%20logo%20png.png"
+          src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1740059697/uboivjuv41dkkdeaqhfa.png"
           className="h-12 w-auto"
           alt="Logo Incor"
         />
