@@ -41,7 +41,10 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
         </h2>
         <p className="text-sm text-gray-900 font-bold">
           {patient?.healthPlans?.[0]?.healthInsurance.name ??
-            "Obra Social No Asignada"} - {patient?.affiliationNumber ?? 'No tiene número de obra social asignado.'}
+            "Obra Social No Asignada"}{" "}
+          -{" "}
+          {patient?.affiliationNumber ??
+            "No tiene número de obra social asignado."}
         </p>
         <p className="text-sm text-gray-500">
           Ingresado por {registerByText || "Desconocido"}
@@ -119,9 +122,17 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        {isSecretary || isAdmin && (
-          <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
-        )}
+        {/* {isDoctor && (
+          <Button className="w-full text-greenPrimary" variant={"link"}>
+            <Link to={`/pacientes/${patient?.slug}/control-nutricional`}>
+              Control Nutricional
+            </Link>
+          </Button>
+        )} */}
+        {isSecretary ||
+          (isAdmin && (
+            <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
+          ))}
       </CardFooter>
     </Card>
   );
