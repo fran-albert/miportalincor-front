@@ -32,7 +32,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
     " " +
     "- " +
     formatDateWithTime(String(patient?.registrationDate));
-  const { isSecretary, isAdmin, isDoctor } = useUserRole();
+  const { isSecretary, isAdmin } = useUserRole();
   return (
     <Card className="w-full max-w-sm border-2">
       <CardHeader className="pb-2">
