@@ -23,18 +23,18 @@ const BreadcrumbComponent: React.FC<BreadcrumbComponentProps> = ({ items }) => {
           return (
             <React.Fragment key={index}>
               <BreadcrumbItem
-                className={` font-medium text-greenPrimary hover:text-teal-800 ${
+                className={`font-medium text-greenPrimary hover:text-teal-800 capitalize ${
                   isLastItem
-                    ? "font-bold text-greenPrimary hover:text-teal-800"
+                    ? "font-bold text-greenPrimary hover:text-teal-800 capitalize" 
                     : ""
                 }`}
               >
                 {item.href && !isLastItem ? (
-                  <Link to={item.href}>
+                  <Link to={item.href} className="capitalize">
                     <>{item.label}</>
                   </Link>
                 ) : (
-                  <span>{item.label}</span>
+                  <span className="capitalize">{item.label}</span>
                 )}
               </BreadcrumbItem>
               {index < items.length - 1 && <BreadcrumbSeparator />}

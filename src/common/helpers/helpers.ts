@@ -116,6 +116,31 @@ export const normalizeDate = (date: string): string => {
     throw new Error(`Formato de fecha no reconocido: ${date}`);
   } catch (error) {
     console.error("Fecha problemática:", date);
-    return ""; 
+    return "";
   }
 };
+
+export interface ParsedSlug {
+  firstName: string;
+  lastName: string;
+  id: number;
+}
+
+export function parseSlug(slug: string): ParsedSlug {
+  const parts = slug.split('-');
+  if (parts.length < 2) {
+    throw new Error('El slug no tiene el formato esperado.');
+  }
+
+  const idString = parts.pop()!;
+  const id = parseInt(idString, 10);
+
+  if (isNaN(id)) {
+    throw new Error('El id no es un número válido.');
+  }
+
+  const firstName = parts[0] || '';
+  const lastName = parts.slice(1).join(' ') || '';
+
+  return { firstName, lastName, id };
+}

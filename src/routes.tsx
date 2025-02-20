@@ -24,7 +24,7 @@ import AccessDeniedPage from "./pages/protected/Access-Denied";
 import PreOcuppationalPage from "./pages/protected/Pre-Occupational";
 import CollaboratorPage from "./pages/protected/Pre-Occupational/Colaborator";
 import PreOccupationalPreviewPage from "./pages/protected/Pre-Occupational/Preview";
-import NutritionPage from "./pages/protected/Nutrition";
+import NutritionPage from "./pages/protected/Patient/Nutrition";
 
 function App() {
   return (

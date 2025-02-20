@@ -162,26 +162,25 @@ export const NutritionTable: React.FC<Props> = ({
             <TableRow key={entry.id}>
               <TableCell>{index + 1}</TableCell>
               <TableCell>
-                {editingId === entry.id ? (
+                {newEntry && nutritionData.length + 1 === index + 1 ? (
                   <DatePicker
-                    value={entry.date ? new Date(entry.date) : new Date()}
+                    value={newEntry.date ? new Date(newEntry.date) : new Date()}
                     onChange={(selectedDate) => {
-                      setNutritionData((prev) =>
-                        prev.map((oldEntry) =>
-                          oldEntry.id === entry.id
-                            ? {
-                                ...oldEntry,
-                                date: selectedDate
-                                  ? format(selectedDate, "yyyy-MM-dd")
-                                  : oldEntry.date,
-                              }
-                            : oldEntry
-                        )
-                      );
+                      setNewEntry((prev) => {
+                        if (!prev) return prev;
+                        return {
+                          ...prev,
+                          date: selectedDate
+                            ? format(selectedDate, "yyyy-MM-dd")
+                            : prev.date,
+                        };
+                      });
                     }}
                   />
                 ) : (
-                  formatDate(entry.date.toString())
+                  <span className="px-2 py-1">
+                    {formatDate(entry.date.toString())}
+                  </span>
                 )}
               </TableCell>
 

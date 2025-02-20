@@ -1,24 +1,27 @@
 import BreadcrumbComponent from "@/components/Breadcrumb";
-import { Patient } from "@/types/Patient/Patient";
 import NutritionCard from "../Card";
 import { NutritionData } from "@/types/Nutrition-Data/NutritionData";
+import { ParsedSlug } from "@/common/helpers/helpers";
 
 interface Props {
   nutritionData: NutritionData[];
-  patient: Patient;
+  slugParts: ParsedSlug;
+  slug: string;
 }
 
-const NutritionComponent = ({ nutritionData, patient }: Props) => {
+const NutritionComponent = ({ nutritionData, slug, slugParts }: Props) => {
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Pacientes", href: "/pacientes" },
     {
-      label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente",
-      href: `/pacientes/${patient?.slug}`,
+      label: slugParts
+        ? `${slugParts.firstName} ${slugParts.lastName}`
+        : "Paciente",
+      href: `/pacientes/${slug}`,
     },
     {
       label: "Control Nutricional",
-      href: `/pacientes/${patient?.slug}/control-nutricional`,
+      href: `/pacientes/${slug}/control-nutricional`,
     },
   ];
 
@@ -27,7 +30,7 @@ const NutritionComponent = ({ nutritionData, patient }: Props) => {
       <BreadcrumbComponent items={breadcrumbItems} />
       <NutritionCard
         nutritionData={nutritionData}
-        userId={Number(patient.userId)}
+        userId={Number(slugParts.id)}
       />
     </div>
   );
