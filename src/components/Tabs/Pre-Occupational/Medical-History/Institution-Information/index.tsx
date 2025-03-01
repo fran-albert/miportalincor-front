@@ -12,12 +12,14 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataType } from "@/types/Data-Type/Data-Type";
 
 interface Props {
   isEditing: boolean;
+  fields: DataType[];
 }
 
-export default function InstitutionInformation({ isEditing }: Props) {
+export default function InstitutionInformation({ isEditing, fields }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const institutionInfo = useSelector(
     (state: RootState) => state.preOccupational.formData.institutionInformation

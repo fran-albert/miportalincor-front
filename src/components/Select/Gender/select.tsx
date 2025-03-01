@@ -40,7 +40,7 @@ export const GenderSelect = ({
             </SelectTrigger>
             <SelectContent>
               {genderTypes.map((type) => (
-                <SelectItem key={type.id} value={type.id}>
+                <SelectItem key={type.id} value={type.name}>
                   {type.name}
                 </SelectItem>
               ))}

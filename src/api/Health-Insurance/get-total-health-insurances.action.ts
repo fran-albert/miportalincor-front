@@ -1,9 +1,9 @@
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const getTotalHealthInsurances = async (): Promise<number> => {
     // await sleep(2);
 
-    const { data } = await axiosInstance.get(`HealthInsurance/all`);
+    const { data } = await apiIncor.get(`HealthInsurance/all`);
     const totalHealthInsurances = data.length;
     return totalHealthInsurances;
 }

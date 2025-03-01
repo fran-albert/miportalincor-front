@@ -1,4 +1,4 @@
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const getLastStudies = async (studyTypeId?: number): Promise<number> => {
     let url = 'study/lastStudies';
@@ -6,7 +6,7 @@ export const getLastStudies = async (studyTypeId?: number): Promise<number> => {
         url += `?studyTypeId=${studyTypeId}`;
     }
 
-    const { data } = await axiosInstance.get(url);
+    const { data } = await apiIncor.get(url);
     return data;
 
 

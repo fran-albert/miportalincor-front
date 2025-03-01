@@ -9,3 +9,11 @@ export interface Company extends Base {
     email?: string
     collaborator: Collaborator[]
 }
+
+export interface CreateCompanyDto {
+    name: string;
+    taxId: string;
+    address: string;
+    phone: number;
+    email: string;
+}

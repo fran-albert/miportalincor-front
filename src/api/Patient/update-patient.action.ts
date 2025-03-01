@@ -1,7 +1,7 @@
 import { Patient } from "@/types/Patient/Patient";
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const updatePatient = async (id: number, patient: Patient) => {
-    const { data } = await axiosInstance.put<Patient>(`Patient/${id}`, patient);
+    const { data } = await apiIncor.put<Patient>(`Patient/${id}`, patient);
     return data;
 }

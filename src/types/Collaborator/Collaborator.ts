@@ -12,5 +12,18 @@ export interface Collaborator extends Base {
     address: Address | string;
     userName: string;
     gender: string;
+    photoUrl: string
     company: Company
+}
+
+export interface CreateCollaboratorDto {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    birthDate: string;
+    phone: string;
+    email: string;
+    address: string;
+    gender: string;
+    idCompany: string
 }

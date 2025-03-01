@@ -9,14 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { addOccupationalHistory, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  addOccupationalHistory,
+  setFormData,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Input } from "@/components/ui/input";
+import { DataType } from "@/types/Data-Type/Data-Type";
 
 interface Props {
   isEditing: boolean;
+  fields: DataType[];
 }
 
-export default function OccupationalHistoryAccordion({ isEditing }: Props) {
+export default function OccupationalHistoryAccordion({
+  isEditing,
+  fields,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const occupationalHistory = useSelector(
     (state: RootState) => state.preOccupational.formData.occupationalHistory

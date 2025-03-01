@@ -13,3 +13,14 @@ export interface Study {
   isUpdating?: boolean;
   created?: Date | null
 }
+
+export interface UploadedFile {
+  name: string;
+  url: string;
+}
+
+export interface StudySection {
+  id: string;
+  title: string;
+  files: UploadedFile[];
+}

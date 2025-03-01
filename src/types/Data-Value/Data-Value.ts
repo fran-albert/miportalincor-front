@@ -6,3 +6,8 @@ export interface DataValue extends Base {
     dataType: DataType
     value: string
 }
+
+export interface CreateDataValuesDto {
+    medicalEvaluationId: number;
+    dataValues: { dataTypeId: number; value: string }[];
+}

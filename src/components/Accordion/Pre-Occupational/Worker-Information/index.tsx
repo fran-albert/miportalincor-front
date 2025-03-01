@@ -64,9 +64,7 @@ export default function WorkerInformationAccordion({ isEditing }: Props) {
                 <Input
                   id="nacionalidad"
                   value={workerInfo.nacionalidad || ""}
-                  onChange={(e) =>
-                    handleChange("nacionalidad", e.target.value)
-                  }
+                  onChange={(e) => handleChange("nacionalidad", e.target.value)}
                 />
               ) : (
                 <div className="p-2 border rounded bg-gray-50">
@@ -145,9 +143,7 @@ export default function WorkerInformationAccordion({ isEditing }: Props) {
                 <Input
                   id="estado-civil"
                   value={workerInfo.estadoCivil || ""}
-                  onChange={(e) =>
-                    handleChange("estadoCivil", e.target.value)
-                  }
+                  onChange={(e) => handleChange("estadoCivil", e.target.value)}
                 />
               ) : (
                 <div className="p-2 border rounded bg-gray-50">
@@ -163,9 +159,7 @@ export default function WorkerInformationAccordion({ isEditing }: Props) {
                   id="nro-hijos"
                   type="number"
                   value={workerInfo.nroHijos?.toString() || "0"}
-                  onChange={(e) =>
-                    handleChange("nroHijos", e.target.value)
-                  }
+                  onChange={(e) => handleChange("nroHijos", e.target.value)}
                 />
               ) : (
                 <div className="p-2 border rounded bg-gray-50">

@@ -5,12 +5,33 @@ import CollaboratorInformationCard from "../Collaborator-Information";
 import NavigationTabs from "@/components/Tabs/Pre-Occupational/Navigation-Tabs";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Collaborator } from "@/types/Collaborator/Collaborator";
+import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
+import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllUrlsByCollaboratorAndMedicalEvaluation";
+import { useDataValuesByMedicalEvaluationId } from "@/hooks/Data-Values/useDataValues";
 
 interface Props {
   slug: string;
+  collaborator: Collaborator;
+  medicalEvaluation: MedicalEvaluation;
 }
 
-export default function PreOccupationalCards({ slug }: Props) {
+export default function PreOccupationalCards({
+  slug,
+  collaborator,
+  medicalEvaluation,
+}: Props) {
+  const { data: urls } = useGetAllUrlsByCollaboratorAndMedicalEvaluation({
+    auth: true,
+    collaboratorId: collaborator.id,
+    medicalEvaluationId: medicalEvaluation.id,
+  });
+
+  const { data: dataValues } = useDataValuesByMedicalEvaluationId({
+    id: medicalEvaluation.id,
+    auth: true,
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
   return (
@@ -27,7 +48,9 @@ export default function PreOccupationalCards({ slug }: Props) {
               </div>
               <div className="space-y-1">
                 <div className="text-sm text-gray-500">Descripción</div>
-                <div className="font-semibold">PRE-OCUPACIONAL</div>
+                <div className="font-semibold">
+                  {medicalEvaluation.evaluationType.name}
+                </div>
               </div>
             </div>
 
@@ -37,9 +60,9 @@ export default function PreOccupationalCards({ slug }: Props) {
                 size="sm"
                 onClick={() =>
                   navigate(
-                    `/incor-laboral/colaboradores/${slug}/previsualizar-informe`
+                    `/incor-laboral/colaboradores/${slug}/examen/${medicalEvaluation.id}/previsualizar-informe`
                   )
-                } // Redirige a la previsualización
+                }
               >
                 <Eye className="mr-2 h-4 w-4" />
                 Previsualizar informe
@@ -51,8 +74,15 @@ export default function PreOccupationalCards({ slug }: Props) {
             </div>
           </CardContent>
         </Card>
-        <CollaboratorInformationCard />
-        <NavigationTabs isEditing={isEditing} setIsEditing={setIsEditing} />
+        <CollaboratorInformationCard collaborator={collaborator} />
+        <NavigationTabs
+          isEditing={isEditing}
+          dataValues={dataValues}
+          urls={urls}
+          medicalEvaluationId={medicalEvaluation.id}
+          setIsEditing={setIsEditing}
+          collaborator={collaborator}
+        />
       </div>
     </div>
   );

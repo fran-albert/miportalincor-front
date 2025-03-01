@@ -1,7 +1,7 @@
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 import { Unit } from "@/types/Unit/Unit";
 
 export const getAllUnits = async () => {
-    const { data } = await axiosInstance.get<Unit[]>(`Unit/all`);
+    const { data } = await apiIncor.get<Unit[]>(`Unit/all`);
     return data;
 }

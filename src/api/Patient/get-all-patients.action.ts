@@ -1,11 +1,11 @@
 import { slugify } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const getPatients = async (search: string): Promise<Patient[]> => {
     const params = search ? { Search: search } : {}; 
   
-    const { data } = await axiosInstance.get(`Patient`, { params });
+    const { data } = await apiIncor.get(`Patient`, { params });
   
     return data.data.map((patient: any) => ({
       id: patient.id,

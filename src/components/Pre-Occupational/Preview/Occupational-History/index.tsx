@@ -4,7 +4,11 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Input } from "@/components/ui/input";
 
-export default function OccupationalHistoryPreview() {
+interface OccupationalHistoryPreviewProps {
+  isForPdf?: boolean;
+}
+
+export default function OccupationalHistoryPreview({ isForPdf = false }: OccupationalHistoryPreviewProps) {
   const occupationalHistory = useSelector(
     (state: RootState) => state.preOccupational.formData.occupationalHistory
   );
@@ -16,19 +20,23 @@ export default function OccupationalHistoryPreview() {
       </h3>
       {occupationalHistory.length > 0 ? (
         <div className="space-y-2">
-          {occupationalHistory.map((item) => (
-            <Input
-              id="puesto"
-              key={item.id}
-              value={item.description || "Sin descripción"}
-              readOnly
-              className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
-            />
-          ))}
+          {occupationalHistory.map((item) =>
+            isForPdf ? (
+              <p key={item.id} className="p-2 font-semibold border-b">{item.description || "Sin descripción"}</p>
+            ) : (
+              <Input
+                key={item.id}
+                value={item.description || "Sin descripción"}
+                readOnly
+                className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+              />
+            )
+          )}
         </div>
+      ) : isForPdf ? (
+        <p className="p-2 font-semibold">No se encontraron antecedentes ocupacionales.</p>
       ) : (
         <Input
-          id="puesto"
           value={"No se encontraron antecedentes ocupacionales."}
           readOnly
           className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"

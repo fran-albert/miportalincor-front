@@ -1,7 +1,7 @@
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const forgotPassword = async (email: string) => {
-    const { data } = await axiosInstance.post(
+    const { data } = await apiIncor.post(
         `Account/forgot/password?email=${email}`,
         email
     );

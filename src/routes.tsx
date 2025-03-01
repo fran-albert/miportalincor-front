@@ -21,10 +21,14 @@ import ResetPaswordPage from "./pages/auth/Reset-Password";
 import BlodTestPage from "./pages/protected/Blod-Test";
 import StudyTypePage from "./pages/protected/Study-Type";
 import AccessDeniedPage from "./pages/protected/Access-Denied";
-import PreOcuppationalPage from "./pages/protected/Pre-Occupational";
-import CollaboratorPage from "./pages/protected/Pre-Occupational/Colaborator";
-import PreOccupationalPreviewPage from "./pages/protected/Pre-Occupational/Preview";
+import PreOcuppationalPage from "./pages/protected/Collaborators";
+import PreOccupationalPreviewPage from "./pages/protected/Collaborator/Pre-Occupattional/Preview";
 import NutritionPage from "./pages/protected/Patient/Nutrition";
+import CreateCollaboratorPage from "./pages/protected/Collaborator/Create";
+import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupattional/Create";
+import ListPreocuppationalExamsPage from "./pages/protected/Collaborator/Pre-Occupattional/List";
+import LaboralIncorPage from "./pages/protected/Laboral-Incor";
+import CompaniesPage from "./pages/protected/Companies";
 
 function App() {
   return (
@@ -115,15 +119,23 @@ function App() {
               }
             />
             <Route
-              path="/incor-laboral/colaboradores/:slug"
+              path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
-                  <CollaboratorPage />
+                  <CreatePreoccupationalPage />
                 </Private_Routes>
               }
             />
             <Route
-              path="/incor-laboral/colaboradores/:slug/previsualizar-informe"
+              path="/incor-laboral/colaboradores/:slug"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <ListPreocuppationalExamsPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId/previsualizar-informe"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <PreOccupationalPreviewPage />
@@ -131,10 +143,26 @@ function App() {
               }
             />
             <Route
-              path="/incor-laboral"
+              path="/incor-laboral/colaboradores"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <PreOcuppationalPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <LaboralIncorPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/empresas"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <CompaniesPage />
                 </Private_Routes>
               }
             />
@@ -227,6 +255,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
                   <CreatePatientPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/colaboradores/agregar"
+              element={
+                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                  <CreateCollaboratorPage />
                 </Private_Routes>
               }
             />

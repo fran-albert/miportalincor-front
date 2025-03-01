@@ -1,5 +1,5 @@
-"use client";
-
+import { useEffect } from "react";
+import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { Label } from "@/components/ui/label";
 import {
   AccordionContent,
@@ -12,50 +12,239 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
-
+import {
+  ConclusionOptions,
+  setFormData,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataType } from "@/types/Data-Type/Data-Type";
+import { selectFlatFormData } from "@/store/Pre-Occupational/selectors";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 interface Props {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
+  fields: DataType[];
+  medicalEvaluationId: number;
+  dataValues?: DataValue[];
 }
 
-export default function ConclusionAccordion({ isEditing, setIsEditing }: Props) {
+const testKeyMapping: Record<string, string> = {
+  "Examen físico": "examenFisico",
+  "Glucemia en Ayuna": "glucemia",
+  Tuberculosis: "tuberculosis",
+  Espirometría: "espirometria",
+  "Capacidad física (Test Harvard)": "capacidadFisica",
+  "Examen visual (Agudeza, campo, profundidad, cromatismo)": "examenVisual",
+  "Radiografía tórax y lumbar": "radiografia",
+  Audiometría: "audiometria",
+  Hemograma: "hemograma",
+  "Historia clínica ocupacional": "historiaClinica",
+  "Examen orina": "examenOrina",
+  Electrocardiograma: "electrocardiograma",
+  "Panel de drogas (COC, THC, etc.)": "panelDrogas",
+  "Pruebas hepáticas (TGO, TGP)": "hepaticas",
+  Psicotenico: "psicotecnico",
+  Otros: "otros",
+  "Otras pruebas realizadas": "otrasPruebas",
+};
+
+const examKeyMapping: Record<string, string> = {
+  Clínico: "clinico",
+  Electrocardiograma: "electrocardiograma-result",
+  "Laboratorio básico ley": "laboratorio",
+  "RX Torax Frente": "rx-torax",
+  Electroencefalograma: "electroencefalograma",
+  Psicotécnico: "psicotecnico",
+};
+
+const getValueForField = (
+  field: DataType,
+  flatFormData: Record<string, any>,
+  dataValues?: DataValue[]
+) => {
+  const dataValue = dataValues?.find((dv) => dv.dataType.name === field.name);
+  if (dataValue) return dataValue.value;
+
+  if (field.dataType === "BOOLEAN" && testKeyMapping[field.name]) {
+    const key = `tests_${testKeyMapping[field.name]}`;
+    return flatFormData[key];
+  }
+  if (field.dataType === "STRING" && examKeyMapping[field.name]) {
+    const key = `exams_${examKeyMapping[field.name]}`;
+    return flatFormData[key];
+  }
+  if (testKeyMapping[field.name]) {
+    return flatFormData[testKeyMapping[field.name]];
+  }
+  return flatFormData[field.name];
+};
+
+export default function ConclusionAccordion({
+  isEditing,
+  setIsEditing,
+  medicalEvaluationId,
+  dataValues,
+  fields,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const { conclusion, recomendaciones, conclusionOptions } = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
-  
+  const { createDataValuesMutation } = useDataValuesMutations();
   const [isFinalized, setIsFinalized] = useState(false);
 
-  const options = [
-    { value: "apto-001", label: "Apto para desempeñar el cargo sin patología aparente" },
-    { value: "apto-002", label: "Apto para desempeñar el cargo con patología que no limite lo laboral" },
-    { value: "apto-003", label: "Apto con restricciones" },
-    { value: "no-apto", label: "No apto" },
-    { value: "aplazado", label: "Aplazado" },
+  const conclusionFilter = [
+    {
+      id: "apto-001",
+      name: "Apto para desempeñar el cargo sin patología aparente",
+    },
+    {
+      id: "apto-002",
+      name: "Apto para desempeñar el cargo con patología que no limite lo laboral",
+    },
+    { id: "apto-003", name: "Apto con restricciones" },
+    { id: "no-apto", name: "No Apto" },
+    { id: "aplazado", name: "Aplazado" },
   ];
 
-  // Actualiza el campo de conclusión
-  const handleConclusionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    dispatch(setFormData({ conclusion: e.target.value }));
+  const options = fields
+    .filter(
+      (field) =>
+        field.dataType === "BOOLEAN" &&
+        conclusionFilter.some((option) => option.name === field.name)
+    )
+    .map((field) => ({
+      id:
+        conclusionFilter.find((opt) => opt.name === field.name)?.id ||
+        field.id.toString(),
+      label: field.name,
+    }));
+
+  const flatFormData = useSelector((state: RootState) =>
+    selectFlatFormData(state)
+  );
+
+  const filteredFields = fields.filter(
+    (field) =>
+      field.category === "GENERAL" ||
+      (field.dataType === "BOOLEAN" && testKeyMapping[field.name])
+  );
+
+  const handleSelectOption = (selectedOptionId: string) => {
+    const updatedOptions: ConclusionOptions = {
+      "apto-001": false,
+      "apto-002": false,
+      "apto-003": false,
+      "no-apto": false,
+      aplazado: false,
+    };
+    if (selectedOptionId in updatedOptions) {
+      updatedOptions[selectedOptionId as keyof ConclusionOptions] = true;
+    }
+    dispatch(setFormData({ conclusionOptions: updatedOptions }));
   };
 
-  // Actualiza el campo de recomendaciones
-  const handleRecomendacionesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    dispatch(setFormData({ recomendaciones: e.target.value }));
-  };
+  useEffect(() => {
+    if (dataValues) {
+      const initialConclusion = dataValues.find(
+        (dv) => dv.dataType.name === "Conclusion"
+      )?.value;
+      const initialRecomendaciones = dataValues.find(
+        (dv) => dv.dataType.name === "Recomendaciones"
+      )?.value;
+      const initialConclusionOptions = dataValues
+        .filter((dv) =>
+          conclusionFilter.some((opt) => opt.name === dv.dataType.name)
+        )
+        .reduce((acc, dv) => {
+          const optionId = conclusionFilter.find(
+            (opt) => opt.name === dv.dataType.name
+          )?.id;
+          if (optionId && dv.value === "true") {
+            acc[optionId as keyof ConclusionOptions] = true;
+          }
+          return acc;
+        }, {} as ConclusionOptions);
 
-  // Alterna el valor de una opción de conclusión
-  const handleToggleOption = (optionValue: string) => {
-    dispatch(
-      setFormData({
-        conclusionOptions: {
-          ...conclusionOptions,
-          [optionValue]: !conclusionOptions[optionValue as keyof typeof conclusionOptions],
-        },
-      })
+      dispatch(
+        setFormData({
+          conclusion: initialConclusion || conclusion,
+          recomendaciones: initialRecomendaciones || recomendaciones,
+          conclusionOptions: {
+            ...conclusionOptions,
+            ...initialConclusionOptions,
+          },
+        })
+      );
+    }
+  }, [dataValues, dispatch]);
+
+  const handleSave = () => {
+    const dataValues = filteredFields
+      .map((field) => ({
+        dataTypeId: field.id,
+        value:
+          getValueForField(field, flatFormData) !== undefined
+            ? String(getValueForField(field, flatFormData))
+            : "",
+      }))
+      .filter((item) => item.value !== "" && item.value !== undefined);
+
+    const conclusionField = fields.find((field) => field.name === "Conclusion");
+    if (
+      conclusionField &&
+      conclusion &&
+      !dataValues.find((dv) => dv.dataTypeId === conclusionField.id)
+    ) {
+      dataValues.push({
+        dataTypeId: conclusionField.id,
+        value: conclusion,
+      });
+    }
+    const recomendacionesField = fields.find(
+      (field) => field.name === "Recomendaciones"
     );
+    if (
+      recomendacionesField &&
+      recomendaciones &&
+      !dataValues.find((dv) => dv.dataTypeId === recomendacionesField.id)
+    ) {
+      dataValues.push({
+        dataTypeId: recomendacionesField.id,
+        value: recomendaciones,
+      });
+    }
+
+    Object.entries(conclusionOptions).forEach(([key, value]) => {
+      if (value === true) {
+        const optionMapping: Record<string, number> = {
+          "apto-001": 30,
+          "apto-002": 31,
+          "apto-003": 32,
+          "no-apto": 33,
+          aplazado: 34,
+        };
+        if (
+          optionMapping[key] !== undefined &&
+          !dataValues.find((dv) => dv.dataTypeId === optionMapping[key])
+        ) {
+          dataValues.push({
+            dataTypeId: optionMapping[key],
+            value: "true",
+          });
+        }
+      }
+    });
+
+    const payload = {
+      medicalEvaluationId: medicalEvaluationId,
+      dataValues,
+    };
+
+    console.log(payload);
+    createDataValuesMutation.mutate(payload);
   };
+
+ 
 
   return (
     <AccordionItem value="conclusion" className="border rounded-lg">
@@ -71,25 +260,28 @@ export default function ConclusionAccordion({ isEditing, setIsEditing }: Props) 
               className="min-h-[100px] mt-2"
               placeholder="Ingrese su conclusión..."
               disabled={!isEditing}
-              value={conclusion}
-              onChange={handleConclusionChange}
+              value={conclusion || ""}
+              onChange={(e) =>
+                dispatch(setFormData({ conclusion: e.target.value }))
+              }
             />
           </div>
 
-          {/* Opciones de Conclusión */}
+          {/* Opciones de Conclusión (Checkboxes) */}
           {options.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.id} className="flex items-center space-x-2">
               <Checkbox
-                id={option.value}
+                id={option.id}
                 disabled={!isEditing}
                 checked={Boolean(
-                  conclusionOptions &&
-                  conclusionOptions[option.value as keyof typeof conclusionOptions]
+                  conclusionOptions?.[option.id as keyof ConclusionOptions]
                 )}
-                onCheckedChange={() => isEditing && handleToggleOption(option.value)}
+                onCheckedChange={() =>
+                  isEditing && handleSelectOption(option.id)
+                }
                 className="rounded-md transition-all text-greenPrimary disabled:opacity-50"
               />
-              <Label htmlFor={option.value} className="text-sm font-medium">
+              <Label htmlFor={option.id} className="text-sm font-medium">
                 {option.label}
               </Label>
             </div>
@@ -97,13 +289,17 @@ export default function ConclusionAccordion({ isEditing, setIsEditing }: Props) 
 
           {/* Campo: Recomendaciones / Observaciones */}
           <div className="space-y-2">
-            <Label htmlFor="recomendaciones">Recomendaciones / Observaciones</Label>
+            <Label htmlFor="recomendaciones">
+              Recomendaciones / Observaciones
+            </Label>
             <Textarea
               id="recomendaciones"
               className="min-h-[100px]"
               disabled={!isEditing}
-              value={recomendaciones}
-              onChange={handleRecomendacionesChange}
+              value={recomendaciones || ""}
+              onChange={(e) =>
+                dispatch(setFormData({ recomendaciones: e.target.value }))
+              }
             />
           </div>
 
@@ -122,12 +318,17 @@ export default function ConclusionAccordion({ isEditing, setIsEditing }: Props) 
             <Label htmlFor="finalizado">Marcar como finalizado</Label>
           </div>
 
+          {/* Botones */}
           <div className="flex justify-end gap-4">
             <Button variant="destructive" disabled={!isEditing}>
               Cancelar
             </Button>
-            <Button disabled={!isEditing} className="bg-greenPrimary hover:bg-teal-800">
-              Guardar
+            <Button
+              disabled={!isEditing || createDataValuesMutation.isPending}
+              className="bg-greenPrimary hover:bg-teal-800"
+              onClick={handleSave}
+            >
+              {createDataValuesMutation.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </div>
