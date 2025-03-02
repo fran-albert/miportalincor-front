@@ -25,7 +25,7 @@ export const ListPreoccupationalExamsTable: React.FC<Props> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { evaluationTypes } = useEvaluationType({ auth: true });
   const openDialog = () => setIsDialogOpen(true);
-  const columns = getColumns(slug, {
+  const columns = getColumns(slug, collaborator, {
     isSecretary,
     isDoctor,
     isAdmin,

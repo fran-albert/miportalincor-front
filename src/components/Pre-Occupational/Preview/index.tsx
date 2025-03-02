@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, Save, Send } from "lucide-react";
@@ -18,36 +16,37 @@ import StudiesPreview from "./Studies";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import AptitudeCertificateHeader from "./Incor";
 import ClinicalEvaluationPreview from "./Clinical-Evaluation";
 import PhysicalEvaluationPreview from "./Physical-Evaluation";
+import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileCollaborator";
+import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
 
 interface Props {
   collaborator: Collaborator;
   urls: GetUrlsResponseDto[] | undefined;
-  medicalEvaluationId: number;
+  medicalEvaluation: MedicalEvaluation;
 }
 
 export default function PreOccupationalPreviewComponent({
   collaborator,
   urls,
-  medicalEvaluationId,
+  medicalEvaluation,
 }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const { mutate: uploadStudy } = useUploadStudyFileMutation({
+    collaboratorId: collaborator.id,
+  });
+  const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
-  const pdfHeaderRef = useRef<HTMLDivElement>(null); // Primera página
-  const pdfGeneralInfoRef = useRef<HTMLDivElement>(null); // Segunda página
-  const pdfMiddleRef = useRef<HTMLDivElement>(null); // Tercera página
-  const pdfRestRef = useRef<HTMLDivElement>(null); // Cuarta página (sin MedicalEvaluation)
+  const pdfHeaderRef = useRef<HTMLDivElement>(null);
+  const pdfGeneralInfoRef = useRef<HTMLDivElement>(null);
+  const pdfMiddleRef = useRef<HTMLDivElement>(null);
+  const pdfRestRef = useRef<HTMLDivElement>(null);
   const pdfMedicalEvalRef = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection1Ref = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection2Ref = useRef<HTMLDivElement>(null);
-  const pdfPhysicalEvalSection3Ref = useRef<HTMLDivElement>(null); // Nueva página para MedicalEvaluation
-  const formData = useSelector(
-    (state: RootState) => state.preOccupational.formData
-  );
+  const pdfPhysicalEvalSection3Ref = useRef<HTMLDivElement>(null);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -75,7 +74,7 @@ export default function PreOccupationalPreviewComponent({
       return;
 
     setIsGenerating(true);
-
+    setProgress(0);
     try {
       // Configuramos el PDF
       const pdf = new jsPDF("p", "mm", "a4");
@@ -124,23 +123,37 @@ export default function PreOccupationalPreviewComponent({
           }
         }
       };
+      const totalSections = 8;
+      let completedSections = 0;
 
-      // Capturamos cada sección
+      const updateProgress = () => {
+        completedSections++;
+        setProgress(Math.round((completedSections / totalSections) * 100));
+      };
+
+      // Capturamos cada sección con progreso
       const headerCanvas = await captureSection(pdfHeaderRef);
+      updateProgress();
       const generalInfoCanvas = await captureSection(pdfGeneralInfoRef);
+      updateProgress();
       const middleCanvas = await captureSection(pdfMiddleRef);
+      updateProgress();
       const restCanvas = await captureSection(pdfRestRef);
+      updateProgress();
       const medicalEvalCanvas = await captureSection(pdfMedicalEvalRef);
+      updateProgress();
       const physicalEvalSection1Canvas = await captureSection(
         pdfPhysicalEvalSection1Ref
       );
+      updateProgress();
       const physicalEvalSection2Canvas = await captureSection(
         pdfPhysicalEvalSection2Ref
       );
+      updateProgress();
       const physicalEvalSection3Canvas = await captureSection(
         pdfPhysicalEvalSection3Ref
       );
-
+      updateProgress();
       if (
         !headerCanvas ||
         !generalInfoCanvas ||
@@ -242,8 +255,27 @@ export default function PreOccupationalPreviewComponent({
         physicalEval3PdfHeight
       );
 
-      // Descargamos el PDF
       const pdfBlob = pdf.output("blob");
+      const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
+      const formData = new FormData();
+      formData.append("file", pdfBlob, fileName);
+      formData.append("userName", collaborator.userName);
+      formData.append("studyType", medicalEvaluation.evaluationType.name);
+      formData.append("completed", "true");
+      formData.append("collaboratorId", String(collaborator.id));
+      formData.append("medicalEvaluationId", String(medicalEvaluation.id));
+      // Subir el PDF a la nube
+      await new Promise((resolve, reject) => {
+        uploadStudy(
+          { collaboratorId: Number(collaborator.id), formData },
+          {
+            onSuccess: () => resolve(true),
+            onError: (error) => reject(error),
+          }
+        );
+      });
+
+      // Descargamos el PDF
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;
@@ -256,6 +288,7 @@ export default function PreOccupationalPreviewComponent({
       console.error("Error al generar el PDF:", error);
     } finally {
       setIsGenerating(false);
+      setProgress(0);
       if (pdfHeaderRef.current) pdfHeaderRef.current.style.display = "none";
       if (pdfGeneralInfoRef.current)
         pdfGeneralInfoRef.current.style.display = "none";
@@ -403,6 +436,23 @@ export default function PreOccupationalPreviewComponent({
       >
         {urls && <StudiesPreview studies={urls} />}
       </div>
+      {isGenerating && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">
+              {progress < 100 ? "Generando PDF..." : "Subiendo PDF..."}
+            </h3>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p className="text-center">{progress}% Completado</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end gap-4 p-6">
         <Button variant="outline" size="sm">
           <Printer className="mr-2 h-4 w-4" />

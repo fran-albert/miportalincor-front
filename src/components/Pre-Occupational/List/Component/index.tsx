@@ -17,6 +17,7 @@ const ListPreoccupationalExams = () => {
     id,
   });
 
+
   const { data, isFetching } = id
     ? useCollaboratorMedicalEvaluation({ id, auth: true })
     : { data: undefined, isFetching: false };

@@ -16,7 +16,7 @@ export function formatMatricula(matricula: string): string {
 }
 
 export function getGenderLabel(gender: string): string {
-  return gender === 'male' ? 'Masculino' : 'Femenino';
+  return gender === 'Masculino' ? 'Masculino' : 'Femenino';
 }
 
 export function formatDate(dateString: string): string {

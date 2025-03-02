@@ -1,6 +1,7 @@
 import LoadingAnimation from "@/components/Loading/loading";
 import PreOccupationalPreviewComponent from "@/components/Pre-Occupational/Preview";
 import { useCollaborator } from "@/hooks/Collaborator/useCollaborator";
+import { useMedicalEvaluation } from "@/hooks/Medical-Evaluation/useMedicalEvaluation";
 import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllUrlsByCollaboratorAndMedicalEvaluation";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
@@ -14,6 +15,11 @@ export default function PreOccupationalPreviewPage() {
   const { isLoading, collaborator, error } = useCollaborator({
     auth: true,
     id,
+  });
+
+  const { data } = useMedicalEvaluation({
+    auth: true,
+    id: Number(medicalEvaluationId),
   });
 
   const { data: urls } = useGetAllUrlsByCollaboratorAndMedicalEvaluation({
@@ -42,9 +48,10 @@ export default function PreOccupationalPreviewPage() {
       {error && <div>Hubo un error al cargar el colaborador.</div>}
       {isLoading ? (
         <LoadingAnimation />
-      ) : collaborator ? (
+      ) : collaborator && data ? (
         <PreOccupationalPreviewComponent
           collaborator={collaborator}
+          medicalEvaluation={data}
           urls={urls}
         />
       ) : (
