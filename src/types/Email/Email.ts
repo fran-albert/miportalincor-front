@@ -1,9 +1,8 @@
 export interface SendEmailDto {
     to: string;
     subject: string;
+    evaluationType: string
     collaboratorName: string;
-    fileData: FileDatum[];
+    fileData: string
 }
-export interface FileDatum {
-    url: string;
-}
+

@@ -33,11 +33,7 @@ export const ListPreoccupationalExamsTable: React.FC<Props> = ({
 
   return (
     <>
-      <CollaboratorInformationCard
-        collaborator={collaborator}
-        canEdit={true}
-        onEditClick={() => console.log("Editar colaborador")}
-      />
+      <CollaboratorInformationCard collaborator={collaborator} canEdit={true} />
       <DataTable
         columns={columns}
         data={data}

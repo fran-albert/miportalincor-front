@@ -5,6 +5,7 @@ import BreadcrumbComponent from "@/components/Breadcrumb";
 import { useParams } from "react-router-dom";
 import { parseSlug } from "@/common/helpers/helpers";
 import { useCollaborator } from "@/hooks/Collaborator/useCollaborator";
+import LoadingAnimation from "@/components/Loading/loading";
 
 const ListPreoccupationalExams = () => {
   const params = useParams();
@@ -12,11 +13,10 @@ const ListPreoccupationalExams = () => {
 
   const { id, formattedName } = parseSlug(slug);
 
-  const { collaborator } = useCollaborator({
+  const { collaborator, isLoading } = useCollaborator({
     auth: true,
     id,
   });
-
 
   const { data, isFetching } = id
     ? useCollaboratorMedicalEvaluation({ id, auth: true })
@@ -27,6 +27,10 @@ const ListPreoccupationalExams = () => {
     { label: "Colaboradores", href: `/incor-laboral/colaboradores` },
     { label: formattedName, href: `/incor-laboral/colaboradores/${slug}` },
   ];
+
+  if (isLoading) {
+    return <LoadingAnimation />;
+  }
 
   return (
     <>

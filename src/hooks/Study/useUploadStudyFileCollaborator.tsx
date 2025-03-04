@@ -63,6 +63,9 @@ export const useUploadStudyFileMutation = ({
       queryClient.invalidateQueries({
         queryKey: ["studies-by-collaborator-id", collaboratorId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["collaborator-medical-evaluation", { collaboratorId }],
+      });
 
       toast.success(
         <SuccessToast message={`${studyType} subido con éxito`} />,

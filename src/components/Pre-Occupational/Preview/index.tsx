@@ -21,6 +21,8 @@ import ClinicalEvaluationPreview from "./Clinical-Evaluation";
 import PhysicalEvaluationPreview from "./Physical-Evaluation";
 import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileCollaborator";
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   collaborator: Collaborator;
@@ -37,6 +39,7 @@ export default function PreOccupationalPreviewComponent({
   const { mutate: uploadStudy } = useUploadStudyFileMutation({
     collaboratorId: collaborator.id,
   });
+  const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const pdfHeaderRef = useRef<HTMLDivElement>(null);
@@ -62,6 +65,7 @@ export default function PreOccupationalPreviewComponent({
       href: `/incor-laboral/colaboradores/${collaborator?.slug}/previsualizar-informe`,
     },
   ];
+  const queryClient = useQueryClient();
 
   const handleSaveAndGeneratePdf = async () => {
     if (
@@ -101,11 +105,7 @@ export default function PreOccupationalPreviewComponent({
       };
 
       // Función para agregar página con numeración
-      const addPageWithNumber = (
-        imgData: string,
-        imgProps: any,
-        pdfHeight: number
-      ) => {
+      const addPageWithNumber = (imgData: string, pdfHeight: number) => {
         let heightLeft = pdfHeight;
         let position = 0;
         while (heightLeft > 0) {
@@ -172,7 +172,7 @@ export default function PreOccupationalPreviewComponent({
       const headerImgProps = pdf.getImageProperties(headerImgData);
       const headerPdfHeight =
         (headerImgProps.height * pdfWidth) / headerImgProps.width;
-      addPageWithNumber(headerImgData, headerImgProps, headerPdfHeight);
+      addPageWithNumber(headerImgData, headerPdfHeight);
 
       // Segunda página (GeneralInfo y Tests)
       pdf.addPage();
@@ -180,11 +180,7 @@ export default function PreOccupationalPreviewComponent({
       const generalInfoImgProps = pdf.getImageProperties(generalInfoImgData);
       const generalInfoPdfHeight =
         (generalInfoImgProps.height * pdfWidth) / generalInfoImgProps.width;
-      addPageWithNumber(
-        generalInfoImgData,
-        generalInfoImgProps,
-        generalInfoPdfHeight
-      );
+      addPageWithNumber(generalInfoImgData, generalInfoPdfHeight);
 
       // Tercera página (ExamsResults y Conclusion)
       pdf.addPage();
@@ -192,7 +188,7 @@ export default function PreOccupationalPreviewComponent({
       const middleImgProps = pdf.getImageProperties(middleImgData);
       const middlePdfHeight =
         (middleImgProps.height * pdfWidth) / middleImgProps.width;
-      addPageWithNumber(middleImgData, middleImgProps, middlePdfHeight);
+      addPageWithNumber(middleImgData, middlePdfHeight);
 
       // Cuarta página (Institution, Worker, OccupationalHistory, etc.)
       pdf.addPage();
@@ -200,7 +196,7 @@ export default function PreOccupationalPreviewComponent({
       const restImgProps = pdf.getImageProperties(restImgData);
       const restPdfHeight =
         (restImgProps.height * pdfWidth) / restImgProps.width;
-      addPageWithNumber(restImgData, restImgProps, restPdfHeight);
+      addPageWithNumber(restImgData, restPdfHeight);
 
       // Nueva página para MedicalEvaluationPreview
       pdf.addPage();
@@ -208,11 +204,7 @@ export default function PreOccupationalPreviewComponent({
       const medicalEvalImgProps = pdf.getImageProperties(medicalEvalImgData);
       const medicalEvalPdfHeight =
         (medicalEvalImgProps.height * pdfWidth) / medicalEvalImgProps.width;
-      addPageWithNumber(
-        medicalEvalImgData,
-        medicalEvalImgProps,
-        medicalEvalPdfHeight
-      );
+      addPageWithNumber(medicalEvalImgData, medicalEvalPdfHeight);
 
       pdf.addPage();
       const physicalEval1ImgData =
@@ -221,11 +213,7 @@ export default function PreOccupationalPreviewComponent({
         pdf.getImageProperties(physicalEval1ImgData);
       const physicalEval1PdfHeight =
         (physicalEval1ImgProps.height * pdfWidth) / physicalEval1ImgProps.width;
-      addPageWithNumber(
-        physicalEval1ImgData,
-        physicalEval1ImgProps,
-        physicalEval1PdfHeight
-      );
+      addPageWithNumber(physicalEval1ImgData, physicalEval1PdfHeight);
 
       // Página 6 - Sección 2
       pdf.addPage();
@@ -235,11 +223,7 @@ export default function PreOccupationalPreviewComponent({
         pdf.getImageProperties(physicalEval2ImgData);
       const physicalEval2PdfHeight =
         (physicalEval2ImgProps.height * pdfWidth) / physicalEval2ImgProps.width;
-      addPageWithNumber(
-        physicalEval2ImgData,
-        physicalEval2ImgProps,
-        physicalEval2PdfHeight
-      );
+      addPageWithNumber(physicalEval2ImgData, physicalEval2PdfHeight);
 
       // Página 7 - Sección 3
       pdf.addPage();
@@ -249,11 +233,7 @@ export default function PreOccupationalPreviewComponent({
         pdf.getImageProperties(physicalEval3ImgData);
       const physicalEval3PdfHeight =
         (physicalEval3ImgProps.height * pdfWidth) / physicalEval3ImgProps.width;
-      addPageWithNumber(
-        physicalEval3ImgData,
-        physicalEval3ImgProps,
-        physicalEval3PdfHeight
-      );
+      addPageWithNumber(physicalEval3ImgData, physicalEval3PdfHeight);
 
       const pdfBlob = pdf.output("blob");
       const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
@@ -275,6 +255,15 @@ export default function PreOccupationalPreviewComponent({
         );
       });
 
+      await queryClient.invalidateQueries({
+        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
+      });
+
+      // Opcionalmente, si realmente necesitas forzar el refetch:
+      await queryClient.refetchQueries({
+        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
+      });
+
       // Descargamos el PDF
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
@@ -284,6 +273,7 @@ export default function PreOccupationalPreviewComponent({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      navigate(`/incor-laboral/colaboradores/${collaborator.slug}`);
     } catch (error) {
       console.error("Error al generar el PDF:", error);
     } finally {

@@ -13,8 +13,6 @@ import OccupationalHistoryPreview from "@/components/Pre-Occupational/Preview/Oc
 import ClinicalEvaluationPreview from "@/components/Pre-Occupational/Preview/Clinical-Evaluation";
 import MedicalEvaluationPreview from "@/components/Pre-Occupational/Preview/Medical-Evaluation";
 import PhysicalEvaluationPreview from "@/components/Pre-Occupational/Preview/Physical-Evaluation";
-import StudiesPreview from "@/components/Pre-Occupational/Preview/Studies";
-
 
 interface PDFRefs {
   pdfHeaderRef: RefObject<HTMLDivElement>;
@@ -33,7 +31,10 @@ interface PDFContainersProps {
   refs: PDFRefs;
 }
 
-export default function PDFContainers({ collaborator, urls, refs }: PDFContainersProps) {
+export default function PDFContainers({
+  collaborator,
+  refs,
+}: PDFContainersProps) {
   const {
     pdfHeaderRef,
     pdfGeneralInfoRef,
@@ -55,36 +56,68 @@ export default function PDFContainers({ collaborator, urls, refs }: PDFContainer
 
   return (
     <>
-      <div ref={pdfHeaderRef} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfHeaderRef}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <AptitudeCertificateHeader company={collaborator.company} />
         <CollaboratorInformationCard collaborator={collaborator} isForPdf />
       </div>
-      <div ref={pdfGeneralInfoRef} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfGeneralInfoRef}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <GeneralInfoPreview isForPdf />
         <TestsPreview isForPdf />
       </div>
-      <div ref={pdfMiddleRef} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfMiddleRef}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <ExamsResultsPreview isForPdf />
         <ConclusionPreview isForPdf />
       </div>
-      <div ref={pdfRestRef} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfRestRef}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <InstitutionInformationPreview isForPdf />
         <WorkerInformationPreview isForPdf />
         <OccupationalHistoryPreview isForPdf />
       </div>
-      <div ref={pdfMedicalEvalRef} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfMedicalEvalRef}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <ClinicalEvaluationPreview isForPdf />
         <MedicalEvaluationPreview isForPdf />
         <PhysicalEvaluationPreview isForPdf section={1} />
       </div>
-      <div ref={pdfPhysicalEvalSection1Ref} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfPhysicalEvalSection1Ref}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <PhysicalEvaluationPreview isForPdf section={2} />
       </div>
-      <div ref={pdfPhysicalEvalSection2Ref} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfPhysicalEvalSection2Ref}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         <PhysicalEvaluationPreview isForPdf section={3} />
         {/* {urls && <StudiesPreview studies={urls} />} */}
       </div>
-      <div ref={pdfPhysicalEvalSection3Ref} className="bg-white p-6 space-y-6" style={containerStyle}>
+      <div
+        ref={pdfPhysicalEvalSection3Ref}
+        className="bg-white p-6 space-y-6"
+        style={containerStyle}
+      >
         {/* {urls && <StudiesPreview studies={urls} />} */}
       </div>
     </>

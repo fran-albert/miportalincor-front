@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Edit2, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
 interface Props {
   collaborator: Collaborator;
   canEdit?: boolean;
-  onEditClick?: () => void;
   isForPdf?: boolean;
 }
 
@@ -20,10 +20,10 @@ export default function CollaboratorInformationCard({
   collaborator,
   canEdit = false,
   isForPdf = false,
-  onEditClick,
 }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const photoUrl = collaborator.photoUrl;
+  const navigate = useNavigate();
   const hasValidImage = !!photoUrl && photoUrl.trim() !== "";
   return (
     <Card className="shadow-lg border border-gray-200 rounded-lg">
@@ -34,7 +34,11 @@ export default function CollaboratorInformationCard({
           </h2>
           {canEdit && (
             <Button
-              onClick={onEditClick}
+              onClick={() =>
+                navigate(
+                  `/incor-laboral/colaboradores/${collaborator.slug}/editar`
+                )
+              }
               className="bg-greenPrimary hover:bg-teal-800 text-white px-4 py-2 rounded-md flex items-center transition duration-200"
               type="button"
             >

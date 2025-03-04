@@ -124,7 +124,7 @@ export const getColumns = (
                         />
                       </Button>
                     </a>
-                    <SendEmailDialog collaborator={collaborator} />
+                    <SendEmailDialog collaborator={collaborator} url={signedUrl.url} evaluationType={row.original.medicalEvaluation.evaluationType.name}/>
                   </>
                 ) : (
                   <ViewButton

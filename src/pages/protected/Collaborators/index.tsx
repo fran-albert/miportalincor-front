@@ -1,4 +1,3 @@
-import { usePrefetchPatient } from "@/hooks/Patient/usePrefetchPatient";
 import { Helmet } from "react-helmet-async";
 import { CollaboratorsTable } from "@/components/Collaborators/Table/table";
 import { useCollaborators } from "@/hooks/Collaborator/useCollaborators";
@@ -9,7 +8,6 @@ const PreOcuppationalPage = () => {
     fetch: true,
   });
 
-  const prefetchPatients = usePrefetchPatient();
 
   return (
     <>
@@ -18,7 +16,6 @@ const PreOcuppationalPage = () => {
       </Helmet>
       <CollaboratorsTable
         Collaborators={collaborators || []}
-        prefetchCollaborators={prefetchPatients}
         isFetching={isFetching}
       />
     </>

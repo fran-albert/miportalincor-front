@@ -19,7 +19,7 @@ interface Props {
   fields: DataType[];
 }
 
-export default function InstitutionInformation({ isEditing, fields }: Props) {
+export default function InstitutionInformation({ isEditing }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const institutionInfo = useSelector(
     (state: RootState) => state.preOccupational.formData.institutionInformation

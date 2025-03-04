@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateDoctor } from "@/api/Doctor/update-doctor.action";
-import { Doctor } from "@/types/Doctor/Doctor";
 import { deleteCollaborator } from "@/api/Collaborator/delete-collaborator.action";
 import { createCollaborator } from "@/api/Collaborator/create-collaborator.action";
+import { updateCollaborator } from "@/api/Collaborator/update-collaborator.action";
 
 export const useCollaboratorMutations = () => {
   const queryClient = useQueryClient();
@@ -19,17 +18,25 @@ export const useCollaboratorMutations = () => {
     },
   });
 
-  const updateDoctorMutation = useMutation({
-    mutationFn: ({ id, doctor }: { id: number; doctor: Doctor }) => updateDoctor(id, doctor),
-    onSuccess: (doctor, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', variables.id] })
-      console.log("OK", doctor, variables, context);
+  const updateCollaboratorMutation = useMutation({
+    mutationFn: async ({
+      id,
+      collaborator,
+    }: {
+      id: number;
+      collaborator: FormData;
+    }) => {
+      return await updateCollaborator(id, collaborator);
+    },
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ['collaborator', variables.id] });
+      console.log('Actualización exitosa:', data, variables, context);
     },
     onError: (error, variables, context) => {
-      console.log("Error", error, variables, context);
+      console.error('Error al actualizar el colaborador:', error, variables, context);
     },
   });
-
+  
   const deleteCollaboratorMutation = useMutation({
     mutationFn: (id: number) => deleteCollaborator(id),
     onSuccess: (collaborator, variables, context) => {
@@ -43,5 +50,5 @@ export const useCollaboratorMutations = () => {
 
 
 
-  return { addCollaboratorMutation, updateDoctorMutation, deleteCollaboratorMutation };
+  return { addCollaboratorMutation, updateCollaboratorMutation, deleteCollaboratorMutation };
 };

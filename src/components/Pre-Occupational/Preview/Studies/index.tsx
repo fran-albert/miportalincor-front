@@ -26,14 +26,9 @@ interface PDFPageAsImageProps {
   width?: number;
 }
 
-const PDFPageAsImage = ({
-  fileUrl,
-  pageNumber,
-  width = 600,
-}: PDFPageAsImageProps) => {
+const PDFPageAsImage = ({ pageNumber, width = 600 }: PDFPageAsImageProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageData, setImageData] = useState<string>("");
-
 
   const onRenderSuccess = () => {
     if (canvasRef.current) {

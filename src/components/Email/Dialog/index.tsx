@@ -34,52 +34,63 @@ import { useEmailMutations } from "@/hooks/Email/useEmailMutations";
 
 interface Props {
   collaborator: Collaborator;
+  url: string;
+  evaluationType: string;
 }
 
-export default function SendEmailDialog({ collaborator }: Props) {
+export default function SendEmailDialog({
+  collaborator,
+  url,
+  evaluationType,
+}: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
+
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
+    defaultValues: {
+      to: collaborator.company.email,
+      subject: "",
+    },
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { reset } = form;
   const { sendEmailMutation } = useEmailMutations();
 
   useEffect(() => {
     if (isOpen) {
-      reset();
+      reset({
+        to: collaborator.company.email,
+        subject: "",
+      });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, collaborator.company.email]);
 
   async function onSubmit(values: z.infer<typeof emailSchema>) {
     setIsSubmitting(true);
-    console.log(values);
     try {
       const payload: SendEmailDto = {
         ...values,
-        collaboratorName: collaborator.firstName + collaborator.lastName,
-
+        collaboratorName: collaborator.firstName + " " + collaborator.lastName,
+        evaluationType: evaluationType,
+        fileData: url,
       };
       const promise = sendEmailMutation.mutateAsync(payload);
       toast.promise(promise, {
-        loading: <LoadingToast message="Creando análisis bioquímico..." />,
-        success: (
-          <SuccessToast message="Análisis bioquímico creado con éxito!" />
-        ),
-        error: (
-          <ErrorToast message="Hubo un error al crear el Análisis Bioquímico." />
-        ),
+        loading: <LoadingToast message="Enviando PDF por Email..." />,
+        success: <SuccessToast message="PDF enviado con éxito!" />,
+        error: <ErrorToast message="Hubo un error al enviar el PDF." />,
       });
       promise
         .then(() => {
           setIsOpen(false);
         })
         .catch((error) => {
-          console.error("Error al crear el análisis bioquímico", error);
+          console.error("Error al enviar el PDF", error);
         });
     } catch (error) {
-      console.error("Error al crear el análisis bioquímico", error);
+      console.error("Error al enviar el PDF", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -151,7 +162,7 @@ export default function SendEmailDialog({ collaborator }: Props) {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || sendEmailMutation.isPending}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isSubmitting ? "Enviando..." : "Enviar Email"}

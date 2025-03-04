@@ -17,12 +17,15 @@ const CreatePreoccupationalPage = () => {
     id: collaboratorId,
   });
 
-  const { data: medicalEvaluation } = useMedicalEvaluation({
-    auth: true,
-    id: Number(medicalEvaluationId),
-  });
+  const { data: medicalEvaluation, isLoading: isLoadingMedical } =
+    useMedicalEvaluation({
+      auth: true,
+      id: Number(medicalEvaluationId),
+    });
 
-
+  if (isLoading || isLoadingMedical) {
+    return <LoadingAnimation />;
+  }
 
   return (
     <>

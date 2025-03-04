@@ -21,16 +21,12 @@ interface Props {
   fields: DataType[];
 }
 
-export default function OccupationalHistoryAccordion({
-  isEditing,
-  fields,
-}: Props) {
+export default function OccupationalHistoryAccordion({ isEditing }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const occupationalHistory = useSelector(
     (state: RootState) => state.preOccupational.formData.occupationalHistory
   );
 
-  // Agrega un nuevo antecedente con descripción vacía
   const handleAddNew = () => {
     const newItem = {
       id: Date.now().toString(),
@@ -39,7 +35,6 @@ export default function OccupationalHistoryAccordion({
     dispatch(addOccupationalHistory(newItem));
   };
 
-  // Actualiza la descripción de un antecedente existente
   const handleUpdateDescription = (id: string, value: string) => {
     const updatedHistory = occupationalHistory.map((item) =>
       item.id === id ? { ...item, description: value } : item

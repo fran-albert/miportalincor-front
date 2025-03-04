@@ -29,6 +29,7 @@ import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupa
 import ListPreocuppationalExamsPage from "./pages/protected/Collaborator/Pre-Occupattional/List";
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
 import CompaniesPage from "./pages/protected/Companies";
+import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
 
 function App() {
   return (
@@ -131,6 +132,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                   <ListPreocuppationalExamsPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/incor-laboral/colaboradores/:slug/editar"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <CollaboratorEditPage />
                 </Private_Routes>
               }
             />

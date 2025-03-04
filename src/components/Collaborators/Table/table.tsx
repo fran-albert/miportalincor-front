@@ -6,18 +6,16 @@ import { Collaborator } from "@/types/Collaborator/Collaborator";
 
 interface Props {
   Collaborators: Collaborator[];
-  prefetchCollaborators: (id: number) => void;
   isFetching?: boolean;
 }
 
 export const CollaboratorsTable: React.FC<Props> = ({
   Collaborators,
   isFetching,
-  prefetchCollaborators,
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
-  const columns = getColumns(prefetchCollaborators, {
+  const columns = getColumns({
     isSecretary,
     isDoctor,
     isAdmin,
@@ -53,6 +51,7 @@ export const CollaboratorsTable: React.FC<Props> = ({
           showSearch={true}
           customFilter={customFilterFunction}
           addLinkPath="/incor-laboral/colaboradores/agregar"
+          searchQueryFilterTable={"colaborador"}
           querySearchFilter=" colaboradores"
           addLinkText="Agregar Colaborador"
           isFetching={isFetching}

@@ -35,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   onAddClick?: () => void;
   isLoading?: boolean;
   isFetching?: boolean;
+  searchQueryFilterTable?: string;
   querySearchFilter?: string;
   searchQuery?: string;
   onSearchSubmit?: (query: string) => void;
@@ -49,6 +50,7 @@ export function DataTable<TData, TValue>({
   searchQuery,
   onSearchSubmit,
   isFetching = false,
+  searchQueryFilterTable,
   addLinkText = "Agregar",
   // searchColumn = "name",
   customFilter,
@@ -221,7 +223,8 @@ export function DataTable<TData, TValue>({
                         colSpan={columns.length}
                         className="py-10 text-center text-gray-900"
                       >
-                        Buscando paciente: <strong>{searchQuery}</strong>...
+                        Buscando {searchQueryFilterTable}:{" "}
+                        <strong>{searchQuery}</strong>...
                       </td>
                     </tr>
                   ) : table.getRowModel().rows.length ? (

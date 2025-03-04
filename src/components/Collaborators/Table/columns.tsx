@@ -5,10 +5,11 @@ import { Link } from "react-router-dom";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import DeleteCollaboratorDialog from "../Delete";
 
-export const getColumns = (
-  prefetchPatients: (id: number) => void,
-  roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
-): ColumnDef<Collaborator>[] => {
+export const getColumns = (roles: {
+  isSecretary: boolean;
+  isDoctor: boolean;
+  isAdmin: boolean;
+}): ColumnDef<Collaborator>[] => {
   const columns: ColumnDef<Collaborator>[] = [
     {
       accessorKey: "#",
