@@ -11,7 +11,7 @@ interface PhysicalEvaluationPreviewProps {
 
 export default function PhysicalEvaluationPreview({
   isForPdf = false,
-  section, 
+  section,
 }: PhysicalEvaluationPreviewProps) {
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
@@ -37,9 +37,6 @@ export default function PhysicalEvaluationPreview({
     { id: "miembros-sup", label: "Miembros Superiores", defaultValue: "" },
     { id: "miembros-inf", label: "Miembros Inferiores", defaultValue: "" },
     { id: "varices", label: "Várices", defaultValue: "" },
-  ];
-
-  const section3 = [
     { id: "sistema-nervioso", label: "Sistema Nervioso", defaultValue: "" },
     { id: "hernias", label: "Hernias", defaultValue: "" },
   ];
@@ -49,9 +46,7 @@ export default function PhysicalEvaluationPreview({
       ? [section1]
       : section === 2
       ? [section2]
-      : section === 3
-      ? [section3]
-      : [section1, section2, section3]; 
+      : [section1, section2];
 
   return (
     <div className="border rounded-lg p-4">
@@ -63,7 +58,7 @@ export default function PhysicalEvaluationPreview({
         {selectedSections.map((sectionItems, index) => (
           <div key={index} className="space-y-4">
             <h5 className="font-bold text-sm text-gray-600">
-              {index === 0 ? "" : index === 1 ? "" : ""}
+              {/* Puedes personalizar el título de cada sección si lo deseas */}
             </h5>
 
             {sectionItems.map((item) => {

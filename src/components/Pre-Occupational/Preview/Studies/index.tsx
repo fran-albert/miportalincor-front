@@ -61,7 +61,6 @@ const PDFPageAsImage = ({ pageNumber, width = 600 }: PDFPageAsImageProps) => {
 export default function StudiesPreview({ studies }: StudiesPreviewProps) {
   const [numPagesArray, setNumPagesArray] = useState<number[]>([]);
 
-  // Cuando se carga un documento, se guarda el número de páginas para ese estudio en el índice correspondiente
   const onDocumentLoadSuccess = (pdf: any, index: number) => {
     setNumPagesArray((prev) => {
       const newArr = [...prev];
@@ -71,8 +70,8 @@ export default function StudiesPreview({ studies }: StudiesPreviewProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-bold">Estudios Subidos</h3>
+    <div className="space-y-4 border rounded-lg p-4">
+      <h3 className="text-lg font-bold text-greenPrimary">Estudios Subidos</h3>
       {studies.length === 0 ? (
         <p>No hay estudios subidos.</p>
       ) : (

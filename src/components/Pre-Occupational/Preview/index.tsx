@@ -7,7 +7,6 @@ import GeneralInfoPreview from "./General-Information";
 import TestsPreview from "./Tests";
 import ExamsResultsPreview from "./Exams-Results";
 import ConclusionPreview from "./Conclusion";
-import InstitutionInformationPreview from "./Institution-Information";
 import WorkerInformationPreview from "./Worker-Information";
 import OccupationalHistoryPreview from "./Occupational-History";
 import MedicalEvaluationPreview from "./Medical-Evaluation";
@@ -23,6 +22,7 @@ import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileColl
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import PdfLoadingOverlay from "@/components/Pdf/Overlay";
 
 interface Props {
   collaborator: Collaborator;
@@ -49,7 +49,6 @@ export default function PreOccupationalPreviewComponent({
   const pdfMedicalEvalRef = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection1Ref = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection2Ref = useRef<HTMLDivElement>(null);
-  const pdfPhysicalEvalSection3Ref = useRef<HTMLDivElement>(null);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -67,6 +66,10 @@ export default function PreOccupationalPreviewComponent({
   ];
   const queryClient = useQueryClient();
 
+  const handleCancel = () => {
+    setIsGenerating(false);
+    setProgress(0);
+  };
   const handleSaveAndGeneratePdf = async () => {
     if (
       !pdfHeaderRef.current ||
@@ -150,10 +153,6 @@ export default function PreOccupationalPreviewComponent({
         pdfPhysicalEvalSection2Ref
       );
       updateProgress();
-      const physicalEvalSection3Canvas = await captureSection(
-        pdfPhysicalEvalSection3Ref
-      );
-      updateProgress();
       if (
         !headerCanvas ||
         !generalInfoCanvas ||
@@ -161,8 +160,7 @@ export default function PreOccupationalPreviewComponent({
         !restCanvas ||
         !medicalEvalCanvas ||
         !physicalEvalSection1Canvas ||
-        !physicalEvalSection2Canvas ||
-        !physicalEvalSection3Canvas
+        !physicalEvalSection2Canvas
       ) {
         throw new Error("No se pudo capturar alguna sección del contenido.");
       }
@@ -225,16 +223,6 @@ export default function PreOccupationalPreviewComponent({
         (physicalEval2ImgProps.height * pdfWidth) / physicalEval2ImgProps.width;
       addPageWithNumber(physicalEval2ImgData, physicalEval2PdfHeight);
 
-      // Página 7 - Sección 3
-      pdf.addPage();
-      const physicalEval3ImgData =
-        physicalEvalSection3Canvas.toDataURL("image/png");
-      const physicalEval3ImgProps =
-        pdf.getImageProperties(physicalEval3ImgData);
-      const physicalEval3PdfHeight =
-        (physicalEval3ImgProps.height * pdfWidth) / physicalEval3ImgProps.width;
-      addPageWithNumber(physicalEval3ImgData, physicalEval3PdfHeight);
-
       const pdfBlob = pdf.output("blob");
       const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
       const formData = new FormData();
@@ -268,7 +256,9 @@ export default function PreOccupationalPreviewComponent({
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `pre_occupational_preview_${collaborator.userName}.pdf`;
+      link.download = `${collaborator.firstName}_${collaborator.lastName}_${
+        medicalEvaluation.evaluationType.name
+      }_${Date.now()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -301,7 +291,7 @@ export default function PreOccupationalPreviewComponent({
         <TestsPreview />
         <ExamsResultsPreview />
         <ConclusionPreview />
-        <InstitutionInformationPreview />
+        {/* <InstitutionInformationPreview /> */}
         <WorkerInformationPreview />
         <OccupationalHistoryPreview />
         <MedicalEvaluationPreview />
@@ -363,7 +353,6 @@ export default function PreOccupationalPreviewComponent({
           display: "none",
         }}
       >
-        <InstitutionInformationPreview isForPdf />
         <WorkerInformationPreview isForPdf />
         <OccupationalHistoryPreview isForPdf />
       </div>
@@ -408,12 +397,11 @@ export default function PreOccupationalPreviewComponent({
           display: "none",
         }}
       >
-        <PhysicalEvaluationPreview isForPdf section={3} />
         {urls && <StudiesPreview studies={urls} />}
       </div>
 
       {/* Página 7: Sección 3 - Otros */}
-      <div
+      {/* <div
         ref={pdfPhysicalEvalSection3Ref}
         className="bg-white p-6 space-y-6"
         style={{
@@ -425,25 +413,16 @@ export default function PreOccupationalPreviewComponent({
         }}
       >
         {urls && <StudiesPreview studies={urls} />}
-      </div>
+      </div> */}
       {isGenerating && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">
-              {progress < 100 ? "Generando PDF..." : "Subiendo PDF..."}
-            </h3>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <p className="text-center">{progress}% Completado</p>
-          </div>
-        </div>
+        <PdfLoadingOverlay
+          isGenerating={isGenerating}
+          progress={progress}
+          onCancel={handleCancel}
+        />
       )}
 
-      <div className="flex justify-end gap-4 p-6">
+      <div className="flex justify-center gap-6 p-6">
         <Button variant="outline" size="sm">
           <Printer className="mr-2 h-4 w-4" />
           Imprimir
@@ -455,6 +434,7 @@ export default function PreOccupationalPreviewComponent({
         <Button
           variant="default"
           size="sm"
+          className="bg-greenPrimary hover:bg-teal-800"
           onClick={handleSaveAndGeneratePdf}
           disabled={isGenerating}
         >

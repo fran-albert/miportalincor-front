@@ -1,8 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { formatCuilCuit } from "@/common/helpers/helpers";
-import { ViewButton } from "@/components/Button/View/button";
 import { Link } from "react-router-dom";
 import { Company } from "@/types/Company/Company";
+import DeleteCompanyDialog from "../Delete";
 
 export const getColumns = (roles: {
   isSecretary: boolean;
@@ -20,7 +20,7 @@ export const getColumns = (roles: {
     },
     {
       accessorKey: "firstName",
-      header: "Colaborador",
+      header: "Empresa",
       cell: ({ row }) => (
         <Link
           to={`/incor-laboral/empresas/${row.original.id}`}
@@ -65,16 +65,16 @@ export const getColumns = (roles: {
       header: " ",
       cell: ({ row }) => (
         <div className="flex items-center justify-end">
-          {(roles.isSecretary || roles.isDoctor || roles.isAdmin) && (
+          {/* {(roles.isSecretary || roles.isDoctor || roles.isAdmin) && (
             <ViewButton
               slug={`${row.original.id}`}
               text="Ver Empresa"
               path="incor-laboral/empresas"
             />
-          )}
-          {/* {(roles.isSecretary || roles.isAdmin) && (
-            <DeleteCollaboratorDialog id={row.original.id} />
           )} */}
+          {(roles.isSecretary || roles.isAdmin) && (
+            <DeleteCompanyDialog id={row.original.id} />
+          )}
         </div>
       ),
     },

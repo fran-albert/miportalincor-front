@@ -7,7 +7,13 @@ export interface DataValue extends Base {
     value: string
 }
 
+export interface CreateDataValueItemDto {
+    id?: number;
+    dataTypeId: number;
+    value: string;
+}
+
 export interface CreateDataValuesDto {
     medicalEvaluationId: number;
-    dataValues: { dataTypeId: number; value: string }[];
+    dataValues: CreateDataValueItemDto[];
 }

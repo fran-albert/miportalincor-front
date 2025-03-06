@@ -31,6 +31,13 @@ import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
 import { CompanySelect } from "@/components/Select/Company/select";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
+import { StateSelect } from "@/components/Select/State/select";
+import { City } from "@/types/City/City";
+import { useState } from "react";
+import { State } from "@/types/State/State";
+import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
+import { CitySelect } from "@/components/Select/City/select";
+import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 
 function dataURLtoFile(dataurl: string, filename: string): File {
   const arr = dataurl.split(",");
@@ -51,8 +58,32 @@ export function CreateCollaboratorComponent() {
   const form = useForm<FormValues>({
     resolver: zodResolver(collaboratorSchema),
   });
-  const { control } = form;
+  const { setValue, control } = form;
+  const [selectedState, setSelectedState] = useState<State | undefined>(
+    undefined
+  );
+  const [selectedCity, setSelectedCity] = useState<City | undefined>(undefined);
 
+  const handleCityChange = (city: City) => {
+    if (selectedState) {
+      const cityWithState = { ...city, state: selectedState };
+      setSelectedCity(cityWithState);
+      setValue("address.city", cityWithState);
+    }
+  };
+
+  const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
+    if (healthInsurance.id !== undefined) {
+      setValue("healthInsuranceId", String(healthInsurance.id));
+    } else {
+      console.error("El seguro de salud no tiene un ID válido");
+    }
+  };
+
+  const handleStateChange = (state: State) => {
+    setSelectedState(state);
+    setValue("address.city.state", String(state.id));
+  };
   async function onSubmit(data: z.infer<typeof collaboratorSchema>) {
     try {
       const formData = new FormData();
@@ -62,9 +93,13 @@ export function CreateCollaboratorComponent() {
       formData.append("birthDate", data.birthDate);
       formData.append("phone", data.phone);
       formData.append("gender", data.gender);
-      formData.append("address", data.address);
+      // formData.append("address", data.address);
       formData.append("email", data.email);
       formData.append("idCompany", data.idCompany.toString());
+      if (data.affiliationNumber) {
+        formData.append("affiliationNumber", data.affiliationNumber.toString());
+      }
+      formData.append("healthInsuranceId", data.healthInsuranceId.toString());
 
       if (data.file) {
         let fileToSend: File;
@@ -302,14 +337,120 @@ export function CreateCollaboratorComponent() {
                   </div>
                 </div>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="idCompany"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel className="text-black">Empresa</FormLabel>
+                          <FormControl>
+                            <CompanySelect control={control} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="healthInsuranceId"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel className="text-black">
+                            Obra Social
+                          </FormLabel>
+                          <FormControl>
+                            <HealthInsuranceSelect
+                              name="healthInsuranceId" // Propiedad agregada para sincronizar nombres
+                              onHealthInsuranceChange={
+                                handleHealthInsuranceChange
+                              }
+                              control={control}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="affiliationNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-black">
+                            Número de Obra Social
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Ingresar Número de Afiliado"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.city.state"
+                    render={({}) => (
+                      <FormItem>
+                        <FormLabel className="text-black">Provincia</FormLabel>
+                        <FormControl>
+                          <StateSelect
+                            control={control}
+                            name="address.city.state"
+                            onStateChange={handleStateChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.city.name"
+                    render={({}) => (
+                      <FormItem>
+                        <FormLabel className="text-black">Ciudad</FormLabel>
+                        <FormControl>
+                          <CitySelect
+                            control={control}
+                            idState={
+                              selectedState ? Number(selectedState.id) : 0
+                            }
+                            onCityChange={handleCityChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               <div className="grid grid-cols-4 gap-6">
                 <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="address"
+                    name="address.street"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">Dirección</FormLabel>
+                        <FormLabel className="text-black">Calle</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ingresar calle" />
                         </FormControl>
@@ -321,12 +462,47 @@ export function CreateCollaboratorComponent() {
                 <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="idCompany"
-                    render={() => (
+                    name="address.number"
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">Empresa</FormLabel>
+                        <FormLabel className="text-black">N°</FormLabel>
                         <FormControl>
-                          <CompanySelect control={control} />
+                          <Input {...field} placeholder="Ingresar número" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">Piso</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar número" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">
+                          Departamento
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Ingresar departamento"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

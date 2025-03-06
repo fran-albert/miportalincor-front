@@ -19,6 +19,10 @@ import {
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { selectFlatFormData } from "@/store/Pre-Occupational/selectors";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { toast } from "sonner";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 interface Props {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
@@ -179,41 +183,63 @@ export default function ConclusionAccordion({
   }, [dataValues, dispatch]);
 
   const handleSave = () => {
-    const dataValues = filteredFields
-      .map((field) => ({
-        dataTypeId: field.id,
-        value:
-          getValueForField(field, flatFormData) !== undefined
-            ? String(getValueForField(field, flatFormData))
-            : "",
-      }))
+    // Armamos el array de dataValues a partir de los campos filtrados.
+    // Si en props.dataValues ya existe un registro para ese campo, incluimos su id.
+    const payloadDataValues = filteredFields
+      .map((field) => {
+        const existing = dataValues?.find((dv) => dv.dataType.id === field.id);
+        return {
+          id: existing ? existing.id : undefined, // si existe, se incluye el id
+          dataTypeId: field.id,
+          value:
+            getValueForField(field, flatFormData, dataValues) !== undefined
+              ? String(getValueForField(field, flatFormData, dataValues))
+              : "",
+        };
+      })
       .filter((item) => item.value !== "" && item.value !== undefined);
-
+  
+    // Para el campo Conclusion
     const conclusionField = fields.find((field) => field.name === "Conclusion");
-    if (
-      conclusionField &&
-      conclusion &&
-      !dataValues.find((dv) => dv.dataTypeId === conclusionField.id)
-    ) {
-      dataValues.push({
-        dataTypeId: conclusionField.id,
-        value: conclusion,
-      });
+    if (conclusionField && conclusion) {
+      const existing = dataValues?.find(
+        (dv) => dv.dataType.name === "Conclusion"
+      );
+      if (
+        !payloadDataValues.find(
+          (dv) => dv.dataTypeId === conclusionField.id
+        )
+      ) {
+        payloadDataValues.push({
+          id: existing ? existing.id : undefined,
+          dataTypeId: conclusionField.id,
+          value: conclusion,
+        });
+      }
     }
+  
+    // Para el campo Recomendaciones
     const recomendacionesField = fields.find(
       (field) => field.name === "Recomendaciones"
     );
-    if (
-      recomendacionesField &&
-      recomendaciones &&
-      !dataValues.find((dv) => dv.dataTypeId === recomendacionesField.id)
-    ) {
-      dataValues.push({
-        dataTypeId: recomendacionesField.id,
-        value: recomendaciones,
-      });
+    if (recomendacionesField && recomendaciones) {
+      const existing = dataValues?.find(
+        (dv) => dv.dataType.name === "Recomendaciones"
+      );
+      if (
+        !payloadDataValues.find(
+          (dv) => dv.dataTypeId === recomendacionesField.id
+        )
+      ) {
+        payloadDataValues.push({
+          id: existing ? existing.id : undefined,
+          dataTypeId: recomendacionesField.id,
+          value: recomendaciones,
+        });
+      }
     }
-
+  
+    // Para las opciones de conclusión (checkboxes)
     Object.entries(conclusionOptions).forEach(([key, value]) => {
       if (value === true) {
         const optionMapping: Record<string, number> = {
@@ -223,28 +249,37 @@ export default function ConclusionAccordion({
           "no-apto": 33,
           aplazado: 34,
         };
-        if (
-          optionMapping[key] !== undefined &&
-          !dataValues.find((dv) => dv.dataTypeId === optionMapping[key])
-        ) {
-          dataValues.push({
-            dataTypeId: optionMapping[key],
-            value: "true",
-          });
+        if (optionMapping[key] !== undefined) {
+          const existing = dataValues?.find(
+            (dv) => dv.dataType.id === optionMapping[key]
+          );
+          if (
+            !payloadDataValues.find(
+              (dv) => dv.dataTypeId === optionMapping[key]
+            )
+          ) {
+            payloadDataValues.push({
+              id: existing ? existing.id : undefined,
+              dataTypeId: optionMapping[key],
+              value: "true",
+            });
+          }
         }
       }
     });
-
+  
     const payload = {
       medicalEvaluationId: medicalEvaluationId,
-      dataValues,
+      dataValues: payloadDataValues,
     };
-
-    console.log(payload);
-    createDataValuesMutation.mutate(payload);
+  
+    toast.promise(createDataValuesMutation.mutateAsync(payload), {
+      loading: <LoadingToast message="Guardando datos..." />,
+      success: <SuccessToast message="Datos guardados exitosamente!" />,
+      error: <ErrorToast message="Error al guardar los datos" />,
+    });
   };
-
- 
+  
 
   return (
     <AccordionItem value="conclusion" className="border rounded-lg">

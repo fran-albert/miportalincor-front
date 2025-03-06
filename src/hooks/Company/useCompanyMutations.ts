@@ -34,7 +34,7 @@ export const useCompanyMutations = () => {
     const deleteCompanyMutations = useMutation({
         mutationFn: (id: number) => deleteCompany(id),
         onSuccess: (company, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['company'] })
+            queryClient.invalidateQueries({ queryKey: ['companies'] })
             console.log("blodTest deleted", company, variables, context);
         },
         onError: (error, variables, context) => {

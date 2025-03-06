@@ -463,6 +463,7 @@ export function CreatePatientComponent() {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state.name"
                               onStateChange={handleStateChange}
                             />
                           </FormControl>

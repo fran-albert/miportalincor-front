@@ -44,12 +44,8 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
   }, [isOpen, form.reset]);
 
   async function onSubmit(values: z.infer<typeof companySchema>) {
-    const formattedValues = {
-      ...values,
-      phone: Number(values.phone) || 0,
-    };
     try {
-      const promise = addCompanyMutations.mutateAsync(formattedValues);
+      const promise = addCompanyMutations.mutateAsync(values);
       toast.promise(promise, {
         loading: <LoadingToast message="Creando Empresa..." />,
         success: <SuccessToast message="Empresa creada con éxito!" />,
@@ -88,7 +84,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                   <FormItem>
                     <Label className="text-black"> Nombre</Label>
                     <FormControl>
-                      <Input {...field} placeholder="Ejemplo S.A." />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,7 +99,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                   <FormItem>
                     <Label className="text-black">Dirección</Label>
                     <FormControl>
-                      <Input {...field} placeholder="Calle Falsa 123" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,11 +129,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                   <FormItem>
                     <Label className="text-black">Email</Label>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="empresa@ejemplo.com"
-                        type="email"
-                      />
+                      <Input {...field} type="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,7 +144,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                   <FormItem>
                     <Label className="text-black"> Teléfono</Label>
                     <FormControl>
-                      <Input {...field} placeholder="+54 9 11 2345-6789" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,6 +155,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
             {/* Botón de Guardar */}
             <Button
               type="submit"
+              disabled={addCompanyMutations.isPending}
               className="w-full  text-white bg-greenPrimary hover:bg-greenPrimary"
             >
               Guardar Empresa

@@ -5,7 +5,7 @@ export interface Company extends Base {
     name: string
     taxId: string;
     address: string;
-    phone: number;
+    phone: string;
     email?: string
     collaborator: Collaborator[]
 }
@@ -14,6 +14,6 @@ export interface CreateCompanyDto {
     name: string;
     taxId: string;
     address: string;
-    phone: number;
+    phone: string;
     email: string;
 }

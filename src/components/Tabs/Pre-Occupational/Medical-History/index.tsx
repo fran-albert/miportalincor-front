@@ -1,10 +1,7 @@
-"use client";
-
 import { TabsContent } from "@/components/ui/tabs";
 import { Accordion } from "@/components/ui/accordion";
 import { Pencil } from "lucide-react";
 import WorkerInformationAccordion from "@/components/Accordion/Pre-Occupational/Worker-Information";
-import InstitutionInformation from "./Institution-Information";
 import OccupationalHistoryAccordion from "@/components/Accordion/Pre-Occupational/Occupational-History";
 import MedicalEvaluationAccordion from "@/components/Accordion/Pre-Occupational/Medical-Evaluation";
 import { Button } from "@/components/ui/button";
@@ -13,8 +10,11 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
+import { toast } from "sonner";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
-// === Worker Information ===
 const workerMapping: Record<string, string> = {
   lugarNacimiento: "Lugar de nacimiento",
   nacionalidad: "Nacionalidad",
@@ -43,7 +43,6 @@ const buildWorkerPayload = (
   return workerDataValues;
 };
 
-// === Antecedentes (Occupational History) ===
 const buildOccupationalHistoryPayload = (
   occupationalHistory: { id: string; description: string }[],
   fields: DataType[]
@@ -59,14 +58,12 @@ const buildOccupationalHistoryPayload = (
     .map((desc) => ({ dataTypeId: antecedentesField.id, value: desc }));
 };
 
-// === Medical Evaluation ===
 const buildMedicalEvaluationPayload = (
   fields: DataType[],
   medicalEvaluation: any
 ): { dataTypeId: number; value: string }[] => {
   const payloadItems: { dataTypeId: number; value: string }[] = [];
 
-  // Aspecto general
   const aspectoField = fields.find(
     (f) => f.category === "HISTORIA_MEDICA" && f.name === "Aspecto general"
   );
@@ -77,7 +74,6 @@ const buildMedicalEvaluationPayload = (
     });
   }
 
-  // Tiempo libre
   const tiempoField = fields.find(
     (f) => f.category === "HISTORIA_MEDICA" && f.name === "Tiempo libre"
   );
@@ -88,7 +84,6 @@ const buildMedicalEvaluationPayload = (
     });
   }
 
-  // Examen Clínico (Talla, Peso, IMC)
   const tallaField = fields.find(
     (f) => f.category === "EXAMEN_CLINICO" && f.name === "Talla"
   );
@@ -116,8 +111,6 @@ const buildMedicalEvaluationPayload = (
       value: String(medicalEvaluation.examenClinico.imc),
     });
   }
-
-  // Examen Físico
   const examenFisicoItems = [
     { id: "piel", label: "Piel y faneras" },
     { id: "ojos", label: "Ojos" },
@@ -164,9 +157,11 @@ const buildMedicalEvaluationPayload = (
 export default function MedicalHistoryTab({
   isEditing,
   setIsEditing,
+  medicalEvaluationId,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
+  medicalEvaluationId: number;
 }) {
   const { data: fields } = useDataTypes({
     auth: true,
@@ -205,11 +200,14 @@ export default function MedicalHistoryTab({
 
   const handleSave = () => {
     const payload = {
-      medicalEvaluationId: 2, // Reemplaza con el ID real
+      medicalEvaluationId: medicalEvaluationId,
       dataValues: combinedDataValues,
     };
-    console.log(payload);
-    createDataValuesMutation.mutate(payload);
+    toast.promise(createDataValuesMutation.mutateAsync(payload), {
+      loading: <LoadingToast message="Guardando datos..." />,
+      success: <SuccessToast message="Datos guardados exitosamente!" />,
+      error: <ErrorToast message="Error al guardar los datos" />,
+    });
   };
 
   return (
@@ -223,7 +221,7 @@ export default function MedicalHistoryTab({
         </p>
       )}
       <Accordion type="multiple" className="w-full space-y-4">
-        <InstitutionInformation isEditing={isEditing} fields={fields} />
+        {/* <InstitutionInformation isEditing={isEditing} fields={fields} /> */}
         <WorkerInformationAccordion isEditing={isEditing} />
         <OccupationalHistoryAccordion isEditing={isEditing} fields={fields} />
         <MedicalEvaluationAccordion isEditing={isEditing} />

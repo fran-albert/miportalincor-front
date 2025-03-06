@@ -10,19 +10,25 @@ export const UserSchema = z.object({
     phoneNumber2: z.string().optional(),
     birthDate: z.union([z.string({ required_error: "Este campo es obligatorio." }), z.date()]),
     address: z.object({
-        id: z.number().optional(),
-        street: z.string().optional(),
-        number: z.string().optional(),
+        street: z.string(),
+        number: z.string(),
+        description: z.string().optional(),
+        phoneNumber: z.string().optional(),
         city: z.object({
             id: z.number(),
-            name: z.string({ required_error: "Este campo es obligatorio." }),
-            state: z.object({
-                id: z.number(),
-                name: z.string({ required_error: "Este campo es obligatorio." }),
-            }),
+            name: z.string(),
+            state: z.union([
+                z.string(), 
+                z.object({
+                    id: z.number(),
+                    name: z.string(),
+                    country: z.object({
+                        id: z.number(),
+                        name: z.string(),
+                    }),
+                }),
+            ]),
         }),
-        phoneNumber: z.string().optional(),
-        description: z.string().optional(),
     }),
     observations: z.string().optional(),
     rhFactor: z.string().optional(),

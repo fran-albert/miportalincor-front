@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import { useDispatch } from "react-redux";
+import { resetForm } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   isOpen: boolean;
@@ -35,6 +37,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
   const handleCheckboxChange = (optionId: number) => {
     setSelectedOption(optionId === selectedOption ? null : optionId);
   };
+  const dispatch = useDispatch();
 
   const handleConfirm = () => {
     if (selectedOption) {
@@ -52,6 +55,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
 
       mutationPromise.then((response) => {
         if (response?.medicalEvaluation?.id) {
+          dispatch(resetForm());
           setIsOpen(false);
           navigate(
             `/incor-laboral/colaboradores/${slug}/examen/${response.medicalEvaluation.id}`
@@ -63,6 +67,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
 
   const handleCancel = () => {
     setSelectedOption(null);
+    dispatch(resetForm());
     setIsOpen(false);
   };
 

@@ -1,7 +1,8 @@
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox"; 
+import { Checkbox } from "@/components/ui/checkbox";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Input } from "@/components/ui/input";
 
 interface TestsPreviewProps {
   isForPdf?: boolean;
@@ -64,9 +65,17 @@ export default function TestsPreview({ isForPdf = false }: TestsPreviewProps) {
         <div className="space-y-2 mt-4">
           <Label>Otras pruebas realizadas</Label>
           {isForPdf ? (
-            <p className="p-2 font-semibold">{otrasPruebas || "No se encontraron otras pruebas realizadas."}</p>
+            <p className="p-2 font-semibold">
+              {otrasPruebas || "No se encontraron otras pruebas realizadas."}
+            </p>
           ) : (
-            <div className="p-2 border rounded bg-gray-50">{otrasPruebas || "No se encontraron otras pruebas realizadas."}</div>
+            <Input
+              value={
+                otrasPruebas || "No se encontraron otras pruebas realizadas."
+              }
+              readOnly
+              className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+            />
           )}
         </div>
       )}

@@ -48,7 +48,9 @@ export const getColumns = (
       header: "D.N.I.",
       cell: ({ row }) => (
         <div className="flex items-center">
-          <p className="text-sm font-medium">{formatDni(row.original.userName)}</p>
+          <p className="text-sm font-medium">
+            {formatDni(row.original.userName)}
+          </p>
         </div>
       ),
     },
@@ -65,8 +67,12 @@ export const getColumns = (
       header: "Obra Social",
       cell: ({ row }) => {
         const firstHealthPlan =
-          row.original.healthPlans?.map((healthPlan) => healthPlan.name)[0] ||
-          "Sin Obra Social";
+          Array.isArray(row.original.healthPlans) &&
+          row.original.healthPlans.length > 0
+            ? row.original.healthPlans[0].name
+            : "Sin Obra Social";
+        console.log("Fila actual:", row.original);
+
         return (
           <div className="flex items-center">
             <p className="text-sm font-medium">{firstHealthPlan}</p>

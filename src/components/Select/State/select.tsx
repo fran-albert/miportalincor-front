@@ -11,6 +11,7 @@ import { State } from "@/types/State/State";
 
 interface StateSelectProps {
   control: any;
+  name: string;
   defaultValue?: State;
   onStateChange?: (value: State) => void;
   disabled?: boolean;
@@ -18,6 +19,7 @@ interface StateSelectProps {
 
 export const StateSelect = ({
   control,
+  name,
   defaultValue,
   disabled,
   onStateChange,
@@ -34,10 +36,10 @@ export const StateSelect = ({
 
   return (
     <Controller
-      name="state"
+      name={name}
       control={control}
       rules={{ required: "Este campo es obligatorio" }}
-      defaultValue={defaultValue ? defaultValue.id.toString() : ""}
+      defaultValue={defaultValue ? String(defaultValue.id) : ""}
       render={({ field }) => (
         <div>
           <Select

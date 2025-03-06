@@ -125,7 +125,10 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
       setValue("address.description", patient.address.description || "");
       setValue("address.phoneNumber", patient.address.phoneNumber || "");
       setValue("address.city", patient.address.city);
-      setValue("address.city.state", patient.address.city.state);
+      setValue(
+        "address.city.state",
+        patient?.address?.city?.state?.id.toString()
+      );
     }
   }, [patient, setValue]);
 
@@ -246,32 +249,33 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                   Perfil Completo
                 </p>
               </CardTitle>
-              {isSecretary || isAdmin &&
-                (!isEditing ? (
-                  <Button
-                    onClick={() => setIsEditing(true)}
-                    type="button"
-                    className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
-                  >
-                    <Edit2 className="mr-2 h-4 w-4" /> Editar
-                  </Button>
-                ) : (
-                  <div className="flex space-x-2">
+              {isSecretary ||
+                (isAdmin &&
+                  (!isEditing ? (
                     <Button
+                      onClick={() => setIsEditing(true)}
                       type="button"
-                      onClick={handleSave}
                       className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                     >
-                      <Save className="mr-2 h-4 w-4" /> Guardar
+                      <Edit2 className="mr-2 h-4 w-4" /> Editar
                     </Button>
-                    <Button
-                      onClick={() => setIsEditing(false)}
-                      variant="outline"
-                    >
-                      <X className="mr-2 h-4 w-4" /> Cancelar
-                    </Button>
-                  </div>
-                ))}
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        onClick={handleSave}
+                        className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
+                      >
+                        <Save className="mr-2 h-4 w-4" /> Guardar
+                      </Button>
+                      <Button
+                        onClick={() => setIsEditing(false)}
+                        variant="outline"
+                      >
+                        <X className="mr-2 h-4 w-4" /> Cancelar
+                      </Button>
+                    </div>
+                  )))}
             </CardHeader>
 
             <CardContent className="grid gap-6">
@@ -609,6 +613,7 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
                               disabled={!isEditing}
                               defaultValue={patient?.address?.city?.state}
                               onStateChange={handleStateChange}

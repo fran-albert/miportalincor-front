@@ -9,7 +9,7 @@ interface Props {
 export const useCollaboratorMedicalEvaluation = ({ auth, id }: Props) => {
 
     const { isLoading, isError, error, data, isFetching } = useQuery({
-        queryKey: ['collaborator-medical-evaluation', { id }],
+        queryKey: ['collaborator-medical-evaluation', id],
         queryFn: () => getByIdCollaboratorMedicalEvaluation(id as number),
         staleTime: 1000 * 60,
         enabled: auth && id !== undefined,

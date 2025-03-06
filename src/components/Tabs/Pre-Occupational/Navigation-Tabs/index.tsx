@@ -65,6 +65,7 @@ export default function NavigationTabs({
                 {activeTab === "medical-history" && (
                   <MedicalHistoryTab
                     isEditing={isEditing}
+                    medicalEvaluationId={medicalEvaluationId}
                     setIsEditing={setIsEditing}
                   />
                 )}
