@@ -14,6 +14,7 @@ export interface Collaborator extends Base {
     gender: string;
     photoUrl: string
     company: Company
+    addressData?: Address
 }
 
 export interface CreateCollaboratorDto {

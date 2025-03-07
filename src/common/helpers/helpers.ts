@@ -117,6 +117,21 @@ export const parseSlug = (slug: string) => {
   return { id, formattedName };
 };
 
+export const formatAddress = (addressData: any) => {
+  if (!addressData) return "S/D";
+
+  const { street, number, description, phoneNumber, city } = addressData;
+  const state = city?.state?.name;
+  const cityName = city?.name;
+
+  if (description && phoneNumber) {
+    return `${street} ${number}, ${description}° ${phoneNumber} - ${cityName}, ${state}`;
+  }
+
+  return `${cityName}, ${state}`;
+};
+
+
 
 export const normalizeDate = (date: string): string => {
   try {

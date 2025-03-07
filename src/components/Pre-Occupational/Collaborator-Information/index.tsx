@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   calculateAge,
+  formatAddress,
   formatDni,
   getGenderLabel,
 } from "@/common/helpers/helpers";
@@ -112,7 +113,7 @@ export default function CollaboratorInformationCard({
           <div className="rounded-lg">
             <p className="text-sm text-gray-500">Dirección:</p>
             <p className="font-medium">
-              {collaborator.address ? String(collaborator.address) : "S/D"}
+              {formatAddress(collaborator.addressData)}
             </p>
           </div>
 

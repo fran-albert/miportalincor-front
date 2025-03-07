@@ -76,12 +76,15 @@ export default function PreOccupationalPreviewComponent({
       !pdfGeneralInfoRef.current ||
       !pdfMiddleRef.current ||
       !pdfRestRef.current ||
-      !pdfMedicalEvalRef.current
+      !pdfMedicalEvalRef.current ||
+      !pdfPhysicalEvalSection1Ref.current ||
+      !pdfPhysicalEvalSection2Ref.current
     )
       return;
 
     setIsGenerating(true);
     setProgress(0);
+
     try {
       // Configuramos el PDF
       const pdf = new jsPDF("p", "mm", "a4");
@@ -98,22 +101,34 @@ export default function PreOccupationalPreviewComponent({
         ref.current.style.left = "-9999px";
 
         const canvas = await html2canvas(ref.current, {
-          scale: 2,
+          scale: 2, // Alta resolución
           useCORS: true,
           width: ref.current.offsetWidth,
-          windowWidth: 794,
+          windowWidth: 794, // Equivalente a A4 en píxeles a 96 DPI
         });
         ref.current.style.display = "none";
         return canvas;
       };
 
       // Función para agregar página con numeración
-      const addPageWithNumber = (imgData: string, pdfHeight: number) => {
-        let heightLeft = pdfHeight;
+      const addPageWithNumber = (imgData: string, pdfWidth: number) => {
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width; // Proporción original
+        let heightLeft = imgHeight;
         let position = 0;
+
         while (heightLeft > 0) {
-          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-          // Numeración en la parte inferior derecha
+          const heightToDraw = Math.min(heightLeft, pageHeight);
+          pdf.addImage(
+            imgData,
+            "PNG",
+            0,
+            position,
+            pdfWidth,
+            imgHeight,
+            undefined,
+            "FAST" // Compresión rápida
+          );
           pdf.setFontSize(10);
           pdf.text(`Página ${pageNumber}`, pdfWidth - 20, pageHeight - 10, {
             align: "right",
@@ -126,7 +141,8 @@ export default function PreOccupationalPreviewComponent({
           }
         }
       };
-      const totalSections = 8;
+
+      const totalSections = 7; // Ajustado según las secciones
       let completedSections = 0;
 
       const updateProgress = () => {
@@ -153,6 +169,7 @@ export default function PreOccupationalPreviewComponent({
         pdfPhysicalEvalSection2Ref
       );
       updateProgress();
+
       if (
         !headerCanvas ||
         !generalInfoCanvas ||
@@ -166,63 +183,43 @@ export default function PreOccupationalPreviewComponent({
       }
 
       // Primera página (header)
+      pdf.addPage();
       const headerImgData = headerCanvas.toDataURL("image/png");
-      const headerImgProps = pdf.getImageProperties(headerImgData);
-      const headerPdfHeight =
-        (headerImgProps.height * pdfWidth) / headerImgProps.width;
-      addPageWithNumber(headerImgData, headerPdfHeight);
+      addPageWithNumber(headerImgData, pdfWidth);
 
       // Segunda página (GeneralInfo y Tests)
       pdf.addPage();
       const generalInfoImgData = generalInfoCanvas.toDataURL("image/png");
-      const generalInfoImgProps = pdf.getImageProperties(generalInfoImgData);
-      const generalInfoPdfHeight =
-        (generalInfoImgProps.height * pdfWidth) / generalInfoImgProps.width;
-      addPageWithNumber(generalInfoImgData, generalInfoPdfHeight);
+      addPageWithNumber(generalInfoImgData, pdfWidth);
 
       // Tercera página (ExamsResults y Conclusion)
       pdf.addPage();
       const middleImgData = middleCanvas.toDataURL("image/png");
-      const middleImgProps = pdf.getImageProperties(middleImgData);
-      const middlePdfHeight =
-        (middleImgProps.height * pdfWidth) / middleImgProps.width;
-      addPageWithNumber(middleImgData, middlePdfHeight);
+      addPageWithNumber(middleImgData, pdfWidth);
 
-      // Cuarta página (Institution, Worker, OccupationalHistory, etc.)
+      // Cuarta página (Worker, OccupationalHistory, etc.)
       pdf.addPage();
       const restImgData = restCanvas.toDataURL("image/png");
-      const restImgProps = pdf.getImageProperties(restImgData);
-      const restPdfHeight =
-        (restImgProps.height * pdfWidth) / restImgProps.width;
-      addPageWithNumber(restImgData, restPdfHeight);
+      addPageWithNumber(restImgData, pdfWidth);
 
-      // Nueva página para MedicalEvaluationPreview
+      // Quinta página (MedicalEvaluation y ClinicalEvaluation)
       pdf.addPage();
       const medicalEvalImgData = medicalEvalCanvas.toDataURL("image/png");
-      const medicalEvalImgProps = pdf.getImageProperties(medicalEvalImgData);
-      const medicalEvalPdfHeight =
-        (medicalEvalImgProps.height * pdfWidth) / medicalEvalImgProps.width;
-      addPageWithNumber(medicalEvalImgData, medicalEvalPdfHeight);
+      addPageWithNumber(medicalEvalImgData, pdfWidth);
 
+      // Sexta página (PhysicalEvaluation Section 1)
       pdf.addPage();
       const physicalEval1ImgData =
         physicalEvalSection1Canvas.toDataURL("image/png");
-      const physicalEval1ImgProps =
-        pdf.getImageProperties(physicalEval1ImgData);
-      const physicalEval1PdfHeight =
-        (physicalEval1ImgProps.height * pdfWidth) / physicalEval1ImgProps.width;
-      addPageWithNumber(physicalEval1ImgData, physicalEval1PdfHeight);
+      addPageWithNumber(physicalEval1ImgData, pdfWidth);
 
-      // Página 6 - Sección 2
+      // Séptima página (Studies - PhysicalEvaluation Section 2)
       pdf.addPage();
       const physicalEval2ImgData =
         physicalEvalSection2Canvas.toDataURL("image/png");
-      const physicalEval2ImgProps =
-        pdf.getImageProperties(physicalEval2ImgData);
-      const physicalEval2PdfHeight =
-        (physicalEval2ImgProps.height * pdfWidth) / physicalEval2ImgProps.width;
-      addPageWithNumber(physicalEval2ImgData, physicalEval2PdfHeight);
+      addPageWithNumber(physicalEval2ImgData, pdfWidth);
 
+      // Generar y subir el PDF
       const pdfBlob = pdf.output("blob");
       const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
       const formData = new FormData();
@@ -232,7 +229,7 @@ export default function PreOccupationalPreviewComponent({
       formData.append("completed", "true");
       formData.append("collaboratorId", String(collaborator.id));
       formData.append("medicalEvaluationId", String(medicalEvaluation.id));
-      // Subir el PDF a la nube
+
       await new Promise((resolve, reject) => {
         uploadStudy(
           { collaboratorId: Number(collaborator.id), formData },
@@ -247,7 +244,6 @@ export default function PreOccupationalPreviewComponent({
         queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
       });
 
-      // Opcionalmente, si realmente necesitas forzar el refetch:
       await queryClient.refetchQueries({
         queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
       });
@@ -276,6 +272,10 @@ export default function PreOccupationalPreviewComponent({
       if (pdfRestRef.current) pdfRestRef.current.style.display = "none";
       if (pdfMedicalEvalRef.current)
         pdfMedicalEvalRef.current.style.display = "none";
+      if (pdfPhysicalEvalSection1Ref.current)
+        pdfPhysicalEvalSection1Ref.current.style.display = "none";
+      if (pdfPhysicalEvalSection2Ref.current)
+        pdfPhysicalEvalSection2Ref.current.style.display = "none";
     }
   };
 
