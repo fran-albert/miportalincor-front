@@ -1,6 +1,7 @@
 import { createNutritionData } from "@/api/Nutrition-Data/create.nutrition.data";
 import { deleteNutritionData } from "@/api/Nutrition-Data/delete.nutrition.data";
 import { updateNutritionData } from "@/api/Nutrition-Data/update.nutrition.data";
+import { uploadExcelNutritionData } from "@/api/Nutrition-Data/upload.excel.nutrition.data";
 import { UpdateNutritionDataDto } from "@/types/Nutrition-Data/NutritionData";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +20,19 @@ export const useNutritionDataMutations = () => {
             console.log("Error creating data", error, variables, context);
         },
     });
+
+
+    const uploadExcelNutritionDataMutation = useMutation({
+        mutationFn: uploadExcelNutritionData,
+        onSuccess: (data, variables, context) => {
+            queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.userId] });
+            console.log("data created", data, variables, context);
+        },
+
+        onError: (error, variables, context) => {
+            console.log("Error creating data", error, variables, context);
+        },
+    })
 
     const updateNutritionDataMutation = useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateNutritionDataDto }) => updateNutritionData(id, data),
@@ -42,5 +56,5 @@ export const useNutritionDataMutations = () => {
         },
     });
 
-    return { addNutritionDataMutation, updateNutritionDataMutation, deleteNutritionDataMutation };
+    return { addNutritionDataMutation, updateNutritionDataMutation, deleteNutritionDataMutation, uploadExcelNutritionDataMutation };
 };

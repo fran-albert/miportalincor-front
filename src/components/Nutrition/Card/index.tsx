@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import ExcelUploader from "../Upload-Excel";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -93,13 +94,16 @@ const NutritionCard = ({
           <ClipboardPlus className="mr-2" />
           Control Nutricional
         </CardTitle>
-        <Button
-          onClick={handleAddNewEntry}
-          className="text-greenPrimary"
-          variant="link"
-        >
-          Nueva Fila
-        </Button>
+        <div className="div">
+          <Button
+            onClick={handleAddNewEntry}
+            className="text-greenPrimary"
+            variant="link"
+          >
+            Nueva Fila
+          </Button>
+          <ExcelUploader userId={userId} />
+        </div>
       </CardHeader>
       <CardContent>
         <NutritionTable

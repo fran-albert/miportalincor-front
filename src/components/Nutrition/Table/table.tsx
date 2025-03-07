@@ -1,7 +1,4 @@
-"use client";
-
 import { TableHeader } from "@/components/ui/table";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import { formatDate } from "@/common/helpers/helpers";
@@ -139,30 +136,224 @@ export const NutritionTable: React.FC<Props> = ({
     onDeleteEntry(id);
   };
 
+  const columnWidths = {
+    index: "w-16",
+    date: "w-32",
+    weight: "w-24",
+    difference: "w-24",
+    fatPercentage: "w-24",
+    musclePercentage: "w-24",
+    visceralFat: "w-32",
+    imc: "w-24",
+    targetWeight: "w-32",
+    observations: "w-auto",
+    actions: "w-24",
+  };
+
   return (
-    <ScrollArea className="w-full h-[400px]">
+    <div className="w-full h-[400px] flex flex-col">
+      {/* Header fijo fuera del ScrollArea */}
       <Table className="w-full table-fixed">
-        <TableHeader>
+        <TableHeader className="bg-white shadow-sm">
           <TableRow>
-            <TableHead className="w-16">#</TableHead>
-            <TableHead className="w-32">Fecha</TableHead>
-            <TableHead className="w-24">Peso</TableHead>
-            <TableHead className="w-24">Diferencia</TableHead>
-            <TableHead className="w-24">% Grasa</TableHead>
-            <TableHead className="w-24">% Músculo</TableHead>
-            <TableHead className="w-32">Grasa Visceral</TableHead>
-            <TableHead className="w-24">IMC</TableHead>
-            <TableHead className="w-32">Peso Objetivo</TableHead>
-            <TableHead>Observaciones</TableHead>
-            <TableHead className="w-24">Acciones</TableHead>
+            <TableHead className={columnWidths.index}>#</TableHead>
+            <TableHead className={columnWidths.date}>Fecha</TableHead>
+            <TableHead className={columnWidths.weight}>Peso</TableHead>
+            <TableHead className={columnWidths.difference}>
+              Diferencia
+            </TableHead>
+            <TableHead className={columnWidths.fatPercentage}>
+              % Grasa
+            </TableHead>
+            <TableHead className={columnWidths.musclePercentage}>
+              % Músculo
+            </TableHead>
+            <TableHead className={columnWidths.visceralFat}>
+              Grasa Visceral
+            </TableHead>
+            <TableHead className={columnWidths.imc}>IMC</TableHead>
+            <TableHead className={columnWidths.targetWeight}>
+              Peso Objetivo
+            </TableHead>
+            <TableHead className={columnWidths.observations}>
+              Observaciones
+            </TableHead>
+            <TableHead className={columnWidths.actions}>Acciones</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {nutritionData.map((entry, index) => (
-            <TableRow key={entry.id}>
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>
-                {newEntry && nutritionData.length + 1 === index + 1 ? (
+      </Table>
+
+      {/* Cuerpo desplazable dentro del ScrollArea */}
+      <ScrollArea className="flex-1 w-full">
+        <Table className="w-full table-fixed">
+          <TableBody>
+            {nutritionData.map((entry, index) => (
+              <TableRow key={entry.id}>
+                <TableCell className={columnWidths.index}>
+                  {index + 1}
+                </TableCell>
+                <TableCell className={columnWidths.date}>
+                  {editingId === entry.id ? (
+                    <DatePicker
+                      value={entry.date ? new Date(entry.date) : new Date()}
+                      onChange={(selectedDate) => {
+                        setNutritionData((prevData) =>
+                          prevData.map((e) =>
+                            e.id === entry.id
+                              ? {
+                                  ...e,
+                                  date: selectedDate
+                                    ? format(selectedDate, "yyyy-MM-dd")
+                                    : e.date,
+                                }
+                              : e
+                          )
+                        );
+                      }}
+                    />
+                  ) : (
+                    <span className="block truncate">
+                      {formatDate(entry.date.toString())}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.weight}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="weight"
+                      value={String(entry.weight)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.weight.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.difference}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="difference"
+                      value={String(entry.difference)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.difference.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.fatPercentage}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="fatPercentage"
+                      value={String(entry.fatPercentage)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.fatPercentage.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.musclePercentage}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="musclePercentage"
+                      value={String(entry.musclePercentage)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.musclePercentage.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.visceralFat}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="visceralFat"
+                      value={String(entry.visceralFat)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.visceralFat.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.imc}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="imc"
+                      value={String(entry.imc)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.imc.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.targetWeight}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="targetWeight"
+                      value={String(entry.targetWeight)}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    entry.targetWeight.toFixed(1)
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.observations}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="text"
+                      name="observations"
+                      value={entry.observations || ""}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
+                    />
+                  ) : (
+                    <span className="block truncate">{entry.observations}</span>
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.actions}>
+                  <div className="flex gap-2 items-center">
+                    {editingId === entry.id ? (
+                      <Button
+                        onClick={() => handleSaveEdit(entry.id)}
+                        className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                      >
+                        <Save size={20} className="text-green-600" />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleEdit(entry.id)}
+                        className="p-2 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
+                      >
+                        <Pencil size={20} className="text-blue-600" />
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => handleDelete(entry.id)}
+                      className="p-2 rounded bg-red-100 hover:bg-red-200 transition-colors duration-200"
+                    >
+                      <Trash size={20} className="text-red-600" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {newEntry && (
+              <TableRow>
+                <TableCell className={columnWidths.index}>
+                  {nutritionData.length + 1}
+                </TableCell>
+                <TableCell className={columnWidths.date}>
                   <DatePicker
                     value={newEntry.date ? new Date(newEntry.date) : new Date()}
                     onChange={(selectedDate) => {
@@ -177,139 +368,92 @@ export const NutritionTable: React.FC<Props> = ({
                       });
                     }}
                   />
-                ) : (
-                  <span className="px-2 py-1">
-                    {formatDate(entry.date.toString())}
-                  </span>
-                )}
-              </TableCell>
-
-              {[
-                "weight",
-                "difference",
-                "fatPercentage",
-                "musclePercentage",
-                "visceralFat",
-                "imc",
-                "targetWeight",
-              ].map((field) => (
-                <TableCell key={field}>
-                  {editingId === entry.id ? (
-                    <div className="min-w-[100px]">
-                      <Input
-                        type="number"
-                        name={field}
-                        value={String(entry[field as keyof NutritionData])}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                      />
-                    </div>
-                  ) : (
-                    (entry[field as keyof NutritionData] as number).toFixed(1)
-                  )}
                 </TableCell>
-              ))}
-              <TableCell>
-                {editingId === entry.id ? (
+                <TableCell className={columnWidths.weight}>
+                  <Input
+                    type="number"
+                    name="weight"
+                    value={(newEntry?.weight ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.difference}>
+                  <Input
+                    type="number"
+                    name="difference"
+                    value={newEntry.difference?.toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.fatPercentage}>
+                  <Input
+                    type="number"
+                    name="fatPercentage"
+                    value={(newEntry?.fatPercentage ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.musclePercentage}>
+                  <Input
+                    type="number"
+                    name="musclePercentage"
+                    value={(newEntry?.musclePercentage ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.visceralFat}>
+                  <Input
+                    type="number"
+                    name="visceralFat"
+                    value={(newEntry?.visceralFat ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.imc}>
+                  <Input
+                    type="number"
+                    name="imc"
+                    value={(newEntry?.imc ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.targetWeight}>
+                  <Input
+                    type="number"
+                    name="targetWeight"
+                    value={(newEntry?.targetWeight ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell className={columnWidths.observations}>
                   <Input
                     type="text"
                     name="observations"
-                    value={entry.observations || ""}
-                    onChange={(e) => handleInputChange(e, entry.id)}
+                    value={newEntry.observations || ""}
+                    onChange={handleInputChange}
+                    className="w-full"
                   />
-                ) : (
-                  entry.observations
-                )}
-              </TableCell>
-              <TableCell className="w-24">
-                <div className="flex gap-2 items-center">
-                  {editingId === entry.id ? (
-                    <Button
-                      onClick={() => handleSaveEdit(entry.id)}
-                      className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                      <Save size={20} className="text-green-600" />
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleEdit(entry.id)}
-                      className="p-2 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
-                    >
-                      <Pencil size={20} className="text-blue-600" />
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => handleDelete(entry.id)}
-                    className="p-2 rounded bg-red-100 hover:bg-red-200 transition-colors duration-200"
-                  >
-                    <Trash size={20} className="text-red-600" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-          {newEntry && (
-            <TableRow>
-              <TableCell>{nutritionData.length + 1}</TableCell>
-              <TableCell>
-                <DatePicker
-                  value={newEntry.date ? new Date(newEntry.date) : new Date()}
-                  onChange={(selectedDate) => {
-                    setNewEntry((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        date: selectedDate
-                          ? format(selectedDate, "yyyy-MM-dd")
-                          : prev.date,
-                      };
-                    });
-                  }}
-                />
-              </TableCell>
-              {[
-                "weight",
-                "difference",
-                "fatPercentage",
-                "musclePercentage",
-                "visceralFat",
-                "imc",
-                "targetWeight",
-              ].map((field) => (
-                <TableCell key={field}>
-                  <div className="min-w-[100px]">
-                    <Input
-                      type="number"
-                      name={field}
-                      value={
-                        newEntry[
-                          field as keyof CreateNutritionDataDto
-                        ]?.toString() || ""
-                      }
-                      onChange={handleInputChange}
-                    />
-                  </div>
                 </TableCell>
-              ))}
-              <TableCell>
-                <Input
-                  type="text"
-                  name="observations"
-                  value={newEntry.observations || ""}
-                  onChange={handleInputChange}
-                />
-              </TableCell>
-              <TableCell>
-                <Button
-                  onClick={handleSaveNewEntry}
-                  className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                >
-                  <Save size={20} className="text-green-600" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </ScrollArea>
+                <TableCell className={columnWidths.actions}>
+                  <Button
+                    onClick={handleSaveNewEntry}
+                    className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                  >
+                    <Save size={20} className="text-green-600" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+    </div>
   );
 };
