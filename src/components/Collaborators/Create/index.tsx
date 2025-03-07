@@ -82,6 +82,7 @@ export function CreateCollaboratorComponent() {
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
+    setSelectedCity(undefined);
     setValue("address.city.state", String(state.id));
   };
   async function onSubmit(data: z.infer<typeof collaboratorSchema>) {
@@ -93,7 +94,25 @@ export function CreateCollaboratorComponent() {
       formData.append("birthDate", data.birthDate);
       formData.append("phone", data.phone);
       formData.append("gender", data.gender);
-      // formData.append("address", data.address);
+      const addressData = {
+        street: data.address.street,
+        number: data.address.number,
+        description: data.address.description,
+        phoneNumber: data.address.phoneNumber,
+        city: {
+          id: selectedCity?.id,
+          name: selectedCity?.name,
+          state: {
+            id: selectedState?.id,
+            name: selectedState?.name,
+            country: {
+              id: 1,
+              name: "Argentina",
+            },
+          },
+        },
+      };
+      formData.append("addressData", JSON.stringify(addressData));
       formData.append("email", data.email);
       formData.append("idCompany", data.idCompany.toString());
       if (data.affiliationNumber) {
