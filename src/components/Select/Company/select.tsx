@@ -10,7 +10,7 @@ import { Controller } from "react-hook-form";
 
 interface Props {
   control: any;
-  defaultValue?: { id: number; name: string; shortName: string } | null;
+  defaultValue?: { id: number; name: string} | null;
   disabled?: boolean;
 }
 

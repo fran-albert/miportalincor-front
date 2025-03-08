@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   calculateAge,
   formatAddress,
@@ -8,9 +7,9 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
-import { Edit2, User } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Edit2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CollaboratorAvatar from "@/components/Collaborators/Avatar";
 interface Props {
   collaborator: Collaborator;
   canEdit?: boolean;
@@ -22,10 +21,8 @@ export default function CollaboratorInformationCard({
   canEdit = false,
   isForPdf = false,
 }: Props) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const photoUrl = collaborator.photoUrl;
   const navigate = useNavigate();
-  const hasValidImage = !!photoUrl && photoUrl.trim() !== "";
   return (
     <Card className="shadow-lg border border-gray-200 rounded-lg">
       <CardHeader className="flex flex-col items-center p-6 rounded-t-lg">
@@ -49,27 +46,10 @@ export default function CollaboratorInformationCard({
         </div>
 
         <div className="mt-4 flex flex-col items-center">
-          <div className="relative flex flex-col items-center">
-            {hasValidImage && !imageLoaded && (
-              <Skeleton className="w-[100px] h-[20px] rounded-full" />
-            )}
-            {hasValidImage ? (
-              <img
-                src={photoUrl}
-                alt={`${collaborator.firstName} ${collaborator.lastName}`}
-                onLoad={() => setImageLoaded(true)}
-                onError={() => setImageLoaded(false)}
-                className={`h-32 w-32 object-cover border-2 border-greenPrimary shadow-md ${
-                  imageLoaded ? "block" : "hidden"
-                }`}
-              />
-            ) : null}
-            {!hasValidImage || !imageLoaded ? (
-              <div className="h-24 w-24 flex items-center justify-center bg-gray-200 rounded-full border-2 border-gray-300 shadow-md">
-                <User className="h-12 w-12 text-gray-500" />
-              </div>
-            ) : null}
-          </div>
+          <CollaboratorAvatar
+            src={photoUrl}
+            alt={`${collaborator.firstName} ${collaborator.lastName}`}
+          />
           <p className="mt-2 text-lg font-medium">
             {collaborator.firstName} {collaborator.lastName}
           </p>
@@ -118,8 +98,14 @@ export default function CollaboratorInformationCard({
           </div>
 
           <div className="rounded-lg">
-            <p className="text-sm text-gray-500">Lugar de Trabajo:</p>
-            <p className="font-medium">Trabajos en altura</p>
+            <p className="text-sm text-gray-500">Obra Social - Affiliado N°:</p>
+            <p className="font-medium">
+              {collaborator.healthInsurance?.name
+                ? `${collaborator.healthInsurance.name} - ${
+                    collaborator.affiliationNumber || "Sin número de afiliación"
+                  }`
+                : "Sin obra social asignada"}
+            </p>
           </div>
           {!isForPdf && (
             <div className="rounded-lg">

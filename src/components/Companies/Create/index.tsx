@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { companySchema } from "@/validators/Company/company.schema";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
@@ -21,9 +19,14 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
-import { useEffect } from "react";
 import { useCompanyMutations } from "@/hooks/Company/useCompanyMutations";
 import { toast } from "sonner";
+import { StateSelect } from "@/components/Select/State/select";
+import { CitySelect } from "@/components/Select/City/select";
+import { State } from "@/types/State/State";
+import { City } from "@/types/City/City";
+import { companySchema } from "@/validators/Company/company.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface Props {
   isOpen: boolean;
@@ -31,21 +34,62 @@ interface Props {
 }
 
 export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
-  const form = useForm<z.infer<typeof companySchema>>({
+  const form = useForm<any>({
     resolver: zodResolver(companySchema),
   });
   const { addCompanyMutations } = useCompanyMutations();
   const toggleDialog = () => setIsOpen(!isOpen);
+  const { setValue } = form;
+  const [selectedState, setSelectedState] = useState<State | undefined>(
+    undefined
+  );
+  const [selectedCity, setSelectedCity] = useState<City | undefined>(undefined);
+
+  const handleStateChange = (state: State) => {
+    setSelectedState(state);
+    setSelectedCity(undefined);
+    setValue("address.city.state", String(state.id));
+  };
+
+  const handleCityChange = (city: City) => {
+    if (selectedState) {
+      const cityWithState = { ...city, state: selectedState };
+      setSelectedCity(cityWithState);
+      setValue("address.city", cityWithState);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       form.reset();
     }
-  }, [isOpen, form.reset]);
+  }, [isOpen, form]);
 
-  async function onSubmit(values: z.infer<typeof companySchema>) {
+  async function onSubmit(values: any) {
+    const addressData = {
+      street: values.address.street,
+      number: values.address.number,
+      description: values.address.description,
+      phoneNumber: values.address.phoneNumber,
+      city: {
+        id: selectedCity?.id,
+        name: selectedCity?.name,
+        state: {
+          id: selectedState?.id,
+          name: selectedState?.name,
+          country: {
+            id: 1,
+            name: "Argentina",
+          },
+        },
+      },
+    };
+    const payload = {
+      ...values,
+      addressData
+    };
     try {
-      const promise = addCompanyMutations.mutateAsync(values);
+      const promise = addCompanyMutations.mutateAsync(payload);
       toast.promise(promise, {
         loading: <LoadingToast message="Creando Empresa..." />,
         success: <SuccessToast message="Empresa creada con éxito!" />,
@@ -74,7 +118,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/** Grupo de Campos */}
+            {/* Sección: Datos de la Empresa */}
             <div className="grid gap-4">
               {/* Nombre */}
               <FormField
@@ -82,24 +126,9 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="text-black"> Nombre</Label>
+                    <Label className="text-black">Nombre</Label>
                     <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Dirección */}
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label className="text-black">Dirección</Label>
-                    <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Nombre de la empresa" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -112,7 +141,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                 name="taxId"
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="text-black"> CUIT</Label>
+                    <Label className="text-black">CUIT</Label>
                     <FormControl>
                       <Input {...field} placeholder="30123456789" />
                     </FormControl>
@@ -129,7 +158,11 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                   <FormItem>
                     <Label className="text-black">Email</Label>
                     <FormControl>
-                      <Input {...field} type="email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="correo@empresa.com"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,9 +175,9 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="text-black"> Teléfono</Label>
+                    <Label className="text-black">Teléfono</Label>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Número de teléfono" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,11 +185,127 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
               />
             </div>
 
+            {/* Sección: Dirección Detallada */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-800">Dirección</h3>
+
+              {/* Provincia y Ciudad */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.city.state"
+                    render={() => (
+                      <FormItem>
+                        <Label className="text-black">Provincia</Label>
+                        <FormControl>
+                          <StateSelect
+                            control={form.control}
+                            name="address.city.state"
+                            onStateChange={handleStateChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.city.name"
+                    render={() => (
+                      <FormItem>
+                        <Label className="text-black">Ciudad</Label>
+                        <FormControl>
+                          <CitySelect
+                            control={form.control}
+                            idState={
+                              selectedState ? Number(selectedState.id) : 0
+                            }
+                            onCityChange={handleCityChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Calle, Número, Piso y Departamento */}
+              <div className="grid grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="text-black">Calle</Label>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar calle" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="text-black">N°</Label>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar número" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="text-black">Piso</Label>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar piso" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="address.phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="text-black">Departamento</Label>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Ingresar departamento"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Botón de Guardar */}
             <Button
               type="submit"
               disabled={addCompanyMutations.isPending}
-              className="w-full  text-white bg-greenPrimary hover:bg-greenPrimary"
+              className="w-full text-white bg-greenPrimary hover:bg-greenPrimary"
             >
               Guardar Empresa
             </Button>

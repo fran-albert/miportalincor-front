@@ -25,8 +25,9 @@ export const StateSelect = ({
   onStateChange,
 }: StateSelectProps) => {
   const { states } = useState();
+
   const handleValueChange = (selectedId: string) => {
-    const selectedState = states.find(
+    const selectedState = states?.find(
       (state) => String(state.id) === selectedId
     );
     if (onStateChange && selectedState) {
@@ -39,22 +40,22 @@ export const StateSelect = ({
       name={name}
       control={control}
       rules={{ required: "Este campo es obligatorio" }}
-      defaultValue={defaultValue ? String(defaultValue.id) : ""}
+      defaultValue={defaultValue?.id ? String(defaultValue.id) : ""}
       render={({ field }) => (
         <div>
           <Select
-            value={field.value}
+            value={field.value ? String(field.value) : ""}
             onValueChange={(value) => {
-              field.onChange(value);
+              field.onChange(value); 
               handleValueChange(value);
             }}
-            disabled={disabled}
+            disabled={disabled || !states?.length}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Seleccione la provincia..." />
             </SelectTrigger>
             <SelectContent>
-              {states.map((state) => (
+              {states?.map((state) => (
                 <SelectItem key={String(state.id)} value={String(state.id)}>
                   {state.name}
                 </SelectItem>

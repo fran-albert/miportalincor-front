@@ -16,13 +16,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useForm } from "react-hook-form";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { toast } from "sonner";
 import { goBack } from "@/common/helpers/helpers";
 import { GenderSelect } from "@/components/Select/Gender/select";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
@@ -38,6 +36,7 @@ import { State } from "@/types/State/State";
 import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { CitySelect } from "@/components/Select/City/select";
 import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
+import CollaboratorAvatar from "../Avatar";
 
 function dataURLtoFile(dataurl: string, filename: string): File {
   const arr = dataurl.split(",");
@@ -52,12 +51,9 @@ function dataURLtoFile(dataurl: string, filename: string): File {
   return new File([u8arr], filename, { type: mime });
 }
 
-type FormValues = z.infer<typeof collaboratorSchema>;
 export function CreateCollaboratorComponent() {
   const { addCollaboratorMutation } = useCollaboratorMutations();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(collaboratorSchema),
-  });
+  const form = useForm<any>({});
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
     undefined
@@ -184,24 +180,16 @@ export function CreateCollaboratorComponent() {
                       <FormControl>
                         <div className="flex flex-col items-center justify-center gap-4">
                           <div className="flex items-center justify-center">
-                            {field.value ? (
-                              <Avatar className="w-24 h-24">
-                                <AvatarImage
-                                  src={
-                                    typeof field.value === "string"
-                                      ? field.value
-                                      : ""
-                                  }
-                                  alt="Avatar"
-                                />
-                                <AvatarFallback>AV</AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <Avatar className="w-24 h-24">
-                                <AvatarFallback>AV</AvatarFallback>
-                              </Avatar>
-                            )}
+                            <CollaboratorAvatar
+                              src={
+                                typeof field.value === "string"
+                                  ? field.value
+                                  : null
+                              }
+                              alt="Avatar"
+                            />
                           </div>
+
                           <ImagePickerDialog onImageSelect={field.onChange} />
                         </div>
                       </FormControl>
@@ -300,6 +288,7 @@ export function CreateCollaboratorComponent() {
                           <FormControl>
                             <Input
                               type="date"
+                              lang="es"
                               {...field}
                               onChange={(e) => {
                                 const selectedDate = e.target.value;
