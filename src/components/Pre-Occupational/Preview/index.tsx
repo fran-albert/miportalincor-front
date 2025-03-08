@@ -118,7 +118,7 @@ export default function PreOccupationalPreviewComponent({
         let position = 0;
 
         while (heightLeft > 0) {
-          const heightToDraw = Math.min(heightLeft, pageHeight);
+          // const heightToDraw = Math.min(heightLeft, pageHeight);
           pdf.addImage(
             imgData,
             "PNG",

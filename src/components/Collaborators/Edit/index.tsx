@@ -172,7 +172,6 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
         formData.append("affiliationNumber", data.affiliationNumber);
       }
 
-      // Reconstruimos el objeto state completo usando el ID de data.address.city.state
       const selectedStateData = states.find(
         (state) => state.id === data.address.city.state.id
       );

@@ -402,6 +402,7 @@ function CreateDoctorComponent() {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state.name"
                               onStateChange={handleStateChange}
                             />
                           </FormControl>
