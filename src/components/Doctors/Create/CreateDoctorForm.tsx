@@ -73,7 +73,8 @@ function CreateDoctorComponent() {
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
-    setValue("address.city.state", state);
+    setSelectedCity(undefined);
+    setValue("address.city.state", String(state.id));
   };
 
   async function onSubmit(values: z.infer<typeof DoctorSchema>) {
@@ -113,7 +114,9 @@ function CreateDoctorComponent() {
           return <ErrorToast message="Error al crear el médico" />;
         },
       });
-      goBack();
+      patientCreationPromise.then(() => {
+        goBack();
+      });
     } catch (error) {
       console.error("Error en onSubmit:", error);
       throw error;
@@ -393,7 +396,7 @@ function CreateDoctorComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="address.city.state.name"
+                      name="address.city.state"
                       render={({}) => (
                         <FormItem>
                           <FormLabel className="text-black">
@@ -402,6 +405,7 @@ function CreateDoctorComponent() {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
                               onStateChange={handleStateChange}
                             />
                           </FormControl>

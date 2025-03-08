@@ -15,6 +15,10 @@ export function formatMatricula(matricula: string): string {
   return dniConPuntos.split("").reverse().join("");
 }
 
+export function getGenderLabel(gender: string): string {
+  return gender === 'Masculino' ? 'Masculino' : 'Femenino';
+}
+
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
 
@@ -68,6 +72,16 @@ export const handleDateChange = (
   setValue(fieldName, formattedDateISO);
 };
 
+export const formatCuilCuit = (numero: number | string): string => {
+  let str: string = numero.toString().replace(/\D/g, '');
+
+  if (str.length !== 11) {
+    return "Número inválido, debe tener 11 dígitos.";
+  }
+
+  return `${str.slice(0, 2)}-${str.slice(2, 10)}-${str.slice(10)}`;
+};
+
 export const sleep = (seconds: number): Promise<boolean> => {
   return new Promise(resolve => {
     setTimeout(() => {
@@ -88,6 +102,36 @@ export const slugify = (text: string, id: number) => {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')}-${id}`;
 };
+
+export const parseSlug = (slug: string) => {
+  const slugParts = slug.split("-");
+  const id = parseInt(slugParts[slugParts.length - 1], 10);
+
+  // Extraer el nombre sin el ID
+  const nameParts = slugParts.slice(0, -1).join(" ");
+  const formattedName = nameParts
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  return { id, formattedName };
+};
+
+export const formatAddress = (addressData: any) => {
+  if (!addressData) return "S/D";
+
+  const { street, number, description, phoneNumber, city } = addressData;
+  const state = city?.state?.name;
+  const cityName = city?.name;
+
+  if (description && phoneNumber) {
+    return `${street} ${number}, ${description}° ${phoneNumber} - ${cityName}, ${state}`;
+  }
+
+  return `${cityName}, ${state}`;
+};
+
+
 
 export const normalizeDate = (date: string): string => {
   try {
@@ -120,27 +164,3 @@ export const normalizeDate = (date: string): string => {
   }
 };
 
-export interface ParsedSlug {
-  firstName: string;
-  lastName: string;
-  id: number;
-}
-
-export function parseSlug(slug: string): ParsedSlug {
-  const parts = slug.split('-');
-  if (parts.length < 2) {
-    throw new Error('El slug no tiene el formato esperado.');
-  }
-
-  const idString = parts.pop()!;
-  const id = parseInt(idString, 10);
-
-  if (isNaN(id)) {
-    throw new Error('El id no es un número válido.');
-  }
-
-  const firstName = parts[0] || '';
-  const lastName = parts.slice(1).join(' ') || '';
-
-  return { firstName, lastName, id };
-}

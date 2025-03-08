@@ -1,11 +1,14 @@
-"use client";
-
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { Input } from "@/components/ui/input";
 
-export default function TestsPreview() {
-  // Obtenemos la información de las pruebas realizadas y el campo "otras pruebas" desde el estado
+interface TestsPreviewProps {
+  isForPdf?: boolean;
+}
+
+export default function TestsPreview({ isForPdf = false }: TestsPreviewProps) {
   const tests = useSelector(
     (state: RootState) => state.preOccupational.formData.testsPerformed
   );
@@ -13,8 +16,7 @@ export default function TestsPreview() {
     (state: RootState) => state.preOccupational.formData.otrasPruebas
   );
 
-  // Definimos los tests en dos columnas, usando los mismos IDs que en la edición
-  const leftTests = [
+  const allTests = [
     { id: "examenFisico", label: "Examen físico" },
     { id: "glucemia", label: "Glucemia en Ayuna" },
     { id: "tuberculosis", label: "Tuberculosis" },
@@ -25,10 +27,6 @@ export default function TestsPreview() {
       label: "Examen visual (Agudeza, campo, profundidad, cromatismo)",
     },
     { id: "radiografia", label: "Radiografía tórax y lumbar" },
-    { id: "otros", label: "Otros" },
-  ];
-
-  const rightTests = [
     { id: "audiometria", label: "Audiometría" },
     { id: "hemograma", label: "Hemograma" },
     { id: "historiaClinica", label: "Historia clínica ocupacional" },
@@ -40,15 +38,8 @@ export default function TestsPreview() {
     },
     { id: "hepaticas", label: "Pruebas hepáticas (TGO, TGP)" },
     { id: "psicotecnico", label: "Psicotécnico" },
+    { id: "otros", label: "Otros" },
   ];
-
-  // Filtramos únicamente las pruebas que se realizaron (valor true)
-  const renderedLeftTests = leftTests.filter(
-    (test) => tests && tests[test.id as keyof typeof tests]
-  );
-  const renderedRightTests = rightTests.filter(
-    (test) => tests && tests[test.id as keyof typeof tests]
-  );
 
   return (
     <div className="border rounded-lg p-4">
@@ -56,32 +47,36 @@ export default function TestsPreview() {
         Pruebas realizadas
       </h3>
       <div className="grid grid-cols-2 gap-6">
-        {/* Columna izquierda */}
-        <div className="space-y-3">
-          {renderedLeftTests.map((test) => (
-            <div key={test.id} className="flex items-center space-x-2">
-              <div className="w-4 h-4 flex items-center justify-center">✔</div>
-              <Label>{test.label}</Label>
-            </div>
-          ))}
-        </div>
+        {allTests.map((test) => {
+          const isChecked = tests
+            ? tests[test.id as keyof typeof tests]
+            : false;
 
-        {/* Columna derecha */}
-        <div className="space-y-3">
-          {renderedRightTests.map((test) => (
+          return (
             <div key={test.id} className="flex items-center space-x-2">
-              <div className="w-4 h-4 flex items-center justify-center">✔</div>
+              <Checkbox checked={isChecked} className="w-4 h-4" />
               <Label>{test.label}</Label>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* Campo para Otras pruebas realizadas */}
       {otrasPruebas && otrasPruebas.trim() !== "" && (
         <div className="space-y-2 mt-4">
           <Label>Otras pruebas realizadas</Label>
-          <div className="p-2 border rounded bg-gray-50">{otrasPruebas}</div>
+          {isForPdf ? (
+            <p className="p-2 font-semibold">
+              {otrasPruebas || "No se encontraron otras pruebas realizadas."}
+            </p>
+          ) : (
+            <Input
+              value={
+                otrasPruebas || "No se encontraron otras pruebas realizadas."
+              }
+              readOnly
+              className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
+            />
+          )}
         </div>
       )}
     </div>

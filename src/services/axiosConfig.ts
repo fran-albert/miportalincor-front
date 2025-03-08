@@ -1,25 +1,28 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API,
+const apiIncor = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_API, 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("authToken");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
+const apiLaboral = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_INCOR_LABORAL_API, 
+  headers: {
+    "Content-Type": "application/json",
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+});
 
-export default axiosInstance;
+const addAuthToken = (config: any) => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
+
+apiIncor.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+
+export { apiIncor, apiLaboral };

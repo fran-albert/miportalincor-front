@@ -439,6 +439,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
                               disabled={!isEditing}
                               defaultValue={user?.address?.city?.state}
                               onStateChange={handleStateChange}

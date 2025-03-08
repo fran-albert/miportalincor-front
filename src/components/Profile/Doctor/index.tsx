@@ -33,6 +33,7 @@ import { Edit2, Save, X } from "lucide-react";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import { ImageUploadBox } from "@/components/Doctors/Signature-Boxs";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 export default function ProfileDoctorCardComponent({
@@ -56,7 +57,26 @@ export default function ProfileDoctorCardComponent({
     data?.birthDate ? new Date(data.birthDate.toString()) : undefined
   );
   const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
+  const [selloImage, setSelloImage] = useState<string | null>(null);
+  const [firmaImage, setFirmaImage] = useState<string | null>(null);
 
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "sello" | "firma"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (type === "sello") {
+          setSelloImage(event.target?.result as string);
+        } else {
+          setFirmaImage(event.target?.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handleStateChange = (state: State) => {
     setSelectedState(state);
     setSelectedCity(undefined);
@@ -82,7 +102,7 @@ export default function ProfileDoctorCardComponent({
       setValue("gender", String(data.gender) || "");
       setValue("maritalStatus", String(data.maritalStatus) || "");
       setValue("observations", data.observations || "");
-      setValue("address.city.state", data?.address?.city?.state);
+      setValue("address.city.state", data?.address?.city?.state.id.toString());
       setValue("address.city", data?.address?.city);
       setValue("address.street", data?.address.street);
       setValue("address.number", data?.address.number);
@@ -144,7 +164,7 @@ export default function ProfileDoctorCardComponent({
   };
 
   const handleSave = async () => {
-    const isValid = await form.trigger(); // Valida el formulario antes de enviar
+    const isValid = await form.trigger();
     if (!isValid) return;
     const specialitiesToSend = data?.specialities.map((s) => ({
       id: s.id,
@@ -176,15 +196,16 @@ export default function ProfileDoctorCardComponent({
       registeredById: data?.registeredById,
     };
     try {
+      console.log(dataToSend);
       const dataCreationPromise = updateDoctorMutation.mutateAsync({
         id: Number(data?.userId),
         doctor: dataToSend,
       });
 
       toast.promise(dataCreationPromise, {
-        loading: <LoadingToast message="Actualizando datos del paciente..." />,
-        success: <SuccessToast message="Paciente actualizado con éxito!" />,
-        error: <ErrorToast message="Error al actualizar el Paciente" />,
+        loading: <LoadingToast message="Actualizando datos del médico..." />,
+        success: <SuccessToast message="Médico actualizado con éxito!" />,
+        error: <ErrorToast message="Error al actualizar el Médico" />,
       });
 
       dataCreationPromise
@@ -192,10 +213,10 @@ export default function ProfileDoctorCardComponent({
           setIsEditing(false);
         })
         .catch((error) => {
-          console.error("Error al actualizar el paciente", error);
+          console.error("Error al actualizar el Médico", error);
         });
     } catch (error) {
-      console.error("Error al actualizar el paciente", error);
+      console.error("Error al actualizar el Médico", error);
     }
   };
 
@@ -251,6 +272,7 @@ export default function ProfileDoctorCardComponent({
                               {...field}
                               placeholder="Ingresar nombre..."
                               defaultValue={data?.firstName}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -270,6 +292,7 @@ export default function ProfileDoctorCardComponent({
                               {...field}
                               placeholder="Ingresar apellido..."
                               defaultValue={data?.lastName}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -293,6 +316,7 @@ export default function ProfileDoctorCardComponent({
                               {...field}
                               placeholder="Ingresar correo electrónico..."
                               defaultValue={data?.email}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -312,6 +336,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               placeholder="Ingresar D.N.I..."
                               defaultValue={formatDni(String(data?.dni))}
                               readOnly
@@ -338,7 +363,7 @@ export default function ProfileDoctorCardComponent({
                               setValue={setValue}
                               fieldName="birthDate"
                               initialDate={startDate}
-                              //   disabled={!isEditing}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -360,6 +385,7 @@ export default function ProfileDoctorCardComponent({
                               {...field}
                               placeholder="Ingresar teléfono..."
                               defaultValue={data?.phoneNumber}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -380,6 +406,7 @@ export default function ProfileDoctorCardComponent({
                             <Input
                               {...field}
                               defaultValue={data?.phoneNumber2}
+                              disabled={!isEditing}
                               placeholder="Ingresar teléfono..."
                             />
                           </FormControl>
@@ -401,6 +428,7 @@ export default function ProfileDoctorCardComponent({
                             <BloodSelect
                               control={control}
                               defaultValue={String(data?.bloodType) || ""}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -421,6 +449,7 @@ export default function ProfileDoctorCardComponent({
                             <RHFactorSelect
                               control={control}
                               defaultValue={String(data?.rhFactor) || ""}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -441,6 +470,7 @@ export default function ProfileDoctorCardComponent({
                             <GenderSelect
                               control={control}
                               defaultValue={String(data?.gender) || ""}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -461,6 +491,7 @@ export default function ProfileDoctorCardComponent({
                             <MaritalStatusSelect
                               control={control}
                               defaultValue={String(data?.maritalStatus) || ""}
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage />
@@ -484,6 +515,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               className="w-full text-gray-800 cursor-not-allowed"
                               value={data?.healthInsurances
                                 .map(
@@ -512,6 +544,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               value={
                                 data?.specialities
                                   .map((speciality) => speciality.name)
@@ -537,6 +570,7 @@ export default function ProfileDoctorCardComponent({
                       className="w-full text-gray-800 cursor-not-allowed"
                       // defaultValue={data?.affiliationNumber}
                       readOnly
+                      disabled={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -551,6 +585,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               className="w-full text-gray-800 cursor-not-allowed"
                               defaultValue={data?.observations}
                               readOnly
@@ -575,6 +610,8 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <StateSelect
                               control={control}
+                              disabled={!isEditing}
+                              name="address.city.state"
                               defaultValue={data?.address?.city?.state}
                               onStateChange={handleStateChange}
                             />
@@ -595,6 +632,7 @@ export default function ProfileDoctorCardComponent({
                             {selectedState && (
                               <CitySelect
                                 control={control}
+                                disabled={!isEditing}
                                 defaultValue={selectedCity}
                                 idState={selectedState.id}
                                 onCityChange={handleCityChange}
@@ -618,6 +656,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               placeholder="Ingresar calle"
                               defaultValue={data?.address.street}
                             />
@@ -637,6 +676,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               placeholder="Ingresar número"
                               defaultValue={data?.address.number}
                             />
@@ -656,6 +696,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               placeholder="Ingresar número"
                               defaultValue={data?.address.description}
                             />
@@ -677,6 +718,7 @@ export default function ProfileDoctorCardComponent({
                           <FormControl>
                             <Input
                               {...field}
+                              disabled={!isEditing}
                               placeholder="Ingresar departamento"
                               defaultValue={data?.address.phoneNumber}
                             />
@@ -687,6 +729,22 @@ export default function ProfileDoctorCardComponent({
                     />
                   </div>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <ImageUploadBox
+                  id="sello"
+                  label="SELLO"
+                  image={selloImage}
+                  isEditing={isEditing}
+                  onImageUpload={(e) => handleImageUpload(e, "sello")}
+                />
+                <ImageUploadBox
+                  id="firma"
+                  label="FIRMA"
+                  image={firmaImage}
+                  isEditing={isEditing}
+                  onImageUpload={(e) => handleImageUpload(e, "firma")}
+                />
               </div>
             </CardContent>
           </form>

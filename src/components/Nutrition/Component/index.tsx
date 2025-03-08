@@ -1,11 +1,13 @@
 import BreadcrumbComponent from "@/components/Breadcrumb";
 import NutritionCard from "../Card";
 import { NutritionData } from "@/types/Nutrition-Data/NutritionData";
-import { ParsedSlug } from "@/common/helpers/helpers";
 
 interface Props {
   nutritionData: NutritionData[];
-  slugParts: ParsedSlug;
+  slugParts: {
+    id: number;
+    formattedName: string;
+  };
   slug: string;
 }
 
@@ -14,9 +16,7 @@ const NutritionComponent = ({ nutritionData, slug, slugParts }: Props) => {
     { label: "Inicio", href: "/inicio" },
     { label: "Pacientes", href: "/pacientes" },
     {
-      label: slugParts
-        ? `${slugParts.firstName} ${slugParts.lastName}`
-        : "Paciente",
+      label: slugParts ? slugParts.formattedName : "Paciente",
       href: `/pacientes/${slug}`,
     },
     {

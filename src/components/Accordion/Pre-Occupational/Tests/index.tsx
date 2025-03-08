@@ -1,46 +1,139 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataType } from "@/types/Data-Type/Data-Type";
+import { DataValue } from "@/types/Data-Value/Data-Value"; // Asegúrate de importar este tipo
+import { selectFlatFormData } from "@/store/Pre-Occupational/selectors";
+import { useEffect } from "react";
 
 interface Props {
   isEditing: boolean;
+  fields: DataType[];
+  dataValues?: DataValue[]; // Añadimos dataValues como prop opcional
 }
 
-export default function TestsAccordion({ isEditing }: Props) {
+const testKeyMapping: Record<string, string> = {
+  "Examen físico": "examenFisico",
+  "Glucemia en Ayuna": "glucemia",
+  "Tuberculosis": "tuberculosis",
+  "Espirometría": "espirometria",
+  "Capacidad física (Test Harvard)": "capacidadFisica",
+  "Examen visual (Agudeza, campo, profundidad, cromatismo)": "examenVisual",
+  "Radiografía tórax y lumbar": "radiografia",
+  "Audiometría": "audiometria",
+  "Hemograma": "hemograma",
+  "Historia clínica ocupacional": "historiaClinica",
+  "Examen orina": "examenOrina",
+  "Electrocardiograma": "electrocardiograma",
+  "Panel de drogas (COC, THC, etc.)": "panelDrogas",
+  "Pruebas hepáticas (TGO, TGP)": "hepaticas",
+  "Psicotecnico": "psicotecnico",
+  "Otros": "otros",
+  "Otras pruebas realizadas": "otrasPruebas",
+};
+
+export default function TestsAccordion({
+  isEditing,
+  fields,
+  dataValues,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
-
-  // Obtenemos la información de las pruebas realizadas y el campo "otras pruebas" desde el estado
-  const testsPerformed = useSelector(
-    (state: RootState) => state.preOccupational.formData.testsPerformed
+  const testFields = fields.filter(
+    (field) =>
+      field.dataType === "BOOLEAN" &&
+      [
+        "Examen físico",
+        "Glucemia en Ayuna",
+        "Tuberculosis",
+        "Espirometría",
+        "Capacidad física (Test Harvard)",
+        "Examen visual (Agudeza, campo, profundidad, cromatismo)",
+        "Radiografía tórax y lumbar",
+        "Audiometría",
+        "Hemograma",
+        "Historia clínica ocupacional",
+        "Examen orina",
+        "Electrocardiograma",
+        "Panel de drogas (COC, THC, etc.)",
+        "Pruebas hepáticas (TGO, TGP)",
+        "Psicotecnico",
+        "Otros",
+      ].includes(field.name)
   );
-  const otrasPruebas = useSelector(
-    (state: RootState) => state.preOccupational.formData.otrasPruebas
-  );
 
-  // Función para alternar el valor de una prueba
-  const handleToggleTest = (testId: string) => {
+  const midIndex = Math.ceil(testFields.length / 2);
+  const leftTests = testFields.slice(0, midIndex);
+  const rightTests = testFields.slice(midIndex);
+
+  const flatFormData = useSelector((state: RootState) =>
+    selectFlatFormData(state)
+  );
+  const otrasPruebas = flatFormData.otrasPruebas;
+
+  const getTestKey = (testName: string) => {
+    const internalKey = testKeyMapping[testName];
+    return internalKey ? `tests_${internalKey}` : testName;
+  };
+
+  useEffect(() => {
+    if (dataValues) {
+      const initialTests = dataValues
+        .filter((dv) => testFields.some((tf) => tf.name === dv.dataType.name))
+        .reduce((acc, dv) => {
+          const key = getTestKey(dv.dataType.name).replace("tests_", "");
+          acc[key] = dv.value;
+          return acc;
+        }, {} as Record<string, any>);
+  
+      const newFormData = {
+        testsPerformed: {
+          ...flatFormData.testsPerformed,
+          ...initialTests,
+        },
+        ...(dataValues.find((dv) => dv.dataType.name === "Otras pruebas realizadas")
+          ? {
+              otrasPruebas: dataValues.find(
+                (dv) => dv.dataType.name === "Otras pruebas realizadas"
+              )!.value as string,
+            }
+          : {}),
+      };
+  
+      if (JSON.stringify(flatFormData.testsPerformed) !== JSON.stringify(newFormData.testsPerformed)) {
+        dispatch(setFormData(newFormData));
+      }
+    }
+  }, [dataValues, dispatch, testFields]);
+  
+
+  const getFieldValue = (testName: string) => {
+    const dataValue = dataValues?.find((dv) => dv.dataType.name === testName);
+    const key = getTestKey(testName);
+    return dataValue ? dataValue.value : flatFormData[key];
+  };
+
+  const handleToggleTest = (testName: string) => {
+    const key = getTestKey(testName);
     dispatch(
       setFormData({
         testsPerformed: {
-          ...testsPerformed,
-          // Usamos aserción de tipo para indicarle a TS que testId es una clave válida
-          [testId]: !testsPerformed[testId as keyof typeof testsPerformed],
+          ...flatFormData.testsPerformed,
+          [key.replace("tests_", "")]: !getFieldValue(testName), // Usamos getFieldValue para el toggle
         },
       })
     );
   };
 
-  // Función para actualizar el campo "otras pruebas"
   const handleOtrasPruebasChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
@@ -55,89 +148,59 @@ export default function TestsAccordion({ isEditing }: Props) {
       <AccordionContent className="px-4 pb-4">
         <div className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Left column */}
+            {/* Columna izquierda */}
             <div className="space-y-3">
-              {[
-                { id: "examenFisico", label: "Examen físico" },
-                { id: "glucemia", label: "Glucemia en Ayuna" },
-                { id: "tuberculosis", label: "Tuberculosis" },
-                { id: "espirometria", label: "Espirometría" },
-                {
-                  id: "capacidadFisica",
-                  label: "Capacidad física (Test Harvard)",
-                },
-                {
-                  id: "examenVisual",
-                  label:
-                    "Examen visual (Agudeza, campo, profundidad, cromatismo)",
-                },
-                { id: "radiografia", label: "Radiografía tórax y lumbar" },
-                { id: "otros", label: "Otros" },
-              ].map((test) => (
-                <div key={test.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={test.id}
-                    disabled={!isEditing}
-                    checked={Boolean(
-                      testsPerformed &&
-                        testsPerformed[test.id as keyof typeof testsPerformed]
-                    )}
-                    onCheckedChange={() =>
-                      isEditing && handleToggleTest(test.id)
-                    }
-                    className="disabled:opacity-50"
-                  />
-                  <Label htmlFor={test.id}>{test.label}</Label>
-                </div>
-              ))}
+              {leftTests.map((test) => {
+                const fieldValue = getFieldValue(test.name);
+                return (
+                  <div key={test.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={test.name}
+                      disabled={!isEditing}
+                      checked={Boolean(fieldValue)} // Usamos el valor de dataValues o flatFormData
+                      onCheckedChange={() =>
+                        isEditing && handleToggleTest(test.name)
+                      }
+                      className="disabled:opacity-50"
+                    />
+                    <Label htmlFor={test.name}>{test.name}</Label>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Right column */}
+            {/* Columna derecha */}
             <div className="space-y-3">
-              {[
-                { id: "audiometria", label: "Audiometría" },
-                { id: "hemograma", label: "Hemograma" },
-                {
-                  id: "historiaClinica",
-                  label: "Historia clínica ocupacional",
-                },
-                { id: "examenOrina", label: "Examen orina" },
-                { id: "electrocardiograma", label: "Electrocardiograma" },
-                {
-                  id: "panelDrogas",
-                  label:
-                    "Panel de drogas, mínimo (COC, THC, MTD, MET)",
-                },
-                { id: "hepaticas", label: "Pruebas hepáticas (TGO, TGP)" },
-                { id: "psicotecnico", label: "Psicotécnico" },
-              ].map((test) => (
-                <div key={test.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={test.id}
-                    disabled={!isEditing}
-                    checked={Boolean(
-                      testsPerformed &&
-                        testsPerformed[test.id as keyof typeof testsPerformed]
-                    )}
-                    onCheckedChange={() =>
-                      isEditing && handleToggleTest(test.id)
-                    }
-                    className="disabled:opacity-50"
-                  />
-                  <Label htmlFor={test.id}>{test.label}</Label>
-                </div>
-              ))}
+              {rightTests.map((test) => {
+                const fieldValue = getFieldValue(test.name);
+                return (
+                  <div key={test.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={test.name}
+                      disabled={!isEditing}
+                      checked={Boolean(fieldValue)} // Usamos el valor de dataValues o flatFormData
+                      onCheckedChange={() =>
+                        isEditing && handleToggleTest(test.name)
+                      }
+                      className="disabled:opacity-50"
+                    />
+                    <Label htmlFor={test.name}>{test.name}</Label>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Otras pruebas realizadas */}
+          {/* Campo de "Otras pruebas realizadas" */}
           <div className="space-y-2">
             <Label htmlFor="otras-pruebas">Otras pruebas realizadas</Label>
             <Textarea
               id="otras-pruebas"
               placeholder="Ingrese otras pruebas realizadas..."
               disabled={!isEditing}
-              value={otrasPruebas}
+              value={
+                getFieldValue("Otras pruebas realizadas") || otrasPruebas || ""
+              } // Usamos getFieldValue para este campo también
               onChange={handleOtrasPruebasChange}
               className="min-h-[100px] disabled:opacity-50"
             />

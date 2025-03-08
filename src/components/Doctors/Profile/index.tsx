@@ -37,6 +37,7 @@ import CustomDatePicker from "@/components/Date-Picker";
 import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
 import ErrorToast from "@/components/Toast/Error";
+import { ImageUploadBox } from "../Signature-Boxs";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
@@ -62,6 +63,7 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     doctor?.birthDate ? new Date(doctor.birthDate.toString()) : undefined
   );
+  console.log(doctor);
   const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
     if (doctor) {
@@ -81,12 +83,15 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
       setValue("gender", String(doctor.gender) || "");
       setValue("maritalStatus", String(doctor.maritalStatus) || "");
       setValue("observations", doctor.observations || "");
-      setValue("address.city.state", doctor?.address?.city?.state);
+      setValue(
+        "address.city.state",
+        doctor?.address?.city?.state?.id.toString()
+      );
       setValue("address.city", doctor?.address?.city);
-      setValue("address.street", doctor?.address.street);
-      setValue("address.number", doctor?.address.number);
-      setValue("address.description", doctor?.address.description || "");
-      setValue("address.phoneNumber", doctor?.address.phoneNumber || "");
+      setValue("address.street", doctor?.address?.street);
+      setValue("address.number", doctor?.address?.number);
+      setValue("address.description", doctor?.address?.description || "");
+      setValue("address.phoneNumber", doctor?.address?.phoneNumber || "");
       setSelectedHealthInsurances(doctor.healthInsurances || []);
       setSelectedSpecialities(doctor.specialities || []);
       setSelectedCity(doctor?.address?.city);
@@ -100,6 +105,27 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
   };
   const handleCityChange = (city: City) => {
     setSelectedCity(city);
+  };
+
+  const [selloImage, setSelloImage] = useState<string | null>(null);
+  const [firmaImage, setFirmaImage] = useState<string | null>(null);
+
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "sello" | "firma"
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (type === "sello") {
+          setSelloImage(event.target?.result as string);
+        } else {
+          setFirmaImage(event.target?.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const onSubmit: SubmitHandler<any> = async (formData) => {
@@ -157,9 +183,9 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
     }
   };
   const handleSave = () => {
-    // Aquí iría la lógica para guardar los cambios en el backend
-    setIsEditing(false);
+    form.handleSubmit(onSubmit)();
   };
+
   return (
     <div key="1" className="">
       <Card>
@@ -181,6 +207,7 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
               ) : (
                 <div className="flex space-x-2">
                   <Button
+                    type="button"
                     onClick={handleSave}
                     className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                   >
@@ -545,6 +572,8 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
+                              defaultValue={doctor?.address?.city?.state}
                               onStateChange={handleStateChange}
                               disabled={!isEditing}
                             />
@@ -563,6 +592,7 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                           <FormLabel className="text-black">Ciudad</FormLabel>
                           <FormControl>
                             <CitySelect
+                              defaultValue={selectedCity}
                               control={control}
                               idState={selectedState ? selectedState.id : 0}
                               onCityChange={handleCityChange}
@@ -656,19 +686,23 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                   </div>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-6">
+                <ImageUploadBox
+                  id="sello"
+                  label="SELLO"
+                  isEditing={!isEditing}
+                  image={selloImage}
+                  onImageUpload={(e) => handleImageUpload(e, "sello")}
+                />
+                <ImageUploadBox
+                  id="firma"
+                  label="FIRMA"
+                  image={firmaImage}
+                  isEditing={!isEditing}
+                  onImageUpload={(e) => handleImageUpload(e, "firma")}
+                />
+              </div>
             </CardContent>
-            {/* <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={goBack}>
-                Cancelar
-              </Button>
-              <Button
-                variant="incor"
-                type="submit"
-                disabled={updateDoctorMutation.isPending}
-              >
-                Confirmar
-              </Button>
-            </CardFooter> */}
           </form>
         </Form>
       </Card>

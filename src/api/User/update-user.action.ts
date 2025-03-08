@@ -1,9 +1,9 @@
 import { User } from "@/types/User/User";
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 
 export const updateUser = async (user: User, id: number) => {
     // await sleep(2);
-    const { data } = await axiosInstance.put(
+    const { data } = await apiIncor.put(
         `account/${id}`,
         user
     );

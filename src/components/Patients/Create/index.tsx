@@ -83,7 +83,8 @@ export function CreatePatientComponent() {
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
-    setValue("address.city.state", state);
+    setSelectedCity(undefined);
+    setValue("address.city.state", String(state.id));
   };
 
   // const handlePlanChange = (plan: HealthPlans | null) => {
@@ -454,7 +455,7 @@ export function CreatePatientComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="address.city.state.name"
+                      name="address.city.state"
                       render={({}) => (
                         <FormItem>
                           <FormLabel className="text-black">
@@ -463,6 +464,7 @@ export function CreatePatientComponent() {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
                               onStateChange={handleStateChange}
                             />
                           </FormControl>

@@ -1,5 +1,5 @@
 import { sleep } from "@/common/helpers/helpers";
-import axiosInstance from "@/services/axiosConfig";
+import { apiIncor } from "@/services/axiosConfig";
 import { Study } from "@/types/Study/Study";
 
 interface UploadStudyProps {
@@ -8,7 +8,7 @@ interface UploadStudyProps {
 }
 export const uploadStudy = async (values: UploadStudyProps) => {
     await sleep(2);
-    const { data } = await axiosInstance.post<Study>(
+    const { data } = await apiIncor.post<Study>(
         `/Study/upload-study`,
         values.formData, {
         headers: {

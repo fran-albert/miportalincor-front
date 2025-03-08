@@ -1,54 +1,118 @@
-import { Button } from "@/components/ui/button";
+import {
+  calculateAge,
+  formatAddress,
+  formatDni,
+  getGenderLabel,
+} from "@/common/helpers/helpers";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Collaborator } from "@/types/Collaborator/Collaborator";
+import { Edit2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import CollaboratorAvatar from "@/components/Collaborators/Avatar";
+interface Props {
+  collaborator: Collaborator;
+  canEdit?: boolean;
+  isForPdf?: boolean;
+}
 
-export default function CollaboratorInformationCard() {
+export default function CollaboratorInformationCard({
+  collaborator,
+  canEdit = false,
+  isForPdf = false,
+}: Props) {
+  const photoUrl = collaborator.photoUrl;
+  const navigate = useNavigate();
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
-        <h2 className="text-lg font-semibold">Información del colaborador</h2>
-        <Button variant="ghost" size="icon">
-          <ChevronLeft className="h-4 w-4 rotate-270" />
-        </Button>
+    <Card className="shadow-lg border border-gray-200 rounded-lg">
+      <CardHeader className="flex flex-col items-center p-6 rounded-t-lg">
+        <div className="flex w-full items-center justify-between">
+          <h2 className="text-xl font-semibold text-greenPrimary">
+            Información del Colaborador
+          </h2>
+          {canEdit && (
+            <Button
+              onClick={() =>
+                navigate(
+                  `/incor-laboral/colaboradores/${collaborator.slug}/editar`
+                )
+              }
+              className="bg-greenPrimary hover:bg-teal-800 text-white px-4 py-2 rounded-md flex items-center transition duration-200"
+              type="button"
+            >
+              <Edit2 className="mr-2 h-4 w-4" /> Editar
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-col items-center">
+          <CollaboratorAvatar
+            src={photoUrl}
+            alt={`${collaborator.firstName} ${collaborator.lastName}`}
+          />
+          <p className="mt-2 text-lg font-medium">
+            {collaborator.firstName} {collaborator.lastName}
+          </p>
+        </div>
       </CardHeader>
-      <CardContent className="p-4">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Nombre:</div>
-            <div>Crocci, Franco Ezequiel</div>
+
+      <CardContent className="p-6">
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">DNI:</p>
+            <p className="font-medium">{formatDni(collaborator.userName)}</p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">DNI:</div>
-            <div>39337877</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Sexo:</p>
+            <p className="font-medium">{getGenderLabel(collaborator.gender)}</p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Sexo:</div>
-            <div>Masculino</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Fecha de Nac.:</p>
+            <p className="font-medium">{String(collaborator.birthDate)}</p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Fecha de Nac.:</div>
-            <div>n/d</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Edad:</p>
+            <p className="font-medium">
+              {calculateAge(String(collaborator.birthDate))} años
+            </p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Edad:</div>
-            <div>n/d</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Email:</p>
+            <p className="font-medium">{collaborator.email}</p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Email:</div>
-            <div>n/d</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Celular:</p>
+            <p className="font-medium">{collaborator.phone}</p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Celular:</div>
-            <div>n/d</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Dirección:</p>
+            <p className="font-medium">
+              {formatAddress(collaborator.addressData)}
+            </p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Lugar de trabajo:</div>
-            <div>trabajos en altura</div>
+
+          <div className="rounded-lg">
+            <p className="text-sm text-gray-500">Obra Social - Affiliado N°:</p>
+            <p className="font-medium">
+              {collaborator.healthInsurance?.name
+                ? `${collaborator.healthInsurance.name} - ${
+                    collaborator.affiliationNumber || "Sin número de afiliación"
+                  }`
+                : "Sin obra social asignada"}
+            </p>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm text-gray-500">Empresa:</div>
-            <div>STI</div>
-          </div>
+          {!isForPdf && (
+            <div className="rounded-lg">
+              <p className="text-sm text-gray-500">Empresa:</p>
+              <p className="font-medium">{collaborator.company.name}</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

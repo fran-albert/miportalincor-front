@@ -32,7 +32,7 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
     " " +
     "- " +
     formatDateWithTime(String(patient?.registrationDate));
-  const { isSecretary, isAdmin } = useUserRole();
+  const { isSecretary, isAdmin, isDoctor } = useUserRole();
   return (
     <Card className="w-full max-w-sm border-2">
       <CardHeader className="pb-2">
@@ -122,13 +122,13 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        {/* {isDoctor && (
+        {isDoctor && (
           <Button className="w-full text-greenPrimary" variant={"link"}>
             <Link to={`/pacientes/${patient?.slug}/control-nutricional`}>
               Control Nutricional
             </Link>
           </Button>
-        )} */}
+        )}
         {isSecretary ||
           (isAdmin && (
             <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />

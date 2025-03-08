@@ -46,7 +46,7 @@ interface MedicalEvaluation {
 }
 
 
-interface ConclusionOptions {
+export interface ConclusionOptions {
     "apto-001": boolean;
     "apto-002": boolean;
     "apto-003": boolean;
@@ -95,10 +95,11 @@ interface FormData {
     workerInformation: WorkerInformation;
     occupationalHistory: OccupationalHistoryItem[];
     medicalEvaluation: MedicalEvaluation;
+    [key: string]: any;
 }
 
 interface PreOccupationalState {
-    collaborator: any; // Ajusta el tipo según corresponda
+    collaborator: any; 
     formData: FormData;
 }
 

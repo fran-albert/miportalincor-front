@@ -55,6 +55,13 @@ export default function HomeComponent({ name }: { name: string }) {
       icon: <CiMedicalClipboard className="h-8 w-8 text-greenPrimary" />,
       href: "/tipos-de-estudios",
     },
+    {
+      title: "Incor Laboral - Colaboradores",
+      description:
+        "Ingrese al módulo de Incor Laboral.",
+      icon: <FaUsers className="h-8 w-8 text-greenPrimary" />,
+      href: "/incor-laboral",
+    },
   ];
 
   return (

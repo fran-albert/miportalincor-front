@@ -24,25 +24,38 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   );
 
   // Actualizar "aspecto general"
-  const handleAspectoGeneralChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAspectoGeneralChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     dispatch(
       setFormData({
-        medicalEvaluation: { ...medicalEvaluation, aspectoGeneral: e.target.value },
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          aspectoGeneral: e.target.value,
+        },
       })
     );
   };
 
   // Actualizar "tiempo libre"
-  const handleTiempoLibreChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTiempoLibreChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     dispatch(
       setFormData({
-        medicalEvaluation: { ...medicalEvaluation, tiempoLibre: e.target.value },
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          tiempoLibre: e.target.value,
+        },
       })
     );
   };
 
   // Actualizar campos de Examen Clínico
-  const handleExamenClinicoChange = (field: keyof typeof medicalEvaluation.examenClinico, value: string) => {
+  const handleExamenClinicoChange = (
+    field: keyof typeof medicalEvaluation.examenClinico,
+    value: string
+  ) => {
     dispatch(
       setFormData({
         medicalEvaluation: {
@@ -54,8 +67,14 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   // Actualizar selección de cada ítem de Examen Físico
-  const handleExamenFisicoSelectedChange = (testId: string, selectedValue: "si" | "no") => {
-    const current = medicalEvaluation.examenFisico[testId] || { selected: "", observaciones: "" };
+  const handleExamenFisicoSelectedChange = (
+    testId: string,
+    selectedValue: "si" | "no"
+  ) => {
+    const current = medicalEvaluation.examenFisico[testId] || {
+      selected: "",
+      observaciones: "",
+    };
     // Alternar el valor: si ya estaba seleccionado, se desmarca
     const newSelected = current.selected === selectedValue ? "" : selectedValue;
     dispatch(
@@ -72,8 +91,14 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   // Actualizar observaciones de un ítem de Examen Físico
-  const handleExamenFisicoObservacionesChange = (testId: string, value: string) => {
-    const current = medicalEvaluation.examenFisico[testId] || { selected: "", observaciones: "" };
+  const handleExamenFisicoObservacionesChange = (
+    testId: string,
+    value: string
+  ) => {
+    const current = medicalEvaluation.examenFisico[testId] || {
+      selected: "",
+      observaciones: "",
+    };
     dispatch(
       setFormData({
         medicalEvaluation: {
@@ -88,15 +113,23 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const examenFisicoItems = [
-    { id: "piel", label: "Piel y faneras", defaultValue: "TATTO" },
-    { id: "ojos", label: "Ojos", defaultValue: "S/P" },
+    { id: "piel", label: "Piel y faneras", defaultValue: "" },
+    { id: "ojos", label: "Ojos", defaultValue: "" },
     { id: "oidos", label: "Oídos", defaultValue: "" },
     { id: "nariz", label: "Nariz", defaultValue: "" },
     { id: "boca", label: "Boca", defaultValue: "" },
     { id: "faringe", label: "Faringe", defaultValue: "" },
     { id: "cuello", label: "Cuello", defaultValue: "" },
-    { id: "respiratorio", label: "Aparato Respiratorio", defaultValue: "BEBA TBQ 5 CIGARRILLOS DIA SAT 98%" },
-    { id: "cardiovascular", label: "Aparato Cardiovascular", defaultValue: "RITMO REGULAR SILENCIOS LIBRES" },
+    {
+      id: "respiratorio",
+      label: "Aparato Respiratorio",
+      defaultValue: "",
+    },
+    {
+      id: "cardiovascular",
+      label: "Aparato Cardiovascular",
+      defaultValue: "",
+    },
     { id: "digestivo", label: "Aparato Digestivo", defaultValue: "" },
     { id: "genitourinario", label: "Aparato Genitourinario", defaultValue: "" },
     { id: "locomotor", label: "Aparato Locomotor", defaultValue: "" },
@@ -121,12 +154,12 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
             {isEditing ? (
               <Input
                 id="aspecto-general"
-                value={medicalEvaluation.aspectoGeneral || "NORMOTIPO"}
+                value={medicalEvaluation.aspectoGeneral || ""}
                 onChange={handleAspectoGeneralChange}
               />
             ) : (
               <div className="p-2 border rounded bg-gray-50">
-                {medicalEvaluation.aspectoGeneral || "NORMOTIPO"}
+                {medicalEvaluation.aspectoGeneral || ""}
               </div>
             )}
           </div>
@@ -150,19 +183,23 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
 
           {/* Examen Clínico */}
           <div className="space-y-4">
-            <h4 className="font-bold text-base text-greenPrimary">Examen Clínico</h4>
+            <h4 className="font-bold text-base text-greenPrimary">
+              Examen Clínico
+            </h4>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="talla">Talla</Label>
                 {isEditing ? (
                   <Input
                     id="talla"
-                    value={medicalEvaluation.examenClinico.talla || "174"}
-                    onChange={(e) => handleExamenClinicoChange("talla", e.target.value)}
+                    value={medicalEvaluation.examenClinico.talla || ""}
+                    onChange={(e) =>
+                      handleExamenClinicoChange("talla", e.target.value)
+                    }
                   />
                 ) : (
                   <div className="p-2 border rounded bg-gray-50">
-                    {medicalEvaluation.examenClinico.talla || "174"}
+                    {medicalEvaluation.examenClinico.talla || ""}
                   </div>
                 )}
               </div>
@@ -171,12 +208,14 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                 {isEditing ? (
                   <Input
                     id="peso"
-                    value={medicalEvaluation.examenClinico.peso || "62"}
-                    onChange={(e) => handleExamenClinicoChange("peso", e.target.value)}
+                    value={medicalEvaluation.examenClinico.peso || ""}
+                    onChange={(e) =>
+                      handleExamenClinicoChange("peso", e.target.value)
+                    }
                   />
                 ) : (
                   <div className="p-2 border rounded bg-gray-50">
-                    {medicalEvaluation.examenClinico.peso || "62"}
+                    {medicalEvaluation.examenClinico.peso || ""}
                   </div>
                 )}
               </div>
@@ -184,9 +223,10 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                 <Label htmlFor="imc">IMC</Label>
                 <Input
                   id="imc"
-                  value={medicalEvaluation.examenClinico.imc || "20.48"}
-                  disabled
-                  readOnly
+                  value={medicalEvaluation.examenClinico.imc || ""}
+                  onChange={(e) =>
+                    handleExamenClinicoChange("imc", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -198,8 +238,10 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
               Examen físico (indique si se realizaron pruebas)
             </h4>
             {examenFisicoItems.map((item) => {
-              const current =
-                medicalEvaluation.examenFisico[item.id] || { selected: "", observaciones: item.defaultValue || "" };
+              const current = medicalEvaluation.examenFisico[item.id] || {
+                selected: "",
+                observaciones: item.defaultValue || "",
+              };
               return (
                 <div key={item.id} className="flex items-center gap-4">
                   <Label htmlFor={item.id} className="min-w-[150px]">
@@ -210,7 +252,10 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     <Checkbox
                       id={`${item.id}-si`}
                       checked={current.selected === "si"}
-                      onCheckedChange={() => isEditing && handleExamenFisicoSelectedChange(item.id, "si")}
+                      onCheckedChange={() =>
+                        isEditing &&
+                        handleExamenFisicoSelectedChange(item.id, "si")
+                      }
                       disabled={!isEditing}
                       className="disabled:opacity-50"
                     />
@@ -221,7 +266,10 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     <Checkbox
                       id={`${item.id}-no`}
                       checked={current.selected === "no"}
-                      onCheckedChange={() => isEditing && handleExamenFisicoSelectedChange(item.id, "no")}
+                      onCheckedChange={() =>
+                        isEditing &&
+                        handleExamenFisicoSelectedChange(item.id, "no")
+                      }
                       disabled={!isEditing}
                       className="disabled:opacity-50"
                     />
@@ -232,7 +280,12 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     <Input
                       className="max-w-[200px]"
                       value={current.observaciones}
-                      onChange={(e) => handleExamenFisicoObservacionesChange(item.id, e.target.value)}
+                      onChange={(e) =>
+                        handleExamenFisicoObservacionesChange(
+                          item.id,
+                          e.target.value
+                        )
+                      }
                     />
                   ) : (
                     <div className="p-2 border rounded bg-gray-50 max-w-[200px]">

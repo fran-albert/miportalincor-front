@@ -10,6 +10,7 @@ import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { Controller } from "react-hook-form";
 
 interface HealthInsuranceSelectProps {
+  name?: string;
   defaultValue?: HealthInsurance;
   control: any;
   disabled?: boolean;
@@ -17,6 +18,7 @@ interface HealthInsuranceSelectProps {
 }
 
 export const HealthInsuranceSelect = ({
+  name = "healthInsurance",
   control,
   defaultValue,
   disabled,
@@ -26,7 +28,7 @@ export const HealthInsuranceSelect = ({
 
   const handleValueChange = (selectedId: string) => {
     const selectedHC = healthInsurances.find(
-      (state) => String(state.id) === selectedId
+      (hi) => String(hi.id) === selectedId
     );
     if (onHealthInsuranceChange && selectedHC) {
       onHealthInsuranceChange(selectedHC);
@@ -35,10 +37,9 @@ export const HealthInsuranceSelect = ({
 
   return (
     <Controller
-      name="healthInsurance"
+      name={name}
       defaultValue={defaultValue?.id?.toString() || ""}
       control={control}
-      // rules={{ required: "Este campo es obligatorio" }}
       render={({ field }) => (
         <div>
           <Select

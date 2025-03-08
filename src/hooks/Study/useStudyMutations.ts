@@ -59,5 +59,5 @@ export const useStudyMutations = () => {
         },
     });
 
-    return { uploadStudyMutation, deleteStudyMutation };
+    return { uploadStudyMutation, deleteStudyMutation, };
 };

@@ -8,8 +8,8 @@ interface PatientTableProps {
   patients: Patient[];
   prefetchPatients: (id: number) => void;
   isFetching?: boolean;
-  searchQuery: string; // Recibimos la búsqueda
-  setSearch: (query: string) => void; // Nuevo prop para actualizar la búsqueda
+  searchQuery: string;
+  setSearch: (query: string) => void; 
 }
 
 export const PatientsTable: React.FC<PatientTableProps> = ({
@@ -44,8 +44,8 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
           data={patients}
           searchPlaceholder="Buscar pacientes..."
           showSearch={true}
-          searchQuery={searchQuery} // Pasamos la búsqueda
-          onSearchSubmit={setSearch} // Pasamos la función para manejar la búsqueda
+          searchQuery={searchQuery} 
+          onSearchSubmit={setSearch} 
           addLinkPath="/pacientes/agregar"
           addLinkText="Agregar Paciente"
           isFetching={isFetching}

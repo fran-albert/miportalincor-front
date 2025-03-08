@@ -9,11 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { addOccupationalHistory, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  addOccupationalHistory,
+  setFormData,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Input } from "@/components/ui/input";
+import { DataType } from "@/types/Data-Type/Data-Type";
 
 interface Props {
   isEditing: boolean;
+  fields: DataType[];
 }
 
 export default function OccupationalHistoryAccordion({ isEditing }: Props) {
@@ -22,7 +27,6 @@ export default function OccupationalHistoryAccordion({ isEditing }: Props) {
     (state: RootState) => state.preOccupational.formData.occupationalHistory
   );
 
-  // Agrega un nuevo antecedente con descripción vacía
   const handleAddNew = () => {
     const newItem = {
       id: Date.now().toString(),
@@ -31,7 +35,6 @@ export default function OccupationalHistoryAccordion({ isEditing }: Props) {
     dispatch(addOccupationalHistory(newItem));
   };
 
-  // Actualiza la descripción de un antecedente existente
   const handleUpdateDescription = (id: string, value: string) => {
     const updatedHistory = occupationalHistory.map((item) =>
       item.id === id ? { ...item, description: value } : item
