@@ -21,7 +21,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 import { toast } from "sonner";
 import { goBack } from "@/common/helpers/helpers";
 import { GenderSelect } from "@/components/Select/Gender/select";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
@@ -30,30 +29,33 @@ import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
 import { CompanySelect } from "@/components/Select/Company/select";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
-import { Collaborator } from "@/types/Collaborator/Collaborator";
-import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { StateSelect } from "@/components/Select/State/select";
+import { CitySelect } from "@/components/Select/City/select";
+import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
+import { State } from "@/types/State/State";
+import { City } from "@/types/City/City";
+import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
+import { Collaborator } from "@/types/Collaborator/Collaborator";
+import { useState as useStatesHook } from "@/hooks/State/useState";
 
 const getValidDateString = (date: string | undefined | null): string => {
   if (!date) return "";
-
   const ddmmyyyyMatch = date.match(/^(\d{2})-(\d{2})-(\d{4})$/);
   if (ddmmyyyyMatch) {
     const [_, day, month, year] = ddmmyyyyMatch;
-    const formattedDate = `${year}-${month}-${day}`; 
+    const formattedDate = `${year}-${month}-${day}`;
     const parsedDate = new Date(formattedDate);
-    const result = !isNaN(parsedDate.getTime())
+    return !isNaN(parsedDate.getTime())
       ? parsedDate.toISOString().split("T")[0]
       : "";
-    return result;
   }
-
   const parsedDate = new Date(date);
-  const result = !isNaN(parsedDate.getTime())
+  return !isNaN(parsedDate.getTime())
     ? parsedDate.toISOString().split("T")[0]
     : "";
-  return result;
 };
 
 function dataURLtoFile(dataurl: string, filename: string): File {
@@ -76,34 +78,52 @@ interface Props {
 type FormValues = z.infer<typeof collaboratorSchema>;
 
 export function EditCollaboratorComponent({ collaborator }: Props) {
-  console.log(collaborator);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState<State | undefined>(
+    collaborator.addressData?.city?.state
+  );
   const { updateCollaboratorMutation } = useCollaboratorMutations();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(collaboratorSchema),
+  const { states } = useStatesHook();
+
+  const form = useForm<any>({
     defaultValues: {
-      firstName: collaborator.firstName,
-      lastName: collaborator.lastName,
-      userName: collaborator.userName,
-      birthDate: getValidDateString(String(collaborator.birthDate)),
-      phone: collaborator.phone,
-      gender: collaborator.gender,
-      address: String(collaborator.address),
-      email: collaborator.email,
-      idCompany: String(collaborator.company.id),
-      file: "",
+      firstName: collaborator.firstName || "",
+      lastName: collaborator.lastName || "",
+      userName: collaborator.userName || "",
+      birthDate: getValidDateString(String(collaborator.birthDate)) || "",
+      phone: collaborator.phone || "",
+      gender: collaborator.gender || "",
+      email: collaborator.email || "",
+      idCompany: collaborator.company?.id || 0,
+      healthInsuranceId: collaborator.healthInsuranceId || 0,
+      affiliationNumber: collaborator.affiliationNumber || "",
+      address: {
+        id: collaborator.addressData?.id,
+        street: collaborator.addressData?.street || "",
+        number: collaborator.addressData?.number || "",
+        description: collaborator.addressData?.description || "",
+        phoneNumber: collaborator.addressData?.phoneNumber || "",
+        city: {
+          id: collaborator.addressData?.city?.id || 0,
+          name: collaborator.addressData?.city?.name || "",
+          state: collaborator.addressData?.city?.state?.id
+            ? String(collaborator.addressData.city.state.id)
+            : "",
+        },
+      },
+      file: collaborator.photoUrl || undefined,
     },
   });
-  const { control } = form;
+
+  const { control, setValue } = form;
+
   const fileField = useWatch({ control, name: "file" });
   useEffect(() => {
     if (fileField) {
       if (typeof fileField === "string") {
-        // Si ya es un string (por ejemplo, base64) lo usamos directamente.
         setPreview(fileField);
       } else if (fileField instanceof File) {
-        // Si es un objeto File, creamos una URL temporal.
         const objectUrl = URL.createObjectURL(fileField);
         setPreview(objectUrl);
         return () => URL.revokeObjectURL(objectUrl);
@@ -112,39 +132,80 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       setPreview(null);
     }
   }, [fileField]);
-  const imageSrc = preview ? preview : collaborator.photoUrl;
+
+  const imageSrc = preview || collaborator.photoUrl || "";
   const hasImageToShow = !!imageSrc && imageSrc.trim() !== "";
+
+  const handleStateChange = (state: State) => {
+    setSelectedState(state);
+    setValue("address.city.state", String(state.id));
+    setValue("address.city.id", 0);
+    setValue("address.city.name", "");
+  };
+
+  const handleCityChange = (city: City) => {
+    if (selectedState) {
+      const cityWithState = { ...city, state: selectedState };
+      setValue("address.city", cityWithState);
+    }
+  };
+
+  const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
+    if (healthInsurance.id !== undefined) {
+      setValue("healthInsuranceId", healthInsurance.id);
+    }
+  };
+
   async function onSubmit(data: FormValues) {
-    console.log("Datos del formulario:", data);
     try {
       const formData = new FormData();
       formData.append("firstName", data.firstName);
       formData.append("lastName", data.lastName);
       formData.append("userName", data.userName);
-      const formattedBirthDate = new Date(data.birthDate)
-        .toISOString()
-        .split("T")[0];
-      formData.append("birthDate", formattedBirthDate);
+      formData.append("birthDate", data.birthDate);
       formData.append("phone", data.phone);
       formData.append("gender", data.gender);
-      formData.append("address", data.address);
       formData.append("email", data.email);
-      formData.append("idCompany", data.idCompany.toString());
+      formData.append("idCompany", String(data.idCompany));
+      formData.append("healthInsuranceId", String(data.healthInsuranceId));
+      if (data.affiliationNumber) {
+        formData.append("affiliationNumber", data.affiliationNumber);
+      }
+
+      // Reconstruimos el objeto state completo usando el ID de data.address.city.state
+      const selectedStateData = states.find(
+        (state) => state.id === data.address.city.state.id
+      );
+
+      const addressData = {
+        id: data.address.id,
+        street: data.address.street || "",
+        number: data.address.number || "",
+        description: data.address.description || "",
+        phoneNumber: data.address.phoneNumber || "",
+        city: {
+          id: data.address.city.id,
+          name: data.address.city.name,
+          state: selectedStateData || {
+            id: Number(data.address.city.state), 
+            name:
+              states.find((s) => s.id === data.address.city.state.id)?.name ||
+              "",
+            country: { id: 1, name: "Argentina" },
+          },
+        },
+      };
+      console.log(addressData, "addresDATA")
+      formData.append("addressData", JSON.stringify(addressData));
 
       if (data.file) {
         let fileToSend: File;
         if (typeof data.file === "string") {
           fileToSend = dataURLtoFile(data.file, "profile.jpg");
-        } else if (data.file instanceof File) {
-          fileToSend = data.file;
         } else {
-          throw new Error("Formato de imagen no reconocido");
+          fileToSend = data.file;
         }
         formData.append("file", fileToSend);
-      }
-
-      for (let [key, value] of formData.entries()) {
-        console.log("FormData entry:", key, value);
       }
 
       const promise = updateCollaboratorMutation.mutateAsync({
@@ -155,12 +216,14 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       toast.promise(promise, {
         loading: <LoadingToast message="Actualizando Colaborador..." />,
         success: <SuccessToast message="Colaborador actualizado con éxito" />,
-        error: (error) => {
-          const errorMessage =
-            error.response?.data?.message ||
-            "Error al actualizar el Colaborador";
-          return <ErrorToast message={errorMessage} />;
-        },
+        error: (error) => (
+          <ErrorToast
+            message={
+              error.response?.data?.message ||
+              "Error al actualizar el Colaborador"
+            }
+          />
+        ),
       });
 
       await promise;
@@ -194,6 +257,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
+              {/* Imagen */}
               <div className="flex flex-col items-center justify-center">
                 <div className="relative flex flex-col items-center mb-2">
                   {hasImageToShow && !imageLoaded && (
@@ -209,22 +273,18 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                         imageLoaded ? "block" : "hidden"
                       }`}
                     />
-                  ) : null}
-                  {(!hasImageToShow || !imageLoaded) && (
+                  ) : (
                     <div className="h-24 w-24 flex items-center justify-center bg-gray-200 rounded-full border-2 border-gray-300 shadow-md">
                       <User className="h-12 w-12 text-gray-500" />
                     </div>
                   )}
                 </div>
-                {/* FormField para seleccionar nueva imagen */}
                 <FormField
                   control={form.control}
                   name="file"
                   render={({ field }) => (
                     <FormItem className="flex flex-col items-center">
                       <FormControl>
-                        {/* El ImagePickerDialog actualiza el campo "file".
-                            Al cambiar, se actualizará la previsualización en la parte superior */}
                         <ImagePickerDialog onImageSelect={field.onChange} />
                       </FormControl>
                       <FormMessage />
@@ -233,161 +293,127 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                 />
               </div>
 
+              {/* Datos Personales */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">Nombre</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Ingresar nombre..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">Apellido</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Ingresar apellido..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">
-                            Correo Electrónico
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Ingresar correo electrónico..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="userName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">D.N.I.</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Ingresar D.N.I..." />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="birthDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">
-                            Fecha de Nacimiento
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              {...field}
-                              value={field.value || ""} // Asegúrate de que siempre sea una cadena válida
-                              onChange={(e) => {
-                                field.onChange(e.target.value); // Actualiza el valor directamente
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">Teléfono</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Ingresar teléfono..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="gender"
-                      render={() => (
-                        <FormItem>
-                          <FormLabel className="text-black">Sexo</FormLabel>
-                          <FormControl>
-                            <GenderSelect control={control} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-6">
-                <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="address"
+                    name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">Dirección</FormLabel>
+                        <FormLabel className="text-black">Nombre</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ingresar calle" />
+                          <Input {...field} placeholder="Ingresar nombre..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">Apellido</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Ingresar apellido..."
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">
+                          Correo Electrónico
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar correo..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="userName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">D.N.I.</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar D.N.I..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">
+                          Fecha de Nacimiento
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-black">Teléfono</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Ingresar teléfono..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className="text-black">Sexo</FormLabel>
+                        <FormControl>
+                          <GenderSelect control={control} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Datos Empresariales y Obra Social */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="idCompany"
@@ -395,13 +421,156 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                       <FormItem>
                         <FormLabel className="text-black">Empresa</FormLabel>
                         <FormControl>
-                          <CompanySelect control={control} />
+                          <CompanySelect
+                            control={control}
+                            defaultValue={collaborator.company}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="healthInsuranceId"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className="text-black">
+                          Obra Social
+                        </FormLabel>
+                        <FormControl>
+                          <HealthInsuranceSelect
+                            control={control}
+                            defaultValue={collaborator.healthInsurance}
+                            onHealthInsuranceChange={
+                              handleHealthInsuranceChange
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="affiliationNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-black">
+                        Número de Obra Social
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Ingresar número de afiliado..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Datos de Dirección */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="address.city.state" // Contiene solo el ID como string
+                  render={() => (
+                    <FormItem>
+                      <FormLabel className="text-black">Provincia</FormLabel>
+                      <FormControl>
+                        <StateSelect
+                          control={control}
+                          name="address.city.state"
+                          defaultValue={collaborator.addressData?.city?.state}
+                          onStateChange={handleStateChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.city.id"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel className="text-black">Ciudad</FormLabel>
+                      <FormControl>
+                        <CitySelect
+                          control={control}
+                          idState={
+                            selectedState?.id ??
+                            collaborator.addressData?.city?.state?.id ??
+                            0
+                          }
+                          defaultValue={collaborator.addressData?.city}
+                          onCityChange={handleCityChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-6">
+                <FormField
+                  control={form.control}
+                  name="address.street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-black">Calle</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ingresar calle..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-black">N°</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ingresar número..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-black">Piso</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ingresar piso..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="address.phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-black">Departamento</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Ingresar departamento..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">

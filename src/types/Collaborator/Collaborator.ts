@@ -10,7 +10,7 @@ export interface Collaborator extends Base {
   slug?: string;
   birthDate: Date | string;
   phone: string;
-  address: Address | string;
+  addressId?: number;
   userName: string;
   gender: string;
   photoUrl: string;

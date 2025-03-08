@@ -33,6 +33,7 @@ export const collaboratorSchema = z.object({
   affiliationNumber: z.string().regex(/^\d+$/, "Solo números").optional(),
   file: z.union([z.instanceof(File), z.string()]).optional(),
   address: z.object({
+    id: z.number().optional(),
     street: z.string().max(100, "Máximo 100 caracteres").optional(),
     number: z.string().regex(/^\d+$/, "Solo números").optional(),
     description: z.string().max(100, "Máximo 100 caracteres").optional(),
