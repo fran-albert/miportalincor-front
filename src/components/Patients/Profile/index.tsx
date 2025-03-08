@@ -122,10 +122,12 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
 
   useEffect(() => {
     if (patient?.address?.city?.state) {
-      form.setValue("address.city.state", String(patient.address.city.state.id));
+      form.setValue(
+        "address.city.state",
+        String(patient.address.city.state.id)
+      );
     }
   }, [patient, form]);
-  
 
   const onSubmit: SubmitHandler<any> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);
@@ -256,29 +258,20 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                 ) : (
                   <div className="flex space-x-2">
                     <Button
-                      onClick={() => setIsEditing(true)}
                       type="button"
+                      onClick={handleSave}
                       className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
                     >
-                      <Edit2 className="mr-2 h-4 w-4" /> Editar
+                      <Save className="mr-2 h-4 w-4" /> Guardar
                     </Button>
-                  ) : (
-                    <div className="flex space-x-2">
-                      <Button
-                        type="button"
-                        onClick={handleSave}
-                        className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
-                      >
-                        <Save className="mr-2 h-4 w-4" /> Guardar
-                      </Button>
-                      <Button
-                        onClick={() => setIsEditing(false)}
-                        variant="outline"
-                      >
-                        <X className="mr-2 h-4 w-4" /> Cancelar
-                      </Button>
-                    </div>
-                  )))}
+                    <Button
+                      onClick={() => setIsEditing(false)}
+                      variant="outline"
+                    >
+                      <X className="mr-2 h-4 w-4" /> Cancelar
+                    </Button>
+                  </div>
+                ))}
             </CardHeader>
 
             <CardContent className="grid gap-6">
