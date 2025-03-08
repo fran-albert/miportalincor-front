@@ -22,7 +22,7 @@ export const useDoctorMutations = () => {
   const updateDoctorMutation = useMutation({
     mutationFn: ({ id, doctor }: { id: number; doctor: Doctor }) => updateDoctor(id, doctor),
     onSuccess: (doctor, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['doctor', variables.id] })
       console.log("OK", doctor, variables, context);
     },
     onError: (error, variables, context) => {

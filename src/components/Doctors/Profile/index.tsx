@@ -160,7 +160,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
     };
 
     try {
-      console.log(dataToSend);
       const doctorCreationPromise = updateDoctorMutation.mutateAsync({
         id: Number(doctor?.userId),
         doctor: dataToSend,
