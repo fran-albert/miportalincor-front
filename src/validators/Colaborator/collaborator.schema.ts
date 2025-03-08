@@ -8,8 +8,8 @@ export const collaboratorSchema = z.object({
     phone: z.string({ required_error: 'Campo Requerido.' }),
     gender: z.string({ required_error: 'Campo Requerido.' }),
     address: z.object({
-        street: z.string(),
-        number: z.string(),
+        street: z.string().optional(),
+        number: z.string().optional(),
         description: z.string().optional(),
         phoneNumber: z.string().optional(),
         city: z.object({
