@@ -244,9 +244,17 @@ function PatientProfileComponent({ patient }: { patient: Patient }) {
                   Perfil Completo
                 </p>
               </CardTitle>
-              {isSecretary ||
-                (isAdmin &&
-                  (!isEditing ? (
+              {(isSecretary || isAdmin) &&
+                (!isEditing ? (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    type="button"
+                    className="bg-greenPrimary hover:shadow-xl hover:bg-teal-800"
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" /> Editar
+                  </Button>
+                ) : (
+                  <div className="flex space-x-2">
                     <Button
                       onClick={() => setIsEditing(true)}
                       type="button"
