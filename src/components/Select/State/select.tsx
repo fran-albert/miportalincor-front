@@ -44,9 +44,11 @@ export const StateSelect = ({
       render={({ field }) => (
         <div>
           <Select
-            value={field.value ? String(field.value) : ""}
+            value={
+              field.value || (defaultValue?.id ? String(defaultValue.id) : "")
+            } // Asegura que tenga un valor inicial
             onValueChange={(value) => {
-              field.onChange(value); 
+              field.onChange(value);
               handleValueChange(value);
             }}
             disabled={disabled || !states?.length}

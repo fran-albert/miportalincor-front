@@ -41,7 +41,52 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   const { updatePatientMutation } = usePatientMutations();
   const form = useForm<FormValues>({
     resolver: zodResolver(PatientSchema),
+    defaultValues: {
+      firstName: patient?.firstName || "",
+      lastName: patient?.lastName || "",
+      email: patient?.email || "",
+      userName: patient?.dni ? formatDni(String(patient.dni)) : "",
+      birthDate: patient?.birthDate
+        ? typeof patient.birthDate === "string" ||
+          patient.birthDate instanceof Date
+          ? new Date(patient.birthDate).toISOString()
+          : ""
+        : "",
+      phoneNumber: patient?.phoneNumber || "",
+      phoneNumber2: patient?.phoneNumber2 || "",
+      bloodType: patient?.bloodType || "",
+      rhFactor: patient?.rhFactor || "",
+      gender: patient?.gender || "",
+      maritalStatus: patient?.maritalStatus || "",
+      observations: patient?.observations || "",
+      address: {
+        street: patient?.address?.street || "",
+        number: patient?.address?.number || "",
+        description: patient?.address?.description || "",
+        phoneNumber: patient?.address?.phoneNumber || "",
+        city: patient?.address?.city || null,
+      },
+      healthPlans:
+        patient?.healthPlans?.map((plan) => ({
+          id: plan.id,
+          name: plan.name,
+          healthInsurance: {
+            id: plan.healthInsurance.id,
+            name: plan.healthInsurance.name,
+          },
+        })) || [],
+    },
   });
+
+  useEffect(() => {
+    if (patient?.address?.city?.state) {
+      form.setValue(
+        "address.city.state",
+        String(patient.address.city.state.id)
+      );
+    }
+  }, [patient, form]);
+
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
     patient?.address?.city?.state
@@ -80,31 +125,6 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
     setSelectedHealthInsurance(healthInsurance);
   };
-  useEffect(() => {
-    if (patient) {
-      setValue("firstName", patient.firstName);
-      setValue("lastName", patient.lastName);
-      setValue("email", patient.email);
-      setValue("userName", formatDni(String(patient.dni)));
-      if (patient?.birthDate) {
-        setStartDate(new Date(patient.birthDate.toString()));
-        setValue("birthDate", patient.birthDate.toString());
-      }
-      setValue("phoneNumber", patient.phoneNumber);
-      setValue("phoneNumber2", patient.phoneNumber2 || "");
-      setValue("bloodType", String(patient.bloodType) || "");
-      setValue("rhFactor", String(patient.rhFactor) || "");
-      setValue("gender", String(patient.gender) || "");
-      setValue("maritalStatus", String(patient.maritalStatus) || "");
-      setValue("observations", patient.observations || "");
-      setValue("address.street", patient.address.street || "");
-      setValue("address.number", patient.address.number || "");
-      setValue("address.description", patient.address.description || "");
-      setValue("address.phoneNumber", patient.address.phoneNumber || "");
-      setValue("address.city", patient.address.city);
-      setValue("address.city.state", patient.address.city.state);
-    }
-  }, [patient, setValue]);
 
   const onSubmit: SubmitHandler<any> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);
@@ -159,7 +179,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
     }
   };
   const handleSave = async () => {
-    const isValid = await form.trigger(); // Valida el formulario antes de enviar
+    const isValid = await form.trigger();
     if (!isValid) return;
     const formattedUserName = removeDotsFromDni(form.getValues("userName"));
     const { address, ...rest } = form.getValues();
@@ -212,7 +232,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
       console.error("Error al actualizar el paciente", error);
     }
   };
-  
+
   return (
     <div key="1" className="w-full mt-2">
       <Card>
@@ -244,10 +264,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
                   >
                     <Save className="mr-2 h-4 w-4" /> Guardar
                   </Button>
-                  <Button
-                    onClick={() => setIsEditing(false)}
-                    variant="outline"
-                  >
+                  <Button onClick={() => setIsEditing(false)} variant="outline">
                     <X className="mr-2 h-4 w-4" /> Cancelar
                   </Button>
                 </div>
@@ -572,6 +589,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
                           <FormControl>
                             <StateSelect
                               control={control}
+                              name="address.city.state"
                               disabled={!isEditing}
                               defaultValue={patient?.address?.city?.state}
                               onStateChange={handleStateChange}

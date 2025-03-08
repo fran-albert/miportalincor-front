@@ -28,6 +28,9 @@ import { useUserMutations } from "@/hooks/User/useUserMutations";
 import { toast } from "sonner";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Lock } from "lucide-react";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface ChangePasswordDialogProps {
   idUser: number;
@@ -60,14 +63,37 @@ export default function ChangePasswordDialog({
     };
 
     try {
-      await changePasswordMutation.mutateAsync(dataToSend);
-      toast.success("Contraseña cambiada correctamente");
-      form.reset();
-      toggleDialog();
+      await toast.promise(changePasswordMutation.mutateAsync(dataToSend), {
+        loading: <LoadingToast message="Cambiando Contraseña..." />,
+        success: () => {
+          form.reset();
+          toggleDialog();
+          return <SuccessToast message="Contraseña cambiada exitosamente!" />;
+        },
+        error: (error: any) => {
+          const errorMessage =
+            error.response?.data?.message ||
+            "Error al cambiar la contraseña. Verifica los datos ingresados.";
+
+          setErrorMessage(errorMessage); 
+          return <ErrorToast message={errorMessage} />; 
+        },
+      });
     } catch (error: any) {
-      setErrorMessage(error.response?.data || "Error al cambiar la contraseña");
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error desconocido al cambiar la contraseña.";
+      setErrorMessage(errorMessage);
     }
   }
+
+  const handleSave = async () => {
+    const isValid = await form.trigger(); // Valida el formulario antes de enviar
+    if (!isValid) return;
+
+    const data = form.getValues();
+    await onSubmit(data);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={toggleDialog}>
@@ -158,7 +184,7 @@ export default function ChangePasswordDialog({
                     Cancelar
                   </Button>
                 </div>
-                <Button variant={"incor"} type="submit">
+                <Button variant={"incor"} type="button" onClick={handleSave}>
                   Guardar
                 </Button>
               </CardFooter>
