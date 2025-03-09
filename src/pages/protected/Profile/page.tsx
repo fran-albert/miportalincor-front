@@ -40,7 +40,7 @@ const MyProfilePage = () => {
         <Helmet>
           <title>{isLoadingDoctor ? "" : `Mi Perfil`}</title>
         </Helmet>
-        <ProfileDoctorCardComponent data={doctor} />{" "}
+        <ProfileDoctorCardComponent data={doctor} />
       </>
     );
   }

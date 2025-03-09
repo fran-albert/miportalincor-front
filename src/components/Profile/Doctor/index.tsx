@@ -57,26 +57,7 @@ export default function ProfileDoctorCardComponent({
     data?.birthDate ? new Date(data.birthDate.toString()) : undefined
   );
   const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
-  const [selloImage, setSelloImage] = useState<string | null>(null);
-  const [firmaImage, setFirmaImage] = useState<string | null>(null);
 
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "sello" | "firma"
-  ) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (type === "sello") {
-          setSelloImage(event.target?.result as string);
-        } else {
-          setFirmaImage(event.target?.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
   const handleStateChange = (state: State) => {
     setSelectedState(state);
     setSelectedCity(undefined);
@@ -733,17 +714,17 @@ export default function ProfileDoctorCardComponent({
               <div className="grid grid-cols-2 gap-6">
                 <ImageUploadBox
                   id="sello"
-                  label="SELLO"
-                  image={selloImage}
+                  label="Sello"
+                  doctorId={Number(data?.userId)}
                   isEditing={isEditing}
-                  onImageUpload={(e) => handleImageUpload(e, "sello")}
+                  image={data?.sello || null}
                 />
                 <ImageUploadBox
                   id="firma"
-                  label="FIRMA"
-                  image={firmaImage}
+                  label="Firma"
+                  image={data?.firma || null}
+                  doctorId={Number(data?.userId)}
                   isEditing={isEditing}
-                  onImageUpload={(e) => handleImageUpload(e, "firma")}
                 />
               </div>
             </CardContent>
