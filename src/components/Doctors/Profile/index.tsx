@@ -670,6 +670,7 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                   doctorId={doctor.userId}
                   isEditing={isEditing} 
                   image={doctor.sello || null}
+                  onImageUploaded={() => setIsEditing(false)}
                 />
                 <ImageUploadBox
                   id="firma"
@@ -677,6 +678,7 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                   image={doctor.firma || null}
                   doctorId={Number(doctor.userId)}
                   isEditing={isEditing} 
+                  onImageUploaded={() => setIsEditing(false)}
                 />
               </div>
             </CardContent>

@@ -4,6 +4,9 @@ import { Label } from "@/components/ui/label";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import { toast } from "sonner";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface ImageUploadBoxProps {
   id: string;
@@ -11,6 +14,7 @@ interface ImageUploadBoxProps {
   image: string | null;
   doctorId: number;
   isEditing: boolean;
+  onImageUploaded?: () => void;
 }
 
 export function ImageUploadBox({
@@ -19,15 +23,15 @@ export function ImageUploadBox({
   image,
   doctorId,
   isEditing,
+  onImageUploaded,
 }: ImageUploadBoxProps) {
   const { uploadSignatureMutation, uploadSelloMutation } = useDoctorMutations();
   const [currentImage, setCurrentImage] = useState<string | null>(image);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    console.log("Actualizando currentImage a:", image);
     setCurrentImage(image);
   }, [image]);
-  
 
   const mutation =
     label.toLowerCase() === "sello"
@@ -36,18 +40,33 @@ export function ImageUploadBox({
 
   const handleImageSelect = async (croppedImage: string) => {
     try {
+      setIsUploading(true);
       const formData = createFormDataFromBase64(croppedImage);
-      const returnedUrl = await mutation.mutateAsync({
+
+      const uploadPromise = mutation.mutateAsync({
         idUser: doctorId,
         formData,
       });
-      const toastDuration = 5000;
-      toast.success("Imagen subida correctamente", { duration: toastDuration });
-      setTimeout(() => {
-        setCurrentImage(returnedUrl);
-      }, toastDuration);
+
+      toast.promise(uploadPromise, {
+        loading: <LoadingToast message="Subiendo imagen..." />,
+        success: <SuccessToast message="Imagen subida con éxito!" />,
+        error: (err) => {
+          if (err?.response?.status === 409) {
+            return <ErrorToast message="La imagen ya existe" />;
+          }
+          return <ErrorToast message="Error al subir la imagen" />;
+        },
+      });
+
+      const returnedUrl = await uploadPromise;
+      setCurrentImage(returnedUrl);
+
+      onImageUploaded?.();
     } catch (error) {
-      toast.error("Error al subir la imagen");
+      console.error("Error al subir la imagen:", error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -63,6 +82,7 @@ export function ImageUploadBox({
     }
     const file = new File([u8arr], "image.jpg", { type: mime });
     const formData = new FormData();
+
     if (label.toLowerCase() === "sello") {
       formData.append("sello", file);
     } else {
@@ -79,7 +99,7 @@ export function ImageUploadBox({
           ${
             isEditing
               ? "cursor-pointer hover:bg-muted/50 transition-colors"
-              : "cursor-not-allowed bg-gray-200"
+              : "cursor-not-allowed "
           }`}
       >
         {currentImage ? (
@@ -101,7 +121,7 @@ export function ImageUploadBox({
           </>
         )}
       </Card>
-      {isEditing && (
+      {isEditing && !isUploading && (
         <div className="pt-2">
           <ImagePickerDialog onImageSelect={handleImageSelect} />
         </div>
