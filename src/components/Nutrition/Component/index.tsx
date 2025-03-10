@@ -9,19 +9,22 @@ interface Props {
     formattedName: string;
   };
   slug: string;
+  role: "patient" | "doctor";
 }
 
-const NutritionComponent = ({ nutritionData, slug, slugParts }: Props) => {
+const NutritionComponent = ({ nutritionData, slug, slugParts, role }: Props) => {
+  const baseRoute = role === "patient" ? "pacientes" : "medicos";
+  
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Pacientes", href: "/pacientes" },
+    { label: role === "patient" ? "Pacientes" : "Medicos", href: `/${baseRoute}` },
     {
-      label: slugParts ? slugParts.formattedName : "Paciente",
-      href: `/pacientes/${slug}`,
+      label: slugParts ? slugParts.formattedName : (role === "patient" ? "Paciente" : "Doctor"),
+      href: `/${baseRoute}/${slug}`,
     },
     {
       label: "Control Nutricional",
-      href: `/pacientes/${slug}/control-nutricional`,
+      href: `/${baseRoute}/${slug}/control-nutricional`,
     },
   ];
 

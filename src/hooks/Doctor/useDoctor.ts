@@ -15,7 +15,6 @@ export const useDoctor = ({ auth, id }: Props) => {
         enabled: auth && id !== undefined,
     });
 
-
     return {
         doctor,
         error,
