@@ -63,7 +63,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     doctor?.birthDate ? new Date(doctor.birthDate.toString()) : undefined
   );
-  console.log(doctor);
   const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
     if (doctor) {
@@ -105,27 +104,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
   };
   const handleCityChange = (city: City) => {
     setSelectedCity(city);
-  };
-
-  const [selloImage, setSelloImage] = useState<string | null>(null);
-  const [firmaImage, setFirmaImage] = useState<string | null>(null);
-
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "sello" | "firma"
-  ) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (type === "sello") {
-          setSelloImage(event.target?.result as string);
-        } else {
-          setFirmaImage(event.target?.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const onSubmit: SubmitHandler<any> = async (formData) => {
@@ -472,7 +450,6 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
                   </div>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -689,17 +666,19 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
               <div className="grid grid-cols-2 gap-6">
                 <ImageUploadBox
                   id="sello"
-                  label="SELLO"
-                  isEditing={!isEditing}
-                  image={selloImage}
-                  onImageUpload={(e) => handleImageUpload(e, "sello")}
+                  label="Sello"
+                  doctorId={doctor.userId}
+                  isEditing={isEditing} 
+                  image={doctor.sello || null}
+                  onImageUploaded={() => setIsEditing(false)}
                 />
                 <ImageUploadBox
                   id="firma"
-                  label="FIRMA"
-                  image={firmaImage}
-                  isEditing={!isEditing}
-                  onImageUpload={(e) => handleImageUpload(e, "firma")}
+                  label="Firma"
+                  image={doctor.firma || null}
+                  doctorId={Number(doctor.userId)}
+                  isEditing={isEditing} 
+                  onImageUploaded={() => setIsEditing(false)}
                 />
               </div>
             </CardContent>

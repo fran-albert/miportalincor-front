@@ -120,6 +120,14 @@ function App() {
               }
             />
             <Route
+              path="/medicos/:slug/control-nutricional"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                  <NutritionPage />
+                </Private_Routes>
+              }
+            />
+            <Route
               path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>

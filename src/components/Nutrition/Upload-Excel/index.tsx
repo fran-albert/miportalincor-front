@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDataMutation";
+import axios from "axios";
 
 interface Props {
   userId: number;
@@ -25,6 +26,7 @@ export default function ExcelUploader({ userId }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const isExcelFile = file?.name.match(/\.(xlsx|xls|csv)$/i);
 
@@ -32,6 +34,7 @@ export default function ExcelUploader({ userId }: Props) {
     const selectedFile = e.target.files?.[0] || null;
     setFile(selectedFile);
     setUploadSuccess(false);
+    setUploadError(null);
   };
 
   const downloadExample = () => {
@@ -48,6 +51,7 @@ export default function ExcelUploader({ userId }: Props) {
   const handleUpload = () => {
     if (!file) return;
     setIsUploading(true);
+    setUploadError(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -58,10 +62,23 @@ export default function ExcelUploader({ userId }: Props) {
         onSuccess: () => {
           setIsUploading(false);
           setUploadSuccess(true);
+          setUploadError(null);
         },
         onError: (error) => {
-          console.error("Error subiendo archivo:", error);
           setIsUploading(false);
+
+          let errorMessage =
+            "Error desconocido al subir el archivo. Intenta nuevamente.";
+
+          // Verifica si el error es una instancia de AxiosError
+          if (axios.isAxiosError(error)) {
+            errorMessage =
+              error.response?.data || error.message || errorMessage;
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+
+          setUploadError(errorMessage);
         },
       }
     );
@@ -120,6 +137,14 @@ export default function ExcelUploader({ userId }: Props) {
             <Alert className="bg-green-50 border-green-200">
               <AlertDescription className="text-green-700">
                 ¡Archivo subido exitosamente!
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {uploadError && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertDescription className="text-red-700">
+                {uploadError}
               </AlertDescription>
             </Alert>
           )}
