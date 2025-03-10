@@ -37,7 +37,7 @@ export const useNutritionDataMutations = () => {
     const updateNutritionDataMutation = useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateNutritionDataDto }) => updateNutritionData(id, data),
         onSuccess: (data, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.data.userId] });
             console.log("data updated", data, variables, context);
         },
         onError: (error, variables, context) => {

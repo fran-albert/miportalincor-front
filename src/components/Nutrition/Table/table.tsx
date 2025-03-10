@@ -16,7 +16,6 @@ import type {
   NutritionData,
   CreateNutritionDataDto,
 } from "@/types/Nutrition-Data/NutritionData";
-import { DatePicker } from "@/components/ui/date-picker";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
@@ -31,10 +30,8 @@ interface Props {
   setNutritionData: React.Dispatch<React.SetStateAction<NutritionData[]>>;
 }
 
-const formatDateForBackend = (date: Date): string => {
-  const offset = date.getTimezoneOffset();
-  const correctedDate = new Date(date.getTime() + offset * 60 * 1000);
-  return format(correctedDate, "yyyy-MM-dd");
+const formatDateForBackend = (dateString: string): string => {
+  return dateString;
 };
 
 export const NutritionTable: React.FC<Props> = ({
@@ -68,6 +65,8 @@ export const NutritionTable: React.FC<Props> = ({
     }
   }, [isAddingNewEntry, userId, setIsAddingNewEntry]);
 
+  // Se modifica para que, en el caso de la fecha, se almacene el string directamente,
+  // evitando crear un objeto Date y así los desfases por zona horaria.
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     id?: number
@@ -81,7 +80,7 @@ export const NutritionTable: React.FC<Props> = ({
                 ...entry,
                 [name]:
                   name === "date"
-                    ? new Date(value)
+                    ? value
                     : name === "observations"
                     ? value
                     : Number(value),
@@ -96,7 +95,7 @@ export const NutritionTable: React.FC<Props> = ({
           ...prev,
           [name]:
             name === "date"
-              ? new Date(value)
+              ? value
               : name === "observations"
               ? value
               : Number(value),
@@ -109,7 +108,7 @@ export const NutritionTable: React.FC<Props> = ({
     if (newEntry) {
       const entryForBackend: CreateNutritionDataDto = {
         ...newEntry,
-        date: formatDateForBackend(new Date(newEntry.date)),
+        date: formatDateForBackend(newEntry.date),
       };
       onAddEntry(entryForBackend);
       setNewEntry(null);
@@ -118,10 +117,7 @@ export const NutritionTable: React.FC<Props> = ({
   };
 
   const handleEdit = (id: number) => {
-    const entry = nutritionData.find((e) => e.id === id);
-    if (entry) {
-      setEditingId(id);
-    }
+    setEditingId(id);
   };
 
   const handleSaveEdit = (id: number) => {
@@ -152,38 +148,26 @@ export const NutritionTable: React.FC<Props> = ({
 
   return (
     <div className="w-full h-[400px] flex flex-col">
-      {/* Header fijo fuera del ScrollArea */}
+      {/* Header fijo */}
       <Table className="w-full table-fixed">
         <TableHeader className="bg-white shadow-sm">
           <TableRow>
             <TableHead className={columnWidths.index}>#</TableHead>
             <TableHead className={columnWidths.date}>Fecha</TableHead>
             <TableHead className={columnWidths.weight}>Peso</TableHead>
-            <TableHead className={columnWidths.difference}>
-              Diferencia
-            </TableHead>
-            <TableHead className={columnWidths.fatPercentage}>
-              % Grasa
-            </TableHead>
-            <TableHead className={columnWidths.musclePercentage}>
-              % Músculo
-            </TableHead>
-            <TableHead className={columnWidths.visceralFat}>
-              Grasa Visceral
-            </TableHead>
+            <TableHead className={columnWidths.difference}>Diferencia</TableHead>
+            <TableHead className={columnWidths.fatPercentage}>% Grasa</TableHead>
+            <TableHead className={columnWidths.musclePercentage}>% Músculo</TableHead>
+            <TableHead className={columnWidths.visceralFat}>Grasa Visceral</TableHead>
             <TableHead className={columnWidths.imc}>IMC</TableHead>
-            <TableHead className={columnWidths.targetWeight}>
-              Peso Objetivo
-            </TableHead>
-            <TableHead className={columnWidths.observations}>
-              Observaciones
-            </TableHead>
+            <TableHead className={columnWidths.targetWeight}>Peso Objetivo</TableHead>
+            <TableHead className={columnWidths.observations}>Observaciones</TableHead>
             <TableHead className={columnWidths.actions}>Acciones</TableHead>
           </TableRow>
         </TableHeader>
       </Table>
 
-      {/* Cuerpo desplazable dentro del ScrollArea */}
+      {/* Cuerpo desplazable */}
       <ScrollArea className="flex-1 w-full">
         <Table className="w-full table-fixed">
           <TableBody>
@@ -194,29 +178,22 @@ export const NutritionTable: React.FC<Props> = ({
                 </TableCell>
                 <TableCell className={columnWidths.date}>
                   {editingId === entry.id ? (
-                    <DatePicker
-                      value={entry.date ? new Date(entry.date) : new Date()}
-                      onChange={(selectedDate) => {
-                        setNutritionData((prevData) =>
-                          prevData.map((e) =>
-                            e.id === entry.id
-                              ? {
-                                  ...e,
-                                  date: selectedDate
-                                    ? format(selectedDate, "yyyy-MM-dd")
-                                    : e.date,
-                                }
-                              : e
-                          )
-                        );
-                      }}
+                    <input
+                      type="date"
+                      name="date"
+                      value={
+                        typeof entry.date === "string"
+                          ? entry.date
+                          : format(new Date(entry.date), "yyyy-MM-dd")
+                      }
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      className="w-full"
                     />
                   ) : (
-                    <span className="block truncate">
-                      {formatDate(entry.date.toString())}
-                    </span>
+                    <span className="block truncate">{formatDate(entry.date)}</span>
                   )}
                 </TableCell>
+
                 <TableCell className={columnWidths.weight}>
                   {editingId === entry.id ? (
                     <Input
@@ -354,19 +331,12 @@ export const NutritionTable: React.FC<Props> = ({
                   {nutritionData.length + 1}
                 </TableCell>
                 <TableCell className={columnWidths.date}>
-                  <DatePicker
-                    value={newEntry.date ? new Date(newEntry.date) : new Date()}
-                    onChange={(selectedDate) => {
-                      setNewEntry((prev) => {
-                        if (!prev) return prev;
-                        return {
-                          ...prev,
-                          date: selectedDate
-                            ? format(selectedDate, "yyyy-MM-dd")
-                            : prev.date,
-                        };
-                      });
-                    }}
+                  <input
+                    type="date"
+                    name="date"
+                    value={newEntry.date}
+                    onChange={(e) => handleInputChange(e)}
+                    className="w-full"
                   />
                 </TableCell>
                 <TableCell className={columnWidths.weight}>
