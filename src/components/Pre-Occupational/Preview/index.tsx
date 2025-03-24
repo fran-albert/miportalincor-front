@@ -23,6 +23,7 @@ import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation"
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import PdfLoadingOverlay from "@/components/Pdf/Overlay";
+import FirstPagePreview from "./First-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -49,6 +50,7 @@ export default function PreOccupationalPreviewComponent({
   const pdfMedicalEvalRef = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection1Ref = useRef<HTMLDivElement>(null);
   const pdfPhysicalEvalSection2Ref = useRef<HTMLDivElement>(null);
+  const pdfFirstPageRef = useRef<HTMLDivElement>(null);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -90,7 +92,6 @@ export default function PreOccupationalPreviewComponent({
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      let pageNumber = 1;
 
       // Función para capturar secciones
       const captureSection = async (ref: React.RefObject<HTMLDivElement>) => {
@@ -101,10 +102,10 @@ export default function PreOccupationalPreviewComponent({
         ref.current.style.left = "-9999px";
 
         const canvas = await html2canvas(ref.current, {
-          scale: 2, // Alta resolución
+          // scale: 2, // Alta resolución
           useCORS: true,
           width: ref.current.offsetWidth,
-          windowWidth: 794, // Equivalente a A4 en píxeles a 96 DPI
+          // windowWidth: 794, // Equivalente a A4 en píxeles a 96 DPI
         });
         ref.current.style.display = "none";
         return canvas;
@@ -130,10 +131,6 @@ export default function PreOccupationalPreviewComponent({
             "FAST" // Compresión rápida
           );
           pdf.setFontSize(10);
-          pdf.text(`Página ${pageNumber}`, pdfWidth - 20, pageHeight - 10, {
-            align: "right",
-          });
-          pageNumber++;
           heightLeft -= pageHeight;
           position -= pageHeight;
           if (heightLeft > 0) {
@@ -180,6 +177,17 @@ export default function PreOccupationalPreviewComponent({
         !physicalEvalSection2Canvas
       ) {
         throw new Error("No se pudo capturar alguna sección del contenido.");
+      }
+
+      const firstPageCanvas = await captureSection(pdfFirstPageRef);
+      updateProgress();
+
+      // Agregarla como la primera página del PDF
+      if (firstPageCanvas) {
+        const firstPageImgData = firstPageCanvas.toDataURL("image/png");
+        addPageWithNumber(firstPageImgData, pdfWidth);
+      } else {
+        throw new Error("No se pudo capturar la primera página");
       }
 
       // Primera página (header)
@@ -286,6 +294,7 @@ export default function PreOccupationalPreviewComponent({
         ref={previewRef}
         className="min-h-screen mx-auto bg-white p-6 space-y-6"
       >
+        <FirstPagePreview collaborator={collaborator} />
         <CollaboratorInformationCard collaborator={collaborator} />
         <GeneralInfoPreview />
         <TestsPreview />
@@ -300,6 +309,9 @@ export default function PreOccupationalPreviewComponent({
         {urls && <StudiesPreview studies={urls} />}
       </div>
       {/* Contenedores para el PDF */}
+      <div ref={pdfFirstPageRef} className="bg-white p-6 space-y-6">
+        <FirstPagePreview collaborator={collaborator} />
+      </div>
       <div
         ref={pdfHeaderRef}
         className="bg-white p-6 space-y-6"
