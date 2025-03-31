@@ -12,17 +12,21 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { DataType } from "@/types/Data-Type/Data-Type";
 
 interface Props {
   isEditing: boolean;
+  fields: DataType[];
 }
 
-export default function MedicalEvaluationAccordion({ isEditing }: Props) {
+export default function MedicalEvaluationAccordion({
+  isEditing,
+  fields,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (
     e: React.ChangeEvent<HTMLInputElement>

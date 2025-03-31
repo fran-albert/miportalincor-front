@@ -14,7 +14,8 @@ import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
-
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import { useInitializeMedicalEvaluation } from "@/common/helpers/maps";
 const workerMapping: Record<string, string> = {
   lugarNacimiento: "Lugar de nacimiento",
   nacionalidad: "Nacionalidad",
@@ -158,10 +159,12 @@ export default function MedicalHistoryTab({
   isEditing,
   setIsEditing,
   medicalEvaluationId,
+  dataValues,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
   medicalEvaluationId: number;
+  dataValues: DataValue[] | undefined;
 }) {
   const { data: fields } = useDataTypes({
     auth: true,
@@ -174,7 +177,8 @@ export default function MedicalHistoryTab({
     ],
   });
   const { createDataValuesMutation } = useDataValuesMutations();
-
+  useInitializeMedicalEvaluation(dataValues);
+  console.log(dataValues);
   const formData = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
@@ -224,7 +228,7 @@ export default function MedicalHistoryTab({
         {/* <InstitutionInformation isEditing={isEditing} fields={fields} /> */}
         <WorkerInformationAccordion isEditing={isEditing} />
         <OccupationalHistoryAccordion isEditing={isEditing} fields={fields} />
-        <MedicalEvaluationAccordion isEditing={isEditing} />
+        <MedicalEvaluationAccordion isEditing={isEditing} fields={fields} />
       </Accordion>
       {isEditing && (
         <div className="flex justify-end gap-4 mt-6">

@@ -1,8 +1,9 @@
 import LoadingAnimation from "@/components/Loading/loading";
 import PreOccupationalPreviewComponent from "@/components/Pre-Occupational/Preview";
 import { useCollaborator } from "@/hooks/Collaborator/useCollaborator";
+import { useDataValuesByMedicalEvaluationId } from "@/hooks/Data-Values/useDataValues";
 import { useMedicalEvaluation } from "@/hooks/Medical-Evaluation/useMedicalEvaluation";
-import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllUrlsByCollaboratorAndMedicalEvaluation";
+import { useGetAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
 
@@ -22,11 +23,19 @@ export default function PreOccupationalPreviewPage() {
     id: Number(medicalEvaluationId),
   });
 
-  const { data: urls } = useGetAllUrlsByCollaboratorAndMedicalEvaluation({
+  const { data: urls } =
+    useGetAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation({
+      auth: true,
+      collaboratorId: id,
+      medicalEvaluationId: Number(medicalEvaluationId),
+    });
+
+  const { data: dataValues } = useDataValuesByMedicalEvaluationId({
+    id: Number(medicalEvaluationId),
     auth: true,
-    collaboratorId: id,
-    medicalEvaluationId: Number(medicalEvaluationId),
   });
+
+  console.log(dataValues, "datavalues");
 
   return (
     <>
@@ -53,6 +62,7 @@ export default function PreOccupationalPreviewPage() {
           collaborator={collaborator}
           medicalEvaluation={data}
           urls={urls}
+          dataValues={dataValues}
         />
       ) : (
         <div>No hay un colaborador disponible.</div>

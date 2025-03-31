@@ -58,6 +58,7 @@ const examKeyMapping: Record<string, string> = {
   "RX Torax Frente": "rx-torax",
   Electroencefalograma: "electroencefalograma",
   Psicotécnico: "psicotecnico",
+  Audiometria: "audiometria",
 };
 
 const getValueForField = (
@@ -198,7 +199,7 @@ export default function ConclusionAccordion({
         };
       })
       .filter((item) => item.value !== "" && item.value !== undefined);
-  
+
     // Para el campo Conclusion
     const conclusionField = fields.find((field) => field.name === "Conclusion");
     if (conclusionField && conclusion) {
@@ -206,9 +207,7 @@ export default function ConclusionAccordion({
         (dv) => dv.dataType.name === "Conclusion"
       );
       if (
-        !payloadDataValues.find(
-          (dv) => dv.dataTypeId === conclusionField.id
-        )
+        !payloadDataValues.find((dv) => dv.dataTypeId === conclusionField.id)
       ) {
         payloadDataValues.push({
           id: existing ? existing.id : undefined,
@@ -217,7 +216,7 @@ export default function ConclusionAccordion({
         });
       }
     }
-  
+
     // Para el campo Recomendaciones
     const recomendacionesField = fields.find(
       (field) => field.name === "Recomendaciones"
@@ -238,7 +237,7 @@ export default function ConclusionAccordion({
         });
       }
     }
-  
+
     // Para las opciones de conclusión (checkboxes)
     Object.entries(conclusionOptions).forEach(([key, value]) => {
       if (value === true) {
@@ -267,19 +266,18 @@ export default function ConclusionAccordion({
         }
       }
     });
-  
+
     const payload = {
       medicalEvaluationId: medicalEvaluationId,
       dataValues: payloadDataValues,
     };
-  
+
     toast.promise(createDataValuesMutation.mutateAsync(payload), {
       loading: <LoadingToast message="Guardando datos..." />,
       success: <SuccessToast message="Datos guardados exitosamente!" />,
       error: <ErrorToast message="Error al guardar los datos" />,
     });
   };
-  
 
   return (
     <AccordionItem value="conclusion" className="border rounded-lg">

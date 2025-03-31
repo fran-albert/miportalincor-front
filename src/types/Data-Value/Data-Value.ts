@@ -5,6 +5,7 @@ export interface DataValue extends Base {
     name: string
     dataType: DataType
     value: string
+    observations?: string
 }
 
 export interface CreateDataValueItemDto {

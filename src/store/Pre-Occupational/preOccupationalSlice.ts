@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface ExamResults {
+export interface ExamResults {
   clinico: string;
   "electrocardiograma-result": string;
   laboratorio: string;
@@ -13,7 +13,6 @@ interface ExamResults {
 export interface OccupationalHistoryItem {
   id: string;
   description: string;
-  // Puedes agregar otros campos como empresa, cargo, fechas, etc.
 }
 
 interface WorkerInformation {
@@ -39,7 +38,7 @@ interface ExamenFisicoItem {
   observaciones: string;
 }
 
-interface MedicalEvaluation {
+export interface IMedicalEvaluation {
   aspectoGeneral: string;
   tiempoLibre: string;
   examenClinico: ExamenClinico;
@@ -93,7 +92,7 @@ interface FormData {
   institutionInformation: InstitutionInformation;
   workerInformation: WorkerInformation;
   occupationalHistory: OccupationalHistoryItem[];
-  medicalEvaluation: MedicalEvaluation;
+  medicalEvaluation: IMedicalEvaluation;
   [key: string]: any;
 }
 
@@ -173,7 +172,7 @@ const initialState: PreOccupationalState = {
         peso: "",
         imc: "",
       },
-      examenFisico: {}, // Inicialmente vacío; se completará según se edite
+      examenFisico: {},
     },
   },
 };
