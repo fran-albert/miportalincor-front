@@ -15,7 +15,6 @@ interface Props {
 
 export const DoctorSelect = ({ control, disabled }: Props) => {
   const { doctors } = useDoctors({ auth: true, fetchDoctors: true });
-
   return (
     <Controller
       name="DoctorId"
@@ -32,8 +31,8 @@ export const DoctorSelect = ({ control, disabled }: Props) => {
           <SelectContent>
             {doctors.map((doctor, index) => (
               <SelectItem
-                key={doctor.id?.toString() || `doctor-${index}`}
-                value={String(doctor.id || index)}
+                key={doctor.userId?.toString() || `doctor-${index}`}
+                value={String(doctor.userId || index)}
               >
                 {doctor.lastName}, {doctor.firstName}
               </SelectItem>

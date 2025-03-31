@@ -51,7 +51,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     const formattedDateISO = moment(date).toISOString();
     formData.append("Date", formattedDateISO);
     formData.append("Note", data.Note);
-    formData.append("DoctorId", data.DoctorId);
+    formData.append("DoctorUserId", data.DoctorId);
     console.log(data.DoctorId, "doctorId");
     try {
       toast.promise(uploadStudyMutation.mutateAsync({ formData, idUser }), {
