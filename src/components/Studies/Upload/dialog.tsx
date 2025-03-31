@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,7 @@ import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import { StudyType } from "@/types/Study-Type/Study-Type";
+import { DoctorSelect } from "@/components/Select/Doctor/select";
 interface AddStudyProps {
   idUser: number;
 }
@@ -29,7 +30,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
   const toggleDialog = () => setIsOpen(!isOpen);
   // @ts-ignore
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, control } = useForm();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { uploadStudyMutation } = useStudyMutations();
   const onSubmit: SubmitHandler<any> = async (data) => {
@@ -50,7 +51,8 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     const formattedDateISO = moment(date).toISOString();
     formData.append("Date", formattedDateISO);
     formData.append("Note", data.Note);
-
+    formData.append("DoctorId", data.DoctorId);
+    console.log(data.DoctorId, "doctorId");
     try {
       toast.promise(uploadStudyMutation.mutateAsync({ formData, idUser }), {
         loading: <LoadingToast message="Subiendo nuevo estudio..." />,
@@ -65,12 +67,19 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }
-      };
+  };
 
   const handleStudyChange = (studyType: StudyType) => {
     setSelectedStudy(studyType);
     setValue("StudyTypeId", studyType.id);
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setValue("DoctorId", "");
+      reset();
+    }
+  }, [isOpen, setValue, reset]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -149,6 +158,12 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
                 type="date"
                 {...register("date", { required: true })}
               />
+            </div>
+            <div className="space-y-2">
+              <Label className="mb-2" htmlFor="date">
+                Médico (Opcional)
+              </Label>
+              <DoctorSelect control={control} />
             </div>
           </div>
           <DialogFooter>
