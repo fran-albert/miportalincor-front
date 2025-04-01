@@ -161,7 +161,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
             </div>
             <div className="space-y-2">
               <Label className="mb-2" htmlFor="date">
-                Médico (Opcional)
+                Firma Médico (Opcional)
               </Label>
               <DoctorSelect control={control} />
             </div>
