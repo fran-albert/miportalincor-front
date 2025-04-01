@@ -1,4 +1,4 @@
-"use client";
+ 
 import { TabsContent } from "@/components/ui/tabs";
 import { Accordion } from "@/components/ui/accordion";
 import GeneralInfoAccordion from "@/components/Accordion/Pre-Occupational/General-Info";

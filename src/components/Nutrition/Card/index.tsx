@@ -1,4 +1,4 @@
-"use client";
+ 
 
 import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { ClipboardPlus } from "lucide-react";
