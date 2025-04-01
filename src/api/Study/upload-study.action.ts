@@ -1,16 +1,23 @@
 import { sleep } from "@/common/helpers/helpers";
 import { apiIncor } from "@/services/axiosConfig";
-import { Study } from "@/types/Study/Study";
 
-interface UploadStudyProps {
-    idUser: number;
-    formData: FormData;
+interface StudyResponse {
+    id: number;
+    locationS3: string;
+    studyTypeId: number;
+    studyType: null | string;
+    date: string;
+    note: string;
+    created: string;
+    signedUrl: string;
+    ultrasoundImages: null | any[];
 }
-export const uploadStudy = async (values: UploadStudyProps) => {
+
+export const uploadStudy = async (values: FormData) => {
     await sleep(2);
-    const { data } = await apiIncor.post<Study>(
+    const { data } = await apiIncor.post<StudyResponse>(
         `/Study/upload-study`,
-        values.formData, {
+        values, {
         headers: {
             "Content-Type": "multipart/form-data",
         },

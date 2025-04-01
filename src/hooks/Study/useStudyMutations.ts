@@ -8,39 +8,39 @@ export const useStudyMutations = () => {
 
     const uploadStudyMutation = useMutation({
         mutationFn: uploadStudy,
-        onMutate: async (variables) => {
-            await queryClient.cancelQueries({ queryKey: ['studiesByUserId', variables.idUser] });
+        // onMutate: async (variables) => {
+        //     await queryClient.cancelQueries({ queryKey: ['studiesByUserId', variables.idUser] });
 
-            const previousStudies = queryClient.getQueryData<Study[]>(['studiesByUserId', variables.idUser]);
+        //     const previousStudies = queryClient.getQueryData<Study[]>(['studiesByUserId', variables.idUser]);
 
-            const optimisticStudy: Study = {
-                id: Math.random(),
-                studyType: {
-                    id: variables.formData.get('StudyTypeId') as string,
-                    name: "Ecografía"
-                },
-                locationS3: "temp-location.pdf",
-                note: variables.formData.get('Note') as string,
-                date: variables.formData.get('Date') as string,
-                ultrasoundImages: [],
-                isOptimistic: true,
-                isUpdating: true,
-            };
+        //     const optimisticStudy: Study = {
+        //         id: Math.random(),
+        //         studyType: {
+        //             id: variables.formData.get('StudyTypeId') as string,
+        //             name: "Ecografía"
+        //         },
+        //         locationS3: "temp-location.pdf",
+        //         note: variables.formData.get('Note') as string,
+        //         date: variables.formData.get('Date') as string,
+        //         ultrasoundImages: [],
+        //         isOptimistic: true,
+        //         isUpdating: true,
+        //     };
 
-            queryClient.setQueryData<Study[]>(['studiesByUserId', variables.idUser], (oldStudies) => [
-                ...(oldStudies || []),
-                optimisticStudy,
-            ]);
+        //     queryClient.setQueryData<Study[]>(['studiesByUserId', variables.idUser], (oldStudies) => [
+        //         ...(oldStudies || []),
+        //         optimisticStudy,
+        //     ]);
 
-            return { previousStudies };
-        },
+        //     return { previousStudies };
+        // },
 
-        onError: (error, variables, context) => {
-            if (context?.previousStudies) {
-                queryClient.setQueryData(['studiesByUserId', variables.idUser], context.previousStudies);
-            }
-            console.error("Error creating study", error);
-        },
+        // onError: (error, variables, context) => {
+        //     if (context?.previousStudies) {
+        //         queryClient.setQueryData(['studiesByUserId', variables.idUser], context.previousStudies);
+        //     }
+        //     console.error("Error creating study", error);
+        // },
         onSettled: (variables) => {
             queryClient.invalidateQueries({ queryKey: ['studiesByUserId', variables?.id] });
             queryClient.invalidateQueries({ queryKey: ['studyAndImageUrls', variables?.id] });

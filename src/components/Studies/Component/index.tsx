@@ -8,23 +8,32 @@ import { StudyTypeSelect } from "@/components/Select/Study/By-Type/select";
 import { StudyYearSelect } from "@/components/Select/Study/By-Year/select";
 import StudiesTable from "../Table";
 import { Link } from "react-router-dom";
+import { StudiesTableSkeleton } from "@/components/Skeleton/Patient";
+
+interface StudiesComponentProps {
+  studiesByUserId: Study[];
+  idUser?: number;
+  slug?: string;
+  role?: string;
+  urls: any;
+  isLoading?: boolean;
+  isLoadingUrls?: boolean;
+}
+
 const StudiesComponent = ({
   studiesByUserId,
   idUser,
   urls,
   slug,
   role,
-}: {
-  studiesByUserId: Study[];
-  idUser?: number;
-  slug?: string;
-  role?: string;
-  urls: any;
-}) => {
+  isLoading = false,
+  isLoadingUrls = false,
+}: StudiesComponentProps) => {
   const { isDoctor } = useRoles();
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
     "Seleccionar tipo de estudio..."
   );
+
   const [selectedYear, setSelectedYear] = useState<string | null>(
     "Seleccionar año..."
   );
@@ -113,14 +122,19 @@ const StudiesComponent = ({
             </Button>
           </div>
         )}
-        <StudiesTable
-          studiesByUserId={filteredStudies}
-          idUser={Number(idUser)}
-          urls={urls}
-        />
+
+        {isLoading ? (
+          <StudiesTableSkeleton />
+        ) : (
+          <StudiesTable
+            studiesByUserId={filteredStudies}
+            idUser={Number(idUser)}
+            urls={urls}
+            isLoadingUrls={isLoadingUrls}
+          />
+        )}
       </CardContent>
     </Card>
   );
 };
-
 export default StudiesComponent;

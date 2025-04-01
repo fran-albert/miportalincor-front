@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { FaUpload } from "react-icons/fa";
 import { toast } from "sonner";
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import moment from "moment-timezone";
@@ -53,20 +54,33 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     formData.append("Note", data.Note);
     formData.append("DoctorUserId", data.DoctorId);
     console.log(data.DoctorId, "doctorId");
-    try {
-      toast.promise(uploadStudyMutation.mutateAsync({ formData, idUser }), {
-        loading: <LoadingToast message="Subiendo nuevo estudio..." />,
-        success: <SuccessToast message="Nuevo estudio subido con exito." />,
-        error: (
-          <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
-        ),
-      });
-      reset();
-      setSelectedFiles([]);
-      setIsOpen(false);
-    } catch (error) {
-      console.error("Error al agregar el estudio", error);
-    }
+    // try {
+    //   const uploadPromise = uploadStudyMutation.mutateAsync({
+    //     formData,
+    //     idUser,
+    //   });
+
+    //   toast.promise(uploadPromise, {
+    //     loading: <LoadingToast message="Subiendo nuevo estudio..." />,
+    //     success: () => {
+    //       // Aquí ocurre SOLO si todo salió bien
+    //       reset();
+    //       setSelectedFiles([]);
+    //       setIsOpen(false);
+    //       // Retorna el componente de toast que quieras mostrar
+    //       return <SuccessToast message="Nuevo estudio subido con exito." />;
+    //     },
+    //     error: () => {
+    //       // Aquí ocurre SOLO si hubo error
+    //       // Mantén el modal abierto para reintentar, si deseas
+    //       return (
+    //         <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
+    //       );
+    //     },
+    //   });
+    // } catch (error) {
+    //   console.error("Error al agregar el estudio", error);
+    // }
   };
 
   const handleStudyChange = (studyType: StudyType) => {

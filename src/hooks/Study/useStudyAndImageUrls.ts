@@ -32,7 +32,7 @@ export const useStudyAndImageUrls = (idUser: number | undefined, studies: Study[
             );
             return allUrls;
         },
-        staleTime: 10000,
+        staleTime: 1000 * 60,
         enabled: !!idUser && studies.length > 0,
     });
 };
