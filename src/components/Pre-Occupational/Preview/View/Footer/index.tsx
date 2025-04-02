@@ -26,8 +26,9 @@ const FooterHtml: React.FC<Props> = ({
           alt="Firma del médico"
           className="h-16 object-contain mb-1"
         />
-        <p className="font-bold">{doctorName}</p>
-        <p>M.P. {doctorLicense}</p>
+        <p className="font-bold text-sm">{doctorName}</p>
+        <p className="font-bold text-sm align-center">Médica del Trabajo</p>
+        <p className="text-sm align-center">{doctorLicense}</p>
       </div>
 
       {/* Columna central: Fecha */}

@@ -94,6 +94,8 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
   collaborator,
   companyData,
 }) => {
+  // Uso:
+
   return (
     <View style={styles.container}>
       {/* Sección Empresa */}
@@ -145,7 +147,7 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
           {/* Imagen del colaborador */}
           <View style={styles.columnOneThird}>
             <CollaboratorAvatarPdf
-              src={collaborator.photoUrl}
+              photoBuffer={collaborator.photoBuffer}
               alt={`${collaborator.firstName} ${collaborator.lastName}`}
             />
           </View>

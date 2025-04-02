@@ -35,8 +35,6 @@ export default function PreOccupationalPreviewPage() {
     auth: true,
   });
 
-  console.log(dataValues, "datavalues");
-
   return (
     <>
       <Helmet>

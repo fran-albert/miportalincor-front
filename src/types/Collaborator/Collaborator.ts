@@ -18,6 +18,8 @@ export interface Collaborator extends Base {
   addressData?: Address;
   healthInsuranceId?: number;
   healthInsurance: HealthInsurance;
+  photoBuffer?: { type: "Buffer"; data: number[] };
+  photoDataUrl?: string;
   affiliationNumber?: string;
 }
 

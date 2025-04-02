@@ -55,10 +55,7 @@ const PdfFooter: React.FC<Props> = ({
   return (
     <View style={styles.container} wrap={false}>
       <View style={styles.leftColumn}>
-        <Image
-          src="https://imgs.search.brave.com/KgtC37nJ8FZd7vidGl8lipdmUm1Ll4Lmi2NlJDafTQc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy9h/L2ExL0pvcyVDMyVB/OV9NaWd1ZWxfSW5z/dWx6YV9maXJtYS5w/bmc"
-          style={styles.signature}
-        />
+        <Image src={signatureUrl} style={styles.signature} />
         <Text style={styles.doctorName}>{doctorName}</Text>
         <Text>M.P. {doctorLicense}</Text>
       </View>

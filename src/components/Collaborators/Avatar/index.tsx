@@ -1,15 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "lucide-react";
 
 interface CollaboratorAvatarProps {
   src?: string | null;
+  photoBuffer?: { type: "Buffer"; data: number[] } | null;
   alt: string;
 }
 
-function CollaboratorAvatar({ src, alt }: CollaboratorAvatarProps) {
+function CollaboratorAvatar({
+  src,
+  photoBuffer,
+  alt,
+}: CollaboratorAvatarProps) {
   const [loaded, setLoaded] = useState(false);
-  const hasValidImage = src && src.trim() !== "";
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Si tenemos un photoBuffer, lo convertimos a dataURL
+    if (photoBuffer && photoBuffer.data && Array.isArray(photoBuffer.data)) {
+      const uint8Array = new Uint8Array(photoBuffer.data);
+      const blob = new Blob([uint8Array], { type: "image/jpeg" });
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setImageDataUrl(dataUrl);
+      };
+
+      reader.readAsDataURL(blob);
+    } else {
+      // Si no hay photoBuffer, usamos el src directamente
+      setImageDataUrl(src || null);
+    }
+  }, [photoBuffer, src]);
+
+  // Verificamos si tenemos una imagen válida para mostrar
+  const hasValidImage = imageDataUrl && imageDataUrl.trim() !== "";
 
   return (
     <div className="relative flex flex-col items-center">
@@ -18,7 +45,7 @@ function CollaboratorAvatar({ src, alt }: CollaboratorAvatarProps) {
       )}
       {hasValidImage ? (
         <img
-          src={src!}
+          src={imageDataUrl}
           alt={alt}
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(false)}

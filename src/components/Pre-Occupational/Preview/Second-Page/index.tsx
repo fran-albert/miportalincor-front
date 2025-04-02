@@ -129,7 +129,7 @@ const SecondPagePreview: React.FC<SecondPagePreviewProps> = ({
       </div>
       <PdfFooter
         pageNumber={1}
-        doctorName="Dr. Juan Pérez"
+        doctorName="BONIFACIO Ma. CECILIA"
         doctorLicense="12345"
         signatureUrl="https://your-url-to-signature.com/firma.png"
       />

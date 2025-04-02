@@ -64,6 +64,7 @@ const CollaboratorInformationHtml: React.FC<
             <CollaboratorAvatarHtml
               alt={collaborator.firstName}
               src={collaborator.photoUrl}
+              photoDataUrl={collaborator.photoDataUrl}
             />
           </div>
         </div>

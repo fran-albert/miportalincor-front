@@ -117,7 +117,6 @@ export default function PreOccupationalPreviewComponent({
         queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
       });
 
-      // Descargamos el PDF
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;

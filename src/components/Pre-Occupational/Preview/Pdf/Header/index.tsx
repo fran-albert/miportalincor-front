@@ -94,7 +94,7 @@ const HeaderPreviewPdf: React.FC<HeaderPreviewPdfProps> = ({
           {/* Izquierda: Logo */}
           <View style={styles.headerLeft}>
             <Image
-              style={{ width: 70, height: 40 }}
+              style={{ width: 80, height: 60 }}
               src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743117056/dpwo5yinodpy9ibpjtum.png"
             />
           </View>

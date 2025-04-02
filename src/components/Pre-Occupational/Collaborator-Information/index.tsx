@@ -21,7 +21,6 @@ export default function CollaboratorInformationCard({
   canEdit = false,
   isForPdf = false,
 }: Props) {
-  const photoUrl = collaborator.photoUrl;
   const navigate = useNavigate();
   return (
     <Card className="shadow-lg border border-gray-200 rounded-lg">
@@ -47,7 +46,7 @@ export default function CollaboratorInformationCard({
 
         <div className="mt-4 flex flex-col items-center">
           <CollaboratorAvatar
-            src={photoUrl}
+            photoBuffer={collaborator.photoBuffer}
             alt={`${collaborator.firstName} ${collaborator.lastName}`}
           />
           <p className="mt-2 text-lg font-medium">
@@ -98,7 +97,7 @@ export default function CollaboratorInformationCard({
           </div>
 
           <div className="rounded-lg">
-            <p className="text-sm text-gray-500">Obra Social - Affiliado N°:</p>
+            <p className="text-sm text-gray-500">Puesto de Trabajo:</p>
             <p className="font-medium">
               {collaborator.healthInsurance?.name
                 ? `${collaborator.healthInsurance.name} - ${

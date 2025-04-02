@@ -34,9 +34,9 @@ const StudyPageHtml: React.FC<StudyPageHtmlProps> = ({
       {/* Aquí se coloca el footer */}
       <FooterHtml
         pageNumber={pageNumber}
-        doctorName="Dr. Juan Pérez"
+        doctorName="BONIFACIO Ma. CECILIA"
         doctorLicense="12345"
-        signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1740699262/wrivrtuyqs3yqo299ooo.png"
+        signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
       />
     </div>
   );

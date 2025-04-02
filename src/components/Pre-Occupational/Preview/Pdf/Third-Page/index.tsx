@@ -26,9 +26,9 @@ const ThirdPagePdfDocument = ({ examenFisico }: Props) => (
     <PhysicalEvaluationPdf examenFisico={examenFisico} section={2} />
     <PdfFooter
       pageNumber={3}
-      doctorName="Dr. Juan Pérez"
-      doctorLicense="12345"
-      signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1740699262/wrivrtuyqs3yqo299ooo.png"
+           doctorName="BONIFACIO Ma. CECILIA"
+      doctorLicense="M.P. 96533 - M.L. 7299"
+      signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
     />
   </Page>
 );
