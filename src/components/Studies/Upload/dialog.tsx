@@ -66,17 +66,22 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     }
 
     try {
-      toast.promise(uploadStudyMutation.mutateAsync(formData), {
-        loading: <LoadingToast message="Subiendo nuevo estudio..." />,
-        success: <SuccessToast message="Nuevo estudio subido con exito." />,
-        error: (
-          <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
-        ),
-      });
-      reset();
-      setSelectedFiles([]);
-      setSelectedStudy(null);
-      setIsOpen(false);
+      toast.promise(
+        uploadStudyMutation.mutateAsync(formData).then(() => {
+          // Only close the modal and reset form upon successful submission
+          reset();
+          setSelectedFiles([]);
+          setSelectedStudy(null);
+          setIsOpen(false);
+        }),
+        {
+          loading: <LoadingToast message="Subiendo nuevo estudio..." />,
+          success: <SuccessToast message="Nuevo estudio subido con exito." />,
+          error: (
+            <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
+          ),
+        }
+      );
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }
