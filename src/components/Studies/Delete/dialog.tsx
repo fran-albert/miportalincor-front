@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import ActionIcon from "@/components/Icons/action";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
@@ -20,7 +20,7 @@ import ErrorToast from "@/components/Toast/Error";
 
 interface DeleteStudyDialogProps {
   idStudy: number;
-  studies: Study[];
+  studies: StudiesWithURL[];
 }
 
 export default function DeleteStudyDialog({

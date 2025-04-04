@@ -1,6 +1,4 @@
 import { usePatient } from "@/hooks/Patient/usePatient";
-import { useStudy } from "@/hooks/Study/useStudy";
-import { useStudyAndImageUrls } from "@/hooks/Study/useStudyAndImageUrls";
 import { PatientComponent } from "@/components/Patients/Component";
 import { useParams } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";

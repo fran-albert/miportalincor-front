@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { formatDate } from "@/common/helpers/helpers";
 import useRoles from "@/hooks/useRoles";
 import { ViewButton } from "@/components/Button/View/button";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import {
   Table,
   TableHeader,
@@ -21,17 +21,25 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import StudyDialog from "../Upload/dialog";
-import { FaRegFilePdf, FaRegImage } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
+import {
+  FaRegFilePdf,
+  FaRegImage,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const StudiesTable = ({
-  studiesByUserId,
+  studies,
   idUser,
-  urls,
 }: {
-  studiesByUserId: Study[];
+  studies: StudiesWithURL[];
   idUser: number;
-  urls: { [key: number]: { pdfUrl: string; imageUrls: string[] } };
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
@@ -62,7 +70,7 @@ const StudiesTable = ({
     });
   };
 
-  const filteredStudies = studiesByUserId.filter((study) => {
+  const filteredStudies = studies.filter((study) => {
     const matchesType =
       selectedStudyType === "Seleccionar tipo de estudio..." ||
       study.studyType?.name === selectedStudyType;
@@ -79,6 +87,14 @@ const StudiesTable = ({
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
   const currentRows = filteredStudies.slice(indexOfFirstRow, indexOfLastRow);
+
+  const hasUltrasoundImages = (study: StudiesWithURL) => {
+    return (
+      study.studyType?.id === 2 &&
+      study.ultrasoundImages &&
+      study.ultrasoundImages.length > 0
+    );
+  };
 
   return (
     <div>
@@ -109,79 +125,68 @@ const StudiesTable = ({
               <React.Fragment key={study.id}>
                 {/* Fila principal para el estudio, PDF o imagen principal */}
                 <TableRow className={`hover:bg-gray-50`}>
-                  {study.isUpdating ? (
-                    <TableCell
-                      colSpan={6}
-                      className="text-center align-middle italic text-gray-500"
-                    >
-                      Actualizando estudios del paciente...
+                  <>
+                    <TableCell className="font-medium text-center align-middle">
+                      {indexOfFirstRow + index + 1}
                     </TableCell>
-                  ) : (
-                    <>
-                      <TableCell className="font-medium text-center align-middle">
-                        {indexOfFirstRow + index + 1}
-                      </TableCell>
 
-                      <TableCell className="text-center align-middle">
-                        <FaRegFilePdf className="text-greenPrimary" size={20} />
-                      </TableCell>
-                      <TableCell className="text-base">
-                        <span>{study.studyType?.name}</span>
-                      </TableCell>
-                      <TableCell className="items-center align-middle text-base">
-                        <span>{study.note}</span>
-                      </TableCell>
-                      <TableCell className="align-middle text-base">
-                        <span>{formatDate(String(study.date))}</span>
-                      </TableCell>
-                      <TableCell className="align-middle text-base">
-                        <div className="flex items-center justify-center gap-2">
-                          {study.locationS3 ? (
-                            <ViewButton
-                              url={urls[study.id]?.pdfUrl || "#"}
-                              text="Ver PDF"
-                            />
-                          ) : (
-                            // Botón de eliminación cuando no hay PDF
-                            isDoctor &&
-                            !study.isOptimistic && (
-                              <DeleteStudyDialog
-                                studies={studiesByUserId}
-                                idStudy={study.id}
-                              />
-                            )
-                          )}
-                          {study &&
-                            study.studyType?.id === 2 &&
-                            urls?.[study.id]?.imageUrls?.length > 0 && (
-                              <Button
-                                onClick={() => toggleExpand(study.id)}
-                                variant={"ghost"}
-                                className="text-gray-600"
-                                style={{ minWidth: "24px" }}
-                              >
-                                {expandedStudies.has(study.id) ? "-" : "+"}
-                              </Button>
-                            )}
+                    <TableCell className="text-center align-middle">
+                      <FaRegFilePdf className="text-greenPrimary" size={20} />
+                    </TableCell>
+                    <TableCell className="text-base">
+                      <span>{study.studyType?.name}</span>
+                    </TableCell>
+                    <TableCell className="items-center align-middle text-base">
+                      <span>{study.note}</span>
+                    </TableCell>
+                    <TableCell className="align-middle text-base">
+                      <span>{formatDate(String(study.date))}</span>
+                    </TableCell>
+                    <TableCell className="align-middle text-base">
+                      <div className="flex items-center gap-2">
+                        {study.locationS3 && (
+                          <ViewButton url={study.signedUrl} text="Ver PDF" />
+                        )}
 
-                          {(isSecretary || isAdmin) && !study.isOptimistic && (
-                            <DeleteStudyDialog
-                              studies={studiesByUserId}
-                              idStudy={study.id}
-                            />
-                          )}
-                        </div>
-                      </TableCell>
-                    </>
-                  )}
+                        {hasUltrasoundImages(study) && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="text-blue-500 hover:text-blue-700 cursor-pointer active:opacity-50"
+                                  onClick={() => toggleExpand(study.id)}
+                                >
+                                  {expandedStudies.has(study.id) ? (
+                                    <FaChevronUp size={16} />
+                                  ) : (
+                                    <FaChevronDown size={16} />
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Ver imágenes de ecografía
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+
+                        {(isDoctor || isSecretary || isAdmin) && (
+                          <DeleteStudyDialog
+                            studies={studies}
+                            idStudy={study.id}
+                          />
+                        )}
+                      </div>
+                    </TableCell>
+                  </>
                 </TableRow>
 
-                {/* Expansión para mostrar imágenes de ultrasonido si hay */}
                 {expandedStudies.has(study.id) &&
-                  urls[study.id]?.imageUrls?.map((image, idx) => (
+                  study.ultrasoundImages &&
+                  study.ultrasoundImages.map((image, idx) => (
                     <TableRow
-                      key={`${study.id}-${idx}`}
-                      className="hover:bg-gray-50"
+                      key={`${study.id}-image-${idx}`}
+                      className="hover:bg-gray-50 bg-blue-50/30"
                     >
                       <TableCell className="font-medium text-center align-middle">
                         -
@@ -193,7 +198,7 @@ const StudiesTable = ({
                         <span>Imagen de Ecografía {idx + 1}</span>
                       </TableCell>
                       <TableCell className="align-middle text-base">
-                        <ViewButton url={image} text="Ver Imagen" />
+                        <ViewButton url={image.signedUrl} text="Ver Imagen" />
                       </TableCell>
                     </TableRow>
                   ))}

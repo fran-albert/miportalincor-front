@@ -1,16 +1,14 @@
 import { Patient } from "@/types/Patient/Patient";
 import BreadcrumbComponent from "@/components/Breadcrumb";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import StudiesComponent from "@/components/Studies/Component";
 import PatientCardComponent from "../View/Card/card";
 export function PatientComponent({
   patient,
-  studiesByUserId,
-  urls,
+  studies,
 }: {
   patient: Patient | undefined;
-  studiesByUserId: Study[];
-  urls: any;
+  studies: StudiesWithURL[] | undefined;
 }) {
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -28,13 +26,14 @@ export function PatientComponent({
         {patient && <PatientCardComponent patient={patient} />}
         <div className="md:grid md:gap-6 space-y-4">
           {/* <StudiesCardComponent idUser={Number(patient?.userId)} /> */}
-          <StudiesComponent
-            idUser={Number(patient?.userId)}
-            studiesByUserId={studiesByUserId}
-            role="pacientes"
-            urls={urls}
-            slug={String(patient?.slug)}
-          />
+          {studies && (
+            <StudiesComponent
+              idUser={Number(patient?.userId)}
+              studies={studies}
+              role="pacientes"
+              slug={String(patient?.slug)}
+            />
+          )}
         </div>
       </div>
     </div>
