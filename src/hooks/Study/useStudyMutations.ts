@@ -4,12 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useStudyMutations = () => {
     const queryClient = useQueryClient();
-
     const uploadStudyMutation = useMutation({
         mutationFn: uploadStudy,
         onSuccess: (patient, variables, context) => {
             const userId = Number(variables.get("userId"));
-            console.log(userId, "userIduploadddd")
             queryClient.invalidateQueries({
                 queryKey: ["studies-by-user-id", { userId }]
             });
@@ -23,9 +21,13 @@ export const useStudyMutations = () => {
     });
 
     const deleteStudyMutation = useMutation({
-        mutationFn: (id: number) => deleteStudy(id),
+        mutationFn: ({ studyId }: { studyId: number, userId: number }) => deleteStudy(studyId),
         onSuccess: (patient, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['studiesByUserId'] });
+            const id = variables.userId
+            queryClient.invalidateQueries({
+                queryKey: ["studies-by-user-id", { id }]
+            });
+
             console.log("Study deleted", patient, variables, context);
         },
         onError: (error, variables, context) => {

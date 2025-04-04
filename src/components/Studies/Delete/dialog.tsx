@@ -21,10 +21,12 @@ import ErrorToast from "@/components/Toast/Error";
 interface DeleteStudyDialogProps {
   idStudy: number;
   studies: StudiesWithURL[];
+  userId: number;
 }
 
 export default function DeleteStudyDialog({
   idStudy,
+  userId,
   studies,
 }: DeleteStudyDialogProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -32,11 +34,17 @@ export default function DeleteStudyDialog({
   const { deleteStudyMutation } = useStudyMutations();
   const handleConfirmDelete = async () => {
     try {
-      toast.promise(deleteStudyMutation.mutateAsync(idStudy), {
-        loading: <LoadingToast message="Eliminando estudio..." />,
-        success: <SuccessToast message="Estudio eliminado con éxito!" />,
-        error: <ErrorToast message="Error al eliminar el estudio" />,
-      });
+      toast.promise(
+        deleteStudyMutation.mutateAsync({
+          studyId: idStudy,
+          userId: userId,
+        }),
+        {
+          loading: <LoadingToast message="Eliminando estudio..." />,
+          success: <SuccessToast message="Estudio eliminado con éxito!" />,
+          error: <ErrorToast message="Error al eliminar el estudio" />,
+        }
+      );
     } catch (error) {
       console.error("Error al eliminar el estudio", error);
     } finally {

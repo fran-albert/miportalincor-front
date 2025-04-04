@@ -47,8 +47,7 @@ export function PatientComponent({
           {isFetchingStudies ? (
             <StudiesTableSkeleton />
           ) : (
-            studies &&
-            studies.length > 0 && (
+            studies && (
               <StudiesComponent
                 idUser={Number(patient?.userId)}
                 studies={studies}
