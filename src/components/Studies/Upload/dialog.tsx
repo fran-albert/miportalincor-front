@@ -21,6 +21,7 @@ import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
+
 interface AddStudyProps {
   idUser: number;
 }
@@ -28,31 +29,41 @@ interface AddStudyProps {
 export default function StudyDialog({ idUser }: AddStudyProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
-  // @ts-ignore
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const { register, handleSubmit, reset, setValue, control } = useForm();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { uploadStudyMutation } = useStudyMutations();
+
   const onSubmit: SubmitHandler<any> = async (data) => {
     const formData = new FormData();
 
-    formData.append("StudyTypeId", data.StudyTypeId);
+    if (selectedStudy) {
+      formData.append("studyTypeId", String(selectedStudy.id));
+      formData.append("studyTypeName", selectedStudy.name);
+    } else {
+      formData.append("studyTypeId", data.StudyTypeId);
+      formData.append("studyTypeName", data.StudyTypeName);
+    }
 
     if (idUser) {
-      formData.append("UserId", String(idUser));
+      formData.append("userId", String(idUser));
     }
 
     if (selectedFiles.length > 0) {
       selectedFiles.forEach((file) => {
-        formData.append("StudyFiles", file);
+        formData.append("file", file);
       });
     }
+
     const date = data.date;
     const formattedDateISO = moment(date).toISOString();
-    formData.append("Date", formattedDateISO);
-    formData.append("Note", data.Note);
-    formData.append("DoctorUserId", data.DoctorId);
-    console.log(data.DoctorId, "doctorId");
+    formData.append("date", formattedDateISO);
+    formData.append("note", data.Note);
+
+    if (data.DoctorId) {
+      formData.append("doctorId", data.DoctorId);
+    }
+
     try {
       toast.promise(uploadStudyMutation.mutateAsync({ formData, idUser }), {
         loading: <LoadingToast message="Subiendo nuevo estudio..." />,
@@ -63,6 +74,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
       });
       reset();
       setSelectedFiles([]);
+      setSelectedStudy(null);
       setIsOpen(false);
     } catch (error) {
       console.error("Error al agregar el estudio", error);
@@ -72,11 +84,15 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
   const handleStudyChange = (studyType: StudyType) => {
     setSelectedStudy(studyType);
     setValue("StudyTypeId", studyType.id);
+    setValue("StudyTypeName", studyType.name);
   };
 
   useEffect(() => {
     if (!isOpen) {
       setValue("DoctorId", "");
+      setValue("StudyTypeId", "");
+      setValue("StudyTypeName", "");
+      setSelectedStudy(null);
       reset();
     }
   }, [isOpen, setValue, reset]);
@@ -111,7 +127,12 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
               >
                 Tipo de Estudio
               </Label>
-              <StudyTypeSelect onStudyChange={handleStudyChange} />
+              <StudyTypeSelect
+                selected={selectedStudy || undefined}
+                onStudyChange={handleStudyChange}
+              />
+              <input type="hidden" {...register("StudyTypeId")} />
+              <input type="hidden" {...register("StudyTypeName")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="file">Archivos</Label>
