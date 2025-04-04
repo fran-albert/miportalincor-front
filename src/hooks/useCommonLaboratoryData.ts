@@ -12,7 +12,7 @@ export const useCommonLaboratoryData = ({ id, role }: { id: number, role: "pacie
     ? useDoctor({ auth: true, id })
     : { doctor: null, isLoading: false, error: null };
 
-  const { studiesByUserId = [], isLoadingStudiesByUserId: isLoadingStudies } = useStudy({
+  const { studiesByUserId = [], isLoading: isLoadingStudies } = useStudy({
     idUser: id,
     fetchStudiesByUserId: true,
   });
