@@ -8,18 +8,27 @@ import { StudyTypeSelect } from "@/components/Select/Study/By-Type/select";
 import { StudyYearSelect } from "@/components/Select/Study/By-Year/select";
 import StudiesTable from "../Table";
 import { Link } from "react-router-dom";
+import { StudiesTableSkeleton } from "@/components/Skeleton/Patient";
 
 interface Props {
   studies: StudiesWithURL[];
   idUser: number;
   slug: string;
+  isLoading: boolean;
   role: string;
 }
-const StudiesComponent = ({ studies, idUser, slug, role }: Props) => {
+const StudiesComponent = ({
+  studies,
+  idUser,
+  slug,
+  role,
+  isLoading,
+}: Props) => {
   const { isDoctor } = useRoles();
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
     "Seleccionar tipo de estudio..."
   );
+
   const [selectedYear, setSelectedYear] = useState<string | null>(
     "Seleccionar año..."
   );
@@ -108,10 +117,13 @@ const StudiesComponent = ({ studies, idUser, slug, role }: Props) => {
             </Button>
           </div>
         )}
-        <StudiesTable studies={filteredStudies} idUser={Number(idUser)} />
+        {isLoading ? (
+          <StudiesTableSkeleton />
+        ) : (
+          <StudiesTable studies={filteredStudies} idUser={Number(idUser)} />
+        )}
       </CardContent>
     </Card>
   );
 };
-
 export default StudiesComponent;

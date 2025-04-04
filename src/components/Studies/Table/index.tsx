@@ -33,6 +33,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import StudyUploadModal from "../Upload/upload.study.dialog";
 
 const StudiesTable = ({
   studies,
@@ -57,7 +59,7 @@ const StudiesTable = ({
   const [expandedStudies, setExpandedStudies] = useState<Set<number>>(
     new Set()
   );
-
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const toggleExpand = (studyId: number) => {
     setExpandedStudies((prev) => {
       const newSet = new Set(prev);
@@ -252,7 +254,13 @@ const StudiesTable = ({
       )}
       {(isSecretary || isAdmin) && (
         <div className="text-center mt-4">
-          <StudyDialog idUser={idUser} />
+          {/* <StudyDialog idUser={idUser} /> */}
+          <Button onClick={() => setIsModalOpen(true)}>Agregar Estudio</Button>
+          <StudyUploadModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            patientId={idUser}
+          />
         </div>
       )}
     </div>

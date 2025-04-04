@@ -1,16 +1,12 @@
 import { sleep } from "@/common/helpers/helpers";
 import { apiLaboral } from "@/services/axiosConfig";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 
-interface UploadStudyProps {
-    idUser: number;
-    formData: FormData;
-}
-export const uploadStudy = async (values: UploadStudyProps) => {
+export const uploadStudy = async (values: FormData) => {
     await sleep(2);
-    const { data } = await apiLaboral.post<Study>(
+    const { data } = await apiLaboral.post<StudiesWithURL[]>(
         `/studies/upload-with-processing`,
-        values.formData, {
+        values, {
         headers: {
             "Content-Type": "multipart/form-data",
         },

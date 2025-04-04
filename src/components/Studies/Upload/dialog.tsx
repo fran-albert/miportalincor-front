@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { FaUpload } from "react-icons/fa";
 import { toast } from "sonner";
+
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import moment from "moment-timezone";
@@ -57,6 +58,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
 
     const date = data.date;
     const formattedDateISO = moment(date).toISOString();
+<<<<<<< HEAD
     formData.append("date", formattedDateISO);
     formData.append("note", data.Note);
 
@@ -79,6 +81,39 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }
+=======
+    formData.append("Date", formattedDateISO);
+    formData.append("Note", data.Note);
+    formData.append("DoctorUserId", data.DoctorId);
+    console.log(data.DoctorId, "doctorId");
+    // try {
+    //   const uploadPromise = uploadStudyMutation.mutateAsync({
+    //     formData,
+    //     idUser,
+    //   });
+
+    //   toast.promise(uploadPromise, {
+    //     loading: <LoadingToast message="Subiendo nuevo estudio..." />,
+    //     success: () => {
+    //       // Aquí ocurre SOLO si todo salió bien
+    //       reset();
+    //       setSelectedFiles([]);
+    //       setIsOpen(false);
+    //       // Retorna el componente de toast que quieras mostrar
+    //       return <SuccessToast message="Nuevo estudio subido con exito." />;
+    //     },
+    //     error: () => {
+    //       // Aquí ocurre SOLO si hubo error
+    //       // Mantén el modal abierto para reintentar, si deseas
+    //       return (
+    //         <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
+    //       );
+    //     },
+    //   });
+    // } catch (error) {
+    //   console.error("Error al agregar el estudio", error);
+    // }
+>>>>>>> features/008
   };
 
   const handleStudyChange = (studyType: StudyType) => {
