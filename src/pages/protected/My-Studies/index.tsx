@@ -1,25 +1,20 @@
-import { useStudy } from "@/hooks/Study/useStudy";
-import { useStudyAndImageUrls } from "@/hooks/Study/useStudyAndImageUrls";
 import useUserRole from "@/hooks/useRoles";
 import LoadingAnimation from "@/components/Loading/loading";
 import MyStudiesCardComponent from "@/components/My-Studies";
 import { Helmet } from "react-helmet-async";
+import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
 
 function MyStudiesPage() {
   const { session } = useUserRole();
   const userId = session?.id ? Number(session.id) : undefined;
 
-  const { studiesByUserId = [], isLoadingStudiesByUserId } = useStudy({
-    idUser: userId,
-    fetchStudiesByUserId: true,
-  });
+  const { data: studies, isLoading: isLoadingStudies } =
+    useGetStudyWithUrlByUserId({
+      userId: Number(userId),
+      auth: true,
+    });
 
-  const { data: allUrls = {}, isLoading: isLoadingUrls } = useStudyAndImageUrls(
-    userId,
-    studiesByUserId
-  );
-
-  if (isLoadingStudiesByUserId || isLoadingUrls) {
+  if (isLoadingStudies) {
     return <LoadingAnimation />;
   }
 
@@ -28,10 +23,7 @@ function MyStudiesPage() {
       <Helmet>
         <title>Mis Estudios</title>
       </Helmet>
-      <MyStudiesCardComponent
-        studiesByUserId={studiesByUserId}
-        urls={allUrls}
-      />
+      {studies && <MyStudiesCardComponent studies={studies} />}
     </>
   );
 }
