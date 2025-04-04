@@ -5,6 +5,7 @@ import { PatientComponent } from "@/components/Patients/Component";
 import { useParams } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
 import { Helmet } from "react-helmet-async";
+import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
 
 const PatientPage = () => {
   const params = useParams();
@@ -18,15 +19,15 @@ const PatientPage = () => {
     id,
   });
 
-  const { studiesByUserId = [], isLoadingStudiesByUserId } = useStudy({
-    idUser: id,
-    fetchStudiesByUserId: true,
+  const {
+    data: studies,
+    error: errorStudies,
+    isError,
+    isLoading: isLoadingStudies,
+  } = useGetStudyWithUrlByUserId({
+    userId: id,
+    auth: true,
   });
-
-  const { data: allUrls = {}, isLoading: isLoadingUrls } = useStudyAndImageUrls(
-    id,
-    studiesByUserId
-  );
 
   return (
     <>
@@ -46,14 +47,10 @@ const PatientPage = () => {
         />
       </Helmet>
       {error && <div>Hubo un error al cargar los pacientes.</div>}
-      {isLoading || isLoadingStudiesByUserId || isLoadingUrls ? (
+      {isLoading || isLoadingStudies ? (
         <LoadingAnimation />
       ) : (
-        <PatientComponent
-          patient={patient}
-          urls={allUrls}
-          studiesByUserId={studiesByUserId}
-        />
+        <PatientComponent patient={patient} studies={studies} />
       )}
     </>
   );
