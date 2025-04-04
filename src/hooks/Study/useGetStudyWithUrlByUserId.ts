@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const useGetStudyWithUrlByUserId = ({ auth = true, userId }: Props) => {
-  const { isLoading, isError, error, data } = useQuery({
+  const { isLoading, isError, error, data, isFetching } = useQuery({
     queryKey: ["studies-by-user-id", { userId }],
     queryFn: () => getAllStudyWithUrl(userId),
     staleTime: 1000 * 60,
@@ -16,7 +16,7 @@ export const useGetStudyWithUrlByUserId = ({ auth = true, userId }: Props) => {
 
   return {
     isLoading,
-    isError,
+    isError, isFetching,
     error,
     data,
   };

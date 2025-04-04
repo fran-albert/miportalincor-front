@@ -14,7 +14,7 @@ interface Props {
   studies: StudiesWithURL[];
   idUser: number;
   slug: string;
-  isLoading: boolean;
+  isFetchingStudies: boolean;
   role: string;
 }
 const StudiesComponent = ({
@@ -22,7 +22,7 @@ const StudiesComponent = ({
   idUser,
   slug,
   role,
-  isLoading,
+  isFetchingStudies,
 }: Props) => {
   const { isDoctor } = useRoles();
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
@@ -117,7 +117,7 @@ const StudiesComponent = ({
             </Button>
           </div>
         )}
-        {isLoading ? (
+        {isFetchingStudies ? (
           <StudiesTableSkeleton />
         ) : (
           <StudiesTable studies={filteredStudies} idUser={Number(idUser)} />

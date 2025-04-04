@@ -3,13 +3,16 @@ import BreadcrumbComponent from "@/components/Breadcrumb";
 import { StudiesWithURL } from "@/types/Study/Study";
 import StudiesComponent from "@/components/Studies/Component";
 import PatientCardComponent from "../View/Card/card";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
+import {
+  PatientCardSkeleton,
+  StudiesTableSkeleton,
+} from "@/components/Skeleton/Patient";
 
 interface PatientComponentProps {
   patient: Patient | undefined;
   studies: StudiesWithURL[] | undefined;
   isLoadingPatient: boolean;
-  isLoadingStudies: boolean;
+  isFetchingStudies: boolean;
   isLoadingUrls?: boolean;
   isRefetching?: boolean;
 }
@@ -18,7 +21,7 @@ export function PatientComponent({
   patient,
   studies,
   isLoadingPatient,
-  isLoadingStudies,
+  isFetchingStudies,
 }: PatientComponentProps) {
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -41,15 +44,19 @@ export function PatientComponent({
         )}
 
         <div className="md:grid md:gap-6 space-y-4">
-          {/* <StudiesCardComponent idUser={Number(patient?.userId)} /> */}
-          {studies && (
-            <StudiesComponent
-              idUser={Number(patient?.userId)}
-              studies={studies}
-              role="pacientes"
-              isLoading={isLoadingStudies}
-              slug={String(patient?.slug)}
-            />
+          {isFetchingStudies ? (
+            <StudiesTableSkeleton />
+          ) : (
+            studies &&
+            studies.length > 0 && (
+              <StudiesComponent
+                idUser={Number(patient?.userId)}
+                studies={studies}
+                role="pacientes"
+                isFetchingStudies={isFetchingStudies}
+                slug={String(patient?.slug)}
+              />
+            )
           )}
         </div>
       </div>

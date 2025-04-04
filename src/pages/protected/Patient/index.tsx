@@ -26,16 +26,15 @@ const PatientPage = () => {
 
   const {
     data: studies,
-    error: errorStudies,
-    isError,
     isLoading: isLoadingStudies,
+    isFetching,
   } = useGetStudyWithUrlByUserId({
     userId: id,
     auth: true,
   });
 
   const isFirstLoadingPatient = isLoadingPatient && !patient;
-  const isFirstLoadingStudies = isLoadingStudies && studies?.length === 0;
+  const isFirstLoadingStudies = isLoadingStudies;
 
   // Renderizamos un placeholder o skeleton mientras los datos se cargan
   if (isFirstLoadingPatient && isFirstLoadingStudies) {
@@ -76,7 +75,7 @@ const PatientPage = () => {
         patient={patient}
         studies={studies}
         isLoadingPatient={isFirstLoadingPatient}
-        isLoadingStudies={isFirstLoadingStudies}
+        isFetchingStudies={isFetching}
       />
     </>
   );
