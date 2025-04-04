@@ -36,7 +36,6 @@ const PatientPage = () => {
   const isFirstLoadingPatient = isLoadingPatient && !patient;
   const isFirstLoadingStudies = isLoadingStudies;
 
-  // Renderizamos un placeholder o skeleton mientras los datos se cargan
   if (isFirstLoadingPatient && isFirstLoadingStudies) {
     return (
       <div className="container space-y-2 mt-2">
