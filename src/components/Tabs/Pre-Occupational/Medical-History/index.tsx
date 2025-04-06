@@ -1,7 +1,7 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { Accordion } from "@/components/ui/accordion";
 import { Pencil } from "lucide-react";
-import WorkerInformationAccordion from "@/components/Accordion/Pre-Occupational/Worker-Information";
+// import WorkerInformationAccordion from "@/components/Accordion/Pre-Occupational/Worker-Information";
 import OccupationalHistoryAccordion from "@/components/Accordion/Pre-Occupational/Occupational-History";
 import MedicalEvaluationAccordion from "@/components/Accordion/Pre-Occupational/Medical-Evaluation";
 import { Button } from "@/components/ui/button";
@@ -14,48 +14,62 @@ import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import { useInitializeMedicalEvaluation } from "@/common/helpers/maps";
+// const workerMapping: Record<string, string> = {
+//   lugarNacimiento: "Lugar de nacimiento",
+//   nacionalidad: "Nacionalidad",
+//   gradoInstruccion: "Grado de instrucción",
+//   domicilio: "Domicilio",
+//   seguro: "Seguro ARS (Privado)",
+//   nroAfiliacion: "Nro. de Afiliación",
+//   estadoCivil: "Estado civil",
+//   nroHijos: "N° de hijos",
+//   nroDependientes: "N° de dependientes",
+// };
 
-const workerMapping: Record<string, string> = {
-  lugarNacimiento: "Lugar de nacimiento",
-  nacionalidad: "Nacionalidad",
-  gradoInstruccion: "Grado de instrucción",
-  domicilio: "Domicilio",
-  seguro: "Seguro ARS (Privado)",
-  nroAfiliacion: "Nro. de Afiliación",
-  estadoCivil: "Estado civil",
-  nroHijos: "N° de hijos",
-  nroDependientes: "N° de dependientes",
-};
-
-const buildWorkerPayload = (
-  fields: DataType[],
-  workerInfo: any
-): { dataTypeId: number; value: string }[] => {
-  const workerDataValues = Object.entries(workerInfo)
-    .map(([key, value]) => {
-      const fieldName = workerMapping[key];
-      if (!fieldName) return null;
-      const field = fields.find((f) => f.name === fieldName);
-      if (!field) return null;
-      return { dataTypeId: field.id, value: String(value) };
-    })
-    .filter((item) => item !== null) as { dataTypeId: number; value: string }[];
-  return workerDataValues;
-};
+// const buildWorkerPayload = (
+//   fields: DataType[],
+//   workerInfo: any
+// ): { dataTypeId: number; value: string }[] => {
+//   const workerDataValues = Object.entries(workerInfo)
+//     .map(([key, value]) => {
+//       const fieldName = workerMapping[key];
+//       if (!fieldName) return null;
+//       const field = fields.find((f) => f.name === fieldName);
+//       if (!field) return null;
+//       return { dataTypeId: field.id, value: String(value) };
+//     })
+//     .filter((item) => item !== null) as { dataTypeId: number; value: string }[];
+//   return workerDataValues;
+// };
 
 const buildOccupationalHistoryPayload = (
   occupationalHistory: { id: string; description: string }[],
   fields: DataType[]
-): { dataTypeId: number; value: string }[] => {
+): { dataTypeId: number; value: string; id?: number }[] => {
   const antecedentesField = fields.find(
     (f) =>
       f.category === "ANTECEDENTES" && f.name === "Antecedentes ocupacionales"
   );
   if (!antecedentesField) return [];
+
   return occupationalHistory
-    .map((item) => item.description.trim())
-    .filter((desc) => desc !== "")
-    .map((desc) => ({ dataTypeId: antecedentesField.id, value: desc }));
+    .filter((item) => item.description.trim() !== "")
+    .map((item) => {
+      // Si el id es real (no es temporal), lo incluimos; si es temporal, se omite.
+      if (!item.id.startsWith("temp-")) {
+        return {
+          id: parseInt(item.id),
+          dataTypeId: antecedentesField.id,
+          value: item.description.trim(),
+        };
+      }
+      return {
+        dataTypeId: antecedentesField.id,
+        value: item.description.trim(),
+      };
+    });
 };
 
 const buildMedicalEvaluationPayload = (
@@ -111,6 +125,70 @@ const buildMedicalEvaluationPayload = (
       value: String(medicalEvaluation.examenClinico.imc),
     });
   }
+  const perimetroAbdominalField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Perimetro Abdominal"
+  );
+  if (
+    perimetroAbdominalField &&
+    medicalEvaluation.examenClinico.perimetroAbdominal
+  ) {
+    payloadItems.push({
+      dataTypeId: perimetroAbdominalField.id,
+      value: String(medicalEvaluation.examenClinico.perimetroAbdominal),
+    });
+  }
+
+  const frecuenciaCardiacaField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Cardíaca"
+  );
+  if (
+    frecuenciaCardiacaField &&
+    medicalEvaluation.examenClinico.frecuenciaCardiaca
+  ) {
+    payloadItems.push({
+      dataTypeId: frecuenciaCardiacaField.id,
+      value: String(medicalEvaluation.examenClinico.frecuenciaCardiaca),
+    });
+  }
+
+  const frecuenciaRespiratoriaField = fields.find(
+    (f) =>
+      f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Respiratoria"
+  );
+  if (
+    frecuenciaRespiratoriaField &&
+    medicalEvaluation.examenClinico.frecuenciaRespiratoria
+  ) {
+    payloadItems.push({
+      dataTypeId: frecuenciaRespiratoriaField.id,
+      value: String(medicalEvaluation.examenClinico.frecuenciaRespiratoria),
+    });
+  }
+
+  const presionSistolicaField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Presión Sistólica"
+  );
+  if (
+    presionSistolicaField &&
+    medicalEvaluation.examenClinico.presionSistolica
+  ) {
+    payloadItems.push({
+      dataTypeId: presionSistolicaField.id,
+      value: String(medicalEvaluation.examenClinico.presionSistolica),
+    });
+  }
+  const presionDiastolicaField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Presión Diastólica"
+  );
+  if (
+    presionDiastolicaField &&
+    medicalEvaluation.examenClinico.presionDiastolica
+  ) {
+    payloadItems.push({
+      dataTypeId: presionDiastolicaField.id,
+      value: String(medicalEvaluation.examenClinico.presionDiastolica),
+    });
+  }
   const examenFisicoItems = [
     { id: "piel", label: "Piel y faneras" },
     { id: "ojos", label: "Ojos" },
@@ -158,10 +236,12 @@ export default function MedicalHistoryTab({
   isEditing,
   setIsEditing,
   medicalEvaluationId,
+  dataValues,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
   medicalEvaluationId: number;
+  dataValues: DataValue[] | undefined;
 }) {
   const { data: fields } = useDataTypes({
     auth: true,
@@ -174,15 +254,15 @@ export default function MedicalHistoryTab({
     ],
   });
   const { createDataValuesMutation } = useDataValuesMutations();
-
+  useInitializeMedicalEvaluation(dataValues);
   const formData = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
-  const workerInfo = formData.workerInformation;
+  // const workerInfo = formData.workerInformation;
   const occupationalHistory = formData.occupationalHistory;
   const medicalEvaluation = formData.medicalEvaluation;
 
-  const workerDataValues = buildWorkerPayload(fields, workerInfo);
+  // const workerDataValues = buildWorkerPayload(fields, workerInfo);
   const antecedentesDataValues = buildOccupationalHistoryPayload(
     occupationalHistory,
     fields
@@ -193,7 +273,7 @@ export default function MedicalHistoryTab({
   );
 
   const combinedDataValues = [
-    ...workerDataValues,
+    // ...workerDataValues,
     ...antecedentesDataValues,
     ...medicalEvaluationDataValues,
   ];
@@ -222,9 +302,15 @@ export default function MedicalHistoryTab({
       )}
       <Accordion type="multiple" className="w-full space-y-4">
         {/* <InstitutionInformation isEditing={isEditing} fields={fields} /> */}
-        <WorkerInformationAccordion isEditing={isEditing} />
-        <OccupationalHistoryAccordion isEditing={isEditing} fields={fields} />
-        <MedicalEvaluationAccordion isEditing={isEditing} />
+        {/* <WorkerInformationAccordion isEditing={isEditing} /> */}
+        <OccupationalHistoryAccordion
+          isEditing={isEditing}
+          dataValues={dataValues}
+        />
+        <MedicalEvaluationAccordion
+          isEditing={isEditing}
+          dataValues={dataValues}
+        />
       </Accordion>
       {isEditing && (
         <div className="flex justify-end gap-4 mt-6">

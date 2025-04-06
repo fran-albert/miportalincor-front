@@ -1,35 +1,39 @@
 import { useState } from "react";
 import useRoles from "@/hooks/useRoles";
 import { BsFillFileTextFill } from "react-icons/bs";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StudyTypeSelect } from "@/components/Select/Study/By-Type/select";
 import { StudyYearSelect } from "@/components/Select/Study/By-Year/select";
 import StudiesTable from "../Table";
 import { Link } from "react-router-dom";
+import { StudiesTableSkeleton } from "@/components/Skeleton/Patient";
+
+interface Props {
+  studies: StudiesWithURL[];
+  idUser: number;
+  slug: string;
+  isFetchingStudies: boolean;
+  role: string;
+}
 const StudiesComponent = ({
-  studiesByUserId,
+  studies,
   idUser,
-  urls,
   slug,
   role,
-}: {
-  studiesByUserId: Study[];
-  idUser?: number;
-  slug?: string;
-  role?: string;
-  urls: any;
-}) => {
+  isFetchingStudies,
+}: Props) => {
   const { isDoctor } = useRoles();
   const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
     "Seleccionar tipo de estudio..."
   );
+
   const [selectedYear, setSelectedYear] = useState<string | null>(
     "Seleccionar año..."
   );
 
-  const groupStudiesByType = (studiesByUserId: Study[]) => {
+  const groupStudiesByType = (studiesByUserId: StudiesWithURL[]) => {
     if (!Array.isArray(studiesByUserId)) {
       return {};
     }
@@ -42,10 +46,10 @@ const StudiesComponent = ({
       }
       acc[name].push(study);
       return acc;
-    }, {} as Record<string, Study[]>);
+    }, {} as Record<string, StudiesWithURL[]>);
   };
 
-  const groupStudiesByYear = (studiesByUserId: Study[]) => {
+  const groupStudiesByYear = (studiesByUserId: StudiesWithURL[]) => {
     return studiesByUserId?.reduce((acc, study) => {
       if (!study.date) {
         return acc;
@@ -57,13 +61,13 @@ const StudiesComponent = ({
       }
       acc[year].push(study);
       return acc;
-    }, {} as Record<string, Study[]>);
+    }, {} as Record<string, StudiesWithURL[]>);
   };
 
-  const groupedStudies = groupStudiesByType(studiesByUserId);
-  const groupedYears = groupStudiesByYear(studiesByUserId);
+  const groupedStudies = groupStudiesByType(studies);
+  const groupedYears = groupStudiesByYear(studies);
 
-  const filteredStudies = studiesByUserId.filter((study) => {
+  const filteredStudies = studies.filter((study) => {
     const matchesType =
       selectedStudyType === "Seleccionar tipo de estudio..." ||
       study.studyType?.name === selectedStudyType;
@@ -113,14 +117,13 @@ const StudiesComponent = ({
             </Button>
           </div>
         )}
-        <StudiesTable
-          studiesByUserId={filteredStudies}
-          idUser={Number(idUser)}
-          urls={urls}
-        />
+        {isFetchingStudies ? (
+          <StudiesTableSkeleton />
+        ) : (
+          <StudiesTable studies={filteredStudies} idUser={Number(idUser)} />
+        )}
       </CardContent>
     </Card>
   );
 };
-
 export default StudiesComponent;

@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { formatCuilCuit } from "@/common/helpers/helpers";
+import { formatAddress, formatCuilCuit } from "@/common/helpers/helpers";
 import { Link } from "react-router-dom";
 import { Company } from "@/types/Company/Company";
 import DeleteCompanyDialog from "../Delete";
@@ -49,6 +49,17 @@ export const getColumns = (roles: {
       cell: ({ row }) => (
         <div className="flex items-center">
           <p className="text-sm font-medium">{row.original.email}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: " ",
+      header: "Dirección",
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <p className="text-sm font-medium">
+            {formatAddress(row.original.address)}
+          </p>
         </div>
       ),
     },

@@ -1,5 +1,3 @@
-"use client";
-
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { Input } from "@/components/ui/input";

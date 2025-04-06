@@ -1,5 +1,3 @@
-"use client";
-
 import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { ClipboardPlus } from "lucide-react";
 import { NutritionTable } from "../Table/table";
@@ -46,7 +44,6 @@ const NutritionCard = ({
     toast.promise(addNutritionDataMutation.mutateAsync(newEntry), {
       loading: <LoadingToast message="Agregando nueva entrada..." />,
       success: (data) => {
-        console.log("Respuesta de la mutación:", data);
         setNutritionData((prev) => [...prev, data]);
         return <SuccessToast message="Nueva entrada agregada con éxito" />;
       },

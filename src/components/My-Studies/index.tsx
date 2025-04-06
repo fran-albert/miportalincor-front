@@ -10,7 +10,7 @@ import { FaRegFilePdf, FaRegImage } from "react-icons/fa";
 import { formatDate } from "@/common/helpers/helpers";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import { Search } from "@/components/ui/search";
 import {
   Pagination,
@@ -21,13 +21,7 @@ import {
   PaginationPrevious,
 } from "../ui/pagination";
 
-const MyStudiesCardComponent = ({
-  studiesByUserId,
-  urls,
-}: {
-  studiesByUserId: Study[];
-  urls: any;
-}) => {
+const MyStudiesCardComponent = ({ studies }: { studies: StudiesWithURL[] }) => {
   const [expandedStudies, setExpandedStudies] = useState<Set<number>>(
     new Set()
   );
@@ -47,14 +41,15 @@ const MyStudiesCardComponent = ({
     });
   };
 
-  const filteredStudies = studiesByUserId
-  .filter((study) => study.locationS3) 
-  .filter(
-    (study) =>
-      study.studyType?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.note?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+  const filteredStudies = studies
+    .filter((study) => study.locationS3)
+    .filter(
+      (study) =>
+        study.studyType?.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        study.note?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const indexOfLastStudy = currentPage * studiesPerPage;
   const indexOfFirstStudy = indexOfLastStudy - studiesPerPage;
@@ -105,19 +100,18 @@ const MyStudiesCardComponent = ({
                     </p>
                     <p className="text-sm mb-4">{study.note}</p>
                     <div className="flex flex-wrap gap-2">
-                      {study.locationS3 ? (
+                      {study.signedUrl && (
                         <Button
-                          onClick={() =>
-                            window.open(urls[study.id]?.pdfUrl || "#", "_blank")
-                          }
+                          onClick={() => window.open(study.signedUrl, "_blank")}
                           variant="outline"
                           size="sm"
                         >
                           Ver PDF
                         </Button>
-                      ) : null}
+                      )}
                       {study.studyType?.id === 2 &&
-                        urls?.[study.id]?.imageUrls?.length > 0 && (
+                        study.ultrasoundImages &&
+                        study.ultrasoundImages.length > 0 && (
                           <Button
                             onClick={() => toggleExpand(study.id)}
                             variant="outline"
@@ -131,16 +125,16 @@ const MyStudiesCardComponent = ({
                     </div>
                   </CardContent>
                   <AnimatePresence>
-                    {expandedStudies.has(study.id) && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <CardFooter className="flex flex-col items-start gap-2 pt-4 border-t">
-                          {urls[study.id]?.imageUrls?.map(
-                            (image: string, idx: number) => (
+                    {expandedStudies.has(study.id) &&
+                      study.ultrasoundImages && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <CardFooter className="flex flex-col items-start gap-2 pt-4 border-t">
+                            {study.ultrasoundImages.map((image, idx) => (
                               <div
                                 key={`${study.id}-${idx}`}
                                 className="flex items-center gap-2 w-full"
@@ -153,18 +147,19 @@ const MyStudiesCardComponent = ({
                                   Imagen de Ecografía {idx + 1}
                                 </span>
                                 <Button
-                                  onClick={() => window.open(image, "_blank")}
+                                  onClick={() =>
+                                    window.open(image.signedUrl, "_blank")
+                                  }
                                   variant="outline"
                                   size="sm"
                                 >
                                   Ver
                                 </Button>
                               </div>
-                            )
-                          )}
-                        </CardFooter>
-                      </motion.div>
-                    )}
+                            ))}
+                          </CardFooter>
+                        </motion.div>
+                      )}
                   </AnimatePresence>
                 </Card>
               </motion.div>
