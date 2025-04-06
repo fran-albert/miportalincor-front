@@ -1,17 +1,28 @@
 import { Doctor } from "@/types/Doctor/Doctor";
 import BreadcrumbComponent from "@/components/Breadcrumb";
-import { Study } from "@/types/Study/Study";
+import { StudiesWithURL } from "@/types/Study/Study";
 import StudiesComponent from "@/components/Studies/Component";
 import DoctorCardComponent from "../View/Card/card";
+import {
+  PatientCardSkeleton,
+  StudiesTableSkeleton,
+} from "@/components/Skeleton/Patient";
+
+interface Props {
+  doctor: Doctor | undefined;
+  studies: StudiesWithURL[] | undefined;
+  isLoadingDoctor: boolean;
+  isFetchingStudies: boolean;
+  isLoadingUrls?: boolean;
+  isRefetching?: boolean;
+}
+
 export function DoctorComponent({
   doctor,
-  urls,
-  studiesByUserId,
-}: {
-  doctor: Doctor | undefined;
-  urls: any;
-  studiesByUserId: Study[];
-}) {
+  studies,
+  isLoadingDoctor,
+  isFetchingStudies,
+}: Props) {
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Médicos", href: "/medicos" },
@@ -24,16 +35,26 @@ export function DoctorComponent({
     <div className="container space-y-2 mt-2">
       <BreadcrumbComponent items={breadcrumbItems} />
       <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-        {doctor && <DoctorCardComponent doctor={doctor} />}
+        {isLoadingDoctor ? (
+          <PatientCardSkeleton />
+        ) : (
+          doctor && <DoctorCardComponent doctor={doctor} />
+        )}
+
         <div className="md:grid md:gap-6 space-y-4">
-          <StudiesComponent
-            idUser={Number(doctor?.userId)}
-            studiesByUserId={studiesByUserId}
-            role="medicos"
-            urls={urls}
-            slug={String(doctor?.slug)}
-          />
-          {/* <StudiesCardComponent idUser={Number(doctor?.userId)} /> */}
+          {isFetchingStudies ? (
+            <StudiesTableSkeleton />
+          ) : (
+            studies && (
+              <StudiesComponent
+                idUser={Number(doctor?.userId)}
+                studies={studies}
+                role="medicos"
+                isFetchingStudies={isFetchingStudies}
+                slug={String(doctor?.slug)}
+              />
+            )
+          )}
         </div>
       </div>
     </div>

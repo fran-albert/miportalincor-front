@@ -24,3 +24,18 @@ export interface StudySection {
   title: string;
   files: UploadedFile[];
 }
+export interface StudiesWithURL {
+  id: number;
+  locationS3: string;
+  studyTypeId: number;
+  studyType: StudyType;
+  date: Date;
+  note: string;
+  created: Date;
+  signedUrl: string;
+  ultrasoundImages: {
+    id: number,
+    locationS3: string,
+    signedUrl: string,
+  }[]
+}
