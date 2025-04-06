@@ -172,6 +172,7 @@ const StudiesTable = ({
                         {(isDoctor || isSecretary || isAdmin) && (
                           <DeleteStudyDialog
                             studies={studies}
+                            userId={idUser}
                             idStudy={study.id}
                           />
                         )}
