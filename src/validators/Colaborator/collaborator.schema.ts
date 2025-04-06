@@ -9,6 +9,9 @@ export const collaboratorSchema = z.object({
     .string({ required_error: "Campo Requerido." })
     .min(2, "Mínimo 2 caracteres")
     .max(50, "Máximo 50 caracteres"),
+  positionJob: z
+    .string({ required_error: "Campo Requerido." })
+    .min(2, "Mínimo 2 caracteres"),
   userName: z
     .string({ required_error: "Campo Requerido." })
     .regex(/^\d{7,8}$/, "Debe ser un DNI válido de 7 u 8 dígitos"),

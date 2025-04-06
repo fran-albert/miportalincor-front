@@ -33,9 +33,8 @@ import { StateSelect } from "@/components/Select/State/select";
 import { City } from "@/types/City/City";
 import { useState } from "react";
 import { State } from "@/types/State/State";
-import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
+// import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { CitySelect } from "@/components/Select/City/select";
-import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 import CollaboratorAvatar from "../Avatar";
 
 function dataURLtoFile(dataurl: string, filename: string): File {
@@ -68,13 +67,13 @@ export function CreateCollaboratorComponent() {
     }
   };
 
-  const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
-    if (healthInsurance.id !== undefined) {
-      setValue("healthInsuranceId", String(healthInsurance.id));
-    } else {
-      console.error("El seguro de salud no tiene un ID válido");
-    }
-  };
+  // const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
+  //   if (healthInsurance.id !== undefined) {
+  //     setValue("healthInsuranceId", String(healthInsurance.id));
+  //   } else {
+  //     console.error("El seguro de salud no tiene un ID válido");
+  //   }
+  // };
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -365,19 +364,16 @@ export function CreateCollaboratorComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="healthInsuranceId"
-                      render={() => (
+                      name="postionJob"
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-black">
-                            Obra Social
+                            Puesto de Trabajo
                           </FormLabel>
                           <FormControl>
-                            <HealthInsuranceSelect
-                              name="healthInsuranceId" // Propiedad agregada para sincronizar nombres
-                              onHealthInsuranceChange={
-                                handleHealthInsuranceChange
-                              }
-                              control={control}
+                            <Input
+                              {...field}
+                              placeholder="Ingresar puesto..."
                             />
                           </FormControl>
                           <FormMessage />

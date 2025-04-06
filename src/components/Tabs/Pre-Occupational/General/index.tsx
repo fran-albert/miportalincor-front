@@ -1,8 +1,5 @@
- 
 import { TabsContent } from "@/components/ui/tabs";
 import { Accordion } from "@/components/ui/accordion";
-import GeneralInfoAccordion from "@/components/Accordion/Pre-Occupational/General-Info";
-import TestsAccordion from "@/components/Accordion/Pre-Occupational/Tests";
 import ExamsResultsAccordion from "@/components/Accordion/Pre-Occupational/Exam-Results";
 import ConclusionAccordion from "@/components/Accordion/Pre-Occupational/Conclusion";
 import { Pencil } from "lucide-react";
@@ -34,18 +31,7 @@ export default function GeneralTab({
           <Pencil className="w-4 h-4" /> Habilitar Edición
         </p>
       )}
-
       <Accordion type="multiple" className="w-full space-y-4">
-        <GeneralInfoAccordion
-          isEditing={isEditing}
-          fields={generalCategory}
-          dataValues={dataValues}
-        />
-        <TestsAccordion
-          isEditing={isEditing}
-          fields={generalCategory}
-          dataValues={dataValues}
-        />
         <ExamsResultsAccordion
           isEditing={isEditing}
           fields={generalCategory}

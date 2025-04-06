@@ -34,10 +34,10 @@ import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StateSelect } from "@/components/Select/State/select";
 import { CitySelect } from "@/components/Select/City/select";
-import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
+// import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 import { State } from "@/types/State/State";
 import { City } from "@/types/City/City";
-import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
+// import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { useState as useStatesHook } from "@/hooks/State/useState";
 
@@ -93,11 +93,12 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       userName: collaborator.userName || "",
       birthDate: getValidDateString(String(collaborator.birthDate)) || "",
       phone: collaborator.phone || "",
+      positionJob: collaborator.positionJob || "",
       gender: collaborator.gender || "",
       email: collaborator.email || "",
       idCompany: collaborator.company?.id || 0,
-      healthInsuranceId: collaborator.healthInsuranceId || 0,
-      affiliationNumber: collaborator.affiliationNumber || "",
+      // healthInsuranceId: collaborator.healthInsuranceId || 0,
+      // affiliationNumber: collaborator.affiliationNumber || "",
       address: {
         id: collaborator.addressData?.id,
         street: collaborator.addressData?.street || "",
@@ -150,11 +151,11 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
     }
   };
 
-  const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
-    if (healthInsurance.id !== undefined) {
-      setValue("healthInsuranceId", healthInsurance.id);
-    }
-  };
+  // const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
+  //   if (healthInsurance.id !== undefined) {
+  //     setValue("healthInsuranceId", healthInsurance.id);
+  //   }
+  // };
 
   async function onSubmit(data: FormValues) {
     try {
@@ -164,13 +165,14 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       formData.append("userName", data.userName);
       formData.append("birthDate", data.birthDate);
       formData.append("phone", data.phone);
+      formData.append("positionJob", data.positionJob);
       formData.append("gender", data.gender);
       formData.append("email", data.email);
       formData.append("idCompany", String(data.idCompany));
-      formData.append("healthInsuranceId", String(data.healthInsuranceId));
-      if (data.affiliationNumber) {
-        formData.append("affiliationNumber", data.affiliationNumber);
-      }
+      // formData.append("healthInsuranceId", String(data.healthInsuranceId));
+      // if (data.affiliationNumber) {
+      //   formData.append("affiliationNumber", data.affiliationNumber);
+      // }
 
       const selectedStateData = states.find(
         (state) => state.id === data.address.city.state.id
@@ -186,7 +188,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
           id: data.address.city.id,
           name: data.address.city.name,
           state: selectedStateData || {
-            id: Number(data.address.city.state), 
+            id: Number(data.address.city.state),
             name:
               states.find((s) => s.id === data.address.city.state.id)?.name ||
               "",
@@ -194,7 +196,6 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
           },
         },
       };
-      console.log(addressData, "addresDATA")
       formData.append("addressData", JSON.stringify(addressData));
 
       if (data.file) {
@@ -431,27 +432,21 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                   />
                   <FormField
                     control={form.control}
-                    name="healthInsuranceId"
-                    render={() => (
+                    name="positionJob"
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-black">
-                          Obra Social
+                          Puesto de Trabajo
                         </FormLabel>
                         <FormControl>
-                          <HealthInsuranceSelect
-                            control={control}
-                            defaultValue={collaborator.healthInsurance}
-                            onHealthInsuranceChange={
-                              handleHealthInsuranceChange
-                            }
-                          />
+                          <Input {...field} placeholder="Ingresar puesto de trabajo..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="affiliationNumber"
                   render={({ field }) => (
@@ -468,7 +463,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
               </div>
 
               {/* Datos de Dirección */}

@@ -1,20 +1,19 @@
- 
-
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 
 interface Props {
   isEditing: boolean;
+  dataValues?: DataValue[];
 }
 
 export default function MedicalEvaluationAccordion({ isEditing }: Props) {
@@ -22,6 +21,18 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
+
+  // Función para calcular el IMC a partir de la talla y el peso
+  const computeImc = () => {
+    const { talla, peso } = medicalEvaluation.examenClinico;
+    const heightInCm = parseFloat(talla);
+    const weight = parseFloat(peso);
+    if (!isNaN(heightInCm) && heightInCm > 0 && !isNaN(weight)) {
+      const heightInM = heightInCm / 100;
+      return (weight / (heightInM * heightInM)).toFixed(2);
+    }
+    return "";
+  };
 
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (
@@ -38,9 +49,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   // Actualizar "tiempo libre"
-  const handleTiempoLibreChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handleTiempoLibreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(
       setFormData({
         medicalEvaluation: {
@@ -51,22 +60,34 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
     );
   };
 
-  // Actualizar campos de Examen Clínico
+  // Actualizar campos de Examen Clínico y Signos Vitales
   const handleExamenClinicoChange = (
     field: keyof typeof medicalEvaluation.examenClinico,
     value: string
   ) => {
+    const updatedExam = { ...medicalEvaluation.examenClinico, [field]: value };
+
+    if (field === "talla" || field === "peso") {
+      const heightInCm = parseFloat(updatedExam.talla);
+      const weight = parseFloat(updatedExam.peso);
+      if (!isNaN(heightInCm) && heightInCm > 0 && !isNaN(weight)) {
+        const heightInM = heightInCm / 100;
+        updatedExam.imc = (weight / (heightInM * heightInM)).toFixed(2);
+      } else {
+        updatedExam.imc = "";
+      }
+    }
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenClinico: { ...medicalEvaluation.examenClinico, [field]: value },
+          examenClinico: updatedExam,
         },
       })
     );
   };
 
-  // Actualizar selección de cada ítem de Examen Físico
   const handleExamenFisicoSelectedChange = (
     testId: string,
     selectedValue: "si" | "no"
@@ -75,7 +96,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       selected: "",
       observaciones: "",
     };
-    // Alternar el valor: si ya estaba seleccionado, se desmarca
     const newSelected = current.selected === selectedValue ? "" : selectedValue;
     dispatch(
       setFormData({
@@ -90,7 +110,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
     );
   };
 
-  // Actualizar observaciones de un ítem de Examen Físico
   const handleExamenFisicoObservacionesChange = (
     testId: string,
     value: string
@@ -158,9 +177,12 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                 onChange={handleAspectoGeneralChange}
               />
             ) : (
-              <div className="p-2 border rounded bg-gray-50">
-                {medicalEvaluation.aspectoGeneral || ""}
-              </div>
+              <Input
+                id="aspecto-general"
+                readOnly
+                value={medicalEvaluation.aspectoGeneral || ""}
+                onChange={handleAspectoGeneralChange}
+              />
             )}
           </div>
 
@@ -168,16 +190,17 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
           <div className="space-y-2">
             <Label htmlFor="tiempo-libre">Tiempo libre</Label>
             {isEditing ? (
-              <Textarea
+              <Input
                 id="tiempo-libre"
                 value={medicalEvaluation.tiempoLibre || ""}
                 onChange={handleTiempoLibreChange}
-                className="min-h-[100px]"
               />
             ) : (
-              <div className="p-2 border rounded bg-gray-50 min-h-[100px]">
-                {medicalEvaluation.tiempoLibre || ""}
-              </div>
+              <Input
+                id="tiempo-libre"
+                value={medicalEvaluation.tiempoLibre || ""}
+                readOnly
+              />
             )}
           </div>
 
@@ -187,6 +210,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
               Examen Clínico
             </h4>
             <div className="grid gap-4 md:grid-cols-3">
+              {/* Talla */}
               <div className="space-y-2">
                 <Label htmlFor="talla">Talla</Label>
                 {isEditing ? (
@@ -198,11 +222,14 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     }
                   />
                 ) : (
-                  <div className="p-2 border rounded bg-gray-50">
-                    {medicalEvaluation.examenClinico.talla || ""}
-                  </div>
+                  <Input
+                    id="talla"
+                    value={medicalEvaluation.examenClinico.talla || ""}
+                    readOnly
+                  />
                 )}
               </div>
+              {/* Peso */}
               <div className="space-y-2">
                 <Label htmlFor="peso">Peso</Label>
                 {isEditing ? (
@@ -214,20 +241,158 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     }
                   />
                 ) : (
-                  <div className="p-2 border rounded bg-gray-50">
-                    {medicalEvaluation.examenClinico.peso || ""}
-                  </div>
+                  <Input
+                    id="peso"
+                    value={medicalEvaluation.examenClinico.peso || ""}
+                    readOnly
+                  />
                 )}
               </div>
+              {/* IMC calculado */}
               <div className="space-y-2">
                 <Label htmlFor="imc">IMC</Label>
-                <Input
-                  id="imc"
-                  value={medicalEvaluation.examenClinico.imc || ""}
-                  onChange={(e) =>
-                    handleExamenClinicoChange("imc", e.target.value)
-                  }
-                />
+                <div className="p-2 border rounded bg-gray-50" id="imc">
+                  {computeImc()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Perímetro Abdominal */}
+              <div className="space-y-2">
+                <Label htmlFor="perimetro-abdominal">Perímetro Abdominal</Label>
+                {isEditing ? (
+                  <Input
+                    id="perimetro-abdominal"
+                    value={
+                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "perimetroAbdominal",
+                        e.target.value
+                      )
+                    }
+                  />
+                ) : (
+                  <Input
+                    id="perimetro-abdominal"
+                    readOnly
+                    value={
+                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
+                    }
+                  />
+                )}
+              </div>
+              {/* Frecuencia Cardíaca */}
+              <div className="space-y-2">
+                <Label htmlFor="frecuencia-cardiaca">Frecuencia Cardíaca</Label>
+                {isEditing ? (
+                  <Input
+                    id="frecuencia-cardiaca"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "frecuenciaCardiaca",
+                        e.target.value
+                      )
+                    }
+                  />
+                ) : (
+                  <Input
+                    id="frecuencia-cardiaca"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
+                    }
+                    readOnly
+                  />
+                )}
+              </div>
+              {/* Frecuencia Respiratoria */}
+              <div className="space-y-2">
+                <Label htmlFor="frecuencia-respiratoria">
+                  Frecuencia Respiratoria
+                </Label>
+                {isEditing ? (
+                  <Input
+                    id="frecuencia-respiratoria"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
+                      ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "frecuenciaRespiratoria",
+                        e.target.value
+                      )
+                    }
+                  />
+                ) : (
+                  <Input
+                    id="frecuencia-respiratoria"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
+                      ""
+                    }
+                    readOnly
+                  />
+                )}
+              </div>
+              {/* Presión Sistólica */}
+              <div className="space-y-2">
+                <Label htmlFor="presion-sistolica">Presión Sistólica</Label>
+                {isEditing ? (
+                  <Input
+                    id="presion-sistolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionSistolica || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "presionSistolica",
+                        e.target.value
+                      )
+                    }
+                  />
+                ) : (
+                  <Input
+                    id="presion-sistolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionSistolica || ""
+                    }
+                    readOnly
+                  />
+                )}
+              </div>
+              {/* Presión Diastólica */}
+              <div className="space-y-2">
+                <Label htmlFor="presion-diastolica">Presión Diastólica</Label>
+                {isEditing ? (
+                  <Input
+                    id="presion-diastolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionDiastolica || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "presionDiastolica",
+                        e.target.value
+                      )
+                    }
+                  />
+                ) : (
+                  <Input
+                    id="presion-diastolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionDiastolica || ""
+                    }
+                    readOnly
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -275,23 +440,24 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     />
                     <Label htmlFor={`${item.id}-no`}>No</Label>
                   </div>
-                  {/* Input para observaciones */}
-                  {isEditing ? (
-                    <Input
-                      className="max-w-[200px]"
-                      value={current.observaciones}
-                      onChange={(e) =>
-                        handleExamenFisicoObservacionesChange(
-                          item.id,
-                          e.target.value
-                        )
-                      }
-                    />
-                  ) : (
-                    <div className="p-2 border rounded bg-gray-50 max-w-[200px]">
-                      {current.observaciones}
-                    </div>
-                  )}
+                  {/* Input para observaciones - solo mostrar si "Sí" está seleccionado */}
+                  {current.selected === "si" &&
+                    (isEditing ? (
+                      <Input
+                        className="max-w-[200px]"
+                        value={current.observaciones}
+                        onChange={(e) =>
+                          handleExamenFisicoObservacionesChange(
+                            item.id,
+                            e.target.value
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="p-2 border rounded bg-gray-50 max-w-[200px]">
+                        {current.observaciones}
+                      </div>
+                    ))}
                 </div>
               );
             })}

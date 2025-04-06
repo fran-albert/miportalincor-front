@@ -1,45 +1,82 @@
- 
-
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/store/store";
+import { Plus, Trash } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 import {
-  addOccupationalHistory,
   setFormData,
+  OccupationalHistoryItem,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Input } from "@/components/ui/input";
-import { DataType } from "@/types/Data-Type/Data-Type";
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import { useEffect, useState } from "react";
 
 interface Props {
   isEditing: boolean;
-  fields: DataType[];
+  dataValues?: DataValue[];
 }
 
-export default function OccupationalHistoryAccordion({ isEditing }: Props) {
+export default function OccupationalHistoryAccordion({
+  isEditing,
+  dataValues,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  const occupationalHistory = useSelector(
-    (state: RootState) => state.preOccupational.formData.occupationalHistory
+  const [historyItems, setHistoryItems] = useState<OccupationalHistoryItem[]>(
+    []
   );
 
+  useEffect(() => {
+    if (dataValues && dataValues.length > 0) {
+      const antecedentes = dataValues.filter(
+        (item) =>
+          item.dataType.name === "Antecedentes ocupacionales" &&
+          item.dataType.category === "ANTECEDENTES"
+      );
+
+      const mappedItems = antecedentes.map((item) => ({
+        id: item.id.toString(),
+        description: item.value || "",
+      }));
+
+      setHistoryItems(mappedItems);
+      dispatch(setFormData({ occupationalHistory: mappedItems }));
+    } else {
+      setHistoryItems([]);
+      dispatch(setFormData({ occupationalHistory: [] }));
+    }
+  }, [dataValues, dispatch]);
+
+  const generateTempId = (): string => {
+    return `temp-${Date.now()}`;
+  };
+
   const handleAddNew = () => {
-    const newItem = {
-      id: Date.now().toString(),
+    const newItem: OccupationalHistoryItem = {
+      id: generateTempId(),
       description: "",
     };
-    dispatch(addOccupationalHistory(newItem));
+
+    const updatedItems = [...historyItems, newItem];
+    setHistoryItems(updatedItems);
+    dispatch(setFormData({ occupationalHistory: updatedItems }));
   };
 
   const handleUpdateDescription = (id: string, value: string) => {
-    const updatedHistory = occupationalHistory.map((item) =>
+    const updatedItems = historyItems.map((item) =>
       item.id === id ? { ...item, description: value } : item
     );
-    dispatch(setFormData({ occupationalHistory: updatedHistory }));
+    setHistoryItems(updatedItems);
+    dispatch(setFormData({ occupationalHistory: updatedItems }));
+  };
+
+  const handleRemoveItem = (id: string) => {
+    const filteredItems = historyItems.filter((item) => item.id !== id);
+    setHistoryItems(filteredItems);
+    dispatch(setFormData({ occupationalHistory: filteredItems }));
   };
 
   return (
@@ -61,25 +98,42 @@ export default function OccupationalHistoryAccordion({ isEditing }: Props) {
               Nuevo antecedente
             </Button>
           </div>
-          {/* Lista de antecedentes */}
-          {occupationalHistory.length > 0 && (
+
+          {historyItems.length > 0 ? (
             <div className="space-y-2">
-              {occupationalHistory.map((item) => (
-                <div key={item.id} className="p-2 border rounded">
-                  {isEditing ? (
-                    <Input
-                      value={item.description}
-                      placeholder="Ingrese descripción del antecedente..."
-                      onChange={(e) =>
-                        handleUpdateDescription(item.id, e.target.value)
-                      }
-                    />
-                  ) : (
-                    <span>{item.description || "Sin descripción"}</span>
+              {historyItems.map((item) => (
+                <div key={item.id} className="p-2 border rounded flex gap-2">
+                  <div className="flex-grow">
+                    {isEditing ? (
+                      <Input
+                        value={item.description}
+                        placeholder="Ingrese descripción del antecedente..."
+                        onChange={(e) => {
+                          const newValue = e.currentTarget.value;
+                          handleUpdateDescription(item.id, newValue);
+                        }}
+                      />
+                    ) : (
+                      <span>{item.description || "Sin descripción"}</span>
+                    )}
+                  </div>
+                  {isEditing && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="h-8 w-8 text-red-500"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-gray-500 italic">
+              No hay antecedentes ocupacionales registrados.
+            </p>
           )}
         </div>
       </AccordionContent>

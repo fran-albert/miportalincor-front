@@ -9,7 +9,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import {
@@ -58,6 +57,7 @@ const examKeyMapping: Record<string, string> = {
   "RX Torax Frente": "rx-torax",
   Electroencefalograma: "electroencefalograma",
   Psicotécnico: "psicotecnico",
+  Audiometria: "audiometria",
 };
 
 const getValueForField = (
@@ -84,7 +84,6 @@ const getValueForField = (
 
 export default function ConclusionAccordion({
   isEditing,
-  setIsEditing,
   medicalEvaluationId,
   dataValues,
   fields,
@@ -94,7 +93,6 @@ export default function ConclusionAccordion({
     (state: RootState) => state.preOccupational.formData
   );
   const { createDataValuesMutation } = useDataValuesMutations();
-  const [isFinalized, setIsFinalized] = useState(false);
 
   const conclusionFilter = [
     {
@@ -198,7 +196,7 @@ export default function ConclusionAccordion({
         };
       })
       .filter((item) => item.value !== "" && item.value !== undefined);
-  
+
     // Para el campo Conclusion
     const conclusionField = fields.find((field) => field.name === "Conclusion");
     if (conclusionField && conclusion) {
@@ -206,9 +204,7 @@ export default function ConclusionAccordion({
         (dv) => dv.dataType.name === "Conclusion"
       );
       if (
-        !payloadDataValues.find(
-          (dv) => dv.dataTypeId === conclusionField.id
-        )
+        !payloadDataValues.find((dv) => dv.dataTypeId === conclusionField.id)
       ) {
         payloadDataValues.push({
           id: existing ? existing.id : undefined,
@@ -217,7 +213,7 @@ export default function ConclusionAccordion({
         });
       }
     }
-  
+
     // Para el campo Recomendaciones
     const recomendacionesField = fields.find(
       (field) => field.name === "Recomendaciones"
@@ -238,7 +234,7 @@ export default function ConclusionAccordion({
         });
       }
     }
-  
+
     // Para las opciones de conclusión (checkboxes)
     Object.entries(conclusionOptions).forEach(([key, value]) => {
       if (value === true) {
@@ -267,19 +263,18 @@ export default function ConclusionAccordion({
         }
       }
     });
-  
+
     const payload = {
       medicalEvaluationId: medicalEvaluationId,
       dataValues: payloadDataValues,
     };
-  
+
     toast.promise(createDataValuesMutation.mutateAsync(payload), {
       loading: <LoadingToast message="Guardando datos..." />,
       success: <SuccessToast message="Datos guardados exitosamente!" />,
       error: <ErrorToast message="Error al guardar los datos" />,
     });
   };
-  
 
   return (
     <AccordionItem value="conclusion" className="border rounded-lg">
@@ -323,7 +318,7 @@ export default function ConclusionAccordion({
           ))}
 
           {/* Campo: Recomendaciones / Observaciones */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="recomendaciones">
               Recomendaciones / Observaciones
             </Label>
@@ -336,22 +331,7 @@ export default function ConclusionAccordion({
                 dispatch(setFormData({ recomendaciones: e.target.value }))
               }
             />
-          </div>
-
-          {/* Finalizado */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="finalizado"
-              checked={isFinalized}
-              onCheckedChange={(checked) => {
-                setIsFinalized(checked as boolean);
-                if (checked) setIsEditing(false);
-              }}
-              disabled={!isEditing}
-              className="disabled:opacity-50"
-            />
-            <Label htmlFor="finalizado">Marcar como finalizado</Label>
-          </div>
+          </div> */}
 
           {/* Botones */}
           <div className="flex justify-end gap-4">

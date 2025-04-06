@@ -17,7 +17,10 @@ export interface Collaborator extends Base {
   company: Company;
   addressData?: Address;
   healthInsuranceId?: number;
-  healthInsurance: HealthInsurance;
+  healthInsurance?: HealthInsurance;
+  positionJob: string
+  photoBuffer?: { type: "Buffer"; data: number[] };
+  photoDataUrl?: string;
   affiliationNumber?: string;
 }
 
@@ -31,4 +34,5 @@ export interface CreateCollaboratorDto {
   address: string;
   gender: string;
   idCompany: string;
+  positionJob: string
 }
