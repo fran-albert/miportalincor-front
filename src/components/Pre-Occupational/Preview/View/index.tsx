@@ -8,13 +8,16 @@ import StudyPageHtml from "./Study-Page";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import {
   mapClinicalEvaluation,
-  ClinicalEvaluation,
   mapConclusionData,
   mapExamResults,
   PhysicalEvaluation,
   mapPhysicalEvaluation,
+  aspectoGeneralyTiempolibre,
 } from "@/common/helpers/maps";
-import { ExamResults } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  ExamenClinico,
+  ExamResults,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   collaborator: Collaborator;
@@ -31,8 +34,8 @@ const View: React.FC<Props> = ({
 }) => {
   const examResults: ExamResults = mapExamResults(dataValues);
   const { conclusion, conclusionOptions } = mapConclusionData(dataValues);
-  const clinicalEvaluation: ClinicalEvaluation =
-    mapClinicalEvaluation(dataValues);
+  const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues);
+  const infoGeneral = aspectoGeneralyTiempolibre(dataValues);
   const physicalEvaluation: PhysicalEvaluation =
     mapPhysicalEvaluation(dataValues);
   return (
@@ -50,6 +53,13 @@ const View: React.FC<Props> = ({
         peso={clinicalEvaluation.peso}
         imc={clinicalEvaluation.imc}
         examenFisico={physicalEvaluation}
+        aspectoGeneral={infoGeneral.aspectoGeneral}
+        tiempoLibre={infoGeneral.tiempoLibre}
+        frecuenciaCardiaca={clinicalEvaluation.frecuenciaCardiaca}
+        frecuenciaRespiratoria={clinicalEvaluation.frecuenciaRespiratoria}
+        perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
+        presionDiastolica={clinicalEvaluation.presionDiastolica}
+        presionSistolica={clinicalEvaluation.presionSistolica}
       />
       <ThirdPageHTML examenFisico={physicalEvaluation} />
       {studies?.map((study, index) => (

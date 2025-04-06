@@ -1,18 +1,20 @@
-import { ExamResults, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamenClinico, ExamResults, IMedicalEvaluation, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { ConclusionOptions } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { useEffect } from "react";
 
-export interface ClinicalEvaluation {
-    talla: string;
-    peso: string;
-    imc: string;
-}
+
 export interface ExamenFisicoItem {
     selected: "" | "si" | "no";
     observaciones: string;
+}
+
+
+interface MedicalEvaluation {
+    aspectoGeneral: string,
+    tiempoLibre: string,
 }
 
 export interface PhysicalEvaluation {
@@ -120,17 +122,50 @@ export function mapExamResults(dataValues: DataValue[]): ExamResults {
     };
 }
 
-export function mapClinicalEvaluation(dataValues: DataValue[]): ClinicalEvaluation {
-    const clinical: ClinicalEvaluation = {
+
+export function mapMedicalEvaluation(dataValues: DataValue[]): IMedicalEvaluation {
+    const clinical = mapClinicalEvaluation(dataValues);
+
+    const aspectoGeneral = dataValues.find(
+        (dv) => dv.dataType.name === "Aspecto general" && typeof dv.value === "string"
+    )?.value || "";
+
+    const tiempoLibre = dataValues.find(
+        (dv) => dv.dataType.name === "Tiempo libre" && typeof dv.value === "string"
+    )?.value || "";
+
+    const examenFisico = mapPhysicalEvaluation(dataValues);
+
+    return {
+        aspectoGeneral,
+        tiempoLibre,
+        examenClinico: clinical,
+        examenFisico,
+    };
+}
+
+export function mapClinicalEvaluation(dataValues: DataValue[]): ExamenClinico {
+    const clinical: ExamenClinico = {
+
         talla: "",
         peso: "",
         imc: "",
+        frecuenciaCardiaca: "",
+        frecuenciaRespiratoria: "",
+        perimetroAbdominal: "",
+        presionDiastolica: "",
+        presionSistolica: ""
     };
 
-    const mapping: Record<string, keyof ClinicalEvaluation> = {
+    const mapping: Record<string, keyof ExamenClinico> = {
         "Talla": "talla",
         "Peso": "peso",
         "IMC": "imc",
+        "Perimetro Abdominal": "perimetroAbdominal",
+        "Frecuencia Cardíaca": "frecuenciaCardiaca",
+        "Frecuencia Respiratoria": "frecuenciaRespiratoria",
+        "Presión Sistólica": "presionSistolica",
+        "Presión Diastólica": "presionDiastolica"
     };
 
     dataValues.forEach((dv) => {
@@ -145,21 +180,44 @@ export function mapClinicalEvaluation(dataValues: DataValue[]): ClinicalEvaluati
     return clinical;
 }
 
+export function aspectoGeneralyTiempolibre(dataValues: DataValue[]): MedicalEvaluation {
+    const data: MedicalEvaluation = {
+        aspectoGeneral: "",
+        tiempoLibre: "",
+
+    };
+
+    const mapping: Record<string, keyof MedicalEvaluation> = {
+        "Aspecto general": "aspectoGeneral",
+        "Tiempo libre": "tiempoLibre",
+    };
+
+    dataValues.forEach((dv) => {
+        if (typeof dv.value === "string") {
+            const key = mapping[dv.dataType.name];
+            if (key) {
+                data[key] = dv.value;
+            }
+        }
+    });
+    return data;
+}
+
 export function useInitializeMedicalEvaluation(dataValues: DataValue[] | undefined) {
     const dispatch = useDispatch<AppDispatch>();
-    const medicalEvaluation = useSelector((state: RootState) => state.preOccupational.formData.medicalEvaluation);
+    const medicalEvaluation = useSelector(
+        (state: RootState) => state.preOccupational.formData.medicalEvaluation
+    );
 
     useEffect(() => {
         if (dataValues && dataValues.length > 0) {
-            const clinical = mapClinicalEvaluation(dataValues);
-            const physical = mapPhysicalEvaluation(dataValues);
+            const fullEvaluation = mapMedicalEvaluation(dataValues);
             // Actualizamos el estado con los valores mapeados
             dispatch(
                 setFormData({
                     medicalEvaluation: {
                         ...medicalEvaluation,
-                        examenClinico: clinical,       // { talla, peso, imc, ... }
-                        examenFisico: physical,        // objeto con ítems de examen físico
+                        ...fullEvaluation,
                     },
                 })
             );

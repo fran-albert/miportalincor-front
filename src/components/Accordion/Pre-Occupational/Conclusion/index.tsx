@@ -9,7 +9,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import {
@@ -85,7 +84,6 @@ const getValueForField = (
 
 export default function ConclusionAccordion({
   isEditing,
-  setIsEditing,
   medicalEvaluationId,
   dataValues,
   fields,
@@ -95,7 +93,6 @@ export default function ConclusionAccordion({
     (state: RootState) => state.preOccupational.formData
   );
   const { createDataValuesMutation } = useDataValuesMutations();
-  const [isFinalized, setIsFinalized] = useState(false);
 
   const conclusionFilter = [
     {
@@ -321,7 +318,7 @@ export default function ConclusionAccordion({
           ))}
 
           {/* Campo: Recomendaciones / Observaciones */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="recomendaciones">
               Recomendaciones / Observaciones
             </Label>
@@ -334,22 +331,7 @@ export default function ConclusionAccordion({
                 dispatch(setFormData({ recomendaciones: e.target.value }))
               }
             />
-          </div>
-
-          {/* Finalizado */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="finalizado"
-              checked={isFinalized}
-              onCheckedChange={(checked) => {
-                setIsFinalized(checked as boolean);
-                if (checked) setIsEditing(false);
-              }}
-              disabled={!isEditing}
-              className="disabled:opacity-50"
-            />
-            <Label htmlFor="finalizado">Marcar como finalizado</Label>
-          </div>
+          </div> */}
 
           {/* Botones */}
           <div className="flex justify-end gap-4">

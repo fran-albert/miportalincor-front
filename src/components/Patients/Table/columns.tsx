@@ -71,7 +71,6 @@ export const getColumns = (
           row.original.healthPlans.length > 0
             ? row.original.healthPlans[0].name
             : "Sin Obra Social";
-        console.log("Fila actual:", row.original);
 
         return (
           <div className="flex items-center">

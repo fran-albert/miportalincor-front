@@ -45,7 +45,6 @@ export default function PreOccupationalPreviewComponent({
   const medicalEvaluationTest = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },

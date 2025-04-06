@@ -29,7 +29,6 @@ const PDFDocument = ({
   medicalEvaluation,
   medicalEvaluationType,
 }: Props) => {
- 
   return (
     <Document>
       <FirstPagePdfDocument
@@ -44,6 +43,15 @@ const PDFDocument = ({
         talla={medicalEvaluation.examenClinico.talla}
         peso={medicalEvaluation.examenClinico.peso}
         imc={medicalEvaluation.examenClinico.imc}
+        aspectoGeneral={medicalEvaluation.aspectoGeneral}
+        tiempoLibre={medicalEvaluation.tiempoLibre}
+        frecuenciaCardiaca={medicalEvaluation.examenClinico.frecuenciaCardiaca}
+        frecuenciaRespiratoria={
+          medicalEvaluation.examenClinico.frecuenciaRespiratoria
+        }
+        perimetroAbdominal={medicalEvaluation.examenClinico.perimetroAbdominal}
+        presionDiastolica={medicalEvaluation.examenClinico.presionDiastolica}
+        presionSistolica={medicalEvaluation.examenClinico.presionSistolica}
         examenFisico={medicalEvaluation.examenFisico}
       />
       <ThirdPagePdfDocument examenFisico={medicalEvaluation.examenFisico} />

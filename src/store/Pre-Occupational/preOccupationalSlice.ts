@@ -27,10 +27,15 @@ interface WorkerInformation {
   nroDependientes: number;
 }
 
-interface ExamenClinico {
+export interface ExamenClinico {
   talla: string;
   peso: string;
   imc: string;
+  perimetroAbdominal: string,
+  frecuenciaCardiaca: string,
+  frecuenciaRespiratoria: string,
+  presionSistolica: string,
+  presionDiastolica: string,
 }
 
 interface ExamenFisicoItem {
@@ -171,6 +176,11 @@ const initialState: PreOccupationalState = {
         talla: "",
         peso: "",
         imc: "",
+        frecuenciaCardiaca: "",
+        frecuenciaRespiratoria: "",
+        perimetroAbdominal: "",
+        presionDiastolica: "",
+        presionSistolica: ""
       },
       examenFisico: {},
     },

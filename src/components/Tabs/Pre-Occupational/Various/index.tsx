@@ -32,16 +32,41 @@ export default function VariousTab({
   urls,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const allowedCategories = [
+    "Laboratorios",
+    "Psicotecnico",
+    "DDJJ de trabajador",
+    "Otros",
+    "Examen de Orina",
+    "Panel de Drogas",
+    "Pruebas Hepáticas (TGO; TGP)",
+    "Electrocardiograma",
+    "RX de Tórax (F)",
+    "RX de Columna Lumbosacra (F y P)",
+    "Audiometría Total",
+    "Espirometría",
+    "Ergometría",
+    "RMN de Columna Lumbosacra",
+    "Electroencefalograma",
+    "Examen Equilibriométrico",
+    "Examen Oftalmológico",
+    "Encuenstra del Sueño",
+    "Score de Framingham",
+  ];
 
-  const initialSections = studiesCategory.map((study) => ({
-    id: study.name.toLowerCase().replace(/\s/g, "-"),
-    title: study.name,
-    files: [] as UploadedFile[],
-  }));
+  const initialSections = studiesCategory
+    .filter((study) => allowedCategories.includes(study.name))
+    .map((study) => ({
+      id: study.name.toLowerCase().replace(/\s/g, "-"),
+      title: study.name,
+      files: [] as UploadedFile[],
+    }));
 
   const [sections, setSections] = useState<StudySection[]>(initialSections);
 
-  const updateSectionsWithUrls = (urls: { url: string; dataTypeName: string }[]) => {
+  const updateSectionsWithUrls = (
+    urls: { url: string; dataTypeName: string }[]
+  ) => {
     setSections(
       initialSections.map((section) => {
         const sectionFiles = urls

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   AccordionContent,
   AccordionItem,
@@ -25,11 +25,13 @@ export default function ExamsResultsAccordion({
   dataValues,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  const examResults = useSelector(
+  
+  const [localExamResults, setLocalExamResults] = useState<Record<string, string>>({});
+  
+  const globalExamResults = useSelector(
     (state: RootState) => state.preOccupational.formData.examResults
   );
 
-  // Definí un filtro para los exámenes que querés mostrar
   const examFilter = [
     { id: "clinico", name: "Clínico" },
     { id: "electrocardiograma-result", name: "Electrocardiograma" },
@@ -40,14 +42,12 @@ export default function ExamsResultsAccordion({
     { id: "audiometria", name: "Audiometria" },
   ];
 
-  // Función para normalizar cadenas (quita acentos y pasa a minúsculas)
   const normalize = (str: string) =>
     str
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
 
-  // Filtramos los fields que sean STRING y que coincidan (normalizados) con alguno de los exámenes que queremos
   const exams = fields
     .filter(
       (field) =>
@@ -63,7 +63,6 @@ export default function ExamsResultsAccordion({
       return acc;
     }, [] as DataType[]);
 
-  // Mapear los fields filtrados a un objeto con id y label, usando el examFilter para asignar el id
   const mappedExams = exams.map((exam) => ({
     id:
       examFilter.find((e) => normalize(e.name) === normalize(exam.name))?.id ||
@@ -71,46 +70,62 @@ export default function ExamsResultsAccordion({
     label: exam.name,
   }));
 
-  // Función para obtener el valor del campo:
-  // Se busca en dataValues (usando normalización) y, si no se encuentra, se recurre a examResults del store.
-  const getFieldValue = (examId: string, examName: string) => {
-    const dataValue = dataValues?.find(
-      (dv) =>
-        normalize(dv.dataType.name) === normalize(examName) &&
-        dv.dataType.dataType === "STRING" // Filtramos solo los de tipo STRING
-    );
-    return dataValue
-      ? dataValue.value
-      : examResults[examId as keyof typeof examResults] || "";
-  };
-
-  // Al montar o actualizar dataValues, se mapean y se actualiza el store
   useEffect(() => {
-    if (dataValues) {
-      const initialExamResults = mapExamResults(dataValues);
-      const newExamResults = {
-        ...examResults,
-        ...initialExamResults,
-      };
-      if (JSON.stringify(examResults) !== JSON.stringify(newExamResults)) {
-        dispatch(setFormData({ examResults: newExamResults }));
-      }
-    }
-  }, [dataValues, dispatch, examResults]);
+    setLocalExamResults({...globalExamResults});
+  }, [globalExamResults]);
 
-  // Función para actualizar el valor cuando el usuario escribe
+  useEffect(() => {
+    if (dataValues && dataValues.length > 0) {
+      const initialExamResults = mapExamResults(dataValues);
+      
+      setLocalExamResults(prev => ({
+        ...prev,
+        ...initialExamResults
+      }));
+      
+      dispatch(
+        setFormData({
+          examResults: {
+            ...globalExamResults,
+            ...initialExamResults,
+          },
+        })
+      );
+    }
+  }, [dataValues, dispatch]);
+
+  useEffect(() => {
+    const updatedResults = {...localExamResults};
+    let hasChanges = false;
+    
+    mappedExams.forEach(exam => {
+      if (updatedResults[exam.id] === undefined) {
+        updatedResults[exam.id] = "";
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      setLocalExamResults(updatedResults);
+    }
+  }, [mappedExams]);
+  
   const handleExamChange = (examId: string, value: string) => {
+    setLocalExamResults(prev => ({
+      ...prev,
+      [examId]: value
+    }));
+    
     dispatch(
       setFormData({
         examResults: {
-          ...examResults,
+          ...globalExamResults,
           [examId]: value,
         },
       })
     );
+    
   };
-
-  console.log(dataValues, "datavalues resultados del examen");
 
   return (
     <AccordionItem value="resultados-examen" className="border rounded-lg">
@@ -126,7 +141,7 @@ export default function ExamsResultsAccordion({
                 id={exam.id}
                 placeholder={`Ingrese resultados de ${exam.label.toLowerCase()}...`}
                 disabled={!isEditing}
-                value={getFieldValue(exam.id, exam.label)}
+                value={localExamResults[exam.id] || ""}
                 onChange={(e) => handleExamChange(exam.id, e.target.value)}
                 className="min-h-[100px] disabled:opacity-50"
               />

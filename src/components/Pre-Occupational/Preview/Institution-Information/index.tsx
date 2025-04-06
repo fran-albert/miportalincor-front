@@ -1,5 +1,3 @@
-"use client";
-
 import { Label } from "@/components/ui/label";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";

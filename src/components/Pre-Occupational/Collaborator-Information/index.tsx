@@ -99,11 +99,9 @@ export default function CollaboratorInformationCard({
           <div className="rounded-lg">
             <p className="text-sm text-gray-500">Puesto de Trabajo:</p>
             <p className="font-medium">
-              {collaborator.healthInsurance?.name
-                ? `${collaborator.healthInsurance.name} - ${
-                    collaborator.affiliationNumber || "Sin número de afiliación"
-                  }`
-                : "Sin obra social asignada"}
+              {collaborator.positionJob
+                ? `${collaborator.positionJob}`
+                : "Sin puesto de trabajo asignado"}
             </p>
           </div>
           {!isForPdf && (

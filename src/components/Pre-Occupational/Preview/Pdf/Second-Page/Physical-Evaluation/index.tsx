@@ -24,6 +24,9 @@ const section1: ExamItem[] = [
   { id: "ojos", label: "Ojos", defaultValue: "" },
   { id: "oidos", label: "Oídos", defaultValue: "" },
   { id: "nariz", label: "Nariz", defaultValue: "" },
+];
+
+const section2: ExamItem[] = [
   { id: "boca", label: "Boca", defaultValue: "" },
   { id: "faringe", label: "Faringe", defaultValue: "" },
   { id: "cuello", label: "Cuello", defaultValue: "" },
@@ -32,11 +35,8 @@ const section1: ExamItem[] = [
     label: "Aparato Respiratorio",
     defaultValue: "Sin observaciones",
   },
-];
-
-const section2: ExamItem[] = [
-    { id: "cardiovascular", label: "Aparato Cardiovascular", defaultValue: "" },
-    { id: "digestivo", label: "Aparato Digestivo", defaultValue: "" },
+  { id: "cardiovascular", label: "Aparato Cardiovascular", defaultValue: "" },
+  { id: "digestivo", label: "Aparato Digestivo", defaultValue: "" },
   { id: "genitourinario", label: "Aparato Genitourinario", defaultValue: "" },
   { id: "locomotor", label: "Aparato Locomotor", defaultValue: "" },
   { id: "columna", label: "Columna", defaultValue: "" },
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 20,
     justifyContent: "center",
-    backgroundColor: "transparent", 
+    backgroundColor: "transparent",
   },
   observationText: {
     fontSize: 12,

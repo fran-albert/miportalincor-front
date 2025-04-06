@@ -8,9 +8,16 @@ import HeaderPreviewPdf from "../Header";
 
 interface Props {
   collaborator: Collaborator;
-  talla?: string;
-  peso?: string;
-  imc?: string;
+  talla: string;
+  peso: string;
+  imc: string;
+  perimetroAbdominal: string;
+  aspectoGeneral: string;
+  tiempoLibre: string;
+  frecuenciaCardiaca: string;
+  frecuenciaRespiratoria: string;
+  presionSistolica: string;
+  presionDiastolica: string;
   examenFisico: any;
 }
 
@@ -25,9 +32,16 @@ const styles = StyleSheet.create({
 
 const SecondPagePdfDocument = ({
   collaborator,
-  peso,
   talla,
+  peso,
   imc,
+  perimetroAbdominal,
+  aspectoGeneral,
+  tiempoLibre,
+  frecuenciaCardiaca,
+  frecuenciaRespiratoria,
+  presionSistolica,
+  presionDiastolica,
   examenFisico,
 }: Props) => (
   <Page size="A4" style={styles.page}>
@@ -39,12 +53,23 @@ const SecondPagePdfDocument = ({
       collaborator={collaborator}
       companyData={collaborator.company}
     />
-
-    <ClinicalEvaluationPdf talla={talla} peso={peso} imc={imc} />
+    <ClinicalEvaluationPdf
+      talla={talla}
+      peso={peso}
+      imc={imc}
+      aspectoGeneral={aspectoGeneral}
+      tiempoLibre={tiempoLibre}
+      frecuenciaCardiaca={frecuenciaCardiaca}
+      frecuenciaRespiratoria={frecuenciaRespiratoria}
+      perimetroAbdominal={perimetroAbdominal}
+      examenFisico={examenFisico}
+      presionDiastolica={presionDiastolica}
+      presionSistolica={presionSistolica}
+    />
     <PhysicalEvaluationPdf examenFisico={examenFisico} section={1} />
     <PdfFooter
       pageNumber={2}
-           doctorName="BONIFACIO Ma. CECILIA"
+      doctorName="BONIFACIO Ma. CECILIA"
       doctorLicense="M.P. 96533 - M.L. 7299"
       signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
     />

@@ -7,9 +7,16 @@ import PhysicalEvaluationHtml from "./Physical-Evaluationn";
 
 interface Props {
   collaborator: Collaborator;
-  talla?: string;
-  peso?: string;
-  imc?: string;
+  talla: string;
+  peso: string;
+  imc: string;
+  perimetroAbdominal: string;
+  aspectoGeneral: string;
+  tiempoLibre: string;
+  frecuenciaCardiaca: string;
+  frecuenciaRespiratoria: string;
+  presionSistolica: string;
+  presionDiastolica: string;
   examenFisico: any;
 }
 
@@ -19,6 +26,13 @@ const SecondPageHTML = ({
   talla,
   imc,
   examenFisico,
+  tiempoLibre,
+  frecuenciaCardiaca,
+  frecuenciaRespiratoria,
+  presionDiastolica,
+  presionSistolica,
+  perimetroAbdominal,
+  aspectoGeneral,
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
@@ -26,7 +40,18 @@ const SecondPageHTML = ({
       collaborator={collaborator}
       companyData={collaborator.company}
     />
-    <ClinicalEvaluationHtml talla={talla} peso={peso} imc={imc} />
+    <ClinicalEvaluationHtml
+      talla={talla}
+      peso={peso}
+      imc={imc}
+      aspectoGeneral={aspectoGeneral}
+      tiempoLibre={tiempoLibre}
+      frecuenciaCardiaca={frecuenciaCardiaca}
+      frecuenciaRespiratoria={frecuenciaRespiratoria}
+      perimetroAbdominal={perimetroAbdominal}
+      presionSistolica={presionSistolica}
+      presionDiastolica={presionDiastolica}
+    />
     <PhysicalEvaluationHtml examenFisico={examenFisico} section={1} />
     <FooterHtml
       pageNumber={2}
