@@ -19,8 +19,7 @@ export const collaboratorSchema = z.object({
     .string({ required_error: "Campo Requerido." })
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido (YYYY-MM-DD)"),
   phone: z
-    .string({ required_error: "Campo Requerido." })
-    .regex(/^\d{10}$/, "Debe ser un número de 10 dígitos"),
+    .string({ required_error: "Campo Requerido." }),
   gender: z.string({ required_error: "Campo Requerido." }),
   email: z
     .string({ required_error: "Campo Requerido." })
@@ -29,11 +28,6 @@ export const collaboratorSchema = z.object({
     .string({ required_error: "Campo Requerido." })
     .transform((val) => Number(val))
     .pipe(z.number({ invalid_type_error: "Debe ser un número" })),
-  healthInsuranceId: z
-    .string({ required_error: "Campo Requerido." })
-    .transform((val) => Number(val))
-    .pipe(z.number({ invalid_type_error: "Debe ser un número" })),
-  affiliationNumber: z.string().regex(/^\d+$/, "Solo números").optional(),
   file: z.union([z.instanceof(File), z.string()]).optional(),
   address: z.object({
     id: z.number().optional(),
@@ -42,7 +36,6 @@ export const collaboratorSchema = z.object({
     description: z.string().max(100, "Máximo 100 caracteres").optional(),
     phoneNumber: z
       .string()
-      .regex(/^\d{10}$/, "Debe ser un número de 10 dígitos")
       .optional(),
     city: z.object({
       id: z.number({ required_error: "Ciudad requerida" }),

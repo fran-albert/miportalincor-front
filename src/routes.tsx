@@ -278,7 +278,7 @@ function App() {
             <Route
               path="/incor-laboral/colaboradores/agregar"
               element={
-                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <Private_Routes allowedRoles={["Secretaria", "Administrador", "Médico"]}>
                   <CreateCollaboratorPage />
                 </Private_Routes>
               }

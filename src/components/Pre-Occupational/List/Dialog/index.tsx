@@ -41,6 +41,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
 
   const handleConfirm = () => {
     if (selectedOption) {
+      setIsOpen(false);
       const mutationPromise =
         addCollaboratorMedicalEvaluationMutation.mutateAsync({
           evaluationTypeId: selectedOption,
