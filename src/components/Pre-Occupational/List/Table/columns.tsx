@@ -50,17 +50,17 @@ export const getColumns = (
         </div>
       ),
     },
-    {
-      accessorKey: "",
-      header: "Último envío",
-      cell: ({ row }) => (
-        <div className="flex flex-col ml-2">
-          <p className="text-sm font-medium">
-            {formatDateWithTime(row.original.updatedAt || "")}
-          </p>
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: "",
+    //   header: "Último envío",
+    //   cell: ({ row }) => (
+    //     <div className="flex flex-col ml-2">
+    //       <p className="text-sm font-medium">
+    //         {formatDateWithTime(row.original.updatedAt || "")}
+    //       </p>
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: "",
       header: "Enviado y Completado",

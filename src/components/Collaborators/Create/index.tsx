@@ -110,11 +110,7 @@ export function CreateCollaboratorComponent() {
       formData.append("addressData", JSON.stringify(addressData));
       formData.append("email", data.email);
       formData.append("idCompany", data.idCompany.toString());
-      if (data.affiliationNumber) {
-        formData.append("affiliationNumber", data.affiliationNumber.toString());
-      }
-      formData.append("healthInsuranceId", data.healthInsuranceId.toString());
-
+      formData.append("positionJob", data.positionJob);
       if (data.file) {
         let fileToSend: File;
         if (typeof data.file === "string") {
@@ -374,28 +370,6 @@ export function CreateCollaboratorComponent() {
                             <Input
                               {...field}
                               placeholder="Ingresar puesto..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="affiliationNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-black">
-                            Número de Obra Social
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Ingresar Número de Afiliado"
                             />
                           </FormControl>
                           <FormMessage />

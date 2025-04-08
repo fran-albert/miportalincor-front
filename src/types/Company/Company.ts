@@ -1,3 +1,4 @@
+import { Address } from "../Address/Address";
 import { Base } from "../Base/Base";
 import { Collaborator } from "../Collaborator/Collaborator";
 
@@ -8,6 +9,7 @@ export interface Company extends Base {
     phone: string;
     email?: string
     collaborator: Collaborator[]
+    addressData?: Address;
 }
 
 export interface CreateCompanyDto {

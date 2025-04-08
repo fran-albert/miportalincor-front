@@ -95,6 +95,9 @@ export function DataTable<TData, TValue>({
       columnFilters,
       pagination,
     },
+    getRowId: (row: TData, index: number) => {
+      return (row as any).id ? `row-${(row as any).id}` : `row-index-${index}`;
+    },
   });
 
   const handleSearchSubmit = () => {
@@ -183,11 +186,11 @@ export function DataTable<TData, TValue>({
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white">
                 <thead className="bg-greenPrimary">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
+                  {table.getHeaderGroups().map((headerGroup, groupIndex) => (
+                    <tr key={`header-group-${headerGroup.id}-${groupIndex}`}>
+                      {headerGroup.headers.map((header, headerIndex) => (
                         <th
-                          key={header.id}
+                          key={`header-${headerGroup.id}-${header.id}-${headerIndex}`}
                           className="py-2 px-6 text-left text-sm font-semibold text-white uppercase tracking-wider"
                         >
                           {header.isPlaceholder
@@ -203,7 +206,7 @@ export function DataTable<TData, TValue>({
                 </thead>
                 <tbody className="text-gray-700">
                   {searchQuery === "" ? (
-                    <tr>
+                    <tr key="empty-search">
                       <td
                         colSpan={columns.length}
                         className="py-10 text-center text-gray-800"
@@ -218,7 +221,7 @@ export function DataTable<TData, TValue>({
                       </td>
                     </tr>
                   ) : isFetching ? (
-                    <tr>
+                    <tr key="fetching">
                       <td
                         colSpan={columns.length}
                         className="py-10 text-center text-gray-900"
@@ -228,18 +231,18 @@ export function DataTable<TData, TValue>({
                       </td>
                     </tr>
                   ) : table.getRowModel().rows.length ? (
-                    table.getRowModel().rows.map((row) => (
+                    table.getRowModel().rows.map((row, rowIndex) => (
                       <tr
-                        key={row.id}
+                        key={`data-row-${row.id}-${rowIndex}`}
                         className={`${
                           row.getIsSelected()
                             ? "bg-teal-100"
                             : "hover:bg-gray-50"
                         } transition duration-150 ease-in-out`}
                       >
-                        {row.getVisibleCells().map((cell) => (
+                        {row.getVisibleCells().map((cell, cellIndex) => (
                           <td
-                            key={cell.id}
+                            key={`cell-${row.id}-${cell.id}-${cellIndex}`}
                             className="py-2 px-6 border-b border-gray-200"
                           >
                             {flexRender(
@@ -251,7 +254,7 @@ export function DataTable<TData, TValue>({
                       </tr>
                     ))
                   ) : (
-                    <tr>
+                    <tr key="no-results">
                       <td
                         colSpan={columns.length}
                         className="py-10 text-center text-gray-900"

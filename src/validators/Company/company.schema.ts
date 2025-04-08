@@ -10,7 +10,6 @@ export const companySchema = z.object({
         description: z.string().max(100, "Máximo 100 caracteres").optional(),
         phoneNumber: z
           .string()
-          .regex(/^\d{10}$/, "Debe ser un número de 10 dígitos")
           .optional(),
         city: z.object({
           id: z.number({ required_error: "Ciudad requerida" }),
