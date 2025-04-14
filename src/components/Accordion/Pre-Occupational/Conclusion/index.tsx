@@ -7,14 +7,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import {
-  ConclusionOptions,
-  setFormData,
-} from "@/store/Pre-Occupational/preOccupationalSlice";
+import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { selectFlatFormData } from "@/store/Pre-Occupational/selectors";
 import { DataValue } from "@/types/Data-Value/Data-Value";
@@ -93,34 +89,6 @@ export default function ConclusionAccordion({
     (state: RootState) => state.preOccupational.formData
   );
   const { createDataValuesMutation } = useDataValuesMutations();
-
-  const conclusionFilter = [
-    {
-      id: "apto-001",
-      name: "Apto para desempeñar el cargo sin patología aparente",
-    },
-    {
-      id: "apto-002",
-      name: "Apto para desempeñar el cargo con patología que no limite lo laboral",
-    },
-    { id: "apto-003", name: "Apto con restricciones" },
-    { id: "no-apto", name: "No Apto" },
-    { id: "aplazado", name: "Aplazado" },
-  ];
-
-  const options = fields
-    .filter(
-      (field) =>
-        field.dataType === "BOOLEAN" &&
-        conclusionFilter.some((option) => option.name === field.name)
-    )
-    .map((field) => ({
-      id:
-        conclusionFilter.find((opt) => opt.name === field.name)?.id ||
-        field.id.toString(),
-      label: field.name,
-    }));
-
   const flatFormData = useSelector((state: RootState) =>
     selectFlatFormData(state)
   );
@@ -131,20 +99,6 @@ export default function ConclusionAccordion({
       (field.dataType === "BOOLEAN" && testKeyMapping[field.name])
   );
 
-  const handleSelectOption = (selectedOptionId: string) => {
-    const updatedOptions: ConclusionOptions = {
-      "apto-001": false,
-      "apto-002": false,
-      "apto-003": false,
-      "no-apto": false,
-      aplazado: false,
-    };
-    if (selectedOptionId in updatedOptions) {
-      updatedOptions[selectedOptionId as keyof ConclusionOptions] = true;
-    }
-    dispatch(setFormData({ conclusionOptions: updatedOptions }));
-  };
-
   useEffect(() => {
     if (dataValues) {
       const initialConclusion = dataValues.find(
@@ -153,19 +107,6 @@ export default function ConclusionAccordion({
       const initialRecomendaciones = dataValues.find(
         (dv) => dv.dataType.name === "Recomendaciones"
       )?.value;
-      const initialConclusionOptions = dataValues
-        .filter((dv) =>
-          conclusionFilter.some((opt) => opt.name === dv.dataType.name)
-        )
-        .reduce((acc, dv) => {
-          const optionId = conclusionFilter.find(
-            (opt) => opt.name === dv.dataType.name
-          )?.id;
-          if (optionId && dv.value === "true") {
-            acc[optionId as keyof ConclusionOptions] = true;
-          }
-          return acc;
-        }, {} as ConclusionOptions);
 
       dispatch(
         setFormData({
@@ -173,7 +114,6 @@ export default function ConclusionAccordion({
           recomendaciones: initialRecomendaciones || recomendaciones,
           conclusionOptions: {
             ...conclusionOptions,
-            ...initialConclusionOptions,
           },
         })
       );
@@ -181,13 +121,11 @@ export default function ConclusionAccordion({
   }, [dataValues, dispatch]);
 
   const handleSave = () => {
-    // Armamos el array de dataValues a partir de los campos filtrados.
-    // Si en props.dataValues ya existe un registro para ese campo, incluimos su id.
     const payloadDataValues = filteredFields
       .map((field) => {
         const existing = dataValues?.find((dv) => dv.dataType.id === field.id);
         return {
-          id: existing ? existing.id : undefined, // si existe, se incluye el id
+          id: existing ? existing.id : undefined,
           dataTypeId: field.id,
           value:
             getValueForField(field, flatFormData, dataValues) !== undefined
@@ -235,35 +173,6 @@ export default function ConclusionAccordion({
       }
     }
 
-    // Para las opciones de conclusión (checkboxes)
-    Object.entries(conclusionOptions).forEach(([key, value]) => {
-      if (value === true) {
-        const optionMapping: Record<string, number> = {
-          "apto-001": 30,
-          "apto-002": 31,
-          "apto-003": 32,
-          "no-apto": 33,
-          aplazado: 34,
-        };
-        if (optionMapping[key] !== undefined) {
-          const existing = dataValues?.find(
-            (dv) => dv.dataType.id === optionMapping[key]
-          );
-          if (
-            !payloadDataValues.find(
-              (dv) => dv.dataTypeId === optionMapping[key]
-            )
-          ) {
-            payloadDataValues.push({
-              id: existing ? existing.id : undefined,
-              dataTypeId: optionMapping[key],
-              value: "true",
-            });
-          }
-        }
-      }
-    });
-
     const payload = {
       medicalEvaluationId: medicalEvaluationId,
       dataValues: payloadDataValues,
@@ -285,6 +194,7 @@ export default function ConclusionAccordion({
         <div className="space-y-4">
           {/* Campo: Conclusión */}
           <div className="space-y-2">
+            <Label htmlFor="conclusion">Conclusión</Label>
             <Textarea
               id="conclusion"
               className="min-h-[100px] mt-2"
@@ -297,41 +207,22 @@ export default function ConclusionAccordion({
             />
           </div>
 
-          {/* Opciones de Conclusión (Checkboxes) */}
-          {options.map((option) => (
-            <div key={option.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={option.id}
-                disabled={!isEditing}
-                checked={Boolean(
-                  conclusionOptions?.[option.id as keyof ConclusionOptions]
-                )}
-                onCheckedChange={() =>
-                  isEditing && handleSelectOption(option.id)
-                }
-                className="rounded-md transition-all text-greenPrimary disabled:opacity-50"
-              />
-              <Label htmlFor={option.id} className="text-sm font-medium">
-                {option.label}
-              </Label>
-            </div>
-          ))}
-
           {/* Campo: Recomendaciones / Observaciones */}
-          {/* <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="recomendaciones">
               Recomendaciones / Observaciones
             </Label>
             <Textarea
               id="recomendaciones"
               className="min-h-[100px]"
+              placeholder="Ingrese su recomendación..."
               disabled={!isEditing}
               value={recomendaciones || ""}
               onChange={(e) =>
                 dispatch(setFormData({ recomendaciones: e.target.value }))
               }
             />
-          </div> */}
+          </div>
 
           {/* Botones */}
           <div className="flex justify-end gap-4">

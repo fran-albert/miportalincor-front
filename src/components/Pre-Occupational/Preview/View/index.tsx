@@ -8,11 +8,11 @@ import StudyPageHtml from "./Study-Page";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import {
   mapClinicalEvaluation,
-  mapConclusionData,
   mapExamResults,
   PhysicalEvaluation,
   mapPhysicalEvaluation,
   aspectoGeneralyTiempolibre,
+  mapConclusionAndRecommendationsData,
 } from "@/common/helpers/maps";
 import {
   ExamenClinico,
@@ -33,18 +33,24 @@ const View: React.FC<Props> = ({
   medicalEvaluationType,
 }) => {
   const examResults: ExamResults = mapExamResults(dataValues);
-  const { conclusion, conclusionOptions } = mapConclusionData(dataValues);
+  const { conclusion, recomendaciones } =
+    mapConclusionAndRecommendationsData(dataValues);
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues);
   const physicalEvaluation: PhysicalEvaluation =
     mapPhysicalEvaluation(dataValues);
+  const antecedentes = dataValues.filter(
+    (item) => item.dataType.category === "ANTECEDENTES"
+  );
+
   return (
     <div>
       <FirstPageHTML
         collaborator={collaborator}
         examResults={examResults}
         conclusion={conclusion}
-        conclusionOptions={conclusionOptions}
+        recomendaciones={recomendaciones}
+        antecedentes={antecedentes}
         medicalEvaluationType={medicalEvaluationType}
       />
       <SecondPageHTML
@@ -52,6 +58,7 @@ const View: React.FC<Props> = ({
         talla={clinicalEvaluation.talla}
         peso={clinicalEvaluation.peso}
         imc={clinicalEvaluation.imc}
+        antecedentes={antecedentes}
         examenFisico={physicalEvaluation}
         aspectoGeneral={infoGeneral.aspectoGeneral}
         tiempoLibre={infoGeneral.tiempoLibre}

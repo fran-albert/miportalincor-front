@@ -2,20 +2,19 @@ import { Page, StyleSheet } from "@react-pdf/renderer";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import ExamResultsPdf from "./Exams-Results";
 import ConclusionPdf from "./Conclusion";
-import {
-  ConclusionOptions,
-  ExamResults,
-} from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamResults } from "@/store/Pre-Occupational/preOccupationalSlice";
 import PdfFooter from "../Footer";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 
 interface Props {
   collaborator: Collaborator;
   examResults: ExamResults;
   conclusion: string;
-  conclusionOptions?: ConclusionOptions;
+  recomendaciones: string;
   medicalEvaluationType: string;
+  antecedentes: DataValue[] | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -32,7 +31,8 @@ const FirstPagePdfDocument = ({
   collaborator,
   examResults,
   conclusion,
-  conclusionOptions,
+  recomendaciones,
+  antecedentes,
   medicalEvaluationType,
 }: Props) => (
   <Page size="A4" style={styles.page}>
@@ -43,15 +43,13 @@ const FirstPagePdfDocument = ({
     <CollaboratorInformationPdf
       collaborator={collaborator}
       companyData={collaborator.company}
+      antecedentes={antecedentes}
     />
     <ExamResultsPdf examResults={examResults} />
-    <ConclusionPdf
-      conclusion={conclusion}
-      conclusionOptions={conclusionOptions}
-    />
+    <ConclusionPdf conclusion={conclusion} recomendaciones={recomendaciones} />
     <PdfFooter
       pageNumber={1}
-           doctorName="BONIFACIO Ma. CECILIA"
+      doctorName="BONIFACIO Ma. CECILIA"
       doctorLicense="M.P. 96533 - M.L. 7299"
       signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
     />

@@ -3,10 +3,13 @@ import { Text, View, StyleSheet } from "@react-pdf/renderer";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Company } from "@/types/Company/Company";
 import CollaboratorAvatarPdf from "./Collaborator-Avatar";
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import { formatAddress, formatCuilCuit } from "@/common/helpers/helpers";
 
 interface CollaboratorInformationPdfProps {
   collaborator: Collaborator;
   companyData: Company;
+  antecedentes: DataValue[] | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -93,9 +96,8 @@ const styles = StyleSheet.create({
 const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
   collaborator,
   companyData,
+  antecedentes,
 }) => {
-  // Uso:
-
   return (
     <View style={styles.container}>
       {/* Sección Empresa */}
@@ -104,11 +106,11 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
         <View style={styles.gridTwoColumns}>
           <View style={styles.gridColumn}>
             <Text style={styles.text}>Nombre: {companyData.name}</Text>
-            <Text style={styles.text}>Cuit: {companyData.taxId}</Text>
+            <Text style={styles.text}>Cuit: {formatCuilCuit(companyData.taxId)}</Text>
           </View>
           <View style={styles.gridColumnRight}>
             <Text style={styles.text}>Teléfono: {companyData.phone}</Text>
-            <Text style={styles.text}>Domicilio: {companyData.address}</Text>
+            <Text style={styles.text}>Domicilio: {formatAddress(companyData.addressData)}</Text>
           </View>
         </View>
       </View>
@@ -122,14 +124,15 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
             <View style={{ flexDirection: "row" }}>
               <View style={styles.gridColumn}>
                 <Text style={styles.text}>
-                  Apellido y Nombre: {collaborator.lastName}{" "}
+                  Apellido y Nombre: {collaborator.lastName},{" "}
                   {collaborator.firstName}
                 </Text>
                 <Text style={styles.text}>
                   Fecha Nac: {String(collaborator.birthDate)}
                 </Text>
-                <Text style={styles.text}>Estado Cívil: </Text>
-                <Text style={styles.text}>Tarea Propuesta: </Text>
+                <Text style={styles.text}>
+                  Puesto de Trabajo:{collaborator.positionJob}
+                </Text>
               </View>
               <View style={styles.gridColumnRight}>
                 <Text style={styles.text}>D.N.I.: {collaborator.userName}</Text>
@@ -142,7 +145,22 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
                 </Text>
               </View>
             </View>
-            <Text style={styles.text}>Antecedentes Personales:</Text>
+            {antecedentes && (
+              <>
+                <Text style={styles.text}>Antecedentes Personales:</Text>
+                {antecedentes ? (
+                  antecedentes.map((antecedente) => (
+                    <Text key={antecedente.id} style={styles.text}>
+                      {antecedente.value}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={styles.text}>
+                    No se encontraron antecedentes.
+                  </Text>
+                )}
+              </>
+            )}
           </View>
           {/* Imagen del colaborador */}
           <View style={styles.columnOneThird}>
