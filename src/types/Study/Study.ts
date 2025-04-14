@@ -15,7 +15,7 @@ export interface Study {
 }
 
 export interface UploadedFile {
-  id: number;
+  id?: number;
   name: string;
   url: string;
 }

@@ -126,7 +126,7 @@ export default function VariousTab({
 
   const removeFile = (sectionId: string, file: UploadedFile) => {
     // Llamamos al hook para eliminar el registro en la base de datos.
-    deleteDataValuesMutation.mutate(file.id, {
+    deleteDataValuesMutation.mutate(Number(file.id), {
       onSuccess: () => {
         // Actualizamos el estado local eliminando el archivo de la sección correspondiente.
         setSections((prev) =>
