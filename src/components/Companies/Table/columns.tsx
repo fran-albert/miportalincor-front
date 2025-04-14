@@ -58,7 +58,7 @@ export const getColumns = (roles: {
       cell: ({ row }) => (
         <div className="flex items-center">
           <p className="text-sm font-medium">
-            {formatAddress(row.original.address)}
+            {formatAddress(row.original.addressData)}
           </p>
         </div>
       ),

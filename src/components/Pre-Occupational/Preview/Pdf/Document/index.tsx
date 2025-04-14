@@ -9,15 +9,17 @@ import {
   ExamResults,
   IMedicalEvaluation,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
   examResults: ExamResults;
   conclusion: string;
-  conclusionOptions: any;
+  recomendaciones: string;
   medicalEvaluation: IMedicalEvaluation;
   medicalEvaluationType: string;
+  dataValues: DataValue[] | undefined;
 }
 
 const PDFDocument = ({
@@ -25,17 +27,23 @@ const PDFDocument = ({
   studies,
   examResults,
   conclusion,
-  conclusionOptions,
+  recomendaciones,
   medicalEvaluation,
+  dataValues,
   medicalEvaluationType,
 }: Props) => {
+  const antecedentes = dataValues?.filter(
+    (item) => item.dataType.category === "ANTECEDENTES"
+  );
+
   return (
     <Document>
       <FirstPagePdfDocument
         collaborator={collaborator}
         examResults={examResults}
         conclusion={conclusion}
-        conclusionOptions={conclusionOptions}
+        antecedentes={antecedentes}
+        recomendaciones={recomendaciones}
         medicalEvaluationType={medicalEvaluationType}
       />
       <SecondPagePdfDocument
@@ -43,6 +51,7 @@ const PDFDocument = ({
         talla={medicalEvaluation.examenClinico.talla}
         peso={medicalEvaluation.examenClinico.peso}
         imc={medicalEvaluation.examenClinico.imc}
+        antecedentes={antecedentes}
         aspectoGeneral={medicalEvaluation.aspectoGeneral}
         tiempoLibre={medicalEvaluation.tiempoLibre}
         frecuenciaCardiaca={medicalEvaluation.examenClinico.frecuenciaCardiaca}

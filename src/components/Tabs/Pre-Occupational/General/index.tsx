@@ -40,6 +40,7 @@ export default function GeneralTab({
         <ConclusionAccordion
           isEditing={isEditing}
           setIsEditing={setIsEditing}
+          dataValues={dataValues}
           fields={generalCategory}
           medicalEvaluationId={medicalEvaluationId}
         />

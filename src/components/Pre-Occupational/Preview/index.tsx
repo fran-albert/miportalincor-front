@@ -39,7 +39,7 @@ export default function PreOccupationalPreviewComponent({
   const examResults = useSelector(
     (state: RootState) => state.preOccupational.formData.examResults
   );
-  const { conclusion, conclusionOptions } = useSelector(
+  const { conclusion, recomendaciones } = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
   const medicalEvaluationTest = useSelector(
@@ -72,7 +72,8 @@ export default function PreOccupationalPreviewComponent({
       studies={urls}
       examResults={examResults}
       conclusion={conclusion}
-      conclusionOptions={conclusionOptions}
+      dataValues={dataValues}
+      recomendaciones={recomendaciones}
       medicalEvaluation={medicalEvaluationTest}
       medicalEvaluationType={medicalEvaluation.evaluationType.name}
     />

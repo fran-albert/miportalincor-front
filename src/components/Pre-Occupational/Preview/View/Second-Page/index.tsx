@@ -4,6 +4,7 @@ import CollaboratorInformationHtml from "../../Collaborator-Information";
 import FooterHtml from "../Footer";
 import ClinicalEvaluationHtml from "./Clinical-Evaluation";
 import PhysicalEvaluationHtml from "./Physical-Evaluationn";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 
 interface Props {
   collaborator: Collaborator;
@@ -18,6 +19,7 @@ interface Props {
   presionSistolica: string;
   presionDiastolica: string;
   examenFisico: any;
+  antecedentes: DataValue[];
 }
 
 const SecondPageHTML = ({
@@ -33,12 +35,14 @@ const SecondPageHTML = ({
   presionSistolica,
   perimetroAbdominal,
   aspectoGeneral,
+  antecedentes,
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
     <CollaboratorInformationHtml
       collaborator={collaborator}
       companyData={collaborator.company}
+      antecedentes={antecedentes}
     />
     <ClinicalEvaluationHtml
       talla={talla}

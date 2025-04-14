@@ -2,15 +2,21 @@ import React from "react";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Company } from "@/types/Company/Company";
 import CollaboratorAvatarHtml from "./Collaborator-Avatar";
+import AntecedentesList from "../View/Antecedentes";
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import { formatAddress, formatCuilCuit } from "@/common/helpers/helpers";
 
 interface CollaboratorInformationHtmlProps {
   collaborator: Collaborator;
   companyData: Company;
+  antecedentes: DataValue[];
 }
 
 const CollaboratorInformationHtml: React.FC<
   CollaboratorInformationHtmlProps
-> = ({ collaborator, companyData }) => {
+> = ({ collaborator, companyData, antecedentes }) => {
+  console.log(companyData);
+
   return (
     <div className="p-[10px]">
       {/* Sección Empresa */}
@@ -19,11 +25,15 @@ const CollaboratorInformationHtml: React.FC<
         <div className="flex flex-row justify-between">
           <div className="flex-1 pr-[4px]">
             <p className="mb-[2px]">Nombre: {companyData.name}</p>
-            <p className="mb-[2px]">Cuit: {companyData.taxId}</p>
+            <p className="mb-[2px]">
+              Cuit: {formatCuilCuit(companyData.taxId)}
+            </p>
           </div>
           <div className="flex-1 pl-[4px]">
             <p className="mb-[2px]">Teléfono: {companyData.phone}</p>
-            <p className="mb-[2px]">Domicilio: {companyData.address}</p>
+            <p className="mb-[2px]">
+              Domicilio: {formatAddress(companyData.addressData)}
+            </p>
           </div>
         </div>
       </div>
@@ -43,8 +53,9 @@ const CollaboratorInformationHtml: React.FC<
                 <p className="mb-[2px]">
                   Fecha Nac: {String(collaborator.birthDate)}
                 </p>
-                <p className="mb-[2px]">Estado Cívil:</p>
-                <p className="mb-[2px]">Tarea Propuesta:</p>
+                <p className="mb-[2px]">
+                  Puesto de Trabajo:{collaborator.positionJob}
+                </p>
               </div>
               <div className="flex-1 pl-[4px]">
                 <p className="mb-[2px]">D.N.I.: {collaborator.userName}</p>
@@ -57,7 +68,9 @@ const CollaboratorInformationHtml: React.FC<
                 </p>
               </div>
             </div>
-            <p className="mb-[2px]">Antecedentes Personales:</p>
+            <div className="mt-4">
+              <AntecedentesList dataValues={antecedentes} />
+            </div>
           </div>
 
           <div className="flex items-center justify-center flex-1">

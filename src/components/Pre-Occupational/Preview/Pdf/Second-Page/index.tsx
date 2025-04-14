@@ -5,6 +5,7 @@ import ClinicalEvaluationPdf from "./Clinical-Evaluation";
 import PhysicalEvaluationPdf from "./Physical-Evaluation";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 
 interface Props {
   collaborator: Collaborator;
@@ -19,6 +20,7 @@ interface Props {
   presionSistolica: string;
   presionDiastolica: string;
   examenFisico: any;
+  antecedentes: DataValue[] | undefined;
 }
 
 const styles = StyleSheet.create({
@@ -43,6 +45,7 @@ const SecondPagePdfDocument = ({
   presionSistolica,
   presionDiastolica,
   examenFisico,
+  antecedentes,
 }: Props) => (
   <Page size="A4" style={styles.page}>
     <HeaderPreviewPdf
@@ -50,6 +53,7 @@ const SecondPagePdfDocument = ({
       examType="Examen Clínico"
     />
     <CollaboratorInformationPdf
+      antecedentes={antecedentes}
       collaborator={collaborator}
       companyData={collaborator.company}
     />
