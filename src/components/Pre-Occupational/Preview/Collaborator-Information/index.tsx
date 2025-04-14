@@ -15,7 +15,6 @@ interface CollaboratorInformationHtmlProps {
 const CollaboratorInformationHtml: React.FC<
   CollaboratorInformationHtmlProps
 > = ({ collaborator, companyData, antecedentes }) => {
-  console.log(companyData);
 
   return (
     <div className="p-[10px]">
