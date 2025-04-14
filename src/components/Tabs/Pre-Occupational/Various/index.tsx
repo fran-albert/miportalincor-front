@@ -13,6 +13,7 @@ import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collab
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { StudySection, UploadedFile } from "@/types/Study/Study";
 import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileCollaborator";
+import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 
 interface Props {
   isEditing: boolean;
@@ -65,11 +66,11 @@ export default function VariousTab({
   const [sections, setSections] = useState<StudySection[]>(initialSections);
 
   const updateSectionsWithUrls = (
-    urls: { url: string; dataTypeName: string }[]
+    urls: { id: number; url: string; dataTypeName: string }[]
   ) => {
     setSections(
       initialSections.map((section) => {
-        const sectionFiles = urls
+        const sectionFiles: UploadedFile[] = urls
           .filter(
             (urlObj) =>
               urlObj.dataTypeName.toLowerCase() === section.title.toLowerCase()
@@ -77,7 +78,7 @@ export default function VariousTab({
           .map((urlObj) => {
             const urlParts = urlObj.url.split("/");
             const fileName = urlParts[urlParts.length - 1].split("?")[0];
-            return { name: fileName, url: urlObj.url };
+            return { id: urlObj.id, name: fileName, url: urlObj.url };
           });
         return { ...section, files: sectionFiles };
       })
@@ -92,7 +93,7 @@ export default function VariousTab({
     collaboratorId: collaborator.id,
     setSections,
   });
-
+  const { deleteDataValuesMutation } = useDataValuesMutations();
   const handleDrop = (sectionId: string, e: React.DragEvent) => {
     e.preventDefault();
     if (!isEditing) return;
@@ -123,17 +124,26 @@ export default function VariousTab({
     uploadStudyMutation.mutate({ collaboratorId: collaborator.id, formData });
   };
 
-  const removeFile = (sectionId: string, fileName: string) => {
-    setSections((prev) =>
-      prev.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              files: section.files.filter((f) => f.name !== fileName),
-            }
-          : section
-      )
-    );
+  const removeFile = (sectionId: string, file: UploadedFile) => {
+    // Llamamos al hook para eliminar el registro en la base de datos.
+    deleteDataValuesMutation.mutate(file.id, {
+      onSuccess: () => {
+        // Actualizamos el estado local eliminando el archivo de la sección correspondiente.
+        setSections((prev) =>
+          prev.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  files: section.files.filter((f) => f.id !== file.id),
+                }
+              : section
+          )
+        );
+      },
+      onError: (error) => {
+        console.error("Error eliminando el archivo:", error);
+      },
+    });
   };
 
   return (
@@ -190,7 +200,7 @@ export default function VariousTab({
                     </button>
                     {isEditing && (
                       <button
-                        onClick={() => removeFile(section.id, file.name)}
+                        onClick={() => removeFile(section.id, file)}
                         className="p-1 rounded-md hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
                         title="Eliminar archivo"
                       >
