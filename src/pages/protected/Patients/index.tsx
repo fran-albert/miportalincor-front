@@ -13,7 +13,6 @@ const PatientsComponent = () => {
   });
 
   const prefetchPatients = usePrefetchPatient();
-  console.log(patients, "patients");
   return (
     <>
       <Helmet>

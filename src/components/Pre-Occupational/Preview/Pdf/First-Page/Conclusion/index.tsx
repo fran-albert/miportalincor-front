@@ -1,37 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { ConclusionOptions } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface ConclusionPdfProps {
   conclusion: string;
-  conclusionOptions?: ConclusionOptions;
+  recomendaciones: string;
 }
 
 const ConclusionPdf: React.FC<ConclusionPdfProps> = ({
   conclusion,
-  conclusionOptions,
+  recomendaciones,
 }) => {
-  const options = [
-    {
-      value: "apto-001",
-      label: "Apto para desempeñar el cargo sin patología aparente",
-    },
-    {
-      value: "apto-002",
-      label:
-        "Apto para desempeñar el cargo con patología que no limite lo laboral",
-    },
-    { value: "apto-003", label: "Apto con restricciones" },
-    { value: "no-apto", label: "No apto" },
-    { value: "aplazado", label: "Aplazado" },
-  ];
-
-  const selectedOptions = options.filter(
-    (option) =>
-      conclusionOptions &&
-      conclusionOptions[option.value as keyof typeof conclusionOptions]
-  );
-
   return (
     <View style={styles.container}>
       {/* Encabezado */}
@@ -43,12 +21,18 @@ const ConclusionPdf: React.FC<ConclusionPdfProps> = ({
 
       {/* Contenido de la conclusión */}
       <View style={styles.contentContainer}>
-        {selectedOptions.length > 0 && (
-          <Text style={styles.optionText}>
-            {selectedOptions.map((option) => option.label).join(", ")}
-          </Text>
-        )}
         <Text style={styles.conclusionText}>{conclusion || "No definido"}</Text>
+      </View>
+
+      <View style={styles.headerContainer}>
+        <View style={styles.headerBox}>
+          <Text style={styles.headerText}>Recomendaciones</Text>
+        </View>
+      </View>
+
+      {/* Contenido de la conclusión */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.conclusionText}>{recomendaciones || "No definido"}</Text>
       </View>
 
       {/* Línea divisoria */}

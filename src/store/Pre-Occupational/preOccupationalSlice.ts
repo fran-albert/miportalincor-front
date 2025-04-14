@@ -50,14 +50,6 @@ export interface IMedicalEvaluation {
   examenFisico: Record<string, ExamenFisicoItem>;
 }
 
-export interface ConclusionOptions {
-  "apto-001": boolean;
-  "apto-002": boolean;
-  "apto-003": boolean;
-  "no-apto": boolean;
-  aplazado: boolean;
-}
-
 interface InstitutionInformation {
   institucion: string;
   direccion: string;
@@ -93,7 +85,6 @@ interface FormData {
   examResults: ExamResults;
   conclusion: string;
   recomendaciones: string;
-  conclusionOptions: ConclusionOptions;
   institutionInformation: InstitutionInformation;
   workerInformation: WorkerInformation;
   occupationalHistory: OccupationalHistoryItem[];
@@ -144,13 +135,6 @@ const initialState: PreOccupationalState = {
     },
     conclusion: "",
     recomendaciones: "",
-    conclusionOptions: {
-      "apto-001": false,
-      "apto-002": false,
-      "apto-003": false,
-      "no-apto": false,
-      aplazado: false,
-    },
     institutionInformation: {
       institucion: "",
       direccion: "",

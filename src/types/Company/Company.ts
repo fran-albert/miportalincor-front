@@ -6,6 +6,7 @@ export interface Company extends Base {
     name: string
     taxId: string;
     address: string;
+    addressData: Address
     phone: string;
     email?: string
     collaborator: Collaborator[]

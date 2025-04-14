@@ -1,6 +1,5 @@
 import { ExamenClinico, ExamResults, IMedicalEvaluation, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { ConclusionOptions } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { useEffect } from "react";
@@ -65,42 +64,22 @@ export function mapConclusionText(dataValues: DataValue[]): string {
     );
     return conclusionData ? conclusionData.value : "";
 }
-
-export function mapConclusionOptions(dataValues: DataValue[]): ConclusionOptions {
-    const options: ConclusionOptions = {
-        "apto-001": false,
-        "apto-002": false,
-        "apto-003": false,
-        "no-apto": false,
-        aplazado: false,
-    };
-
-    const mapping: Record<string, keyof ConclusionOptions> = {
-        "Apto para desempeñar el cargo sin patología aparente": "apto-001",
-        "Apto para desempeñar el cargo con patología que no limite lo laboral": "apto-002",
-        "Apto con restricciones": "apto-003",
-        "No apto": "no-apto",
-        "Aplazado": "aplazado",
-    };
-
-    dataValues.forEach((dv) => {
-        if (typeof dv.value === "boolean") {
-            const key = mapping[dv.dataType.name];
-            if (key) {
-                options[key] = dv.value;
-            }
-        }
-    });
-
-    return options;
+export function mapRecomendacionesText(dataValues: DataValue[]): string {
+    const recomendacionesData = dataValues.find(
+        (dv) =>
+            dv.dataType.name === "Recomendaciones" &&
+            typeof dv.value === "string"
+    );
+    return recomendacionesData ? recomendacionesData.value : "";
 }
-export function mapConclusionData(dataValues: DataValue[]): {
+
+export function mapConclusionAndRecommendationsData(dataValues: DataValue[]): {
     conclusion: string;
-    conclusionOptions: ConclusionOptions;
+    recomendaciones: string;
 } {
     return {
         conclusion: mapConclusionText(dataValues),
-        conclusionOptions: mapConclusionOptions(dataValues),
+        recomendaciones: mapRecomendacionesText(dataValues),
     };
 }
 export function mapExamResults(dataValues: DataValue[]): ExamResults {
