@@ -36,9 +36,6 @@ export default function PreOccupationalPreviewComponent({
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
 
-  const examResults = useSelector(
-    (state: RootState) => state.preOccupational.formData.examResults
-  );
   const { conclusion, recomendaciones } = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
