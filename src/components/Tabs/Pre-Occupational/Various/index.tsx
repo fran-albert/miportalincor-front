@@ -51,7 +51,7 @@ export default function VariousTab({
     "Electroencefalograma",
     "Examen Equilibriométrico",
     "Examen Oftalmológico",
-    "Encuenstra del Sueño",
+    "Escala de Somnolencia Epworth",
     "Score de Framingham",
   ];
 
