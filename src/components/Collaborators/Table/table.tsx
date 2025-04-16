@@ -20,7 +20,7 @@ export const CollaboratorsTable: React.FC<Props> = ({
     isDoctor,
     isAdmin,
   });
-
+  console.log(Collaborators);
   const customFilterFunction = (collaborator: Collaborator, query: string) => {
     const fullName = `${collaborator.firstName.toLowerCase()} ${collaborator.lastName.toLowerCase()}`;
     const reversedFullName = `${collaborator.lastName.toLowerCase()} ${collaborator.firstName.toLowerCase()}`;

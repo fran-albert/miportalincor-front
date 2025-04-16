@@ -38,7 +38,9 @@ export const getColumns = (roles: {
               style={{ fontSize: "0.75rem" }}
               className="text-gray-900 font-bold"
             >
-              {row.original.email}
+              {row.original.email && row.original.email !== "undefined"
+                ? row.original.email
+                : ""}
             </span>
           </div>
         </Link>

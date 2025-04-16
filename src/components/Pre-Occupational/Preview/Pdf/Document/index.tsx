@@ -2,19 +2,19 @@ import { Document } from "@react-pdf/renderer";
 import FirstPagePdfDocument from "../First-Page";
 import SecondPagePdfDocument from "../Second-Page";
 import ThirdPagePdfDocument from "../Third-Page";
-import StudyPagePdfDocument from "../Study-Page";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
+import { IMedicalEvaluation } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataValue } from "@/types/Data-Value/Data-Value";
+import StudyPagePdfDocument from "../Study-Page";
 import {
   ExamResults,
-  IMedicalEvaluation,
-} from "@/store/Pre-Occupational/preOccupationalSlice";
-import { DataValue } from "@/types/Data-Value/Data-Value";
+  mapExamResults,
+} from "@/common/helpers/examsResults.maps";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
-  examResults: ExamResults;
   conclusion: string;
   recomendaciones: string;
   medicalEvaluation: IMedicalEvaluation;
@@ -25,7 +25,6 @@ interface Props {
 const PDFDocument = ({
   collaborator,
   studies,
-  examResults,
   conclusion,
   recomendaciones,
   medicalEvaluation,
@@ -36,6 +35,7 @@ const PDFDocument = ({
     (item) => item.dataType.category === "ANTECEDENTES"
   );
 
+  const examResults: ExamResults = mapExamResults(dataValues!);
   return (
     <Document>
       <FirstPagePdfDocument
@@ -51,6 +51,7 @@ const PDFDocument = ({
         talla={medicalEvaluation.examenClinico.talla}
         peso={medicalEvaluation.examenClinico.peso}
         imc={medicalEvaluation.examenClinico.imc}
+        examResults={examResults}
         antecedentes={antecedentes}
         aspectoGeneral={medicalEvaluation.aspectoGeneral}
         tiempoLibre={medicalEvaluation.tiempoLibre}
@@ -63,12 +64,16 @@ const PDFDocument = ({
         presionSistolica={medicalEvaluation.examenClinico.presionSistolica}
         examenFisico={medicalEvaluation.examenFisico}
       />
-      <ThirdPagePdfDocument examenFisico={medicalEvaluation.examenFisico} />
+      <ThirdPagePdfDocument
+        examenFisico={medicalEvaluation.examenFisico}
+        examResults={examResults}
+      />
       {studies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}
           studyTitle={`${study.dataTypeName}`}
           studyUrl={study.url}
+          examResults={examResults}
           pageNumber={4 + index}
         />
       ))}

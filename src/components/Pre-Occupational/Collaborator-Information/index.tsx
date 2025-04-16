@@ -81,7 +81,11 @@ export default function CollaboratorInformationCard({
 
           <div className="rounded-lg">
             <p className="text-sm text-gray-500">Email:</p>
-            <p className="font-medium">{collaborator.email}</p>
+            <p className="font-medium">
+              {collaborator.email && collaborator.email !== "undefined"
+                ? collaborator.email
+                : ""}
+            </p>
           </div>
 
           <div className="rounded-lg">

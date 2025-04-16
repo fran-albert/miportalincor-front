@@ -72,7 +72,6 @@ export function mapRecomendacionesText(dataValues: DataValue[]): string {
     );
     return recomendacionesData ? recomendacionesData.value : "";
 }
-
 export function mapConclusionAndRecommendationsData(dataValues: DataValue[]): {
     conclusion: string;
     recomendaciones: string;

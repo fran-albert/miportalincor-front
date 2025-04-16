@@ -6,6 +6,7 @@ import PhysicalEvaluationPdf from "./Physical-Evaluation";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface Props {
   collaborator: Collaborator;
@@ -21,6 +22,7 @@ interface Props {
   presionDiastolica: string;
   examenFisico: any;
   antecedentes: DataValue[] | undefined;
+  examResults: ExamResults;
 }
 
 const styles = StyleSheet.create({
@@ -44,6 +46,7 @@ const SecondPagePdfDocument = ({
   frecuenciaRespiratoria,
   presionSistolica,
   presionDiastolica,
+  examResults,
   examenFisico,
   antecedentes,
 }: Props) => (
@@ -70,7 +73,11 @@ const SecondPagePdfDocument = ({
       presionDiastolica={presionDiastolica}
       presionSistolica={presionSistolica}
     />
-    <PhysicalEvaluationPdf examenFisico={examenFisico} section={1} />
+    <PhysicalEvaluationPdf
+      examenFisico={examenFisico}
+      section={1}
+      examResults={examResults}
+    />
     <PdfFooter
       pageNumber={2}
       doctorName="BONIFACIO Ma. CECILIA"
