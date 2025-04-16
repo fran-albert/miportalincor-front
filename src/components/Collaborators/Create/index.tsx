@@ -360,7 +360,7 @@ export function CreateCollaboratorComponent() {
                   <div className="space-y-2">
                     <FormField
                       control={form.control}
-                      name="postionJob"
+                      name="positionJob"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-black">

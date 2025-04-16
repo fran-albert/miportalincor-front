@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Printer, Save, Send } from "lucide-react";
 import BreadcrumbComponent from "@/components/Breadcrumb";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
-import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
 import { pdf } from "@react-pdf/renderer";
 import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileCollaborator";
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
@@ -15,6 +14,7 @@ import View from "./View";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
 
 interface Props {
   collaborator: Collaborator;
@@ -45,6 +45,8 @@ export default function PreOccupationalPreviewComponent({
   const medicalEvaluationTest = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
+  console.log(dataValues, "datavalues");
+
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -70,7 +72,6 @@ export default function PreOccupationalPreviewComponent({
     <PDFDocument
       collaborator={collaborator}
       studies={urls}
-      examResults={examResults}
       conclusion={conclusion}
       dataValues={dataValues}
       recomendaciones={recomendaciones}

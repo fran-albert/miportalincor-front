@@ -2,11 +2,11 @@ import { Page, StyleSheet } from "@react-pdf/renderer";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import ExamResultsPdf from "./Exams-Results";
 import ConclusionPdf from "./Conclusion";
-import { ExamResults } from "@/store/Pre-Occupational/preOccupationalSlice";
 import PdfFooter from "../Footer";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface Props {
   collaborator: Collaborator;

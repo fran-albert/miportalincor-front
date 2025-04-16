@@ -1,14 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-
-interface ExamResults {
-  clinico?: string;
-  psicotecnico?: string;
-  "rx-torax"?: string;
-  "electrocardiograma-result"?: string;
-  laboratorio?: string;
-  electroencefalograma?: string;
-}
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface ExamResultsPdfProps {
   examResults: ExamResults;
@@ -65,6 +57,12 @@ const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
         </View>
         <View style={styles.examContainer}>
           <Text style={styles.examTitle}>AUDIOMETRÍA</Text>
+          <Text style={styles.examResult}>
+            {examResults?.audiometria || "No definido"}
+          </Text>
+        </View>
+        <View style={styles.examContainer}>
+          <Text style={styles.examTitle}>PSICOTECNICO</Text>
           <Text style={styles.examResult}>
             {examResults?.psicotecnico || "No definido"}
           </Text>

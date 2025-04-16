@@ -1,6 +1,7 @@
 import { apiLaboral } from "@/services/axiosConfig";
 
 export interface GetUrlsResponseDto {
+    id: number;
     url: string
     dataTypeName: string
 }

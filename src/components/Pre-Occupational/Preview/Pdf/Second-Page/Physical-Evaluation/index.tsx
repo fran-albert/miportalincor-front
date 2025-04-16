@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface ExamItem {
   id: string;
@@ -17,6 +18,7 @@ interface PhysicalEvaluationData {
 interface PhysicalEvaluationPdfProps {
   examenFisico: PhysicalEvaluationData;
   section?: number;
+  examResults: ExamResults;
 }
 
 const section1: ExamItem[] = [
@@ -111,11 +113,17 @@ const styles = StyleSheet.create({
   observationText: {
     fontSize: 12,
   },
+  informeText: {
+    fontSize: 11,
+    textAlign: "center",
+    marginBottom: 5,
+  },
 });
 
 const PhysicalEvaluationPdf: React.FC<PhysicalEvaluationPdfProps> = ({
   examenFisico,
   section,
+  examResults,
 }) => {
   let selectedSections: ExamItem[][] = [];
   if (section === 1) {
@@ -172,6 +180,9 @@ const PhysicalEvaluationPdf: React.FC<PhysicalEvaluationPdfProps> = ({
           })}
         </View>
       ))}
+      <Text style={styles.informeText}>
+        INFORME: {examResults["clinico"] || "Resultado no disponible"}
+      </Text>
     </View>
   );
 };
