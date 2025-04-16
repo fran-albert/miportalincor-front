@@ -1,5 +1,5 @@
 import {
-  calculateAge,
+  calculateAgeCollaborator,
   formatAddress,
   formatDni,
   getGenderLabel,
@@ -75,7 +75,7 @@ export default function CollaboratorInformationCard({
           <div className="rounded-lg">
             <p className="text-sm text-gray-500">Edad:</p>
             <p className="font-medium">
-              {calculateAge(String(collaborator.birthDate))} años
+              {calculateAgeCollaborator(String(collaborator.birthDate))} años
             </p>
           </div>
 
