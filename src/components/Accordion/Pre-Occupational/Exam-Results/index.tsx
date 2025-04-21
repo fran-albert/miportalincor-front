@@ -25,9 +25,11 @@ export default function ExamsResultsAccordion({
   dataValues,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  
-  const [localExamResults, setLocalExamResults] = useState<Record<string, string>>({});
-  
+  console.log(dataValues);
+  const [localExamResults, setLocalExamResults] = useState<
+    Record<string, string>
+  >({});
+
   const globalExamResults = useSelector(
     (state: RootState) => state.preOccupational.formData.examResults
   );
@@ -52,6 +54,7 @@ export default function ExamsResultsAccordion({
     .filter(
       (field) =>
         field.dataType === "STRING" &&
+        field.category === "GENERAL" &&
         examFilter.some(
           (exam) => normalize(exam.name) === normalize(field.name)
         )
@@ -71,18 +74,25 @@ export default function ExamsResultsAccordion({
   }));
 
   useEffect(() => {
-    setLocalExamResults({...globalExamResults});
+    setLocalExamResults({ ...globalExamResults });
   }, [globalExamResults]);
 
   useEffect(() => {
     if (dataValues && dataValues.length > 0) {
-      const initialExamResults = mapExamResults(dataValues);
-      
-      setLocalExamResults(prev => ({
+      // <-- filtrar sólo GENERAL & STRING
+      const generalStrings = dataValues.filter(
+        (dv) =>
+          dv.dataType.dataType === "STRING" &&
+          dv.dataType.category === "GENERAL"
+      );
+
+      const initialExamResults = mapExamResults(generalStrings);
+
+      setLocalExamResults((prev) => ({
         ...prev,
-        ...initialExamResults
+        ...initialExamResults,
       }));
-      
+
       dispatch(
         setFormData({
           examResults: {
@@ -95,27 +105,27 @@ export default function ExamsResultsAccordion({
   }, [dataValues, dispatch]);
 
   useEffect(() => {
-    const updatedResults = {...localExamResults};
+    const updatedResults = { ...localExamResults };
     let hasChanges = false;
-    
-    mappedExams.forEach(exam => {
+
+    mappedExams.forEach((exam) => {
       if (updatedResults[exam.id] === undefined) {
         updatedResults[exam.id] = "";
         hasChanges = true;
       }
     });
-    
+
     if (hasChanges) {
       setLocalExamResults(updatedResults);
     }
   }, [mappedExams]);
-  
+
   const handleExamChange = (examId: string, value: string) => {
-    setLocalExamResults(prev => ({
+    setLocalExamResults((prev) => ({
       ...prev,
-      [examId]: value
+      [examId]: value,
     }));
-    
+
     dispatch(
       setFormData({
         examResults: {
@@ -124,7 +134,6 @@ export default function ExamsResultsAccordion({
         },
       })
     );
-    
   };
 
   return (

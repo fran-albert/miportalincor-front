@@ -85,7 +85,10 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
   );
   const { updateCollaboratorMutation } = useCollaboratorMutations();
   const { states } = useStatesHook();
-
+  const safeEmail =
+    collaborator.email && collaborator.email !== "undefined"
+      ? collaborator.email
+      : "";
   const form = useForm<any>({
     defaultValues: {
       firstName: collaborator.firstName || "",
@@ -95,7 +98,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       phone: collaborator.phone || "",
       positionJob: collaborator.positionJob || "",
       gender: collaborator.gender || "",
-      email: collaborator.email || "",
+      email: safeEmail,
       idCompany: collaborator.company?.id || 0,
       // healthInsuranceId: collaborator.healthInsuranceId || 0,
       // affiliationNumber: collaborator.affiliationNumber || "",
@@ -439,7 +442,10 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                           Puesto de Trabajo
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ingresar puesto de trabajo..." />
+                          <Input
+                            {...field}
+                            placeholder="Ingresar puesto de trabajo..."
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

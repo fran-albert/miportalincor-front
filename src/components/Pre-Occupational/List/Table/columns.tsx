@@ -9,6 +9,7 @@ import SendEmailDialog from "@/components/Email/Dialog";
 import { useGetStudyFileNameByEvaluationType } from "@/hooks/Study/useStudyFileNameByEvaluationType";
 import { useGetSignedUrlByCollaboratorIdAndFileName } from "@/hooks/Study/useSignedUrlByCollaboratorAndFileName";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
+import DeleteMedicalEvaluation from "../Delete";
 
 export const getColumns = (
   slug: string,
@@ -124,14 +125,23 @@ export const getColumns = (
                         />
                       </Button>
                     </a>
-                    <SendEmailDialog collaborator={collaborator} url={signedUrl.url} evaluationType={row.original.medicalEvaluation.evaluationType.name}/>
+                    <SendEmailDialog
+                      collaborator={collaborator}
+                      url={signedUrl.url}
+                      evaluationType={
+                        row.original.medicalEvaluation.evaluationType.name
+                      }
+                    />
                   </>
                 ) : (
-                  <ViewButton
-                    slug={`${slug}/examen/${row.original.id}`}
-                    text="Ver Exámen"
-                    path="incor-laboral/colaboradores"
-                  />
+                  <>
+                    <ViewButton
+                      slug={`${slug}/examen/${row.original.id}`}
+                      text="Ver Exámen"
+                      path="incor-laboral/colaboradores"
+                    />
+                    <DeleteMedicalEvaluation id={row.original.medicalEvaluation.id} />
+                  </>
                 )}
               </div>
             )}
