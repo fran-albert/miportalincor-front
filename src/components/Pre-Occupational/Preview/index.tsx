@@ -42,7 +42,6 @@ export default function PreOccupationalPreviewComponent({
   const medicalEvaluationTest = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-  console.log(dataValues, "datavalues");
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -133,6 +132,21 @@ export default function PreOccupationalPreviewComponent({
       setProgress(0);
     }
   };
+  if (urls === undefined) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <p className="text-gray-500">Cargando estudios...</p>
+      </div>
+    );
+  }
+
+  if (urls.length === 0) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <p className="text-gray-500">No hay estudios subidos todavía.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2 mt-2">
