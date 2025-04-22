@@ -14,10 +14,8 @@ import {
   aspectoGeneralyTiempolibre,
   mapConclusionAndRecommendationsData,
 } from "@/common/helpers/maps";
-import {
-  ExamenClinico,
-  ExamResults,
-} from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface Props {
   collaborator: Collaborator;
@@ -74,6 +72,7 @@ const View: React.FC<Props> = ({
           key={index}
           studyTitle={`${study.dataTypeName}`}
           studyUrl={study.url}
+          examResults={examResults}
           pageNumber={4 + index}
         />
       ))}
