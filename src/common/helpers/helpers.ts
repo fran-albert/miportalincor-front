@@ -49,48 +49,37 @@ export function calculateAge(birthDate: string): number {
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 }
 
-export async function fetchImageAsDataUrl(url: string): Promise<string> {
-  const res = await fetch(url, { mode: 'cors' });
-  const blob = await res.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-}
-
-
 export function calculateAgeCollaborator(birthDate: string): number {
   // Split the date string by '-'
   const parts = birthDate.split('-');
-
+  
   // Check if we have 3 parts (day, month, year)
   if (parts.length !== 3) {
     return 0; // Return 0 or some default value if format is invalid
   }
-
+  
   // Create date with parts in the correct order (YYYY, MM-1, DD)
   // Note: JS months are 0-indexed (0=January, 11=December)
   const day = parseInt(parts[0], 10);
   const month = parseInt(parts[1], 10) - 1; // Subtract 1 for JS month format
   const year = parseInt(parts[2], 10);
-
+  
   const birthDateObj = new Date(year, month, day);
-
+  
   // Check if the date is valid
   if (isNaN(birthDateObj.getTime())) {
     return 0; // Return 0 or some default if invalid date
   }
-
+  
   const today = new Date();
   let age = today.getFullYear() - birthDateObj.getFullYear();
-
+  
   // Adjust age if birthday hasn't occurred yet this year
   const m = today.getMonth() - birthDateObj.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
     age--;
   }
-
+  
   return age;
 }
 export function capitalizeWords(input: any) {
