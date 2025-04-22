@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
+import { fetchImageAsDataUrl } from "@/common/helpers/helpers";
 
 interface Props {
   collaborator: Collaborator;
@@ -64,17 +65,17 @@ export default function PreOccupationalPreviewComponent({
   ];
   const queryClient = useQueryClient();
 
-  const getPDFContent = () => (
-    <PDFDocument
-      collaborator={collaborator}
-      studies={urls}
-      conclusion={conclusion}
-      dataValues={dataValues}
-      recomendaciones={recomendaciones}
-      medicalEvaluation={medicalEvaluationTest}
-      medicalEvaluationType={medicalEvaluation.evaluationType.name}
-    />
-  );
+  // const getPDFContent = () => (
+  //   <PDFDocument
+  //     collaborator={collaborator}
+  //     studies={dataUrls}
+  //     conclusion={conclusion}
+  //     dataValues={dataValues}
+  //     recomendaciones={recomendaciones}
+  //     medicalEvaluation={medicalEvaluationTest}
+  //     medicalEvaluationType={medicalEvaluation.evaluationType.name}
+  //   />
+  // );
 
   const handleCancel = () => {
     setIsGenerating(false);
@@ -85,7 +86,26 @@ export default function PreOccupationalPreviewComponent({
     setProgress(0);
 
     try {
-      const MyPDFContent = getPDFContent();
+      const dataUrls = await Promise.all(
+        urls!.map((u) => fetchImageAsDataUrl(u.url))
+      );
+
+      const studiesWithDataUrls: GetUrlsResponseDto[] = urls!.map((u, i) => ({
+        ...u,
+        url: dataUrls[i], // sustituye la URL S3 por el data URL
+      }));
+
+      const MyPDFContent = (
+        <PDFDocument
+          collaborator={collaborator}
+          studies={studiesWithDataUrls}
+          conclusion={conclusion}
+          dataValues={dataValues}
+          recomendaciones={recomendaciones}
+          medicalEvaluation={medicalEvaluationTest}
+          medicalEvaluationType={medicalEvaluation.evaluationType.name}
+        />
+      );
       const pdfBlob = await pdf(MyPDFContent).toBlob();
       const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
       const formData = new FormData();
