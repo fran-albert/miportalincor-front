@@ -1,14 +1,6 @@
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 import React from "react";
 
-interface ExamResults {
-  clinico?: string;
-  psicotecnico?: string;
-  "rx-torax"?: string;
-  "electrocardiograma-result"?: string;
-  laboratorio?: string;
-  electroencefalograma?: string;
-  audiometria: string;
-}
 
 interface ExamResultsHtmlProps {
   examResults: ExamResults;

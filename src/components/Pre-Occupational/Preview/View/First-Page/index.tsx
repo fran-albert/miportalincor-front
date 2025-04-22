@@ -1,11 +1,11 @@
 import { Collaborator } from "@/types/Collaborator/Collaborator";
-import { ExamResults } from "@/store/Pre-Occupational/preOccupationalSlice";
 import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
 import ExamResultsHtml from "./Exams-Results";
 import ConclusionHtml from "./Conclusion";
 import FooterHtml from "../Footer";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 
 interface Props {
   collaborator: Collaborator;

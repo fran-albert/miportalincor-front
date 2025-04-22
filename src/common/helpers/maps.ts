@@ -1,8 +1,9 @@
-import { ExamenClinico, ExamResults, IMedicalEvaluation, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamenClinico, IMedicalEvaluation, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { useEffect } from "react";
+import { ExamResults } from "./examsResults.maps";
 
 
 export interface ExamenFisicoItem {

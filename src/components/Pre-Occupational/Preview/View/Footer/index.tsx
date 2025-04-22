@@ -27,7 +27,6 @@ const FooterHtml: React.FC<Props> = ({
           className="h-16 object-contain mb-1"
         />
         <p className="font-bold text-sm">{doctorName}</p>
-        <p className="font-bold text-sm align-center">Médica del Trabajo</p>
         <p className="text-sm align-center">{doctorLicense}</p>
       </div>
 
