@@ -10,7 +10,7 @@ interface Props {
 export const useGetAllUrlsByCollaboratorAndMedicalEvaluation = ({ auth = true, collaboratorId, medicalEvaluationId }: Props) => {
 
     const { isLoading, isError, error, data } = useQuery({
-        queryKey: ["urls"],
+        queryKey: ["urls", collaboratorId, medicalEvaluationId],
         queryFn: () => getAllUrlsByCollaboratorAndMedicalEvaluation(collaboratorId, medicalEvaluationId),
         staleTime: 1000 * 60,
         enabled: auth

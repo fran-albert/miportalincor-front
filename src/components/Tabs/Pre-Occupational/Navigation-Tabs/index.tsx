@@ -72,6 +72,7 @@ export default function NavigationTabs({
                 )}
                 {activeTab === "various" && urls && (
                   <VariousTab
+                    key={`${collaborator.id}-${medicalEvaluationId}`}
                     isEditing={isEditing}
                     setIsEditing={setIsEditing}
                     studiesCategory={studiesCategory}

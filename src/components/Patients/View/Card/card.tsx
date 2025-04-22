@@ -129,10 +129,9 @@ const PatientCardComponent = ({ patient }: { patient: Patient | null }) => {
             </Link>
           </Button>
         )}
-        {isSecretary ||
-          (isAdmin && (
-            <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
-          ))}
+        {(isSecretary || isAdmin) && (
+          <ResetDefaultPasswordDialog idUser={Number(patient?.userId)} />
+        )}
       </CardFooter>
     </Card>
   );
