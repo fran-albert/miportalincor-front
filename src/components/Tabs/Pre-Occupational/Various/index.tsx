@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import {
   Accordion,
@@ -32,7 +32,6 @@ export default function VariousTab({
   medicalEvaluationId,
   urls,
 }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const allowedCategories = [
     "Laboratorios",
     "Psicotecnico",
@@ -64,6 +63,7 @@ export default function VariousTab({
     }));
 
   const [sections, setSections] = useState<StudySection[]>(initialSections);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   const updateSectionsWithUrls = (
     urls: { id: number; url: string; dataTypeName: string }[]
@@ -94,6 +94,7 @@ export default function VariousTab({
     setSections,
   });
   const { deleteDataValuesMutation } = useDataValuesMutations();
+
   const handleDrop = (sectionId: string, e: React.DragEvent) => {
     e.preventDefault();
     if (!isEditing) return;
@@ -125,10 +126,9 @@ export default function VariousTab({
   };
 
   const removeFile = (sectionId: string, file: UploadedFile) => {
-    // Llamamos al hook para eliminar el registro en la base de datos.
+    setDeletingIds((prev) => [...prev, Number(file.id)]);
     deleteDataValuesMutation.mutate(Number(file.id), {
       onSuccess: () => {
-        // Actualizamos el estado local eliminando el archivo de la sección correspondiente.
         setSections((prev) =>
           prev.map((section) =>
             section.id === sectionId
@@ -139,9 +139,11 @@ export default function VariousTab({
               : section
           )
         );
+        setDeletingIds((prev) => prev.filter((id) => id !== file.id));
       },
       onError: (error) => {
         console.error("Error eliminando el archivo:", error);
+        setDeletingIds((prev) => prev.filter((id) => id !== file.id));
       },
     });
   };
@@ -156,6 +158,7 @@ export default function VariousTab({
           <Pencil className="w-4 h-4" /> Habilitar Edición
         </p>
       )}
+
       <Accordion type="multiple" className="w-full space-y-4">
         {sections.map((section) => (
           <AccordionItem
@@ -166,6 +169,7 @@ export default function VariousTab({
             <AccordionTrigger className="font-bold text-greenPrimary text-lg">
               {section.title}
             </AccordionTrigger>
+
             <AccordionContent className="pt-4 pb-3 space-y-2">
               {section.files.map((file, index) => (
                 <div
@@ -198,22 +202,32 @@ export default function VariousTab({
                     >
                       <Download className="h-4 w-4" />
                     </button>
+
+                    {/* Botón o texto de eliminando */}
                     {isEditing && (
-                      <button
-                        onClick={() => removeFile(section.id, file)}
-                        className="p-1 rounded-md hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                        title="Eliminar archivo"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      deletingIds.includes(Number(file.id)) ? (
+                        <span className="text-sm italic text-gray-500">
+                          Eliminando...
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => removeFile(section.id, file)}
+                          className="p-1 rounded-md hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                          title="Eliminar archivo"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
               ))}
-              <div
+
+              {/* Zona de drop/click como <label> */}
+              <label
+                htmlFor={`file-input-${section.id}`}
                 onDrop={(e) => handleDrop(section.id, e)}
                 onDragOver={(e) => e.preventDefault()}
-                onClick={() => isEditing && fileInputRef.current?.click()}
                 className={cn(
                   "border-2 border-dashed rounded-lg p-4",
                   "flex flex-col items-center justify-center gap-2",
@@ -225,12 +239,13 @@ export default function VariousTab({
               >
                 <FileUp className="h-6 w-6" />
                 <p>Arrastra el archivo o haz click aquí</p>
-              </div>
+              </label>
               <input
+                id={`file-input-${section.id}`}
                 type="file"
-                ref={fileInputRef}
                 onChange={(e) => handleFileChange(section.id, e)}
-                style={{ display: "none" }}
+                className="hidden"
+                disabled={!isEditing}
               />
             </AccordionContent>
           </AccordionItem>
