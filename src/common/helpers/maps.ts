@@ -83,12 +83,16 @@ export function mapConclusionAndRecommendationsData(dataValues: DataValue[]): {
     };
 }
 export function mapExamResults(dataValues: DataValue[]): ExamResults {
-    const resultMap = dataValues.reduce<Record<string, string>>((acc, dv) => {
-        if (typeof dv.value === "string") {
-            acc[dv.dataType.name] = dv.value;
-        }
-        return acc;
-    }, {});
+    const resultMap = dataValues
+        .filter(
+            dv =>
+                dv.dataType.category === "GENERAL" &&
+                dv.dataType.dataType === "STRING"
+        )
+        .reduce<Record<string, string>>((acc, dv) => {
+            acc[dv.dataType.name] = dv.value as string;
+            return acc;
+        }, {});
 
     return {
         clinico: resultMap["Clínico"] || "",
