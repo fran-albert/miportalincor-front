@@ -22,6 +22,7 @@ import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AddStudyProps {
   idUser: number;
@@ -150,16 +151,18 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
               />
               {selectedFiles.length > 0 && (
                 <div className="mt-2">
-                  <ul className="list-disc pl-5 space-y-1">
-                    {selectedFiles.map((file, index) => (
-                      <li
-                        key={index}
-                        className="flex justify-between items-center text-sm text-gray-700"
-                      >
-                        {file.name}
-                      </li>
-                    ))}
-                  </ul>
+                  <ScrollArea className="h-32 rounded-md border">
+                    <ul className="list-disc pl-5 space-y-1 pr-2">
+                      {selectedFiles.map((file, index) => (
+                        <li
+                          key={index}
+                          className="flex justify-between items-center text-sm text-gray-700"
+                        >
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </ScrollArea>
                 </div>
               )}
             </div>
