@@ -103,6 +103,13 @@ export default function VariousTab({
     uploadFile(sectionId, files[0]);
   };
 
+  const clearFileInput = (sectionId: string) => {
+    const input = document.getElementById(
+      `file-input-${sectionId}`
+    ) as HTMLInputElement | null;
+    if (input) input.value = "";
+  };
+
   const handleFileChange = (
     sectionId: string,
     e: React.ChangeEvent<HTMLInputElement>
@@ -122,7 +129,12 @@ export default function VariousTab({
     formData.append("collaboratorId", String(collaborator.id));
     formData.append("medicalEvaluationId", String(medicalEvaluationId));
 
-    uploadStudyMutation.mutate({ collaboratorId: collaborator.id, formData });
+    uploadStudyMutation.mutate(
+      { collaboratorId: collaborator.id, formData },
+      {
+        onSettled: () => clearFileInput(sectionId),
+      }
+    );
   };
 
   const removeFile = (sectionId: string, file: UploadedFile) => {
@@ -204,8 +216,8 @@ export default function VariousTab({
                     </button>
 
                     {/* Botón o texto de eliminando */}
-                    {isEditing && (
-                      deletingIds.includes(Number(file.id)) ? (
+                    {isEditing &&
+                      (deletingIds.includes(Number(file.id)) ? (
                         <span className="text-sm italic text-gray-500">
                           Eliminando...
                         </span>
@@ -217,8 +229,7 @@ export default function VariousTab({
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                      )
-                    )}
+                      ))}
                   </div>
                 </div>
               ))}
