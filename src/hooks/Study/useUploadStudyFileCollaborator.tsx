@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import LoadingToast from "@/components/Toast/Loading";
+import type { AxiosError } from "axios";
 
 interface Props {
   collaboratorId: number;
@@ -26,7 +27,11 @@ export const useUploadStudyFileMutation = ({
 }: Props) => {
   const queryClient = useQueryClient();
 
-  return useMutation<UploadResponse, Error, UploadVariables>({
+  return useMutation<
+    UploadResponse,
+    AxiosError<{ message: string }>,
+    UploadVariables
+  >({
     mutationFn: uploadStudyCollaborator,
 
     onMutate: async (variables) => {
@@ -75,10 +80,12 @@ export const useUploadStudyFileMutation = ({
       );
     },
 
-    onError: (error: Error) => {
-      toast.error(<ErrorToast message="Error al subir el estudio" />, {
-        id: "upload-toast",
-      });
+    onError: (error: AxiosError<{ message: string }>) => {
+      const backendMsg = error.response?.data?.message;
+      toast.error(
+        <ErrorToast message={backendMsg ?? "Error al subir el estudio"} />,
+        { id: "upload-toast" }
+      );
 
       console.error("Error uploading study:", error.message);
     },
