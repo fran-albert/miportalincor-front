@@ -7,10 +7,8 @@ import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collab
 import { IMedicalEvaluation } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import StudyPagePdfDocument from "../Study-Page";
-import {
-  ExamResults,
-  mapExamResults,
-} from "@/common/helpers/examsResults.maps";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
+import { mapExamResults } from "@/common/helpers/maps";
 
 interface Props {
   collaborator: Collaborator;
