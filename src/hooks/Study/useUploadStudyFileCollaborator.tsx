@@ -64,7 +64,6 @@ export const useUploadStudyFileMutation = ({
           )
         );
       }
-
       queryClient.invalidateQueries({
         queryKey: ["studies-by-collaborator-id", collaboratorId],
       });

@@ -3,7 +3,7 @@ import React from "react";
 interface CollaboratorAvatarHtmlProps {
   src?: string | null;
   alt: string;
-  photoDataUrl?: string; 
+  photoDataUrl?: string;
 }
 
 const CollaboratorAvatarHtml: React.FC<CollaboratorAvatarHtmlProps> = ({
@@ -23,8 +23,8 @@ const CollaboratorAvatarHtml: React.FC<CollaboratorAvatarHtmlProps> = ({
       />
     </div>
   ) : (
-    <div className="w-20 h-20 rounded-full border-2 border-[#ccc] flex items-center justify-center bg-[#eee]">
-      <span className="text-[12px] text-[#888]">User</span>
+    <div className="">
+      {/* <span className="text-[12px] text-[#888]">User</span> */}
     </div>
   );
 };

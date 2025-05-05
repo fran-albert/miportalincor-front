@@ -4,7 +4,11 @@ import { Company } from "@/types/Company/Company";
 import CollaboratorAvatarHtml from "./Collaborator-Avatar";
 import AntecedentesList from "../View/Antecedentes";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { formatAddress, formatCuilCuit } from "@/common/helpers/helpers";
+import {
+  formatAddress,
+  formatCuilCuit,
+  formatDni,
+} from "@/common/helpers/helpers";
 
 interface CollaboratorInformationHtmlProps {
   collaborator: Collaborator;
@@ -15,7 +19,6 @@ interface CollaboratorInformationHtmlProps {
 const CollaboratorInformationHtml: React.FC<
   CollaboratorInformationHtmlProps
 > = ({ collaborator, companyData, antecedentes }) => {
-
   return (
     <div className="p-[10px]">
       {/* Sección Empresa */}
@@ -50,17 +53,19 @@ const CollaboratorInformationHtml: React.FC<
                   {collaborator.firstName}
                 </p>
                 <p className="mb-[2px]">
-                  Fecha Nac: {String(collaborator.birthDate)}
+                  Fecha Nacimiento: {String(collaborator.birthDate)}
                 </p>
                 <p className="mb-[2px]">
-                  Puesto de Trabajo:{collaborator.positionJob}
+                  Puesto de Trabajo: {collaborator.positionJob}
                 </p>
               </div>
               <div className="flex-1 pl-[4px]">
-                <p className="mb-[2px]">D.N.I.: {collaborator.userName}</p>
                 <p className="mb-[2px]">
-                  Domicilio: {collaborator.addressData?.city.name}
+                  D.N.I.: {formatDni(collaborator.userName)}
                 </p>
+                {/* <p className="mb-[2px]">
+                  Domicilio: {collaborator.addressData?.city.name}
+                </p> */}
                 <p className="mb-[2px]">Teléfono: {collaborator.phone}</p>
                 <p className="mb-[2px]">
                   Localidad: {collaborator.addressData?.city.name}

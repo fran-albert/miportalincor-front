@@ -4,20 +4,23 @@ import SecondPagePdfDocument from "../Second-Page";
 import ThirdPagePdfDocument from "../Third-Page";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
-import { IMedicalEvaluation } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import StudyPagePdfDocument from "../Study-Page";
+import { ExamResults } from "@/common/helpers/examsResults.maps";
 import {
-  ExamResults,
+  aspectoGeneralyTiempolibre,
+  mapClinicalEvaluation,
   mapExamResults,
-} from "@/common/helpers/examsResults.maps";
+  mapPhysicalEvaluation,
+  PhysicalEvaluation,
+} from "@/common/helpers/maps";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
   conclusion: string;
   recomendaciones: string;
-  medicalEvaluation: IMedicalEvaluation;
   medicalEvaluationType: string;
   dataValues: DataValue[] | undefined;
 }
@@ -27,7 +30,6 @@ const PDFDocument = ({
   studies,
   conclusion,
   recomendaciones,
-  medicalEvaluation,
   dataValues,
   medicalEvaluationType,
 }: Props) => {
@@ -36,6 +38,11 @@ const PDFDocument = ({
   );
 
   const examResults: ExamResults = mapExamResults(dataValues!);
+  const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
+  const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
+  const physicalEvaluation: PhysicalEvaluation = mapPhysicalEvaluation(
+    dataValues!
+  );
   return (
     <Document>
       <FirstPagePdfDocument
@@ -48,24 +55,22 @@ const PDFDocument = ({
       />
       <SecondPagePdfDocument
         collaborator={collaborator}
-        talla={medicalEvaluation.examenClinico.talla}
-        peso={medicalEvaluation.examenClinico.peso}
-        imc={medicalEvaluation.examenClinico.imc}
+        talla={clinicalEvaluation.talla}
+        peso={clinicalEvaluation.peso}
+        imc={clinicalEvaluation.imc}
         examResults={examResults}
         antecedentes={antecedentes}
-        aspectoGeneral={medicalEvaluation.aspectoGeneral}
-        tiempoLibre={medicalEvaluation.tiempoLibre}
-        frecuenciaCardiaca={medicalEvaluation.examenClinico.frecuenciaCardiaca}
-        frecuenciaRespiratoria={
-          medicalEvaluation.examenClinico.frecuenciaRespiratoria
-        }
-        perimetroAbdominal={medicalEvaluation.examenClinico.perimetroAbdominal}
-        presionDiastolica={medicalEvaluation.examenClinico.presionDiastolica}
-        presionSistolica={medicalEvaluation.examenClinico.presionSistolica}
-        examenFisico={medicalEvaluation.examenFisico}
+        aspectoGeneral={infoGeneral.aspectoGeneral}
+        tiempoLibre={infoGeneral.tiempoLibre}
+        frecuenciaCardiaca={clinicalEvaluation.frecuenciaCardiaca}
+        frecuenciaRespiratoria={clinicalEvaluation.frecuenciaRespiratoria}
+        perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
+        presionDiastolica={clinicalEvaluation.presionDiastolica}
+        presionSistolica={clinicalEvaluation.presionSistolica}
+        examenFisico={physicalEvaluation}
       />
       <ThirdPagePdfDocument
-        examenFisico={medicalEvaluation.examenFisico}
+        examenFisico={physicalEvaluation}
         examResults={examResults}
       />
       {studies?.map((study, index) => (

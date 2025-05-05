@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Image, Text, StyleSheet } from "@react-pdf/renderer";
+import { View, Image, StyleSheet } from "@react-pdf/renderer";
 import { Buffer } from "buffer";
 
 interface CollaboratorAvatarPdfProps {
@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
 
 const CollaboratorAvatarPdf: React.FC<CollaboratorAvatarPdfProps> = ({
   photoBuffer,
-  alt,
 }) => {
   if (
     !photoBuffer ||
@@ -47,11 +46,7 @@ const CollaboratorAvatarPdf: React.FC<CollaboratorAvatarPdfProps> = ({
     !Array.isArray(photoBuffer.data) ||
     photoBuffer.data.length === 0
   ) {
-    return (
-      <View style={styles.fallbackContainer}>
-        <Text style={styles.fallbackText}>{alt || "User"}</Text>
-      </View>
-    );
+    return null;
   }
 
   const nodeBuffer = Buffer.from(photoBuffer.data);
