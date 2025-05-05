@@ -13,12 +13,7 @@ import DeleteMedicalEvaluation from "../Delete";
 
 export const getColumns = (
   slug: string,
-  collaborator: Collaborator,
-  roles: {
-    isSecretary: boolean;
-    isDoctor: boolean;
-    isAdmin: boolean;
-  }
+  collaborator: Collaborator
 ): ColumnDef<CollaboratorMedicalEvaluation>[] => {
   const columns: ColumnDef<CollaboratorMedicalEvaluation>[] = [
     {
@@ -78,72 +73,63 @@ export const getColumns = (
       header: " ",
       cell: ({ row }) => {
         const medicalEvaluation = row.original.medicalEvaluation;
-        if (!medicalEvaluation || !collaborator) {
-          return (
-            <span className="text-sm text-red-500">Datos no disponibles</span>
-          );
-        }
-
         const isCompleted = medicalEvaluation.completed;
         const medicalEvaluationId = medicalEvaluation.id;
         const collaboratorId = collaborator.id;
 
-        const { data: fileData } = useGetStudyFileNameByEvaluationType({
-          auth: true,
-          medicalEvaluationId,
-        });
-
+        // 1. Hook para obtener nombre de archivo
+        const { data: fileData, isLoading: loadingFileName } =
+          useGetStudyFileNameByEvaluationType({
+            auth: true,
+            medicalEvaluationId,
+          });
         const fileName = fileData?.fileName || "";
 
-        const { data: signedUrl } = useGetSignedUrlByCollaboratorIdAndFileName({
-          auth: !!fileName,
-          collaboratorId,
-          fileName,
-        });
+        // 2. Hook para obtener URL firmada
+        const { data: signedUrl, isLoading: loadingSignedUrl } =
+          useGetSignedUrlByCollaboratorIdAndFileName({
+            auth: !!fileName,
+            collaboratorId,
+            fileName,
+          });
 
+        // 3. Si alguna de las dos está en loading, mostramos un placeholder
+        if (loadingFileName || loadingSignedUrl) {
+          return <div className="w-6 h-6 bg-gray-200 animate-pulse rounded" />;
+        }
+
+        // 4. Finalmente, renderizamos la versión “completa”
         return (
-          <div className="flex items-center justify-end">
-            {(roles.isSecretary || roles.isDoctor || roles.isAdmin) && (
-              <div className="gap-2 flex items-center">
-                {isCompleted && signedUrl ? (
-                  <>
-                    <a
-                      href={signedUrl.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button variant="ghost" size={"icon"}>
-                        <ActionIcon
-                          tooltip={"Ver PDF"}
-                          icon={
-                            <FaFilePdf
-                              className="w-4 h-4"
-                              color="red"
-                              size={30}
-                            />
-                          }
-                        />
-                      </Button>
-                    </a>
-                    <SendEmailDialog
-                      collaborator={collaborator}
-                      url={signedUrl.url}
-                      evaluationType={
-                        row.original.medicalEvaluation.evaluationType.name
-                      }
+          <div className="flex items-center justify-end gap-2">
+            {isCompleted && signedUrl ? (
+              <>
+                <a
+                  href={signedUrl.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="ghost" size="icon">
+                    <ActionIcon
+                      tooltip="Ver PDF"
+                      icon={<FaFilePdf className="w-4 h-4 text-red-600" />}
                     />
-                  </>
-                ) : (
-                  <>
-                    <ViewButton
-                      slug={`${slug}/examen/${row.original.id}`}
-                      text="Ver Exámen"
-                      path="incor-laboral/colaboradores"
-                    />
-                    <DeleteMedicalEvaluation id={row.original.medicalEvaluation.id} />
-                  </>
-                )}
-              </div>
+                  </Button>
+                </a>
+                <SendEmailDialog
+                  collaborator={collaborator}
+                  url={signedUrl.url}
+                  evaluationType={medicalEvaluation.evaluationType.name}
+                />
+              </>
+            ) : (
+              <>
+                <ViewButton
+                  slug={`${slug}/examen/${row.original.id}`}
+                  text="Ver Exámen"
+                  path="incor-laboral/colaboradores"
+                />
+                <DeleteMedicalEvaluation id={medicalEvaluation.id} />
+              </>
             )}
           </div>
         );

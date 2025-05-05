@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import GeneralTab from "@/components/Tabs/Pre-Occupational/General";
@@ -8,6 +8,11 @@ import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import { useDispatch } from "react-redux";
+import {
+  resetForm,
+  setFormData,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   isEditing: boolean;
@@ -32,6 +37,26 @@ export default function NavigationTabs({
     fetch: true,
     categories: ["GENERAL", "ESTUDIOS"],
   });
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(resetForm());
+  }, [medicalEvaluationId, dispatch]);
+  useEffect(() => {
+    if (!dataValues) return;
+
+    const initialConclusion =
+      dataValues.find((dv) => dv.dataType.name === "Conclusion")?.value ?? "";
+    const initialRecomendaciones =
+      dataValues.find((dv) => dv.dataType.name === "Recomendaciones")?.value ??
+      "";
+
+    dispatch(
+      setFormData({
+        conclusion: initialConclusion,
+        recomendaciones: initialRecomendaciones,
+      })
+    );
+  }, [dataValues, dispatch]);
   const generalCategory = fields.filter((item) => item.category === "GENERAL");
   const studiesCategory = fields.filter((item) => item.category === "ESTUDIOS");
   return (

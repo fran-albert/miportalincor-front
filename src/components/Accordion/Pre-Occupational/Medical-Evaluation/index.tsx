@@ -179,7 +179,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
             ) : (
               <Input
                 id="aspecto-general"
-                readOnly
+                  disabled
+                    className="disabled:opacity-50"
                 value={medicalEvaluation.aspectoGeneral || ""}
                 onChange={handleAspectoGeneralChange}
               />
@@ -199,7 +200,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
               <Input
                 id="tiempo-libre"
                 value={medicalEvaluation.tiempoLibre || ""}
-                readOnly
+                  disabled
+                    className="disabled:opacity-50"
               />
             )}
           </div>
@@ -225,7 +227,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                   <Input
                     id="talla"
                     value={medicalEvaluation.examenClinico.talla || ""}
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>
@@ -244,7 +247,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                   <Input
                     id="peso"
                     value={medicalEvaluation.examenClinico.peso || ""}
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>
@@ -279,7 +283,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                 ) : (
                   <Input
                     id="perimetro-abdominal"
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                     value={
                       medicalEvaluation.examenClinico.perimetroAbdominal || ""
                     }
@@ -308,7 +313,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     value={
                       medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
                     }
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>
@@ -338,7 +344,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                       medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
                       ""
                     }
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>
@@ -364,7 +371,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     value={
                       medicalEvaluation.examenClinico.presionSistolica || ""
                     }
-                    readOnly
+                      disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>
@@ -390,7 +398,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     value={
                       medicalEvaluation.examenClinico.presionDiastolica || ""
                     }
-                    readOnly
+                    disabled
+                    className="disabled:opacity-50"
                   />
                 )}
               </div>

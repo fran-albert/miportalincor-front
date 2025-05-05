@@ -4,7 +4,11 @@ import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Company } from "@/types/Company/Company";
 import CollaboratorAvatarPdf from "./Collaborator-Avatar";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { formatAddress, formatCuilCuit } from "@/common/helpers/helpers";
+import {
+  formatAddress,
+  formatCuilCuit,
+  formatDni,
+} from "@/common/helpers/helpers";
 
 interface CollaboratorInformationPdfProps {
   collaborator: Collaborator;
@@ -106,11 +110,15 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
         <View style={styles.gridTwoColumns}>
           <View style={styles.gridColumn}>
             <Text style={styles.text}>Nombre: {companyData.name}</Text>
-            <Text style={styles.text}>Cuit: {formatCuilCuit(companyData.taxId)}</Text>
+            <Text style={styles.text}>
+              Cuit: {formatCuilCuit(companyData.taxId)}
+            </Text>
           </View>
           <View style={styles.gridColumnRight}>
             <Text style={styles.text}>Teléfono: {companyData.phone}</Text>
-            <Text style={styles.text}>Domicilio: {formatAddress(companyData.addressData)}</Text>
+            <Text style={styles.text}>
+              Domicilio: {formatAddress(companyData.addressData)}
+            </Text>
           </View>
         </View>
       </View>
@@ -128,21 +136,20 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
                   {collaborator.firstName}
                 </Text>
                 <Text style={styles.text}>
-                  Fecha Nac: {String(collaborator.birthDate)}
+                  Fecha de Nacimiento: {String(collaborator.birthDate)}
                 </Text>
                 <Text style={styles.text}>
-                  Puesto de Trabajo:{collaborator.positionJob}
+                  Puesto de Trabajo: {collaborator.positionJob}
                 </Text>
               </View>
               <View style={styles.gridColumnRight}>
-                <Text style={styles.text}>D.N.I.: {collaborator.userName}</Text>
+                <Text style={styles.text}>
+                  D.N.I.: {formatDni(collaborator.userName)}
+                </Text>
                 <Text style={styles.text}>
                   Domicilio: {collaborator.addressData?.city.name}
                 </Text>
                 <Text style={styles.text}>Teléfono: {collaborator.phone}</Text>
-                <Text style={styles.text}>
-                  Localidad: {collaborator.addressData?.city.name}
-                </Text>
               </View>
             </View>
             {antecedentes && (
