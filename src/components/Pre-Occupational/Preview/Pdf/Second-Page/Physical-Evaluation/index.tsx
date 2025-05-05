@@ -26,16 +26,16 @@ const section1: ExamItem[] = [
   { id: "ojos", label: "Ojos", defaultValue: "" },
   { id: "oidos", label: "Oídos", defaultValue: "" },
   { id: "nariz", label: "Nariz", defaultValue: "" },
-];
-
-const section2: ExamItem[] = [
   { id: "boca", label: "Boca", defaultValue: "" },
   { id: "faringe", label: "Faringe", defaultValue: "" },
   { id: "cuello", label: "Cuello", defaultValue: "" },
+];
+
+const section2: ExamItem[] = [
   {
     id: "respiratorio",
     label: "Aparato Respiratorio",
-    defaultValue: "Sin observaciones",
+    defaultValue: "",
   },
   { id: "cardiovascular", label: "Aparato Cardiovascular", defaultValue: "" },
   { id: "digestivo", label: "Aparato Digestivo", defaultValue: "" },
@@ -180,9 +180,11 @@ const PhysicalEvaluationPdf: React.FC<PhysicalEvaluationPdfProps> = ({
           })}
         </View>
       ))}
-      <Text style={styles.informeText}>
-        INFORME: {examResults["clinico"] || "Resultado no disponible"}
-      </Text>
+      {section === 2 && (
+        <Text style={styles.informeText}>
+          INFORME: {examResults["clinico"] || "Resultado no disponible"}
+        </Text>
+      )}
     </View>
   );
 };

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { Label } from "@/components/ui/label";
 import {
@@ -85,40 +84,23 @@ export default function ConclusionAccordion({
   fields,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  const { conclusion, recomendaciones, conclusionOptions } = useSelector(
+  const { conclusion, recomendaciones } = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
+
   const { createDataValuesMutation } = useDataValuesMutations();
   const flatFormData = useSelector((state: RootState) =>
     selectFlatFormData(state)
   );
 
+  // filtras pero excluyes conclusion y recomendaciones
   const filteredFields = fields.filter(
     (field) =>
-      field.category === "GENERAL" ||
+      (field.category === "GENERAL" &&
+        field.name !== "Conclusion" &&
+        field.name !== "Recomendaciones") ||
       (field.dataType === "BOOLEAN" && testKeyMapping[field.name])
   );
-
-  useEffect(() => {
-    if (dataValues) {
-      const initialConclusion = dataValues.find(
-        (dv) => dv.dataType.name === "Conclusion"
-      )?.value;
-      const initialRecomendaciones = dataValues.find(
-        (dv) => dv.dataType.name === "Recomendaciones"
-      )?.value;
-
-      dispatch(
-        setFormData({
-          conclusion: initialConclusion || conclusion,
-          recomendaciones: initialRecomendaciones || recomendaciones,
-          conclusionOptions: {
-            ...conclusionOptions,
-          },
-        })
-      );
-    }
-  }, [dataValues, dispatch]);
 
   const handleSave = () => {
     const payloadDataValues = filteredFields

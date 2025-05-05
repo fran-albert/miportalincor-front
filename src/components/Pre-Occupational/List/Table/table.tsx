@@ -4,15 +4,16 @@ import { CollaboratorMedicalEvaluation } from "@/types/Collaborator-Medical-Eval
 import { useState } from "react";
 import CreateExamDialog from "../Dialog";
 import { DataTable } from "@/components/Table/Table-List-Examns/table";
-import { useEvaluationType } from "@/hooks/Evaluation-Type/useEvaluationTypes";
 import CollaboratorInformationCard from "../../Collaborator-Information";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
+import { EvaluationType } from "@/types/Evaluation-Type/Evaluation-Type";
 
 interface Props {
   data: CollaboratorMedicalEvaluation[];
   isFetching?: boolean;
   slug: string;
   collaborator: Collaborator;
+  evaluationTypes: EvaluationType[];
 }
 
 export const ListPreoccupationalExamsTable: React.FC<Props> = ({
@@ -20,18 +21,14 @@ export const ListPreoccupationalExamsTable: React.FC<Props> = ({
   isFetching,
   collaborator,
   slug,
+  evaluationTypes,
 }) => {
-  const { isSecretary, isAdmin, isDoctor } = useRoles();
+  const { isSecretary, isAdmin } = useRoles();
   const canEdit = isSecretary || isAdmin;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { evaluationTypes } = useEvaluationType({ auth: true });
   const openDialog = () => setIsDialogOpen(true);
-  const columns = getColumns(slug, collaborator, {
-    isSecretary,
-    isDoctor,
-    isAdmin,
-  });
+  const columns = getColumns(slug, collaborator);
 
   return (
     <>

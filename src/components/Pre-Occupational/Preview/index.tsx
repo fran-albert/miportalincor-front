@@ -62,18 +62,6 @@ export default function PreOccupationalPreviewComponent({
   ];
   const queryClient = useQueryClient();
 
-  // const getPDFContent = () => (
-  //   <PDFDocument
-  //     collaborator={collaborator}
-  //     studies={urls}
-  //     conclusion={conclusion}
-  //     dataValues={dataValues}
-  //     recomendaciones={recomendaciones}
-  //     medicalEvaluation={medicalEvaluationTest}
-  //     medicalEvaluationType={medicalEvaluation.evaluationType.name}
-  //   />
-  // );
-
   const handleCancel = () => {
     setIsGenerating(false);
     setProgress(0);
@@ -87,7 +75,6 @@ export default function PreOccupationalPreviewComponent({
         urls!.map((u) => fetchImageAsDataUrl(u.url))
       );
 
-      // 2) Reconstruyo el array con data URLs
       const studiesWithDataUrls = urls!.map((u, i) => ({
         ...u,
         url: dataUrls[i],
@@ -156,13 +143,13 @@ export default function PreOccupationalPreviewComponent({
     );
   }
 
-  if (urls.length === 0) {
-    return (
-      <div className="flex justify-center items-center p-6">
-        <p className="text-gray-500">No hay estudios subidos todavía.</p>
-      </div>
-    );
-  }
+  // if (urls.length === 0) {
+  //   return (
+  //     <div className="flex justify-center items-center p-6">
+  //       <p className="text-gray-500">No hay estudios subidos todavía.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-2 mt-2">

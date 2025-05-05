@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { parseSlug } from "@/common/helpers/helpers";
 import { useCollaborator } from "@/hooks/Collaborator/useCollaborator";
 import LoadingAnimation from "@/components/Loading/loading";
+import { useEvaluationType } from "@/hooks/Evaluation-Type/useEvaluationTypes";
 
 const ListPreoccupationalExams = () => {
   const params = useParams();
@@ -17,6 +18,8 @@ const ListPreoccupationalExams = () => {
     auth: true,
     id,
   });
+  const { evaluationTypes, isLoading: isLoadingEvaluationTypes } =
+    useEvaluationType({ auth: true });
 
   const { data, isFetching } = id
     ? useCollaboratorMedicalEvaluation({ id, auth: true })
@@ -28,7 +31,7 @@ const ListPreoccupationalExams = () => {
     { label: formattedName, href: `/incor-laboral/colaboradores/${slug}` },
   ];
 
-  if (isLoading) {
+  if (isLoading || isLoadingEvaluationTypes) {
     return <LoadingAnimation />;
   }
 
@@ -45,6 +48,7 @@ const ListPreoccupationalExams = () => {
               <ListPreoccupationalExamsTable
                 data={data || []}
                 isFetching={isFetching}
+                evaluationTypes={evaluationTypes}
                 slug={slug}
                 collaborator={collaborator}
               />
