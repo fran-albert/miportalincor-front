@@ -40,9 +40,6 @@ export default function PreOccupationalPreviewComponent({
   const { conclusion, recomendaciones } = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
-  const medicalEvaluationTest = useSelector(
-    (state: RootState) => state.preOccupational.formData.medicalEvaluation
-  );
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -102,7 +99,6 @@ export default function PreOccupationalPreviewComponent({
           conclusion={conclusion}
           dataValues={dataValues}
           recomendaciones={recomendaciones}
-          medicalEvaluation={medicalEvaluationTest}
           medicalEvaluationType={medicalEvaluation.evaluationType.name}
         />
       );
