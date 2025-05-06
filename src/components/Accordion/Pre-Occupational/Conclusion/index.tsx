@@ -54,7 +54,7 @@ const examKeyMapping: Record<string, string> = {
   Psicotécnico: "psicotecnico",
   Audiometria: "audiometria",
 };
-
+const examNames = Object.keys(examKeyMapping);
 const getValueForField = (
   field: DataType,
   flatFormData: Record<string, any>,
@@ -67,13 +67,8 @@ const getValueForField = (
     const key = `tests_${testKeyMapping[field.name]}`;
     return flatFormData[key];
   }
-  if (field.dataType === "STRING" && examKeyMapping[field.name]) {
-    const key = `exams_${examKeyMapping[field.name]}`;
-    return flatFormData[key];
-  }
-  if (testKeyMapping[field.name]) {
-    return flatFormData[testKeyMapping[field.name]];
-  }
+
+  // Ya no procesamos STRING de examenes aquí, los excluimos
   return flatFormData[field.name];
 };
 
@@ -94,13 +89,22 @@ export default function ConclusionAccordion({
   );
 
   // filtras pero excluyes conclusion y recomendaciones
-  const filteredFields = fields.filter(
-    (field) =>
-      (field.category === "GENERAL" &&
-        field.name !== "Conclusion" &&
-        field.name !== "Recomendaciones") ||
-      (field.dataType === "BOOLEAN" && testKeyMapping[field.name])
-  );
+  const filteredFields = fields.filter((field) => {
+    // GENERAL, no Conclusion/Recomendaciones, no examen
+    if (
+      field.category === "GENERAL" &&
+      field.name !== "Conclusion" &&
+      field.name !== "Recomendaciones" &&
+      !examNames.includes(field.name)
+    ) {
+      return true;
+    }
+    // BOOLEAN de tests
+    if (field.dataType === "BOOLEAN" && testKeyMapping[field.name]) {
+      return true;
+    }
+    return false;
+  });
 
   const handleSave = () => {
     const payloadDataValues = filteredFields
