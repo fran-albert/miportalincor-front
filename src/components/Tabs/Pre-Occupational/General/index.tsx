@@ -36,6 +36,7 @@ export default function GeneralTab({
           isEditing={isEditing}
           fields={generalCategory}
           dataValues={dataValues}
+          medicalEvaluationId={medicalEvaluationId}
         />
         <ConclusionAccordion
           isEditing={isEditing}

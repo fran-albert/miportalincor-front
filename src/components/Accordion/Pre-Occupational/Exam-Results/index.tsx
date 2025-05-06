@@ -11,18 +11,26 @@ import { RootState, AppDispatch } from "@/store/store";
 import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { mapExamResults } from "@/common/helpers/maps";
+import { mapExamResults } from "@/common/helpers/examsResults.maps";
+import { Button } from "@/components/ui/button";
+import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
+import { toast } from "sonner";
+import LoadingToast from "@/components/Toast/Loading";
+import SuccessToast from "@/components/Toast/Success";
+import ErrorToast from "@/components/Toast/Error";
 
 interface Props {
   isEditing: boolean;
   fields: DataType[];
   dataValues?: DataValue[];
+  medicalEvaluationId: number;
 }
 
 export default function ExamsResultsAccordion({
   isEditing,
   fields,
   dataValues,
+  medicalEvaluationId,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   console.log(dataValues);
@@ -136,6 +144,32 @@ export default function ExamsResultsAccordion({
     );
   };
 
+  const { createDataValuesMutation } = useDataValuesMutations();
+
+  const handleSaveResults = () => {
+    const payload = {
+      medicalEvaluationId,
+      dataValues: mappedExams
+        .map((exam) => {
+          const dt = fields.find((f) => f.name === exam.label)!;
+          // Buscá si ya hay un DataValue para este examen:
+          const existing = dataValues?.find((dv) => dv.dataType.id === dt.id);
+          return {
+            id: existing?.id, // ← aquí incluyes el id, si existe
+            dataTypeId: dt.id,
+            value: localExamResults[exam.id] || "",
+          };
+        })
+        .filter((dv) => dv.value.trim() !== ""),
+    };
+
+    toast.promise(createDataValuesMutation.mutateAsync(payload), {
+      loading: <LoadingToast message="Guardando datos..." />,
+      success: <SuccessToast message="Datos guardados exitosamente!" />,
+      error: <ErrorToast message="Error al guardar los datos" />,
+    });
+  };
+
   return (
     <AccordionItem value="resultados-examen" className="border rounded-lg">
       <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
@@ -156,6 +190,15 @@ export default function ExamsResultsAccordion({
               />
             </div>
           ))}
+        </div>
+        <div className="flex justify-end gap-4 mt-2">
+          <Button
+            disabled={!isEditing || createDataValuesMutation.isPending}
+            className="bg-greenPrimary hover:bg-teal-800"
+            onClick={handleSaveResults}
+          >
+            {createDataValuesMutation.isPending ? "Guardando..." : "Guardar"}
+          </Button>
         </div>
       </AccordionContent>
     </AccordionItem>
