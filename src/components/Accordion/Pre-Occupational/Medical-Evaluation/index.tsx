@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { DataValue } from "@/types/Data-Value/Data-Value";
+import AspectoGeneralCheckboxes from "./AspectoGeneralCheckbox";
 
 interface Props {
   isEditing: boolean;
@@ -35,14 +36,12 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   // Actualizar "aspecto general"
-  const handleAspectoGeneralChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleAspectoGeneralChange = (value: string) => {
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          aspectoGeneral: e.target.value,
+          aspectoGeneral: value,
         },
       })
     );
@@ -168,24 +167,11 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       <AccordionContent className="px-4 pb-4">
         <div className="space-y-6">
           {/* Aspecto general */}
-          <div className="space-y-2">
-            <Label htmlFor="aspecto-general">Aspecto general</Label>
-            {isEditing ? (
-              <Input
-                id="aspecto-general"
-                value={medicalEvaluation.aspectoGeneral || ""}
-                onChange={handleAspectoGeneralChange}
-              />
-            ) : (
-              <Input
-                id="aspecto-general"
-                  disabled
-                    className="disabled:opacity-50"
-                value={medicalEvaluation.aspectoGeneral || ""}
-                onChange={handleAspectoGeneralChange}
-              />
-            )}
-          </div>
+          <AspectoGeneralCheckboxes
+            isEditing={isEditing}
+            medicalEvaluation={medicalEvaluation}
+            handleAspectoGeneralChange={handleAspectoGeneralChange}
+          />
 
           {/* Tiempo libre */}
           <div className="space-y-2">
@@ -200,8 +186,8 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
               <Input
                 id="tiempo-libre"
                 value={medicalEvaluation.tiempoLibre || ""}
-                  disabled
-                    className="disabled:opacity-50"
+                disabled
+                className="disabled:opacity-50"
               />
             )}
           </div>
@@ -227,7 +213,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                   <Input
                     id="talla"
                     value={medicalEvaluation.examenClinico.talla || ""}
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                   />
                 )}
@@ -247,7 +233,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                   <Input
                     id="peso"
                     value={medicalEvaluation.examenClinico.peso || ""}
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                   />
                 )}
@@ -283,7 +269,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                 ) : (
                   <Input
                     id="perimetro-abdominal"
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                     value={
                       medicalEvaluation.examenClinico.perimetroAbdominal || ""
@@ -313,7 +299,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     value={
                       medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
                     }
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                   />
                 )}
@@ -344,7 +330,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                       medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
                       ""
                     }
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                   />
                 )}
@@ -371,7 +357,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
                     value={
                       medicalEvaluation.examenClinico.presionSistolica || ""
                     }
-                      disabled
+                    disabled
                     className="disabled:opacity-50"
                   />
                 )}
