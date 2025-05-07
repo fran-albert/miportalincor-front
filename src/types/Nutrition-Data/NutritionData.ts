@@ -7,6 +7,7 @@ export interface NutritionData {
     musclePercentage: number;
     visceralFat: number;
     imc: number;
+    height: number
     targetWeight: number;
     observations: string;
 }
@@ -14,11 +15,12 @@ export interface NutritionData {
 export interface CreateNutritionDataDto {
     userId: number;
     date: string;
-    weight?: number;
+    weight: number;
     difference?: number;
     fatPercentage?: number;
     musclePercentage?: number;
     visceralFat?: number;
+    height: number
     imc?: number;
     targetWeight?: number;
     observations?: string;
@@ -32,6 +34,7 @@ export interface UpdateNutritionDataDto {
     difference?: number;
     fatPercentage?: number;
     musclePercentage?: number;
+    height?: number
     visceralFat?: number;
     imc?: number;
     targetWeight?: number;

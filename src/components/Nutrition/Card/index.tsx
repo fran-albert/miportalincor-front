@@ -14,6 +14,7 @@ import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import ExcelUploader from "../Upload-Excel";
+import { NutritionChart } from "../Chart";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -85,36 +86,53 @@ const NutritionCard = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center text-greenPrimary">
-          <ClipboardPlus className="mr-2" />
-          Control Nutricional
-        </CardTitle>
-        <div className="div">
-          <Button
-            onClick={handleAddNewEntry}
-            className="text-greenPrimary"
-            variant="link"
-          >
-            Nueva Fila
-          </Button>
-          <ExcelUploader userId={userId} />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <NutritionTable
-          userId={userId}
-          nutritionData={nutritionData}
-          isAddingNewEntry={isAddingNewEntry}
-          setIsAddingNewEntry={setIsAddingNewEntry}
-          setNutritionData={setNutritionData}
-          onAddEntry={handleAddEntry}
-          onUpdateEntry={handleUpdateEntry}
-          onDeleteEntry={handleDeleteEntry}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center text-greenPrimary">
+            <ClipboardPlus className="mr-2" />
+            Control Nutricional
+          </CardTitle>
+          <div className="div">
+            <Button
+              onClick={handleAddNewEntry}
+              className="text-greenPrimary"
+              variant="link"
+            >
+              Nueva Fila
+            </Button>
+            <ExcelUploader userId={userId} />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <NutritionTable
+            userId={userId}
+            nutritionData={nutritionData}
+            isAddingNewEntry={isAddingNewEntry}
+            setIsAddingNewEntry={setIsAddingNewEntry}
+            setNutritionData={setNutritionData}
+            onAddEntry={handleAddEntry}
+            onUpdateEntry={handleUpdateEntry}
+            onDeleteEntry={handleDeleteEntry}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center text-greenPrimary">
+            <ClipboardPlus className="mr-2" />
+            Evolución Peso
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mt-6">
+            <div className="mx-auto w-full max-w-2xl">
+              <NutritionChart data={nutritionData} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

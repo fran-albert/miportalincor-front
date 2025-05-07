@@ -18,6 +18,7 @@ import type {
 } from "@/types/Nutrition-Data/NutritionData";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -59,6 +60,7 @@ export const NutritionTable: React.FC<Props> = ({
         visceralFat: 0,
         imc: 0,
         targetWeight: 0,
+        height: 0,
         observations: "",
       });
       setIsAddingNewEntry(false);
@@ -68,38 +70,65 @@ export const NutritionTable: React.FC<Props> = ({
   // Se modifica para que, en el caso de la fecha, se almacene el string directamente,
   // evitando crear un objeto Date y así los desfases por zona horaria.
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     id?: number
   ) => {
     const { name, value } = e.target;
     if (id !== undefined) {
-      setNutritionData((prevData) =>
-        prevData.map((entry) =>
-          entry.id === id
-            ? {
-                ...entry,
-                [name]:
-                  name === "date"
-                    ? value
-                    : name === "observations"
-                    ? value
-                    : Number(value),
-              }
-            : entry
-        )
+      setNutritionData((prev) =>
+        prev.map((entry, idx, arr) => {
+          if (entry.id !== id) return entry;
+
+          // paso 1: datos base
+          const updatedEntry = {
+            ...entry,
+            [name]: name === "date" ? value : Number(value),
+          };
+          if (name === "weight" || name === "height") {
+            const weight = name === "weight" ? Number(value) : entry.weight;
+            const height = name === "height" ? Number(value) : entry.height;
+            const heightM = height / 100;
+            updatedEntry.imc = heightM > 0 ? weight / (heightM * heightM) : 0;
+          }
+
+          // 2. Recalculamos la diferencia solo si cambió el peso
+          if (name === "weight") {
+            if (idx > 0) {
+              const prevWeight = arr[idx - 1].weight;
+              updatedEntry.difference = updatedEntry.weight - prevWeight;
+            } else {
+              // fila 0: siempre 0
+              updatedEntry.difference = 0;
+            }
+          }
+          return updatedEntry;
+        })
       );
     } else {
+      // mismo para newEntry
       setNewEntry((prev) => {
         if (!prev) return null;
-        return {
+        const updated = {
           ...prev,
-          [name]:
-            name === "date"
-              ? value
-              : name === "observations"
-              ? value
-              : Number(value),
+          [name]: name === "date" ? value : Number(value),
         };
+
+        if (name === "weight" || name === "height") {
+          const weight = name === "weight" ? Number(value) : prev.weight;
+          const height = name === "height" ? Number(value) : prev.height;
+          const heightM = height / 100;
+          updated.imc = heightM > 0 ? weight / (heightM * heightM) : 0;
+        }
+
+        if (name === "weight") {
+          if (nutritionData.length > 0) {
+            const last = nutritionData[nutritionData.length - 1];
+            updated.difference = updated.weight - last.weight;
+          } else {
+            updated.difference = 0;
+          }
+        }
+        return updated;
       });
     }
   };
@@ -140,6 +169,7 @@ export const NutritionTable: React.FC<Props> = ({
     fatPercentage: "w-24",
     musclePercentage: "w-24",
     visceralFat: "w-32",
+    height: "w-24",
     imc: "w-24",
     targetWeight: "w-32",
     observations: "w-auto",
@@ -154,14 +184,27 @@ export const NutritionTable: React.FC<Props> = ({
           <TableRow>
             <TableHead className={columnWidths.index}>#</TableHead>
             <TableHead className={columnWidths.date}>Fecha</TableHead>
-            <TableHead className={columnWidths.weight}>Peso</TableHead>
-            <TableHead className={columnWidths.difference}>Diferencia</TableHead>
-            <TableHead className={columnWidths.fatPercentage}>% Grasa</TableHead>
-            <TableHead className={columnWidths.musclePercentage}>% Músculo</TableHead>
-            <TableHead className={columnWidths.visceralFat}>Grasa Visceral</TableHead>
+            <TableHead className={columnWidths.height}>Altura (cm)</TableHead>
+            <TableHead className={columnWidths.weight}>Peso (kg)</TableHead>
+            <TableHead className={columnWidths.difference}>
+              Diferencia
+            </TableHead>
+            <TableHead className={columnWidths.fatPercentage}>
+              % Grasa
+            </TableHead>
+            <TableHead className={columnWidths.musclePercentage}>
+              % Músculo
+            </TableHead>
+            <TableHead className={columnWidths.visceralFat}>
+              Grasa Visceral
+            </TableHead>
             <TableHead className={columnWidths.imc}>IMC</TableHead>
-            <TableHead className={columnWidths.targetWeight}>Peso Objetivo</TableHead>
-            <TableHead className={columnWidths.observations}>Observaciones</TableHead>
+            <TableHead className={columnWidths.targetWeight}>
+              Peso Objetivo
+            </TableHead>
+            <TableHead className={columnWidths.observations}>
+              Observaciones
+            </TableHead>
             <TableHead className={columnWidths.actions}>Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -190,7 +233,30 @@ export const NutritionTable: React.FC<Props> = ({
                       className="w-full"
                     />
                   ) : (
-                    <span className="block truncate">{formatDate(entry.date)}</span>
+                    <span className="block truncate">
+                      {formatDate(entry.date)}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className={columnWidths.height}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="height"
+                      step={1}
+                      min={0}
+                      value={entry.height ?? 0}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      onKeyDown={(e) => {
+                        // Evita punto y coma decimal
+                        if (e.key === "." || e.key === ",") {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="w-full"
+                    />
+                  ) : (
+                    (entry.height ?? 0).toFixed(1)
                   )}
                 </TableCell>
 
@@ -212,14 +278,15 @@ export const NutritionTable: React.FC<Props> = ({
                     <Input
                       type="number"
                       name="difference"
-                      value={String(entry.difference)}
-                      onChange={(e) => handleInputChange(e, entry.id)}
-                      className="w-full"
+                      value={entry.difference.toFixed(1)}
+                      readOnly
+                      className="w-full bg-gray-50 cursor-not-allowed"
                     />
                   ) : (
                     entry.difference.toFixed(1)
                   )}
                 </TableCell>
+
                 <TableCell className={columnWidths.fatPercentage}>
                   {editingId === entry.id ? (
                     <Input
@@ -264,9 +331,9 @@ export const NutritionTable: React.FC<Props> = ({
                     <Input
                       type="number"
                       name="imc"
-                      value={String(entry.imc)}
-                      onChange={(e) => handleInputChange(e, entry.id)}
-                      className="w-full"
+                      value={entry.imc.toFixed(1)}
+                      readOnly
+                      className="w-full bg-gray-50 cursor-not-allowed"
                     />
                   ) : (
                     entry.imc.toFixed(1)
@@ -287,17 +354,18 @@ export const NutritionTable: React.FC<Props> = ({
                 </TableCell>
                 <TableCell className={columnWidths.observations}>
                   {editingId === entry.id ? (
-                    <Input
-                      type="text"
+                    <Textarea
                       name="observations"
                       value={entry.observations || ""}
                       onChange={(e) => handleInputChange(e, entry.id)}
                       className="w-full"
+                      rows={2}
                     />
                   ) : (
                     <span className="block truncate">{entry.observations}</span>
                   )}
                 </TableCell>
+
                 <TableCell className={columnWidths.actions}>
                   <div className="flex gap-2 items-center">
                     {editingId === entry.id ? (
@@ -339,6 +407,21 @@ export const NutritionTable: React.FC<Props> = ({
                     className="w-full"
                   />
                 </TableCell>
+                <TableCell className={columnWidths.height}>
+                  <Input
+                    type="number"
+                    name="height"
+                    step={1}
+                    min={0}
+                    value={(newEntry.height ?? 0).toString()}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.key === "." || e.key === ",") e.preventDefault();
+                    }}
+                    className="w-full"
+                  />
+                </TableCell>
+
                 <TableCell className={columnWidths.weight}>
                   <Input
                     type="number"
@@ -352,11 +435,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="difference"
-                    value={newEntry.difference?.toString()}
-                    onChange={handleInputChange}
-                    className="w-full"
+                    value={(newEntry?.difference ?? 0).toFixed(1)}
+                    readOnly
+                    className="w-full bg-gray-50 cursor-not-allowed"
                   />
                 </TableCell>
+
                 <TableCell className={columnWidths.fatPercentage}>
                   <Input
                     type="number"
@@ -388,11 +472,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="imc"
-                    value={(newEntry?.imc ?? 0).toString()}
-                    onChange={handleInputChange}
-                    className="w-full"
+                    value={(newEntry?.imc ?? 0).toFixed(2)}
+                    readOnly
+                    className="w-full bg-gray-50 cursor-not-allowed"
                   />
                 </TableCell>
+
                 <TableCell className={columnWidths.targetWeight}>
                   <Input
                     type="number"
@@ -403,14 +488,15 @@ export const NutritionTable: React.FC<Props> = ({
                   />
                 </TableCell>
                 <TableCell className={columnWidths.observations}>
-                  <Input
-                    type="text"
+                  <Textarea
                     name="observations"
                     value={newEntry.observations || ""}
                     onChange={handleInputChange}
                     className="w-full"
+                    rows={2}
                   />
                 </TableCell>
+
                 <TableCell className={columnWidths.actions}>
                   <Button
                     onClick={handleSaveNewEntry}
