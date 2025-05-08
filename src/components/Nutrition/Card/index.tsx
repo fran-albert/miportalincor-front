@@ -14,7 +14,7 @@ import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import ExcelUploader from "../Upload-Excel";
-import { NutritionChart } from "../Chart";
+import WeightEvolutionCard from "../Weight-Evolution";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -117,21 +117,7 @@ const NutritionCard = ({
           />
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center text-greenPrimary">
-            <ClipboardPlus className="mr-2" />
-            Evolución Peso
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mt-6">
-            <div className="mx-auto w-full max-w-2xl">
-              <NutritionChart data={nutritionData} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <WeightEvolutionCard nutritionData={nutritionData} />
     </>
   );
 };
