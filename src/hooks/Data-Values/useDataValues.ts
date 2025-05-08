@@ -11,7 +11,7 @@ export const useDataValuesByMedicalEvaluationId = ({ auth, id }: Props) => {
     const { isLoading, isError, error, data, isFetching } = useQuery({
         queryKey: ['data-values', id],
         queryFn: () => getDataValuesByIdMedicalEvaluation(id as number),
-        staleTime: 1000 * 60,
+        staleTime: 0,
         enabled: auth && id !== undefined,
     });
 

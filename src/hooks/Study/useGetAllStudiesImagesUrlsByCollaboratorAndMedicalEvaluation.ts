@@ -12,7 +12,7 @@ export const useGetAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation = ({ a
     const { isLoading, isError, error, data } = useQuery({
         queryKey: ["studies-images-urls"],
         queryFn: () => getAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation(collaboratorId, medicalEvaluationId),
-        staleTime: 1000 * 60,
+        staleTime: 0,
         enabled: auth
     });
 
