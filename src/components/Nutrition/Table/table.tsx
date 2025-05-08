@@ -243,7 +243,7 @@ export const NutritionTable: React.FC<Props> = ({
                     <Input
                       type="number"
                       name="height"
-                      step={1}
+                      step={0.1}
                       min={0}
                       value={entry.height ?? 0}
                       onChange={(e) => handleInputChange(e, entry.id)}
@@ -411,13 +411,9 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="height"
-                    step={1}
                     min={0}
                     value={(newEntry.height ?? 0).toString()}
                     onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      if (e.key === "." || e.key === ",") e.preventDefault();
-                    }}
                     className="w-full"
                   />
                 </TableCell>

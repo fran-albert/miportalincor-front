@@ -22,6 +22,7 @@ export const NutritionChart: React.FC<Props> = ({ data }) => {
         ? formatDate(d.date)
         : new Date(d.date).toISOString().slice(0, 10),
     weight: d.weight,
+    targetWeight: d.targetWeight,
   }));
 
   return (
@@ -58,6 +59,15 @@ export const NutritionChart: React.FC<Props> = ({ data }) => {
           dot={{ r: 5, strokeWidth: 2 }}
           activeDot={{ r: 8 }}
           strokeLinecap="round"
+        />
+        <Line
+          type="monotone"
+          dataKey="targetWeight"
+          name="Peso objetivo"
+          stroke="#82ca9d"
+          strokeWidth={3}
+          dot={false}
+          strokeDasharray="6 4"
         />
       </LineChart>
     </ResponsiveContainer>
