@@ -74,14 +74,14 @@ const NutritionCard = ({
     );
   };
 
-  const handleDeleteEntry = (id: number) => {
-    toast.promise(deleteNutritionDataMutation.mutateAsync(id), {
-      loading: <LoadingToast message="Eliminando entrada..." />,
+  const handleDeleteEntry = (ids: number[]) => {
+    toast.promise(deleteNutritionDataMutation.mutateAsync(ids), {
+      loading: <LoadingToast message="Eliminando entradas..." />,
       success: () => {
-        setNutritionData(nutritionData.filter((entry) => entry.id !== id));
-        return <SuccessToast message="Entrada eliminada con éxito" />;
+        setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
+        return <SuccessToast message="Entradas eliminadas con éxito" />;
       },
-      error: <ErrorToast message="Error al eliminar entrada" />,
+      error: <ErrorToast message="Error al eliminar entradas" />,
     });
   };
 

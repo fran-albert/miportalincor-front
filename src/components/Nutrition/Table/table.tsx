@@ -25,7 +25,7 @@ interface Props {
   nutritionData: NutritionData[];
   onAddEntry: (newEntry: CreateNutritionDataDto) => void;
   onUpdateEntry: (updatedEntry: NutritionData) => void;
-  onDeleteEntry: (id: number) => void;
+  onDeleteEntry: (ids: number[]) => void;
   userId: number;
   isAddingNewEntry: boolean;
   setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>;
@@ -64,7 +64,8 @@ export const NutritionTable: React.FC<Props> = ({
 
   // 3. Acción de borrar todos los seleccionados
   const handleDeleteSelected = () => {
-    selectedIds.forEach((id) => onDeleteEntry(id));
+    if (selectedIds.length === 0) return;
+    onDeleteEntry(selectedIds);
     setSelectedIds([]);
   };
   useEffect(() => {
@@ -177,7 +178,7 @@ export const NutritionTable: React.FC<Props> = ({
   };
 
   const handleDelete = (id: number) => {
-    onDeleteEntry(id);
+    onDeleteEntry([id]);
   };
 
   const columnWidths = {
