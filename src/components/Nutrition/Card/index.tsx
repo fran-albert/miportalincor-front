@@ -14,7 +14,7 @@ import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import ExcelUploader from "../Upload-Excel";
-import { NutritionChart } from "../Chart";
+import WeightEvolutionCard from "../Weight-Evolution";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -74,14 +74,14 @@ const NutritionCard = ({
     );
   };
 
-  const handleDeleteEntry = (id: number) => {
-    toast.promise(deleteNutritionDataMutation.mutateAsync(id), {
-      loading: <LoadingToast message="Eliminando entrada..." />,
+  const handleDeleteEntry = (ids: number[]) => {
+    toast.promise(deleteNutritionDataMutation.mutateAsync(ids), {
+      loading: <LoadingToast message="Eliminando entradas..." />,
       success: () => {
-        setNutritionData(nutritionData.filter((entry) => entry.id !== id));
-        return <SuccessToast message="Entrada eliminada con éxito" />;
+        setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
+        return <SuccessToast message="Entradas eliminadas con éxito" />;
       },
-      error: <ErrorToast message="Error al eliminar entrada" />,
+      error: <ErrorToast message="Error al eliminar entradas" />,
     });
   };
 
@@ -117,21 +117,7 @@ const NutritionCard = ({
           />
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center text-greenPrimary">
-            <ClipboardPlus className="mr-2" />
-            Evolución Peso
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mt-6">
-            <div className="mx-auto w-full max-w-2xl">
-              <NutritionChart data={nutritionData} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <WeightEvolutionCard nutritionData={nutritionData} />
     </>
   );
 };

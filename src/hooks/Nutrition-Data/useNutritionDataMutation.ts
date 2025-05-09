@@ -46,7 +46,7 @@ export const useNutritionDataMutations = () => {
     });
 
     const deleteNutritionDataMutation = useMutation({
-        mutationFn: (id: number) => deleteNutritionData(id),
+        mutationFn: (id: number[]) => deleteNutritionData(id),
         onSuccess: (blodTest, variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['nutrition-data'] });
             console.log("blodTest deleted", blodTest, variables, context);

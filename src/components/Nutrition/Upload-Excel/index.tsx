@@ -39,7 +39,7 @@ export default function ExcelUploader({ userId }: Props) {
 
   const downloadExample = () => {
     const url =
-      "https://res.cloudinary.com/dfoqki8kt/raw/upload/v1741311204/Plantilla_Nutricion.xlsx";
+      "https://res.cloudinary.com/dfoqki8kt/raw/upload/v1746723294/Plantilla_Nutricion_INCOR.xlsx";
     const a = document.createElement("a");
     a.href = url;
     a.download = "Planilla_Nutricion.xlsx";

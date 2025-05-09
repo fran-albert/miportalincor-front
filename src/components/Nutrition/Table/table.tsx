@@ -19,12 +19,13 @@ import type {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   nutritionData: NutritionData[];
   onAddEntry: (newEntry: CreateNutritionDataDto) => void;
   onUpdateEntry: (updatedEntry: NutritionData) => void;
-  onDeleteEntry: (id: number) => void;
+  onDeleteEntry: (ids: number[]) => void;
   userId: number;
   isAddingNewEntry: boolean;
   setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>;
@@ -47,7 +48,26 @@ export const NutritionTable: React.FC<Props> = ({
 }) => {
   const [newEntry, setNewEntry] = useState<CreateNutritionDataDto | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const handleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+  const handleSelectAll = () => {
+    if (selectedIds.length === nutritionData.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(nutritionData.map((e) => e.id));
+    }
+  };
 
+  // 3. Acción de borrar todos los seleccionados
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    onDeleteEntry(selectedIds);
+    setSelectedIds([]);
+  };
   useEffect(() => {
     if (isAddingNewEntry) {
       setNewEntry({
@@ -158,7 +178,7 @@ export const NutritionTable: React.FC<Props> = ({
   };
 
   const handleDelete = (id: number) => {
-    onDeleteEntry(id);
+    onDeleteEntry([id]);
   };
 
   const columnWidths = {
@@ -182,9 +202,14 @@ export const NutritionTable: React.FC<Props> = ({
       <Table className="w-full table-fixed">
         <TableHeader className="bg-white shadow-sm">
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox
+                checked={selectedIds.length === nutritionData.length}
+                onCheckedChange={handleSelectAll}
+              />
+            </TableHead>
             <TableHead className={columnWidths.index}>#</TableHead>
             <TableHead className={columnWidths.date}>Fecha</TableHead>
-            <TableHead className={columnWidths.height}>Altura (cm)</TableHead>
             <TableHead className={columnWidths.weight}>Peso (kg)</TableHead>
             <TableHead className={columnWidths.difference}>
               Diferencia
@@ -199,6 +224,7 @@ export const NutritionTable: React.FC<Props> = ({
               Grasa Visceral
             </TableHead>
             <TableHead className={columnWidths.imc}>IMC</TableHead>
+            <TableHead className={columnWidths.height}>Talla (cm)</TableHead>
             <TableHead className={columnWidths.targetWeight}>
               Peso Objetivo
             </TableHead>
@@ -216,6 +242,12 @@ export const NutritionTable: React.FC<Props> = ({
           <TableBody>
             {nutritionData.map((entry, index) => (
               <TableRow key={entry.id}>
+                <TableCell className="w-12">
+                  <Checkbox
+                    checked={selectedIds.includes(entry.id)}
+                    onCheckedChange={() => handleSelect(entry.id)}
+                  />
+                </TableCell>
                 <TableCell className={columnWidths.index}>
                   {index + 1}
                 </TableCell>
@@ -236,27 +268,6 @@ export const NutritionTable: React.FC<Props> = ({
                     <span className="block truncate">
                       {formatDate(entry.date)}
                     </span>
-                  )}
-                </TableCell>
-                <TableCell className={columnWidths.height}>
-                  {editingId === entry.id ? (
-                    <Input
-                      type="number"
-                      name="height"
-                      step={0.1}
-                      min={0}
-                      value={entry.height ?? 0}
-                      onChange={(e) => handleInputChange(e, entry.id)}
-                      onKeyDown={(e) => {
-                        // Evita punto y coma decimal
-                        if (e.key === "." || e.key === ",") {
-                          e.preventDefault();
-                        }
-                      }}
-                      className="w-full"
-                    />
-                  ) : (
-                    (entry.height ?? 0).toFixed(1)
                   )}
                 </TableCell>
 
@@ -339,6 +350,27 @@ export const NutritionTable: React.FC<Props> = ({
                     entry.imc.toFixed(1)
                   )}
                 </TableCell>
+                <TableCell className={columnWidths.height}>
+                  {editingId === entry.id ? (
+                    <Input
+                      type="number"
+                      name="height"
+                      step={0.1}
+                      min={0}
+                      value={entry.height ?? 0}
+                      onChange={(e) => handleInputChange(e, entry.id)}
+                      onKeyDown={(e) => {
+                        // Evita punto y coma decimal
+                        if (e.key === "." || e.key === ",") {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="w-full"
+                    />
+                  ) : (
+                    (entry.height ?? 0).toFixed(1)
+                  )}
+                </TableCell>
                 <TableCell className={columnWidths.targetWeight}>
                   {editingId === entry.id ? (
                     <Input
@@ -395,6 +427,7 @@ export const NutritionTable: React.FC<Props> = ({
             ))}
             {newEntry && (
               <TableRow>
+                <TableCell className={columnWidths.index}></TableCell>
                 <TableCell className={columnWidths.index}>
                   {nutritionData.length + 1}
                 </TableCell>
@@ -404,16 +437,6 @@ export const NutritionTable: React.FC<Props> = ({
                     name="date"
                     value={newEntry.date}
                     onChange={(e) => handleInputChange(e)}
-                    className="w-full"
-                  />
-                </TableCell>
-                <TableCell className={columnWidths.height}>
-                  <Input
-                    type="number"
-                    name="height"
-                    min={0}
-                    value={(newEntry.height ?? 0).toString()}
-                    onChange={handleInputChange}
                     className="w-full"
                   />
                 </TableCell>
@@ -468,12 +491,21 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="imc"
-                    value={(newEntry?.imc ?? 0).toFixed(2)}
+                    value={(newEntry?.imc ?? 0).toFixed(1)}
                     readOnly
                     className="w-full bg-gray-50 cursor-not-allowed"
                   />
                 </TableCell>
-
+                <TableCell className={columnWidths.height}>
+                  <Input
+                    type="number"
+                    name="height"
+                    min={0}
+                    value={(newEntry.height ?? 0).toString()}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
+                </TableCell>
                 <TableCell className={columnWidths.targetWeight}>
                   <Input
                     type="number"
@@ -504,6 +536,16 @@ export const NutritionTable: React.FC<Props> = ({
               </TableRow>
             )}
           </TableBody>
+          {selectedIds.length > 0 && (
+            <div className="p-2">
+              <Button
+                onClick={handleDeleteSelected}
+                className="bg-red-100 hover:bg-red-200 text-red-600"
+              >
+                Eliminar seleccionados
+              </Button>
+            </div>
+          )}
         </Table>
       </ScrollArea>
     </div>
