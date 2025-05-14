@@ -1,40 +1,32 @@
-import { TableHeader } from "@/components/ui/table";
-import type React from "react";
-import { useState, useEffect } from "react";
-import { formatDate } from "@/common/helpers/helpers";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Pencil, Trash, Save } from "lucide-react";
-import type {
-  NutritionData,
-  CreateNutritionDataDto,
-} from "@/types/Nutrition-Data/NutritionData";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+"use client"
+
+import { TableHeader } from "@/components/ui/table"
+import type React from "react"
+import { useState, useEffect } from "react"
+import { formatDate } from "@/common/helpers/helpers"
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Pencil, Trash, Save } from "lucide-react"
+import type { NutritionData, CreateNutritionDataDto } from "@/types/Nutrition-Data/NutritionData"
+import { format } from "date-fns"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Props {
-  nutritionData: NutritionData[];
-  onAddEntry: (newEntry: CreateNutritionDataDto) => void;
-  onUpdateEntry: (updatedEntry: NutritionData) => void;
-  onDeleteEntry: (ids: number[]) => void;
-  userId: number;
-  isAddingNewEntry: boolean;
-  setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>;
-  setNutritionData: React.Dispatch<React.SetStateAction<NutritionData[]>>;
+  nutritionData: NutritionData[]
+  onAddEntry: (newEntry: CreateNutritionDataDto) => void
+  onUpdateEntry: (updatedEntry: NutritionData) => void
+  onDeleteEntry: (ids: number[]) => void
+  userId: number
+  isAddingNewEntry: boolean
+  setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>
+  setNutritionData: React.Dispatch<React.SetStateAction<NutritionData[]>>
 }
 
 const formatDateForBackend = (dateString: string): string => {
-  return dateString;
-};
+  return dateString
+}
 
 export const NutritionTable: React.FC<Props> = ({
   nutritionData,
@@ -46,28 +38,26 @@ export const NutritionTable: React.FC<Props> = ({
   setIsAddingNewEntry,
   setNutritionData,
 }) => {
-  const [newEntry, setNewEntry] = useState<CreateNutritionDataDto | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [newEntry, setNewEntry] = useState<CreateNutritionDataDto | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
   const handleSelect = (id: number) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }
   const handleSelectAll = () => {
     if (selectedIds.length === nutritionData.length) {
-      setSelectedIds([]);
+      setSelectedIds([])
     } else {
-      setSelectedIds(nutritionData.map((e) => e.id));
+      setSelectedIds(nutritionData.map((e) => e.id))
     }
-  };
+  }
 
   // 3. Acción de borrar todos los seleccionados
   const handleDeleteSelected = () => {
-    if (selectedIds.length === 0) return;
-    onDeleteEntry(selectedIds);
-    setSelectedIds([]);
-  };
+    if (selectedIds.length === 0) return
+    onDeleteEntry(selectedIds)
+    setSelectedIds([])
+  }
   useEffect(() => {
     if (isAddingNewEntry) {
       setNewEntry({
@@ -82,192 +72,182 @@ export const NutritionTable: React.FC<Props> = ({
         targetWeight: 0,
         height: 0,
         observations: "",
-      });
-      setIsAddingNewEntry(false);
+      })
+      setIsAddingNewEntry(false)
     }
-  }, [isAddingNewEntry, userId, setIsAddingNewEntry]);
+  }, [isAddingNewEntry, userId, setIsAddingNewEntry])
 
   // Se modifica para que, en el caso de la fecha, se almacene el string directamente,
   // evitando crear un objeto Date y así los desfases por zona horaria.
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    id?: number
-  ) => {
-    const { name, value } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, id?: number) => {
+    const { name, value } = e.target
+
+    // Campos que deben ser number
+    const numericFields = new Set([
+      "weight",
+      "height",
+      "difference",
+      "fatPercentage",
+      "musclePercentage",
+      "visceralFat",
+      "imc",
+      "targetWeight",
+    ])
+
+    // Función auxiliar para parsear el campo según su tipo
+    const parseValue = (): number | string => {
+      if (name === "date") return value
+      if (numericFields.has(name)) return Number(value)
+      return value // para observaciones y cualquier otro texto
+    }
+
     if (id !== undefined) {
+      // Edición de un entry existente
       setNutritionData((prev) =>
         prev.map((entry, idx, arr) => {
-          if (entry.id !== id) return entry;
+          if (entry.id !== id) return entry
 
-          // paso 1: datos base
-          const updatedEntry = {
+          const updatedEntry: NutritionData = {
             ...entry,
-            [name]: name === "date" ? value : Number(value),
-          };
-          if (name === "weight" || name === "height") {
-            const weight = name === "weight" ? Number(value) : entry.weight;
-            const height = name === "height" ? Number(value) : entry.height;
-            const heightM = height / 100;
-            updatedEntry.imc = heightM > 0 ? weight / (heightM * heightM) : 0;
+            [name]: parseValue(),
           }
 
-          // 2. Recalculamos la diferencia solo si cambió el peso
+          // Recalcular IMC si cambian peso o altura
+          if (name === "weight" || name === "height") {
+            const weight = name === "weight" ? Number(value) : entry.weight
+            const height = name === "height" ? Number(value) : entry.height
+            const heightM = height / 100
+            updatedEntry.imc = heightM > 0 ? weight / (heightM * heightM) : 0
+          }
+
+          // Recalcular diferencia si cambia peso
           if (name === "weight") {
             if (idx > 0) {
-              const prevWeight = arr[idx - 1].weight;
-              updatedEntry.difference = updatedEntry.weight - prevWeight;
+              const prevWeight = arr[idx - 1].weight
+              updatedEntry.difference = updatedEntry.weight - prevWeight
             } else {
-              // fila 0: siempre 0
-              updatedEntry.difference = 0;
+              updatedEntry.difference = 0
             }
           }
-          return updatedEntry;
-        })
-      );
+
+          return updatedEntry
+        }),
+      )
     } else {
-      // mismo para newEntry
+      // Entrada nueva
       setNewEntry((prev) => {
-        if (!prev) return null;
-        const updated = {
+        if (!prev) return null
+
+        const updated: CreateNutritionDataDto = {
           ...prev,
-          [name]: name === "date" ? value : Number(value),
-        };
+          [name]: parseValue(),
+        }
 
         if (name === "weight" || name === "height") {
-          const weight = name === "weight" ? Number(value) : prev.weight;
-          const height = name === "height" ? Number(value) : prev.height;
-          const heightM = height / 100;
-          updated.imc = heightM > 0 ? weight / (heightM * heightM) : 0;
+          const weight = name === "weight" ? Number(value) : prev.weight
+          const height = name === "height" ? Number(value) : prev.height
+          const heightM = height / 100
+          updated.imc = heightM > 0 ? weight / (heightM * heightM) : 0
         }
 
         if (name === "weight") {
           if (nutritionData.length > 0) {
-            const last = nutritionData[nutritionData.length - 1];
-            updated.difference = updated.weight - last.weight;
+            const last = nutritionData[nutritionData.length - 1]
+            updated.difference = updated.weight - last.weight
           } else {
-            updated.difference = 0;
+            updated.difference = 0
           }
         }
-        return updated;
-      });
+
+        return updated
+      })
     }
-  };
+  }
 
   const handleSaveNewEntry = () => {
     if (newEntry) {
       const entryForBackend: CreateNutritionDataDto = {
         ...newEntry,
         date: formatDateForBackend(newEntry.date),
-      };
-      onAddEntry(entryForBackend);
-      setNewEntry(null);
-      setIsAddingNewEntry(false);
+      }
+      onAddEntry(entryForBackend)
+      setNewEntry(null)
+      setIsAddingNewEntry(false)
     }
-  };
+  }
 
   const handleEdit = (id: number) => {
-    setEditingId(id);
-  };
+    setEditingId(id)
+  }
 
   const handleSaveEdit = (id: number) => {
-    const entryToUpdate = nutritionData.find((entry) => entry.id === id);
+    const entryToUpdate = nutritionData.find((entry) => entry.id === id)
     if (entryToUpdate) {
-      onUpdateEntry(entryToUpdate);
+      onUpdateEntry(entryToUpdate)
     }
-    setEditingId(null);
-  };
+    setEditingId(null)
+  }
 
   const handleDelete = (id: number) => {
-    onDeleteEntry([id]);
-  };
+    onDeleteEntry([id])
+  }
 
   const columnWidths = {
-    index: "w-16",
-    date: "w-32",
-    weight: "w-24",
-    difference: "w-24",
-    fatPercentage: "w-24",
-    musclePercentage: "w-24",
-    visceralFat: "w-32",
-    height: "w-24",
-    imc: "w-24",
-    targetWeight: "w-32",
-    observations: "w-auto",
-    actions: "w-24",
-  };
+    index: "w-12 md:w-16",
+    date: "w-24 md:w-32",
+    weight: "w-20 md:w-24",
+    difference: "w-20 md:w-24",
+    fatPercentage: "w-20 md:w-24",
+    musclePercentage: "w-20 md:w-24",
+    visceralFat: "w-24 md:w-32",
+    height: "w-20 md:w-24",
+    imc: "w-20 md:w-24",
+    targetWeight: "w-24 md:w-32",
+    observations: "w-[200px] md:w-[300px]",
+    actions: "w-20 md:w-24",
+  }
 
   return (
-    <div className="w-full h-[400px] flex flex-col">
-      {/* Header fijo */}
-      <Table className="w-full table-fixed">
-        <TableHeader className="bg-white shadow-sm">
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                checked={selectedIds.length === nutritionData.length}
-                onCheckedChange={handleSelectAll}
-              />
-            </TableHead>
-            <TableHead className={columnWidths.index}>#</TableHead>
-            <TableHead className={columnWidths.date}>Fecha</TableHead>
-            <TableHead className={columnWidths.weight}>Peso (kg)</TableHead>
-            <TableHead className={columnWidths.difference}>
-              Diferencia
-            </TableHead>
-            <TableHead className={columnWidths.fatPercentage}>
-              % Grasa
-            </TableHead>
-            <TableHead className={columnWidths.musclePercentage}>
-              % Músculo
-            </TableHead>
-            <TableHead className={columnWidths.visceralFat}>
-              Grasa Visceral
-            </TableHead>
-            <TableHead className={columnWidths.imc}>IMC</TableHead>
-            <TableHead className={columnWidths.height}>Talla (cm)</TableHead>
-            <TableHead className={columnWidths.targetWeight}>
-              Peso Objetivo
-            </TableHead>
-            <TableHead className={columnWidths.observations}>
-              Observaciones
-            </TableHead>
-            <TableHead className={columnWidths.actions}>Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-      </Table>
-
-      {/* Cuerpo desplazable */}
-      <ScrollArea className="flex-1 w-full">
+    <div className="w-full h-[400px] ">
+      <div className="min-w-[1000px]">
         <Table className="w-full table-fixed">
+          <TableHeader className="bg-white shadow-sm sticky top-0 z-10">
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox checked={selectedIds.length === nutritionData.length} onCheckedChange={handleSelectAll} />
+              </TableHead>
+              <TableHead className={columnWidths.index}>#</TableHead>
+              <TableHead className={columnWidths.date}>Fecha</TableHead>
+              <TableHead className={columnWidths.weight}>Peso (kg)</TableHead>
+              <TableHead className={columnWidths.difference}>Diferencia</TableHead>
+              <TableHead className={columnWidths.fatPercentage}>% Grasa</TableHead>
+              <TableHead className={columnWidths.musclePercentage}>% Músculo</TableHead>
+              <TableHead className={columnWidths.visceralFat}>Grasa Visceral</TableHead>
+              <TableHead className={columnWidths.imc}>IMC</TableHead>
+              <TableHead className={columnWidths.height}>Talla (cm)</TableHead>
+              <TableHead className={columnWidths.targetWeight}>Peso Objetivo</TableHead>
+              <TableHead className={columnWidths.observations}>Observaciones</TableHead>
+              <TableHead className={columnWidths.actions}>Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             {nutritionData.map((entry, index) => (
               <TableRow key={entry.id}>
                 <TableCell className="w-12">
-                  <Checkbox
-                    checked={selectedIds.includes(entry.id)}
-                    onCheckedChange={() => handleSelect(entry.id)}
-                  />
+                  <Checkbox checked={selectedIds.includes(entry.id)} onCheckedChange={() => handleSelect(entry.id)} />
                 </TableCell>
-                <TableCell className={columnWidths.index}>
-                  {index + 1}
-                </TableCell>
+                <TableCell className={columnWidths.index}>{index + 1}</TableCell>
                 <TableCell className={columnWidths.date}>
                   {editingId === entry.id ? (
                     <input
                       type="date"
                       name="date"
-                      value={
-                        typeof entry.date === "string"
-                          ? entry.date
-                          : format(new Date(entry.date), "yyyy-MM-dd")
-                      }
+                      value={typeof entry.date === "string" ? entry.date : format(new Date(entry.date), "yyyy-MM-dd")}
                       onChange={(e) => handleInputChange(e, entry.id)}
                       className="w-full"
                     />
                   ) : (
-                    <span className="block truncate">
-                      {formatDate(entry.date)}
-                    </span>
+                    <span className="block truncate">{formatDate(entry.date)}</span>
                   )}
                 </TableCell>
 
@@ -362,7 +342,7 @@ export const NutritionTable: React.FC<Props> = ({
                       onKeyDown={(e) => {
                         // Evita punto y coma decimal
                         if (e.key === "." || e.key === ",") {
-                          e.preventDefault();
+                          e.preventDefault()
                         }
                       }}
                       className="w-full"
@@ -390,11 +370,13 @@ export const NutritionTable: React.FC<Props> = ({
                       name="observations"
                       value={entry.observations || ""}
                       onChange={(e) => handleInputChange(e, entry.id)}
-                      className="w-full"
-                      rows={2}
+                      className="w-full min-h-[80px]"
+                      rows={3}
                     />
                   ) : (
-                    <span className="block truncate">{entry.observations}</span>
+                    <div className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+                      {entry.observations}
+                    </div>
                   )}
                 </TableCell>
 
@@ -428,9 +410,7 @@ export const NutritionTable: React.FC<Props> = ({
             {newEntry && (
               <TableRow>
                 <TableCell className={columnWidths.index}></TableCell>
-                <TableCell className={columnWidths.index}>
-                  {nutritionData.length + 1}
-                </TableCell>
+                <TableCell className={columnWidths.index}>{nutritionData.length + 1}</TableCell>
                 <TableCell className={columnWidths.date}>
                   <input
                     type="date"
@@ -520,8 +500,8 @@ export const NutritionTable: React.FC<Props> = ({
                     name="observations"
                     value={newEntry.observations || ""}
                     onChange={handleInputChange}
-                    className="w-full"
-                    rows={2}
+                    className="w-full min-h-[80px]"
+                    rows={3}
                   />
                 </TableCell>
 
@@ -537,17 +517,18 @@ export const NutritionTable: React.FC<Props> = ({
             )}
           </TableBody>
           {selectedIds.length > 0 && (
-            <div className="p-2">
-              <Button
-                onClick={handleDeleteSelected}
-                className="bg-red-100 hover:bg-red-200 text-red-600"
-              >
-                Eliminar seleccionados
-              </Button>
-            </div>
+            <tfoot>
+              <tr>
+                <td colSpan={12} className="p-2">
+                  <Button onClick={handleDeleteSelected} className="bg-red-100 hover:bg-red-200 text-red-600">
+                    Eliminar seleccionados
+                  </Button>
+                </td>
+              </tr>
+            </tfoot>
           )}
         </Table>
-      </ScrollArea>
+      </div>
     </div>
-  );
-};
+  )
+}
