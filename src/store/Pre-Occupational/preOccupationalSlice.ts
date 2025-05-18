@@ -31,11 +31,11 @@ export interface ExamenClinico {
   talla: string;
   peso: string;
   imc: string;
-  perimetroAbdominal: string,
-  frecuenciaCardiaca: string,
-  frecuenciaRespiratoria: string,
-  presionSistolica: string,
-  presionDiastolica: string,
+  perimetroAbdominal: string;
+  frecuenciaCardiaca: string;
+  frecuenciaRespiratoria: string;
+  presionSistolica: string;
+  presionDiastolica: string;
 }
 
 interface ExamenFisicoItem {
@@ -48,6 +48,77 @@ export interface IMedicalEvaluation {
   tiempoLibre: string;
   examenClinico: ExamenClinico;
   examenFisico: Record<string, ExamenFisicoItem>;
+  agudezaSc?: { right: string; left: string };
+  agudezaCc?: { right: string; left: string };
+  visionCromatica?: 'normal' | 'anormal';
+  notasVision?: string;
+  piel?: {
+    normocoloreada: "si" | "no";
+    tatuajes: "si" | "no";
+    observaciones: string;
+  };
+  cabezaCuello?: {
+    sinAlteraciones: boolean;
+    observaciones: string;
+  };
+  bucodental?: {
+    sinAlteraciones: boolean;
+    caries: boolean;
+    faltanPiezas: boolean;
+    observaciones: string;
+  };
+  torax?: {
+    deformaciones: "si" | "no";
+    deformacionesObs: string;
+    cicatrices: "si" | "no";
+    cicatricesObs: string;
+  };
+  respiratorio?: {
+    frecuenciaRespiratoria: string;
+    oximetria: string;
+    sinAlteraciones: boolean;
+    observaciones: string;
+  };
+  circulatorio?: {
+    frecuenciaCardiaca: string;
+    presion: string;          // ej. "112/89"
+    sinAlteraciones: boolean;
+    observaciones: string;
+    varices: boolean;
+    varicesObs: string;
+  };
+  neurologico?: {
+    sinAlteraciones: boolean;
+    observaciones: string;
+  };
+  gastrointestinal?: {
+    sinAlteraciones: boolean;
+    observaciones: string;
+    cicatrices: boolean;
+    cicatricesObs: string;
+    hernias: boolean;
+    herniasObs: string;
+    eventraciones: boolean;
+    eventracionesObs: string;
+    hemorroides: boolean;
+    hemorroidesObs: string;
+  };
+  genitourinario?: {
+    sinAlteraciones: boolean;
+    observaciones: string;
+    varicocele: boolean;
+    varicoceleObs: string;
+  };
+  osteoarticular?: {
+    mmssSin: boolean;
+    mmssObs: string;
+    mmiiSin: boolean;
+    mmiiObs: string;
+    columnaSin: boolean;
+    columnaObs: string;
+    amputaciones: boolean;
+    amputacionesObs: string;
+  };
 }
 
 interface InstitutionInformation {
@@ -164,7 +235,7 @@ const initialState: PreOccupationalState = {
         frecuenciaRespiratoria: "",
         perimetroAbdominal: "",
         presionDiastolica: "",
-        presionSistolica: ""
+        presionSistolica: "",
       },
       examenFisico: {},
     },
