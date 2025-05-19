@@ -15,15 +15,24 @@ import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import ExcelUploader from "../Upload-Excel";
 import WeightEvolutionCard from "../Weight-Evolution";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { NutritionPdfDocument } from "../Pdf";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { capitalizeWords } from "@/common/helpers/helpers";
 
 interface Props {
   nutritionData: NutritionData[];
   userId: number;
+  userName: string;
+  userLastname: string;
 }
 
 const NutritionCard = ({
   nutritionData: initialNutritionData,
   userId,
+  userLastname,
+  userName,
 }: Props) => {
   const [nutritionData, setNutritionData] = useState(initialNutritionData);
   const {
@@ -32,7 +41,15 @@ const NutritionCard = ({
     deleteNutritionDataMutation,
   } = useNutritionDataMutations();
   const [isAddingNewEntry, setIsAddingNewEntry] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [chartBase64, setChartBase64] = useState<string>();
+  const today = format(new Date(), "dd-MM-yyyy", { locale: es });
 
+  const nameCap = capitalizeWords(userName);
+  const surnameCap = capitalizeWords(userLastname);
+  
+  const fileName = `${nameCap}-${surnameCap}-Control-Nutricional-Incor-${today}.pdf`;
   const handleAddNewEntry = () => {
     setIsAddingNewEntry(true);
   };
@@ -102,6 +119,28 @@ const NutritionCard = ({
               Nueva Fila
             </Button>
             <ExcelUploader userId={userId} />
+            <PDFDownloadLink
+              document={
+                <NutritionPdfDocument
+                  data={nutritionData}
+                  patientName={userName}
+                  patientSurname={userLastname}
+                  logoSrc="https://res.cloudinary.com/dfoqki8kt/image/upload/v1747680733/jzpshzgbcrtne9fbkhxm.png"
+                  chartSrc={chartBase64}
+                  dateFrom={
+                    startDate ? startDate.toLocaleDateString("es-AR") : "-"
+                  }
+                  dateTo={endDate ? endDate.toLocaleDateString("es-AR") : "-"}
+                />
+              }
+              fileName={fileName}
+            >
+              {({ loading }) => (
+                <Button variant="outline" disabled={loading}>
+                  Exportar a PDF
+                </Button>
+              )}
+            </PDFDownloadLink>
           </div>
         </CardHeader>
         <CardContent>
@@ -117,7 +156,14 @@ const NutritionCard = ({
           />
         </CardContent>
       </Card>
-      <WeightEvolutionCard nutritionData={nutritionData} />
+      <WeightEvolutionCard
+        nutritionData={nutritionData}
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onChartReady={setChartBase64}
+      />
     </>
   );
 };

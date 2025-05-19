@@ -28,11 +28,16 @@ const NutritionComponent = ({ nutritionData, slug, slugParts, role }: Props) => 
     },
   ];
 
+  const [firstName, ...last] = slugParts.formattedName.split(" ");
+  const lastName = last.join(" ");
+
   return (
     <div className="container space-y-2 mt-2">
       <BreadcrumbComponent items={breadcrumbItems} />
       <NutritionCard
         nutritionData={nutritionData}
+        userName={firstName}
+        userLastname={lastName}
         userId={Number(slugParts.id)}
       />
     </div>

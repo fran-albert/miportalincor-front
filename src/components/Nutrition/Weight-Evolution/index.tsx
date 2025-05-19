@@ -1,19 +1,34 @@
-import * as React from "react";
+// WeightEvolutionCard.tsx
+import React, { useEffect, useRef, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ClipboardPlus } from "lucide-react";
 import type { NutritionData } from "@/types/Nutrition-Data/NutritionData";
-import { NutritionChart } from "../Chart";
-import { useState, useMemo } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
+import { toPng } from "html-to-image";
+import { NutritionChart } from "../Chart";
 
 interface Props {
   nutritionData: NutritionData[];
+  startDate?: Date;
+  endDate?: Date;
+  onStartDateChange: (d?: Date) => void;
+  onEndDateChange: (d?: Date) => void;
+  onChartReady: (dataUrl: string) => void;
 }
 
-const WeightEvolutionCard: React.FC<Props> = ({ nutritionData: initialData }) => {
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+const CAPTURE_WIDTH = 600;
+const CAPTURE_HEIGHT = 300;
+
+const WeightEvolutionCard: React.FC<Props> = ({
+  nutritionData: initialData,
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  onChartReady,
+}) => {
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const filteredData = useMemo(() => {
     return initialData.filter((d) => {
@@ -23,6 +38,22 @@ const WeightEvolutionCard: React.FC<Props> = ({ nutritionData: initialData }) =>
       return true;
     });
   }, [initialData, startDate, endDate]);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      Object.assign(chartRef.current.style, {
+        width: `${CAPTURE_WIDTH}px`,
+        height: `${CAPTURE_HEIGHT}px`,
+      });
+      toPng(chartRef.current, { cacheBust: true, pixelRatio: 2 })
+        .then(onChartReady)
+        .catch(console.error)
+        .finally(() => {
+          chartRef.current!.style.width = "";
+          chartRef.current!.style.height = "";
+        });
+    }
+  }, [filteredData, onChartReady]);
 
   return (
     <Card>
@@ -36,26 +67,26 @@ const WeightEvolutionCard: React.FC<Props> = ({ nutritionData: initialData }) =>
             <Label htmlFor="startDate" className="block mb-1 text-sm font-medium">
               Desde
             </Label>
-            <DatePicker
-              value={startDate}
-              onChange={setStartDate}
-            />
+            <DatePicker value={startDate} onChange={onStartDateChange} />
           </div>
           <div className="flex-1">
             <Label htmlFor="endDate" className="block mb-1 text-sm font-medium">
               Hasta
             </Label>
-            <DatePicker
-              value={endDate}
-              onChange={setEndDate}
-            />
+            <DatePicker value={endDate} onChange={onEndDateChange} />
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {filteredData.length > 0 ? (
           <div className="mx-auto w-full max-w-2xl">
-            <NutritionChart data={filteredData} />
+            <div ref={chartRef}>
+              <NutritionChart
+                data={filteredData}
+                width={CAPTURE_WIDTH}
+                height={CAPTURE_HEIGHT}
+              />
+            </div>
           </div>
         ) : (
           <p className="text-center text-muted-foreground py-8">
