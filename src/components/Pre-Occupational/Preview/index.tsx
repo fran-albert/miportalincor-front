@@ -11,8 +11,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import PdfLoadingOverlay from "@/components/Pdf/Overlay";
 import PDFDocument from "./Pdf/Document";
 import View from "./View";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action";
@@ -36,10 +34,6 @@ export default function PreOccupationalPreviewComponent({
   });
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
-
-  const { conclusion, recomendaciones } = useSelector(
-    (state: RootState) => state.preOccupational.formData
-  );
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -83,9 +77,7 @@ export default function PreOccupationalPreviewComponent({
         <PDFDocument
           collaborator={collaborator}
           studies={studiesWithDataUrls}
-          conclusion={conclusion}
           dataValues={dataValues}
-          recomendaciones={recomendaciones}
           medicalEvaluationType={medicalEvaluation.evaluationType.name}
         />
       );
