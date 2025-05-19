@@ -11,6 +11,7 @@ import { ExamResults } from "@/common/helpers/examsResults.maps";
 import {
   aspectoGeneralyTiempolibre,
   mapClinicalEvaluation,
+  mapConclusionAndRecommendationsData,
   mapExamResults,
   mapPhysicalEvaluation,
   PhysicalEvaluation,
@@ -19,8 +20,6 @@ import {
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
-  conclusion: string;
-  recomendaciones: string;
   medicalEvaluationType: string;
   dataValues: DataValue[] | undefined;
 }
@@ -28,15 +27,13 @@ interface Props {
 const PDFDocument = ({
   collaborator,
   studies,
-  conclusion,
-  recomendaciones,
   dataValues,
   medicalEvaluationType,
 }: Props) => {
   const antecedentes = dataValues?.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-
+  const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(dataValues!);
   const examResults: ExamResults = mapExamResults(dataValues!);
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
