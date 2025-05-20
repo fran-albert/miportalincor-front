@@ -64,16 +64,37 @@ const WeightEvolutionCard: React.FC<Props> = ({
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <div className="flex-1">
-            <Label htmlFor="startDate" className="block mb-1 text-sm font-medium">
+            <Label
+              htmlFor="startDate"
+              className="block mb-1 text-sm font-medium"
+            >
               Desde
             </Label>
-            <DatePicker value={startDate} onChange={onStartDateChange} />
+            <input
+              id="startDate"
+              type="date"
+              className="w-full rounded border border-gray-300 p-2 text-sm"
+              value={startDate ? startDate.toISOString().slice(0, 10) : ""}
+              onChange={(e) => {
+                const d = e.target.value ? new Date(e.target.value) : undefined;
+                onStartDateChange(d);
+              }}
+            />
           </div>
           <div className="flex-1">
             <Label htmlFor="endDate" className="block mb-1 text-sm font-medium">
               Hasta
             </Label>
-            <DatePicker value={endDate} onChange={onEndDateChange} />
+            <input
+              id="endDate"
+              type="date"
+              className="w-full rounded border border-gray-300 p-2 text-sm"
+              value={endDate ? endDate.toISOString().slice(0, 10) : ""}
+              onChange={(e) => {
+                const d = e.target.value ? new Date(e.target.value) : undefined;
+                onEndDateChange(d);
+              }}
+            />
           </div>
         </div>
       </CardHeader>
