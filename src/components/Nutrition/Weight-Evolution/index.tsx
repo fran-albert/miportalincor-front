@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ClipboardPlus } from "lucide-react";
 import type { NutritionData } from "@/types/Nutrition-Data/NutritionData";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { toPng } from "html-to-image";
 import { NutritionChart } from "../Chart";
