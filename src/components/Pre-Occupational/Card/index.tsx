@@ -9,6 +9,8 @@ import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
 import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllUrlsByCollaboratorAndMedicalEvaluation";
 import { useDataValuesByMedicalEvaluationId } from "@/hooks/Data-Values/useDataValues";
+import LoadingAnimation from "@/components/Loading/loading";
+import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 
 interface Props {
   slug: string;
@@ -21,19 +23,41 @@ export default function PreOccupationalCards({
   collaborator,
   medicalEvaluation,
 }: Props) {
-  const { data: urls } = useGetAllUrlsByCollaboratorAndMedicalEvaluation({
+  const {
+    data: urls,
+    isLoading: isLoadingUrls,
+    isError: isErrorUrls,
+  } = useGetAllUrlsByCollaboratorAndMedicalEvaluation({
     auth: true,
     collaboratorId: collaborator.id,
     medicalEvaluationId: medicalEvaluation.id,
   });
-
-  const { data: dataValues } = useDataValuesByMedicalEvaluationId({
-    id: medicalEvaluation.id,
+ 
+  const { data: fields, isLoading: isLoadingFields } = useDataTypes({
     auth: true,
+    fetch: true,
+    categories: ["GENERAL", "ESTUDIOS"],
+  });
+
+  const {
+    data: dataValues,
+    isLoading: isLoadingValues,
+    isError: isErrorValues,
+  } = useDataValuesByMedicalEvaluationId({
+    auth: true,
+    id: medicalEvaluation.id,
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+
+  if (isLoadingUrls || isLoadingValues || isLoadingFields) {
+    return <LoadingAnimation />;
+  }
+  if (isErrorUrls || isErrorValues) {
+    return <div>Error cargando datos</div>;
+  }
+
   return (
     <div className="min-h-screen p-4">
       <div className="mx-auto space-y-4">
@@ -79,6 +103,7 @@ export default function PreOccupationalCards({
           isEditing={isEditing}
           dataValues={dataValues}
           urls={urls}
+          fields={fields}   
           medicalEvaluationId={medicalEvaluation.id}
           setIsEditing={setIsEditing}
           collaborator={collaborator}

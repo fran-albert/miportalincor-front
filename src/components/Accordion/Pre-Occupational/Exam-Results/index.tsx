@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   AccordionContent,
   AccordionItem,
@@ -6,42 +5,29 @@ import {
 } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch } from "@/store/store";
-import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataType } from "@/types/Data-Type/Data-Type";
-import { DataValue } from "@/types/Data-Value/Data-Value";
-import { mapExamResults } from "@/common/helpers/examsResults.maps";
-import { Button } from "@/components/ui/button";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import LoadingToast from "@/components/Toast/Loading";
 import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 
-interface Props {
+interface ExamsResultsAccordionProps {
   isEditing: boolean;
   fields: DataType[];
-  dataValues?: DataValue[];
+  examResults: Record<string, string>;
+  setExamResults: (er: Record<string, string>) => void;
   medicalEvaluationId: number;
 }
 
 export default function ExamsResultsAccordion({
   isEditing,
   fields,
-  dataValues,
+  examResults,
+  setExamResults,
   medicalEvaluationId,
-}: Props) {
-  const dispatch = useDispatch<AppDispatch>();
-  console.log(dataValues);
-  const [localExamResults, setLocalExamResults] = useState<
-    Record<string, string>
-  >({});
-
-  const globalExamResults = useSelector(
-    (state: RootState) => state.preOccupational.formData.examResults
-  );
-
+}: ExamsResultsAccordionProps) {
   const examFilter = [
     { id: "clinico", name: "Clínico" },
     { id: "electrocardiograma-result", name: "Electrocardiograma" },
@@ -53,96 +39,27 @@ export default function ExamsResultsAccordion({
   ];
 
   const normalize = (str: string) =>
-    str
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+  // Filtrar y deduplicar campos STRING & GENERAL
   const exams = fields
     .filter(
-      (field) =>
-        field.dataType === "STRING" &&
-        field.category === "GENERAL" &&
-        examFilter.some(
-          (exam) => normalize(exam.name) === normalize(field.name)
-        )
+      (f) =>
+        f.dataType === "STRING" &&
+        f.category === "GENERAL" &&
+        examFilter.some((e) => normalize(e.name) === normalize(f.name))
     )
-    .reduce((acc, curr) => {
-      if (!acc.find((exam) => exam.name === curr.name)) {
-        acc.push(curr);
-      }
+    .reduce((acc: DataType[], curr) => {
+      if (!acc.find((x) => x.name === curr.name)) acc.push(curr);
       return acc;
-    }, [] as DataType[]);
+    }, []);
 
   const mappedExams = exams.map((exam) => ({
     id:
-      examFilter.find((e) => normalize(e.name) === normalize(exam.name))?.id ||
-      exam.id.toString(),
+      examFilter.find((e) => normalize(e.name) === normalize(exam.name))
+        ?.id || exam.id.toString(),
     label: exam.name,
   }));
-
-  useEffect(() => {
-    setLocalExamResults({ ...globalExamResults });
-  }, [globalExamResults]);
-
-  useEffect(() => {
-    if (dataValues && dataValues.length > 0) {
-      // <-- filtrar sólo GENERAL & STRING
-      const generalStrings = dataValues.filter(
-        (dv) =>
-          dv.dataType.dataType === "STRING" &&
-          dv.dataType.category === "GENERAL"
-      );
-
-      const initialExamResults = mapExamResults(generalStrings);
-
-      setLocalExamResults((prev) => ({
-        ...prev,
-        ...initialExamResults,
-      }));
-
-      dispatch(
-        setFormData({
-          examResults: {
-            ...globalExamResults,
-            ...initialExamResults,
-          },
-        })
-      );
-    }
-  }, [dataValues, dispatch]);
-
-  useEffect(() => {
-    const updatedResults = { ...localExamResults };
-    let hasChanges = false;
-
-    mappedExams.forEach((exam) => {
-      if (updatedResults[exam.id] === undefined) {
-        updatedResults[exam.id] = "";
-        hasChanges = true;
-      }
-    });
-
-    if (hasChanges) {
-      setLocalExamResults(updatedResults);
-    }
-  }, [mappedExams]);
-
-  const handleExamChange = (examId: string, value: string) => {
-    setLocalExamResults((prev) => ({
-      ...prev,
-      [examId]: value,
-    }));
-
-    dispatch(
-      setFormData({
-        examResults: {
-          ...globalExamResults,
-          [examId]: value,
-        },
-      })
-    );
-  };
 
   const { createDataValuesMutation } = useDataValuesMutations();
 
@@ -150,16 +67,11 @@ export default function ExamsResultsAccordion({
     const payload = {
       medicalEvaluationId,
       dataValues: mappedExams
-        .map((exam) => {
-          const dt = fields.find((f) => f.name === exam.label)!;
-          // Buscá si ya hay un DataValue para este examen:
-          const existing = dataValues?.find((dv) => dv.dataType.id === dt.id);
-          return {
-            id: existing?.id, // ← aquí incluyes el id, si existe
-            dataTypeId: dt.id,
-            value: localExamResults[exam.id] || "",
-          };
-        })
+        .map((exam) => ({
+          dataTypeId:
+            fields.find((f) => f.name === exam.label)!.id,
+          value: examResults[exam.id] || "",
+        }))
         .filter((dv) => dv.value.trim() !== ""),
     };
 
@@ -175,22 +87,26 @@ export default function ExamsResultsAccordion({
       <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
         Resultados del Examen
       </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4">
-        <div className="space-y-4">
-          {mappedExams.map((exam) => (
-            <div key={exam.id} className="space-y-2">
-              <Label htmlFor={exam.id}>{exam.label}</Label>
-              <Textarea
-                id={exam.id}
-                placeholder={`Ingrese resultados de ${exam.label.toLowerCase()}...`}
-                disabled={!isEditing}
-                value={localExamResults[exam.id] || ""}
-                onChange={(e) => handleExamChange(exam.id, e.target.value)}
-                className="min-h-[100px] disabled:opacity-50"
-              />
-            </div>
-          ))}
-        </div>
+      <AccordionContent className="px-4 pb-4 space-y-4">
+        {mappedExams.map((exam) => (
+          <div key={exam.id} className="space-y-2">
+            <Label htmlFor={exam.id}>{exam.label}</Label>
+            <Textarea
+              id={exam.id}
+              placeholder={`Ingrese resultados de ${exam.label.toLowerCase()}...`}
+              disabled={!isEditing}
+              value={examResults[exam.id] || ""}
+              onChange={(e) =>
+                setExamResults({
+                  ...examResults,
+                  [exam.id]: e.target.value,
+                })
+              }
+              className="min-h-[100px] disabled:opacity-50"
+            />
+          </div>
+        ))}
+
         <div className="flex justify-end gap-4 mt-2">
           <Button
             disabled={!isEditing || createDataValuesMutation.isPending}

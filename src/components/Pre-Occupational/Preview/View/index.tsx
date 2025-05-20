@@ -40,7 +40,9 @@ const View: React.FC<Props> = ({
   const antecedentes = dataValues.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-
+  const filteredStudies = studies?.filter(
+    (s) => s.dataTypeName !== medicalEvaluationType
+  );
   return (
     <div>
       <FirstPageHTML
@@ -67,7 +69,7 @@ const View: React.FC<Props> = ({
         presionSistolica={clinicalEvaluation.presionSistolica}
       />
       <ThirdPageHTML examenFisico={physicalEvaluation} />
-      {studies?.map((study, index) => (
+      {filteredStudies?.map((study, index) => (
         <StudyPageHtml
           key={index}
           studyTitle={`${study.dataTypeName}`}
