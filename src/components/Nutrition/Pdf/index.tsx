@@ -82,7 +82,7 @@ const columns: { key: keyof NutritionData; label: string }[] = [
   { key: "imc", label: "IMC" },
   { key: "height", label: "Talla (cm)" },
   { key: "targetWeight", label: "Peso Objetivo (kg)" },
-  { key: "observations", label: "Observaciones" },
+  // { key: "observations", label: "Observaciones" },
 ];
 
 export function NutritionPdfDocument({
@@ -110,7 +110,7 @@ export function NutritionPdfDocument({
           {logoSrc && <Image src={logoSrc} style={styles.logo} />}
           <View style={styles.patientInfo}>
             <Text style={styles.headerTitle}>
-              Paciente: {patientName} {patientSurname}
+              {patientName} {patientSurname}
             </Text>
             <Text>
               Fecha: {new Date().toLocaleDateString("es-AR")}
