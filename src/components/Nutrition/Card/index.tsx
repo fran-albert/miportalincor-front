@@ -52,18 +52,19 @@ const NutritionCard: React.FC<Props> = ({
   const [pdfUrl, setPdfUrl] = useState<string>();
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [isAddingNewEntry, setIsAddingNewEntry] = useState(false);
-  // — Nombre de archivo
   const nameCap = capitalizeWords(userName);
   const surnameCap = capitalizeWords(userLastname);
   const today = format(new Date(), "dd-MM-yyyy", { locale: es });
   const fileName = `${nameCap}-${surnameCap}-Control-Nutricional-Incor-${today}.pdf`;
 
-  // — Sincronización inicial de datos
   useEffect(() => {
     setNutritionData(initialNutritionData);
   }, [initialNutritionData]);
 
-  // — Handlers de tabla
+  useEffect(() => {
+    setPdfUrl(undefined);
+  }, [startDate, endDate]);
+
   const handleAddEntry = (newEntry: CreateNutritionDataDto) => {
     toast.promise(addNutritionDataMutation.mutateAsync(newEntry), {
       loading: <LoadingToast message="Agregando nueva entrada..." />,
@@ -143,17 +144,30 @@ const NutritionCard: React.FC<Props> = ({
             Control Nutricional
           </CardTitle>
           <div className="div">
-            <Button onClick={() => setIsAddingNewEntry(true)} variant="link" className="text-greenPrimary">
+            <Button
+              onClick={() => setIsAddingNewEntry(true)}
+              variant="link"
+              className="text-greenPrimary"
+            >
               Nueva Fila
             </Button>
             <ExcelUploader userId={userId} />
             {!pdfUrl ? (
-              <Button onClick={preparePdf} disabled={loadingPdf} className="bg-teal-800 hover:bg-teal-950">
+              <Button
+                onClick={preparePdf}
+                disabled={loadingPdf}
+                className="bg-teal-800 hover:bg-teal-950"
+              >
                 {loadingPdf ? "Generando…" : "Generar PDF"}
               </Button>
             ) : (
               <a href={pdfUrl} download={fileName}>
-                <Button variant="outline" className="text-greenPrimary hover:text-teal-950">Descargar PDF</Button>
+                <Button
+                  variant="outline"
+                  className="text-greenPrimary hover:text-teal-950"
+                >
+                  Descargar PDF
+                </Button>
               </a>
             )}
           </div>

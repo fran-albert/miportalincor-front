@@ -82,7 +82,6 @@ const columns: { key: keyof NutritionData; label: string }[] = [
   { key: "imc", label: "IMC" },
   { key: "height", label: "Talla (cm)" },
   { key: "targetWeight", label: "Peso Objetivo (kg)" },
-  // { key: "observations", label: "Observaciones" },
 ];
 
 export function NutritionPdfDocument({
@@ -102,6 +101,25 @@ export function NutritionPdfDocument({
   dateFrom?: string;
   dateTo?: string;
 }) {
+  // Capitaliza la primera letra de cada palabra
+  const capitalize = (text: string) =>
+    text.replace(/\b\w/g, (char) => char.toUpperCase());
+
+  // Calcula periodo si no se proporcionan fechas
+  const dates = data
+    .map((d) => new Date(d.date as string))
+    .sort((a, b) => a.getTime() - b.getTime());
+  const from = dateFrom && dateFrom !== "-"
+    ? dateFrom
+    : dates.length
+    ? dates[0].toLocaleDateString("es-AR")
+    : "-";
+  const to = dateTo && dateTo !== "-"
+    ? dateTo
+    : dates.length
+    ? dates[dates.length - 1].toLocaleDateString("es-AR")
+    : "-";
+
   return (
     <Document>
       <Page size="A4" style={styles.page} wrap>
@@ -110,11 +128,9 @@ export function NutritionPdfDocument({
           {logoSrc && <Image src={logoSrc} style={styles.logo} />}
           <View style={styles.patientInfo}>
             <Text style={styles.headerTitle}>
-              {patientName} {patientSurname}
+              {capitalize(patientName)} {capitalize(patientSurname)}
             </Text>
-            <Text>
-              Fecha: {new Date().toLocaleDateString("es-AR")}
-            </Text>
+            <Text>Fecha: {new Date().toLocaleDateString("es-AR")}</Text>
           </View>
         </View>
 
@@ -144,10 +160,7 @@ export function NutritionPdfDocument({
                   {columns.map((col) => (
                     <View
                       key={col.key}
-                      style={[
-                        styles.tableCol,
-                        { width: `${100 / columns.length}%` },
-                      ]}
+                      style={[styles.tableCol, { width: `${100 / columns.length}%` }]}
                     >
                       <Text>{formatCell(row[col.key], col.key)}</Text>
                     </View>
@@ -177,7 +190,7 @@ export function NutritionPdfDocument({
             </View>
 
             <Text style={styles.periodLabel}>
-              Período: {dateFrom ?? "-"} hasta {dateTo ?? "-"}
+              Período: {from} hasta {to}
             </Text>
 
             <View style={styles.chartContainer}>
@@ -199,12 +212,14 @@ export function NutritionPdfDocument({
   );
 }
 
+// Formatea celdas numéricas con un decimal
 function formatCell(value: any, key: keyof NutritionData) {
-  if (key === "date") return new Date(value as string).toLocaleDateString("es-AR");
-  if (value == null || value === "") return "-";
-  if (key === "imc") {
-    const n = Number(value);
-    return isNaN(n) ? String(value) : n.toFixed(1);
+  if (key === 'date') {
+    return new Date(value as string).toLocaleDateString('es-AR');
   }
-  return String(value);
+  if (value == null || value === '') {
+    return '-';
+  }
+  const num = Number(value);
+  return isNaN(num) ? String(value) : num.toFixed(1);
 }
