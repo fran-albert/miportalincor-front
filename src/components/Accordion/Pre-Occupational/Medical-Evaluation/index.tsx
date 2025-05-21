@@ -95,19 +95,29 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       selected: "",
       observaciones: "",
     };
-    const newSelected = current.selected === selectedValue ? "" : selectedValue;
+  
+    const newSelected =
+      current.selected === selectedValue ? "" : selectedValue;
+  
+    const newObservaciones =
+      newSelected === "si" ? current.observaciones : "";
+  
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
           examenFisico: {
             ...medicalEvaluation.examenFisico,
-            [testId]: { ...current, selected: newSelected },
+            [testId]: {
+              selected: newSelected,
+              observaciones: newObservaciones,
+            },
           },
         },
       })
     );
   };
+  
 
   const handleExamenFisicoObservacionesChange = (
     testId: string,
