@@ -4,23 +4,34 @@ import ExamsResultsAccordion from "@/components/Accordion/Pre-Occupational/Exam-
 import ConclusionAccordion from "@/components/Accordion/Pre-Occupational/Conclusion";
 import { Pencil } from "lucide-react";
 import { DataType } from "@/types/Data-Type/Data-Type";
-import { DataValue } from "@/types/Data-Value/Data-Value";
 
-interface Props {
+interface GeneralTabProps {
   isEditing: boolean;
-  medicalEvaluationId: number;
   setIsEditing: (value: boolean) => void;
-  dataValues: DataValue[] | undefined;
-  generalCategory: DataType[];
+  formData: {
+    examResults: Record<string, string>;
+    conclusion: string;
+    recomendaciones: string;
+  };
+  setFormData: React.Dispatch<
+    React.SetStateAction<{
+      examResults: Record<string, string>;
+      conclusion: string;
+      recomendaciones: string;
+    }>
+  >;
+  fields: DataType[];
+  medicalEvaluationId: number;
 }
 
 export default function GeneralTab({
   isEditing,
   setIsEditing,
-  generalCategory,
-  dataValues,
+  formData,
+  setFormData,
+  fields,
   medicalEvaluationId,
-}: Props) {
+}: GeneralTabProps) {
   return (
     <TabsContent value="general" className="mt-4 space-y-4">
       {!isEditing && (
@@ -31,19 +42,30 @@ export default function GeneralTab({
           <Pencil className="w-4 h-4" /> Habilitar Edición
         </p>
       )}
+
       <Accordion type="multiple" className="w-full space-y-4">
         <ExamsResultsAccordion
           isEditing={isEditing}
-          fields={generalCategory}
-          dataValues={dataValues}
+          fields={fields}
+          examResults={formData.examResults}
+          setExamResults={(er) =>
+            setFormData((prev) => ({ ...prev, examResults: er }))
+          }
           medicalEvaluationId={medicalEvaluationId}
         />
+
         <ConclusionAccordion
           isEditing={isEditing}
-          setIsEditing={setIsEditing}
-          dataValues={dataValues}
-          fields={generalCategory}
+          conclusion={formData.conclusion}
+          recomendaciones={formData.recomendaciones}
+          setConclusion={(c) =>
+            setFormData((prev) => ({ ...prev, conclusion: c }))
+          }
+          setRecomendaciones={(r) =>
+            setFormData((prev) => ({ ...prev, recomendaciones: r }))
+          }
           medicalEvaluationId={medicalEvaluationId}
+          fields={fields}
         />
       </Accordion>
     </TabsContent>

@@ -34,17 +34,11 @@ export function NewPreOcuppationalComponent({
   return (
     <div className="container space-y-2 mt-2">
       <BreadcrumbComponent items={breadcrumbItems} />
-      {medicalEvaluation?.completed ? (
-        <div className="p-6 text-center text-red-600 font-bold">
-          Esta evaluación ya está completada y no puede ser editada.
-        </div>
-      ) : (
-        <PreOccupationalCards
-          slug={String(Collaborator?.slug)}
-          medicalEvaluation={medicalEvaluation}
-          collaborator={Collaborator}
-        />
-      )}
+      <PreOccupationalCards
+        slug={String(Collaborator?.slug)}
+        medicalEvaluation={medicalEvaluation}
+        collaborator={Collaborator}
+      />
     </div>
   );
 }
