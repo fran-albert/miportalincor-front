@@ -40,6 +40,9 @@ const PDFDocument = ({
   const physicalEvaluation: PhysicalEvaluation = mapPhysicalEvaluation(
     dataValues!
   );
+  const filteredStudies = studies?.filter(
+    (s) => s.dataTypeName !== medicalEvaluationType
+  );
   return (
     <Document>
       <FirstPagePdfDocument
@@ -70,7 +73,7 @@ const PDFDocument = ({
         examenFisico={physicalEvaluation}
         examResults={examResults}
       />
-      {studies?.map((study, index) => (
+      {filteredStudies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}
           studyTitle={`${study.dataTypeName}`}
