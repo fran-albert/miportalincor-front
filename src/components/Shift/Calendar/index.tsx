@@ -49,128 +49,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-
-// Datos de ejemplo para turnos con más fechas
-const turnos = [
-  {
-    id: 1,
-    paciente: "Ana García",
-    medico: "Dr. Carlos Rodríguez",
-    especialidad: "Cardiología",
-    fecha: "2024-01-15",
-    hora: "09:00",
-    estado: "confirmado",
-    telefono: "+54 11 1234-5678",
-    obraSocial: "OSDE",
-    observaciones: "Control de rutina",
-  },
-  {
-    id: 2,
-    paciente: "Luis Martínez",
-    medico: "Dra. María López",
-    especialidad: "Medicina General",
-    fecha: "2024-01-15",
-    hora: "09:30",
-    estado: "pendiente",
-    telefono: "+54 11 2345-6789",
-    obraSocial: "Swiss Medical",
-    observaciones: "Primera consulta",
-  },
-  {
-    id: 3,
-    paciente: "Carmen Silva",
-    medico: "Dr. Juan Pérez",
-    especialidad: "Dermatología",
-    fecha: "2024-01-16",
-    hora: "10:00",
-    estado: "completado",
-    telefono: "+54 11 3456-7890",
-    obraSocial: "Galeno",
-    observaciones: "Control de lunares",
-  },
-  {
-    id: 4,
-    paciente: "Roberto Díaz",
-    medico: "Dra. Laura Fernández",
-    especialidad: "Traumatología",
-    fecha: "2024-01-16",
-    hora: "10:30",
-    estado: "cancelado",
-    telefono: "+54 11 4567-8901",
-    obraSocial: "IOMA",
-    observaciones: "Dolor en rodilla",
-  },
-  {
-    id: 5,
-    paciente: "Elena Morales",
-    medico: "Dr. Miguel Torres",
-    especialidad: "Ginecología",
-    fecha: "2024-01-17",
-    hora: "11:00",
-    estado: "confirmado",
-    telefono: "+54 11 5678-9012",
-    obraSocial: "OSECAC",
-    observaciones: "Control anual",
-  },
-  {
-    id: 6,
-    paciente: "Pedro Ruiz",
-    medico: "Dr. Carlos Rodríguez",
-    especialidad: "Cardiología",
-    fecha: "2024-01-18",
-    hora: "14:00",
-    estado: "pendiente",
-    telefono: "+54 11 6789-0123",
-    obraSocial: "OSDE",
-    observaciones: "Dolor en el pecho",
-  },
-  {
-    id: 7,
-    paciente: "María Fernández",
-    medico: "Dra. Ana Ruiz",
-    especialidad: "Pediatría",
-    fecha: "2024-01-19",
-    hora: "15:30",
-    estado: "confirmado",
-    telefono: "+54 11 7890-1234",
-    obraSocial: "Swiss Medical",
-    observaciones: "Control de crecimiento",
-  },
-  {
-    id: 8,
-    paciente: "José López",
-    medico: "Dr. Pablo Sánchez",
-    especialidad: "Neurología",
-    fecha: "2024-01-22",
-    hora: "16:00",
-    estado: "pendiente",
-    telefono: "+54 11 8901-2345",
-    obraSocial: "Galeno",
-    observaciones: "Dolor de cabeza recurrente",
-  },
-];
-
-const especialidades = [
-  "Cardiología",
-  "Medicina General",
-  "Dermatología",
-  "Traumatología",
-  "Ginecología",
-  "Pediatría",
-  "Neurología",
-  "Oftalmología",
-];
-
-const medicos = [
-  "Dr. Carlos Rodríguez",
-  "Dra. María López",
-  "Dr. Juan Pérez",
-  "Dra. Laura Fernández",
-  "Dr. Miguel Torres",
-  "Dra. Ana Ruiz",
-  "Dr. Pablo Sánchez",
-  "Dra. Lucía Vega",
-];
+import { format, parseISO } from "date-fns";
+import { useGetByMonthYear } from "@/hooks/Appointments/useGetByMonthYear";
+import {
+  CountByDay,
+  useCountsFromMonthlyAppointments,
+} from "@/hooks/Appointments/useCountFromMonthYear";
+import { StatusBadge } from "@/components/Badge/Appointment";
+import { capitalizeWords } from "@/common/helpers/helpers";
 
 const meses = [
   "Enero",
@@ -188,41 +74,6 @@ const meses = [
 ];
 
 const diasSemana = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-
-function getEstadoBadge(estado: string) {
-  switch (estado) {
-    case "confirmado":
-      return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Confirmado
-        </Badge>
-      );
-    case "pendiente":
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          <Clock className="w-3 h-3 mr-1" />
-          Pendiente
-        </Badge>
-      );
-    case "completado":
-      return (
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Completado
-        </Badge>
-      );
-    case "cancelado":
-      return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-          <XCircle className="w-3 h-3 mr-1" />
-          Cancelado
-        </Badge>
-      );
-    default:
-      return <Badge variant="secondary">{estado}</Badge>;
-  }
-}
 
 function NuevoTurnoDialog({
   fechaSeleccionada,
@@ -264,13 +115,7 @@ function NuevoTurnoDialog({
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar especialidad" />
                 </SelectTrigger>
-                <SelectContent>
-                  {especialidades.map((esp) => (
-                    <SelectItem key={esp} value={esp.toLowerCase()}>
-                      {esp}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent></SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
@@ -279,13 +124,7 @@ function NuevoTurnoDialog({
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar médico" />
                 </SelectTrigger>
-                <SelectContent>
-                  {medicos.map((medico) => (
-                    <SelectItem key={medico} value={medico.toLowerCase()}>
-                      {medico}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent></SelectContent>
               </Select>
             </div>
           </div>
@@ -333,123 +172,121 @@ function NuevoTurnoDialog({
   );
 }
 
+const statusColor: Record<string, string> = {
+  confirmado: "bg-green-500",
+  pendiente: "bg-yellow-500",
+  completado: "bg-blue-500",
+  cancelado: "bg-red-500",
+};
+
+interface Props {
+  fechaActual: Date;
+  onCambiarFecha: (d: Date) => void;
+  onSeleccionarDia: (n: number) => void;
+  diaSeleccionado: number | null;
+  countsByDay: CountByDay[];
+  loadingCounts: boolean;
+}
+
 function CalendarioMensual({
   fechaActual,
   onCambiarFecha,
   onSeleccionarDia,
   diaSeleccionado,
-}: {
-  fechaActual: Date;
-  onCambiarFecha: (fecha: Date) => void;
-  onSeleccionarDia: (dia: number) => void;
-  diaSeleccionado: number | null;
-}) {
+  countsByDay,
+  loadingCounts,
+}: Props) {
   const año = fechaActual.getFullYear();
   const mes = fechaActual.getMonth();
 
-  // Primer día del mes
+  // 1) Construir array de 42 celdas (6 semanas)
   const primerDia = new Date(año, mes, 1);
   const ultimoDia = new Date(año, mes + 1, 0);
-
-  // Días del mes anterior para completar la primera semana
-  const diasMesAnterior = primerDia.getDay();
+  const diasMesPrev = primerDia.getDay();
   const diasEnMes = ultimoDia.getDate();
+  const totalCeldas = 6 * 7;
+  const dias: { numero: number; esDelMes: boolean }[] = [];
 
-  const dias = [];
-
-  // Días del mes anterior
-  for (let i = diasMesAnterior - 1; i >= 0; i--) {
-    const dia = new Date(año, mes, -i);
-    dias.push({
-      numero: dia.getDate(),
-      esDelMes: false,
-      fecha: dia,
-    });
+  // Mes anterior
+  for (let i = diasMesPrev - 1; i >= 0; i--) {
+    const d = new Date(año, mes, -i);
+    dias.push({ numero: d.getDate(), esDelMes: false });
   }
-
-  // Días del mes actual
+  // Mes actual
   for (let i = 1; i <= diasEnMes; i++) {
-    dias.push({
-      numero: i,
-      esDelMes: true,
-      fecha: new Date(año, mes, i),
-    });
+    dias.push({ numero: i, esDelMes: true });
+  }
+  // Mes siguiente
+  while (dias.length < totalCeldas) {
+    const idx = dias.length;
+    const next = new Date(año, mes + 1, idx - diasEnMes - diasMesPrev + 1);
+    dias.push({ numero: next.getDate(), esDelMes: false });
   }
 
-  // Días del mes siguiente para completar la última semana
-  const diasRestantes = 42 - dias.length; // 6 semanas * 7 días
-  for (let i = 1; i <= diasRestantes; i++) {
-    const dia = new Date(año, mes + 1, i);
-    dias.push({
-      numero: dia.getDate(),
-      esDelMes: false,
-      fecha: dia,
-    });
-  }
-
-  const getTurnosDelDia = (dia: number) => {
-    const fechaDia = `${año}-${String(mes + 1).padStart(2, "0")}-${String(
-      dia
-    ).padStart(2, "0")}`;
-    return turnos.filter((turno) => turno.fecha === fechaDia);
-  };
-
-  const mesAnterior = () => {
-    onCambiarFecha(new Date(año, mes - 1, 1));
-  };
-
-  const mesSiguiente = () => {
-    onCambiarFecha(new Date(año, mes + 1, 1));
-  };
+  const mesAnterior = () => onCambiarFecha(new Date(año, mes - 1, 1));
+  const mesSiguiente = () => onCambiarFecha(new Date(año, mes + 1, 1));
 
   return (
     <div className="space-y-4">
-      {/* Header del calendario */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-greenPrimary">
+        <h2 className="text-xl font-semibold">
           {meses[mes]} {año}
         </h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={mesAnterior}>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={mesAnterior}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={mesSiguiente}>
+          <Button size="sm" variant="outline" onClick={mesSiguiente}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Días de la semana */}
-      <div className="grid grid-cols-7 gap-1">
-        {diasSemana.map((dia) => (
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {diasSemana.map((d) => (
           <div
-            key={dia}
-            className="p-2 text-center text-sm font-medium text-muted-foreground"
+            key={d}
+            className="p-1 text-xs font-medium text-muted-foreground"
           >
-            {dia}
+            {d}
           </div>
         ))}
       </div>
 
-      {/* Días del mes */}
+      {/* Celdas del mes */}
       <div className="grid grid-cols-7 gap-1">
-        {dias.map((dia, index) => {
-          const turnosDelDia = dia.esDelMes ? getTurnosDelDia(dia.numero) : [];
-          const esSeleccionado = dia.esDelMes && dia.numero === diaSeleccionado;
+        {dias.map((celda, idx) => {
+          // buscamos conteos para ese día
+          const entry = countsByDay.find((e) => {
+            const d = parseISO(e.date);
+            return (
+              d.getFullYear() === año &&
+              d.getMonth() === mes &&
+              d.getDate() === celda.numero
+            );
+          });
+
           const esHoy =
-            dia.esDelMes &&
-            dia.fecha.toDateString() === new Date().toDateString();
+            celda.esDelMes &&
+            new Date().getFullYear() === año &&
+            new Date().getMonth() === mes &&
+            new Date().getDate() === celda.numero;
+          const esSeleccionado =
+            celda.esDelMes && celda.numero === diaSeleccionado;
 
           return (
             <button
-              key={index}
-              onClick={() => dia.esDelMes && onSeleccionarDia(dia.numero)}
+              key={idx}
+              disabled={!celda.esDelMes}
+              onClick={() => onSeleccionarDia(celda.numero)}
               className={`
-                relative p-2 h-20 border rounded-lg text-left transition-colors
+                relative p-2 h-20 border rounded-lg text-left
                 ${
-                  dia.esDelMes
-                    ? "hover:bg-muted/50"
-                    : "text-muted-foreground bg-muted/20"
+                  !celda.esDelMes
+                    ? "bg-muted/20 text-muted-foreground"
+                    : "hover:bg-muted/50"
                 }
                 ${
                   esSeleccionado
@@ -459,36 +296,31 @@ function CalendarioMensual({
                 ${esHoy ? "bg-blue-50 border-blue-200" : ""}
               `}
             >
-              <span
-                className={`text-sm ${esHoy ? "font-bold text-blue-600" : ""}`}
-              >
-                {dia.numero}
+              <span className={esHoy ? "font-bold text-blue-600" : ""}>
+                {celda.numero}
               </span>
 
-              {/* Indicadores de turnos */}
-              {turnosDelDia.length > 0 && (
-                <div className="absolute bottom-1 left-1 right-1">
-                  <div className="flex gap-1 flex-wrap">
-                    {turnosDelDia.slice(0, 3).map((turno) => (
+              {/* loading */}
+              {loadingCounts && celda.esDelMes && (
+                <div className="absolute bottom-1 left-1 text-xs">…</div>
+              )}
+
+              {/* indicadores de estado */}
+              {!loadingCounts && entry && (
+                <div className="absolute bottom-1 left-1 right-1 flex flex-wrap gap-1">
+                  {(
+                    Object.entries(entry.counts) as [
+                      keyof typeof entry.counts,
+                      number
+                    ][]
+                  ).map(([status, cnt]) =>
+                    cnt > 0 ? (
                       <div
-                        key={turno.id}
-                        className={`w-2 h-2 rounded-full ${
-                          turno.estado === "confirmado"
-                            ? "bg-green-500"
-                            : turno.estado === "pendiente"
-                            ? "bg-yellow-500"
-                            : turno.estado === "completado"
-                            ? "bg-blue-500"
-                            : "bg-red-500"
-                        }`}
+                        key={status}
+                        className={`w-2 h-2 rounded-full ${statusColor[status]}`}
                       />
-                    ))}
-                    {turnosDelDia.length > 3 && (
-                      <span className="text-xs text-muted-foreground">
-                        +{turnosDelDia.length - 3}
-                      </span>
-                    )}
-                  </div>
+                    ) : null
+                  )}
                 </div>
               )}
             </button>
@@ -498,25 +330,28 @@ function CalendarioMensual({
     </div>
   );
 }
-
 export default function CalendarioTurnos() {
-  const [fechaActual, setFechaActual] = useState(new Date(2024, 0, 1)); // Enero 2024
+  const [fechaActual, setFechaActual] = useState(new Date());
   const [diaSeleccionado, setDiaSeleccionado] = useState<number | null>(15);
-
-  const turnosDelDiaSeleccionado = diaSeleccionado
-    ? turnos.filter((turno) => {
-        const fechaDia = `${fechaActual.getFullYear()}-${String(
-          fechaActual.getMonth() + 1
-        ).padStart(2, "0")}-${String(diaSeleccionado).padStart(2, "0")}`;
-        return turno.fecha === fechaDia;
-      })
-    : [];
+  const month = String(fechaActual.getMonth() + 1).padStart(2, "0");
+  const year = String(fechaActual.getFullYear());
+  const { data: monthTurns = [], isLoading: loadingMonth } = useGetByMonthYear({
+    year,
+    month,
+  });
+  const { countsByDay, isLoading: loadingCounts } =
+    useCountsFromMonthlyAppointments(year, month);
 
   const fechaSeleccionadaString = diaSeleccionado
-    ? `${fechaActual.getFullYear()}-${String(
-        fechaActual.getMonth() + 1
-      ).padStart(2, "0")}-${String(diaSeleccionado).padStart(2, "0")}`
-    : undefined;
+    ? format(
+        new Date(Number(year), parseInt(month) - 1, diaSeleccionado),
+        "yyyy-MM-dd"
+      )
+    : null;
+
+  const turnosDelDiaSeleccionado = fechaSeleccionadaString
+    ? monthTurns.filter((t) => t.date === fechaSeleccionadaString)
+    : [];
 
   return (
     <>
@@ -590,8 +425,10 @@ export default function CalendarioTurnos() {
               <CalendarioMensual
                 fechaActual={fechaActual}
                 onCambiarFecha={setFechaActual}
-                onSeleccionarDia={setDiaSeleccionado}
                 diaSeleccionado={diaSeleccionado}
+                onSeleccionarDia={setDiaSeleccionado}
+                countsByDay={countsByDay}
+                loadingCounts={loadingCounts}
               />
             </CardContent>
           </Card>
@@ -612,29 +449,39 @@ export default function CalendarioTurnos() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {turnosDelDiaSeleccionado.length > 0 ? (
+                {loadingMonth || loadingCounts ? (
+                  <p>Cargando mes…</p>
+                ) : turnosDelDiaSeleccionado.length > 0 ? (
                   turnosDelDiaSeleccionado
-                    .sort((a, b) => a.hora.localeCompare(b.hora))
+                    .sort((a, b) => a.hour.localeCompare(b.hour))
                     .map((turno) => (
                       <div
                         key={turno.id}
-                        className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors space-"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-sm">
-                              {turno.hora}
+                              {turno.hour}
                             </span>
-                            {getEstadoBadge(turno.estado)}
+                            <StatusBadge status={turno.status} />
                           </div>
                           <h4 className="font-semibold text-sm">
-                            {turno.paciente}
+                            {capitalizeWords(turno.patient?.lastName ?? "")},{" "}
+                            {capitalizeWords(turno.patient?.firstName ?? "")}
                           </h4>
                           <p className="text-xs text-muted-foreground">
-                            {turno.medico}
+                            {turno.doctor &&
+                              `${
+                                turno.doctor.gender === "Masculino"
+                                  ? "Dr."
+                                  : "Dra."
+                              } ${turno.doctor.firstName} ${
+                                turno.doctor.lastName
+                              }`}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {turno.especialidad}
+                            {turno.doctor?.specialities?.map((esp) => esp.name)}
                           </p>
                         </div>
                         <DropdownMenu>
@@ -667,7 +514,7 @@ export default function CalendarioTurnos() {
                     <p>No hay turnos programados para este día</p>
                     {diaSeleccionado && (
                       <NuevoTurnoDialog
-                        fechaSeleccionada={fechaSeleccionadaString}
+                        fechaSeleccionada={String(fechaSeleccionadaString)}
                       />
                     )}
                   </div>

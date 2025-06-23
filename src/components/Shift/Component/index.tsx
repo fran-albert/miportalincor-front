@@ -6,7 +6,6 @@ import {
   XCircle,
   MoreHorizontal,
   Edit,
-  Trash2,
   Phone,
   Mail,
   CalendarDays,
@@ -15,8 +14,6 @@ import {
   List,
 } from "lucide-react";
 import { useState } from "react";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -55,105 +52,11 @@ import CalendarioTurnos from "../Calendar";
 import { useSpeciality } from "@/hooks/Speciality/useSpeciality";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { Doctor } from "@/types/Doctor/Doctor";
-
-// Datos de ejemplo para turnos
-const turnos = [
-  {
-    id: 1,
-    paciente: "Ana García",
-    medico: "Dr. Carlos Rodríguez",
-    especialidad: "Cardiología",
-    fecha: "2024-01-15",
-    hora: "09:00",
-    estado: "confirmado",
-    telefono: "+54 11 1234-5678",
-    obraSocial: "OSDE",
-    observaciones: "Control de rutina",
-  },
-  {
-    id: 2,
-    paciente: "Luis Martínez",
-    medico: "Dra. María López",
-    especialidad: "Medicina General",
-    fecha: "2024-01-15",
-    hora: "09:30",
-    estado: "pendiente",
-    telefono: "+54 11 2345-6789",
-    obraSocial: "Swiss Medical",
-    observaciones: "Primera consulta",
-  },
-  {
-    id: 3,
-    paciente: "Carmen Silva",
-    medico: "Dr. Juan Pérez",
-    especialidad: "Dermatología",
-    fecha: "2024-01-15",
-    hora: "10:00",
-    estado: "completado",
-    telefono: "+54 11 3456-7890",
-    obraSocial: "Galeno",
-    observaciones: "Control de lunares",
-  },
-  {
-    id: 4,
-    paciente: "Roberto Díaz",
-    medico: "Dra. Laura Fernández",
-    especialidad: "Traumatología",
-    fecha: "2024-01-15",
-    hora: "10:30",
-    estado: "cancelado",
-    telefono: "+54 11 4567-8901",
-    obraSocial: "IOMA",
-    observaciones: "Dolor en rodilla",
-  },
-  {
-    id: 5,
-    paciente: "Elena Morales",
-    medico: "Dr. Miguel Torres",
-    especialidad: "Ginecología",
-    fecha: "2024-01-15",
-    hora: "11:00",
-    estado: "confirmado",
-    telefono: "+54 11 5678-9012",
-    obraSocial: "OSECAC",
-    observaciones: "Control anual",
-  },
-];
-
-function getEstadoBadge(estado: string) {
-  switch (estado) {
-    case "confirmado":
-      return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Confirmado
-        </Badge>
-      );
-    case "pendiente":
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          <Clock className="w-3 h-3 mr-1" />
-          Pendiente
-        </Badge>
-      );
-    case "completado":
-      return (
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Completado
-        </Badge>
-      );
-    case "cancelado":
-      return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-          <XCircle className="w-3 h-3 mr-1" />
-          Cancelado
-        </Badge>
-      );
-    default:
-      return <Badge variant="secondary">{estado}</Badge>;
-  }
-}
+import { addDays, format, parse, subDays } from "date-fns";
+import { useGetByDate } from "@/hooks/Appointments/useGetByDate";
+import { es } from "date-fns/locale";
+import { StatusBadge } from "@/components/Badge/Appointment";
+import { capitalizeWords } from "@/common/helpers/helpers";
 
 interface Props {
   doctors: Doctor[];
@@ -270,28 +173,53 @@ interface ShiftProps {
   doctors: Doctor[];
 }
 export default function ShifComponent({ specialities, doctors }: ShiftProps) {
-  const [filtroEspecialidad, setFiltroEspecialidad] = useState("");
-  const [filtroMedico, setFiltroMedico] = useState("");
-  const [filtroEstado, setFiltroEstado] = useState("");
+  const [currentDate, setCurrentDate] = useState<string>(() =>
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const {
+    data: appointments = [],
+    isLoading,
+    isError,
+  } = useGetByDate({
+    date: currentDate,
+  });
+  const prevDay = () =>
+    setCurrentDate((d) =>
+      format(subDays(parse(d, "yyyy-MM-dd", new Date()), 1), "yyyy-MM-dd")
+    );
+
+  const nextDay = () =>
+    setCurrentDate((d) =>
+      format(addDays(parse(d, "yyyy-MM-dd", new Date()), 1), "yyyy-MM-dd")
+    );
+  const today = () => setCurrentDate(format(new Date(), "yyyy-MM-dd"));
+  const humanDate = () =>
+    format(
+      parse(currentDate, "yyyy-MM-dd", new Date()),
+      "EEEE, d 'de' MMMM yyyy",
+      { locale: es }
+    );
+  const [filtroEspecialidad, setFiltroEspecialidad] = useState<string>("all");
+  const [filtroMedico, setFiltroMedico] = useState<string>("all");
+  const [filtroEstado, setFiltroEstado] = useState<string>("all");
   const [busqueda, setBusqueda] = useState("");
   const [vistaCalendario, setVistaCalendario] = useState(false);
-
-  const turnosFiltrados = turnos.filter((turno) => {
+  const turnosFiltrados = appointments.filter((turno) => {
     const matchEspecialidad =
-      !filtroEspecialidad ||
-      filtroEspecialidad === "" ||
-      turno.especialidad === filtroEspecialidad;
+      filtroEspecialidad === "all" ||
+      turno.doctor?.specialities?.some(
+        (esp) => esp.name === filtroEspecialidad
+      );
+
     const matchMedico =
-      !filtroMedico || filtroMedico === "" || turno.medico === filtroMedico;
-    const matchEstado = !filtroEstado || turno.estado === filtroEstado;
-    const matchBusqueda =
-      !busqueda ||
-      turno.paciente.toLowerCase().includes(busqueda.toLowerCase()) ||
-      turno.medico.toLowerCase().includes(busqueda.toLowerCase());
+      filtroMedico === "all" || turno.doctor?.firstName === filtroMedico;
 
-    return matchEspecialidad && matchMedico && matchEstado && matchBusqueda;
+    const matchEstado =
+      filtroEstado === "all" || turno.status.toLowerCase() === filtroEstado;
+
+    return matchEspecialidad && matchMedico && matchEstado;
   });
-
+  
   return (
     <div>
       <div className="flex flex-1 flex-col gap-4 p-4">
@@ -328,10 +256,8 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
           </div>
         </div>
         {vistaCalendario ? (
-          /* Cuando vistaCalendario=true, muestro el calendario completo */
           <CalendarioTurnos />
         ) : (
-          /* Cuando vistaCalendario=false, muestro tus métricas, filtros y lista */
           <>
             {/* Métricas rápidas */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -454,10 +380,10 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos los estados</SelectItem>
-                          <SelectItem value="confirmado">Confirmado</SelectItem>
-                          <SelectItem value="pendiente">Pendiente</SelectItem>
-                          <SelectItem value="completado">Completado</SelectItem>
-                          <SelectItem value="cancelado">Cancelado</SelectItem>
+                          <SelectItem value="pending">Pendiente</SelectItem>
+                          <SelectItem value="confirmed">Confirmado</SelectItem>
+                          <SelectItem value="completed">Completado</SelectItem>
+                          <SelectItem value="canceled">Cancelado</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -466,10 +392,9 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setFiltroEspecialidad("");
-                          setFiltroMedico("");
-                          setFiltroEstado("");
-                          setBusqueda("");
+                          setFiltroEspecialidad("all");
+                          setFiltroMedico("all");
+                          setFiltroEstado("all");
                         }}
                         className="w-full"
                       >
@@ -488,18 +413,20 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
                     <div>
                       <CardTitle>Turnos del Día</CardTitle>
                       <CardDescription>
-                        Lunes, 15 de Enero 2024 - {turnosFiltrados.length}{" "}
-                        turnos encontrados
+                        {humanDate()} –{" "}
+                        {isLoading
+                          ? "cargando…"
+                          : `${appointments.length} turnos`}
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={prevDay}>
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={today}>
                         Hoy
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={nextDay}>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -507,77 +434,95 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {turnosFiltrados.map((turno) => (
-                      <div
-                        key={turno.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="flex flex-col items-center justify-center w-16 h-16 bg-primary/10 rounded-lg">
-                            <span className="text-sm font-medium text-primary">
-                              {turno.hora}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(turno.fecha).toLocaleDateString(
-                                "es-ES",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                }
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">
-                                {turno.paciente}
-                              </h3>
-                              {getEstadoBadge(turno.estado)}
+                    {isError && <div>Error al cargar turnos</div>}
+                    {isLoading && <div>Cargando turnos…</div>}
+                    {!isLoading &&
+                      !isError &&
+                      turnosFiltrados.map((turno) => (
+                        <div
+                          key={turno.id}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          {/* hora + fecha */}
+                          <div className="flex items-center space-x-4">
+                            <div className="flex flex-col items-center justify-center w-16 h-16 bg-primary/10 rounded-lg">
+                              <span className="text-sm font-medium">
+                                {turno.hour.slice(0, 5)}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(
+                                  parse(turno.date, "yyyy-MM-dd", new Date()),
+                                  "dd/MM",
+                                  { locale: es }
+                                )}
+                              </span>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-1">
-                              {turno.medico} • {turno.especialidad}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {turno.obraSocial} • {turno.observaciones}
-                            </p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold">
+                                  {capitalizeWords(
+                                    turno.patient?.lastName ?? ""
+                                  )}
+                                  ,{" "}
+                                  {capitalizeWords(
+                                    turno.patient?.firstName ?? ""
+                                  )}
+                                </h3>
+                                <StatusBadge status={turno.status} />
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {turno.doctor &&
+                                  `${
+                                    turno.doctor.gender === "Masculino"
+                                      ? "Dr."
+                                      : "Dra."
+                                  } ${turno.doctor.firstName} ${
+                                    turno.doctor.lastName
+                                  } • `}
+                                {turno.doctor?.specialities?.map(
+                                  (esp) => esp.name
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* acciones */}
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Confirmar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  Reprogramar
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-600">
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Cancelar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Confirmar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Calendar className="mr-2 h-4 w-4" />
-                                Reprogramar
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Cancelar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </CardContent>
               </Card>

@@ -1,43 +1,16 @@
 "use client";
-
 import {
-  Activity,
-  Calendar,
-  Heart,
-  Home,
-  Microscope,
-  Settings,
-  Shield,
-  Stethoscope,
   User,
-  Users,
-  UserCheck,
-  ClipboardList,
-  TestTube,
-  FileBarChart,
-  TrendingUp,
-  Bell,
-  ChevronDown,
   Edit,
   Phone,
   Mail,
-  Eye,
-  CalendarIcon,
-  Clock,
   Award,
-  CheckCircle,
-  XCircle,
   Star,
   Plus,
   Trash2,
-  Save,
-  ArrowLeft,
   MapPin,
   GraduationCap,
-  Building,
-  CalendarDays,
   CalendarX,
-  CalendarCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -50,14 +23,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -86,26 +51,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInset,
-} from "@/components/ui/sidebar";
-import { Link } from "react-router-dom";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { formatMatricula } from "@/common/helpers/helpers";
 import ScheduleDoctor from "../Schedule";
+import DoctorAppointments from "../Appointments";
 
 // Datos del médico (simulando que viene de una API)
 const medico = {
@@ -140,47 +90,6 @@ const medico = {
   contactoEmergencia: "María Rodríguez - +54 11 9876-5432",
 };
 
-// Horarios semanales del médico
-const horariosSemanales = [
-  {
-    dia: "Lunes",
-    activo: true,
-    horaInicio: "08:00",
-    horaFin: "16:00",
-    descanso: "12:00-13:00",
-  },
-  {
-    dia: "Martes",
-    activo: true,
-    horaInicio: "08:00",
-    horaFin: "16:00",
-    descanso: "12:00-13:00",
-  },
-  {
-    dia: "Miércoles",
-    activo: true,
-    horaInicio: "08:00",
-    horaFin: "16:00",
-    descanso: "12:00-13:00",
-  },
-  {
-    dia: "Jueves",
-    activo: true,
-    horaInicio: "08:00",
-    horaFin: "16:00",
-    descanso: "12:00-13:00",
-  },
-  {
-    dia: "Viernes",
-    activo: true,
-    horaInicio: "08:00",
-    horaFin: "16:00",
-    descanso: "12:00-13:00",
-  },
-  { dia: "Sábado", activo: false, horaInicio: "", horaFin: "", descanso: "" },
-  { dia: "Domingo", activo: false, horaInicio: "", horaFin: "", descanso: "" },
-];
-
 // Ausencias programadas
 const ausencias = [
   {
@@ -208,78 +117,6 @@ const ausencias = [
     estado: "aprobada",
   },
 ];
-
-// Turnos recientes
-const turnosRecientes = [
-  {
-    id: 1,
-    paciente: "Ana García",
-    fecha: "2024-01-15",
-    hora: "09:00",
-    tipo: "Consulta",
-    estado: "completado",
-  },
-  {
-    id: 2,
-    paciente: "Luis Martínez",
-    fecha: "2024-01-15",
-    hora: "09:30",
-    tipo: "Control",
-    estado: "completado",
-  },
-  {
-    id: 3,
-    paciente: "Carmen Silva",
-    fecha: "2024-01-15",
-    hora: "10:00",
-    tipo: "Procedimiento",
-    estado: "completado",
-  },
-  {
-    id: 4,
-    paciente: "Roberto Díaz",
-    fecha: "2024-01-16",
-    hora: "09:00",
-    tipo: "Consulta",
-    estado: "programado",
-  },
-  {
-    id: 5,
-    paciente: "Elena Morales",
-    fecha: "2024-01-16",
-    hora: "09:30",
-    tipo: "Control",
-    estado: "programado",
-  },
-];
-
-function getEstadoBadge(estado: string) {
-  switch (estado) {
-    case "activo":
-      return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Activo
-        </Badge>
-      );
-    case "licencia":
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          <Clock className="w-3 h-3 mr-1" />
-          En Licencia
-        </Badge>
-      );
-    case "inactivo":
-      return (
-        <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-          <XCircle className="w-3 h-3 mr-1" />
-          Inactivo
-        </Badge>
-      );
-    default:
-      return <Badge variant="secondary">{estado}</Badge>;
-  }
-}
 
 function getEstadoAusenciaBadge(estado: string) {
   switch (estado) {
@@ -546,13 +383,9 @@ interface Props {
   doctor: Doctor;
 }
 export default function MedicoDetallePage({ doctor }: Props) {
-  const [horariosEditables, setHorariosEditables] = useState(horariosSemanales);
-
-  const actualizarHorario = (index: number, campo: string, valor: any) => {
-    const nuevosHorarios = [...horariosEditables];
-    nuevosHorarios[index] = { ...nuevosHorarios[index], [campo]: valor };
-    setHorariosEditables(nuevosHorarios);
-  };
+  const doctorName =
+    (doctor.gender === "male" ? "Dr." : "Dra.") +
+    ` ${doctor.firstName} ${doctor.lastName}`;
 
   const calcularEdad = (fechaNacimiento: string) => {
     const hoy = new Date();
@@ -612,25 +445,24 @@ export default function MedicoDetallePage({ doctor }: Props) {
           {/* Header del médico */}
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+              {/* <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
                 <UserCheck className="w-12 h-12 text-primary" />
-              </div>
+              </div> */}
               <div>
-                <h1 className="text-3xl font-bold">
-                  Dr. {doctor.firstName} {doctor.lastName}
+                <h1 className="text-3xl font-bold text-greenPrimary">
+                  {doctorName}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {medico.especialidad}
-                </p>
-                <p className="text-muted-foreground">
-                  {medico.subespecialidad}
+                  {doctor?.specialities.map((speciality) => (
+                    <span>{speciality.name}</span>
+                  ))}
                 </p>
                 <div className="flex items-center gap-4 mt-2">
-                  {getEstadoBadge(medico.estado)}
-                  <div className="flex items-center gap-1">
+                  {/* {getEstadoBadge(medico.estado)} */}
+                  {/* <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-medium">{medico.calificacion}</span>
-                  </div>
+                  </div> */}
                   <Badge variant="outline">
                     Matrícula: {formatMatricula(doctor.matricula)}
                   </Badge>
@@ -648,65 +480,6 @@ export default function MedicoDetallePage({ doctor }: Props) {
               </Button>
               <EditarMedicoDialog />
             </div>
-          </div>
-
-          {/* Métricas rápidas */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Turnos Hoy
-                </CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{medico.turnosHoy}</div>
-                <p className="text-xs text-muted-foreground">
-                  consultas programadas
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Esta Semana
-                </CardTitle>
-                <CalendarDays className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{medico.turnosSemana}</div>
-                <p className="text-xs text-muted-foreground">
-                  turnos programados
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Este Mes</CardTitle>
-                <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{medico.turnosMes}</div>
-                <p className="text-xs text-muted-foreground">
-                  consultas realizadas
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Consultorio
-                </CardTitle>
-                <Building className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{medico.consultorio}</div>
-                <p className="text-xs text-muted-foreground">planta 2</p>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Contenido principal con pestañas */}
@@ -904,64 +677,10 @@ export default function MedicoDetallePage({ doctor }: Props) {
             </TabsContent>
 
             <TabsContent value="turnos" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5" />
-                    Turnos Recientes
-                  </CardTitle>
-                  <CardDescription>
-                    Últimos turnos y consultas del médico
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Paciente</TableHead>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Hora</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {turnosRecientes.map((turno) => (
-                        <TableRow key={turno.id}>
-                          <TableCell className="font-medium">
-                            {turno.paciente}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(turno.fecha).toLocaleDateString("es-ES")}
-                          </TableCell>
-                          <TableCell>{turno.hora}</TableCell>
-                          <TableCell>{turno.tipo}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                turno.estado === "completado"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              {turno.estado}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <DoctorAppointments doctorId={doctor.userId} />
             </TabsContent>
 
-            {/* <TabsContent value="estadisticas" className="space-y-6">
+            <TabsContent value="estadisticas" className="space-y-6">
               <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                   <CardHeader>
@@ -1036,7 +755,7 @@ export default function MedicoDetallePage({ doctor }: Props) {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent> */}
+            </TabsContent>
           </Tabs>
         </div>
       </SidebarInset>

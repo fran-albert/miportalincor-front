@@ -1,10 +1,11 @@
 import { Base } from "../Base/Base";
 
-export interface DoctorAvailability extends Base{
+export interface DoctorAvailability extends Base {
     doctorId: number;
     weekDay: WeekDays;
     startTime: string;
     endTime: string;
+    slotDuration: number;
 }
 
 export interface CreateDoctorAvailabilityDto {
@@ -12,6 +13,7 @@ export interface CreateDoctorAvailabilityDto {
     weekDay: WeekDays;
     startTime: string;
     endTime: string;
+    slotDuration: number;
 }
 
 export enum WeekDays {
