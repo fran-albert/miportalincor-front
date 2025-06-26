@@ -2,18 +2,12 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-export interface Genitourinario {
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varicocele: boolean;
-  varicoceleObs: string;
-}
+import { Genitourinario } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface GenitourinarioSectionProps {
   isEditing: boolean;
   data: Genitourinario;
-  onChange: (field: keyof Genitourinario, value: boolean | string) => void;
+  onChange: (field: keyof Genitourinario, value: boolean | string | undefined) => void;
 }
 
 export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
@@ -30,9 +24,11 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
     <div className="flex items-center space-x-2 text-black">
       <Checkbox
         id="gen-sin"
-        checked={data.sinAlteraciones}
+        checked={data.sinAlteraciones === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("sinAlteraciones", chk)}
+        onCheckedChange={(chk) =>
+          onChange("sinAlteraciones", chk ? true : false)
+        }
       />
       <Label htmlFor="gen-sin">Sin alteraciones</Label>
     </div>
@@ -52,16 +48,16 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
       <Label>Varicocele:</Label>
       <Checkbox
         id="gen-varicocele-si"
-        checked={data.varicocele}
+        checked={data.varicocele === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("varicocele", chk)}
+        onCheckedChange={(chk) => onChange("varicocele", chk ? true : undefined)}
       />
       <Label htmlFor="gen-varicocele-si">Sí</Label>
       <Checkbox
         id="gen-varicocele-no"
-        checked={!data.varicocele}
+        checked={!data.varicocele === false}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("varicocele", !chk)}
+        onCheckedChange={(chk) => onChange("varicocele", chk ? false : undefined)}
       />
       <Label htmlFor="gen-varicocele-no">No</Label>
 

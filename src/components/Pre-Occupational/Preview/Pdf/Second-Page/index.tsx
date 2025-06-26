@@ -2,27 +2,24 @@ import { Page, StyleSheet } from "@react-pdf/renderer";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import PdfFooter from "../Footer";
 import ClinicalEvaluationPdf from "./Clinical-Evaluation";
-import PhysicalEvaluationPdf from "./Physical-Evaluation";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { ExamResults } from "@/common/helpers/examsResults.maps";
+import VisualAcuityPdf from "./Visual";
+import PielPdf from "./Piel";
+import { Piel } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
+import CabezaCuelloPdf from "./CabezaCuello";
+import { IMedicalEvaluation } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   collaborator: Collaborator;
   talla: string;
   peso: string;
   imc: string;
-  perimetroAbdominal: string;
-  aspectoGeneral: string;
-  tiempoLibre: string;
-  frecuenciaCardiaca: string;
-  frecuenciaRespiratoria: string;
-  presionSistolica: string;
-  presionDiastolica: string;
-  examenFisico: any;
+  pielData: Piel;
   antecedentes: DataValue[] | undefined;
-  examResults: ExamResults;
+  aspectoGeneral: "Bueno" | "Regular" | "Malo";
+  data: IMedicalEvaluation;
 }
 
 const styles = StyleSheet.create({
@@ -39,16 +36,10 @@ const SecondPagePdfDocument = ({
   talla,
   peso,
   imc,
-  perimetroAbdominal,
   aspectoGeneral,
-  tiempoLibre,
-  frecuenciaCardiaca,
-  frecuenciaRespiratoria,
-  presionSistolica,
-  presionDiastolica,
-  examResults,
-  examenFisico,
   antecedentes,
+  data,
+  pielData,
 }: Props) => (
   <Page size="A4" style={styles.page}>
     <HeaderPreviewPdf
@@ -65,19 +56,23 @@ const SecondPagePdfDocument = ({
       peso={peso}
       imc={imc}
       aspectoGeneral={aspectoGeneral}
-      tiempoLibre={tiempoLibre}
-      frecuenciaCardiaca={frecuenciaCardiaca}
-      frecuenciaRespiratoria={frecuenciaRespiratoria}
-      perimetroAbdominal={perimetroAbdominal}
-      examenFisico={examenFisico}
-      presionDiastolica={presionDiastolica}
-      presionSistolica={presionSistolica}
     />
-    <PhysicalEvaluationPdf
-      examenFisico={examenFisico}
-      section={1}
-      examResults={examResults}
+    <VisualAcuityPdf
+      withCorrection={{ right: "-", left: "-" }}
+      chromaticVision="normal"
+      withoutCorrection={{ right: "-", left: "-" }}
+      notes="asda"
     />
+    <PielPdf
+      normocoloreada={pielData.normocoloreada}
+      tatuajes={pielData.tatuajes}
+      observaciones={pielData.observaciones}
+    />
+    <CabezaCuelloPdf
+      sinAlteraciones={data.cabezaCuello?.sinAlteraciones ?? false}
+      observaciones={data.cabezaCuello?.observaciones ?? ""}
+    />
+    
     <PdfFooter
       pageNumber={2}
       doctorName="BONIFACIO Ma. CECILIA"

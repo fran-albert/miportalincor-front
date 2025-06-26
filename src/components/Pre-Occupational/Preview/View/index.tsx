@@ -13,9 +13,11 @@ import {
   mapPhysicalEvaluation,
   aspectoGeneralyTiempolibre,
   mapConclusionAndRecommendationsData,
+  mapMedicalEvaluation,
 } from "@/common/helpers/maps";
 import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
+import FourthPageHTML from "./Fourth-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -40,7 +42,7 @@ const View: React.FC<Props> = ({
   const antecedentes = dataValues.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-
+  const medicalEvaluation = mapMedicalEvaluation(dataValues);
   return (
     <div>
       <FirstPageHTML
@@ -65,8 +67,25 @@ const View: React.FC<Props> = ({
         perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
         presionDiastolica={clinicalEvaluation.presionDiastolica}
         presionSistolica={clinicalEvaluation.presionSistolica}
+        visualChromatic="normal"
+        visualWithout={{ right: "-", left: "-" }}
+        visualWith={{ right: "-", left: "-" }}
+        visualNotes="asda"
+        pielData={medicalEvaluation.piel!}
+        cabezaCuello={medicalEvaluation.cabezaCuello!}
       />
-      <ThirdPageHTML examenFisico={physicalEvaluation} />
+      <ThirdPageHTML
+        bucodental={medicalEvaluation.bucodental!}
+        torax={medicalEvaluation.torax!}
+        respiratorio={medicalEvaluation.respiratorio!}
+        circulatorio={medicalEvaluation.circulatorio!}
+      />
+      <FourthPageHTML
+        neurologico={medicalEvaluation.neurologico!}
+        gastrointestinal={medicalEvaluation.gastrointestinal!}
+        genitourinario={medicalEvaluation.genitourinario!}
+        osteoarticular={medicalEvaluation.osteoarticular!}
+      />
       {studies?.map((study, index) => (
         <StudyPageHtml
           key={index}

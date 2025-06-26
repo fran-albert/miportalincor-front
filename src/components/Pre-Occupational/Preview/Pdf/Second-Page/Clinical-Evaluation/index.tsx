@@ -1,128 +1,112 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface ClinicalEvaluationPdfProps {
-  talla: string;
+  aspectoGeneral: "Bueno" | "Regular" | "Malo";
   peso: string;
+  talla: string;
   imc: string;
-  perimetroAbdominal: string;
-  aspectoGeneral: string;
-  tiempoLibre: string;
-  frecuenciaCardiaca: string;
-  frecuenciaRespiratoria: string;
-  presionSistolica: string;
-  presionDiastolica: string;
-  examenFisico: any;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 8,
-  },
-  headerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  headerBox: {
-    position: "relative",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  headerText: {
-    fontSize: 12,
-    fontWeight: "bold",
+  container: { padding: 8 },
+  header: {
     textAlign: "center",
-  },
-  grid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    fontSize: 14,
+    fontWeight: "bold",
     marginBottom: 8,
   },
-  item: {
-    flex: 1,
-    paddingHorizontal: 8,
+
+  // sección casillas
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  label: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginBottom: 4,
+  row: { flexDirection: "row", alignItems: "center" },
+  checkboxWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 12,
   },
-  value: {
-    fontSize: 10,
+  box: {
+    width: 10,
+    height: 10,
+    borderWidth: 1,
+    borderColor: "#000",
+    marginRight: 4,
   },
+  tick: {
+    position: "absolute",
+    top: 2,
+    left: 2,
+    width: 6,
+    height: 6,
+    backgroundColor: "#000",
+  },
+  checkboxLabel: { fontSize: 12 },
+
+  // Peso/Talla/IMC
+  valueRow: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  infoField: { alignItems: "center" },
+  infoLabel: { fontSize: 10, fontWeight: "bold" },
+  infoValue: { fontSize: 10, marginTop: 2 },
 });
 
+const OPTIONS = ["Bueno", "Regular", "Malo"] as const;
+
+const PDFCheckboxes = ({
+  selected,
+}: {
+  selected: (typeof OPTIONS)[number];
+}) => (
+  <View style={styles.row}>
+    {OPTIONS.map((opt) => (
+      <View key={opt} style={styles.checkboxWrapper}>
+        <CheckboxPdf checked={selected === opt} />
+        <Text style={styles.checkboxLabel}>{opt}</Text>
+      </View>
+    ))}
+  </View>
+);
+
+const InfoField = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.infoField}>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={styles.infoValue}>{value || "—"}</Text>
+  </View>
+);
+
 const ClinicalEvaluationPdf: React.FC<ClinicalEvaluationPdfProps> = ({
-  talla,
-  peso,
-  imc,
-  perimetroAbdominal,
   aspectoGeneral,
-  tiempoLibre,
-  frecuenciaCardiaca,
-  frecuenciaRespiratoria,
-  presionSistolica,
-  presionDiastolica,
-}) => {
-  return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerBox}>
-          <Text style={styles.headerText}>Resultados del Examen</Text>
-        </View>
-      </View>
+  peso,
+  talla,
+  imc,
+}) => (
+  <View style={styles.container}>
+    <Text style={styles.header}>Resultados del Examen</Text>
 
-      {/* Primera fila - 5 datos */}
-      <View style={styles.grid}>
-        <View style={styles.item}>
-          <Text style={styles.label}>Talla</Text>
-          <Text style={styles.value}>{talla}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Peso</Text>
-          <Text style={styles.value}>{peso}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>IMC</Text>
-          <Text style={styles.value}>{imc}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Perímetro Abdominal</Text>
-          <Text style={styles.value}>{perimetroAbdominal}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Aspecto General</Text>
-          <Text style={styles.value}>{aspectoGeneral}</Text>
-        </View>
-      </View>
+    {/* Aspecto General */}
+    <View style={styles.sectionRow}>
+      <Text style={styles.infoLabel}>Aspecto General:</Text>
+      <PDFCheckboxes selected={aspectoGeneral} />
+    </View>
 
-      {/* Segunda fila - 5 datos */}
-      <View style={styles.grid}>
-        <View style={styles.item}>
-          <Text style={styles.label}>Tiempo Libre</Text>
-          <Text style={styles.value}>{tiempoLibre}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Frec. Cardíaca</Text>
-          <Text style={styles.value}>{frecuenciaCardiaca}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Frec. Respiratoria</Text>
-          <Text style={styles.value}>{frecuenciaRespiratoria}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Presión Sistólica</Text>
-          <Text style={styles.value}>{presionSistolica}</Text>
-        </View>
-        <View style={styles.item}>
-          <Text style={styles.label}>Presión Diastólica</Text>
-          <Text style={styles.value}>{presionDiastolica}</Text>
-        </View>
+    {/* Peso / Talla / IMC */}
+    <View style={{ marginBottom: 12 }}>
+      <View style={styles.valueRow}>
+        <InfoField label="Peso:" value={peso} />
+        <InfoField label="Talla:" value={talla} />
+        <InfoField label="IMC:" value={imc} />
       </View>
     </View>
-  );
-};
+  </View>
+);
 
 export default ClinicalEvaluationPdf;

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export interface CabezaCuello {
   sinAlteraciones: boolean;
@@ -28,7 +28,7 @@ export const CabezaCuelloSection: React.FC<CabezaCuelloSectionProps> = ({
         id="cabeza-sin"
         checked={data.sinAlteraciones}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('sinAlteraciones', chk)}
+        onCheckedChange={(chk) => onChange("sinAlteraciones", chk)}
       />
       <Label htmlFor="cabeza-sin">Sin alteraciones</Label>
     </div>
@@ -39,7 +39,7 @@ export const CabezaCuelloSection: React.FC<CabezaCuelloSectionProps> = ({
       className="w-full text-black"
       value={data.observaciones}
       disabled={!isEditing}
-      onChange={(e) => onChange('observaciones', e.currentTarget.value)}
+      onChange={(e) => onChange("observaciones", e.currentTarget.value)}
       placeholder="Observaciones…"
     />
   </div>

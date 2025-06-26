@@ -43,6 +43,71 @@ interface ExamenFisicoItem {
   observaciones: string;
 }
 
+export interface Piel {
+  normocoloreada?: "si" | "no";
+  tatuajes?: "si" | "no";
+  observaciones: string;
+}
+
+export interface Torax {
+  deformaciones?: "si" | "no";
+  deformacionesObs: string;
+  cicatrices?: "si" | "no";
+  cicatricesObs: string;
+}
+
+export interface Respiratorio {
+  frecuenciaRespiratoria?: string;
+  oximetria?: string;
+  sinAlteraciones: boolean;
+  observaciones?: string;
+}
+
+export interface Circulatorio {
+  frecuenciaCardiaca?: string;
+  presion?: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  varices?: boolean;
+  varicesObs?: string;
+}
+
+export interface Neurologico {
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+}
+
+export interface Gastrointestinal {
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  cicatrices?: boolean;
+  cicatricesObs?: string;
+  hernias?: boolean;
+  herniasObs?: string;
+  eventraciones?: boolean;
+  eventracionesObs?: string;
+  hemorroides?: boolean;
+  hemorroidesObs?: string;
+}
+
+export interface Genitourinario {
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  varicocele?: boolean;
+  varicoceleObs?: string;
+}
+
+export interface Osteoarticular {
+  mmssSin?: boolean;
+  mmssObs?: string;
+  mmiiSin?: boolean;
+  mmiiObs?: string;
+  columnaSin?: boolean;
+  columnaObs?: string;
+  amputaciones?: boolean;
+  amputacionesObs?: string;
+}
+
 export interface IMedicalEvaluation {
   aspectoGeneral: string;
   tiempoLibre: string;
@@ -52,11 +117,7 @@ export interface IMedicalEvaluation {
   agudezaCc?: { right: string; left: string };
   visionCromatica?: 'normal' | 'anormal';
   notasVision?: string;
-  piel?: {
-    normocoloreada: "si" | "no";
-    tatuajes: "si" | "no";
-    observaciones: string;
-  };
+  piel?: Piel;
   cabezaCuello?: {
     sinAlteraciones: boolean;
     observaciones: string;
@@ -67,58 +128,13 @@ export interface IMedicalEvaluation {
     faltanPiezas: boolean;
     observaciones: string;
   };
-  torax?: {
-    deformaciones: "si" | "no";
-    deformacionesObs: string;
-    cicatrices: "si" | "no";
-    cicatricesObs: string;
-  };
-  respiratorio?: {
-    frecuenciaRespiratoria: string;
-    oximetria: string;
-    sinAlteraciones: boolean;
-    observaciones: string;
-  };
-  circulatorio?: {
-    frecuenciaCardiaca: string;
-    presion: string;          // ej. "112/89"
-    sinAlteraciones: boolean;
-    observaciones: string;
-    varices: boolean;
-    varicesObs: string;
-  };
-  neurologico?: {
-    sinAlteraciones: boolean;
-    observaciones: string;
-  };
-  gastrointestinal?: {
-    sinAlteraciones: boolean;
-    observaciones: string;
-    cicatrices: boolean;
-    cicatricesObs: string;
-    hernias: boolean;
-    herniasObs: string;
-    eventraciones: boolean;
-    eventracionesObs: string;
-    hemorroides: boolean;
-    hemorroidesObs: string;
-  };
-  genitourinario?: {
-    sinAlteraciones: boolean;
-    observaciones: string;
-    varicocele: boolean;
-    varicoceleObs: string;
-  };
-  osteoarticular?: {
-    mmssSin: boolean;
-    mmssObs: string;
-    mmiiSin: boolean;
-    mmiiObs: string;
-    columnaSin: boolean;
-    columnaObs: string;
-    amputaciones: boolean;
-    amputacionesObs: string;
-  };
+  torax?: Torax;
+  respiratorio?: Respiratorio;
+  circulatorio?: Circulatorio;
+  neurologico?: Neurologico;
+  gastrointestinal?: Gastrointestinal;
+  genitourinario?: Genitourinario;
+  osteoarticular?: Osteoarticular
 }
 
 interface InstitutionInformation {

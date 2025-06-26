@@ -2,13 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-export interface Torax {
-  deformaciones: 'si' | 'no';
-  deformacionesObs: string;
-  cicatrices: 'si' | 'no';
-  cicatricesObs: string;
-}
+import { Torax } from '@/store/Pre-Occupational/preOccupationalSlice';
 
 interface ToraxSectionProps {
   isEditing: boolean;

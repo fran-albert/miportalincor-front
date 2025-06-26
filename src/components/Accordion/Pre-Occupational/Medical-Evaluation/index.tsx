@@ -1,6 +1,15 @@
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  Circulatorio,
+  Gastrointestinal,
+  Genitourinario,
+  Neurologico,
+  Osteoarticular,
+  Respiratorio,
+  setFormData,
+  Torax,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,16 +20,13 @@ import {
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import AspectoGeneralCheckboxes from "./AspectoGeneralCheckbox";
 import { VisualAcuityCard } from "./Visual";
-import { Osteoarticular, OsteoarticularSection } from "./OsteoArticularSection";
-import { GenitourinarioSection, Genitourinario } from "./GenitourinarioSection";
-import {
-  GastrointestinalSection,
-  Gastrointestinal,
-} from "./GastrointestinalSection";
-import { NeurologicoSection, Neurologico } from "./NeurologicoSection";
-import { CirculatorioSection, Circulatorio } from "./CirculatorioSection";
-import { RespiratorioSection, Respiratorio } from "./RespiratorioSection";
-import { ToraxSection, Torax } from "./ToraxSection";
+import { OsteoarticularSection } from "./OsteoArticularSection";
+import { GenitourinarioSection } from "./GenitourinarioSection";
+import { GastrointestinalSection } from "./GastrointestinalSection";
+import { NeurologicoSection } from "./NeurologicoSection";
+import { CirculatorioSection } from "./CirculatorioSection";
+import { RespiratorioSection } from "./RespiratorioSection";
+import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
@@ -62,15 +68,13 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   const circulatorio: Circulatorio = medicalEvaluation.circulatorio ?? {
     frecuenciaCardiaca: "",
     presion: "",
-    sinAlteraciones: true,
+    sinAlteraciones: false,
     observaciones: "",
-    varices: false,
-    varicesObs: "",
   };
 
   const handleCirculatorioChange = (
     field: keyof Circulatorio,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -84,10 +88,9 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       })
     );
   };
+
   const toraxData: Torax = medicalEvaluation.torax ?? {
-    deformaciones: "no",
     deformacionesObs: "",
-    cicatrices: "no",
     cicatricesObs: "",
   };
   const handleToraxChange = (field: keyof Torax, value: boolean | string) => {
@@ -102,10 +105,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const resp: Respiratorio = medicalEvaluation.respiratorio ?? {
-    frecuenciaRespiratoria: "",
-    oximetria: "",
-    sinAlteraciones: true,
-    observaciones: "",
+    sinAlteraciones: false,
   };
   const handleRespChange = (
     field: keyof Respiratorio,
@@ -122,13 +122,9 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const osteo: Osteoarticular = medicalEvaluation.osteoarticular ?? {
-    mmssSin: true,
     mmssObs: "",
-    mmiiSin: true,
     mmiiObs: "",
-    columnaSin: true,
     columnaObs: "",
-    amputaciones: false,
     amputacionesObs: "",
   };
 
@@ -150,15 +146,13 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const genito: Genitourinario = medicalEvaluation.genitourinario ?? {
-    sinAlteraciones: true,
     observaciones: "",
-    varicocele: false,
     varicoceleObs: "",
   };
 
   const handleGenitoChange = (
     field: keyof Genitourinario,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -171,21 +165,12 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const gi: Gastrointestinal = medicalEvaluation.gastrointestinal ?? {
-    sinAlteraciones: true,
     observaciones: "",
-    cicatrices: false,
-    cicatricesObs: "",
-    hernias: false,
-    herniasObs: "",
-    eventraciones: false,
-    eventracionesObs: "",
-    hemorroides: false,
-    hemorroidesObs: "",
   };
 
   const handleGIChange = (
     field: keyof Gastrointestinal,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -228,36 +213,40 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
     );
   };
   const withoutCorr = {
-    right: medicalEvaluation.agudezaSc?.right ?? '10/10',
-    left:  medicalEvaluation.agudezaSc?.left  ?? '10/10',
+    right: medicalEvaluation.agudezaSc?.right ?? "10/10",
+    left: medicalEvaluation.agudezaSc?.left ?? "10/10",
   };
   const withCorr = {
-    right: medicalEvaluation.agudezaCc?.right ?? '10/10',
-    left:  medicalEvaluation.agudezaCc?.left  ?? '10/10',
+    right: medicalEvaluation.agudezaCc?.right ?? "10/10",
+    left: medicalEvaluation.agudezaCc?.left ?? "10/10",
   };
-  const chromatic = medicalEvaluation.visionCromatica ?? 'normal';
-  const notes     = medicalEvaluation.notasVision    ?? '';
-  
-  const handleChromaticChange = (val: 'normal' | 'anormal') => {
-    dispatch(setFormData({
-      medicalEvaluation: {
-        ...medicalEvaluation,
-        visionCromatica: val,
-      },
-    }));
+  const chromatic = medicalEvaluation.visionCromatica ?? "normal";
+  const notes = medicalEvaluation.notasVision ?? "";
+
+  const handleChromaticChange = (val: "normal" | "anormal") => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          visionCromatica: val,
+        },
+      })
+    );
   };
-  
+
   const handleNotesChange = (txt: string) => {
-    dispatch(setFormData({
-      medicalEvaluation: {
-        ...medicalEvaluation,
-        notasVision: txt,
-      },
-    }));
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          notasVision: txt,
+        },
+      })
+    );
   };
 
   const cabezaData: CabezaCuello = medicalEvaluation.cabezaCuello ?? {
-    sinAlteraciones: true,
+    sinAlteraciones: false,
     observaciones: "",
   };
   const handleCabezaChange = (
@@ -275,7 +264,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const neu: Neurologico = medicalEvaluation.neurologico ?? {
-    sinAlteraciones: true,
     observaciones: "",
   };
 
@@ -297,7 +285,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const bucodental: Bucodental = medicalEvaluation.bucodental ?? {
-    sinAlteraciones: true,
+    sinAlteraciones: false,
     caries: false,
     faltanPiezas: false,
     observaciones: "",
@@ -317,8 +305,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
   };
 
   const pielData: Piel = medicalEvaluation.piel ?? {
-    normocoloreada: "si",
-    tatuajes: "no",
     observaciones: "",
   };
   const handlePielChange = (field: keyof Piel, value: "si" | "no" | string) => {
@@ -441,11 +427,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
             isEditing={isEditing}
             data={circulatorio}
             onChange={handleCirculatorioChange}
-          />
-          <GastrointestinalSection
-            isEditing={isEditing}
-            data={gi}
-            onChange={handleGIChange}
           />
           <NeurologicoSection
             isEditing={isEditing}

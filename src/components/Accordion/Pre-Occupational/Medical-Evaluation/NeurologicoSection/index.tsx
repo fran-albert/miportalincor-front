@@ -2,11 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-export interface Neurologico {
-  sinAlteraciones: boolean;
-  observaciones: string;
-}
+import { Neurologico } from '@/store/Pre-Occupational/preOccupationalSlice';
 
 interface NeurologicoSectionProps {
   isEditing: boolean;

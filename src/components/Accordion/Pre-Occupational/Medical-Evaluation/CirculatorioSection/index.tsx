@@ -1,21 +1,16 @@
-import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-export interface Circulatorio {
-  frecuenciaCardiaca: string;
-  presion: string;
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varices: boolean;
-  varicesObs: string;
-}
+import React from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Circulatorio } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface CirculatorioSectionProps {
   isEditing: boolean;
   data: Circulatorio;
-  onChange: (field: keyof Circulatorio, value: boolean | string) => void;
+  onChange: (
+    field: keyof Circulatorio,
+    value: boolean | string | undefined
+  ) => void;
 }
 
 export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
@@ -38,7 +33,9 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
           className="w-20"
           value={data.frecuenciaCardiaca}
           disabled={!isEditing}
-          onChange={(e) => onChange('frecuenciaCardiaca', e.currentTarget.value)}
+          onChange={(e) =>
+            onChange("frecuenciaCardiaca", e.currentTarget.value)
+          }
           placeholder="100"
         />
         <span>x minuto</span>
@@ -52,7 +49,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
           className="w-24"
           value={data.presion}
           disabled={!isEditing}
-          onChange={(e) => onChange('presion', e.currentTarget.value)}
+          onChange={(e) => onChange("presion", e.currentTarget.value)}
           placeholder="112/89"
         />
         <span>mmHg</span>
@@ -64,7 +61,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
           id="circ-sinalt"
           checked={data.sinAlteraciones}
           disabled={!isEditing}
-          onCheckedChange={(chk) => onChange('sinAlteraciones', chk)}
+          onCheckedChange={(chk) => onChange("sinAlteraciones", chk)}
         />
         <Label htmlFor="circ-sinalt">Sin alteraciones</Label>
       </div>
@@ -77,7 +74,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
         className="w-full"
         value={data.observaciones}
         disabled={!isEditing}
-        onChange={(e) => onChange('observaciones', e.currentTarget.value)}
+        onChange={(e) => onChange("observaciones", e.currentTarget.value)}
         placeholder="Escribe aquí…"
       />
     </div>
@@ -87,24 +84,32 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
       <Label>Várices:</Label>
       <Checkbox
         id="circ-varices-si"
-        checked={data.varices}
+        checked={data.varices === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('varices', chk)}
+        onCheckedChange={
+          isEditing
+            ? (chk) => onChange("varices", chk ? true : undefined)
+            : undefined
+        }
       />
       <Label htmlFor="circ-varices-si">Sí</Label>
       <Checkbox
         id="circ-varices-no"
-        checked={!data.varices}
+        checked={data.varices === false}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('varices', !chk)}
+        onCheckedChange={
+          isEditing
+            ? (chk) => onChange("varices", chk ? false : undefined)
+            : undefined
+        }
       />
       <Label htmlFor="circ-varices-no">No</Label>
       <Input
         id="circ-varices-obs"
         className="flex-1 ml-4"
-        value={data.varicesObs}
+        value={data.varicesObs || ""}
         disabled={!isEditing}
-        onChange={(e) => onChange('varicesObs', e.currentTarget.value)}
+        onChange={(e) => onChange("varicesObs", e.currentTarget.value)}
         placeholder="Observaciones…"
       />
     </div>

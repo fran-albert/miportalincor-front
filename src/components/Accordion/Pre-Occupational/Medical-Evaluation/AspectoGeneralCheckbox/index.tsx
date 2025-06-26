@@ -35,7 +35,9 @@ export default function AspectoGeneralCheckboxes({
               />
               <label
                 htmlFor={id}
-                className={`text-base font-medium ${!isEditing ? "text-gray-500" : ""}`}
+                className={`text-base font-medium ${
+                  !isEditing ? "text-gray-500" : ""
+                }`}
               >
                 {opt}
               </label>
