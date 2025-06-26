@@ -1,12 +1,10 @@
-import { Torax } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/ToraxSection";
 import HeaderPreviewHtml from "../../Header";
 import FooterHtml from "../Footer";
 import BucodentalHtml from "./Bucodental";
 import ToraxHtml from "./Torax";
-import { Respiratorio } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/RespiratorioSection";
 import RespiratorioHtml from "./Respiratorio";
 import CirculatorioHtml from "./Circulatorio";
-import { Circulatorio } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/CirculatorioSection";
+import { Circulatorio, Respiratorio, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   bucodental: {

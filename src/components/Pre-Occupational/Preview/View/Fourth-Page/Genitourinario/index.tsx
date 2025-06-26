@@ -1,13 +1,7 @@
 // src/components/GenitourinarioHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Genitourinario {
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varicocele: boolean;
-  varicoceleObs: string;
-}
+import { Genitourinario } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Genitourinario;

@@ -1,9 +1,6 @@
 import HeaderPreviewHtml from "../../Header";
 import FooterHtml from "../Footer";
-import { Neurologico } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/NeurologicoSection";
-import { Gastrointestinal } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/GastrointestinalSection";
-import { Genitourinario } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/GenitourinarioSection";
-import { Osteoarticular } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/OsteoArticularSection";
+import { Gastrointestinal, Genitourinario, Neurologico, Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
 import NeurologicoHtml from "./Neurologico";
 import GastrointestinalHtml from "./Gastrointestinal";
 import GenitourinarioHtml from "./Genitourinario";

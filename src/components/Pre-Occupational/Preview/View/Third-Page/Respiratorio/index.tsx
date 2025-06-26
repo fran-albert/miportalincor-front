@@ -1,13 +1,8 @@
 // src/components/RespiratorioHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Respiratorio } from "@/store/Pre-Occupational/preOccupationalSlice";
 
-export interface Respiratorio {
-  frecuenciaRespiratoria: string;
-  oximetria: string;
-  sinAlteraciones: boolean;
-  observaciones: string;
-}
 
 interface Props {
   data: Respiratorio;

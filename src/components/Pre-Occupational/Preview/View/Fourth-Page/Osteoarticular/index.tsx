@@ -1,17 +1,7 @@
 // src/components/OsteoarticularHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Osteoarticular {
-  mmssSin: boolean;
-  mmssObs: string;
-  mmiiSin: boolean;
-  mmiiObs: string;
-  columnaSin: boolean;
-  columnaObs: string;
-  amputaciones: boolean;
-  amputacionesObs: string;
-}
+import { Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Osteoarticular;

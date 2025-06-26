@@ -1,15 +1,7 @@
 // src/components/CirculatorioHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Circulatorio {
-  frecuenciaCardiaca: string;
-  presion: string;
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varices: boolean;
-  varicesObs: string;
-}
+import { Circulatorio } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Circulatorio;

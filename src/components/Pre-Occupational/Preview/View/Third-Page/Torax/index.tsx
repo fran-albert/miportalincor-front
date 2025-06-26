@@ -1,13 +1,7 @@
 // src/components/ToraxHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Torax {
-  deformaciones: "si" | "no";
-  deformacionesObs: string;
-  cicatrices: "si" | "no";
-  cicatricesObs: string;
-}
+import { Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Torax;

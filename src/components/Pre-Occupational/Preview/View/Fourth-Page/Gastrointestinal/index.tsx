@@ -1,19 +1,7 @@
 // src/components/GastrointestinalHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Gastrointestinal {
-  sinAlteraciones: boolean;
-  observaciones: string;
-  cicatrices: boolean;
-  cicatricesObs: string;
-  hernias: boolean;
-  herniasObs: string;
-  eventraciones: boolean;
-  eventracionesObs: string;
-  hemorroides: boolean;
-  hemorroidesObs: string;
-}
+import { Gastrointestinal } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Gastrointestinal;

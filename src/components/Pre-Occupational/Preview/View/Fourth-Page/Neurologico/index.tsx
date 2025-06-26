@@ -1,11 +1,7 @@
 // src/components/NeurologicoHtml.tsx
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-export interface Neurologico {
-  sinAlteraciones: boolean;
-  observaciones: string;
-}
+import { Neurologico } from "@/store/Pre-Occupational/preOccupationalSlice";
 
 interface Props {
   data: Neurologico;
