@@ -22,6 +22,12 @@ import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -419,9 +425,32 @@ export const NutritionTable: React.FC<Props> = ({
                         rows={3}
                       />
                     ) : (
-                      <div className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
-                        {entry.observations}
-                      </div>
+                      <TableCell className={columnWidths.observations}>
+                        <div className="relative group">
+                          {/* Texto truncado por defecto */}
+                          <span className="block truncate max-w-[200px]">
+                            {entry.observations}
+                          </span>
+
+                          {/* Overlay que aparece en hover */}
+                          <div
+                            className={`
+        hidden group-hover:block transition-all duration-200 ease-out
+        absolute
+        top-0 left-0
+        w-auto
+        max-w-md      /* ancho máximo al expandirse */
+        bg-white
+        p-2
+        rounded
+        shadow-lg
+        z-50
+      `}
+                          >
+                            {entry.observations}
+                          </div>
+                        </div>
+                      </TableCell>
                     )}
                   </TableCell>
 
