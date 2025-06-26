@@ -7,7 +7,10 @@ import { Gastrointestinal } from "@/store/Pre-Occupational/preOccupationalSlice"
 interface GastrointestinalSectionProps {
   isEditing: boolean;
   data: Gastrointestinal;
-  onChange: (field: keyof Gastrointestinal, value: boolean | string | undefined) => void;
+  onChange: (
+    field: keyof Gastrointestinal,
+    value: boolean | string | undefined
+  ) => void;
 }
 
 export const GastrointestinalSection: React.FC<
@@ -32,7 +35,7 @@ export const GastrointestinalSection: React.FC<
     {/* Observaciones generales */}
     <Input
       id="gi-obs"
-      className="w-full"
+      className="w-full text-black"
       value={data.observaciones}
       disabled={!isEditing}
       onChange={(e) => onChange("observaciones", e.currentTarget.value)}
@@ -111,7 +114,7 @@ export const GastrointestinalSection: React.FC<
       <Label htmlFor="gi-event-si">Sí</Label>
       <Checkbox
         id="gi-event-no"
-        checked={!data.eventraciones === false}
+        checked={data.eventraciones === false}
         disabled={!isEditing}
         onCheckedChange={(chk) =>
           onChange("eventraciones", chk ? false : undefined)
@@ -142,7 +145,7 @@ export const GastrointestinalSection: React.FC<
       <Label htmlFor="gi-hemo-si">Sí</Label>
       <Checkbox
         id="gi-hemo-no"
-        checked={!data.hemorroides === false}
+        checked={data.hemorroides === false}
         disabled={!isEditing}
         onCheckedChange={(chk) =>
           onChange("hemorroides", chk ? false : undefined)

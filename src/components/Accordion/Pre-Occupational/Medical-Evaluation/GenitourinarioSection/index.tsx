@@ -36,7 +36,7 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
     {/* Observaciones generales */}
     <Input
       id="gen-obs"
-      className="w-full"
+      className="w-full text-black"
       value={data.observaciones}
       disabled={!isEditing}
       onChange={(e) => onChange("observaciones", e.currentTarget.value)}
@@ -55,7 +55,7 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
       <Label htmlFor="gen-varicocele-si">Sí</Label>
       <Checkbox
         id="gen-varicocele-no"
-        checked={!data.varicocele === false}
+        checked={data.varicocele === false}
         disabled={!isEditing}
         onCheckedChange={(chk) => onChange("varicocele", chk ? false : undefined)}
       />

@@ -58,21 +58,20 @@ const SecondPagePdfDocument = ({
       aspectoGeneral={aspectoGeneral}
     />
     <VisualAcuityPdf
-      withCorrection={{ right: "-", left: "-" }}
-      chromaticVision="normal"
-      withoutCorrection={{ right: "-", left: "-" }}
-      notes="asda"
+      withCorrection={data.agudezaCc}
+      chromaticVision={data.visionCromatica!}
+      withoutCorrection={data.agudezaSc}
+      notes= {data.notasVision}
     />
     <PielPdf
-      normocoloreada={pielData.normocoloreada}
-      tatuajes={pielData.tatuajes}
+      normocoloreada={pielData.normocoloreada!}
+      tatuajes={pielData.tatuajes!}
       observaciones={pielData.observaciones}
     />
     <CabezaCuelloPdf
       sinAlteraciones={data.cabezaCuello?.sinAlteraciones ?? false}
       observaciones={data.cabezaCuello?.observaciones ?? ""}
     />
-    
     <PdfFooter
       pageNumber={2}
       doctorName="BONIFACIO Ma. CECILIA"

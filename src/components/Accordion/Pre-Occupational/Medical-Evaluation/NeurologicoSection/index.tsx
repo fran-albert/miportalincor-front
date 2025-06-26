@@ -34,7 +34,7 @@ export const NeurologicoSection: React.FC<NeurologicoSectionProps> = ({
     {/* Observaciones */}
     <Input
       id="neu-obs"
-      className="w-full"
+      className="w-full text-black"
       value={data.observaciones}
       disabled={!isEditing}
       onChange={(e) => onChange('observaciones', e.currentTarget.value)}

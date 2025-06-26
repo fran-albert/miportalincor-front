@@ -10,20 +10,26 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 interface VisualAcuityProps {
+  isEditing: boolean;
   withoutCorrection: { right: string; left: string };
-  withCorrection?: { right?: string; left?: string };
+  withCorrection:  { right: string; left: string };
   chromaticVision: "normal" | "anormal";
-  onChromaticVisionChange?: (value: "normal" | "anormal") => void;
-  notes?: string;
-  onNotesChange?: (value: string) => void;
+  notes: string;
+  onScChange: (eye: "right" | "left", value: string) => void;
+  onCcChange: (eye: "right" | "left", value: string) => void;
+  onChromaticVisionChange: (value: "normal" | "anormal") => void;
+  onNotesChange: (value: string) => void;
 }
 
 export function VisualAcuityCard({
+  isEditing,
   withoutCorrection,
-  withCorrection = { right: "-", left: "-" },
+  withCorrection,
   chromaticVision,
+  notes,
+  onScChange,
+  onCcChange,
   onChromaticVisionChange,
-  notes = "",
   onNotesChange,
 }: VisualAcuityProps) {
   return (
@@ -44,50 +50,74 @@ export function VisualAcuityCard({
           </TableHeader>
 
           <TableBody className="text-black">
-            <TableRow>
-              <TableCell>Ojo Derecho</TableCell>
-              <TableCell className="text-center">
-                {withoutCorrection.right}
-              </TableCell>
-              <TableCell className="text-center">
-                {withCorrection.right}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Ojo Izquierdo</TableCell>
-              <TableCell className="text-center">
-                {withoutCorrection.left}
-              </TableCell>
-              <TableCell className="text-center">
-                {withCorrection.left}
-              </TableCell>
-            </TableRow>
+            {(["right","left"] as const).map((eye) => (
+              <TableRow key={eye}>
+                <TableCell>
+                  {eye === "right" ? "Ojo Derecho" : "Ojo Izquierdo"}
+                </TableCell>
+
+                {/* S/C cell */}
+                <TableCell className="text-center">
+                  {isEditing ? (
+                    <Input
+                      value={withoutCorrection[eye]}
+                      onChange={e => onScChange(eye, e.currentTarget.value)}
+                      disabled={!isEditing}
+                      className="w-16 mx-auto text-center"
+                    />
+                  ) : (
+                    withoutCorrection[eye]
+                  )}
+                </TableCell>
+
+                {/* C/C cell */}
+                <TableCell className="text-center">
+                  {isEditing ? (
+                    <Input
+                      value={withCorrection[eye]}
+                      onChange={e => onCcChange(eye, e.currentTarget.value)}
+                      disabled={!isEditing}
+                      className="w-16 mx-auto text-center"
+                    />
+                  ) : (
+                    withCorrection[eye]
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
 
         {/* Visión Cromática */}
         <div className="flex items-center space-x-6">
           <Label className="text-black">Visión Cromática:</Label>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="vision-normal"
+              disabled={!isEditing}
               checked={chromaticVision === "normal"}
-              onCheckedChange={(checked) =>
-                onChromaticVisionChange?.(checked ? "normal" : "anormal")
+              onCheckedChange={chk =>
+                onChromaticVisionChange(chk ? "normal" : "anormal")
               }
-              
             />
-            <Label htmlFor="vision-normal" className="text-black">Normal</Label>
+            <Label htmlFor="vision-normal" className="text-black">
+              Normal
+            </Label>
           </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="vision-anormal"
+              disabled={!isEditing}
               checked={chromaticVision === "anormal"}
-              onCheckedChange={(checked) =>
-                onChromaticVisionChange?.(checked ? "anormal" : "normal")
+              onCheckedChange={chk =>
+                onChromaticVisionChange(chk ? "anormal" : "normal")
               }
             />
-            <Label htmlFor="vision-anormal" className="text-black">Anormal</Label>
+            <Label htmlFor="vision-anormal" className="text-black">
+              Anormal
+            </Label>
           </div>
         </div>
 
@@ -96,7 +126,8 @@ export function VisualAcuityCard({
           <Input
             id="visual-notes"
             value={notes}
-            onChange={(e) => onNotesChange?.(e.currentTarget.value)}
+            disabled={!isEditing}
+            onChange={e => onNotesChange(e.currentTarget.value)}
             placeholder="Observaciones..."
             className="text-black"
           />

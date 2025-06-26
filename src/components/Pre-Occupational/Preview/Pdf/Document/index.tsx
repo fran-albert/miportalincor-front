@@ -14,6 +14,7 @@ import {
   mapExamResults,
   mapMedicalEvaluation,
 } from "@/common/helpers/maps";
+import FourthPagePdfDocument from "../Fourth-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -40,8 +41,6 @@ const PDFDocument = ({
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
   const medicalEvaluation = mapMedicalEvaluation(dataValues!);
-  console.log("medicalEvaluation", medicalEvaluation);
-  console.log("infoGeneral", infoGeneral);
   return (
     <Document>
       <FirstPagePdfDocument
@@ -63,6 +62,7 @@ const PDFDocument = ({
         pielData={medicalEvaluation.piel!}
       />
       <ThirdPagePdfDocument data={medicalEvaluation} />
+      <FourthPagePdfDocument data={medicalEvaluation} />
       {studies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}

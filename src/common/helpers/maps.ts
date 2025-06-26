@@ -1,4 +1,4 @@
-import { ExamenClinico, IMedicalEvaluation, setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { Circulatorio, ExamenClinico, Gastrointestinal, Genitourinario, IMedicalEvaluation, Neurologico, Osteoarticular, Respiratorio, setFormData, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
@@ -6,13 +6,6 @@ import { useEffect } from "react";
 import { ExamResults } from "./examsResults.maps";
 import { Piel } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
 import { Bucodental } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/BucodentalSection";
-import { Torax } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/ToraxSection";
-import { Respiratorio } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/RespiratorioSection";
-import { Circulatorio } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/CirculatorioSection";
-import { Neurologico } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/NeurologicoSection";
-import { Gastrointestinal } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/GastrointestinalSection";
-import { Genitourinario } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/GenitourinarioSection";
-import { Osteoarticular } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/OsteoArticularSection";
 
 
 export interface ExamenFisicoItem {
@@ -30,7 +23,11 @@ export interface PhysicalEvaluation {
     [key: string]: ExamenFisicoItem;
 }
 
-const toBool = (val?: string) => val === "true" || val === "si";
+const toBool = (val?: string | boolean): boolean => {
+    if (typeof val === "boolean") return val;
+    const low = (val ?? "").toString().toLowerCase();
+    return low === "true" || low === "si";
+};
 
 
 export function mapPhysicalEvaluation(dataValues: DataValue[]): PhysicalEvaluation {
@@ -80,7 +77,6 @@ export function mapPiel(dataValues: DataValue[]): Piel {
         (dv) =>
             dv.dataType.category === "EXAMEN_FISICO" && dv.dataType.name === "Tatuajes"
     );
-    const toBool = (val?: string) => val === "true" || val === "si";
 
     return {
         normocoloreada: toBool(dvNormo?.value as string) ? "si" : "no",
@@ -143,42 +139,49 @@ export function mapVisual(
     visionCromatica: "normal" | "anormal";
     notasVision: string;
 } {
+    // Agudeza S/C
     const scR = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Agudeza S/C Derecho"
     )?.value as string;
     const scL = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Agudeza S/C Izquierdo"
     )?.value as string;
+
+    // Agudeza C/C
     const ccR = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Agudeza C/C Derecho"
     )?.value as string;
     const ccL = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Agudeza C/C Izquierdo"
     )?.value as string;
-    const crom = (dataValues.find(
-        (dv) =>
+
+    // Visión cromática: valor + observaciones
+    const dvCrom = dataValues.find(
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Visión Cromática"
-    )?.value as string)?.toLowerCase();
-    const notas = dataValues.find(
-        (dv) => dv.dataType.name === "Observaciones Respiratorio"
-    )?.value as string; // ajusta a tu DataType real
+    );
+    const cromRaw = (dvCrom?.value as string)?.toLowerCase();
+    const visionCromatica =
+        cromRaw === "normal" || cromRaw === "anormal" ? (cromRaw as any) : "normal";
+    const notasVision = dvCrom?.observations ?? "";
+
     return {
         agudezaSc: { right: scR || "-", left: scL || "-" },
         agudezaCc: { right: ccR || "-", left: ccL || "-" },
-        visionCromatica:
-            crom === "normal" || crom === "anormal" ? (crom as any) : "normal",
-        notasVision: notas || "",
+        visionCromatica,
+        notasVision,
     };
 }
+
 export function mapMedicalEvaluation(dataValues: DataValue[]): IMedicalEvaluation {
     const clinical = mapClinicalEvaluation(dataValues);
     const { agudezaSc, agudezaCc, visionCromatica, notasVision } = mapVisual(
@@ -244,63 +247,37 @@ export function mapGastrointestinal(dataValues: DataValue[]): Gastrointestinal {
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Aparato Gastrointestinal"
     );
-    const dvObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Gastrointestinal"
-    );
     const dvCic = dataValues.find(
         dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Cicatrices"
-    );
-    const dvCicObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Cicatrices"
     );
     const dvHer = dataValues.find(
         dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Hernias"
     );
-    const dvHerObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Hernias"
-    );
     const dvEvent = dataValues.find(
         dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Eventraciones"
-    );
-    const dvEventObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Eventraciones"
     );
     const dvHemo = dataValues.find(
         dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Hemorroides"
     );
-    const dvHemoObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Hemorroides"
-    );
-
     return {
         sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: dvObs?.value as string || "",
+        observaciones: dvSin?.observations as string || "",
         cicatrices: toBool(dvCic?.value as string),
-        cicatricesObs: dvCicObs?.value as string || "",
+        cicatricesObs: dvCic?.observations as string || "",
         hernias: toBool(dvHer?.value as string),
-        herniasObs: dvHerObs?.value as string || "",
+        herniasObs: dvHer?.observations as string || "",
         eventraciones: toBool(dvEvent?.value as string),
-        eventracionesObs: dvEventObs?.value as string || "",
+        eventracionesObs: dvEvent?.observations as string || "",
         hemorroides: toBool(dvHemo?.value as string),
-        hemorroidesObs: dvHemoObs?.value as string || "",
+        hemorroidesObs: dvHemo?.observations as string || "",
     };
 }
 
@@ -310,27 +287,17 @@ export function mapGenitourinario(dataValues: DataValue[]): Genitourinario {
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Aparato Genitourinario"
     );
-    const dvObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Genitourinario"
-    );
     const dvVar = dataValues.find(
         dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Varicocele"
     );
-    const dvVarObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Varicocele"
-    );
 
     return {
         sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: dvObs?.value as string || "",
+        observaciones: dvSin?.observations as string || "",
         varicocele: toBool(dvVar?.value as string),
-        varicoceleObs: dvVarObs?.value as string || "",
+        varicoceleObs: dvVar?.observations as string || "",
     };
 }
 
@@ -340,57 +307,48 @@ export function mapNeurologico(dataValues: DataValue[]): Neurologico {
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Aparato Neurológico"
     );
-    const dvObs = dataValues.find(
-        (dv) =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Neurológico"
-    );
 
     return {
         sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: (dvObs?.value as string) || "",
+        observaciones: (dvSin?.observations as string) || "",
     };
 }
 
 export function mapCirculatorio(dataValues: DataValue[]): Circulatorio {
     const dvFrecuencia = dataValues.find(
-        dv =>
+        (dv) =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Frecuencia Cardíaca"
     );
     const dvTA = dataValues.find(
-        dv =>
+        (dv) =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "TA"
     );
     const dvSin = dataValues.find(
-        dv =>
+        (dv) =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Aparato Circulatorio"
     );
-    const dvObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Cardiovascular"
-    );
     const dvVar = dataValues.find(
-        dv =>
+        (dv) =>
             dv.dataType.category === "EXAMEN_FISICO" &&
             dv.dataType.name === "Várices"
     );
-    const dvVarObs = dataValues.find(
-        dv =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Várices"
-    );
+
+    const toBool = (val?: boolean | string): boolean => {
+        if (typeof val === "boolean") return val;
+        const s = (val ?? "").toString().toLowerCase();
+        return s === "true" || s === "si";
+    };
 
     return {
-        frecuenciaCardiaca: (dvFrecuencia?.value as string) || "",
-        presion: (dvTA?.value as string) || "",
-        sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: (dvObs?.value as string) || "",
-        varices: toBool(dvVar?.value as string),
-        varicesObs: (dvVarObs?.value as string) || "",
+        frecuenciaCardiaca: dvFrecuencia?.value as string || "",
+        presion: dvTA?.value as string || "",
+        sinAlteraciones: toBool(dvSin?.value),
+        observaciones: dvSin?.observations || "",
+        varices: toBool(dvVar?.value),
+        varicesObs: dvVar?.observations || "",
     };
 }
 
@@ -432,31 +390,27 @@ export function mapClinicalEvaluation(dataValues: DataValue[]): ExamenClinico {
 
 export function mapRespiratorio(dataValues: DataValue[]): Respiratorio {
     const dvFrecuencia = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_CLINICO" &&
             dv.dataType.name === "Frecuencia Respiratoria"
     );
     const dvOximetria = dataValues.find(
-        (dv) =>
-            dv.dataType.category === "EXAMEN_CLINICO" && dv.dataType.name === "Oximetria"
+        dv =>
+            dv.dataType.category === "EXAMEN_CLINICO" &&
+            dv.dataType.name === "Oximetria"
     );
+    // Ajustamos aquí: buscamos el BOOLEAN con name "Aparato Respiratorio"
     const dvSin = dataValues.find(
-        (dv) =>
+        dv =>
             dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Respiratorio" // aquí ajusta si tienes un campo Boolean específico
-    );
-    const dvObs = dataValues.find(
-        (dv) =>
-            dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Observaciones Respiratorio"
+            dv.dataType.name === "Aparato Respiratorio"
     );
 
     return {
         frecuenciaRespiratoria: (dvFrecuencia?.value as string) || "",
         oximetria: (dvOximetria?.value as string) || "",
-        // si tienes un booleano ‘Sin alteraciones Respiratorio’, mapea así:
-        sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: (dvObs?.value as string) || "",
+        sinAlteraciones: toBool(dvSin?.value),
+        observaciones: dvSin?.observations || "",
     };
 }
 
@@ -544,49 +498,43 @@ export function mapBucodental(dataValues: DataValue[]): Bucodental {
 export function mapTorax(dataValues: DataValue[]): Torax {
     const dvDef = dataValues.find(
         (dv) =>
-            dv.dataType.category === "EXAMEN_FISICO" && dv.dataType.name === "Torax Deformaciones"
-    );
-    const dvDefObs = dataValues.find(
-        (dv) =>
             dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Torax Deformaciones Observaciones"
+            dv.dataType.name === "Torax Deformaciones"
     );
     const dvCic = dataValues.find(
         (dv) =>
-            dv.dataType.category === "EXAMEN_FISICO" && dv.dataType.name === "Torax Cicatrices"
-    );
-    const dvCicObs = dataValues.find(
-        (dv) =>
             dv.dataType.category === "EXAMEN_FISICO" &&
-            dv.dataType.name === "Torax Cicatrices Observaciones"
+            dv.dataType.name === "Torax Cicatrices"
     );
 
+    const toBool = (val?: boolean | string): boolean => {
+        if (typeof val === "boolean") return val;
+        const s = (val ?? "").toString().toLowerCase();
+        return s === "true" || s === "si";
+    };
+
     return {
-        deformaciones: toBool(dvDef?.value as string) ? "si" : "no",
-        deformacionesObs: dvDefObs?.value as string || "",
-        cicatrices: toBool(dvCic?.value as string) ? "si" : "no",
-        cicatricesObs: dvCicObs?.value as string || "",
+        deformaciones: toBool(dvDef?.value) ? "si" : "no",
+        deformacionesObs: dvDef?.observations ?? "",
+        cicatrices: toBool(dvCic?.value) ? "si" : "no",
+        cicatricesObs: dvCic?.observations ?? "",
     };
 }
 
 export function mapOsteoarticular(dataValues: DataValue[]): Osteoarticular {
     const dvMmss = dataValues.find(dv => dv.dataType.name === "MMSS Sin Alteraciones");
-    const dvMmssObs = dataValues.find(dv => dv.dataType.name === "Observaciones MMSS");
     const dvMmii = dataValues.find(dv => dv.dataType.name === "MMII Sin Alteraciones");
-    const dvMmiiObs = dataValues.find(dv => dv.dataType.name === "Observaciones MMII");
     const dvCol = dataValues.find(dv => dv.dataType.name === "Columna Sin Alteraciones");
-    const dvColObs = dataValues.find(dv => dv.dataType.name === "Observaciones Columna");
     const dvAmp = dataValues.find(dv => dv.dataType.name === "Amputaciones");
-    const dvAmpObs = dataValues.find(dv => dv.dataType.name === "Observaciones Amputaciones");
 
     return {
         mmssSin: toBool(dvMmss?.value as string),
-        mmssObs: dvMmssObs?.value as string || "",
+        mmssObs: dvMmss?.observations as string || "",
         mmiiSin: toBool(dvMmii?.value as string),
-        mmiiObs: dvMmiiObs?.value as string || "",
+        mmiiObs: dvMmii?.observations as string || "",
         columnaSin: toBool(dvCol?.value as string),
-        columnaObs: dvColObs?.value as string || "",
+        columnaObs: dvCol?.observations as string || "",
         amputaciones: toBool(dvAmp?.value as string),
-        amputacionesObs: dvAmpObs?.value as string || "",
+        amputacionesObs: dvAmp?.observations as string || "",
     };
 }

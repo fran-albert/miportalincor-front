@@ -113,8 +113,8 @@ export interface IMedicalEvaluation {
   tiempoLibre: string;
   examenClinico: ExamenClinico;
   examenFisico: Record<string, ExamenFisicoItem>;
-  agudezaSc?: { right: string; left: string };
-  agudezaCc?: { right: string; left: string };
+  agudezaSc: { right: string; left: string };
+  agudezaCc: { right: string; left: string };
   visionCromatica?: 'normal' | 'anormal';
   notasVision?: string;
   piel?: Piel;
@@ -254,6 +254,20 @@ const initialState: PreOccupationalState = {
         presionSistolica: "",
       },
       examenFisico: {},
+      osteoarticular: {
+        mmssSin: false,
+        mmssObs: "",
+        mmiiSin: false,
+        mmiiObs: "",
+        columnaSin: false,
+        columnaObs: "",
+        amputaciones: false,
+        amputacionesObs: "",
+      },
+      agudezaSc: { right: "", left: "" },
+      agudezaCc: { right: "", left: "" },
+      visionCromatica: "normal",
+      notasVision: "",
     },
   },
 };

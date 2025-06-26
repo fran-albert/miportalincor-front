@@ -33,7 +33,6 @@ export default function ExamsResultsAccordion({
   medicalEvaluationId,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  console.log(dataValues);
   const [localExamResults, setLocalExamResults] = useState<
     Record<string, string>
   >({});

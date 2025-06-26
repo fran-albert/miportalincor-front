@@ -67,10 +67,10 @@ const View: React.FC<Props> = ({
         perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
         presionDiastolica={clinicalEvaluation.presionDiastolica}
         presionSistolica={clinicalEvaluation.presionSistolica}
-        visualChromatic="normal"
-        visualWithout={{ right: "-", left: "-" }}
-        visualWith={{ right: "-", left: "-" }}
-        visualNotes="asda"
+        visualChromatic={medicalEvaluation.visionCromatica!}
+        visualWithout={medicalEvaluation.agudezaSc}
+        visualWith={medicalEvaluation.agudezaCc}
+        visualNotes={medicalEvaluation.notasVision}
         pielData={medicalEvaluation.piel!}
         cabezaCuello={medicalEvaluation.cabezaCuello!}
       />

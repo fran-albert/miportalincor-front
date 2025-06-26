@@ -30,18 +30,23 @@ import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
+import { useEffect } from "react";
+import { mapMedicalEvaluation } from "@/common/helpers/maps";
 
 interface Props {
   isEditing: boolean;
   dataValues?: DataValue[];
 }
 
-export default function MedicalEvaluationAccordion({ isEditing }: Props) {
+export default function MedicalEvaluationAccordion({
+  isEditing,
+  dataValues,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-
+  console.log(dataValues, "medicalEvaluation");
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
     const { talla, peso } = medicalEvaluation.examenClinico;
@@ -53,6 +58,17 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
     }
     return "";
   };
+
+  useEffect(() => {
+    if (dataValues && dataValues.length > 0) {
+      const me = mapMedicalEvaluation(dataValues);
+      dispatch(
+        setFormData({
+          medicalEvaluation: me,
+        })
+      );
+    }
+  }, [dataValues, dispatch]);
 
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (value: string) => {
@@ -262,6 +278,7 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       })
     );
   };
+  console.log(cabezaData, "cabezaData");
 
   const neu: Neurologico = medicalEvaluation.neurologico ?? {
     observaciones: "",
@@ -313,6 +330,36 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
         medicalEvaluation: {
           ...medicalEvaluation,
           piel: { ...pielData, [field]: value },
+        },
+      })
+    );
+  };
+
+  // Actualizar agudeza sin corrección
+  const handleScChange = (eye: "right" | "left", value: string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          agudezaSc: {
+            ...medicalEvaluation.agudezaSc,
+            [eye]: value,
+          },
+        },
+      })
+    );
+  };
+
+  // Actualizar agudeza con corrección
+  const handleCcChange = (eye: "right" | "left", value: string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          agudezaCc: {
+            ...medicalEvaluation.agudezaCc,
+            [eye]: value,
+          },
         },
       })
     );
@@ -390,6 +437,9 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
             withoutCorrection={withoutCorr}
             withCorrection={withCorr}
             chromaticVision={chromatic}
+            isEditing={isEditing}
+            onScChange={handleScChange} 
+            onCcChange={handleCcChange} 
             onChromaticVisionChange={handleChromaticChange}
             notes={notes}
             onNotesChange={handleNotesChange}
