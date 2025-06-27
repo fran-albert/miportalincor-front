@@ -75,8 +75,12 @@ const buildOccupationalHistoryPayload = (
 const buildMedicalEvaluationPayload = (
   fields: DataType[],
   medicalEvaluation: any
-): { dataTypeId: number; value: string }[] => {
-  const payloadItems: { dataTypeId: number; value: string }[] = [];
+): { dataTypeId: number; value: string; observations?: string }[] => {
+  const payloadItems: {
+    dataTypeId: number;
+    value: string;
+    observations?: string;
+  }[] = [];
 
   const aspectoField = fields.find(
     (f) => f.category === "HISTORIA_MEDICA" && f.name === "Aspecto general"
@@ -85,16 +89,6 @@ const buildMedicalEvaluationPayload = (
     payloadItems.push({
       dataTypeId: aspectoField.id,
       value: medicalEvaluation.aspectoGeneral,
-    });
-  }
-
-  const tiempoField = fields.find(
-    (f) => f.category === "HISTORIA_MEDICA" && f.name === "Tiempo libre"
-  );
-  if (tiempoField && medicalEvaluation.tiempoLibre) {
-    payloadItems.push({
-      dataTypeId: tiempoField.id,
-      value: medicalEvaluation.tiempoLibre,
     });
   }
 
@@ -189,46 +183,362 @@ const buildMedicalEvaluationPayload = (
       value: String(medicalEvaluation.examenClinico.presionDiastolica),
     });
   }
-  const examenFisicoItems = [
-    { id: "piel", label: "Piel y faneras" },
-    { id: "ojos", label: "Ojos" },
-    { id: "oidos", label: "Oídos" },
-    { id: "nariz", label: "Nariz" },
-    { id: "boca", label: "Boca" },
-    { id: "faringe", label: "Faringe" },
-    { id: "cuello", label: "Cuello" },
-    { id: "respiratorio", label: "Aparato Respiratorio" },
-    { id: "cardiovascular", label: "Aparato Cardiovascular" },
-    { id: "digestivo", label: "Aparato Digestivo" },
-    { id: "genitourinario", label: "Aparato Genitourinario" },
-    { id: "locomotor", label: "Aparato Locomotor" },
-    { id: "columna", label: "Columna" },
-    { id: "miembros-sup", label: "Miembros Superiores" },
-    { id: "miembros-inf", label: "Miembros Inferiores" },
-    { id: "varices", label: "Várices" },
-    { id: "sistema-nervioso", label: "Sistema Nervioso" },
-    { id: "hernias", label: "Hernias" },
+  // dentro de buildMedicalEvaluationPayload, tras los bloques EXAMEN_CLINICO:
+  const normoField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Normocoloreada"
+  );
+  if (normoField && medicalEvaluation.piel) {
+    payloadItems.push({
+      dataTypeId: normoField.id,
+      value: medicalEvaluation.piel.normocoloreada === "si" ? "true" : "false",
+      observations: medicalEvaluation.piel.observaciones?.trim() || null,
+    });
+  }
+
+  // Tatuajes
+  const tatField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Tatuajes"
+  );
+  if (tatField && medicalEvaluation.piel) {
+    payloadItems.push({
+      dataTypeId: tatField.id,
+      value: medicalEvaluation.piel.tatuajes === "si" ? "true" : "false",
+    });
+  }
+
+  const cabezaBool = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Cabeza y Cuello"
+  );
+  if (cabezaBool && medicalEvaluation.cabezaCuello) {
+    payloadItems.push({
+      dataTypeId: cabezaBool.id,
+      value: medicalEvaluation.cabezaCuello.sinAlteraciones ? "true" : "false",
+    });
+  }
+
+  // 2) Observaciones Cabeza y Cuello
+  const cabezaObs = fields.find(
+    (f) =>
+      f.category === "EXAMEN_FISICO" &&
+      f.name === "Observaciones Cabeza y Cuello"
+  );
+  const trimmedCabezaObs =
+    medicalEvaluation.cabezaCuello?.observaciones?.trim();
+  if (cabezaObs && trimmedCabezaObs) {
+    payloadItems.push({
+      dataTypeId: cabezaObs.id,
+      value: trimmedCabezaObs,
+    });
+  }
+  const bucoFields = [
+    { key: "sinAlteraciones", name: "Bucodental – Sin alteraciones" },
+    { key: "caries", name: "Bucodental – Caries" },
+    { key: "faltanPiezas", name: "Bucodental – Faltan piezas" },
   ];
-  examenFisicoItems.forEach((item) => {
-    const data = medicalEvaluation.examenFisico[item.id];
-    if (data && (data.selected || data.observaciones)) {
-      const field = fields.find(
-        (f) => f.category === "EXAMEN_FISICO" && f.name === item.label
-      );
-      if (field) {
-        // Convertimos el objeto en un string JSON (puedes elegir otro formato si lo prefieres)
-        const value = JSON.stringify({
-          selected: data.selected,
-          observaciones: data.observaciones,
-        });
-        payloadItems.push({
-          dataTypeId: field.id,
-          value,
-        });
-      }
+  bucoFields.forEach(({ key, name }) => {
+    const dt = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === name
+    );
+    if (dt && medicalEvaluation.bucodental) {
+      payloadItems.push({
+        dataTypeId: dt.id,
+        value: (medicalEvaluation.bucodental as any)[key] ? "true" : "false",
+      });
+    }
+  });
+  const bucoObs = fields.find(
+    (f) =>
+      f.category === "EXAMEN_FISICO" && f.name === "Bucodental – Observaciones"
+  );
+  if (bucoObs && medicalEvaluation.bucodental?.observaciones?.trim()) {
+    payloadItems.push({
+      dataTypeId: bucoObs.id,
+      value: medicalEvaluation.bucodental.observaciones.trim(),
+    });
+  }
+
+  // === Torax ===
+  const toraxFields = [
+    { key: "deformaciones", name: "Torax Deformaciones" },
+    { key: "cicatrices", name: "Torax Cicatrices" },
+  ];
+  toraxFields.forEach(({ key, name }) => {
+    const dt = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === name
+    );
+    if (dt && medicalEvaluation.torax) {
+      payloadItems.push({
+        dataTypeId: dt.id,
+        value:
+          (medicalEvaluation.torax as any)[key] === "si" ? "true" : "false",
+        observations:
+          (medicalEvaluation.torax as any)[`${key}Obs`]?.trim() || null,
+      });
     }
   });
 
+  // === Respiratorio ===
+  if (medicalEvaluation.respiratorio) {
+    // Booleano Aparato Respiratorio
+    const respBool = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Respiratorio"
+    );
+    if (respBool) {
+      payloadItems.push({
+        dataTypeId: respBool.id,
+        value: medicalEvaluation.respiratorio.sinAlteraciones
+          ? "true"
+          : "false",
+        observations:
+          medicalEvaluation.respiratorio.observaciones?.trim() || null,
+      });
+    }
+
+    // Campos de clínica (números)
+    ["frecuenciaRespiratoria", "oximetria"].forEach((key) => {
+      const dt = fields.find(
+        (f) =>
+          f.category === "EXAMEN_CLINICO" &&
+          (key === "frecuenciaRespiratoria"
+            ? f.name === "Frecuencia Respiratoria"
+            : f.name === "Oximetria")
+      );
+      const val =
+        medicalEvaluation.respiratorio![
+          key as keyof typeof medicalEvaluation.respiratorio
+        ];
+      if (dt && val !== undefined && val !== null && val !== "") {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: String(val),
+        });
+      }
+    });
+  }
+
+  // === Circulatorio ===
+  const circ = medicalEvaluation.circulatorio;
+  if (circ) {
+    // 1) Booleano Aparato Circulatorio
+    const circBool = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Circulatorio"
+    );
+    if (circBool) {
+      payloadItems.push({
+        dataTypeId: circBool.id,
+        value: circ.sinAlteraciones ? "true" : "false",
+        observations: circ.observaciones?.trim() || null,
+      });
+    }
+
+    // 2) Signos vitales circulatorios (números)
+    const circClin = [
+      { key: "frecuenciaCardiaca", name: "Frecuencia Cardíaca" },
+      { key: "presion", name: "TA" },
+    ] as const;
+
+    circClin.forEach(({ key, name }) => {
+      const dt = fields.find(
+        (f) => f.category === "EXAMEN_CLINICO" && f.name === name
+      );
+      const val = (circ as any)[key];
+      if (dt && val != null && val !== "") {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: String(val),
+        });
+      }
+    });
+
+    // 3) Várices (boolean + obs)
+    const varicesField = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === "Várices"
+    );
+    if (varicesField && typeof circ.varices === "boolean") {
+      payloadItems.push({
+        dataTypeId: varicesField.id,
+        value: circ.varices ? "true" : "false",
+        observations: circ.varicesObs?.trim() || null,
+      });
+    }
+  }
+
+  // === Gastrointestinal ===
+  const giBool = fields.find(
+    (f) =>
+      f.category === "EXAMEN_FISICO" && f.name === "Aparato Gastrointestinal"
+  );
+  if (giBool && medicalEvaluation.gastrointestinal) {
+    payloadItems.push({
+      dataTypeId: giBool.id,
+      value: medicalEvaluation.gastrointestinal.sinAlteraciones
+        ? "true"
+        : "false",
+      observations:
+        medicalEvaluation.gastrointestinal.observaciones?.trim() || null,
+    });
+  }
+  if (medicalEvaluation.gastrointestinal) {
+    // === Cirugías, hernias, eventraciones, hemorroides ===
+    const giDetails = [
+      "cicatrices",
+      "hernias",
+      "eventraciones",
+      "hemorroides",
+    ] as const;
+    giDetails.forEach((key) => {
+      const fieldName = key.charAt(0).toUpperCase() + key.slice(1); // "Cicatrices", "Hernias", ...
+      const dt = fields.find(
+        (f) => f.category === "EXAMEN_FISICO" && f.name === fieldName
+      );
+      if (!dt) return;
+
+      const val = (medicalEvaluation.gastrointestinal as any)[key] as
+        | boolean
+        | undefined;
+      // marcó SI o NO (true o false)
+      if (val !== undefined) {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: val ? "true" : "false",
+          // si hay observaciones, las agregamos; si no, null
+          observations:
+            (medicalEvaluation.gastrointestinal as any)[`${key}Obs`]?.trim() ||
+            null,
+        });
+      }
+    });
+  }
+
+  // === Neurológico ===
+  const neuroBool = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Neurológico"
+  );
+  if (neuroBool && medicalEvaluation.neurologico) {
+    payloadItems.push({
+      dataTypeId: neuroBool.id,
+      value: medicalEvaluation.neurologico.sinAlteraciones ? "true" : "false",
+      observations: medicalEvaluation.neurologico.observaciones?.trim() || null,
+    });
+  }
+
+  // === Genitourinario ===
+  const genBool = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Genitourinario"
+  );
+  if (genBool && medicalEvaluation.genitourinario) {
+    payloadItems.push({
+      dataTypeId: genBool.id,
+      value: medicalEvaluation.genitourinario.sinAlteraciones
+        ? "true"
+        : "false",
+      observations:
+        medicalEvaluation.genitourinario.observaciones?.trim() || null,
+    });
+  }
+  const varicoField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Varicocele"
+  );
+  if (varicoField && medicalEvaluation.genitourinario?.varicocele) {
+    payloadItems.push({
+      dataTypeId: varicoField.id,
+      value: medicalEvaluation.genitourinario.varicocele ? "true" : "false",
+      observations:
+        medicalEvaluation.genitourinario.varicoceleObs?.trim() || null,
+    });
+  }
+
+  // === Osteoarticular ===
+  const osteo = medicalEvaluation.osteoarticular;
+  if (osteo) {
+    const osteoKeys = [
+      { key: "mmssSin", name: "MMSS Sin Alteraciones", obsKey: "mmssObs" },
+      { key: "mmiiSin", name: "MMII Sin Alteraciones", obsKey: "mmiiObs" },
+      {
+        key: "columnaSin",
+        name: "Columna Sin Alteraciones",
+        obsKey: "columnaObs",
+      },
+      { key: "amputaciones", name: "Amputaciones", obsKey: "amputacionesObs" },
+    ] as const;
+
+    osteoKeys.forEach(({ key, name, obsKey }) => {
+      const dt = fields.find(
+        (f) => f.category === "EXAMEN_FISICO" && f.name === name
+      );
+      if (!dt) return;
+
+      // true/false
+      const val = (osteo as any)[key] === true;
+      // lee la propiedad correcta
+      const obs = (osteo as any)[obsKey]?.trim() || null;
+
+      payloadItems.push({
+        dataTypeId: dt.id,
+        value: val ? "true" : "false",
+        observations: obs,
+      });
+    });
+  }
+
+  // === Agudeza Visual ===
+  // S/C Derecho
+  const scDerField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Agudeza S/C Derecho"
+  );
+  if (scDerField && medicalEvaluation.agudezaSc?.right) {
+    payloadItems.push({
+      dataTypeId: scDerField.id,
+      value: medicalEvaluation.agudezaSc.right,
+    });
+  }
+
+  // S/C Izquierdo
+  const scIzqField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Agudeza S/C Izquierdo"
+  );
+  if (scIzqField && medicalEvaluation.agudezaSc?.left) {
+    payloadItems.push({
+      dataTypeId: scIzqField.id,
+      value: medicalEvaluation.agudezaSc.left,
+    });
+  }
+
+  // C/C Derecho
+  const ccDerField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Agudeza C/C Derecho"
+  );
+  if (ccDerField && medicalEvaluation.agudezaCc?.right) {
+    payloadItems.push({
+      dataTypeId: ccDerField.id,
+      value: medicalEvaluation.agudezaCc.right,
+    });
+  }
+
+  // C/C Izquierdo
+  const ccIzqField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Agudeza C/C Izquierdo"
+  );
+  if (ccIzqField && medicalEvaluation.agudezaCc?.left) {
+    payloadItems.push({
+      dataTypeId: ccIzqField.id,
+      value: medicalEvaluation.agudezaCc.left,
+    });
+  }
+
+  // Visión Cromática
+  const cromField = fields.find(
+    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Visión Cromática"
+  );
+  if (cromField && medicalEvaluation.visionCromatica) {
+    payloadItems.push({
+      dataTypeId: cromField.id,
+      // valor "normal" o "anormal"
+      value: medicalEvaluation.visionCromatica,
+      // aquí guardo tus observaciones (antes usabas notasVision)
+      observations: medicalEvaluation.notasVision?.trim() || null,
+    });
+  }
   return payloadItems;
 };
 

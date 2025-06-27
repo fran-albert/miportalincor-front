@@ -3,9 +3,13 @@ import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
 import FooterHtml from "../Footer";
 import ClinicalEvaluationHtml from "./Clinical-Evaluation";
-import PhysicalEvaluationHtml from "./Physical-Evaluationn";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-
+import VisualAcuityHtml from "./Visual";
+import {
+  Piel,
+  PielSection,
+} from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
+import CabezaCuelloHtml from "./CabezaCuello";
 interface Props {
   collaborator: Collaborator;
   talla: string;
@@ -20,6 +24,12 @@ interface Props {
   presionDiastolica: string;
   examenFisico: any;
   antecedentes: DataValue[];
+  visualWithout: { right: string; left: string };
+  visualWith?: { right?: string; left?: string };
+  visualChromatic: "normal" | "anormal";
+  visualNotes?: string;
+  pielData: Piel;
+  cabezaCuello: { sinAlteraciones: boolean; observaciones: string };
 }
 
 const SecondPageHTML = ({
@@ -27,15 +37,14 @@ const SecondPageHTML = ({
   peso,
   talla,
   imc,
-  examenFisico,
-  tiempoLibre,
-  frecuenciaCardiaca,
-  frecuenciaRespiratoria,
-  presionDiastolica,
-  presionSistolica,
-  perimetroAbdominal,
   aspectoGeneral,
   antecedentes,
+  visualWithout,
+  visualWith,
+  visualChromatic,
+  visualNotes,
+  pielData,
+  cabezaCuello,
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
@@ -49,14 +58,16 @@ const SecondPageHTML = ({
       peso={peso}
       imc={imc}
       aspectoGeneral={aspectoGeneral}
-      tiempoLibre={tiempoLibre}
-      frecuenciaCardiaca={frecuenciaCardiaca}
-      frecuenciaRespiratoria={frecuenciaRespiratoria}
-      perimetroAbdominal={perimetroAbdominal}
-      presionSistolica={presionSistolica}
-      presionDiastolica={presionDiastolica}
     />
-    <PhysicalEvaluationHtml examenFisico={examenFisico} section={1} />
+    <VisualAcuityHtml
+      withoutCorrection={visualWithout}
+      withCorrection={visualWith}
+      chromaticVision={visualChromatic}
+      notes={visualNotes}
+    />
+    <PielSection isEditing={false} data={pielData} />
+    <CabezaCuelloHtml data={cabezaCuello} />
+    {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={1} /> */}
     <FooterHtml
       pageNumber={2}
       doctorName="BONIFACIO Ma. CECILIA"
