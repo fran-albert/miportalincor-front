@@ -26,7 +26,7 @@ export default function ExamsResultsAccordion({
   fields,
   examResults,
   setExamResults,
-  medicalEvaluationId,
+  medicalEvaluationId
 }: ExamsResultsAccordionProps) {
   const examFilter = [
     { id: "clinico", name: "Clínico" },

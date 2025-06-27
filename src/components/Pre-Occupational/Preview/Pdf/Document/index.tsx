@@ -13,9 +13,10 @@ import {
   mapClinicalEvaluation,
   mapConclusionAndRecommendationsData,
   mapExamResults,
-  mapPhysicalEvaluation,
-  PhysicalEvaluation,
+  mapMedicalEvaluation,
 } from "@/common/helpers/maps";
+import FourthPagePdfDocument from "../Fourth-Page";
+import FifthPagePdfDocument from "../Fifth-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -33,16 +34,11 @@ const PDFDocument = ({
   const antecedentes = dataValues?.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-  const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(dataValues!);
+const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(dataValues!);
   const examResults: ExamResults = mapExamResults(dataValues!);
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
-  const physicalEvaluation: PhysicalEvaluation = mapPhysicalEvaluation(
-    dataValues!
-  );
-  const filteredStudies = studies?.filter(
-    (s) => s.dataTypeName !== medicalEvaluationType
-  );
+  const medicalEvaluation = mapMedicalEvaluation(dataValues!);
   return (
     <Document>
       <FirstPagePdfDocument
@@ -58,22 +54,17 @@ const PDFDocument = ({
         talla={clinicalEvaluation.talla}
         peso={clinicalEvaluation.peso}
         imc={clinicalEvaluation.imc}
-        examResults={examResults}
         antecedentes={antecedentes}
+        data={medicalEvaluation}
         aspectoGeneral={infoGeneral.aspectoGeneral}
-        tiempoLibre={infoGeneral.tiempoLibre}
-        frecuenciaCardiaca={clinicalEvaluation.frecuenciaCardiaca}
-        frecuenciaRespiratoria={clinicalEvaluation.frecuenciaRespiratoria}
-        perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
-        presionDiastolica={clinicalEvaluation.presionDiastolica}
-        presionSistolica={clinicalEvaluation.presionSistolica}
-        examenFisico={physicalEvaluation}
       />
       <ThirdPagePdfDocument
-        examenFisico={physicalEvaluation}
-        examResults={examResults}
+        data={medicalEvaluation}
+        pielData={medicalEvaluation.piel!}
       />
-      {filteredStudies?.map((study, index) => (
+      <FourthPagePdfDocument data={medicalEvaluation} />
+      <FifthPagePdfDocument data={medicalEvaluation} />
+      {studies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}
           studyTitle={`${study.dataTypeName}`}

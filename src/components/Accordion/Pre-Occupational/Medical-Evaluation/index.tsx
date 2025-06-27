@@ -1,9 +1,17 @@
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  Circulatorio,
+  Gastrointestinal,
+  Genitourinario,
+  Neurologico,
+  Osteoarticular,
+  Respiratorio,
+  setFormData,
+  Torax,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   AccordionContent,
   AccordionItem,
@@ -11,18 +19,34 @@ import {
 } from "@/components/ui/accordion";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import AspectoGeneralCheckboxes from "./AspectoGeneralCheckbox";
+import { VisualAcuityCard } from "./Visual";
+import { OsteoarticularSection } from "./OsteoArticularSection";
+import { GenitourinarioSection } from "./GenitourinarioSection";
+import { GastrointestinalSection } from "./GastrointestinalSection";
+import { NeurologicoSection } from "./NeurologicoSection";
+import { CirculatorioSection } from "./CirculatorioSection";
+import { RespiratorioSection } from "./RespiratorioSection";
+import { ToraxSection } from "./ToraxSection";
+import { Bucodental, BucodentalSection } from "./BucodentalSection";
+import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
+import { PielSection, Piel } from "./PielSection";
+import { useEffect } from "react";
+import { mapMedicalEvaluation } from "@/common/helpers/maps";
 
 interface Props {
   isEditing: boolean;
   dataValues?: DataValue[];
 }
 
-export default function MedicalEvaluationAccordion({ isEditing }: Props) {
+export default function MedicalEvaluationAccordion({
+  isEditing,
+  dataValues,
+}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-
+  console.log(dataValues, "medicalEvaluation");
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
     const { talla, peso } = medicalEvaluation.examenClinico;
@@ -35,6 +59,17 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
     return "";
   };
 
+  useEffect(() => {
+    if (dataValues && dataValues.length > 0) {
+      const me = mapMedicalEvaluation(dataValues);
+      dispatch(
+        setFormData({
+          medicalEvaluation: me,
+        })
+      );
+    }
+  }, [dataValues, dispatch]);
+
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (value: string) => {
     dispatch(
@@ -46,14 +81,121 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       })
     );
   };
+  const circulatorio: Circulatorio = medicalEvaluation.circulatorio ?? {
+    frecuenciaCardiaca: "",
+    presion: "",
+    sinAlteraciones: false,
+    observaciones: "",
+  };
 
-  // Actualizar "tiempo libre"
-  const handleTiempoLibreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCirculatorioChange = (
+    field: keyof Circulatorio,
+    value: boolean | string | undefined
+  ) => {
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          tiempoLibre: e.target.value,
+          circulatorio: {
+            ...circulatorio,
+            [field]: value,
+          },
+        },
+      })
+    );
+  };
+
+  const toraxData: Torax = medicalEvaluation.torax ?? {
+    deformacionesObs: "",
+    cicatricesObs: "",
+  };
+  const handleToraxChange = (field: keyof Torax, value: boolean | string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          torax: { ...toraxData, [field]: value },
+        },
+      })
+    );
+  };
+
+  const resp: Respiratorio = medicalEvaluation.respiratorio ?? {
+    sinAlteraciones: false,
+  };
+  const handleRespChange = (
+    field: keyof Respiratorio,
+    value: boolean | string
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          respiratorio: { ...resp, [field]: value },
+        },
+      })
+    );
+  };
+
+  const osteo: Osteoarticular = medicalEvaluation.osteoarticular ?? {
+    mmssObs: "",
+    mmiiObs: "",
+    columnaObs: "",
+    amputacionesObs: "",
+  };
+
+  const handleOsteoChange = (
+    field: keyof Osteoarticular,
+    value: boolean | string
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          osteoarticular: {
+            ...osteo,
+            [field]: value,
+          },
+        },
+      })
+    );
+  };
+
+  const genito: Genitourinario = medicalEvaluation.genitourinario ?? {
+    observaciones: "",
+    varicoceleObs: "",
+  };
+
+  const handleGenitoChange = (
+    field: keyof Genitourinario,
+    value: boolean | string | undefined
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          genitourinario: { ...genito, [field]: value },
+        },
+      })
+    );
+  };
+
+  const gi: Gastrointestinal = medicalEvaluation.gastrointestinal ?? {
+    observaciones: "",
+  };
+
+  const handleGIChange = (
+    field: keyof Gastrointestinal,
+    value: boolean | string | undefined
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          gastrointestinal: {
+            ...gi,
+            [field]: value,
+          },
         },
       })
     );
@@ -86,88 +228,142 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
       })
     );
   };
-
-  const handleExamenFisicoSelectedChange = (
-    testId: string,
-    selectedValue: "si" | "no"
-  ) => {
-    const current = medicalEvaluation.examenFisico[testId] || {
-      selected: "",
-      observaciones: "",
-    };
-  
-    const newSelected =
-      current.selected === selectedValue ? "" : selectedValue;
-  
-    const newObservaciones =
-      newSelected === "si" ? current.observaciones : "";
-  
-    dispatch(
-      setFormData({
-        medicalEvaluation: {
-          ...medicalEvaluation,
-          examenFisico: {
-            ...medicalEvaluation.examenFisico,
-            [testId]: {
-              selected: newSelected,
-              observaciones: newObservaciones,
-            },
-          },
-        },
-      })
-    );
+  const withoutCorr = {
+    right: medicalEvaluation.agudezaSc?.right ?? "10/10",
+    left: medicalEvaluation.agudezaSc?.left ?? "10/10",
   };
-  
+  const withCorr = {
+    right: medicalEvaluation.agudezaCc?.right ?? "10/10",
+    left: medicalEvaluation.agudezaCc?.left ?? "10/10",
+  };
+  const chromatic = medicalEvaluation.visionCromatica ?? "normal";
+  const notes = medicalEvaluation.notasVision ?? "";
 
-  const handleExamenFisicoObservacionesChange = (
-    testId: string,
-    value: string
-  ) => {
-    const current = medicalEvaluation.examenFisico[testId] || {
-      selected: "",
-      observaciones: "",
-    };
+  const handleChromaticChange = (val: "normal" | "anormal") => {
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenFisico: {
-            ...medicalEvaluation.examenFisico,
-            [testId]: { ...current, observaciones: value },
-          },
+          visionCromatica: val,
         },
       })
     );
   };
 
-  const examenFisicoItems = [
-    { id: "piel", label: "Piel y faneras", defaultValue: "" },
-    { id: "ojos", label: "Ojos", defaultValue: "" },
-    { id: "oidos", label: "Oídos", defaultValue: "" },
-    { id: "nariz", label: "Nariz", defaultValue: "" },
-    { id: "boca", label: "Boca", defaultValue: "" },
-    { id: "faringe", label: "Faringe", defaultValue: "" },
-    { id: "cuello", label: "Cuello", defaultValue: "" },
-    {
-      id: "respiratorio",
-      label: "Aparato Respiratorio",
-      defaultValue: "",
-    },
-    {
-      id: "cardiovascular",
-      label: "Aparato Cardiovascular",
-      defaultValue: "",
-    },
-    { id: "digestivo", label: "Aparato Digestivo", defaultValue: "" },
-    { id: "genitourinario", label: "Aparato Genitourinario", defaultValue: "" },
-    { id: "locomotor", label: "Aparato Locomotor", defaultValue: "" },
-    { id: "columna", label: "Columna", defaultValue: "" },
-    { id: "miembros-sup", label: "Miembros Superiores", defaultValue: "" },
-    { id: "miembros-inf", label: "Miembros Inferiores", defaultValue: "" },
-    { id: "varices", label: "Várices", defaultValue: "" },
-    { id: "sistema-nervioso", label: "Sistema Nervioso", defaultValue: "" },
-    { id: "hernias", label: "Hernias", defaultValue: "" },
-  ];
+  const handleNotesChange = (txt: string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          notasVision: txt,
+        },
+      })
+    );
+  };
+
+  const cabezaData: CabezaCuello = medicalEvaluation.cabezaCuello ?? {
+    sinAlteraciones: false,
+    observaciones: "",
+  };
+  const handleCabezaChange = (
+    field: keyof CabezaCuello,
+    value: boolean | string
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          cabezaCuello: { ...cabezaData, [field]: value },
+        },
+      })
+    );
+  };
+  console.log(cabezaData, "cabezaData");
+
+  const neu: Neurologico = medicalEvaluation.neurologico ?? {
+    observaciones: "",
+  };
+
+const handleNeuChange = (
+    field: keyof Neurologico,
+    value: boolean | string
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          neurologico: {
+            ...neu,
+            [field]: value,
+          },
+        },
+      })
+    );
+  };
+
+  const bucodental: Bucodental = medicalEvaluation.bucodental ?? {
+    sinAlteraciones: false,
+    caries: false,
+    faltanPiezas: false,
+    observaciones: "",
+  };
+  const handleBucodentalChange = (
+    field: keyof Bucodental,
+    value: boolean | string
+  ) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          bucodental: { ...bucodental, [field]: value },
+        },
+      })
+    );
+  };
+
+  const pielData: Piel = medicalEvaluation.piel ?? {
+    observaciones: "",
+  };
+  const handlePielChange = (field: keyof Piel, value: "si" | "no" | string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          piel: { ...pielData, [field]: value },
+        },
+      })
+    );
+  };
+
+  // Actualizar agudeza sin corrección
+  const handleScChange = (eye: "right" | "left", value: string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          agudezaSc: {
+            ...medicalEvaluation.agudezaSc,
+            [eye]: value,
+          },
+        },
+      })
+    );
+  };
+
+  // Actualizar agudeza con corrección
+  const handleCcChange = (eye: "right" | "left", value: string) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          agudezaCc: {
+            ...medicalEvaluation.agudezaCc,
+            [eye]: value,
+          },
+        },
+      })
+    );
+  };
 
   return (
     <AccordionItem value="medical-evaluation" className="border rounded-lg">
@@ -182,26 +378,6 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
             medicalEvaluation={medicalEvaluation}
             handleAspectoGeneralChange={handleAspectoGeneralChange}
           />
-
-          {/* Tiempo libre */}
-          <div className="space-y-2">
-            <Label htmlFor="tiempo-libre">Tiempo libre</Label>
-            {isEditing ? (
-              <Input
-                id="tiempo-libre"
-                value={medicalEvaluation.tiempoLibre || ""}
-                onChange={handleTiempoLibreChange}
-              />
-            ) : (
-              <Input
-                id="tiempo-libre"
-                value={medicalEvaluation.tiempoLibre || ""}
-                disabled
-                className="disabled:opacity-50"
-              />
-            )}
-          </div>
-
           {/* Examen Clínico */}
           <div className="space-y-4">
             <h4 className="font-bold text-base text-greenPrimary">
@@ -257,216 +433,71 @@ export default function MedicalEvaluationAccordion({ isEditing }: Props) {
               </div>
             </div>
           </div>
-
+          <VisualAcuityCard
+            withoutCorrection={withoutCorr}
+            withCorrection={withCorr}
+            chromaticVision={chromatic}
+            isEditing={isEditing}
+            onScChange={handleScChange} 
+            onCcChange={handleCcChange} 
+            onChromaticVisionChange={handleChromaticChange}
+            notes={notes}
+            onNotesChange={handleNotesChange}
+          />
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Perímetro Abdominal */}
-              <div className="space-y-2">
-                <Label htmlFor="perimetro-abdominal">Perímetro Abdominal</Label>
-                {isEditing ? (
-                  <Input
-                    id="perimetro-abdominal"
-                    value={
-                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "perimetroAbdominal",
-                        e.target.value
-                      )
-                    }
-                  />
-                ) : (
-                  <Input
-                    id="perimetro-abdominal"
-                    disabled
-                    className="disabled:opacity-50"
-                    value={
-                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
-                    }
-                  />
-                )}
-              </div>
-              {/* Frecuencia Cardíaca */}
-              <div className="space-y-2">
-                <Label htmlFor="frecuencia-cardiaca">Frecuencia Cardíaca</Label>
-                {isEditing ? (
-                  <Input
-                    id="frecuencia-cardiaca"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "frecuenciaCardiaca",
-                        e.target.value
-                      )
-                    }
-                  />
-                ) : (
-                  <Input
-                    id="frecuencia-cardiaca"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
-                    }
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
-              </div>
-              {/* Frecuencia Respiratoria */}
-              <div className="space-y-2">
-                <Label htmlFor="frecuencia-respiratoria">
-                  Frecuencia Respiratoria
-                </Label>
-                {isEditing ? (
-                  <Input
-                    id="frecuencia-respiratoria"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "frecuenciaRespiratoria",
-                        e.target.value
-                      )
-                    }
-                  />
-                ) : (
-                  <Input
-                    id="frecuencia-respiratoria"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
-                      ""
-                    }
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
-              </div>
-              {/* Presión Sistólica */}
-              <div className="space-y-2">
-                <Label htmlFor="presion-sistolica">Presión Sistólica</Label>
-                {isEditing ? (
-                  <Input
-                    id="presion-sistolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionSistolica || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "presionSistolica",
-                        e.target.value
-                      )
-                    }
-                  />
-                ) : (
-                  <Input
-                    id="presion-sistolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionSistolica || ""
-                    }
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
-              </div>
-              {/* Presión Diastólica */}
-              <div className="space-y-2">
-                <Label htmlFor="presion-diastolica">Presión Diastólica</Label>
-                {isEditing ? (
-                  <Input
-                    id="presion-diastolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionDiastolica || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "presionDiastolica",
-                        e.target.value
-                      )
-                    }
-                  />
-                ) : (
-                  <Input
-                    id="presion-diastolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionDiastolica || ""
-                    }
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
-              </div>
-            </div>
+            <PielSection
+              isEditing={isEditing}
+              data={pielData}
+              onChange={handlePielChange}
+            />
           </div>
-
-          {/* Examen físico */}
-          <div className="space-y-6 mt-2">
-            <h4 className="font-bold text-base text-greenPrimary">
-              Examen físico (indique si se realizaron pruebas)
-            </h4>
-            {examenFisicoItems.map((item) => {
-              const current = medicalEvaluation.examenFisico[item.id] || {
-                selected: "",
-                observaciones: item.defaultValue || "",
-              };
-              return (
-                <div key={item.id} className="flex items-center gap-4">
-                  <Label htmlFor={item.id} className="min-w-[150px]">
-                    {item.label}
-                  </Label>
-                  {/* Checkbox para "Sí" */}
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`${item.id}-si`}
-                      checked={current.selected === "si"}
-                      onCheckedChange={() =>
-                        isEditing &&
-                        handleExamenFisicoSelectedChange(item.id, "si")
-                      }
-                      disabled={!isEditing}
-                      className="disabled:opacity-50"
-                    />
-                    <Label htmlFor={`${item.id}-si`}>Sí</Label>
-                  </div>
-                  {/* Checkbox para "No" */}
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`${item.id}-no`}
-                      checked={current.selected === "no"}
-                      onCheckedChange={() =>
-                        isEditing &&
-                        handleExamenFisicoSelectedChange(item.id, "no")
-                      }
-                      disabled={!isEditing}
-                      className="disabled:opacity-50"
-                    />
-                    <Label htmlFor={`${item.id}-no`}>No</Label>
-                  </div>
-                  {/* Input para observaciones - solo mostrar si "Sí" está seleccionado */}
-                  {current.selected === "si" &&
-                    (isEditing ? (
-                      <Input
-                        className="max-w-[200px]"
-                        value={current.observaciones}
-                        onChange={(e) =>
-                          handleExamenFisicoObservacionesChange(
-                            item.id,
-                            e.target.value
-                          )
-                        }
-                      />
-                    ) : (
-                      <div className="p-2 border rounded bg-gray-50 max-w-[200px]">
-                        {current.observaciones}
-                      </div>
-                    ))}
-                </div>
-              );
-            })}
+          <div className="space-y-6">
+            <CabezaCuelloSection
+              isEditing={isEditing}
+              data={cabezaData}
+              onChange={handleCabezaChange}
+            />
+            <BucodentalSection
+              isEditing={isEditing}
+              data={bucodental}
+              onChange={handleBucodentalChange}
+            />
+            <ToraxSection
+              isEditing={isEditing}
+              data={toraxData}
+              onChange={handleToraxChange}
+            />
           </div>
+          <RespiratorioSection
+            isEditing={isEditing}
+            data={resp}
+            onChange={handleRespChange}
+          />
+          <CirculatorioSection
+            isEditing={isEditing}
+            data={circulatorio}
+            onChange={handleCirculatorioChange}
+          />
+          <NeurologicoSection
+            isEditing={isEditing}
+            data={neu}
+            onChange={handleNeuChange}
+          />
+          <GastrointestinalSection
+            isEditing={isEditing}
+            data={gi}
+            onChange={handleGIChange}
+          />
+          <GenitourinarioSection
+            isEditing={isEditing}
+            data={genito}
+            onChange={handleGenitoChange}
+          />
+          <OsteoarticularSection
+            isEditing={isEditing}
+            data={osteo}
+            onChange={handleOsteoChange}
+          />
         </div>
       </AccordionContent>
     </AccordionItem>
