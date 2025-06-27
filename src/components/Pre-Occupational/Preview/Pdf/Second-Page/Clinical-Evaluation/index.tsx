@@ -1,3 +1,4 @@
+// src/components/pdf/ClinicalEvaluationPdf.tsx
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
@@ -10,53 +11,70 @@ interface ClinicalEvaluationPdfProps {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 8 },
+  container: {
+    marginTop: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 8,
+    backgroundColor: "#FFF",
+  },
   header: {
-    textAlign: "center",
     fontSize: 14,
     fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-
-  // sección casillas
   sectionRow: {
-    flexDirection: "row",
-    alignItems: "center",
     marginBottom: 12,
   },
-  row: { flexDirection: "row", alignItems: "center" },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  rowInline: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   checkboxWrapper: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 12,
   },
-  box: {
-    width: 10,
-    height: 10,
-    borderWidth: 1,
-    borderColor: "#000",
-    marginRight: 4,
+  checkboxLabel: {
+    fontSize: 10,
+    fontStyle: "italic",
   },
-  tick: {
-    position: "absolute",
-    top: 2,
-    left: 2,
-    width: 6,
-    height: 6,
-    backgroundColor: "#000",
-  },
-  checkboxLabel: { fontSize: 12 },
-
-  // Peso/Talla/IMC
   valueRow: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
   },
-  infoField: { alignItems: "center" },
-  infoLabel: { fontSize: 10, fontWeight: "bold" },
-  infoValue: { fontSize: 10, marginTop: 2 },
+  infoField: {
+    alignItems: "center",
+    width: "30%",
+  },
+  infoLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 10,
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    width: "100%",
+    textAlign: "center",
+    backgroundColor: "#F9F9F9",
+  },
 });
 
 const OPTIONS = ["Bueno", "Regular", "Malo"] as const;
@@ -66,7 +84,7 @@ const PDFCheckboxes = ({
 }: {
   selected: (typeof OPTIONS)[number];
 }) => (
-  <View style={styles.row}>
+  <View style={styles.rowInline}>
     {OPTIONS.map((opt) => (
       <View key={opt} style={styles.checkboxWrapper}>
         <CheckboxPdf checked={selected === opt} />
@@ -94,16 +112,16 @@ const ClinicalEvaluationPdf: React.FC<ClinicalEvaluationPdfProps> = ({
 
     {/* Aspecto General */}
     <View style={styles.sectionRow}>
-      <Text style={styles.infoLabel}>Aspecto General:</Text>
+      <Text style={styles.sectionLabel}>Aspecto General:</Text>
       <PDFCheckboxes selected={aspectoGeneral} />
     </View>
 
     {/* Peso / Talla / IMC */}
-    <View style={{ marginBottom: 12 }}>
+    <View style={styles.sectionRow}>
       <View style={styles.valueRow}>
-        <InfoField label="Peso:" value={peso} />
-        <InfoField label="Talla:" value={talla} />
-        <InfoField label="IMC:" value={imc} />
+        <InfoField label="Peso (kg)" value={peso} />
+        <InfoField label="Talla (cm)" value={talla} />
+        <InfoField label="IMC" value={imc} />
       </View>
     </View>
   </View>

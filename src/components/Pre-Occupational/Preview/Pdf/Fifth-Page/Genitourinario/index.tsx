@@ -1,10 +1,12 @@
-// src/components/pdf/NeurologicoPdf.tsx
+// src/components/pdf/GenitourinarioPdf.tsx
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
-interface NeurologicoPdfProps {
+interface GenitourinarioPdfProps {
   sinAlteraciones: boolean;
   observaciones: string;
+  varicocele: boolean;
+  varicoceleObs: string;
 }
 
 const styles = StyleSheet.create({
@@ -29,20 +31,35 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   checkboxWrapper: {
     width: 16,
     alignItems: "center",
     marginRight: 6,
   },
-  checkboxLabel: {
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
+  },
+  label: {
     fontSize: 10,
     fontWeight: "500",
+    marginRight: 4,
+  },
+  obsGeneral: {
+    fontSize: 10,
+    marginTop: 4,
+    marginLeft: 22, // align under text, indented past checkbox
+  },
+  obsInline: {
+    fontSize: 10,
+    marginLeft: 12,
   },
   obsLabel: {
     fontSize: 10,
     fontWeight: "500",
+    marginTop: 8,
     marginBottom: 4,
   },
   obsText: {
@@ -55,29 +72,45 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function NeurologicoPdf({
+export default function GenitourinarioPdf({
   sinAlteraciones,
   observaciones,
-}: NeurologicoPdfProps) {
+  varicocele,
+  varicoceleObs,
+}: GenitourinarioPdfProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Aparato Neurológico</Text>
+      <Text style={styles.title}>Aparato Genitourinario</Text>
 
       {/* Sin alteraciones */}
       <View style={styles.row}>
         <View style={styles.checkboxWrapper}>
           <CheckboxPdf checked={sinAlteraciones} />
         </View>
-        <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
+        <Text style={styles.optionText}>Sin alteraciones</Text>
       </View>
-
-      {/* Observaciones */}
       {observaciones.trim() !== "" && (
         <View>
           <Text style={styles.obsLabel}>Observaciones</Text>
           <Text style={styles.obsText}>{observaciones}</Text>
         </View>
       )}
+
+      {/* Varicocele */}
+      <View style={[styles.row, { marginTop: 8 }]}>
+        <Text style={styles.label}>Varicocele:</Text>
+        <View style={styles.checkboxWrapper}>
+          <CheckboxPdf checked={varicocele} />
+        </View>
+        <Text style={styles.optionText}>Sí</Text>
+        <View style={styles.checkboxWrapper}>
+          <CheckboxPdf checked={!varicocele} />
+        </View>
+        <Text style={styles.optionText}>No</Text>
+        {varicoceleObs.trim() !== "" && (
+          <Text style={styles.obsInline}>{varicoceleObs}</Text>
+        )}
+      </View>
     </View>
   );
 }

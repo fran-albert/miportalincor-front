@@ -16,6 +16,7 @@ import {
   mapMedicalEvaluation,
 } from "@/common/helpers/maps";
 import FourthPagePdfDocument from "../Fourth-Page";
+import FifthPagePdfDocument from "../Fifth-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -58,10 +59,13 @@ const PDFDocument = ({
         antecedentes={antecedentes}
         data={medicalEvaluation}
         aspectoGeneral={infoGeneral.aspectoGeneral}
+      />
+      <ThirdPagePdfDocument
+        data={medicalEvaluation}
         pielData={medicalEvaluation.piel!}
       />
-      <ThirdPagePdfDocument data={medicalEvaluation} />
       <FourthPagePdfDocument data={medicalEvaluation} />
+      <FifthPagePdfDocument data={medicalEvaluation} />
       {studies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}

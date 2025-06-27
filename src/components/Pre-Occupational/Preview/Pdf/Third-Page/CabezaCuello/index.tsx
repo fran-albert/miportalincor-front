@@ -1,8 +1,8 @@
-// src/components/pdf/NeurologicoPdf.tsx
+// src/components/pdf/CabezaCuelloPdf.tsx
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
-interface NeurologicoPdfProps {
+interface CabezaCuelloPdfProps {
   sinAlteraciones: boolean;
   observaciones: string;
 }
@@ -29,20 +29,26 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   checkboxWrapper: {
     width: 16,
     alignItems: "center",
     marginRight: 6,
   },
-  checkboxLabel: {
+  label: {
     fontSize: 10,
     fontWeight: "500",
+    marginRight: 4,
+  },
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
   },
   obsLabel: {
     fontSize: 10,
     fontWeight: "500",
+    marginTop: 8,
     marginBottom: 4,
   },
   obsText: {
@@ -55,29 +61,29 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function NeurologicoPdf({
+export default function CabezaCuelloPdf({
   sinAlteraciones,
   observaciones,
-}: NeurologicoPdfProps) {
+}: CabezaCuelloPdfProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Aparato Neurológico</Text>
+      <Text style={styles.title}>Cabeza y Cuello</Text>
 
       {/* Sin alteraciones */}
       <View style={styles.row}>
         <View style={styles.checkboxWrapper}>
           <CheckboxPdf checked={sinAlteraciones} />
         </View>
-        <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
+        <Text style={styles.optionText}>
+          Sin alteraciones: {sinAlteraciones ? "Sí" : "No"}
+        </Text>
       </View>
 
       {/* Observaciones */}
-      {observaciones.trim() !== "" && (
-        <View>
-          <Text style={styles.obsLabel}>Observaciones</Text>
-          <Text style={styles.obsText}>{observaciones}</Text>
-        </View>
-      )}
+      <Text style={styles.obsLabel}>Observaciones</Text>
+      <Text style={styles.obsText}>
+        {observaciones.trim() !== "" ? observaciones : "—"}
+      </Text>
     </View>
   );
 }
