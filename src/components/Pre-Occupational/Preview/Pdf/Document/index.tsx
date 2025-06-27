@@ -28,15 +28,13 @@ interface Props {
 const PDFDocument = ({
   collaborator,
   studies,
-  conclusion,
-  recomendaciones,
   dataValues,
   medicalEvaluationType,
 }: Props) => {
   const antecedentes = dataValues?.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-
+const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(dataValues!);
   const examResults: ExamResults = mapExamResults(dataValues!);
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
@@ -80,4 +78,3 @@ const PDFDocument = ({
 };
 
 export default PDFDocument;
-
