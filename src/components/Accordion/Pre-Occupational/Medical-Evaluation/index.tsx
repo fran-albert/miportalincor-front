@@ -284,7 +284,7 @@ export default function MedicalEvaluationAccordion({
     observaciones: "",
   };
 
-  const handleNeuChange = (
+const handleNeuChange = (
     field: keyof Neurologico,
     value: boolean | string
   ) => {

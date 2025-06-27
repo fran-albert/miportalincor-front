@@ -6,13 +6,9 @@ import MedicalHistoryTab from "@/components/Tabs/Pre-Occupational/Medical-Histor
 import VariousTab from "../Various";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-urls.collaborators.action";
-import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { useDispatch } from "react-redux";
-import {
-  resetForm,
-  setFormData,
-} from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DataType } from "@/types/Data-Type/Data-Type";
+import { mapExamResults } from "@/common/helpers/examsResults.maps";
 
 interface Props {
   isEditing: boolean;
@@ -20,6 +16,7 @@ interface Props {
   urls: GetUrlsResponseDto[] | undefined;
   dataValues: DataValue[] | undefined;
   collaborator: Collaborator;
+  fields: DataType[];
   medicalEvaluationId: number;
 }
 
@@ -27,38 +24,49 @@ export default function NavigationTabs({
   isEditing,
   setIsEditing,
   urls,
+  fields,
   collaborator,
   dataValues,
   medicalEvaluationId,
 }: Props) {
   const [activeTab, setActiveTab] = useState("general");
-  const { data: fields } = useDataTypes({
-    auth: true,
-    fetch: true,
-    categories: ["GENERAL", "ESTUDIOS"],
+  const [formData, setFormData] = useState<{
+    examResults: Record<string, string>;
+    conclusion: string;
+    recomendaciones: string;
+  }>({
+    examResults: {},
+    conclusion: "",
+    recomendaciones: "",
   });
-  const dispatch = useDispatch();
+
+  // 2) cuando cambien dataValues, inicializamos formData
   useEffect(() => {
-    dispatch(resetForm());
-  }, [medicalEvaluationId, dispatch]);
-  useEffect(() => {
-    if (!dataValues) return;
+    // filtrar sólo STRING & GENERAL
+    const generalStrings = dataValues?.filter(
+      (dv) =>
+        dv.dataType.dataType === "STRING" && dv.dataType.category === "GENERAL"
+    );
+
+    // mapExamResults es tu helper para pasar array a { id: valor }
+    const initialExamResults = mapExamResults(generalStrings!);
 
     const initialConclusion =
-      dataValues.find((dv) => dv.dataType.name === "Conclusion")?.value ?? "";
+      dataValues?.find((dv) => dv.dataType.name === "Conclusion")?.value ?? "";
     const initialRecomendaciones =
-      dataValues.find((dv) => dv.dataType.name === "Recomendaciones")?.value ??
+      dataValues?.find((dv) => dv.dataType.name === "Recomendaciones")?.value ??
       "";
 
-    dispatch(
-      setFormData({
-        conclusion: initialConclusion,
-        recomendaciones: initialRecomendaciones,
-      })
-    );
-  }, [dataValues, dispatch]);
-  const generalCategory = fields.filter((item) => item.category === "GENERAL");
-  const studiesCategory = fields.filter((item) => item.category === "ESTUDIOS");
+    setFormData({
+      examResults: initialExamResults,
+      conclusion: initialConclusion,
+      recomendaciones: initialRecomendaciones,
+    });
+  }, [dataValues]);
+
+  // 3) categoriza tus campos
+  const generalCategory = fields.filter((f) => f.category === "GENERAL");
+  const studiesCategory = fields.filter((f) => f.category === "ESTUDIOS");
   return (
     <div className="min-h-screen p-4">
       <div className="mx-auto space-y-4">
@@ -81,10 +89,11 @@ export default function NavigationTabs({
                 {activeTab === "general" && (
                   <GeneralTab
                     isEditing={isEditing}
-                    dataValues={dataValues}
                     setIsEditing={setIsEditing}
+                    formData={formData}
+                    setFormData={setFormData}
                     medicalEvaluationId={medicalEvaluationId}
-                    generalCategory={generalCategory}
+                    fields={generalCategory}
                   />
                 )}
                 {activeTab === "medical-history" && (

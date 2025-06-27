@@ -11,6 +11,7 @@ import { ExamResults } from "@/common/helpers/examsResults.maps";
 import {
   aspectoGeneralyTiempolibre,
   mapClinicalEvaluation,
+  mapConclusionAndRecommendationsData,
   mapExamResults,
   mapMedicalEvaluation,
 } from "@/common/helpers/maps";
@@ -19,8 +20,6 @@ import FourthPagePdfDocument from "../Fourth-Page";
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
-  conclusion: string;
-  recomendaciones: string;
   medicalEvaluationType: string;
   dataValues: DataValue[] | undefined;
 }
@@ -77,3 +76,4 @@ const PDFDocument = ({
 };
 
 export default PDFDocument;
+

@@ -1,5 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { formatDateWithTime } from "@/common/helpers/helpers";
 import { CollaboratorMedicalEvaluation } from "@/types/Collaborator-Medical-Evaluation/Collaborator-Medical-Evaluation";
 import { FaFilePdf } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
@@ -36,44 +35,9 @@ export const getColumns = (
       ),
     },
     {
-      accessorKey: "",
-      header: "Creado",
-      cell: ({ row }) => (
-        <div className="flex flex-col ml-2">
-          <p className="text-sm font-medium">
-            {formatDateWithTime(row.original.medicalEvaluation.createdAt || "")}
-          </p>
-        </div>
-      ),
-    },
-    // {
-    //   accessorKey: "",
-    //   header: "Último envío",
-    //   cell: ({ row }) => (
-    //     <div className="flex flex-col ml-2">
-    //       <p className="text-sm font-medium">
-    //         {formatDateWithTime(row.original.updatedAt || "")}
-    //       </p>
-    //     </div>
-    //   ),
-    // },
-    {
-      accessorKey: "",
-      header: "Enviado y Completado",
-      cell: ({ row }) => (
-        <div className="flex flex-col ml-2">
-          <p className="text-sm font-medium">
-            {row.original.medicalEvaluation.completed ? "Sí" : "No"}
-          </p>
-        </div>
-      ),
-    },
-
-    {
       header: " ",
       cell: ({ row }) => {
         const medicalEvaluation = row.original.medicalEvaluation;
-        const isCompleted = medicalEvaluation.completed;
         const medicalEvaluationId = medicalEvaluation.id;
         const collaboratorId = collaborator.id;
 
@@ -101,10 +65,9 @@ export const getColumns = (
         // 4. Finalmente, renderizamos la versión “completa”
         return (
           <div className="flex items-center justify-end gap-2">
-            {isCompleted && signedUrl ? (
               <>
                 <a
-                  href={signedUrl.url}
+                  href={signedUrl?.url}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -117,12 +80,9 @@ export const getColumns = (
                 </a>
                 <SendEmailDialog
                   collaborator={collaborator}
-                  url={signedUrl.url}
+                  url={String(signedUrl?.url)}
                   evaluationType={medicalEvaluation.evaluationType.name}
                 />
-              </>
-            ) : (
-              <>
                 <ViewButton
                   slug={`${slug}/examen/${row.original.id}`}
                   text="Ver Exámen"
@@ -130,7 +90,6 @@ export const getColumns = (
                 />
                 <DeleteMedicalEvaluation id={medicalEvaluation.id} />
               </>
-            )}
           </div>
         );
       },
