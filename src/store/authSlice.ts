@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
+import { AuthUtils } from '@/utils/auth';
 
 interface DecodedToken {
     exp?: number;
@@ -7,9 +8,9 @@ interface DecodedToken {
 
 const initialState = {
     user: null,
-    token: localStorage.getItem("authToken") || null,
-    tokenExpiration: localStorage.getItem("tokenExpiration") || null,
-    isAuthenticated: !!localStorage.getItem("authToken"),
+    token: AuthUtils.getAuthToken(),
+    tokenExpiration: AuthUtils.getTokenExpiration(),
+    isAuthenticated: AuthUtils.isTokenValid(),
 };
 
 const authSlice = createSlice({
@@ -23,12 +24,14 @@ const authSlice = createSlice({
 
                 state.token = action.payload.token;
                 state.isAuthenticated = true;
-                state.tokenExpiration = expirationTime.toString();
+                state.tokenExpiration = expirationTime;
 
-                localStorage.setItem("authToken", action.payload.token);
-                localStorage.setItem("tokenExpiration", expirationTime.toString());
+                AuthUtils.setAuthToken(action.payload.token);
             } else {
-                console.error('Token does not have an expiration date.');
+                // Token sin fecha de expiración no es válido
+                state.token = null;
+                state.isAuthenticated = false;
+                state.tokenExpiration = null;
             }
         },
         setUser: (state, action) => {
@@ -38,8 +41,7 @@ const authSlice = createSlice({
             state.token = null;
             state.isAuthenticated = false;
             state.tokenExpiration = null;
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("tokenExpiration");
+            AuthUtils.removeAuthToken();
         },
     },
 });

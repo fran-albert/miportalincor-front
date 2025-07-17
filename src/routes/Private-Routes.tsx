@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+import { AuthUtils } from "@/utils/auth";
 
 interface DecodedToken {
   Id: string;
@@ -23,7 +24,7 @@ export const Private_Routes = ({
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
   useEffect(() => {
-    const stateUser = localStorage.getItem("authToken");
+    const stateUser = AuthUtils.getAuthToken();
 
     if (!stateUser) {
       setRedirectPath("/iniciar-sesion");
@@ -54,7 +55,8 @@ export const Private_Routes = ({
 
       setAuthChecked(true);
     } catch (error) {
-      console.error("Error al decodificar el token:", error);
+      // Token inválido, limpiar estado
+      AuthUtils.removeAuthToken();
       setRedirectPath("/iniciar-sesion");
       setAuthChecked(true);
     }
