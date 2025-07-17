@@ -7,6 +7,10 @@ interface GenitourinarioPdfProps {
   observaciones: string;
   varicocele: boolean;
   varicoceleObs: string;
+  fum: string;
+  partos: string;
+  cesarea: string;
+  embarazos: string;
 }
 
 const styles = StyleSheet.create({
@@ -50,7 +54,7 @@ const styles = StyleSheet.create({
   obsGeneral: {
     fontSize: 10,
     marginTop: 4,
-    marginLeft: 22, // align under text, indented past checkbox
+    marginLeft: 22,
   },
   obsInline: {
     fontSize: 10,
@@ -70,6 +74,24 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#F9F9F9",
   },
+
+  // --- NUEVOS ESTILOS PARA LA FILA DE F.U.M / EMBARAZOS / PARTOS / CESÁREA ---
+  rowFour: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  cell: {
+    flex: 1,
+  },
+  cellLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  cellValue: {
+    fontSize: 10,
+    textAlign: "right",
+  },
 });
 
 export default function GenitourinarioPdf({
@@ -77,6 +99,10 @@ export default function GenitourinarioPdf({
   observaciones,
   varicocele,
   varicoceleObs,
+  fum,
+  partos,
+  cesarea,
+  embarazos,
 }: GenitourinarioPdfProps) {
   return (
     <View style={styles.container}>
@@ -89,6 +115,7 @@ export default function GenitourinarioPdf({
         </View>
         <Text style={styles.optionText}>Sin alteraciones</Text>
       </View>
+
       {observaciones.trim() !== "" && (
         <View>
           <Text style={styles.obsLabel}>Observaciones</Text>
@@ -110,6 +137,26 @@ export default function GenitourinarioPdf({
         {varicoceleObs.trim() !== "" && (
           <Text style={styles.obsInline}>{varicoceleObs}</Text>
         )}
+      </View>
+
+      {/* F.U.M. / Embarazos / Partos / Cesárea en una sola fila */}
+      <View style={styles.rowFour}>
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Fecha F.U.M:</Text>
+          <Text style={styles.cellValue}>{fum || "-"}</Text>
+        </View>
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Embarazos:</Text>
+          <Text style={styles.cellValue}>{embarazos || "-"}</Text>
+        </View>
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Partos:</Text>
+          <Text style={styles.cellValue}>{partos || "-"}</Text>
+        </View>
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Cesárea:</Text>
+          <Text style={styles.cellValue}>{cesarea || "-"}</Text>
+        </View>
       </View>
     </View>
   );

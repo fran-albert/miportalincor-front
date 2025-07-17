@@ -60,6 +60,10 @@ const FifthPagePdfDocument = ({ data }: Props) => (
           observaciones={data.genitourinario?.observaciones ?? ""}
           varicocele={data.genitourinario?.varicocele ?? false}
           varicoceleObs={data.genitourinario?.varicoceleObs ?? ""}
+          fum={data.genitourinario?.fum ?? ""}
+          partos={data.genitourinario?.partos ?? ""}
+          cesarea={data.genitourinario?.cesarea ?? ""}
+          embarazos={data.genitourinario?.embarazos ?? ""}
         />
       </View>
       <View style={styles.sectionWrapper}>
