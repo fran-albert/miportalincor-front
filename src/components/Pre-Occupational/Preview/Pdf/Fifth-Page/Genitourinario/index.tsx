@@ -45,20 +45,12 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 10,
     fontStyle: "italic",
+    marginRight: 12,
   },
   label: {
     fontSize: 10,
     fontWeight: "500",
     marginRight: 4,
-  },
-  obsGeneral: {
-    fontSize: 10,
-    marginTop: 4,
-    marginLeft: 22,
-  },
-  obsInline: {
-    fontSize: 10,
-    marginLeft: 12,
   },
   obsLabel: {
     fontSize: 10,
@@ -74,19 +66,31 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#F9F9F9",
   },
+  obsInlineRow: {
+    flexDirection: "row",
+    marginLeft: 22,
+    marginBottom: 4,
+  },
+  obsInlineText: {
+    fontSize: 10,
+    marginLeft: 4,
+  },
 
-  // --- NUEVOS ESTILOS PARA LA FILA DE F.U.M / EMBARAZOS / PARTOS / CESÁREA ---
+  // --- Estilos para F.U.M / Embarazos / Partos / Cesárea ---
   rowFour: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginTop: 8,
   },
   cell: {
     flex: 1,
   },
+  cellMargin: {
+    marginRight: 12,
+  },
   cellLabel: {
     fontSize: 10,
     fontWeight: "500",
+    marginBottom: 2,
   },
   cellValue: {
     fontSize: 10,
@@ -116,9 +120,10 @@ export default function GenitourinarioPdf({
         <Text style={styles.optionText}>Sin alteraciones</Text>
       </View>
 
+      {/* Observaciones generales */}
       {observaciones.trim() !== "" && (
         <View>
-          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsLabel}>Observaciones:</Text>
           <Text style={styles.obsText}>{observaciones}</Text>
         </View>
       )}
@@ -134,22 +139,25 @@ export default function GenitourinarioPdf({
           <CheckboxPdf checked={!varicocele} />
         </View>
         <Text style={styles.optionText}>No</Text>
-        {varicoceleObs.trim() !== "" && (
-          <Text style={styles.obsInline}>{varicoceleObs}</Text>
-        )}
       </View>
+      {varicoceleObs.trim() !== "" && (
+        <View style={styles.obsInlineRow}>
+          <Text style={styles.label} />
+          <Text style={styles.obsInlineText}>{varicoceleObs}</Text>
+        </View>
+      )}
 
-      {/* F.U.M. / Embarazos / Partos / Cesárea en una sola fila */}
+      {/* F.U.M | Embarazos | Partos | Cesárea */}
       <View style={styles.rowFour}>
-        <View style={styles.cell}>
+        <View style={[styles.cell, styles.cellMargin]}>
           <Text style={styles.cellLabel}>Fecha F.U.M:</Text>
           <Text style={styles.cellValue}>{fum || "-"}</Text>
         </View>
-        <View style={styles.cell}>
+        <View style={[styles.cell, styles.cellMargin]}>
           <Text style={styles.cellLabel}>Embarazos:</Text>
           <Text style={styles.cellValue}>{embarazos || "-"}</Text>
         </View>
-        <View style={styles.cell}>
+        <View style={[styles.cell, styles.cellMargin]}>
           <Text style={styles.cellLabel}>Partos:</Text>
           <Text style={styles.cellValue}>{partos || "-"}</Text>
         </View>

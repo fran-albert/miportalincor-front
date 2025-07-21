@@ -78,58 +78,63 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
         placeholder="Observaciones…"
       />
     </div>
-    <div className="flex items-center space-x-6 text-black">
-      {/* Fecha F.U.M */}
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="gen-fum">F.U.M</Label>
-        <Input
-          id="gen-fum"
-          type="date"
-          value={data.fum}
-          disabled={!isEditing}
-          onChange={(e) => onChange("fum", e.currentTarget.value)}
-        />
-      </div>
 
-      {/* Embarazos */}
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="gen-embarazos">Embarazos</Label>
-        <Input
-          id="gen-embarazos"
-          type="number"
-          min="0"
-          value={data.embarazos}
-          disabled={!isEditing}
-          onChange={(e) => onChange("embarazos", e.currentTarget.value)}
-          placeholder="n°"
-        />
-      </div>
+    {/* F.U.M | Partos */}
+    {/* Embarazos | Cesárea */}
+    <div className="grid grid-cols-[max-content,1fr,max-content,1fr] gap-x-6 gap-y-4 items-center text-black">
+      {/* Row 1 */}
+      <Label htmlFor="gen-fum" className="text-right">
+        F.U.M
+      </Label>
+      <Input
+        id="gen-fum"
+        type="date"
+        className="w-full"
+        value={data.fum}
+        disabled={!isEditing}
+        onChange={(e) => onChange("fum", e.currentTarget.value)}
+      />
+      <Label htmlFor="gen-partos" className="text-right">
+        Partos
+      </Label>
+      <Input
+        id="gen-partos"
+        type="text"
+        className="w-full"
+        value={data.partos}
+        disabled={!isEditing}
+        onChange={(e) => onChange("partos", e.currentTarget.value)}
+        placeholder="Observaciones..."
+      />
 
-      {/* Cesárea */}
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="gen-cesarea">Cesárea</Label>
-        <Input
-          id="gen-cesarea"
-          type="number"
-          min="0"
-          value={data.cesarea}
-          disabled={!isEditing}
-          onChange={(e) => onChange("cesarea", e.currentTarget.value)}
-          placeholder="n°"
-        />
-      </div>
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="gen-partos">Partos</Label>
-        <Input
-          id="gen-partos"
-          type="number"
-          min="0"
-          value={data.partos}
-          disabled={!isEditing}
-          onChange={(e) => onChange("partos", e.currentTarget.value)}
-          placeholder="n°"
-        />
-      </div>
+      {/* Row 2 */}
+      <Label htmlFor="gen-embarazos" className="text-right">
+        Embarazos
+      </Label>
+      <Input
+        id="gen-embarazos"
+        type="text"
+        className="w-full"
+        value={data.embarazos}
+        disabled={!isEditing}
+        onChange={(e) => onChange("embarazos", e.currentTarget.value)}
+        placeholder="Observaciones..."
+      />
+      <Label htmlFor="gen-cesarea" className="text-right">
+        Cesárea
+      </Label>
+      <Input
+        id="gen-cesarea"
+        type="text"
+        className="w-full"
+        value={data.cesarea}
+        disabled={!isEditing}
+        onChange={(e) => onChange("cesarea", e.currentTarget.value)}
+        placeholder="Observaciones..."
+      />
     </div>
+
+
+
   </div>
 );
