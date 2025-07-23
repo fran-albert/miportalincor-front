@@ -1,27 +1,32 @@
 import HeaderPreviewHtml from "../../Header";
 import FooterHtml from "../Footer";
 import {
-  Circulatorio,
-  Neurologico,
-  Respiratorio,
+  Gastrointestinal,
+  Genitourinario,
+  Osteoarticular,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
-import NeurologicoHtml from "./Neurologico";
-import RespiratorioHtml from "../Third-Page/Respiratorio";
-import CirculatorioHtml from "../Third-Page/Circulatorio";
+import GastrointestinalHtml from "../Fourth-Page/Gastrointestinal";
+import GenitourinarioHtml from "../Fourth-Page/Genitourinario";
+import OsteoarticularHtml from "../Fourth-Page/Osteoarticular";
+
 
 interface Props {
-  neurologico: Neurologico;
-  respiratorio: Respiratorio;
-  circulatorio: Circulatorio;
+  gastrointestinal: Gastrointestinal;
+  genitourinario: Genitourinario;
+  osteoarticular: Osteoarticular;
 }
-const FourthPageHTML = ({ neurologico, respiratorio, circulatorio }: Props) => (
+const FifthPageHTML = ({
+  gastrointestinal,
+  genitourinario,
+  osteoarticular,
+}: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
-    <RespiratorioHtml data={respiratorio} />
-    <CirculatorioHtml data={circulatorio} />
-    <NeurologicoHtml data={neurologico} />
+    <GastrointestinalHtml data={gastrointestinal} />
+    <GenitourinarioHtml data={genitourinario} />
+    <OsteoarticularHtml data={osteoarticular} />
     <FooterHtml
-      pageNumber={4}
+      pageNumber={5}
       primaryDoctor={{
         name: "BONIFACIO Ma. CECILIA",
         license: "M.P. 96533 - M.L. 7299",
@@ -39,4 +44,4 @@ const FourthPageHTML = ({ neurologico, respiratorio, circulatorio }: Props) => (
   </>
 );
 
-export default FourthPageHTML;
+export default FifthPageHTML;

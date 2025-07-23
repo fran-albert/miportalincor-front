@@ -18,6 +18,7 @@ import {
 import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import FourthPageHTML from "./Fourth-Page";
+import FifthPageHTML from "./Fifth-Page";
 
 interface Props {
   collaborator: Collaborator;
@@ -71,17 +72,19 @@ const View: React.FC<Props> = ({
         visualWithout={medicalEvaluation.agudezaSc}
         visualWith={medicalEvaluation.agudezaCc}
         visualNotes={medicalEvaluation.notasVision}
-        pielData={medicalEvaluation.piel!}
-        cabezaCuello={medicalEvaluation.cabezaCuello!}
       />
       <ThirdPageHTML
+        pielData={medicalEvaluation.piel!}
+        cabezaCuello={medicalEvaluation.cabezaCuello!}
         bucodental={medicalEvaluation.bucodental!}
         torax={medicalEvaluation.torax!}
-        respiratorio={medicalEvaluation.respiratorio!}
-        circulatorio={medicalEvaluation.circulatorio!}
       />
       <FourthPageHTML
         neurologico={medicalEvaluation.neurologico!}
+        respiratorio={medicalEvaluation.respiratorio!}
+        circulatorio={medicalEvaluation.circulatorio!}
+      />
+      <FifthPageHTML
         gastrointestinal={medicalEvaluation.gastrointestinal!}
         genitourinario={medicalEvaluation.genitourinario!}
         osteoarticular={medicalEvaluation.osteoarticular!}
@@ -100,4 +103,3 @@ const View: React.FC<Props> = ({
 };
 
 export default View;
-

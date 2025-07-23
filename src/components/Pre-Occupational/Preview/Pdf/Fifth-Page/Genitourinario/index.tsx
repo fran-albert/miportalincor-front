@@ -66,35 +66,30 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#F9F9F9",
   },
-  obsInlineRow: {
-    flexDirection: "row",
-    marginLeft: 22,
-    marginBottom: 4,
-  },
-  obsInlineText: {
+
+  obsInlineInline: {
     fontSize: 10,
-    marginLeft: 4,
+    marginLeft: 8,
+    flex: 1, // que use el espacio restante
   },
 
-  // --- Estilos para F.U.M / Embarazos / Partos / Cesárea ---
-  rowFour: {
-    flexDirection: "row",
+  // Bloque vertical para FUM / Embarazos / Partos / Cesárea
+  dataBlock: {
     marginTop: 8,
   },
-  cell: {
-    flex: 1,
+  dataRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
   },
-  cellMargin: {
-    marginRight: 12,
-  },
-  cellLabel: {
+  dataLabel: {
+    width: 90, // ancho fijo para alinear todas las etiquetas
     fontSize: 10,
     fontWeight: "500",
-    marginBottom: 2,
   },
-  cellValue: {
+  dataValue: {
+    flex: 1,
     fontSize: 10,
-    textAlign: "right",
   },
 });
 
@@ -129,7 +124,7 @@ export default function GenitourinarioPdf({
       )}
 
       {/* Varicocele */}
-      <View style={[styles.row, { marginTop: 8 }]}>
+      <View style={[styles.row, { marginTop: 8, alignItems: "flex-start" }]}>
         <Text style={styles.label}>Varicocele:</Text>
         <View style={styles.checkboxWrapper}>
           <CheckboxPdf checked={varicocele} />
@@ -141,29 +136,26 @@ export default function GenitourinarioPdf({
         <Text style={styles.optionText}>No</Text>
       </View>
       {varicoceleObs.trim() !== "" && (
-        <View style={styles.obsInlineRow}>
-          <Text style={styles.label} />
-          <Text style={styles.obsInlineText}>{varicoceleObs}</Text>
-        </View>
+        <Text style={styles.obsInlineInline}>{varicoceleObs}</Text>
       )}
 
-      {/* F.U.M | Embarazos | Partos | Cesárea */}
-      <View style={styles.rowFour}>
-        <View style={[styles.cell, styles.cellMargin]}>
-          <Text style={styles.cellLabel}>Fecha F.U.M:</Text>
-          <Text style={styles.cellValue}>{fum || "-"}</Text>
+      {/* Datos gineco-obstétricos en filas verticales */}
+      <View style={styles.dataBlock}>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Fecha F.U.M:</Text>
+          <Text style={styles.dataValue}>{fum || "—"}</Text>
         </View>
-        <View style={[styles.cell, styles.cellMargin]}>
-          <Text style={styles.cellLabel}>Embarazos:</Text>
-          <Text style={styles.cellValue}>{embarazos || "-"}</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Embarazos:</Text>
+          <Text style={styles.dataValue}>{embarazos || "—"}</Text>
         </View>
-        <View style={[styles.cell, styles.cellMargin]}>
-          <Text style={styles.cellLabel}>Partos:</Text>
-          <Text style={styles.cellValue}>{partos || "-"}</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Partos:</Text>
+          <Text style={styles.dataValue}>{partos || "—"}</Text>
         </View>
-        <View style={styles.cell}>
-          <Text style={styles.cellLabel}>Cesárea:</Text>
-          <Text style={styles.cellValue}>{cesarea || "-"}</Text>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Cesárea:</Text>
+          <Text style={styles.dataValue}>{cesarea || "—"}</Text>
         </View>
       </View>
     </View>
