@@ -7,6 +7,10 @@ interface GenitourinarioPdfProps {
   observaciones: string;
   varicocele: boolean;
   varicoceleObs: string;
+  fum: string;
+  partos: string;
+  cesarea: string;
+  embarazos: string;
 }
 
 const styles = StyleSheet.create({
@@ -41,20 +45,12 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 10,
     fontStyle: "italic",
+    marginRight: 12,
   },
   label: {
     fontSize: 10,
     fontWeight: "500",
     marginRight: 4,
-  },
-  obsGeneral: {
-    fontSize: 10,
-    marginTop: 4,
-    marginLeft: 22, // align under text, indented past checkbox
-  },
-  obsInline: {
-    fontSize: 10,
-    marginLeft: 12,
   },
   obsLabel: {
     fontSize: 10,
@@ -70,6 +66,31 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#F9F9F9",
   },
+
+  obsInlineInline: {
+    fontSize: 10,
+    marginLeft: 8,
+    flex: 1, // que use el espacio restante
+  },
+
+  // Bloque vertical para FUM / Embarazos / Partos / Cesárea
+  dataBlock: {
+    marginTop: 8,
+  },
+  dataRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+  },
+  dataLabel: {
+    width: 90, // ancho fijo para alinear todas las etiquetas
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  dataValue: {
+    flex: 1,
+    fontSize: 10,
+  },
 });
 
 export default function GenitourinarioPdf({
@@ -77,6 +98,10 @@ export default function GenitourinarioPdf({
   observaciones,
   varicocele,
   varicoceleObs,
+  fum,
+  partos,
+  cesarea,
+  embarazos,
 }: GenitourinarioPdfProps) {
   return (
     <View style={styles.container}>
@@ -89,15 +114,17 @@ export default function GenitourinarioPdf({
         </View>
         <Text style={styles.optionText}>Sin alteraciones</Text>
       </View>
+
+      {/* Observaciones generales */}
       {observaciones.trim() !== "" && (
         <View>
-          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsLabel}>Observaciones:</Text>
           <Text style={styles.obsText}>{observaciones}</Text>
         </View>
       )}
 
       {/* Varicocele */}
-      <View style={[styles.row, { marginTop: 8 }]}>
+      <View style={[styles.row, { marginTop: 8, alignItems: "flex-start" }]}>
         <Text style={styles.label}>Varicocele:</Text>
         <View style={styles.checkboxWrapper}>
           <CheckboxPdf checked={varicocele} />
@@ -107,9 +134,29 @@ export default function GenitourinarioPdf({
           <CheckboxPdf checked={!varicocele} />
         </View>
         <Text style={styles.optionText}>No</Text>
-        {varicoceleObs.trim() !== "" && (
-          <Text style={styles.obsInline}>{varicoceleObs}</Text>
-        )}
+      </View>
+      {varicoceleObs.trim() !== "" && (
+        <Text style={styles.obsInlineInline}>{varicoceleObs}</Text>
+      )}
+
+      {/* Datos gineco-obstétricos en filas verticales */}
+      <View style={styles.dataBlock}>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Fecha F.U.M:</Text>
+          <Text style={styles.dataValue}>{fum || "—"}</Text>
+        </View>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Embarazos:</Text>
+          <Text style={styles.dataValue}>{embarazos || "—"}</Text>
+        </View>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Partos:</Text>
+          <Text style={styles.dataValue}>{partos || "—"}</Text>
+        </View>
+        <View style={styles.dataRow}>
+          <Text style={styles.dataLabel}>Cesárea:</Text>
+          <Text style={styles.dataValue}>{cesarea || "—"}</Text>
+        </View>
       </View>
     </View>
   );

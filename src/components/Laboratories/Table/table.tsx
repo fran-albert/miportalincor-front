@@ -127,7 +127,7 @@ export const LabPatientTable = ({
             const existingData = bloodTestsData.find(
               (data) =>
                 normalizeDate(String(data.study.date)) ===
-                  normalizeDate(cleanDate) &&
+                normalizeDate(cleanDate) &&
                 data.bloodTest.id === bloodTestIdAsNumber
             );
 
@@ -235,76 +235,80 @@ export const LabPatientTable = ({
           </div>
         </div>
 
-        <Table className="table-fixed w-full">
-          <TableHeader className="sticky top-0 bg-white z-10">
-            <TableRow>
-              <TableHead className="w-2/12">Análisis</TableHead>
-              <TableHead className="w-3/12">Valor de Referencia</TableHead>
-              <TableHead className="w-2/12">Unidad</TableHead>
-              {dates.map((date) => (
-                <TableHead key={date} className="w-[100px] text-center">
-                  {date}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table className="table-fixed w-full min-w-[800px]">
+            <TableHeader className="sticky top-0 bg-white z-10">
+              <TableRow>
+                <TableHead className="w-2/12 px-2 sm:px-4">Análisis</TableHead>
+                <TableHead className="w-3/12 px-2 sm:px-4">Valor de Referencia</TableHead>
+                <TableHead className="w-2/12 px-2 sm:px-4">Unidad</TableHead>
+                {dates.map((date) => (
+                  <TableHead key={date} className="w-[100px] text-center px-2 sm:px-4">
+                    {date}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+          </Table>
+        </div>
 
         <ScrollArea className="h-96">
-          <Table className="table-fixed w-full">
-            <TableBody>
-              {filteredBloodTests.map((bloodTest) => {
-                return (
-                  <TableRow key={bloodTest.id}>
-                    <TableCell className="font-medium w-2/12">
-                      {bloodTest.originalName}
-                    </TableCell>
-                    <TableCell className="whitespace-pre-wrap text-ellipsis w-3/12">
-                      {bloodTest.referenceValue || "N/A"}
-                    </TableCell>
-                    <TableCell className="w-2/12">
-                      {bloodTest.unit?.shortName || "N/A"}
-                    </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="table-fixed w-full min-w-[800px]">
+              <TableBody>
+                {filteredBloodTests.map((bloodTest) => {
+                  return (
+                    <TableRow key={bloodTest.id}>
+                      <TableCell className="font-medium w-2/12 px-2 sm:px-4">
+                        {bloodTest.originalName}
+                      </TableCell>
+                      <TableCell className="whitespace-pre-wrap text-ellipsis w-3/12 px-2 sm:px-4">
+                        {bloodTest.referenceValue || "N/A"}
+                      </TableCell>
+                      <TableCell className="w-2/12 px-2 sm:px-4">
+                        {bloodTest.unit?.shortName || "N/A"}
+                      </TableCell>
 
-                    {dates.map((date) => {
-                      // Encontramos el estudio correspondiente a la fecha
-                      const relatedStudy = transformedBloodTestsData.find(
-                        (studyGroup) =>
-                          formatDate(studyGroup.study.date ?? "") === date
-                      );
+                      {dates.map((date) => {
+                        // Encontramos el estudio correspondiente a la fecha
+                        const relatedStudy = transformedBloodTestsData.find(
+                          (studyGroup) =>
+                            formatDate(studyGroup.study.date ?? "") === date
+                        );
 
-                      // Si hay un estudio en esta fecha, buscar el análisis de sangre dentro de él
-                      const relatedData = relatedStudy?.bloodTestData.find(
-                        (test) => test.bloodTest.id === bloodTest.id
-                      );
+                        // Si hay un estudio en esta fecha, buscar el análisis de sangre dentro de él
+                        const relatedData = relatedStudy?.bloodTestData.find(
+                          (test) => test.bloodTest.id === bloodTest.id
+                        );
 
-                      // Verificar si se encontró el valor y asignarlo
-                      const inputValue =
-                        editedValues[date]?.[bloodTest.id as number] ??
-                        (relatedData ? relatedData.value : "");
+                        // Verificar si se encontró el valor y asignarlo
+                        const inputValue =
+                          editedValues[date]?.[bloodTest.id as number] ??
+                          (relatedData ? relatedData.value : "");
 
-                      return (
-                        <TableCell key={date} className="w-[100px] text-center">
-                          <input
-                            type="text"
-                            value={inputValue}
-                            className="w-1/2 border rounded px-2 text-center"
-                            onChange={(e) =>
-                              handleInputChange(
-                                date,
-                                String(bloodTest.id),
-                                e.target.value
-                              )
-                            }
-                          />
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        return (
+                          <TableCell key={date} className="w-[100px] text-center">
+                            <input
+                              type="text"
+                              value={inputValue}
+                              className="w-1/2 border rounded px-2 text-center"
+                              onChange={(e) =>
+                                handleInputChange(
+                                  date,
+                                  String(bloodTest.id),
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </ScrollArea>
         {hasPendingChanges && (
           <div className="flex justify-end mt-4">

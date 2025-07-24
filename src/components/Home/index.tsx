@@ -65,15 +65,15 @@ export default function HomeComponent({ name }: { name: string }) {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-greenPrimary">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-greenPrimary">
         Hola, {name}
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {cards.map((card, index) => (
           <Card
             key={index}
-            className="flex flex-col items-center text-center sm:transition sm:duration-300 sm:ease-in-out sm:transform sm:hover:-translate-y-2 cursor-pointer"
+            className="flex flex-col items-center text-center transition duration-300 ease-in-out transform hover:-translate-y-2 cursor-pointer h-full"
           >
             <Link to={card.href}>
               <CardHeader>

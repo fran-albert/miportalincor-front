@@ -25,11 +25,11 @@ export function HeaderComponent() {
   };
   const { isDoctor, isSecretary, session, isAdmin } = useUserRole();
   return (
-    <header className="flex h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
-      <Link to="#" className="mr-6 flex items-center">
+    <header className="flex h-16 sm:h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
+      <Link to="#" className="mr-2 sm:mr-4 lg:mr-6 flex items-center">
         <img
           src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1740059697/uboivjuv41dkkdeaqhfa.png"
-          className="h-12 w-auto"
+          className="h-8 sm:h-10 lg:h-12 w-auto"
           alt="Logo Incor"
         />
       </Link>
@@ -83,7 +83,7 @@ export function HeaderComponent() {
                       Gestionar
                     </NavigationMenuTrigger>
                     <NavigationMenuContent className="relative">
-                      <div className="grid w-[400px] p-2">
+                      <div className="grid w-full min-w-[300px] max-w-[400px] p-2">
                         <NavigationMenuLink asChild>
                           <Link
                             to="/medicos"

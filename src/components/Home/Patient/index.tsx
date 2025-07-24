@@ -4,20 +4,20 @@ import { Link } from "react-router-dom";
 export default function PatientHomePage({ name }: { name: string }) {
   return (
     <div className="w-full bg-background">
-      <section className="container mx-auto py-12 px-4 md:py-16 md:px-6">
-        <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
+      <section className="container mx-auto py-8 px-4 sm:py-12 md:py-16 md:px-6">
+        <div className="grid gap-6 md:grid-cols-2 lg:gap-12">
           <div className="space-y-4">
-            <h1 className="text-3xl font-bold tracking-tighter text-greenPrimary sm:text-4xl md:text-5xl">
+            <h1 className="text-2xl font-bold tracking-tighter text-greenPrimary sm:text-3xl md:text-4xl lg:text-5xl">
               ¡Bienvenido {name} a Mi Portal!
             </h1>
-            <p className="text-muted-foreground md:text-xl text-justify">
+            <p className="text-muted-foreground sm:text-lg md:text-xl text-justify">
               Acá podrás acceder a toda la información sobre tu bienestar y
               salud de manera segura y confidencial.
             </p>
           </div>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Card className="flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Card className="flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm min-h-[160px]">
                 <div>
                   <UserIcon className="h-8 w-8 text-greenPrimary" />
                   <h3 className="mt-2 text-lg font-medium">
@@ -31,7 +31,7 @@ export default function PatientHomePage({ name }: { name: string }) {
                   <Link to={"/mi-perfil"}>Ir a Perfil</Link>
                 </Button>
               </Card>
-              <Card className="flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm">
+              <Card className="flex flex-col items-start justify-between gap-4 rounded-lg border bg-card p-4 shadow-sm min-h-[160px]">
                 <div>
                   <FileTextIcon className="h-8 w-8 text-greenPrimary" />
                   <h3 className="mt-2 text-lg font-medium">

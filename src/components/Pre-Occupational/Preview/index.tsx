@@ -14,6 +14,7 @@ import View from "./View";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action";
+import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 
 interface Props {
   collaborator: Collaborator;
@@ -34,7 +35,17 @@ export default function PreOccupationalPreviewComponent({
   });
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
-
+  const { data, isLoading, isError } = useDoctorWithSignatures({
+    id: medicalEvaluation.doctorId,
+  });
+  if (isError) return <p>Error cargando datos del doctor.</p>;
+  if (isLoading || !data) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <p className="text-gray-500">Cargando datos del doctor...</p>
+      </div>
+    );
+  }
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -55,7 +66,6 @@ export default function PreOccupationalPreviewComponent({
     },
   ];
   const queryClient = useQueryClient();
-
   const handleCancel = () => {
     setIsGenerating(false);
     setProgress(0);
@@ -79,6 +89,7 @@ export default function PreOccupationalPreviewComponent({
           studies={studiesWithDataUrls}
           dataValues={dataValues}
           medicalEvaluationType={medicalEvaluation.evaluationType.name}
+          doctorData={data}
         />
       );
       const pdfBlob = await pdf(MyPDFContent).toBlob();
@@ -142,7 +153,6 @@ export default function PreOccupationalPreviewComponent({
   //     </div>
   //   );
   // }
-
   return (
     <div className="space-y-2 mt-2">
       <BreadcrumbComponent items={breadcrumbItems} />
@@ -151,6 +161,7 @@ export default function PreOccupationalPreviewComponent({
         studies={urls}
         medicalEvaluationType={medicalEvaluation.evaluationType.name}
         dataValues={dataValues!}
+        doctorData={data}
       />
       {isGenerating && (
         <PdfLoadingOverlay

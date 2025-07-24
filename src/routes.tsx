@@ -36,7 +36,7 @@ function App() {
     <>
       <Router>
         <HeaderComponent />
-        <div className="mx-auto container">
+        <div className="mx-auto container px-4 sm:px-6 lg:px-8">
           <Routes>
             <Route
               path="/especialidades"

@@ -1,41 +1,74 @@
+// components/FooterHtmlConditional.tsx
 import React from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface Props {
   pageNumber: number;
-  doctorName: string;
-  doctorLicense: string;
-  signatureUrl: string;
+  useCustom?: boolean;
+  doctorName?: string;
+  doctorLicense?: string;
+  doctorSpeciality?: string;
+  signatureUrl?: string;
+  sealUrl?: string;
 }
 
-const FooterHtml: React.FC<Props> = ({
+const DEFAULT_DOCTOR = {
+  name: "BONIFACIO Ma. CECILIA",
+  license: "M.P. 96533 - M.L. 7299",
+  speciality: "Médica Cardióloga",
+  signatureUrl:
+    "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
+};
+
+const FooterHtmlConditional: React.FC<Props> = ({
   pageNumber,
+  useCustom = false,
   doctorName,
   doctorLicense,
+  doctorSpeciality,
   signatureUrl,
+  sealUrl,
 }) => {
   const currentDate = format(new Date(), "dd/MM/yyyy", { locale: es });
 
+  // Decidir datos
+  const name = useCustom && doctorName ? doctorName : DEFAULT_DOCTOR.name;
+  const licence =
+    useCustom && doctorLicense ? doctorLicense : DEFAULT_DOCTOR.license;
+  const speciality = useCustom && doctorSpeciality;
+  const sigUrl =
+    useCustom && signatureUrl ? signatureUrl : DEFAULT_DOCTOR.signatureUrl;
+  const sealImageUrl = useCustom && sealUrl ? sealUrl : undefined;
+
   return (
     <div className="w-full flex flex-row justify-between items-end pt-2 mt-4 text-black">
-      {/* Columna izquierda: Firma y datos del médico */}
-      <div className="flex flex-col items-start">
+      {/* Izquierda: Firma y datos */}
+      <div className="flex flex-col items-start relative">
         <img
-          src={signatureUrl}
-          alt="Firma del médico"
+          src={sigUrl}
+          alt={`Firma ${name}`}
           className="h-16 object-contain mb-1"
         />
-        <p className="font-bold text-sm">{doctorName}</p>
-        <p className="text-sm align-center">{doctorLicense}</p>
+        {sealImageUrl && (
+          <img
+            src={sealImageUrl}
+            alt={`Sello ${name}`}
+            className="h-12 object-contain mb-1"
+            style={{ position: "absolute", bottom: 0, left: 0 }}
+          />
+        )}
+        <p className="font-bold text-sm">{name}</p>
+        <p className="italic text-xs mb-1">{speciality}</p>
+        <p className="text-sm">{licence}</p>
       </div>
 
-      {/* Columna central: Fecha */}
+      {/* Centro: Fecha */}
       <div className="flex-grow flex items-center justify-center text-center">
         <p>Fecha {currentDate}</p>
       </div>
 
-      {/* Columna derecha: Número de página */}
+      {/* Derecha: Página */}
       <div className="text-right">
         <p>Página {pageNumber}</p>
       </div>
@@ -43,4 +76,4 @@ const FooterHtml: React.FC<Props> = ({
   );
 };
 
-export default FooterHtml;
+export default FooterHtmlConditional;

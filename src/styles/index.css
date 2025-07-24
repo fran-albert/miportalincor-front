@@ -33,7 +33,17 @@
 @layer base {
   body {
     @apply bg-background text-foreground;
+  }
+}
 
-
+@layer components {
+  .container {
+    @apply max-w-7xl;
+  }
+  
+  @media (max-width: 640px) {
+    .container {
+      @apply px-2;
+    }
   }
 }

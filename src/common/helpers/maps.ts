@@ -293,11 +293,39 @@ export function mapGenitourinario(dataValues: DataValue[]): Genitourinario {
             dv.dataType.name === "Varicocele"
     );
 
+    const dvFum = dataValues.find(
+        dv =>
+            dv.dataType.category === "EXAMEN_FISICO" &&
+            dv.dataType.name === "FUM"
+    );
+
+    const dvPartos = dataValues.find(
+        dv =>
+            dv.dataType.category === "EXAMEN_FISICO" &&
+            dv.dataType.name === "Partos"
+    );
+
+    const dvCesarea = dataValues.find(
+        dv =>
+            dv.dataType.category === "EXAMEN_FISICO" &&
+            dv.dataType.name === "Cesárea"
+    );
+
+    const dvEmbarazos = dataValues.find(
+        dv =>
+            dv.dataType.category === "EXAMEN_FISICO" &&
+            dv.dataType.name === "Embarazos"
+    );
+
     return {
         sinAlteraciones: toBool(dvSin?.value as string),
         observaciones: dvSin?.observations as string || "",
         varicocele: toBool(dvVar?.value as string),
         varicoceleObs: dvVar?.observations as string || "",
+        fum: dvFum?.value as string || "",
+        partos: dvPartos?.value as string || "",
+        cesarea: dvCesarea?.value as string || "",
+        embarazos: dvEmbarazos?.value as string || "",
     };
 }
 

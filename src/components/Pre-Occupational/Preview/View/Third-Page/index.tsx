@@ -1,10 +1,11 @@
 import HeaderPreviewHtml from "../../Header";
-import FooterHtml from "../Footer";
 import BucodentalHtml from "./Bucodental";
 import ToraxHtml from "./Torax";
-import RespiratorioHtml from "./Respiratorio";
-import CirculatorioHtml from "./Circulatorio";
-import { Circulatorio, Respiratorio, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { Piel, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { PielSection } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
+import CabezaCuelloHtml from "../Second-Page/CabezaCuello";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import FooterHtmlConditional from "../Footer";
 
 interface Props {
   bucodental: {
@@ -14,27 +15,32 @@ interface Props {
     observaciones: string;
   };
   torax: Torax;
-  respiratorio: Respiratorio;
-  circulatorio: Circulatorio;
+  doctorData: DoctorSignatures;
+  pielData: Piel;
+  cabezaCuello: { sinAlteraciones: boolean; observaciones: string };
 }
 const ThirdPageHTML = ({
   bucodental,
   torax,
-  respiratorio,
-  circulatorio,
+  doctorData,
+  pielData,
+  cabezaCuello,
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
+    <PielSection isEditing={false} data={pielData} />
+    <CabezaCuelloHtml data={cabezaCuello} />
     <BucodentalHtml data={bucodental} />
     <ToraxHtml data={torax} />
-    <RespiratorioHtml data={respiratorio} />
-    <CirculatorioHtml data={circulatorio} />
+
     {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={2} /> */}
-    <FooterHtml
+    <FooterHtmlConditional
       pageNumber={3}
-      doctorName="BONIFACIO Ma. CECILIA"
-      doctorLicense="M.P. 96533 - M.L. 7299"
-      signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
+      useCustom
+      doctorLicense={doctorData.matricula}
+      doctorName={doctorData.fullName}
+      doctorSpeciality={doctorData.specialty}
+      signatureUrl={doctorData.signatureDataUrl}
     />
   </>
 );

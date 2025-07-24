@@ -17,12 +17,14 @@ import {
 } from "@/common/helpers/maps";
 import FourthPagePdfDocument from "../Fourth-Page";
 import FifthPagePdfDocument from "../Fifth-Page";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
   medicalEvaluationType: string;
   dataValues: DataValue[] | undefined;
+  doctorData: DoctorSignatures;
 }
 
 const PDFDocument = ({
@@ -30,11 +32,14 @@ const PDFDocument = ({
   studies,
   dataValues,
   medicalEvaluationType,
+  doctorData,
 }: Props) => {
   const antecedentes = dataValues?.filter(
     (item) => item.dataType.category === "ANTECEDENTES"
   );
-const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(dataValues!);
+  const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(
+    dataValues!
+  );
   const examResults: ExamResults = mapExamResults(dataValues!);
   const clinicalEvaluation: ExamenClinico = mapClinicalEvaluation(dataValues!);
   const infoGeneral = aspectoGeneralyTiempolibre(dataValues!);
@@ -55,15 +60,17 @@ const { conclusion, recomendaciones } = mapConclusionAndRecommendationsData(data
         peso={clinicalEvaluation.peso}
         imc={clinicalEvaluation.imc}
         antecedentes={antecedentes}
+        doctorData={doctorData}
         data={medicalEvaluation}
         aspectoGeneral={infoGeneral.aspectoGeneral}
       />
       <ThirdPagePdfDocument
         data={medicalEvaluation}
+        doctorData={doctorData}
         pielData={medicalEvaluation.piel!}
       />
-      <FourthPagePdfDocument data={medicalEvaluation} />
-      <FifthPagePdfDocument data={medicalEvaluation} />
+      <FourthPagePdfDocument data={medicalEvaluation} doctorData={doctorData} />
+      <FifthPagePdfDocument data={medicalEvaluation} doctorData={doctorData} />
       {studies?.map((study, index) => (
         <StudyPagePdfDocument
           key={index}

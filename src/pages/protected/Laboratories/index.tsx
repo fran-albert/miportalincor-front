@@ -24,15 +24,16 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
   } = useCommonLaboratoryData({ id, role });
 
   const entity = role === "paciente" ? patient : doctor;
-
+  const isAllLoading = isLoading || isLoadingBloodTests;
+  const hasEntityData = entity?.firstName && entity?.lastName;
 
   return (
     <>
       <Helmet>
         <title>
-          {isLoading || isLoadingBloodTests
-            ? ""
-            : `${patient?.firstName} ${patient?.lastName} - Laboratorios`}
+          {isAllLoading || !hasEntityData
+            ? "Cargando laboratorios..."
+            : `${entity.firstName} ${entity.lastName} - Laboratorios`}
         </title>
       </Helmet>
       <LaboratoriesPageWrapper

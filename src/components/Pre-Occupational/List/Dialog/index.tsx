@@ -1,3 +1,7 @@
+"use client";
+
+import type React from "react";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +23,8 @@ import SuccessToast from "@/components/Toast/Success";
 import ErrorToast from "@/components/Toast/Error";
 import { useDispatch } from "react-redux";
 import { resetForm } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { DoctorSelect } from "@/components/Select/Doctor/select";
+import { useForm } from "react-hook-form";
 
 interface Props {
   isOpen: boolean;
@@ -34,18 +40,25 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
   const toggleDialog = () => setIsOpen(!isOpen);
   const navigate = useNavigate();
   const { evaluationTypes } = useEvaluationType({ auth: true });
+  const { control, watch, reset } = useForm<{ DoctorId: string }>({
+    defaultValues: { DoctorId: "" },
+  });
+  const selectedDoctor = watch("DoctorId");
   const handleCheckboxChange = (optionId: number) => {
     setSelectedOption(optionId === selectedOption ? null : optionId);
+    reset({ DoctorId: "" }); // Reset doctor selection when changing evaluation type
   };
+
   const dispatch = useDispatch();
 
   const handleConfirm = () => {
-    if (selectedOption) {
+    if (selectedOption && selectedDoctor) {
       setIsOpen(false);
       const mutationPromise =
         addCollaboratorMedicalEvaluationMutation.mutateAsync({
           evaluationTypeId: selectedOption,
           collaboratorId: id,
+          doctorId: Number.parseInt(selectedDoctor), // Asumiendo que el doctorId es número
         });
 
       toast.promise(mutationPromise, {
@@ -72,34 +85,76 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
     setIsOpen(false);
   };
 
+  // Determinar si se puede mostrar el select de doctores
+  const showDoctorSelect = selectedOption !== null;
+
+  // Determinar si se puede confirmar
+  const canConfirm = selectedOption !== null && selectedDoctor !== "";
+
   return (
     <Dialog open={isOpen} onOpenChange={toggleDialog}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Seleccione el Tipo de Evaluación</DialogTitle>
+          <DialogTitle>Crear Nuevo Examen</DialogTitle>
           <DialogDescription>
-            Por favor seleccione el tipo de evalución para el exámen.
+            Complete los siguientes pasos para crear el examen médico.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {evaluationTypes.map((option) => (
-            <div key={option.id} className="flex items-start space-x-2">
-              <Checkbox
-                id={String(option.id)}
-                checked={selectedOption === option.id}
-                onCheckedChange={() => handleCheckboxChange(option.id)}
-              />
-              <div>
-                <Label
-                  htmlFor={String(option.id)}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {option.name}
-                </Label>
-              </div>
+
+        <div className="grid gap-6 py-4">
+          {/* Paso 1: Selección del tipo de evaluación */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">
+              Paso 1: Seleccione el Tipo de Evaluación
+            </Label>
+            <div className="grid gap-3">
+              {evaluationTypes.map((option) => (
+                <div key={option.id} className="flex items-start space-x-2">
+                  <Checkbox
+                    id={String(option.id)}
+                    checked={selectedOption === option.id}
+                    onCheckedChange={() => handleCheckboxChange(option.id)}
+                  />
+                  <div>
+                    <Label
+                      htmlFor={String(option.id)}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {option.name}
+                    </Label>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Paso 2: Selección del doctor */}
+          {showDoctorSelect && (
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">
+                Paso 2: Seleccione el Doctor
+              </Label>
+              <DoctorSelect control={control} disabled={!showDoctorSelect} />
+            </div>
+          )}
+
+          {/* Indicador de progreso */}
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                selectedOption ? "bg-green-500" : "bg-gray-300"
+              }`}
+            />
+            <span>Tipo de evaluación</span>
+            <div
+              className={`w-2 h-2 rounded-full ${
+                selectedDoctor ? "bg-green-500" : "bg-gray-300"
+              }`}
+            />
+            <span>Doctor asignado</span>
+          </div>
         </div>
+
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={handleCancel}>
             Cancelar
@@ -107,12 +162,13 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
           <Button
             onClick={handleConfirm}
             disabled={
-              !selectedOption ||
-              addCollaboratorMedicalEvaluationMutation.isPending
+              !canConfirm || addCollaboratorMedicalEvaluationMutation.isPending
             }
             variant={"incor"}
           >
-            Confirmar
+            {addCollaboratorMedicalEvaluationMutation.isPending
+              ? "Creando..."
+              : "Confirmar"}
           </Button>
         </div>
       </DialogContent>

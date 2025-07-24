@@ -18,12 +18,15 @@ import {
 import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import FourthPageHTML from "./Fourth-Page";
+import FifthPageHTML from "./Fifth-Page";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
   medicalEvaluationType: string;
   dataValues: DataValue[];
+  doctorData: DoctorSignatures;
 }
 
 const View: React.FC<Props> = ({
@@ -31,6 +34,7 @@ const View: React.FC<Props> = ({
   studies,
   dataValues,
   medicalEvaluationType,
+  doctorData,
 }) => {
   const examResults: ExamResults = mapExamResults(dataValues);
   const { conclusion, recomendaciones } =
@@ -71,19 +75,25 @@ const View: React.FC<Props> = ({
         visualWithout={medicalEvaluation.agudezaSc}
         visualWith={medicalEvaluation.agudezaCc}
         visualNotes={medicalEvaluation.notasVision}
-        pielData={medicalEvaluation.piel!}
-        cabezaCuello={medicalEvaluation.cabezaCuello!}
+        doctorData={doctorData}
       />
       <ThirdPageHTML
+        pielData={medicalEvaluation.piel!}
+        cabezaCuello={medicalEvaluation.cabezaCuello!}
         bucodental={medicalEvaluation.bucodental!}
         torax={medicalEvaluation.torax!}
-        respiratorio={medicalEvaluation.respiratorio!}
-        circulatorio={medicalEvaluation.circulatorio!}
+        doctorData={doctorData}
       />
       <FourthPageHTML
         neurologico={medicalEvaluation.neurologico!}
+        respiratorio={medicalEvaluation.respiratorio!}
+        doctorData={doctorData}
+        circulatorio={medicalEvaluation.circulatorio!}
+      />
+      <FifthPageHTML
         gastrointestinal={medicalEvaluation.gastrointestinal!}
         genitourinario={medicalEvaluation.genitourinario!}
+        doctorData={doctorData}
         osteoarticular={medicalEvaluation.osteoarticular!}
       />
       {studies?.map((study, index) => (
@@ -100,4 +110,3 @@ const View: React.FC<Props> = ({
 };
 
 export default View;
-
