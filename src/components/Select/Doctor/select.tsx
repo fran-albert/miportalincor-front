@@ -10,14 +10,19 @@ import { Controller } from "react-hook-form";
 
 interface Props {
   control: any;
+  name?: string;
   disabled?: boolean;
 }
 
-export const DoctorSelect = ({ control, disabled }: Props) => {
+export const DoctorSelect = ({
+  control,
+  name = "DoctorId",
+  disabled,
+}: Props) => {
   const { doctors } = useDoctors({ auth: true, fetchDoctors: true });
   return (
     <Controller
-      name="DoctorId"
+      name={name}
       control={control}
       render={({ field }) => (
         <Select

@@ -3,9 +3,9 @@ import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
 import ExamResultsHtml from "./Exams-Results";
 import ConclusionHtml from "./Conclusion";
-import FooterHtml from "../Footer";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
+import FooterHtmlConditional from "../Footer";
 
 interface Props {
   collaborator: Collaborator;
@@ -36,12 +36,7 @@ const FirstPageHTML = ({
     />
     <ExamResultsHtml examResults={examResults} />
     <ConclusionHtml conclusion={conclusion} recomendaciones={recomendaciones} />
-    <FooterHtml
-      pageNumber={1}
-      doctorName="BONIFACIO Ma. CECILIA"
-      doctorLicense="M.P. 96533 - M.L. 7299"
-      signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
-    />
+    <FooterHtmlConditional pageNumber={1} />
   </>
 );
 

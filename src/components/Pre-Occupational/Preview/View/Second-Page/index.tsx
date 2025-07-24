@@ -1,15 +1,11 @@
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
-import FooterHtml from "../Footer";
 import ClinicalEvaluationHtml from "./Clinical-Evaluation";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import VisualAcuityHtml from "./Visual";
-import {
-  Piel,
-  PielSection,
-} from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
-import CabezaCuelloHtml from "./CabezaCuello";
+import FooterHtmlConditional from "../Footer";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 interface Props {
   collaborator: Collaborator;
   talla: string;
@@ -28,8 +24,7 @@ interface Props {
   visualWith?: { right?: string; left?: string };
   visualChromatic: "normal" | "anormal";
   visualNotes?: string;
-  pielData: Piel;
-  cabezaCuello: { sinAlteraciones: boolean; observaciones: string };
+  doctorData: DoctorSignatures;
 }
 
 const SecondPageHTML = ({
@@ -42,9 +37,8 @@ const SecondPageHTML = ({
   visualWithout,
   visualWith,
   visualChromatic,
+  doctorData,
   visualNotes,
-  pielData,
-  cabezaCuello,
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
@@ -65,14 +59,13 @@ const SecondPageHTML = ({
       chromaticVision={visualChromatic}
       notes={visualNotes}
     />
-    <PielSection isEditing={false} data={pielData} />
-    <CabezaCuelloHtml data={cabezaCuello} />
-    {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={1} /> */}
-    <FooterHtml
+    <FooterHtmlConditional
       pageNumber={2}
-      doctorName="BONIFACIO Ma. CECILIA"
-      doctorLicense="M.P. 96533 - M.L. 7299"
-      signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
+      useCustom
+      doctorLicense={doctorData.matricula}
+      doctorName={doctorData.fullName}
+      doctorSpeciality={doctorData.specialty}
+      signatureUrl={doctorData.signatureDataUrl}
     />
   </>
 );

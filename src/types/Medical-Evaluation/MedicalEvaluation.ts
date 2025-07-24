@@ -8,4 +8,5 @@ export interface MedicalEvaluation extends Base {
     evaluationType: EvaluationType;
     dataValues?: DataValue[];
     completed: boolean
+    doctorId: number;
 }

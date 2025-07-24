@@ -447,7 +447,42 @@ const buildMedicalEvaluationPayload = (
         medicalEvaluation.genitourinario.varicoceleObs?.trim() || null,
     });
   }
-
+  const fumField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "FUM"
+  );
+  if (fumField && medicalEvaluation.genitourinario?.fum) {
+    payloadItems.push({
+      dataTypeId: fumField.id,
+      value: medicalEvaluation.genitourinario.fum,
+    });
+  }
+  const partosField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Partos"
+  );
+  if (partosField && medicalEvaluation.genitourinario?.partos) {
+    payloadItems.push({
+      dataTypeId: partosField.id,
+      value: String(medicalEvaluation.genitourinario.partos),
+    });
+  }
+  const cesareaField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Cesárea"
+  );
+  if (cesareaField && medicalEvaluation.genitourinario?.cesarea) {
+    payloadItems.push({
+      dataTypeId: cesareaField.id,
+      value: String(medicalEvaluation.genitourinario.cesarea),
+    });
+  }
+  const embarazosField = fields.find(
+    (f) => f.category === "EXAMEN_FISICO" && f.name === "Embarazos"
+  );
+  if (embarazosField && medicalEvaluation.genitourinario?.embarazos) {
+    payloadItems.push({
+      dataTypeId: embarazosField.id,
+      value: String(medicalEvaluation.genitourinario.embarazos),
+    });
+  }
   // === Osteoarticular ===
   const osteo = medicalEvaluation.osteoarticular;
   if (osteo) {

@@ -13,27 +13,30 @@ export default function PreOccupationalPreviewPage() {
   const slugParts = slugString.split("-");
   const id = parseInt(slugParts[slugParts.length - 1], 10);
 
-  const { isLoading, collaborator, error } = useCollaborator({
+  const { isLoading: collaboratorLoading, collaborator, error: collaboratorError } = useCollaborator({
     auth: true,
     id,
   });
 
-  const { data } = useMedicalEvaluation({
+  const { data, isLoading: medicalEvaluationLoading, error: medicalEvaluationError } = useMedicalEvaluation({
     auth: true,
     id: Number(medicalEvaluationId),
   });
 
-  const { data: urls } =
+  const { data: urls, isLoading: urlsLoading, error: urlsError } =
     useGetAllStudiesImagesUrlsByCollaboratorAndMedicalEvaluation({
       auth: true,
       collaboratorId: id,
       medicalEvaluationId: Number(medicalEvaluationId),
     });
 
-  const { data: dataValues } = useDataValuesByMedicalEvaluationId({
+  const { data: dataValues, isLoading: dataValuesLoading, error: dataValuesError } = useDataValuesByMedicalEvaluationId({
     id: Number(medicalEvaluationId),
     auth: true,
   });
+
+  const isLoading = collaboratorLoading || medicalEvaluationLoading || urlsLoading || dataValuesLoading;
+  const error = collaboratorError || medicalEvaluationError || urlsError || dataValuesError;
 
   return (
     <>
@@ -52,7 +55,7 @@ export default function PreOccupationalPreviewPage() {
           content={`Collaborator, ${collaborator?.firstName}, perfil`}
         />
       </Helmet>
-      {error && <div>Hubo un error al cargar el colaborador.</div>}
+      {error && <div>Hubo un error al cargar los datos.</div>}
       {isLoading ? (
         <LoadingAnimation />
       ) : collaborator && data ? (
@@ -63,7 +66,7 @@ export default function PreOccupationalPreviewPage() {
           dataValues={dataValues}
         />
       ) : (
-        <div>No hay un colaborador disponible.</div>
+        <div>No hay datos disponibles.</div>
       )}
     </>
   );

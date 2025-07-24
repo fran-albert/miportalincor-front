@@ -147,7 +147,7 @@ export function DataTable<TData, TValue>({
       {isLoading ? null : (
         <>
           {showSearch && (
-            <div className="flex items-center mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
               <Search
                 placeholder={searchPlaceholder}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-greenPrimary"
@@ -156,24 +156,18 @@ export function DataTable<TData, TValue>({
                 onKeyDown={handleKeyPress}
                 onChange={handleSearchChange}
               />
-              {/* <Button
-                onClick={handleSearchSubmit}
-                className="bg-greenPrimary hover:bg-greenPrimary-700 text-white px-4 py-2 rounded-md shadow-lg flex items-center ml-2"
-              >
-                Buscar
-              </Button> */}
               {canAddUser && (
-                <div className="ml-4">
+                <div className="w-full sm:w-auto">
                   {onAddClick ? (
                     <Button
-                      className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center"
+                      className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center w-full sm:w-auto justify-center"
                       onClick={onAddClick}
                     >
                       {addLinkText}
                     </Button>
                   ) : (
                     <Link to={addLinkPath}>
-                      <Button className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center">
+                      <Button className="bg-greenPrimary hover:bg-teal-700 hover:shadow-2xl text-white px-4 py-2 rounded-md shadow-lg flex items-center w-full sm:w-auto justify-center">
                         {addLinkText}
                       </Button>
                     </Link>
@@ -191,7 +185,7 @@ export function DataTable<TData, TValue>({
                       {headerGroup.headers.map((header, headerIndex) => (
                         <th
                           key={`header-${headerGroup.id}-${header.id}-${headerIndex}`}
-                          className="py-2 px-6 text-left text-sm font-semibold text-white uppercase tracking-wider"
+                          className="py-2 px-2 sm:px-4 lg:px-6 text-left text-xs sm:text-sm font-semibold text-white uppercase tracking-wider"
                         >
                           {header.isPlaceholder
                             ? null
@@ -243,7 +237,7 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell, cellIndex) => (
                           <td
                             key={`cell-${row.id}-${cell.id}-${cellIndex}`}
-                            className="py-2 px-6 border-b border-gray-200"
+                            className="py-2 px-2 sm:px-4 lg:px-6 border-b border-gray-200 text-xs sm:text-sm"
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -268,9 +262,9 @@ export function DataTable<TData, TValue>({
               </table>
             </div>
           </div>
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
             <div className="text-gray-500 text-sm w-full"></div>
-            <Pagination className="mt-6 justify-end px-4 py-2">
+            <Pagination className="mt-2 sm:mt-6 justify-center sm:justify-end px-2 sm:px-4 py-2">
               <PaginationContent>
                 {/* Botón para la página anterior */}
                 <PaginationPrevious

@@ -95,6 +95,10 @@ export interface Genitourinario {
   observaciones?: string;
   varicocele?: boolean;
   varicoceleObs?: string;
+  fum?: string;
+  embarazos?: string;
+  partos?: string;
+  cesarea?: string;
 }
 
 export interface Osteoarticular {

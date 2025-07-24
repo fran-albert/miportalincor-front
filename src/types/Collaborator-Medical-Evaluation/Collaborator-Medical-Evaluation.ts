@@ -10,4 +10,5 @@ export interface CollaboratorMedicalEvaluation extends Base {
 export interface CollaboratorMedicalEvaluationDto {
     collaboratorId: number;
     evaluationTypeId: number;
+    doctorId: number;
 }
