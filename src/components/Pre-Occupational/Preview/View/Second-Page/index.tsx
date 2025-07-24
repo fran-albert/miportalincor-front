@@ -1,10 +1,11 @@
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
-import FooterHtml from "../Footer";
 import ClinicalEvaluationHtml from "./Clinical-Evaluation";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import VisualAcuityHtml from "./Visual";
+import FooterHtmlConditional from "../Footer";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 interface Props {
   collaborator: Collaborator;
   talla: string;
@@ -23,7 +24,7 @@ interface Props {
   visualWith?: { right?: string; left?: string };
   visualChromatic: "normal" | "anormal";
   visualNotes?: string;
-
+  doctorData: DoctorSignatures;
 }
 
 const SecondPageHTML = ({
@@ -36,8 +37,8 @@ const SecondPageHTML = ({
   visualWithout,
   visualWith,
   visualChromatic,
+  doctorData,
   visualNotes,
-
 }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
@@ -58,15 +59,13 @@ const SecondPageHTML = ({
       chromaticVision={visualChromatic}
       notes={visualNotes}
     />
- 
-    {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={1} /> */}
-   <FooterHtml
+    <FooterHtmlConditional
       pageNumber={2}
-      primaryDoctor={{
-        name: "BONIFACIO Ma. CECILIA",
-        license: "M.P. 96533 - M.L. 7299",
-        signatureUrl: "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
-      }}
+      useCustom
+      doctorLicense={doctorData.matricula}
+      doctorName={doctorData.fullName}
+      doctorSpeciality={doctorData.specialty}
+      signatureUrl={doctorData.signatureDataUrl}
     />
   </>
 );

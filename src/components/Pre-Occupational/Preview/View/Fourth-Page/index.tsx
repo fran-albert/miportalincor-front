@@ -1,5 +1,4 @@
 import HeaderPreviewHtml from "../../Header";
-import FooterHtml from "../Footer";
 import {
   Circulatorio,
   Neurologico,
@@ -8,33 +7,28 @@ import {
 import NeurologicoHtml from "./Neurologico";
 import RespiratorioHtml from "../Third-Page/Respiratorio";
 import CirculatorioHtml from "../Third-Page/Circulatorio";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import FooterHtmlConditional from "../Footer";
 
 interface Props {
   neurologico: Neurologico;
   respiratorio: Respiratorio;
   circulatorio: Circulatorio;
+  doctorData: DoctorSignatures;
 }
-const FourthPageHTML = ({ neurologico, respiratorio, circulatorio }: Props) => (
+const FourthPageHTML = ({ neurologico, respiratorio, circulatorio, doctorData }: Props) => (
   <>
     <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
     <RespiratorioHtml data={respiratorio} />
     <CirculatorioHtml data={circulatorio} />
     <NeurologicoHtml data={neurologico} />
-    <FooterHtml
+    <FooterHtmlConditional
       pageNumber={4}
-      primaryDoctor={{
-        name: "BONIFACIO Ma. CECILIA",
-        license: "M.P. 96533 - M.L. 7299",
-        signatureUrl:
-          "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
-      }}
-      dualSign={true}
-      secondDoctor={{
-        name: "DR. JUAN PÉREZ",
-        license: "M.P. 12345 - M.L. 6789",
-        signatureUrl:
-          "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
-      }}
+      useCustom
+      doctorLicense={doctorData.matricula}
+      doctorName={doctorData.fullName}
+      doctorSpeciality={doctorData.specialty}
+      signatureUrl={doctorData.signatureDataUrl}
     />
   </>
 );

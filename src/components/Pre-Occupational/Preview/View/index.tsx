@@ -19,21 +19,22 @@ import { ExamenClinico } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import FourthPageHTML from "./Fourth-Page";
 import FifthPageHTML from "./Fifth-Page";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 
 interface Props {
   collaborator: Collaborator;
   studies?: GetUrlsResponseDto[];
   medicalEvaluationType: string;
   dataValues: DataValue[];
-  doctorId: number;
+  doctorData: DoctorSignatures;
 }
 
 const View: React.FC<Props> = ({
   collaborator,
   studies,
   dataValues,
-  doctorId,
   medicalEvaluationType,
+  doctorData,
 }) => {
   const examResults: ExamResults = mapExamResults(dataValues);
   const { conclusion, recomendaciones } =
@@ -74,22 +75,25 @@ const View: React.FC<Props> = ({
         visualWithout={medicalEvaluation.agudezaSc}
         visualWith={medicalEvaluation.agudezaCc}
         visualNotes={medicalEvaluation.notasVision}
+        doctorData={doctorData}
       />
       <ThirdPageHTML
         pielData={medicalEvaluation.piel!}
         cabezaCuello={medicalEvaluation.cabezaCuello!}
         bucodental={medicalEvaluation.bucodental!}
         torax={medicalEvaluation.torax!}
+        doctorData={doctorData}
       />
       <FourthPageHTML
         neurologico={medicalEvaluation.neurologico!}
         respiratorio={medicalEvaluation.respiratorio!}
+        doctorData={doctorData}
         circulatorio={medicalEvaluation.circulatorio!}
       />
       <FifthPageHTML
         gastrointestinal={medicalEvaluation.gastrointestinal!}
         genitourinario={medicalEvaluation.genitourinario!}
-        doctorId={doctorId}
+        doctorData={doctorData}
         osteoarticular={medicalEvaluation.osteoarticular!}
       />
       {studies?.map((study, index) => (

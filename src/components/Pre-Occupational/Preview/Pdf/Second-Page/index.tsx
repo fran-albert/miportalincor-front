@@ -1,12 +1,13 @@
 import { Page, StyleSheet, View } from "@react-pdf/renderer";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
-import PdfFooter from "../Footer";
 import ClinicalEvaluationPdf from "./Clinical-Evaluation";
 import CollaboratorInformationPdf from "../Collaborator-Information";
 import HeaderPreviewPdf from "../Header";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import VisualAcuityPdf from "./Visual";
 import { IMedicalEvaluation } from "@/store/Pre-Occupational/preOccupationalSlice";
+import FooterPdfConditional from "../Footer";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 
 interface Props {
   collaborator: Collaborator;
@@ -14,6 +15,7 @@ interface Props {
   peso: string;
   imc: string;
   antecedentes: DataValue[] | undefined;
+  doctorData: DoctorSignatures;
   aspectoGeneral: "Bueno" | "Regular" | "Malo";
   data: IMedicalEvaluation;
 }
@@ -47,6 +49,7 @@ const SecondPagePdfDocument = ({
   peso,
   imc,
   aspectoGeneral,
+  doctorData,
   antecedentes,
   data,
 }: Props) => (
@@ -82,11 +85,14 @@ const SecondPagePdfDocument = ({
       </View>
     </View>
     <View style={styles.footer}>
-      <PdfFooter
+      <FooterPdfConditional
         pageNumber={2}
-        doctorName="BONIFACIO Ma. CECILIA"
-        doctorLicense="M.P. 96533 - M.L. 7299"
-        signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
+        useCustom={true}
+        doctorLicense={doctorData.matricula}
+        doctorName={doctorData.fullName}
+        doctorSpeciality={doctorData.specialty}
+        signatureUrl={doctorData.signatureDataUrl}
+        sealUrl={doctorData.sealDataUrl}
       />
     </View>
   </Page>
