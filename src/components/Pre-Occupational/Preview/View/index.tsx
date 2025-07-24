@@ -25,12 +25,14 @@ interface Props {
   studies?: GetUrlsResponseDto[];
   medicalEvaluationType: string;
   dataValues: DataValue[];
+  doctorId: number;
 }
 
 const View: React.FC<Props> = ({
   collaborator,
   studies,
   dataValues,
+  doctorId,
   medicalEvaluationType,
 }) => {
   const examResults: ExamResults = mapExamResults(dataValues);
@@ -87,6 +89,7 @@ const View: React.FC<Props> = ({
       <FifthPageHTML
         gastrointestinal={medicalEvaluation.gastrointestinal!}
         genitourinario={medicalEvaluation.genitourinario!}
+        doctorId={doctorId}
         osteoarticular={medicalEvaluation.osteoarticular!}
       />
       {studies?.map((study, index) => (

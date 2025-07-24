@@ -4,7 +4,7 @@ export async function fetchImageAsDataUrl(presignedUrl: string): Promise<string>
     // Llamo al proxy de tu backend, pasando la URL presignada como parámetro
     const response = await apiLaboral.get<Blob>("/file/proxy-image", {
         params: { url: presignedUrl },
-        responseType: "blob",           // <- muy importante
+        responseType: "blob",          
     });
 
     // convierto el Blob en Data URL
