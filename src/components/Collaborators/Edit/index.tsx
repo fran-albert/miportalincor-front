@@ -18,13 +18,10 @@ import {
 } from "@/components/ui/form";
 import { useForm, useWatch } from "react-hook-form";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
 import { goBack } from "@/common/helpers/helpers";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { z } from "zod";
-import SuccessToast from "@/components/Toast/Success";
-import LoadingToast from "@/components/Toast/Loading";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
 import { CompanySelect } from "@/components/Select/Company/select";
@@ -84,6 +81,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
     collaborator.addressData?.city?.state
   );
   const { updateCollaboratorMutation } = useCollaboratorMutations();
+  const { promiseToast } = useToastContext();
   const { states } = useStatesHook();
   const safeEmail =
     collaborator.email && collaborator.email !== "undefined"
@@ -216,20 +214,22 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
         collaborator: formData,
       });
 
-      toast.promise(promise, {
-        loading: <LoadingToast message="Actualizando Colaborador..." />,
-        success: <SuccessToast message="Colaborador actualizado con éxito" />,
-        error: (error) => (
-          <ErrorToast
-            message={
-              error.response?.data?.message ||
-              "Error al actualizar el Colaborador"
-            }
-          />
-        ),
+      await promiseToast(promise, {
+        loading: {
+          title: "Actualizando colaborador...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Colaborador actualizado!",
+          description: "El colaborador se ha actualizado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar colaborador",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      await promise;
       goBack();
     } catch (error) {
       console.error("Error al actualizar el Colaborador", error);

@@ -16,7 +16,6 @@ import { User } from "@/types/User/User";
 import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MaritalStatusSelect } from "@/components/Select/MaritalStatus/select";
 import { GenderSelect } from "@/components/Select/Gender/select";
@@ -29,9 +28,11 @@ import { UserSchema } from "@/validators/user.schema";
 import CustomDatePicker from "@/components/Date-Picker";
 import { Edit2, Save, X } from "lucide-react";
 import ChangePasswordDialog from "../Change-Password";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 type FormValues = z.infer<typeof UserSchema>;
 export default function SecretaryProfileComponent({ user }: { user: User }) {
   const { updateUserMutation } = useUserMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(UserSchema),
   });
@@ -120,13 +121,20 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
         user: dataToSend,
       });
 
-      toast.promise(patientUpdatePromise, {
-        loading: "Actualizando datos...",
-        success: "Datos actualizados con éxito!",
-        error: "Error al actualizar los datos",
+      await promiseToast(patientUpdatePromise, {
+        loading: {
+          title: "Actualizando datos",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Datos actualizados",
+          description: "Datos actualizados con éxito",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar datos",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-
-      await patientUpdatePromise;
 
       setIsEditing(false);
     } catch (error) {

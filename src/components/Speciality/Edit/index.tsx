@@ -7,14 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { specialitySchema } from "@/validators/speciality.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -39,6 +36,7 @@ export default function EditSpecialityDialog({
   speciality,
 }: EditSpecialityDialogProps) {
   const { updateSpecialityMutation } = useSpecialityMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof specialitySchema>>({
     resolver: zodResolver(specialitySchema),
@@ -60,18 +58,23 @@ export default function EditSpecialityDialog({
           name: values.name,
         },
       });
-      toast.promise(specialityCreationPromise, {
-        loading: <LoadingToast message="Editando especialidad..." />,
-        success: <SuccessToast message="Especialidad editada con éxito!" />,
-        error: <ErrorToast message="Error al editar la Especialidad" />,
+      await promiseToast(specialityCreationPromise, {
+        loading: {
+          title: "Editando especialidad...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Especialidad editada!",
+          description: "La especialidad se ha editado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al editar especialidad",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      specialityCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al editar la Especialidad", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al editar la Especialidad", error);
     }

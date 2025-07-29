@@ -29,7 +29,6 @@ import { State } from "@/types/State/State";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
 import { HealthInsuranceDoctorSelect } from "@/components/Select/HealthInsurace/Doctor/select";
 import { SpecialitySelect } from "@/components/Select/Speciality/select";
 import { DoctorSchema } from "@/validators/doctor.schema";
@@ -38,9 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { City } from "@/types/City/City";
 import { goBack } from "@/common/helpers/helpers";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import useUserRole from "@/hooks/useRoles";
 
 type FormValues = z.infer<typeof DoctorSchema>;
@@ -48,6 +45,7 @@ type FormValues = z.infer<typeof DoctorSchema>;
 function CreateDoctorComponent() {
   const { session } = useUserRole();
   const { addDoctorMutation } = useDoctorMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(DoctorSchema),
   });
@@ -103,23 +101,35 @@ function CreateDoctorComponent() {
     };
 
     try {
-      const patientCreationPromise = addDoctorMutation.mutateAsync(payload);
-      toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Creando médico..." />,
-        success: <SuccessToast message="Médico creado con éxito" />,
-        error: (err) => {
-          if (err.response && err.response.status === 409) {
-            return <ErrorToast message="El médico ya existe" />;
+      const promise = addDoctorMutation.mutateAsync(payload);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando médico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Médico creado!",
+          description: "El médico se ha creado exitosamente",
+        },
+        error: (error: any) => {
+          if (error.response && error.response.status === 409) {
+            return {
+              title: "Médico ya existe",
+              description: "El médico ya se encuentra registrado en el sistema",
+            };
           }
-          return <ErrorToast message="Error al crear el médico" />;
+          return {
+            title: "Error al crear médico",
+            description:
+              error.response?.data?.message || "Ha ocurrido un error inesperado",
+          };
         },
       });
-      patientCreationPromise.then(() => {
-        goBack();
-      });
+
+      goBack();
     } catch (error) {
       console.error("Error en onSubmit:", error);
-      throw error;
     }
   }
 

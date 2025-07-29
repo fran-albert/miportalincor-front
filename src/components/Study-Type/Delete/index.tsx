@@ -10,11 +10,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { useStudyTypeMutations } from "@/hooks/Study-Type/useStudyTypeMutations";
 
@@ -28,24 +25,29 @@ export default function DeleteStudyTypeDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteStudyTypeMutation } = useStudyTypeMutations();
+  const { promiseToast } = useToastContext();
   const handleConfirmDelete = async () => {
     try {
       const studyTypeDeletionPromise = deleteStudyTypeMutation.mutateAsync(
         Number(studyType.id)
       );
-      toast.promise(studyTypeDeletionPromise, {
-        loading: <LoadingToast message="Eliminando tipo de estudio..." />,
-        success: <SuccessToast message="Tipo de estudio eliminado con éxito!" />,
-        error: <ErrorToast message="Error al eliminar el tipo de estudio" />,
-        duration: 3000,
+      await promiseToast(studyTypeDeletionPromise, {
+        loading: {
+          title: "Eliminando tipo de estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Tipo de estudio eliminado!",
+          description: "El tipo de estudio se ha eliminado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar tipo de estudio",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      studyTypeDeletionPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear el tipo de estudio", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al crear la Especialidad", error);
     }

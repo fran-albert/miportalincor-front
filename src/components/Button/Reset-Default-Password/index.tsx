@@ -9,12 +9,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { SubmitHandler } from "react-hook-form";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 interface Props {
   idUser: number;
 }
@@ -23,16 +20,22 @@ export default function ResetDefaultPasswordDialog({ idUser }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { resetDefaultPasswordMutation } = useUserMutations();
+  const { promiseToast } = useToastContext();
   const onSubmit: SubmitHandler<any> = async () => {
     try {
-      toast.promise(resetDefaultPasswordMutation.mutateAsync(idUser), {
-        loading: (
-          <LoadingToast message="Restableciendo contraseña del paciente..." />
-        ),
-        success: <SuccessToast message="Contraseña restablecida con exito!" />,
-        error: (
-          <ErrorToast message="Hubo un error al restablecer la contraseña." />
-        ),
+      await promiseToast(resetDefaultPasswordMutation.mutateAsync(idUser), {
+        loading: {
+          title: "Restableciendo contraseña",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Contraseña restablecida",
+          description: "La contraseña se restableció exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al restablecer la contraseña",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
     } catch (error) {
       console.error("Hubo un error al restablecer la contraseña", error);

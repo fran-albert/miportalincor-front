@@ -25,12 +25,9 @@ import {
 } from "@/components/ui/card";
 import { ChangePasswordSchema } from "@/validators/user.schema";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
-import { toast } from "sonner";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Lock } from "lucide-react";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface ChangePasswordDialogProps {
   idUser: number;
@@ -45,6 +42,7 @@ export default function ChangePasswordDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { changePasswordMutation } = useUserMutations();
+  const { promiseToast } = useToastContext();
 
   const toggleDialog = () => {
     setIsOpen(!isOpen);
@@ -63,22 +61,31 @@ export default function ChangePasswordDialog({
     };
 
     try {
-      await toast.promise(changePasswordMutation.mutateAsync(dataToSend), {
-        loading: <LoadingToast message="Cambiando Contraseña..." />,
-        success: () => {
-          form.reset();
-          toggleDialog();
-          return <SuccessToast message="Contraseña cambiada exitosamente!" />;
+      const promise = changePasswordMutation.mutateAsync(dataToSend);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Cambiando contraseña...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Contraseña cambiada!",
+          description: "La contraseña se ha cambiado exitosamente",
         },
         error: (error: any) => {
           const errorMessage =
             error.response?.data?.message ||
             "Error al cambiar la contraseña. Verifica los datos ingresados.";
-
-          setErrorMessage(errorMessage); 
-          return <ErrorToast message={errorMessage} />; 
+          setErrorMessage(errorMessage);
+          return {
+            title: "Error al cambiar contraseña",
+            description: errorMessage,
+          };
         },
       });
+
+      form.reset();
+      toggleDialog();
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message ||

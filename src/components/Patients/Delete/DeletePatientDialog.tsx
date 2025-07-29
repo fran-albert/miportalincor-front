@@ -10,12 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface DeletePatientDialogProps {
   idPatient: number;
@@ -27,22 +24,31 @@ export default function DeletePatientDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deletePatientMutation } = usePatientMutations();
+  const { promiseToast } = useToastContext();
 
   const handleConfirmDelete = async () => {
     try {
-      const deletePromise = deletePatientMutation.mutateAsync(idPatient);
-      toast.promise(deletePromise, {
-        loading: <LoadingToast message="Eliminando Paciente..." />,
-        success: <SuccessToast message="Paciente eliminado con éxito" />,
-        error: (err) => {
-          console.error("Error al eliminar el Paciente", err);
-          return <ErrorToast message="Error al eliminar el Paciente" />;
+      const promise = deletePatientMutation.mutateAsync(idPatient);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando paciente...",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "¡Paciente eliminado!",
+          description: "El paciente se ha eliminado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar paciente",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al eliminar el Paciente", error);
-    } finally {
-      setIsOpen(false);
     }
   };
 

@@ -9,9 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   Form,
   FormField,
@@ -20,7 +18,6 @@ import {
   FormControl,
 } from "@/components/ui/form";
 import { useCompanyMutations } from "@/hooks/Company/useCompanyMutations";
-import { toast } from "sonner";
 import { StateSelect } from "@/components/Select/State/select";
 import { CitySelect } from "@/components/Select/City/select";
 import { State } from "@/types/State/State";
@@ -38,6 +35,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
     resolver: zodResolver(companySchema),
   });
   const { addCompanyMutations } = useCompanyMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const { setValue } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
@@ -90,18 +88,24 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
     };
     try {
       const promise = addCompanyMutations.mutateAsync(payload);
-      toast.promise(promise, {
-        loading: <LoadingToast message="Creando Empresa..." />,
-        success: <SuccessToast message="Empresa creada con éxito!" />,
-        error: <ErrorToast message="Hubo un error al crear la empresa." />,
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando empresa...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Empresa creada!",
+          description: "La empresa se ha creado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al crear empresa",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      promise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear la empresa", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al crear la empresa", error);
     }

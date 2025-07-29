@@ -22,7 +22,6 @@ import { State } from "@/types/State/State";
 
 import { useEffect, useState } from "react";
 
-import { toast } from "sonner";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { Speciality } from "@/types/Speciality/Speciality";
 import { SpecialitySelect } from "@/components/Select/Speciality/select";
@@ -34,14 +33,13 @@ import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import { HealthInsuranceDoctorSelect } from "@/components/Select/HealthInsurace/Doctor/select";
 import { Edit2, Save, X } from "lucide-react";
 import CustomDatePicker from "@/components/Date-Picker";
-import SuccessToast from "@/components/Toast/Success";
-import LoadingToast from "@/components/Toast/Loading";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { ImageUploadBox } from "../Signature-Boxs";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
   const { updateDoctorMutation } = useDoctorMutations();
+  const { promiseToast } = useToastContext();
   const [selectedState, setSelectedState] = useState<State | undefined>(
     doctor?.address?.city?.state
   );
@@ -138,24 +136,28 @@ function DoctorProfileComponent({ doctor }: { doctor: Doctor }) {
     };
 
     try {
-      const doctorCreationPromise = updateDoctorMutation.mutateAsync({
+      const promise = updateDoctorMutation.mutateAsync({
         id: Number(doctor?.userId),
         doctor: dataToSend,
       });
 
-      toast.promise(doctorCreationPromise, {
-        loading: <LoadingToast message="Actualizando médico..." />,
-        success: <SuccessToast message="Médico actualizado con éxito!" />,
-        error: <ErrorToast message="Error al actualizar el médico" />,
+      await promiseToast(promise, {
+        loading: {
+          title: "Actualizando médico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Médico actualizado!",
+          description: "El médico se ha actualizado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar médico",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      doctorCreationPromise
-        .then(() => {
-          goBack();
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el médico", error);
-        });
+      goBack();
     } catch (error) {
       console.error("Error al actualizar el médico", error);
     }

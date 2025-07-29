@@ -18,13 +18,10 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
 import { goBack } from "@/common/helpers/helpers";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { z } from "zod";
-import SuccessToast from "@/components/Toast/Success";
-import LoadingToast from "@/components/Toast/Loading";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
 import { CompanySelect } from "@/components/Select/Company/select";
@@ -52,6 +49,7 @@ function dataURLtoFile(dataurl: string, filename: string): File {
 
 export function CreateCollaboratorComponent() {
   const { addCollaboratorMutation } = useCollaboratorMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<any>({});
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
@@ -125,17 +123,22 @@ export function CreateCollaboratorComponent() {
 
       const promise = addCollaboratorMutation.mutateAsync(formData);
 
-      toast.promise(promise, {
-        loading: <LoadingToast message="Creando Colaborador..." />,
-        success: <SuccessToast message="Colaborador creado con éxito" />,
-        error: (error) => {
-          const errorMessage =
-            error.response?.data?.message || "Error al crear el Colaborador";
-          return <ErrorToast message={errorMessage} />;
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando colaborador...",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "¡Colaborador creado!",
+          description: "El colaborador se ha creado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al crear colaborador",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      await promise;
       goBack();
     } catch (error) {
       console.error("Error al crear el Colaborador", error);

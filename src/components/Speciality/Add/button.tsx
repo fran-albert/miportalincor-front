@@ -6,13 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useSpecialityMutations } from "@/hooks/Speciality/useSpecialityMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   Form,
   FormField,
@@ -35,6 +32,7 @@ export default function AddSpecialityDialog({
   setIsOpen,
 }: AddSpecialityDialogProps) {
   const { addSpecialityMutation } = useSpecialityMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof specialitySchema>>({
     resolver: zodResolver(specialitySchema),
@@ -42,20 +40,25 @@ export default function AddSpecialityDialog({
 
   async function onSubmit(values: z.infer<typeof specialitySchema>) {
     try {
-      const specialityCreationPromise =
-        addSpecialityMutation.mutateAsync(values);
-      toast.promise(specialityCreationPromise, {
-        loading: <LoadingToast message="Creando especialidad..." />,
-        success: <SuccessToast message="Especialidad creada con exito!" />,
-        error: <ErrorToast message="Hubo un error al crear la Especialidad." />,
+      const promise = addSpecialityMutation.mutateAsync(values);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando especialidad...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Especialidad creada!",
+          description: "La especialidad se ha creado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al crear especialidad",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      specialityCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear la Especialidad", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al crear la Especialidad", error);
     }

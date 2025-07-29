@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import {
@@ -19,9 +18,7 @@ import {
   FormControl,
 } from "@/components/ui/form";
 import { useHealthInsuranceMutations } from "@/hooks/Health-Insurance/useHealthInsuranceMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { healthInsuranceSchema } from "@/validators/health.insurance.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,6 +33,7 @@ export default function AddHealthInsuranceDialog({
   setIsOpen,
 }: AddHealthInsuranceDialogProps) {
   const { addHealthInsuranceMutation } = useHealthInsuranceMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof healthInsuranceSchema>>({
     resolver: zodResolver(healthInsuranceSchema),
@@ -43,21 +41,26 @@ export default function AddHealthInsuranceDialog({
 
   async function onSubmit(values: z.infer<typeof healthInsuranceSchema>) {
     try {
-      const hcCreationPromise = addHealthInsuranceMutation.mutateAsync(values);
-      toast.promise(hcCreationPromise, {
-        loading: <LoadingToast message="Creando Obra Social..." />,
-        success: <SuccessToast message="Obra Social creada con éxito!" />,
-        error: <ErrorToast message="Error al crear la Obra Social" />,
+      const promise = addHealthInsuranceMutation.mutateAsync(values);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando obra social...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Obra social creada!",
+          description: "La obra social se ha creado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al crear obra social",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      hcCreationPromise
-        .then(() => {
-          setIsOpen(false);
-          form.reset();
-        })
-        .catch((error) => {
-          console.error("Error al crear la Obra Social", error);
-        });
+      setIsOpen(false);
+      form.reset();
     } catch (error) {
       console.error("Error al crear la Obra Social", error);
     }

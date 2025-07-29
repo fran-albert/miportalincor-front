@@ -10,11 +10,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useCompanyMutations } from "@/hooks/Company/useCompanyMutations";
 
 interface Props {
@@ -25,22 +22,31 @@ export default function DeleteCompanyDialog({ id }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteCompanyMutations } = useCompanyMutations();
+  const { promiseToast } = useToastContext();
 
   const handleConfirmDelete = async () => {
     try {
-      const deletePromise = deleteCompanyMutations.mutateAsync(id);
-      toast.promise(deletePromise, {
-        loading: <LoadingToast message="Eliminando Empresa..." />,
-        success: <SuccessToast message="Empresa eliminada con éxito" />,
-        error: (err) => {
-          console.error("Error al eliminar la Empresa", err);
-          return <ErrorToast message="Error al eliminar la Empresa" />;
+      const promise = deleteCompanyMutations.mutateAsync(id);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando empresa...",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "¡Empresa eliminada!",
+          description: "La empresa se ha eliminado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar empresa",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al eliminar la Empresa", error);
-    } finally {
-      setIsOpen(false);
     }
   };
 

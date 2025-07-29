@@ -6,11 +6,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCompanies } from "@/hooks/Company/useCompanies";
+import { Company } from "@/types/Company/Company";
 import { Controller } from "react-hook-form";
 
 interface Props {
   control: any;
-  defaultValue?: { id: number; name: string} | null;
+  defaultValue?: Company | null;
   disabled?: boolean;
 }
 

@@ -21,7 +21,6 @@ import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { toast } from "sonner";
 import { DoctorSchema } from "@/validators/doctor.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,10 +29,8 @@ import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import CustomDatePicker from "@/components/Date-Picker";
 import ChangePasswordDialog from "../Change-Password";
 import { Edit2, Save, X } from "lucide-react";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
 import { ImageUploadBox } from "@/components/Doctors/Signature-Boxs";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 export default function ProfileDoctorCardComponent({
@@ -42,6 +39,7 @@ export default function ProfileDoctorCardComponent({
   data: Doctor | undefined;
 }) {
   const { updateDoctorMutation } = useDoctorMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(DoctorSchema),
   });
@@ -130,14 +128,19 @@ export default function ProfileDoctorCardComponent({
         doctor: dataToSend,
       });
 
-      toast.promise(doctorCreationPromise, {
-        loading: "Actualizando médico...",
-        success: "Médico actualizado con éxito!",
-        error: "Error al actualizar el médico",
-      });
-
-      doctorCreationPromise.catch((error) => {
-        console.error("Error al actualizar el médico", error);
+      await promiseToast(doctorCreationPromise, {
+        loading: {
+          title: "Actualizando médico",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Médico actualizado",
+          description: "Médico actualizado con éxito",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar médico",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
     } catch (error) {
       console.error("Error al actualizar el médico", error);
@@ -182,19 +185,22 @@ export default function ProfileDoctorCardComponent({
         doctor: dataToSend,
       });
 
-      toast.promise(dataCreationPromise, {
-        loading: <LoadingToast message="Actualizando datos del médico..." />,
-        success: <SuccessToast message="Médico actualizado con éxito!" />,
-        error: <ErrorToast message="Error al actualizar el Médico" />,
+      await promiseToast(dataCreationPromise, {
+        loading: {
+          title: "Actualizando datos del médico",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Médico actualizado",
+          description: "Médico actualizado con éxito",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar médico",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      dataCreationPromise
-        .then(() => {
-          setIsEditing(false);
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el Médico", error);
-        });
+      setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar el Médico", error);
     }

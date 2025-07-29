@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import {
   Card,
@@ -22,9 +21,7 @@ import {
 } from "@/components/ui/form";
 import { PasswordInput } from "../ui/password-input";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import LoadingToast from "../Toast/Loading";
-import SuccessToast from "../Toast/Success";
-import ErrorToast from "../Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 type FormValues = z.infer<typeof ResetPasswordSchema>;
 function ResetPasswordForm() {
@@ -32,13 +29,14 @@ function ResetPasswordForm() {
     resolver: zodResolver(ResetPasswordSchema),
   });
   const { resetPasswordMutation } = useUserMutations();
+  const { promiseToast, showError } = useToastContext();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const navigate = useNavigate();
 
   async function onSubmit(data: z.infer<typeof ResetPasswordSchema>) {
     if (!token) {
-      toast.error("Token de restablecimiento no proporcionado.");
+      showError("Token no proporcionado", "Token de restablecimiento no proporcionado.");
       return;
     }
 
@@ -49,14 +47,25 @@ function ResetPasswordForm() {
     };
 
     try {
-      toast.promise(resetPasswordMutation.mutateAsync(payload), {
-        loading: <LoadingToast message="Cambiando contraseña..." />,
-        success: <SuccessToast message="Contraseña actualizada con éxito!" />,
-        error: <ErrorToast message="Error al actualizar la contraseña" />,
+      const promise = resetPasswordMutation.mutateAsync(payload);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Cambiando contraseña...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Contraseña actualizada!",
+          description: "La contraseña se ha actualizado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar contraseña",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      if (resetPasswordMutation.isSuccess) {
-        navigate("/iniciar-sesion");
-      }
+
+      navigate("/iniciar-sesion");
     } catch (error) {
       console.error("Error al cambiar la contraseña", error);
     }
