@@ -4,12 +4,12 @@ import { logout } from '@/store/authSlice';
 import { useEffect } from 'react';
 
 interface DecodedToken {
-  Id: string;
-  Email: string;
+  id: string;
+  email: string;
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string | string[];
   exp: number;
   iss: string;
-  FirstName: string;
+  firstName: string;
 }
 
 const ROLES = {
@@ -78,13 +78,13 @@ const useUserRole = () => {
   const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
 
   const session = {
-    id: decodedToken.Id,
-    email: decodedToken.Email,
+    id: decodedToken.id,
+    email: decodedToken.email,
     role: rolesArray,
     exp: decodedToken.exp,
     iss: decodedToken.iss,
     token: token,
-    FirstName: decodedToken.FirstName,
+    firstName: decodedToken.firstName,
   };
 
   return {

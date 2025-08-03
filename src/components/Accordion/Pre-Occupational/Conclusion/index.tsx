@@ -19,8 +19,8 @@ interface ConclusionAccordionProps {
   recomendaciones: string;
   setConclusion: (c: string) => void;
   setRecomendaciones: (r: string) => void;
-  fields: DataType[];              
-  dataValues?: DataValue[];        
+  fields: DataType[];
+  dataValues?: DataValue[];
   medicalEvaluationId: number;
 }
 
@@ -38,15 +38,18 @@ export default function ConclusionAccordion({
   const { promiseToast } = useToastContext();
 
   const handleSave = async () => {
-    const payloadItems: { id?: number; dataTypeId: number; value: string }[] = [];
+    const payloadItems: { id?: number; dataTypeId: number; value: string }[] =
+      [];
 
     // Arma el objeto para "Conclusion"
     const conclField = fields.find((f) => f.name === "Conclusion");
     if (conclField && conclusion.trim() !== "") {
-      const existing = dataValues?.find((dv) => dv.dataType.id === conclField.id);
+      const existing = dataValues?.find(
+        (dv) => dv.dataType.id === conclField.id
+      );
       payloadItems.push({
-        id: existing?.id,
-        dataTypeId: conclField.id,
+        id: Number(existing?.id),
+        dataTypeId: Number(conclField.id),
         value: conclusion,
       });
     }
@@ -56,8 +59,8 @@ export default function ConclusionAccordion({
     if (recField && recomendaciones.trim() !== "") {
       const existing = dataValues?.find((dv) => dv.dataType.id === recField.id);
       payloadItems.push({
-        id: existing?.id,
-        dataTypeId: recField.id,
+        id: Number(existing?.id),
+        dataTypeId: Number(recField.id),
         value: recomendaciones,
       });
     }
@@ -79,7 +82,8 @@ export default function ConclusionAccordion({
         },
         error: (error: any) => ({
           title: "Error al guardar los datos",
-          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       }
     );

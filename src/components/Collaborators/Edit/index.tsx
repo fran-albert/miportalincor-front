@@ -210,7 +210,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       }
 
       const promise = updateCollaboratorMutation.mutateAsync({
-        id: collaborator.id,
+        id: Number(collaborator.id),
         collaborator: formData,
       });
 

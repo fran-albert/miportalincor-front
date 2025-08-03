@@ -50,7 +50,6 @@ export default function DeleteHealthInsuranceDialog({
     } catch (error) {
       console.error("Error al eliminar la Obra Social", error);
     }
-  }
   };
 
   return (

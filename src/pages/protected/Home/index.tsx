@@ -12,10 +12,10 @@ const HomePage = () => {
         <title>Inicio</title>
       </Helmet>
       {(isSecretary || isAdmin) && (
-        <HomeComponent name={String(session?.FirstName)} />
+        <HomeComponent name={String(session?.firstName)} />
       )}
-      {isDoctor && <HomeComponent name={String(session?.FirstName)} />}
-      {isPatient && <PatientHomePage name={String(session?.FirstName)} />}
+      {isDoctor && <HomeComponent name={String(session?.firstName)} />}
+      {isPatient && <PatientHomePage name={String(session?.firstName)} />}
     </div>
   );
 };
