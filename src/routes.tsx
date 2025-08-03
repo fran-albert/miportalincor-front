@@ -4,7 +4,6 @@ import LoginPage from "./pages/auth/Login";
 import { HeaderComponent } from "./components/Header";
 import HomePage from "./pages/protected/Home";
 import DoctorsComponent from "./pages/protected/Doctors";
-import PatientPage from "./pages/protected/Patient";
 import PatientsComponent from "./pages/protected/Patients";
 import { Private_Routes } from "./routes/Private-Routes";
 import DoctorPage from "./pages/protected/Doctor";
@@ -30,6 +29,10 @@ import ListPreocuppationalExamsPage from "./pages/protected/Collaborator/Pre-Occ
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
 import CompaniesPage from "./pages/protected/Companies";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
+import PatientDashboardPage from "./pages/protected/Patient";
+import PatientHistoryPage from "./pages/protected/Patient/Historia-Clinica";
+import PatientStudiesPage from "./pages/protected/Patient/Studies";
+import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
 
 function App() {
   return (
@@ -98,7 +101,35 @@ function App() {
                 <Private_Routes
                   allowedRoles={["Medico", "Secretaria", "Administrador"]}
                 >
-                  <PatientPage />
+                  <PatientDashboardPage />
+                </Private_Routes>
+              }
+            />
+
+            <Route
+              path="/pacientes/:slug/historia-clinica"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <PatientHistoryPage />
+                </Private_Routes>
+              }
+            />
+
+            <Route
+              path="/pacientes/:slug/estudios"
+              element={
+                <Private_Routes
+                  allowedRoles={["Medico", "Secretaria", "Administrador"]}
+                >
+                  <PatientStudiesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/pacientes/:slug/historia-clinica/antecedentes"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <PatientAntecedentesPage />
                 </Private_Routes>
               }
             />
@@ -278,7 +309,9 @@ function App() {
             <Route
               path="/incor-laboral/colaboradores/agregar"
               element={
-                <Private_Routes allowedRoles={["Secretaria", "Administrador", "Médico"]}>
+                <Private_Routes
+                  allowedRoles={["Secretaria", "Administrador", "Médico"]}
+                >
                   <CreateCollaboratorPage />
                 </Private_Routes>
               }
