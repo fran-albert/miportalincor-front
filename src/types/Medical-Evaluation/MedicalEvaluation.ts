@@ -10,3 +10,10 @@ export interface MedicalEvaluation extends Base {
     completed: boolean
     doctorId: number;
 }
+
+export interface ResponseMedicalEvaluation extends Base {
+    evaluationType: EvaluationType;
+    dataValues: DataValue[];
+    completed: boolean
+    doctorId: number;
+}

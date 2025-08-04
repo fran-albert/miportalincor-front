@@ -6,3 +6,8 @@ export interface SendEmailDto {
     fileData: string
 }
 
+export interface SendCompanyTextEmailDto {
+    to: string;
+    subject: string;
+    text: string;
+}
