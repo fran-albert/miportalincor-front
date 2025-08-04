@@ -1,10 +1,8 @@
 import { getColumns } from "./columns";
-import useRoles from "@/hooks/useRoles";
 import { CollaboratorMedicalEvaluation } from "@/types/Collaborator-Medical-Evaluation/Collaborator-Medical-Evaluation";
 import { useState } from "react";
 import CreateExamDialog from "../Dialog";
 import { DataTable } from "@/components/Table/Table-List-Examns/table";
-import CollaboratorInformationCard from "../../Collaborator-Information";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { EvaluationType } from "@/types/Evaluation-Type/Evaluation-Type";
 
@@ -23,23 +21,35 @@ export const ListPreoccupationalExamsTable: React.FC<Props> = ({
   slug,
   evaluationTypes,
 }) => {
-  const { isSecretary, isAdmin } = useRoles();
-  const canEdit = isSecretary || isAdmin;
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const openDialog = () => setIsDialogOpen(true);
   const columns = getColumns(slug, collaborator);
 
+  const allowedEvaluationTypes = [
+    "Preocupacional",
+    "Periódico",
+    "Salida (Retiro)",
+    "Cambio de Puesto",
+    "Libreta Sanitaria",
+    "Otro",
+  ];
+
+  const filteredData = data.filter(evaluation => {
+    const evaluationTypeName = evaluation.medicalEvaluation?.evaluationType?.name;
+    return evaluationTypeName && allowedEvaluationTypes.includes(evaluationTypeName);
+  });
+
+  const filteredEvaluationTypes = evaluationTypes.filter(type => 
+    allowedEvaluationTypes.includes(type.name)
+  );
+
+  
   return (
     <>
-      <CollaboratorInformationCard
-        collaborator={collaborator}
-        canEdit={canEdit}
-      />
       <DataTable
         columns={columns}
-        data={data}
-        evaluationTypes={evaluationTypes}
+        data={filteredData}
+        evaluationTypes={filteredEvaluationTypes}
         isFetching={isFetching}
         onAddClick={openDialog}
       />
