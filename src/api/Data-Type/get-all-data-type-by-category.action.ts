@@ -4,7 +4,7 @@ import { AxiosInstance } from "axios";
 
 const getAllDataTypeByCategoriesGeneric = async (api: AxiosInstance, categories: string[]) => {
     const params = new URLSearchParams();
-    categories.forEach(category => params.append("categories", category));
+    categories.forEach(category => params.append("category", category));
 
     const { data } = await api.get<DataType[]>(`data-types?${params.toString()}`);
     return data;
