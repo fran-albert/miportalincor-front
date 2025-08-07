@@ -1,9 +1,8 @@
 import { Patient } from "@/types/Patient/Patient";
-import BreadcrumbComponent from "@/components/Breadcrumb";
 import { StudiesWithURL } from "@/types/Study/Study";
 import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import { AntecedentesResponse } from "@/types/Antecedentes/Antecedentes";
-import PatientHistory from "@/components/Historia-Clinica/Component";
+import { PatientHistoryWrapper } from "@/components/Historia-Clinica/Wrapper";
 
 interface PatientComponentProps {
   patient: Patient | undefined;
@@ -33,19 +32,27 @@ export function PatientHistoryComponent({
       href: `/pacientes/${patient?.slug}/historia-clinica`,
     },
   ];
-  return (
-    <div className="container space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-
-      <div className="gap-6">
-        {isLoadingPatient ? (
-          <PatientCardSkeleton />
-        ) : (
-          patient && (
-            <PatientHistory patient={patient} antecedentes={antecedentes} />
-          )
-        )}
+  if (isLoadingPatient) {
+    return (
+      <div className="container space-y-2 mt-2">
+        <PatientCardSkeleton />
       </div>
-    </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="container space-y-2 mt-2">
+        <p>Paciente no encontrado</p>
+      </div>
+    );
+  }
+
+  return (
+    <PatientHistoryWrapper
+      userData={patient}
+      antecedentes={antecedentes}
+      breadcrumbItems={breadcrumbItems}
+    />
   );
 }
