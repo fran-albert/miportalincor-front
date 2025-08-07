@@ -62,8 +62,6 @@ export default function AntecedentesComponent({
     userId: parseInt(userId),
   });
 
-  console.log("Antecedentes Response:", antecedentesResponse);
-
   // Pre-load data needed for the modal AND for categories
   const { data: antecedentesTypeData, isLoading: isLoadingAntecedentes } =
     useDataTypes({
@@ -72,13 +70,6 @@ export default function AntecedentesComponent({
       categories: ["ANTECEDENTES"],
       apiType: "incor",
     });
-
-  console.log(
-    "Antecedentes Type Data:",
-    antecedentesTypeData,
-    "Loading:",
-    isLoadingAntecedentes
-  );
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!doctorId,
