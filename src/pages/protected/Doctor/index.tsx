@@ -1,12 +1,8 @@
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
-import { DoctorComponent } from "@/components/Doctors/Component";
+import { DoctorDashboardComponent } from "@/components/Doctors/Dashboard/Component";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
-import {
-  PatientCardSkeleton,
-  StudiesCardSkeleton,
-} from "@/components/Skeleton/Patient";
+import { DoctorDashboardSkeleton } from "@/components/Skeleton/Doctor";
 
 function DoctorPage() {
   const params = useParams();
@@ -23,25 +19,12 @@ function DoctorPage() {
     id,
   });
 
-  const {
-    data: studies,
-    isLoading: isLoadingStudies,
-    isFetching,
-  } = useGetStudyWithUrlByUserId({
-    userId: id,
-    auth: true,
-  });
+  const isFirstLoadingDoctor = isLoadingDoctor && !doctor;
 
-  const isFirstLoadingPatient = isLoadingDoctor && !doctor;
-  const isFirstLoadingStudies = isLoadingStudies;
-
-  if (isFirstLoadingPatient && isFirstLoadingStudies) {
+  if (isFirstLoadingDoctor) {
     return (
       <div className="container space-y-2 mt-2">
-        <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
-          <StudiesCardSkeleton />
-        </div>
+        <DoctorDashboardSkeleton />
       </div>
     );
   }
@@ -60,11 +43,9 @@ function DoctorPage() {
             : `${doctor?.firstName} ${doctor?.lastName}`}
         </title>
       </Helmet>
-      <DoctorComponent
+      <DoctorDashboardComponent
         doctor={doctor}
-        studies={studies}
-        isLoadingDoctor={isFirstLoadingPatient}
-        isFetchingStudies={isFetching}
+        isLoadingDoctor={isLoadingDoctor}
       />
     </>
   );

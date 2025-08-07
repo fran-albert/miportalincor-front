@@ -33,6 +33,10 @@ import PatientDashboardPage from "./pages/protected/Patient";
 import PatientHistoryPage from "./pages/protected/Patient/Historia-Clinica";
 import PatientStudiesPage from "./pages/protected/Patient/Studies";
 import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
+import PatientEvolucionesPage from "./pages/protected/Patient/Evoluciones";
+import DoctorHistoryPage from "./pages/protected/Doctor/Historia-Clinica";
+import DoctorEvolucionesPage from "./pages/protected/Doctor/Evoluciones";
+import DoctorAntecedentesPage from "./pages/protected/Doctor/Antecedentes";
 
 function App() {
   return (
@@ -130,6 +134,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Administrador"]}>
                   <PatientAntecedentesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/pacientes/:slug/historia-clinica/evoluciones"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <PatientEvolucionesPage />
                 </Private_Routes>
               }
             />
@@ -270,6 +282,30 @@ function App() {
                   allowedRoles={["Medico", "Secretaria", "Administrador"]}
                 >
                   <DoctorPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/medicos/:slug/historia-clinica"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <DoctorHistoryPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/medicos/:slug/historia-clinica/evoluciones"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <DoctorEvolucionesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/medicos/:slug/historia-clinica/antecedentes"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <DoctorAntecedentesPage />
                 </Private_Routes>
               }
             />

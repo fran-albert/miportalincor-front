@@ -1,13 +1,10 @@
-import { usePatient } from "@/hooks/Patient/usePatient";
+import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import {
-  useAntecedentes,
-  useEvoluciones,
-} from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
+import { useAntecedentes, useEvoluciones } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { HistoryPage } from "@/components/Historia-Clinica/Page";
 
-const PatientHistoryPage = () => {
+const DoctorHistoryPage = () => {
   const params = useParams();
   const slug = params.slug;
   const slugString = slug as string;
@@ -15,10 +12,10 @@ const PatientHistoryPage = () => {
   const id = parseInt(slugParts[slugParts.length - 1], 10);
 
   const {
-    patient,
-    isLoading: isLoadingPatient,
-    error: patientError,
-  } = usePatient({
+    doctor,
+    isLoading: isLoadingDoctor,
+    error: doctorError,
+  } = useDoctor({
     auth: true,
     id,
   });
@@ -43,14 +40,14 @@ const PatientHistoryPage = () => {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Pacientes", href: "/pacientes" },
+    { label: "Médicos", href: "/medicos" },
     {
-      label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente",
-      href: `/pacientes/${patient?.slug}`,
+      label: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médico",
+      href: doctor ? `/medicos/${doctor.slug}` : "/medicos",
     },
     {
       label: "Historia Clínica",
-      href: `/pacientes/${patient?.slug}/historia-clinica`,
+      href: doctor ? `/medicos/${doctor.slug}/historia-clinica` : "#",
     },
   ];
 
@@ -58,30 +55,30 @@ const PatientHistoryPage = () => {
     <>
       <Helmet>
         <title>
-          {isLoadingPatient
-            ? "Paciente"
-            : `${patient?.firstName} ${patient?.lastName} - Historia Clínica`}
+          {isLoadingDoctor
+            ? "Doctor"
+            : `${doctor?.firstName} ${doctor?.lastName} - Historia Clínica`}
         </title>
         <meta
           name="description"
-          content={`Historia clínica del paciente ${patient?.firstName}.`}
+          content={`Historia clínica del doctor ${doctor?.firstName}.`}
         />
         <meta
           name="keywords"
-          content={`paciente, ${patient?.firstName}, historia clínica`}
+          content={`doctor, ${doctor?.firstName}, historia clínica, médico`}
         />
       </Helmet>
 
       <HistoryPage
-        userData={patient}
-        userType="patient"
+        userData={doctor}
+        userType="doctor"
         antecedentes={antecedentes}
         evoluciones={evoluciones}
-        isLoadingUser={isLoadingPatient}
+        isLoadingUser={isLoadingDoctor}
         isLoadingAntecedentes={isLoadingAntecedentes}
         isLoadingEvoluciones={isLoadingEvoluciones}
         breadcrumbItems={breadcrumbItems}
-        userError={patientError}
+        userError={doctorError}
         antecedentesError={antecedentesError}
         evolucionesError={evolucionesError}
         patientId={id}
@@ -90,4 +87,4 @@ const PatientHistoryPage = () => {
   );
 };
 
-export default PatientHistoryPage;
+export default DoctorHistoryPage;

@@ -2,11 +2,11 @@ import { usePatient } from "@/hooks/Patient/usePatient";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
-import AntecedentesComponent from "@/components/Antecedentes/Component";
-import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
-import useUserRole from "@/hooks/useRoles";
+import React from "react";
+import EvolucionesComponent from "@/components/Evoluciones/Component";
+import { useEvoluciones } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 
-const PatientAntecedentesPage = () => {
+const PatientEvolucionesPage: React.FC = () => {
   const params = useParams();
   const slug = params.slug;
   const slugString = slug as string;
@@ -23,15 +23,13 @@ const PatientAntecedentesPage = () => {
   });
 
   const {
-    error: antecedentesError,
-  } = useAntecedentes({
+    evoluciones,
+    error: evolucionesError,
+  } = useEvoluciones({
     auth: true,
     userId: id,
   });
 
-  const { session } = useUserRole();
-  const idDoctor = session?.id ? session.id : undefined;
-  
   const navigate = useNavigate();
 
   const isFirstLoadingPatient = isLoadingPatient && !patient;
@@ -52,15 +50,15 @@ const PatientAntecedentesPage = () => {
         <title>
           {isLoadingPatient
             ? "Paciente"
-            : `${patient?.firstName} ${patient?.lastName} - Antecedentes`}
+            : `${patient?.firstName} ${patient?.lastName}`}
         </title>
         <meta
           name="description"
-          content={`Antecedentes médicos del paciente ${patient?.firstName}.`}
+          content={`Información detallada sobre el paciente ${patient?.firstName}.`}
         />
         <meta
           name="keywords"
-          content={`paciente, ${patient?.firstName}, antecedentes, historia clínica`}
+          content={`paciente, ${patient?.firstName}, perfil`}
         />
       </Helmet>
 
@@ -70,19 +68,20 @@ const PatientAntecedentesPage = () => {
         </div>
       )}
       
-      {antecedentesError && (
+      {evolucionesError && (
         <div className="p-4 text-red-500">
-          Hubo un error al cargar los antecedentes.
+          Hubo un error al cargar las evoluciones.
         </div>
       )}
-      
-      <AntecedentesComponent
+      <EvolucionesComponent
         onBack={() => navigate(-1)}
-        idUser={String(id)}
-        idDoctor={idDoctor}
+        evoluciones={evoluciones}
+        userData={patient}
+        userType="patient"
+        patientId={id}
       />
     </>
   );
 };
 
-export default PatientAntecedentesPage;
+export default PatientEvolucionesPage;

@@ -5,10 +5,8 @@ import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUs
 import {
   PatientCardSkeleton,
   StudiesCardSkeleton,
-  StudiesTableSkeleton,
 } from "@/components/Skeleton/Patient";
-import StudiesComponent from "@/components/Studies/Component";
-import PatientInformation from "@/components/Patients/Dashboard/Patient-Information";
+import { PatientStudiesPage as GenericPatientStudiesPage } from "@/components/Studies/Page";
 import BreadcrumbComponent from "@/components/Breadcrumb";
 
 const PatientStudiesPage = () => {
@@ -93,29 +91,23 @@ const PatientStudiesPage = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Patient Information Section */}
+          {/* Studies Section with Modern Table */}
           <div className="w-full">
-            {isLoadingPatient ? (
-              <PatientCardSkeleton />
-            ) : (
-              patient && <PatientInformation patient={patient} />
-            )}
-          </div>
-
-          {/* Studies Section */}
-          <div className="w-full">
-            {isFetching ? (
-              <StudiesTableSkeleton />
-            ) : (
-              studies && (
-                <StudiesComponent
-                  idUser={Number(patient?.userId)}
-                  studies={studies}
-                  role="pacientes"
-                  isFetchingStudies={isFetching}
-                  slug={String(patient?.slug)}
-                />
-              )
+            {studies && (
+              <GenericPatientStudiesPage
+                userData={patient}
+                studies={studies}
+                loading={isFetching}
+                role="pacientes"
+                slug={String(patient?.slug)}
+                idUser={Number(patient?.userId)}
+                showUserInfo={false} // Ya mostramos la info del paciente arriba
+                breadcrumbItems={[]} // Sin breadcrumbs porque ya los mostramos
+                onRefresh={() => {
+                  // Aquí puedes agregar lógica de refresh si es necesaria
+                  window.location.reload();
+                }}
+              />
             )}
           </div>
         </div>
