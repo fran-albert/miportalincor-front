@@ -21,7 +21,7 @@ import type {
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -218,14 +218,15 @@ export const NutritionTable: React.FC<Props> = ({
     height: "w-20 md:w-24",
     imc: "w-20 md:w-24",
     targetWeight: "w-24 md:w-32",
-    observations: "w-[200px] md:w-[300px]",
-    actions: "w-20 md:w-24",
+    observations: "w-[200px] md:w-[250px]",
+    actions: "w-32 md:w-36",
   };
 
   return (
     <div className="w-full h-[400px] ">
-      <div className="min-w-[1000px]">
-        <Table className="w-full table-fixed">
+      <ScrollArea className="w-full h-full">
+        <div className="min-w-[1200px]">
+          <Table className="w-full table-fixed">
           <TableHeader className="bg-white shadow-sm sticky top-0 z-10">
             <TableRow>
               <TableHead className="w-12">
@@ -261,10 +262,9 @@ export const NutritionTable: React.FC<Props> = ({
             </TableRow>
           </TableHeader>
         </Table>
-        <ScrollArea className="h-[350px]">
-          <Table className="w-full table-fixed">
-            {/* <ScrollArea className="h-[350px]"> */}
-            <TableBody>
+          <ScrollArea className="h-[350px]">
+            <Table className="w-full table-fixed">
+              <TableBody>
               {nutritionData.map((entry, index) => (
                 <TableRow key={entry.id}>
                   <TableCell className="w-12">
@@ -367,12 +367,12 @@ export const NutritionTable: React.FC<Props> = ({
                       <Input
                         type="number"
                         name="imc"
-                        value={entry.imc.toFixed(1)}
+                        value={entry.imc.toFixed(2)}
                         readOnly
                         className="w-full bg-gray-50 cursor-not-allowed"
                       />
                     ) : (
-                      entry.imc.toFixed(1)
+                      entry.imc.toFixed(2)
                     )}
                   </TableCell>
                   <TableCell className={columnWidths.height}>
@@ -449,27 +449,30 @@ export const NutritionTable: React.FC<Props> = ({
                   </TableCell>
 
                   <TableCell className={columnWidths.actions}>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-1 items-center justify-center">
                       {editingId === entry.id ? (
                         <Button
                           onClick={() => handleSaveEdit(entry.id)}
-                          className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                          className="p-1.5 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                          size="sm"
                         >
-                          <Save size={20} className="text-green-600" />
+                          <Save size={16} className="text-green-600" />
                         </Button>
                       ) : (
                         <Button
                           onClick={() => handleEdit(entry.id)}
-                          className="p-2 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
+                          className="p-1.5 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
+                          size="sm"
                         >
-                          <Pencil size={20} className="text-blue-600" />
+                          <Pencil size={16} className="text-blue-600" />
                         </Button>
                       )}
                       <Button
                         onClick={() => handleDelete(entry.id)}
-                        className="p-2 rounded bg-red-100 hover:bg-red-200 transition-colors duration-200"
+                        className="p-1.5 rounded bg-red-100 hover:bg-red-200 transition-colors duration-200"
+                        size="sm"
                       >
-                        <Trash size={20} className="text-red-600" />
+                        <Trash size={16} className="text-red-600" />
                       </Button>
                     </div>
                   </TableCell>
@@ -477,7 +480,7 @@ export const NutritionTable: React.FC<Props> = ({
               ))}
               {newEntry && (
                 <TableRow>
-                  <TableCell className={columnWidths.index}></TableCell>
+                  <TableCell className="w-12"></TableCell>
                   <TableCell className={columnWidths.index}>
                     {nutritionData.length + 1}
                   </TableCell>
@@ -541,7 +544,7 @@ export const NutritionTable: React.FC<Props> = ({
                     <Input
                       type="number"
                       name="imc"
-                      value={(newEntry?.imc ?? 0).toFixed(1)}
+                      value={(newEntry?.imc ?? 0).toFixed(2)}
                       readOnly
                       className="w-full bg-gray-50 cursor-not-allowed"
                     />
@@ -578,9 +581,10 @@ export const NutritionTable: React.FC<Props> = ({
                   <TableCell className={columnWidths.actions}>
                     <Button
                       onClick={handleSaveNewEntry}
-                      className="p-2 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                      className="p-1.5 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                      size="sm"
                     >
-                      <Save size={20} className="text-green-600" />
+                      <Save size={16} className="text-green-600" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -600,9 +604,11 @@ export const NutritionTable: React.FC<Props> = ({
                 </tr>
               </tfoot>
             )}
-          </Table>
-        </ScrollArea>
-      </div>
+            </Table>
+          </ScrollArea>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </div>
   );
 };
