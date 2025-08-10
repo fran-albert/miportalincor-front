@@ -26,10 +26,10 @@ import PreOccupationalPreviewPage from "./pages/protected/Collaborator/Pre-Occup
 import NutritionPage from "./pages/protected/Patient/Nutrition";
 import CreateCollaboratorPage from "./pages/protected/Collaborator/Create";
 import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupattional/Create";
-import ListPreocuppationalExamsPage from "./pages/protected/Collaborator/Pre-Occupattional/List";
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
 import CompaniesPage from "./pages/protected/Companies";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
+import CollaboratorPage from "./pages/protected/Collaborator";
 
 function App() {
   return (
@@ -139,7 +139,7 @@ function App() {
               path="/incor-laboral/colaboradores/:slug"
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
-                  <ListPreocuppationalExamsPage />
+                  <CollaboratorPage />
                 </Private_Routes>
               }
             />
@@ -278,7 +278,9 @@ function App() {
             <Route
               path="/incor-laboral/colaboradores/agregar"
               element={
-                <Private_Routes allowedRoles={["Secretaria", "Administrador", "Médico"]}>
+                <Private_Routes
+                  allowedRoles={["Secretaria", "Administrador", "Médico"]}
+                >
                   <CreateCollaboratorPage />
                 </Private_Routes>
               }

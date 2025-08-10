@@ -47,6 +47,15 @@ export const getColumns = (roles: {
       ),
     },
     {
+      accessorKey: "company",
+      header: "Empresa",
+      cell: ({ row }) => (
+        <div className="flex flex-col ml-2">
+          <p className="text-sm font-medium">{row.original.company.name}</p>
+        </div>
+      ),
+    },
+    {
       accessorKey: "dni",
       header: "D.N.I.",
       cell: ({ row }) => (
