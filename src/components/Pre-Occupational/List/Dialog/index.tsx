@@ -39,7 +39,21 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
     useCollaboratorMedicalEvaluationMutations();
   const toggleDialog = () => setIsOpen(!isOpen);
   const navigate = useNavigate();
-  const { evaluationTypes } = useEvaluationType({ auth: true });
+  const { evaluationTypes: allEvaluationTypes } = useEvaluationType({ auth: true });
+  
+  // Filter evaluation types to only show specific ones
+  const allowedEvaluationTypes = [
+    "Preocupacional", 
+    "Periódico", 
+    "Salida (Retiro)", 
+    "Cambio de Puesto", 
+    "Libreta Sanitaria", 
+    "Otro"
+  ];
+  
+  const evaluationTypes = allEvaluationTypes.filter(type => 
+    allowedEvaluationTypes.includes(type.name)
+  );
   const { control, watch, reset } = useForm<{ DoctorId: string }>({
     defaultValues: { DoctorId: "" },
   });

@@ -19,6 +19,21 @@ export function getGenderLabel(gender: string): string {
   return gender === 'Masculino' ? 'Masculino' : 'Femenino';
 }
 
+export const formatDateOnly = (dateString: string): string => {
+  if (!dateString || dateString === "-") return "-";
+
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}-${month}-${year}`;
+  }
+
+  if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
+    return dateString;
+  }
+
+  return formatDate(dateString);
+};
+
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
 

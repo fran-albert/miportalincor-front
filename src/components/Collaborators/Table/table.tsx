@@ -20,6 +20,24 @@ export const CollaboratorsTable: React.FC<Props> = ({
     isDoctor,
     isAdmin,
   });
+
+  // Sort collaborators by company name (A-Z) then by collaborator name (A-Z)
+  const sortedCollaborators = [...Collaborators].sort((a, b) => {
+    // First sort by company name
+    const companyA = a.company?.name?.toLowerCase() || '';
+    const companyB = b.company?.name?.toLowerCase() || '';
+    
+    if (companyA !== companyB) {
+      return companyA.localeCompare(companyB);
+    }
+    
+    // If companies are the same, sort by collaborator full name
+    const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+    const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+    
+    return nameA.localeCompare(nameB);
+  });
+
   const customFilterFunction = (collaborator: Collaborator, query: string) => {
     const fullName = `${collaborator.firstName.toLowerCase()} ${collaborator.lastName.toLowerCase()}`;
     const reversedFullName = `${collaborator.lastName.toLowerCase()} ${collaborator.firstName.toLowerCase()}`;
@@ -45,7 +63,7 @@ export const CollaboratorsTable: React.FC<Props> = ({
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={columns}
-          data={Collaborators}
+          data={sortedCollaborators}
           searchPlaceholder="Buscar colaborador..."
           showSearch={true}
           customFilter={customFilterFunction}
