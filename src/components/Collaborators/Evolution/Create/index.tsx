@@ -25,6 +25,8 @@ import {
 import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
 import ErrorToast from "@/components/Toast/Error";
+import { DoctorSelect } from "@/components/Select/Doctor/select";
+
 interface Props {
   setEvolutionView: React.Dispatch<
     React.SetStateAction<"menu" | "list" | "new">
@@ -32,6 +34,12 @@ interface Props {
   collaboratorId: number;
   doctorId: number;
   companyEmail?: string;
+  collaboratorName?: string;
+  userRole?: {
+    isSecretary: boolean;
+    isAdmin: boolean;
+    isDoctor: boolean;
+  };
 }
 
 const CreateCollaboratorEvolution: React.FC<Props> = ({
@@ -39,30 +47,37 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
   collaboratorId,
   doctorId,
   companyEmail,
+  collaboratorName,
+  userRole,
 }) => {
   const { sendEmailNoteToCompanyMutation } = useEmailMutations();
   const { createEvolutionMutation } = useEvolutionMutations();
 
+  const showDoctorSelect = userRole?.isSecretary || userRole?.isAdmin;
+
   const form = useForm<EvolutionFormData>({
     resolver: zodResolver(evolutionSchema),
     defaultValues: {
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0], // Fecha de hoy por defecto, pero el usuario puede cambiarla
       doctor: "",
-      specialty: "",
+      doctorId: userRole?.isDoctor ? doctorId : undefined,
       consultationReason: "",
       currentIllness: "",
       companyNote: "",
       sendEmail: false,
-      companyEmail: companyEmail, // Use the passed company email or default to empty string
+      companyEmail: companyEmail,
     },
   });
 
   const onSubmit = async (data: EvolutionFormData) => {
     try {
+      // Use doctorId from form if select is shown, otherwise use the passed doctorId
+      const selectedDoctorId = showDoctorSelect ? Number(data.doctorId) : doctorId;
+      
       // Create evolution payload
       const evolutionPayload = {
         collaboratorId,
-        doctorId,
+        doctorId: selectedDoctorId,
         evolutionData: {
           fechaDiagnostico: data.date,
           motivoConsulta: data.consultationReason,
@@ -71,46 +86,38 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
         },
       };
 
-      // Create evolution
-      const evolutionPromise =
-        createEvolutionMutation.mutateAsync(evolutionPayload);
+      // Determine if email will be sent
+      const willSendEmail = data.sendEmail && data.companyNote && companyEmail;
+      
+      // Create the main promise that includes evolution creation and optional email
+      const mainProcess = async () => {
+        // Create evolution
+        await createEvolutionMutation.mutateAsync(evolutionPayload);
+        
+        // Send email if requested
+        if (willSendEmail) {
+          const emailPayload = {
+            to: companyEmail,
+            subject: `Evolución Médica - ${collaboratorName || "Colaborador"}`,
+            text: data.companyNote!,  // We know it's defined because of willSendEmail check
+          };
+          
+          await sendEmailNoteToCompanyMutation.mutateAsync(emailPayload);
+        }
+      };
 
-      toast.promise(evolutionPromise, {
-        loading: <LoadingToast message="Creando evolución..." />,
-        success: <SuccessToast message="Evolución creada con éxito" />,
+      // Show a single toast for the entire process
+      toast.promise(mainProcess(), {
+        loading: <LoadingToast message={willSendEmail ? "Creando evolución y enviando email..." : "Creando evolución..."} />,
+        success: <SuccessToast message={willSendEmail ? "Evolución creada y email enviado con éxito" : "Evolución creada con éxito"} />,
         error: (error) => {
           const errorMessage =
-            error.response?.data?.message || "Error al crear la evolución";
+            error.response?.data?.message || "Error al procesar la solicitud";
           return <ErrorToast message={errorMessage} />;
         },
       });
 
-      await evolutionPromise;
-
-      // Send email if requested
-      if (data.sendEmail && data.companyNote && companyEmail) {
-        const emailPayload = {
-          to: companyEmail,
-          subject: `Nota de Evolución Médica - ${data.doctor}`,
-          text: data.companyNote,
-        };
-
-        const emailPromise =
-          sendEmailNoteToCompanyMutation.mutateAsync(emailPayload);
-
-        toast.promise(emailPromise, {
-          loading: <LoadingToast message="Enviando email..." />,
-          success: <SuccessToast message="Email enviado con éxito" />,
-          error: (error) => {
-            const errorMessage =
-              error.response?.data?.message || "Error al enviar el email";
-            return <ErrorToast message={errorMessage} />;
-          },
-        });
-
-        await emailPromise;
-      }
-
+      await mainProcess();
       setEvolutionView("list");
     } catch (error) {
       console.error("Error al procesar la evolución:", error);
@@ -130,7 +137,7 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="date"
@@ -144,32 +151,40 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="doctor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Doctor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nombre del doctor" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="specialty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Especialidad</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Especialidad médica" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {showDoctorSelect ? (
+                  <FormField
+                    control={form.control}
+                    name="doctorId"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Doctor</FormLabel>
+                        <FormControl>
+                          <DoctorSelect control={form.control} name="doctorId" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <FormField
+                    control={form.control}
+                    name="doctor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Doctor</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Nombre del doctor" 
+                            {...field} 
+                            disabled
+                            value="Mi evaluación"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name="consultationReason"

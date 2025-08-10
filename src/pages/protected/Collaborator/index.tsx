@@ -50,7 +50,7 @@ const CollaboratorPage = () => {
   const params = useParams();
   const slug = params.slug as string;
   const { id, formattedName } = parseSlug(slug);
-  const { isSecretary, isAdmin, session } = useRoles();
+  const { isSecretary, isAdmin, session, isDoctor } = useRoles();
   const canEdit = isSecretary || isAdmin;
   const { collaborator, isLoading } = useCollaborator({
     auth: true,
@@ -179,6 +179,12 @@ const CollaboratorPage = () => {
                   companyEmail={collaborator.company.email}
                   doctorId={Number(session?.id)}
                   collaboratorId={id}
+                  collaboratorName={`${collaborator.firstName} ${collaborator.lastName}`}
+                  userRole={{
+                    isSecretary,
+                    isAdmin,
+                    isDoctor,
+                  }}
                 />
               )}
             </TabsContent>
