@@ -26,6 +26,7 @@ import SuccessToast from "@/components/Toast/Success";
 import LoadingToast from "@/components/Toast/Loading";
 import ErrorToast from "@/components/Toast/Error";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
+import { useDoctor } from "@/hooks/Doctor/useDoctor";
 
 interface Props {
   setEvolutionView: React.Dispatch<
@@ -52,8 +53,17 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
 }) => {
   const { sendEmailNoteToCompanyMutation } = useEmailMutations();
   const { createEvolutionMutation } = useEvolutionMutations();
+  
+  // Get doctor information when user is a doctor
+  const { doctor, isLoading: isDoctorLoading } = useDoctor({ 
+    auth: userRole?.isDoctor, 
+    id: doctorId 
+  });
 
   const showDoctorSelect = userRole?.isSecretary || userRole?.isAdmin;
+  
+  // Show loading state if doctor is still loading and user is a doctor
+  const isLoadingDoctor = userRole?.isDoctor && isDoctorLoading;
 
   const form = useForm<EvolutionFormData>({
     resolver: zodResolver(evolutionSchema),
@@ -107,7 +117,7 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
       };
 
       // Show a single toast for the entire process
-      toast.promise(mainProcess(), {
+      await toast.promise(mainProcess(), {
         loading: <LoadingToast message={willSendEmail ? "Creando evolución y enviando email..." : "Creando evolución..."} />,
         success: <SuccessToast message={willSendEmail ? "Evolución creada y email enviado con éxito" : "Evolución creada con éxito"} />,
         error: (error) => {
@@ -117,12 +127,35 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
         },
       });
 
-      await mainProcess();
       setEvolutionView("list");
     } catch (error) {
       console.error("Error al procesar la evolución:", error);
     }
   };
+
+  // Show loading state while doctor info is loading
+  if (isLoadingDoctor) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Nueva Evolución</h3>
+          <Button variant="ghost" onClick={() => setEvolutionView("menu")}>
+            Volver
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center space-y-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                <p className="text-sm text-gray-500">Cargando información del médico...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -157,7 +190,7 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
                     name="doctorId"
                     render={() => (
                       <FormItem>
-                        <FormLabel>Doctor</FormLabel>
+                        <FormLabel>Médico</FormLabel>
                         <FormControl>
                           <DoctorSelect control={form.control} name="doctorId" />
                         </FormControl>
@@ -171,13 +204,13 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
                     name="doctor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Doctor</FormLabel>
+                        <FormLabel>Médico</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Nombre del doctor" 
-                            {...field} 
+                          <Input
+                            placeholder="Nombre del médico"
+                            {...field}
                             disabled
-                            value="Mi evaluación"
+                            value={doctor ? `${doctor.firstName} ${doctor.lastName}` : "Cargando..."}
                           />
                         </FormControl>
                         <FormMessage />
@@ -280,7 +313,8 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
                   className="flex-1 bg-greenPrimary hover:bg-teal-600 text-white"
                   disabled={
                     createEvolutionMutation.isPending ||
-                    sendEmailNoteToCompanyMutation.isPending
+                    sendEmailNoteToCompanyMutation.isPending ||
+                    isLoadingDoctor
                   }
                 >
                   Guardar Evolución
