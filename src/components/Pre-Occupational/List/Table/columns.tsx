@@ -84,7 +84,7 @@ export const getColumns = (
                   evaluationType={medicalEvaluation.evaluationType.name}
                 />
                 <ViewButton
-                  slug={`${slug}/examen/${row.original.id}`}
+                  slug={`${slug}/examen/${row.original.medicalEvaluation.id}`}
                   text="Ver Exámen"
                   path="incor-laboral/colaboradores"
                 />
