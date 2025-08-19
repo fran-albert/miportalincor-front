@@ -18,15 +18,19 @@ export interface MedicacionActual {
   createdAt: string;
 }
 
-export interface Evolucion extends Base {
+export interface EvolucionData extends Base {
   value: string;
-  observaciones: string | null
-  dataType: DataType,
+  observaciones: string | null;
+  dataType: DataType;
+}
+
+export interface Evolucion extends Base {
   doctor: {
-    userId: number,
+    userId: number;
     firstName: string;
     lastName: string;
-  }
+  };
+  data: EvolucionData[];
 }
 
 export interface AntecedentesResponse {

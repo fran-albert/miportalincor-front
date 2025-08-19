@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import CreateEvolucionDialog from "../Create";
-import { EvolucionesResponse } from "@/types/Antecedentes/Antecedentes";
+import { EvolucionesResponse, Evolucion as EvolucionType, EvolucionData } from "@/types/Antecedentes/Antecedentes";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
@@ -50,14 +50,14 @@ export default function EvolucionesComponent({
   const [selectedConsultaToView, setSelectedConsultaToView] = useState<{
     fechaConsulta: string;
     fechaCreacion: string;
-    doctor: any;
+    doctor: EvolucionType['doctor'];
     especialidad: string | null;
     motivoConsulta: string | null;
     enfermedadActual: string | null;
     diagnosticosPresuntivos: string | null;
-    evolucionPrincipal: any;
-    mediciones: any[];
-    evoluciones: any[];
+    evolucionPrincipal: EvolucionType | null;
+    mediciones: EvolucionData[];
+    evoluciones: EvolucionType[];
   } | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
@@ -85,54 +85,36 @@ export default function EvolucionesComponent({
   };
 
   // Función para obtener la fecha de consulta de una evolución
-  const getFechaConsulta = (
-    evoluciones: any[],
-    doctorId: number,
-    createdAt: string
-  ) => {
-    const baseTime = new Date(createdAt).getTime();
-    const timeWindow = 60000; // 1 minuto en milisegundos
-
-    const fechaEvolucion = evoluciones.find((e: any) => {
-      if (e.doctor.userId !== doctorId) return false;
-      if (e.dataType.name.toLowerCase() !== "fecha de consulta") return false;
-
-      const evolucionTime = new Date(e.createdAt).getTime();
-      const timeDiff = Math.abs(evolucionTime - baseTime);
-
-      return timeDiff <= timeWindow;
-    });
-
-    return fechaEvolucion
-      ? fechaEvolucion.value
-      : new Date(createdAt).toISOString().split("T")[0];
+  const getFechaConsulta = (evolucion: EvolucionType) => {
+    // Buscar el campo de fecha de consulta en el array data
+    const fechaData = evolucion.data.find(d => 
+      d.dataType && d.dataType.name.toLowerCase() === 'fecha de consulta'
+    );
+    
+    return fechaData ? fechaData.value : new Date(evolucion.createdAt).toISOString().split('T')[0];
   };
 
   // Función para agrupar evoluciones por fecha de consulta
-  const groupEvolucionesByConsulta = (evoluciones: any[]) => {
+  const groupEvolucionesByConsulta = (evoluciones: EvolucionType[]) => {
     const grouped: {
       [key: string]: {
         fechaConsulta: string;
         fechaCreacion: string;
-        doctor: any;
+        doctor: EvolucionType['doctor'];
         especialidad: string | null;
         motivoConsulta: string | null;
         enfermedadActual: string | null;
         diagnosticosPresuntivos: string | null;
-        evolucionPrincipal: any;
-        mediciones: any[];
-        evoluciones: any[];
+        evolucionPrincipal: EvolucionType | null;
+        mediciones: EvolucionData[];
+        evoluciones: EvolucionType[];
       };
     } = {};
 
-    // Primero, crear todas las agrupaciones únicas basadas en fecha de consulta
-    evoluciones.forEach((evolucion: any) => {
-      const fechaConsulta = getFechaConsulta(
-        evoluciones,
-        evolucion.doctor.userId,
-        evolucion.createdAt
-      );
-      const key = fechaConsulta;
+    // Procesar cada evolución
+    evoluciones.forEach((evolucion: EvolucionType) => {
+      const fechaConsulta = getFechaConsulta(evolucion);
+      const key = `${fechaConsulta}_${evolucion.doctor.userId}`; // Agrupar por fecha y doctor
 
       if (!grouped[key]) {
         grouped[key] = {
@@ -143,48 +125,41 @@ export default function EvolucionesComponent({
           motivoConsulta: null,
           enfermedadActual: null,
           diagnosticosPresuntivos: null,
-          evolucionPrincipal: null,
+          evolucionPrincipal: evolucion,
           mediciones: [],
           evoluciones: [],
         };
       }
-    });
 
-    // Luego, clasificar cada evolución
-    evoluciones.forEach((evolucion: any) => {
-      const fechaConsulta = getFechaConsulta(
-        evoluciones,
-        evolucion.doctor.userId,
-        evolucion.createdAt
-      );
-      const key = fechaConsulta;
-
-      if (evolucion.dataType.category === "MEDICION") {
-        grouped[key].mediciones.push(evolucion);
-      } else {
-        const dataTypeName = evolucion.dataType.name.toLowerCase();
-
-        if (dataTypeName.includes("especialidad")) {
-          grouped[key].especialidad = evolucion.value;
-        } else if (dataTypeName.includes("motivo")) {
-          grouped[key].motivoConsulta = evolucion.value;
-        } else if (dataTypeName.includes("enfermedad actual")) {
-          grouped[key].enfermedadActual = evolucion.value;
-        } else if (
-          dataTypeName.includes("diagnóstico presuntivo") ||
-          dataTypeName.includes("diagnostico presuntivo")
-        ) {
-          grouped[key].diagnosticosPresuntivos = evolucion.value;
+      // Procesar cada item de data dentro de la evolución
+      evolucion.data.forEach((dataItem: EvolucionData) => {
+        if (!dataItem.dataType) return;
+        
+        const dataTypeName = dataItem.dataType.name.toLowerCase();
+        
+        if (dataItem.dataType.category === "MEDICION") {
+          // Agregar a mediciones
+          grouped[key].mediciones.push(dataItem);
+        } else {
+          // Clasificar evoluciones no-medición
+          if (dataTypeName === "fecha de consulta") {
+            // Ya procesado arriba
+          } else if (dataTypeName.includes("especialidad")) {
+            grouped[key].especialidad = dataItem.value;
+          } else if (dataTypeName.includes("motivo de consulta")) {
+            grouped[key].motivoConsulta = dataItem.value;
+          } else if (dataTypeName.includes("enfermedad actual")) {
+            grouped[key].enfermedadActual = dataItem.value;
+          } else if (
+            dataTypeName.includes("diagnóstico presuntivo") ||
+            dataTypeName.includes("diagnostico presuntivo")
+          ) {
+            grouped[key].diagnosticosPresuntivos = dataItem.value;
+          }
         }
+      });
 
-        if (
-          !grouped[key].evolucionPrincipal &&
-          dataTypeName !== "fecha de consulta"
-        ) {
-          grouped[key].evolucionPrincipal = evolucion;
-        }
-      }
-
+      // Agregar la evolución completa al grupo
       grouped[key].evoluciones.push(evolucion);
     });
 
@@ -203,7 +178,7 @@ export default function EvolucionesComponent({
     ? groupEvolucionesByConsulta(evoluciones.evoluciones)
     : [];
 
-  const filteredConsultas = consultasAgrupadas.filter((consulta: any) => {
+  const filteredConsultas = consultasAgrupadas.filter((consulta) => {
     const matchesSearch =
       consulta.motivoConsulta
         ?.toLowerCase()
@@ -324,7 +299,7 @@ export default function EvolucionesComponent({
               </CardContent>
             </Card>
           ) : (
-            filteredConsultas.map((consulta: any, index: number) => {
+            filteredConsultas.map((consulta, index) => {
               const [year, month, day] = consulta.fechaConsulta.split("-");
               const formattedDate = new Date(
                 parseInt(year),
@@ -420,8 +395,8 @@ export default function EvolucionesComponent({
                                     .slice(0, 4)
                                     .map(
                                       (
-                                        medicion: any,
-                                        medicionIndex: number
+                                        medicion,
+                                        medicionIndex
                                       ) => (
                                         <Badge
                                           key={medicionIndex}
@@ -589,7 +564,7 @@ export default function EvolucionesComponent({
                     <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {selectedConsultaToView.mediciones.map(
-                          (medicion: any, index: number) => (
+                          (medicion, index) => (
                             <div
                               key={index}
                               className="bg-white p-2 rounded border text-center relative group"
