@@ -16,7 +16,7 @@ interface Props {
 const DEFAULT_DOCTOR = {
   name: "BONIFACIO Ma. CECILIA",
   license: "M.P. 96533 - M.L. 7299",
-  speciality: "Médica Cardióloga",
+  speciality: "Especialista en Medicina del Trabajo",
   signatureUrl:
     "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
 };
@@ -36,7 +36,7 @@ const FooterHtmlConditional: React.FC<Props> = ({
   const name = useCustom && doctorName ? doctorName : DEFAULT_DOCTOR.name;
   const licence =
     useCustom && doctorLicense ? doctorLicense : DEFAULT_DOCTOR.license;
-  const speciality = useCustom && doctorSpeciality;
+  const speciality = useCustom && doctorSpeciality ? doctorSpeciality : DEFAULT_DOCTOR.speciality;
   const sigUrl =
     useCustom && signatureUrl ? signatureUrl : DEFAULT_DOCTOR.signatureUrl;
   const sealImageUrl = useCustom && sealUrl ? sealUrl : undefined;
