@@ -1,6 +1,6 @@
 import path from "path";
 import react from "@vitejs/plugin-react";
-import { defineConfig, normalizePath, loadEnv } from "vite";
+import { defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { createRequire } from "module";
 
@@ -8,10 +8,7 @@ const require = createRequire(import.meta.url);
 const pdfjsDistPath = path.dirname(require.resolve("pdfjs-dist/package.json"));
 const cMapsDir = normalizePath(path.join(pdfjsDistPath, "cmaps"));
 
-export default defineConfig(({ command, mode }) => {
-  // Cargar variables de entorno basadas en el modo
-  const env = loadEnv(mode, process.cwd(), '');
-  
+export default defineConfig(({ mode }) => {
   // Determinar configuración específica del entorno
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
