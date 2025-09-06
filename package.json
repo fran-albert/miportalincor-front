@@ -4,10 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vite --mode development",
+    "dev:staging": "vite --mode staging",
+    "build": "tsc -b && vite build --mode production",
+    "build:staging": "tsc -b && vite build --mode staging",
+    "build:development": "tsc -b && vite build --mode development",
+    "preview": "vite preview",
+    "preview:staging": "vite preview --mode staging",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "type-check": "tsc -b --noEmit",
+    "clean": "rm -rf dist",
+    "start:prod": "npm run build && npm run preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
