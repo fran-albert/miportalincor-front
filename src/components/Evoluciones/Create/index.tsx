@@ -25,7 +25,9 @@ interface Parametro {
   id: number;
   dataType: DataType;
   valor: string;
+  isRequired?: boolean;
 }
+
 
 interface Props {
   isOpen: boolean;
@@ -68,7 +70,6 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   const { promiseToast } = useToastContext();
 
   const [newEvolucion, setNewEvolucion] = useState({
-    fecha: "",
     motivoConsulta: "",
     enfermedadActual: "",
     diagnosticosPresuntivos: "",
@@ -137,8 +138,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
       }
 
       if (fechaType) {
-        const fechaValue =
-          newEvolucion.fecha || new Date().toISOString().split("T")[0];
+        const fechaValue = new Date().toISOString().split("T")[0];
         dataValues.push({
           idDataType: fechaType.id.toString(),
           value: fechaValue,
@@ -223,7 +223,6 @@ const CreateEvolucionDialog: React.FC<Props> = ({
 
   const handleClose = () => {
     setNewEvolucion({
-      fecha: "",
       motivoConsulta: "",
       enfermedadActual: "",
       diagnosticosPresuntivos: "",
@@ -245,27 +244,19 @@ const CreateEvolucionDialog: React.FC<Props> = ({
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-3">
-              <Label
-                htmlFor="fechaEvolucion"
-                className="text-sm font-medium text-gray-700"
-              >
-                Fecha de Consulta
-              </Label>
-              <Input
-                id="fechaEvolucion"
-                type="date"
-                value={newEvolucion.fecha}
-                onChange={(e) =>
-                  setNewEvolucion({
-                    ...newEvolucion,
-                    fecha: e.target.value,
-                  })
-                }
-                className="focus:ring-2 focus:ring-green-500"
-              />
-            </div>
+          {/* Información de fecha automática */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-700 font-medium">
+              📅 Fecha de Consulta: {new Date().toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Se registrará automáticamente la fecha de hoy
+            </p>
           </div>
 
           <div className="grid gap-3">
@@ -339,7 +330,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
               Parámetros de Medición
             </Label>
 
-            {/* Selector para agregar nuevos par�metros */}
+            {/* Selector para agregar nuevos parámetros */}
             <div className="grid grid-cols-12 gap-2 items-end">
               <div className="col-span-5">
                 <Label className="text-xs text-gray-600">
@@ -380,7 +371,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Lista de par�metros agregados */}
+            {/* Lista de parámetros agregados */}
             {parametrosSeleccionados.length === 0 ? (
               <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
                 <p className="text-sm text-gray-500">
