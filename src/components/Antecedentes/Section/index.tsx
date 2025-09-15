@@ -13,14 +13,13 @@ import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { CreateAntecedenteDialog } from "../Create";
-import { formatDate } from "@/common/helpers/helpers";
 import { ViewAntecedenteDialog } from "../View";
 
 type UserData = Patient | Doctor;
 
 interface Props {
   userData: UserData;
-  userType?: 'patient' | 'doctor';
+  userType?: "patient" | "doctor";
   antecedentes: AntecedentesResponse | undefined;
   readOnly?: boolean;
   showEditActions?: boolean;
@@ -28,13 +27,13 @@ interface Props {
   patient?: Patient;
 }
 
-const AntecedentesSection: React.FC<Props> = ({ 
+const AntecedentesSection: React.FC<Props> = ({
   userData,
-  userType = 'patient',
-  antecedentes, 
-  readOnly = false, 
+  userType = "patient",
+  antecedentes,
+  readOnly = false,
   showEditActions = true,
-  patient // Para compatibilidad hacia atrás
+  patient, // Para compatibilidad hacia atrás
 }) => {
   // Usar userData si está disponible, si no usar patient para compatibilidad
   const currentUser = userData || patient;
@@ -115,9 +114,6 @@ const AntecedentesSection: React.FC<Props> = ({
                 className="flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
                 onClick={() => handleAntecedenteClick(ant)}
               >
-                <span className="text-xs text-gray-500 font-mono">
-                  {formatDate(ant.createdAt)}
-                </span>
                 <span className="text-sm font-medium text-gray-800">
                   {ant.observaciones}
                 </span>
