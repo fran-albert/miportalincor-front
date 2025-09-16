@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Calendar, Plus, Activity, ChevronDown, ChevronRight } from "lucide-react";
+import { User, Calendar, Plus, Activity } from "lucide-react";
 import { useState } from "react";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
@@ -70,10 +70,21 @@ const EvolutionSection: React.FC<Props> = ({
   } | null>(null);
   const [isViewEvolucionModalOpen, setIsViewEvolucionModalOpen] =
     useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const handleConsultaClick = (consulta: typeof selectedConsultaToView) => {
-    setSelectedConsultaToView(consulta);
+  const handleConsultaClick = (evolucion: typeof evolucionesLista[0]) => {
+    const consultaData = {
+      fechaConsulta: evolucion.fechaConsulta,
+      fechaCreacion: evolucion.fechaCreacion,
+      doctor: evolucion.doctor,
+      especialidad: evolucion.especialidad,
+      motivoConsulta: evolucion.motivoConsulta,
+      enfermedadActual: evolucion.enfermedadActual,
+      diagnosticosPresuntivos: evolucion.diagnosticosPresuntivos,
+      evolucionPrincipal: evolucion.evolucionCompleta,
+      mediciones: evolucion.mediciones,
+      evoluciones: [evolucion.evolucionCompleta]
+    };
+    setSelectedConsultaToView(consultaData);
     setIsViewEvolucionModalOpen(true);
   };
 
@@ -87,150 +98,65 @@ const EvolutionSection: React.FC<Props> = ({
     return fechaData ? fechaData.value : new Date(evolucion.createdAt).toISOString().split('T')[0];
   };
 
-  // Función para agrupar evoluciones por fecha de consulta
-  const groupEvolucionesByConsulta = (evoluciones: EvolucionType[]) => {
-    
-    const grouped: { [key: string]: {
-      fechaConsulta: string;
-      fechaCreacion: string;
-      doctor: EvolucionType['doctor'];
-      especialidad: string | null;
-      motivoConsulta: string | null;
-      enfermedadActual: string | null;
-      diagnosticosPresuntivos: string | null;
-      evolucionPrincipal: EvolucionType | null;
-      mediciones: EvolucionData[];
-      evoluciones: EvolucionType[];
-    }} = {};
-    
-    // Procesar cada evolución
-    evoluciones.forEach(evolucion => {
+  // Función para procesar evoluciones en una lista simple
+  const processEvolucionesForList = (evoluciones: EvolucionType[]) => {
+    const processed = evoluciones.map(evolucion => {
       const fechaConsulta = getFechaConsulta(evolucion);
-      const key = `${fechaConsulta}_${evolucion.doctor.userId}`; // Agrupar por fecha y doctor
-      
-      if (!grouped[key]) {
-        grouped[key] = {
-          fechaConsulta: fechaConsulta,
-          fechaCreacion: evolucion.createdAt,
-          doctor: evolucion.doctor,
-          especialidad: null,
-          motivoConsulta: null,
-          enfermedadActual: null,
-          diagnosticosPresuntivos: null,
-          evolucionPrincipal: evolucion,
-          mediciones: [],
-          evoluciones: []
-        };
-      }
-      
-      // Procesar cada item de data dentro de la evolución
+
+      // Extraer datos específicos
+      let especialidad: string | null = null;
+      let motivoConsulta: string | null = null;
+      let enfermedadActual: string | null = null;
+      let diagnosticosPresuntivos: string | null = null;
+      const mediciones: EvolucionData[] = [];
+
       evolucion.data.forEach(dataItem => {
         if (!dataItem.dataType) return;
-        
+
         const dataTypeName = dataItem.dataType.name.toLowerCase();
-        
+
         if (dataItem.dataType.category === 'MEDICION') {
-          // Agregar a mediciones
-          grouped[key].mediciones.push(dataItem);
+          mediciones.push(dataItem);
         } else {
-          // Clasificar evoluciones no-medición
-          if (dataTypeName === 'fecha de consulta') {
-            // Ya procesado arriba
-          } else if (dataTypeName.includes('especialidad')) {
-            grouped[key].especialidad = dataItem.value;
+          if (dataTypeName.includes('especialidad')) {
+            especialidad = dataItem.value;
           } else if (dataTypeName.includes('motivo de consulta')) {
-            grouped[key].motivoConsulta = dataItem.value;
+            motivoConsulta = dataItem.value;
           } else if (dataTypeName.includes('enfermedad actual')) {
-            grouped[key].enfermedadActual = dataItem.value;
+            enfermedadActual = dataItem.value;
           } else if (dataTypeName.includes('diagnóstico presuntivo') || dataTypeName.includes('diagnostico presuntivo')) {
-            grouped[key].diagnosticosPresuntivos = dataItem.value;
+            diagnosticosPresuntivos = dataItem.value;
           }
         }
       });
-      
-      // Agregar la evolución completa al grupo
-      grouped[key].evoluciones.push(evolucion);
-    });
-    
-    const result = Object.values(grouped).filter(consulta => {
-      // Filtrar consultas que tengan contenido real (no solo fecha)
-      const hasContent = consulta.motivoConsulta || 
-                        consulta.enfermedadActual || 
-                        consulta.diagnosticosPresuntivos || 
-                        consulta.especialidad || 
-                        consulta.mediciones.length > 0;
-      
-      return hasContent;
-    });
-    
-    return result;
-  };
 
-  const consultasAgrupadas = evoluciones ? groupEvolucionesByConsulta(evoluciones.evoluciones) : [];
-
-  // Función para agrupar las consultas por mes/año
-  const groupConsultasByMonthYear = (consultas: typeof consultasAgrupadas) => {
-    const grouped: { [key: string]: typeof consultasAgrupadas } = {};
-    
-    consultas.forEach(consulta => {
-      const [year, month] = consulta.fechaConsulta.split('-');
-      const monthNames = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-      ];
-      const monthName = monthNames[parseInt(month) - 1];
-      const groupKey = `${monthName} ${year}`;
-      
-      if (!grouped[groupKey]) {
-        grouped[groupKey] = [];
-      }
-      grouped[groupKey].push(consulta);
+      return {
+        id: evolucion.id,
+        fechaConsulta,
+        fechaCreacion: evolucion.createdAt,
+        doctor: evolucion.doctor,
+        especialidad,
+        motivoConsulta,
+        enfermedadActual,
+        diagnosticosPresuntivos,
+        mediciones,
+        evolucionCompleta: evolucion
+      };
     });
 
-    // Ordenar por fecha (más reciente primero)
-    const sortedGroups = Object.keys(grouped).sort((a, b) => {
-      const [monthA, yearA] = a.split(' ');
-      const [monthB, yearB] = b.split(' ');
-      const monthNames = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-      ];
-      const monthIndexA = monthNames.indexOf(monthA);
-      const monthIndexB = monthNames.indexOf(monthB);
-      
-      if (yearA !== yearB) {
-        return parseInt(yearB) - parseInt(yearA);
-      }
-      return monthIndexB - monthIndexA;
-    });
-
-    return sortedGroups.map(key => ({
-      groupKey: key,
-      consultas: grouped[key].sort((a, b) => 
-        new Date(b.fechaConsulta).getTime() - new Date(a.fechaConsulta).getTime()
+    // Filtrar solo evoluciones con contenido y ordenar por fecha más reciente
+    return processed
+      .filter(consulta =>
+        consulta.motivoConsulta ||
+        consulta.enfermedadActual ||
+        consulta.diagnosticosPresuntivos ||
+        consulta.especialidad ||
+        consulta.mediciones.length > 0
       )
-    }));
+      .sort((a, b) => new Date(b.fechaConsulta).getTime() - new Date(a.fechaConsulta).getTime());
   };
 
-  const consultasGroupedByMonth = groupConsultasByMonthYear(consultasAgrupadas);
-
-  // Función para toggle de expansión de grupos
-  const toggleGroupExpansion = (groupKey: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupKey)) {
-      newExpanded.delete(groupKey);
-    } else {
-      newExpanded.add(groupKey);
-    }
-    setExpandedGroups(newExpanded);
-  };
-
-  // Expandir automáticamente el primer grupo si no hay ninguno expandido
-  React.useEffect(() => {
-    if (consultasGroupedByMonth.length > 0 && expandedGroups.size === 0) {
-      setExpandedGroups(new Set([consultasGroupedByMonth[0].groupKey]));
-    }
-  }, [consultasGroupedByMonth.length]);
+  const evolucionesLista = evoluciones ? processEvolucionesForList(evoluciones.evoluciones) : [];
 
   const handleNavigateToEvoluciones = () => {
     const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
@@ -290,137 +216,38 @@ const EvolutionSection: React.FC<Props> = ({
                 </p>
               </div>
             ) : (
-              consultasGroupedByMonth.map((group) => (
-                <div key={group.groupKey} className="space-y-2">
-                  {/* Header del grupo con contador */}
-                  <div
-                    className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => toggleGroupExpansion(group.groupKey)}
-                  >
-                    <div className="flex items-center gap-2">
-                      {expandedGroups.has(group.groupKey) ? (
-                        <ChevronDown className="h-4 w-4 text-gray-600" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-600" />
-                      )}
-                      <span className="font-medium text-gray-800 text-sm">
-                        {group.groupKey}
-                      </span>
-                      <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200">
-                        {group.consultas.length} {group.consultas.length === 1 ? 'consulta' : 'consultas'}
-                      </Badge>
-                    </div>
-                  </div>
+              <div className="space-y-2">
+                {evolucionesLista.map((evolucion) => {
+                  // Formatear fecha simple
+                  const [year, month, day] = evolucion.fechaConsulta.split('-');
+                  const formattedDate = `${day}/${month}/${year}`;
 
-                  {/* Contenido del grupo */}
-                  {expandedGroups.has(group.groupKey) && (
-                    <div className="space-y-3 ml-2">
-                      {group.consultas.map((consulta, index) => {
-                        // Formatear fecha sin problemas de zona horaria
-                        const [year, month, day] = consulta.fechaConsulta.split('-');
-                        const formattedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString('es-AR', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        });
-                        
-                        return (
-                          <div
-                            key={`${group.groupKey}-consulta-${index}`}
-                            className="border-l-4 border-teal-500 pl-4 py-3 bg-white rounded-r-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
-                            onClick={() => handleConsultaClick(consulta)}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs font-medium bg-teal-50 text-teal-700 border-teal-200"
-                                >
-                                  {consulta.doctor.firstName} {consulta.doctor.lastName}
-                                </Badge>
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>{formattedDate}</span>
-                                </div>
-                                {consulta.especialidad && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                                  >
-                                    {consulta.especialidad}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              {consulta.motivoConsulta && (
-                                <div>
-                                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                    Motivo de Consulta:
-                                  </span>
-                                  <p className="text-sm text-gray-800 mt-1">
-                                    {truncateText(consulta.motivoConsulta, 80)}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {consulta.enfermedadActual && (
-                                <div>
-                                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                    Enfermedad Actual:
-                                  </span>
-                                  <p className="text-sm text-gray-700 mt-1">
-                                    {truncateText(consulta.enfermedadActual, 100)}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {consulta.diagnosticosPresuntivos && (
-                                <div>
-                                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                    Diagnósticos Presuntivos:
-                                  </span>
-                                  <p className="text-sm text-gray-700 mt-1">
-                                    {truncateText(consulta.diagnosticosPresuntivos, 100)}
-                                  </p>
-                                </div>
-                              )}
-                              
-                              {consulta.mediciones.length > 0 && (
-                                <div>
-                                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                    Mediciones ({consulta.mediciones.length}):
-                                  </span>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {consulta.mediciones.slice(0, 3).map((medicion, medicionIndex) => (
-                                      <Badge
-                                        key={medicionIndex}
-                                        variant="outline"
-                                        className="text-xs bg-purple-50 text-purple-700 border-purple-200"
-                                      >
-                                        {medicion.dataType.name}: {medicion.value}
-                                      </Badge>
-                                    ))}
-                                    {consulta.mediciones.length > 3 && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs bg-gray-50 text-gray-600 border-gray-200"
-                                      >
-                                        +{consulta.mediciones.length - 3} más
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                  return (
+                    <div
+                      key={evolucion.id}
+                      className="border border-gray-200 rounded p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => handleConsultaClick(evolucion)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-gray-900">
+                            {formattedDate}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            Dr. {evolucion.doctor.firstName} {evolucion.doctor.lastName}
+                          </span>
+                        </div>
+                      </div>
+
+                      {evolucion.motivoConsulta && (
+                        <p className="text-sm text-gray-700 mt-2">
+                          {truncateText(evolucion.motivoConsulta, 80)}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))
+                  );
+                })}
+              </div>
             )}
           </div>
         </CardContent>

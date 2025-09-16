@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Activity } from "lucide-react";
+import { Activity } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MedicionSelect } from "@/components/Select/Medicion/select";
+import { MedicionInputs } from "@/components/Select/Medicion/select";
 import { useForm } from "react-hook-form";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { DataType } from "@/types/Data-Type/Data-Type";
@@ -28,7 +27,6 @@ interface Parametro {
   isRequired?: boolean;
 }
 
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -42,23 +40,12 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   isOpen,
   onClose,
 }) => {
-  const { control, watch, setValue, reset } = useForm({
+  const { reset } = useForm({
     defaultValues: {
       selectedMedicion: "",
       valorMedicion: "",
     },
   });
-
-  // Get mediciones data from API
-  const { data: medicionesData, isLoading: isMedicionesLoading } = useDataTypes(
-    {
-      auth: true,
-      fetch: true,
-      categories: ["MEDICION"],
-      apiType: "incor",
-    }
-  );
-
   // Get evolucion data types from API
   const { data: evolucionData } = useDataTypes({
     auth: true,
@@ -80,6 +67,19 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   const [parametrosSeleccionados, setParametrosSeleccionados] = useState<
     Parametro[]
   >([]);
+
+  // Estado para mediciones dinámicas del backend
+  const [medicionesDinamicas, setMedicionesDinamicas] = useState<{
+    [key: string]: string;
+  }>({});
+
+  // Función para manejar cambios en mediciones dinámicas
+  const handleMedicionChange = (medicionId: string, value: string) => {
+    setMedicionesDinamicas((prev) => ({
+      ...prev,
+      [medicionId]: value,
+    }));
+  };
 
   const handleAddEvolucion = async () => {
     if (
@@ -145,7 +145,17 @@ const CreateEvolucionDialog: React.FC<Props> = ({
         });
       }
 
-      // Add mediciones (parametros)
+      // Add mediciones from dynamic inputs
+      Object.entries(medicionesDinamicas).forEach(([medicionId, value]) => {
+        if (value && value.trim() !== "") {
+          dataValues.push({
+            idDataType: medicionId,
+            value: value,
+          });
+        }
+      });
+
+      // Add mediciones (parametros adicionales del select)
       parametrosSeleccionados.forEach((parametro) => {
         dataValues.push({
           idDataType: parametro.dataType.id.toString(),
@@ -186,41 +196,6 @@ const CreateEvolucionDialog: React.FC<Props> = ({
     }
   };
 
-  const handleAgregarParametro = () => {
-    const selectedMedicionId = watch("selectedMedicion");
-    const valorMedicion = watch("valorMedicion");
-
-    if (!selectedMedicionId || !valorMedicion) {
-      return;
-    }
-
-    const selectedDataType = medicionesData?.find(
-      (medicion) => medicion.id.toString() === selectedMedicionId
-    );
-
-    if (!selectedDataType) {
-      return;
-    }
-
-    const nuevoParametro: Parametro = {
-      id: Date.now(),
-      dataType: selectedDataType,
-      valor: valorMedicion,
-    };
-
-    setParametrosSeleccionados([...parametrosSeleccionados, nuevoParametro]);
-
-    // Reset form values
-    setValue("selectedMedicion", "");
-    setValue("valorMedicion", "");
-  };
-
-  const handleEliminarParametro = (id: number) => {
-    setParametrosSeleccionados(
-      parametrosSeleccionados.filter((p) => p.id !== id)
-    );
-  };
-
   const handleClose = () => {
     setNewEvolucion({
       motivoConsulta: "",
@@ -230,6 +205,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
       doctor: "",
     });
     setParametrosSeleccionados([]);
+    setMedicionesDinamicas({});
     reset();
     onClose();
   };
@@ -247,11 +223,12 @@ const CreateEvolucionDialog: React.FC<Props> = ({
           {/* Información de fecha automática */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
             <p className="text-sm text-green-700 font-medium">
-              📅 Fecha de Consulta: {new Date().toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+              📅 Fecha de Consulta:{" "}
+              {new Date().toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               })}
             </p>
             <p className="text-xs text-green-600 mt-1">
@@ -327,88 +304,11 @@ const CreateEvolucionDialog: React.FC<Props> = ({
 
           <div className="grid gap-3">
             <Label className="text-sm font-medium text-gray-700">
-              Parámetros de Medición
+              Parámetros de Medición (Opcional)
             </Label>
 
-            {/* Selector para agregar nuevos parámetros */}
-            <div className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-5">
-                <Label className="text-xs text-gray-600">
-                  Tipo de Medición
-                </Label>
-                <MedicionSelect
-                  control={control}
-                  name="selectedMedicion"
-                  placeholder="Selecciona una medición..."
-                  disabled={isMedicionesLoading}
-                />
-              </div>
-              <div className="col-span-4">
-                <Label className="text-xs text-gray-600">Valor</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={watch("valorMedicion")}
-                  onChange={(e) => setValue("valorMedicion", e.target.value)}
-                  placeholder="Ingresa el valor"
-                  className="text-xs h-8"
-                />
-              </div>
-              <div className="col-span-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAgregarParametro}
-                  disabled={
-                    !watch("selectedMedicion") || !watch("valorMedicion")
-                  }
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50 bg-transparent h-8 w-full"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Agregar
-                </Button>
-              </div>
-            </div>
-
-            {/* Lista de parámetros agregados */}
-            {parametrosSeleccionados.length === 0 ? (
-              <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-500">
-                  No hay parámetros agregados
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Selecciona una medición y valor para agregar
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3 bg-gray-50">
-                {parametrosSeleccionados.map((parametro) => (
-                  <div
-                    key={parametro.id}
-                    className="flex items-center justify-between bg-white p-2 rounded border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-700">
-                        {parametro.dataType.name}
-                      </span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {parametro.valor}
-                      </span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEliminarParametro(parametro.id)}
-                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Inputs dinámicos desde el backend */}
+            <MedicionInputs onMedicionChange={handleMedicionChange} />
           </div>
         </div>
         <div className="flex justify-end gap-3 pt-4 border-t">
