@@ -15,15 +15,19 @@ import {
 import { Label } from "@/components/ui/label";
 import CreateEvolucionDialog from "@/components/Evoluciones/Create";
 import { useNavigate } from "react-router-dom";
-import { EvolucionesResponse, Evolucion as EvolucionType, EvolucionData } from "@/types/Antecedentes/Antecedentes";
+import {
+  EvolucionesResponse,
+  Evolucion as EvolucionType,
+  EvolucionData,
+} from "@/types/Antecedentes/Antecedentes";
 import useUserRole from "@/hooks/useRoles";
-
+import { formatDoctorInfo } from "@/common/helpers/helpers";
 
 type UserData = Patient | Doctor;
 
 interface Props {
   userData: UserData;
-  userType?: 'patient' | 'doctor';
+  userType?: "patient" | "doctor";
   evoluciones: EvolucionesResponse | undefined;
   isLoadingEvoluciones?: boolean;
   readOnly?: boolean;
@@ -34,16 +38,16 @@ interface Props {
   patient?: Patient;
 }
 
-const EvolutionSection: React.FC<Props> = ({ 
+const EvolutionSection: React.FC<Props> = ({
   userData,
-  userType = 'patient',
-  evoluciones, 
+  userType = "patient",
+  evoluciones,
   isLoadingEvoluciones = false,
-  readOnly = false, 
-  showEditActions = true, 
+  readOnly = false,
+  showEditActions = true,
   allowNewEvolutions = true,
   patientId,
-  patient // Para compatibilidad hacia atrás
+  patient, // Para compatibilidad hacia atrás
 }) => {
   // Usar userData si está disponible, si no usar patient para compatibilidad
   const currentUser = userData || patient;
@@ -52,17 +56,18 @@ const EvolutionSection: React.FC<Props> = ({
   // Obtener ID del usuario de la sesión usando useUserRole
   const { session } = useUserRole();
   const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
-  
+
   // Usar patientId prop o fallback a currentUser.id
   const idUser = patientId || currentUser.id;
   const [isAddEvolucionModalOpen, setIsAddEvolucionModalOpen] = useState(false);
   const [selectedConsultaToView, setSelectedConsultaToView] = useState<{
     fechaConsulta: string;
     fechaCreacion: string;
-    doctor: EvolucionType['doctor'];
+    doctor: EvolucionType["doctor"];
     especialidad: string | null;
     motivoConsulta: string | null;
     enfermedadActual: string | null;
+    examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
     evolucionPrincipal: EvolucionType | null;
     mediciones: EvolucionData[];
@@ -71,7 +76,7 @@ const EvolutionSection: React.FC<Props> = ({
   const [isViewEvolucionModalOpen, setIsViewEvolucionModalOpen] =
     useState(false);
   const navigate = useNavigate();
-  const handleConsultaClick = (evolucion: typeof evolucionesLista[0]) => {
+  const handleConsultaClick = (evolucion: (typeof evolucionesLista)[0]) => {
     const consultaData = {
       fechaConsulta: evolucion.fechaConsulta,
       fechaCreacion: evolucion.fechaCreacion,
@@ -79,10 +84,11 @@ const EvolutionSection: React.FC<Props> = ({
       especialidad: evolucion.especialidad,
       motivoConsulta: evolucion.motivoConsulta,
       enfermedadActual: evolucion.enfermedadActual,
+      examenFisico: evolucion.examenFisico,
       diagnosticosPresuntivos: evolucion.diagnosticosPresuntivos,
       evolucionPrincipal: evolucion.evolucionCompleta,
       mediciones: evolucion.mediciones,
-      evoluciones: [evolucion.evolucionCompleta]
+      evoluciones: [evolucion.evolucionCompleta],
     };
     setSelectedConsultaToView(consultaData);
     setIsViewEvolucionModalOpen(true);
@@ -91,40 +97,48 @@ const EvolutionSection: React.FC<Props> = ({
   // Función para obtener la fecha de consulta de una evolución
   const getFechaConsulta = (evolucion: EvolucionType) => {
     // Buscar el campo de fecha de consulta en el array data
-    const fechaData = evolucion.data.find(d => 
-      d.dataType && d.dataType.name.toLowerCase() === 'fecha de consulta'
+    const fechaData = evolucion.data.find(
+      (d) => d.dataType && d.dataType.name.toLowerCase() === "fecha de consulta"
     );
-    
-    return fechaData ? fechaData.value : new Date(evolucion.createdAt).toISOString().split('T')[0];
+
+    return fechaData
+      ? fechaData.value
+      : new Date(evolucion.createdAt).toISOString();
   };
 
   // Función para procesar evoluciones en una lista simple
   const processEvolucionesForList = (evoluciones: EvolucionType[]) => {
-    const processed = evoluciones.map(evolucion => {
+    const processed = evoluciones.map((evolucion) => {
       const fechaConsulta = getFechaConsulta(evolucion);
 
       // Extraer datos específicos
       let especialidad: string | null = null;
       let motivoConsulta: string | null = null;
       let enfermedadActual: string | null = null;
+      let examenFisico: string | null = null;
       let diagnosticosPresuntivos: string | null = null;
       const mediciones: EvolucionData[] = [];
 
-      evolucion.data.forEach(dataItem => {
+      evolucion.data.forEach((dataItem) => {
         if (!dataItem.dataType) return;
 
         const dataTypeName = dataItem.dataType.name.toLowerCase();
 
-        if (dataItem.dataType.category === 'MEDICION') {
+        if (dataItem.dataType.category === "MEDICION") {
           mediciones.push(dataItem);
         } else {
-          if (dataTypeName.includes('especialidad')) {
+          if (dataTypeName.includes("especialidad")) {
             especialidad = dataItem.value;
-          } else if (dataTypeName.includes('motivo de consulta')) {
+          } else if (dataTypeName.includes("motivo de consulta")) {
             motivoConsulta = dataItem.value;
-          } else if (dataTypeName.includes('enfermedad actual')) {
+          } else if (dataTypeName.includes("enfermedad actual")) {
             enfermedadActual = dataItem.value;
-          } else if (dataTypeName.includes('diagnóstico presuntivo') || dataTypeName.includes('diagnostico presuntivo')) {
+          } else if (dataTypeName.includes("examen fisico") || dataTypeName.includes("examen físico")) {
+            examenFisico = dataItem.value;
+          } else if (
+            dataTypeName.includes("diagnóstico presuntivo") ||
+            dataTypeName.includes("diagnostico presuntivo")
+          ) {
             diagnosticosPresuntivos = dataItem.value;
           }
         }
@@ -138,28 +152,37 @@ const EvolutionSection: React.FC<Props> = ({
         especialidad,
         motivoConsulta,
         enfermedadActual,
+        examenFisico,
         diagnosticosPresuntivos,
         mediciones,
-        evolucionCompleta: evolucion
+        evolucionCompleta: evolucion,
       };
     });
 
     // Filtrar solo evoluciones con contenido y ordenar por fecha más reciente
     return processed
-      .filter(consulta =>
-        consulta.motivoConsulta ||
-        consulta.enfermedadActual ||
-        consulta.diagnosticosPresuntivos ||
-        consulta.especialidad ||
-        consulta.mediciones.length > 0
+      .filter(
+        (consulta) =>
+          consulta.motivoConsulta ||
+          consulta.enfermedadActual ||
+          consulta.examenFisico ||
+          consulta.diagnosticosPresuntivos ||
+          consulta.especialidad ||
+          consulta.mediciones.length > 0
       )
-      .sort((a, b) => new Date(b.fechaConsulta).getTime() - new Date(a.fechaConsulta).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.fechaConsulta).getTime() -
+          new Date(a.fechaConsulta).getTime()
+      );
   };
 
-  const evolucionesLista = evoluciones ? processEvolucionesForList(evoluciones.evoluciones) : [];
+  const evolucionesLista = evoluciones
+    ? processEvolucionesForList(evoluciones.evoluciones)
+    : [];
 
   const handleNavigateToEvoluciones = () => {
-    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
+    const basePath = userType === "doctor" ? "medicos" : "pacientes";
     navigate(`/${basePath}/${currentUser.slug}/historia-clinica/evoluciones`);
   };
 
@@ -201,9 +224,7 @@ const EvolutionSection: React.FC<Props> = ({
             {isLoadingEvoluciones ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-3"></div>
-                <p className="text-gray-500 text-sm">
-                  Cargando evoluciones...
-                </p>
+                <p className="text-gray-500 text-sm">Cargando evoluciones...</p>
               </div>
             ) : !evoluciones || evoluciones.evoluciones.length === 0 ? (
               <div className="text-center py-8">
@@ -218,9 +239,26 @@ const EvolutionSection: React.FC<Props> = ({
             ) : (
               <div className="space-y-2">
                 {evolucionesLista.map((evolucion) => {
-                  // Formatear fecha simple
-                  const [year, month, day] = evolucion.fechaConsulta.split('-');
-                  const formattedDate = `${day}/${month}/${year}`;
+                  // Formatear fecha con hora
+                  const fechaConsulta = new Date(evolucion.fechaConsulta);
+                  const formattedDate = fechaConsulta.toLocaleDateString(
+                    "es-AR",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }
+                  );
+                  const formattedTime = fechaConsulta.toLocaleTimeString(
+                    "es-AR",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  );
+
+                  // Formatear información del doctor
+                  const doctorInfo = formatDoctorInfo(evolucion.doctor);
 
                   return (
                     <div
@@ -230,12 +268,14 @@ const EvolutionSection: React.FC<Props> = ({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-900">
-                            {formattedDate}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            Dr. {evolucion.doctor.firstName} {evolucion.doctor.lastName}
-                          </span>
+                          <div className="text-sm font-medium text-gray-900">
+                            <div>
+                              {formattedDate} - {formattedTime}
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {doctorInfo.fullNameWithPrimarySpeciality}
+                          </div>
                         </div>
                       </div>
 
@@ -284,16 +324,24 @@ const EvolutionSection: React.FC<Props> = ({
                   </Label>
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      {(() => {
-                        const [year, month, day] = selectedConsultaToView.fechaConsulta.split('-');
-                        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString('es-AR', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        });
-                      })()}
-                    </span>
+                    <div className="text-sm">
+                      <div>
+                        {new Date(
+                          selectedConsultaToView.fechaConsulta
+                        ).toLocaleDateString("es-AR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {new Date(
+                          selectedConsultaToView.fechaConsulta
+                        ).toLocaleTimeString("es-AR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -302,9 +350,12 @@ const EvolutionSection: React.FC<Props> = ({
                   </Label>
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
                     <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
-                      {selectedConsultaToView.doctor.firstName} {selectedConsultaToView.doctor.lastName}
-                    </span>
+                    <div className="text-sm">
+                      {(() => {
+                        const doctorInfo = formatDoctorInfo(selectedConsultaToView.doctor);
+                        return doctorInfo.fullNameWithAllSpecialities;
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -351,6 +402,19 @@ const EvolutionSection: React.FC<Props> = ({
                 </div>
               )}
 
+              {selectedConsultaToView.examenFisico && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Examen Físico
+                  </Label>
+                  <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      {selectedConsultaToView.examenFisico}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {selectedConsultaToView.diagnosticosPresuntivos && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-gray-700">
@@ -371,24 +435,26 @@ const EvolutionSection: React.FC<Props> = ({
                   </Label>
                   <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {selectedConsultaToView.mediciones.map((medicion, index) => (
-                        <div
-                          key={index}
-                          className="bg-white p-2 rounded border text-center"
-                        >
-                          <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                            {medicion.dataType.name}
-                          </p>
-                          <p className="text-lg font-bold text-gray-800 mt-1">
-                            {medicion.value}
-                          </p>
-                          {medicion.observaciones && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {medicion.observaciones}
+                      {selectedConsultaToView.mediciones.map(
+                        (medicion, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-2 rounded border text-center"
+                          >
+                            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                              {medicion.dataType.name}
                             </p>
-                          )}
-                        </div>
-                      ))}
+                            <p className="text-lg font-bold text-gray-800 mt-1">
+                              {medicion.value}
+                            </p>
+                            {medicion.observaciones && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {medicion.observaciones}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

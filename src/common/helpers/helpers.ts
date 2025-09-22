@@ -198,3 +198,36 @@ export const normalizeDate = (date: string): string => {
   }
 };
 
+/**
+ * Formatea la información del doctor para mostrar nombre completo y especialidades
+ */
+export interface DoctorInfo {
+  firstName: string;
+  lastName: string;
+  specialities: { id: number; name: string }[];
+}
+
+export const formatDoctorInfo = (doctor: DoctorInfo) => {
+  const fullName = `Dr. ${doctor.firstName} ${doctor.lastName}`;
+  const primarySpeciality = doctor.specialities.length > 0 ? doctor.specialities[0].name : null;
+  const allSpecialities = doctor.specialities.map(spec => spec.name).join(", ");
+
+  // Formato en una línea: "Dr. Nombre - Especialidades"
+  const fullNameWithPrimarySpeciality = primarySpeciality
+    ? `${fullName} - ${primarySpeciality}`
+    : fullName;
+
+  const fullNameWithAllSpecialities = allSpecialities
+    ? `${fullName} - ${allSpecialities}`
+    : fullName;
+
+  return {
+    fullName,
+    primarySpeciality,
+    allSpecialities,
+    hasSpecialities: doctor.specialities.length > 0,
+    fullNameWithPrimarySpeciality,
+    fullNameWithAllSpecialities
+  };
+};
+

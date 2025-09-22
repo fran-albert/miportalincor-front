@@ -29,6 +29,10 @@ export interface Evolucion extends Base {
     userId: number;
     firstName: string;
     lastName: string;
+    specialities: {
+      id: number;
+      name: string;
+    }[];
   };
   data: EvolucionData[];
 }

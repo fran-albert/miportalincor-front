@@ -23,7 +23,13 @@ import { EvolucionesResponse, Evolucion as EvolucionType, EvolucionData } from "
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
-import DeleteConsultaDialog from "../Delete/DeleteConsultaDialog";
+import EvolutionTable from "../Table/table";
+import { EvolutionTableRow } from "../Table/columns";
+import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
+import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
+import { useToast } from "@/hooks/Toast/useToast";
+import { useEvolutionMutation } from "@/hooks/Evolution/useEvolutionMutation";
+import DeleteEvolutionDialog from "../Delete/DeleteEvolutionDialog";
 
 type UserData = Patient | Doctor;
 
@@ -44,6 +50,9 @@ export default function EvolucionesComponent({
   const { session } = useUserRole();
   const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
   const idUser = patientId || userData?.id;
+  const { showSuccess, showError, showLoading, removeToast } = useToast();
+  const { generatePDF } = useEvolutionPDF();
+  const { deleteEvolutionMutation } = useEvolutionMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEspecialidad, setSelectedEspecialidad] = useState("Todas");
@@ -54,12 +63,15 @@ export default function EvolucionesComponent({
     especialidad: string | null;
     motivoConsulta: string | null;
     enfermedadActual: string | null;
+    examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
     evolucionPrincipal: EvolucionType | null;
     mediciones: EvolucionData[];
     evoluciones: EvolucionType[];
   } | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [evolutionToDelete, setEvolutionToDelete] = useState<EvolutionTableRow | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const especialidades = [
     "Todas",
@@ -84,6 +96,83 @@ export default function EvolucionesComponent({
     setIsViewModalOpen(true);
   };
 
+  const handleViewEvolution = (row: EvolutionTableRow) => {
+    const consulta = {
+      fechaConsulta: row.fechaConsulta,
+      fechaCreacion: row.fechaCreacion,
+      doctor: row.doctor,
+      especialidad: row.evolucionCompleta.especialidad,
+      motivoConsulta: row.motivoConsulta,
+      enfermedadActual: row.enfermedadActual,
+      examenFisico: row.examenFisico,
+      diagnosticosPresuntivos: row.diagnosticosPresuntivos,
+      evolucionPrincipal: row.evolucionCompleta.evolucionPrincipal,
+      mediciones: row.evolucionCompleta.mediciones,
+      evoluciones: row.evolucionCompleta.evoluciones
+    };
+    handleConsultaClick(consulta);
+  };
+
+  const handleDeleteEvolution = (row: EvolutionTableRow) => {
+    setEvolutionToDelete(row);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async (evolution: EvolutionTableRow) => {
+    try {
+      // Necesitamos obtener el ID de la evolución desde evolucionCompleta
+      // Ya que la tabla agrupa por consulta, necesitamos eliminar todas las evoluciones de la consulta
+      const evolutionIds = evolution.evolucionCompleta.evoluciones.map((ev: EvolucionType) => ev.id);
+
+      if (evolutionIds.length === 0) {
+        showError("No se encontraron evoluciones para eliminar");
+        return;
+      }
+
+      // Por ahora, intentamos eliminar solo la primera evolución
+      // (esto podría necesitar ajuste según la lógica de negocio)
+      const firstEvolutionId = evolutionIds[0];
+
+      await deleteEvolutionMutation.mutateAsync(String(firstEvolutionId));
+
+      showSuccess("Evolución Eliminada", "La evolución ha sido eliminada exitosamente");
+    } catch (error: any) {
+      console.error("Error deleting evolution:", error);
+
+      const errorMessage = error.response?.data?.message || error.message || "Error desconocido";
+      showError("Error", `No se pudo eliminar la evolución: ${errorMessage}`);
+    }
+  };
+
+  const handlePrintEvolution = async (row: EvolutionTableRow) => {
+    if (!userData) {
+      showError("No se encontró información del paciente");
+      return;
+    }
+
+    try {
+      const loadingToastId = showLoading("Generando PDF", "Preparando documento...");
+
+      const result = await generatePDF({
+        evolution: row,
+        patientName: userData.firstName || "",
+        patientSurname: userData.lastName || "",
+        // logoSrc: "/path/to/logo.png" // Agregar logo si está disponible
+      });
+
+      removeToast(loadingToastId);
+
+      if (result.success) {
+        showSuccess("PDF Generado", `Archivo descargado: ${result.fileName}`);
+      } else {
+        showError("No se pudo generar el PDF");
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showError("Ocurrió un error al generar el PDF");
+    }
+  };
+
   // Función para obtener la fecha de consulta de una evolución
   const getFechaConsulta = (evolucion: EvolucionType) => {
     // Buscar el campo de fecha de consulta en el array data
@@ -94,8 +183,8 @@ export default function EvolucionesComponent({
     return fechaData ? fechaData.value : new Date(evolucion.createdAt).toISOString().split('T')[0];
   };
 
-  // Función para agrupar evoluciones por fecha de consulta
-  const groupEvolucionesByConsulta = (evoluciones: EvolucionType[]) => {
+  // Función para transformar evoluciones a formato de tabla
+  const transformEvolucionesToTableRows = (evoluciones: EvolucionType[]): EvolutionTableRow[] => {
     const grouped: {
       [key: string]: {
         fechaConsulta: string;
@@ -104,6 +193,7 @@ export default function EvolucionesComponent({
         especialidad: string | null;
         motivoConsulta: string | null;
         enfermedadActual: string | null;
+        examenFisico: string | null;
         diagnosticosPresuntivos: string | null;
         evolucionPrincipal: EvolucionType | null;
         mediciones: EvolucionData[];
@@ -124,6 +214,7 @@ export default function EvolucionesComponent({
           especialidad: null,
           motivoConsulta: null,
           enfermedadActual: null,
+          examenFisico: null,
           diagnosticosPresuntivos: null,
           evolucionPrincipal: evolucion,
           mediciones: [],
@@ -134,9 +225,9 @@ export default function EvolucionesComponent({
       // Procesar cada item de data dentro de la evolución
       evolucion.data.forEach((dataItem: EvolucionData) => {
         if (!dataItem.dataType) return;
-        
+
         const dataTypeName = dataItem.dataType.name.toLowerCase();
-        
+
         if (dataItem.dataType.category === "MEDICION") {
           // Agregar a mediciones
           grouped[key].mediciones.push(dataItem);
@@ -151,6 +242,11 @@ export default function EvolucionesComponent({
           } else if (dataTypeName.includes("enfermedad actual")) {
             grouped[key].enfermedadActual = dataItem.value;
           } else if (
+            dataTypeName.includes("examen fisico") ||
+            dataTypeName.includes("examen físico")
+          ) {
+            grouped[key].examenFisico = dataItem.value;
+          } else if (
             dataTypeName.includes("diagnóstico presuntivo") ||
             dataTypeName.includes("diagnostico presuntivo")
           ) {
@@ -163,61 +259,68 @@ export default function EvolucionesComponent({
       grouped[key].evoluciones.push(evolucion);
     });
 
-    return Object.values(grouped).filter((consulta) => {
+    const consultasAgrupadas = Object.values(grouped).filter((consulta) => {
       const hasContent =
         consulta.motivoConsulta ||
         consulta.enfermedadActual ||
+        consulta.examenFisico ||
         consulta.diagnosticosPresuntivos ||
         consulta.especialidad ||
         consulta.mediciones.length > 0;
       return hasContent;
     });
+
+    // Transformar a formato de tabla
+    return consultasAgrupadas.map((consulta) => ({
+      id: `${consulta.fechaConsulta}_${consulta.doctor.userId}`,
+      fechaConsulta: consulta.fechaConsulta,
+      fechaCreacion: consulta.fechaCreacion,
+      doctor: {
+        userId: consulta.doctor.userId,
+        firstName: consulta.doctor.firstName,
+        lastName: consulta.doctor.lastName,
+        specialities: consulta.doctor.specialities || []
+      },
+      motivoConsulta: consulta.motivoConsulta,
+      enfermedadActual: consulta.enfermedadActual,
+      examenFisico: consulta.examenFisico,
+      diagnosticosPresuntivos: consulta.diagnosticosPresuntivos,
+      evolucionCompleta: {
+        ...consulta,
+        mediciones: consulta.mediciones,
+        evoluciones: consulta.evoluciones
+      }
+    }));
   };
 
-  const consultasAgrupadas = evoluciones
-    ? groupEvolucionesByConsulta(evoluciones.evoluciones)
+  const tableRows = evoluciones
+    ? transformEvolucionesToTableRows(evoluciones.evoluciones)
     : [];
 
-  const filteredConsultas = consultasAgrupadas.filter((consulta) => {
+  const filteredRows = tableRows.filter((row) => {
     const matchesSearch =
-      consulta.motivoConsulta
+      row.motivoConsulta
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      consulta.enfermedadActual
+      row.enfermedadActual
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      consulta.diagnosticosPresuntivos
+      row.examenFisico
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      `${consulta.doctor.firstName} ${consulta.doctor.lastName}`
+      row.diagnosticosPresuntivos
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      `${row.doctor.firstName} ${row.doctor.lastName}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
     const matchesEspecialidad =
       selectedEspecialidad === "Todas" ||
-      consulta.especialidad === selectedEspecialidad;
+      row.evolucionCompleta.especialidad === selectedEspecialidad;
 
     return matchesSearch && matchesEspecialidad;
   });
-
-  const getEspecialidadColor = (especialidad: string) => {
-    const colors: { [key: string]: string } = {
-      "Medicina General": "bg-blue-100 text-blue-800 border-blue-200",
-      Cardiología: "bg-red-100 text-red-800 border-red-200",
-      Endocrinología: "bg-green-100 text-green-800 border-green-200",
-      Neurología: "bg-purple-100 text-purple-800 border-purple-200",
-      Gastroenterología: "bg-orange-100 text-orange-800 border-orange-200",
-      Neumología: "bg-cyan-100 text-cyan-800 border-cyan-200",
-      Dermatología: "bg-pink-100 text-pink-800 border-pink-200",
-      Traumatología: "bg-gray-100 text-gray-800 border-gray-200",
-    };
-    return colors[especialidad] || "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
-  const truncateText = (text: string, maxLength = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -284,164 +387,18 @@ export default function EvolucionesComponent({
           </CardContent>
         </Card>
 
-        {/* Lista de Evoluciones */}
-        <div className="grid gap-4">
-          {filteredConsultas.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No se encontraron evoluciones</p>
-                <p className="text-gray-400 text-sm mt-1">
-                  {searchTerm || selectedEspecialidad !== "Todas"
-                    ? "Intenta cambiar los filtros de búsqueda"
-                    : "Haz clic en 'Agregar Evolución' para comenzar"}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredConsultas.map((consulta, index) => {
-              const [year, month, day] = consulta.fechaConsulta.split("-");
-              const formattedDate = new Date(
-                parseInt(year),
-                parseInt(month) - 1,
-                parseInt(day)
-              ).toLocaleDateString("es-AR", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              });
-
-              return (
-                <Card
-                  key={`consulta-${index}`}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => handleConsultaClick(consulta)}
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          {consulta.especialidad && (
-                            <Badge
-                              className={`${getEspecialidadColor(
-                                consulta.especialidad
-                              )} border`}
-                            >
-                              {consulta.especialidad}
-                            </Badge>
-                          )}
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>{formattedDate}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              <span>
-                                {consulta.doctor.firstName}{" "}
-                                {consulta.doctor.lastName}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          {consulta.motivoConsulta && (
-                            <div>
-                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                Motivo de Consulta:
-                              </span>
-                              <p className="text-sm text-gray-800 mt-1 leading-relaxed">
-                                {truncateText(consulta.motivoConsulta, 100)}
-                              </p>
-                            </div>
-                          )}
-
-                          {consulta.enfermedadActual && (
-                            <div>
-                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                Enfermedad Actual:
-                              </span>
-                              <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                                {truncateText(consulta.enfermedadActual, 150)}
-                              </p>
-                            </div>
-                          )}
-
-                          {consulta.diagnosticosPresuntivos && (
-                            <div>
-                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                Diagnósticos Presuntivos:
-                              </span>
-                              <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                                {truncateText(
-                                  consulta.diagnosticosPresuntivos,
-                                  120
-                                )}
-                              </p>
-                            </div>
-                          )}
-
-                          {consulta.mediciones &&
-                            consulta.mediciones.length > 0 && (
-                              <div>
-                                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                  Mediciones ({consulta.mediciones.length}):
-                                </span>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {consulta.mediciones
-                                    .slice(0, 4)
-                                    .map(
-                                      (
-                                        medicion,
-                                        medicionIndex
-                                      ) => (
-                                        <Badge
-                                          key={medicionIndex}
-                                          variant="outline"
-                                          className="text-xs bg-purple-50 text-purple-700 border-purple-200"
-                                        >
-                                          {medicion.dataType.name}:{" "}
-                                          {medicion.value}
-                                        </Badge>
-                                      )
-                                    )}
-                                  {consulta.mediciones.length > 4 && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs bg-gray-50 text-gray-600"
-                                    >
-                                      +{consulta.mediciones.length - 4} más
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                      </div>
-                      <div className="ml-4 flex items-center">
-                        {consulta.evoluciones.length > 0 && (
-                          <DeleteConsultaDialog
-                            evoluciones={consulta.evoluciones}
-                            consultaDescription={truncateText(
-                              consulta.motivoConsulta ||
-                                consulta.enfermedadActual ||
-                                consulta.diagnosticosPresuntivos ||
-                                `Consulta del ${formattedDate}`,
-                              80
-                            )}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
+        {/* Tabla de Evoluciones */}
+        <Card>
+          <CardContent className="p-0">
+            <EvolutionTable
+              data={filteredRows}
+              onView={handleViewEvolution}
+              onDelete={handleDeleteEvolution}
+              onPrint={handlePrintEvolution}
+              isLoading={false}
+            />
+          </CardContent>
+        </Card>
 
         {/* Modal para Agregar Evolución */}
         {typeof idUser === "number" && typeof idDoctor === "number" && (
@@ -452,6 +409,18 @@ export default function EvolucionesComponent({
             onClose={() => setIsAddEvolucionModalOpen(false)}
           />
         )}
+
+        {/* Diálogo de Eliminación */}
+        <DeleteEvolutionDialog
+          evolution={evolutionToDelete}
+          isOpen={isDeleteDialogOpen}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            setEvolutionToDelete(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          isDeleting={deleteEvolutionMutation.isPending}
+        />
         {/* Modal para Ver Evolución Completa */}
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
@@ -472,17 +441,8 @@ export default function EvolucionesComponent({
                       <Calendar className="h-4 w-4 text-gray-500" />
                       <span className="text-sm">
                         {(() => {
-                          const [year, month, day] =
-                            selectedConsultaToView.fechaConsulta.split("-");
-                          return new Date(
-                            parseInt(year),
-                            parseInt(month) - 1,
-                            parseInt(day)
-                          ).toLocaleDateString("es-AR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          });
+                          const dateTime = formatEvolutionDateTime(selectedConsultaToView.fechaConsulta);
+                          return `${dateTime.date} - ${dateTime.time}`;
                         })()}
                       </span>
                     </div>
@@ -493,10 +453,29 @@ export default function EvolucionesComponent({
                     </Label>
                     <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">
-                        {selectedConsultaToView.doctor.firstName}{" "}
-                        {selectedConsultaToView.doctor.lastName}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium">
+                          Dr. {selectedConsultaToView.doctor.firstName}{" "}
+                          {selectedConsultaToView.doctor.lastName}
+                        </span>
+                        {selectedConsultaToView.doctor.specialities &&
+                         selectedConsultaToView.doctor.specialities.length > 0 && (
+                          <>
+                            <span className="text-gray-400">-</span>
+                            <div className="flex flex-wrap gap-1">
+                              {selectedConsultaToView.doctor.specialities.map((specialty, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {specialty.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -538,6 +517,19 @@ export default function EvolucionesComponent({
                     <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                       <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
                         {selectedConsultaToView.enfermedadActual}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedConsultaToView.examenFisico && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Examen Físico
+                    </Label>
+                    <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                        {selectedConsultaToView.examenFisico}
                       </p>
                     </div>
                   </div>

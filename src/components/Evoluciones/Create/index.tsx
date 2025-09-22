@@ -59,6 +59,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   const [newEvolucion, setNewEvolucion] = useState({
     motivoConsulta: "",
     enfermedadActual: "",
+    examenFisico: "",
     diagnosticosPresuntivos: "",
     especialidad: "",
     doctor: "",
@@ -101,6 +102,10 @@ const CreateEvolucionDialog: React.FC<Props> = ({
       const enfermedadActualType = evolucionData.find((dt) =>
         dt.name.toLowerCase().includes("enfermedad")
       );
+      const examenFisicoType = evolucionData.find((dt) =>
+        dt.name.toLowerCase().includes("examen fisico") ||
+        dt.name.toLowerCase().includes("examen físico")
+      );
       const diagnosticoType = evolucionData.find(
         (dt) =>
           dt.name.toLowerCase().includes("diagnóstico presuntivo") ||
@@ -130,6 +135,13 @@ const CreateEvolucionDialog: React.FC<Props> = ({
         });
       }
 
+      if (examenFisicoType && newEvolucion.examenFisico.trim() !== "") {
+        dataValues.push({
+          idDataType: examenFisicoType.id.toString(),
+          value: newEvolucion.examenFisico,
+        });
+      }
+
       if (diagnosticoType) {
         dataValues.push({
           idDataType: diagnosticoType.id.toString(),
@@ -138,7 +150,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
       }
 
       if (fechaType) {
-        const fechaValue = new Date().toISOString().split("T")[0];
+        const fechaValue = new Date().toISOString();
         dataValues.push({
           idDataType: fechaType.id.toString(),
           value: fechaValue,
@@ -200,6 +212,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
     setNewEvolucion({
       motivoConsulta: "",
       enfermedadActual: "",
+      examenFisico: "",
       diagnosticosPresuntivos: "",
       especialidad: "",
       doctor: "",
@@ -275,6 +288,28 @@ const CreateEvolucionDialog: React.FC<Props> = ({
                 })
               }
               placeholder="Describe detalladamente la enfermedad actual del paciente..."
+              rows={4}
+              className="resize-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+
+          <div className="grid gap-3">
+            <Label
+              htmlFor="examenFisico"
+              className="text-sm font-medium text-gray-700"
+            >
+              Examen Físico
+            </Label>
+            <Textarea
+              id="examenFisico"
+              value={newEvolucion.examenFisico}
+              onChange={(e) =>
+                setNewEvolucion({
+                  ...newEvolucion,
+                  examenFisico: e.target.value,
+                })
+              }
+              placeholder="Describe los hallazgos del examen físico del paciente..."
               rows={4}
               className="resize-none focus:ring-2 focus:ring-green-500"
             />
