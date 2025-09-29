@@ -1,13 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import UserInformation from "@/components/Usuario/Informacion";
 import {
   AntecedentesResponse,
   EvolucionesResponse,
+  MedicacionActualResponse,
 } from "@/types/Antecedentes/Antecedentes";
 import AntecedentesSection from "@/components/Antecedentes/Section";
 import EvolutionSection from "@/components/Evoluciones/Section";
+import CurrentMedicationSection from "@/components/Current-Medication/Section";
 import {
   AntecedentesSkeleton,
   EvolucionesSkeleton,
@@ -20,8 +21,10 @@ interface GenericHistoryProps {
   userType: "patient" | "doctor";
   antecedentes: AntecedentesResponse | undefined;
   evoluciones: EvolucionesResponse | undefined;
+  medicacionActual: MedicacionActualResponse | undefined;
   isLoadingAntecedentes?: boolean;
   isLoadingEvoluciones?: boolean;
+  isLoadingMedicacionActual?: boolean;
   patientId?: number; // ID del paciente extraído del slug
   onBack?: () => void;
 }
@@ -31,8 +34,10 @@ export default function GenericHistory({
   userType,
   antecedentes,
   evoluciones,
+  medicacionActual,
   isLoadingAntecedentes = false,
   isLoadingEvoluciones = false,
+  isLoadingMedicacionActual = false,
   patientId,
 }: GenericHistoryProps) {
   // Validación de seguridad - no debería llegar aquí sin userData, pero por si acaso
@@ -50,21 +55,13 @@ export default function GenericHistory({
 
   // Las evoluciones vienen como prop desde el backend
 
-  // Título de la sección de medicación según el tipo de usuario
-  const medicationTitle =
-    userType === "doctor" ? "MEDICACIÓN PROFESIONAL" : "MEDICACIÓN ACTUAL";
-  const medicationPlaceholder =
-    userType === "doctor"
-      ? "Medicación y suplementos del profesional médico"
-      : "Lista de medicamentos actuales";
-
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Información del Usuario */}
         <UserInformation userData={userData} userType={userType} />
 
-        {/* Sección de Antecedentes */}
+        {/* Sección de Antecedentes y Evoluciones */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {(isLoadingAntecedentes && !antecedentes) ||
           (isLoadingEvoluciones && !evoluciones) ? (
@@ -96,23 +93,29 @@ export default function GenericHistory({
           )}
         </div>
 
-        {/* Medicación - Abajo a la izquierda */}
+        {/* Sección de Medicación Actual */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-xl">{medicationTitle}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                {medicationPlaceholder}
-              </div>
-            </CardContent>
-          </Card>
-
+          {(isLoadingMedicacionActual && !medicacionActual) ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+              <p className="text-gray-500 text-sm mt-2">
+                Cargando medicaciones...
+              </p>
+            </div>
+          ) : (
+            <CurrentMedicationSection
+              userData={userData}
+              userType={userType}
+              medicacionActual={medicacionActual}
+              readOnly={false}
+              showEditActions={true}
+            />
+          )}
           <div className="lg:col-span-2">
             {/* Espacio vacío para mantener el layout */}
           </div>
         </div>
+
       </div>
     </div>
   );

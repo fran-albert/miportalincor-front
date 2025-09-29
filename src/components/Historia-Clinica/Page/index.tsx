@@ -4,6 +4,7 @@ import BreadcrumbComponent from "@/components/Breadcrumb";
 import {
   AntecedentesResponse,
   EvolucionesResponse,
+  MedicacionActualResponse,
 } from "@/types/Antecedentes/Antecedentes";
 import GenericHistory from "@/components/Historia-Clinica/Generic";
 import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
@@ -21,13 +22,16 @@ interface HistoryPageProps {
   userType: "patient" | "doctor";
   antecedentes: AntecedentesResponse | undefined;
   evoluciones: EvolucionesResponse | undefined;
+  medicacionActual: MedicacionActualResponse | undefined;
   isLoadingUser: boolean;
   isLoadingAntecedentes: boolean;
   isLoadingEvoluciones?: boolean;
+  isLoadingMedicacionActual?: boolean;
   breadcrumbItems: BreadcrumbItem[];
   userError?: any;
   antecedentesError?: any;
   evolucionesError?: any;
+  medicacionActualError?: any;
   patientId?: number; // ID del paciente extraído del slug
 }
 
@@ -36,13 +40,16 @@ export function HistoryPage({
   userType,
   antecedentes,
   evoluciones,
+  medicacionActual,
   isLoadingUser,
   isLoadingAntecedentes,
   isLoadingEvoluciones = false,
+  isLoadingMedicacionActual = false,
   breadcrumbItems,
   userError,
   antecedentesError,
   evolucionesError,
+  medicacionActualError,
   patientId,
 }: HistoryPageProps) {
   const isFirstLoadingUser = isLoadingUser && !userData;
@@ -94,6 +101,11 @@ export function HistoryPage({
           Hubo un error al cargar las evoluciones.
         </div>
       )}
+      {medicacionActualError && (
+        <div className="p-4 text-red-500">
+          Hubo un error al cargar la medicación actual.
+        </div>
+      )}
 
       <div className="gap-6">
         <GenericHistory
@@ -101,8 +113,10 @@ export function HistoryPage({
           userType={userType}
           antecedentes={antecedentes}
           evoluciones={evoluciones}
+          medicacionActual={medicacionActual}
           isLoadingAntecedentes={isLoadingAntecedentes}
           isLoadingEvoluciones={isLoadingEvoluciones}
+          isLoadingMedicacionActual={isLoadingMedicacionActual}
           patientId={patientId}
         />
       </div>

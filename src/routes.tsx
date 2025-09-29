@@ -34,9 +34,11 @@ import PatientHistoryPage from "./pages/protected/Patient/Historia-Clinica";
 import PatientStudiesPage from "./pages/protected/Patient/Studies";
 import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
 import PatientEvolucionesPage from "./pages/protected/Patient/Evoluciones";
+import PatientMedicacionActualPage from "./pages/protected/Patient/Medicacion-Actual";
 import DoctorHistoryPage from "./pages/protected/Doctor/Historia-Clinica";
 import DoctorEvolucionesPage from "./pages/protected/Doctor/Evoluciones";
 import DoctorAntecedentesPage from "./pages/protected/Doctor/Antecedentes";
+import DoctorMedicacionActualPage from "./pages/protected/Doctor/Medicacion-Actual";
 
 function App() {
   return (
@@ -142,6 +144,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Administrador"]}>
                   <PatientEvolucionesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/pacientes/:slug/historia-clinica/medicacion-actual"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <PatientMedicacionActualPage />
                 </Private_Routes>
               }
             />
@@ -298,6 +308,14 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Administrador"]}>
                   <DoctorEvolucionesPage />
+                </Private_Routes>
+              }
+            />
+            <Route
+              path="/medicos/:slug/historia-clinica/medicacion-actual"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Administrador"]}>
+                  <DoctorMedicacionActualPage />
                 </Private_Routes>
               }
             />

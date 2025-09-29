@@ -23,7 +23,6 @@ interface Props {
   antecedentes: AntecedentesResponse | undefined;
   readOnly?: boolean;
   showEditActions?: boolean;
-  // Mantener compatibilidad con el prop anterior
   patient?: Patient;
 }
 

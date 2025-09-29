@@ -1,4 +1,5 @@
 import { getUserHistoriaClinica } from "@/api/User-Historia-Clinica/get-user-historia-clinica.action";
+import { MedicacionActualQueryParams } from "@/types/Antecedentes/Antecedentes";
 import { useQuery } from "@tanstack/react-query";
 
 interface UseAntecedentesProps {
@@ -9,6 +10,7 @@ interface UseAntecedentesProps {
 interface UseMedicacionActualProps {
   auth: boolean;
   userId: number;
+  queryParams?: MedicacionActualQueryParams;
 }
 
 interface UseEvolucionesProps {
@@ -33,10 +35,10 @@ export const useAntecedentes = ({ auth, userId }: UseAntecedentesProps) => {
   };
 };
 
-export const useMedicacionActual = ({ auth, userId }: UseMedicacionActualProps) => {
+export const useMedicacionActual = ({ auth, userId, queryParams }: UseMedicacionActualProps) => {
   const { isLoading, isError, error, data: medicacionActual, isFetching } = useQuery({
-    queryKey: ['historia-clinica', userId, 'medicacion-actual'],
-    queryFn: () => getUserHistoriaClinica(userId, 'medicacion-actual'),
+    queryKey: ['historia-clinica', userId, 'medicacion-actual', queryParams],
+    queryFn: () => getUserHistoriaClinica(userId, 'medicacion-actual', queryParams),
     staleTime: 1000 * 60,
     enabled: auth && !!userId,
   });

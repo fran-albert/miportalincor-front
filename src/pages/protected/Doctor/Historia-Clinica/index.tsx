@@ -1,7 +1,7 @@
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useAntecedentes, useEvoluciones } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
+import { useAntecedentes, useEvoluciones, useMedicacionActual } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { HistoryPage } from "@/components/Historia-Clinica/Page";
 
 const DoctorHistoryPage = () => {
@@ -36,6 +36,19 @@ const DoctorHistoryPage = () => {
   } = useEvoluciones({
     auth: true,
     userId: id,
+  });
+
+  const {
+    medicacionActual,
+    isLoading: isLoadingMedicacionActual,
+    error: medicacionActualError,
+  } = useMedicacionActual({
+    auth: true,
+    userId: id,
+    queryParams: {
+      status: 'ACTIVE',
+      includeDoctor: true
+    },
   });
 
   const breadcrumbItems = [
@@ -74,13 +87,16 @@ const DoctorHistoryPage = () => {
         userType="doctor"
         antecedentes={antecedentes}
         evoluciones={evoluciones}
+        medicacionActual={medicacionActual}
         isLoadingUser={isLoadingDoctor}
         isLoadingAntecedentes={isLoadingAntecedentes}
         isLoadingEvoluciones={isLoadingEvoluciones}
+        isLoadingMedicacionActual={isLoadingMedicacionActual}
         breadcrumbItems={breadcrumbItems}
         userError={doctorError}
         antecedentesError={antecedentesError}
         evolucionesError={evolucionesError}
+        medicacionActualError={medicacionActualError}
         patientId={id}
       />
     </>

@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import {
   useAntecedentes,
   useEvoluciones,
+  useMedicacionActual,
 } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { HistoryPage } from "@/components/Historia-Clinica/Page";
 
@@ -39,6 +40,19 @@ const PatientHistoryPage = () => {
   } = useEvoluciones({
     auth: true,
     userId: id,
+  });
+
+  const {
+    medicacionActual,
+    isLoading: isLoadingMedicacionActual,
+    error: medicacionActualError,
+  } = useMedicacionActual({
+    auth: true,
+    userId: id,
+    queryParams: {
+      status: 'ACTIVE',
+      includeDoctor: true
+    },
   });
 
   const breadcrumbItems = [
@@ -77,13 +91,16 @@ const PatientHistoryPage = () => {
         userType="patient"
         antecedentes={antecedentes}
         evoluciones={evoluciones}
+        medicacionActual={medicacionActual}
         isLoadingUser={isLoadingPatient}
         isLoadingAntecedentes={isLoadingAntecedentes}
         isLoadingEvoluciones={isLoadingEvoluciones}
+        isLoadingMedicacionActual={isLoadingMedicacionActual}
         breadcrumbItems={breadcrumbItems}
         userError={patientError}
         antecedentesError={antecedentesError}
         evolucionesError={evolucionesError}
+        medicacionActualError={medicacionActualError}
         patientId={id}
       />
     </>
