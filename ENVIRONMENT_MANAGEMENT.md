@@ -14,7 +14,7 @@ Este proyecto maneja múltiples entornos de forma automatizada y tipada, permiti
 - **Debug:** Habilitado
 
 ### 🧪 Staging/QA
-- **Archivo:** `.env.staging`
+- **Archivo:** `.env.staging` 
 - **APIs:** Staging servers
 - **Comando:** `npm run dev:staging` (local) o `npm run build:staging` (build)
 - **URL:** https://staging.miportal.incorcentromedico.com.ar
