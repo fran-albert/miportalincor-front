@@ -14,6 +14,7 @@ import { useCreateCurrentMedication } from "@/hooks/Current-Medication/useCurren
 import { CreateCurrentMedicationDto } from "@/types/Current-Medication/Current-Medication";
 import { Pill } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { formatDateWithWeekdayArgentina } from "@/common/helpers/helpers";
 
 type UserData = Patient | Doctor;
 
@@ -60,14 +61,15 @@ export default function CreateCurrentMedicationModal({
       return;
     }
 
-    const createData: CreateCurrentMedicationDto = {
-      idUser: patientId.toString(),
-      idDoctor: doctorId.toString(),
-      startDate: new Date().toISOString(),
-      observations: observations.trim(),
-    };
-
     try {
+      // Crear la nueva medicación
+      const createData: CreateCurrentMedicationDto = {
+        idUser: patientId.toString(),
+        idDoctor: doctorId.toString(),
+        startDate: new Date().toISOString(),
+        observations: observations.trim(),
+      };
+
       const promise = createMutation.mutateAsync(createData);
 
       await promiseToast(promise, {
@@ -77,7 +79,7 @@ export default function CreateCurrentMedicationModal({
         },
         success: {
           title: "¡Medicación agregada!",
-          description: "La medicación se ha registrado correctamente en el historial"
+          description: "La medicación se ha registrado correctamente"
         },
         error: (error) => ({
           title: "Error al guardar",
@@ -102,7 +104,7 @@ export default function CreateCurrentMedicationModal({
         <DialogHeader className="pb-4">
           <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Pill className="h-5 w-5 text-purple-600" />
-            Agregar Nueva Medicación
+            Agregar Medicación Actual
           </DialogTitle>
         </DialogHeader>
 
@@ -111,12 +113,7 @@ export default function CreateCurrentMedicationModal({
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
             <p className="text-sm text-purple-700 font-medium">
               📅 Fecha de Inicio:{" "}
-              {new Date().toLocaleDateString("es-ES", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {formatDateWithWeekdayArgentina(new Date())}
             </p>
             <p className="text-xs text-purple-600 mt-1">
               Se registrará automáticamente la fecha de hoy

@@ -7,6 +7,6 @@ export const updateCurrentMedication = async (
     values: UpdateCurrentMedicationDto
 ): Promise<CurrentMedication> => {
     await sleep(1);
-    const { data } = await apiIncorHC.put<CurrentMedication>(`current-medications/${id}`, values);
+    const { data } = await apiIncorHC.patch<CurrentMedication>(`current-medication/${id}`, values);
     return data;
 }

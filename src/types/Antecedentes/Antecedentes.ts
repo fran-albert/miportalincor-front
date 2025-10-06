@@ -1,5 +1,6 @@
 import { Base } from "../Base/Base";
 import { DataType } from "../Data-Type/Data-Type";
+import { CurrentMedication } from "../Current-Medication/Current-Medication";
 
 export interface Antecedente extends Base {
   value: string;
@@ -12,27 +13,14 @@ export interface Antecedente extends Base {
   }
 }
 
-export interface MedicacionActual {
-  id: string;
-  idUserHistoriaClinica: string;
-  idDoctor: string;
-  medicationName?: string;
-  dosage?: string;
-  frequency?: string;
-  startDate: string;
-  status: 'ACTIVE' | 'SUSPENDED';
-  observations?: string;
-  suspensionDate?: string;
-  suspensionReason?: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
+// Re-export CurrentMedication as MedicacionActual for backwards compatibility
+export type MedicacionActual = CurrentMedication & {
   doctor?: {
     userId: number;
     firstName: string;
     lastName: string;
   };
-}
+};
 
 export interface MedicacionActualQueryParams {
   status?: 'ACTIVE' | 'SUSPENDED' | 'ALL';

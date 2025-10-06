@@ -1,6 +1,4 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,92 +6,77 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Patient } from "@/types/Patient/Patient";
-import { Doctor } from "@/types/Doctor/Doctor";
 import { useUpdateCurrentMedication } from "@/hooks/Current-Medication/useCurrentMedication";
 import {
-  CurrentMedication,
   UpdateCurrentMedicationDto,
 } from "@/types/Current-Medication/Current-Medication";
+import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
 import { Edit } from "lucide-react";
-
-type UserData = Patient | Doctor;
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface EditCurrentMedicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  medication: CurrentMedication;
-  userData: UserData;
+  medication: MedicacionActual;
   userType: "patient" | "doctor";
 }
-
-const updateMedicationSchema = z.object({
-  medicationName: z.string().optional(),
-  dosage: z.string().optional(),
-  frequency: z.string().optional(),
-  observations: z.string().optional(),
-});
-
-type UpdateMedicationFormData = z.infer<typeof updateMedicationSchema>;
 
 export default function EditCurrentMedicationModal({
   isOpen,
   onClose,
   medication,
-  userData,
   userType,
 }: EditCurrentMedicationModalProps) {
+  const [observations, setObservations] = useState(medication.observations || "");
   const updateMutation = useUpdateCurrentMedication();
+  const { promiseToast, showError } = useToastContext();
 
-  const form = useForm<UpdateMedicationFormData>({
-    resolver: zodResolver(updateMedicationSchema),
-    defaultValues: {
-      medicationName: medication.medicationName || "",
-      dosage: medication.dosage || "",
-      frequency: medication.frequency || "",
-      observations: medication.observations || "",
-    },
-  });
+  const handleUpdateMedication = async () => {
+    if (!observations.trim()) {
+      showError("Campo requerido", "Las observaciones son obligatorias");
+      return;
+    }
 
-  const onSubmit = (data: UpdateMedicationFormData) => {
-    const updateData: UpdateCurrentMedicationDto = {
-      medicationName: data.medicationName || undefined,
-      dosage: data.dosage || undefined,
-      frequency: data.frequency || undefined,
-      observations: data.observations || undefined,
-    };
+    try {
+      const updateData: UpdateCurrentMedicationDto = {
+        observations: observations.trim(),
+      };
 
-    updateMutation.mutate(
-      {
+      const promise = updateMutation.mutateAsync({
         id: String(medication.id),
         data: updateData,
-      },
-      {
-        onSuccess: () => {
-          onClose();
+      });
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Actualizando medicación...",
+          description: "Procesando la información médica"
         },
-      }
-    );
+        success: {
+          title: "¡Medicación actualizada!",
+          description: "Los cambios se han guardado correctamente"
+        },
+        error: (error) => ({
+          title: "Error al actualizar",
+          description: error?.message || "No se pudo actualizar la medicación. Intenta nuevamente."
+        })
+      });
+
+      handleClose();
+    } catch (error) {
+      // Error already handled by promiseToast
+    }
   };
 
   const handleClose = () => {
-    form.reset();
+    setObservations(medication.observations || "");
     onClose();
   };
 
   // Check if user can edit this medication
-  const canEdit =
-    userType === "doctor" || medication.idDoctor === userData.id.toString();
+  const canEdit = userType === "doctor";
 
   if (!canEdit) {
     return (
@@ -120,104 +103,48 @@ export default function EditCurrentMedicationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Edit className="h-5 w-5 text-purple-600" />
-            Editar Medicación
+            Actualizar Medicación Actual
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="medicationName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre del Medicamento</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ej: Paracetamol, Ibuprofeno..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <div className="grid gap-6 py-4">
+          <div className="grid gap-3">
+            <Label
+              htmlFor="observations"
+              className="text-sm font-medium text-gray-700"
+            >
+              Observaciones
+            </Label>
+            <Textarea
+              id="observations"
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Describe el medicamento, dosis, frecuencia, indicaciones especiales, reacciones adversas, etc..."
+              rows={6}
+              className="resize-none focus:ring-2 focus:ring-purple-500"
             />
+            <p className="text-xs text-gray-500">
+              Incluye toda la información relevante sobre la medicación: nombre, dosis, frecuencia, duración del tratamiento, etc.
+            </p>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="dosage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dosis</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ej: 500mg, 1 comprimido..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Frecuencia</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: 3 veces al día..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Indicaciones especiales, reacciones adversas, etc..."
-                      className="resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={updateMutation.isPending}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={updateMutation.isPending}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={handleClose} className="px-6">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpdateMedication}
+            disabled={updateMutation.isPending}
+            className="bg-purple-600 hover:bg-purple-700 px-6"
+          >
+            {updateMutation.isPending ? "Guardando..." : "Actualizar Medicación"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

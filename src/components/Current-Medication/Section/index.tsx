@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pill, Plus, Calendar, FileText } from "lucide-react";
+import { Pill, Calendar, FileText } from "lucide-react";
 import { MedicacionActualResponse } from "@/types/Antecedentes/Antecedentes";
 import { useNavigate } from "react-router-dom";
 import { Patient } from "@/types/Patient/Patient";
@@ -9,7 +9,10 @@ import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import CreateCurrentMedicationModal from "../Create";
+import EditCurrentMedicationModal from "../Edit";
 import ViewMedicacionActualModal from "../View-Simple";
+import { formatDateArgentina } from "@/common/helpers/helpers";
+import { MedicationStatus } from "@/types/Current-Medication/Current-Medication";
 
 type UserData = Patient | Doctor;
 
@@ -51,21 +54,32 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
 
   const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!session?.id,
     id: parseInt(session?.id || "0"),
   });
 
+  // Obtener solo la medicación activa más reciente
+  const currentMedication = medicacionActual && medicacionActual.length > 0
+    ? medicacionActual.find(m => m.status === MedicationStatus.ACTIVE) || medicacionActual[0]
+    : null;
+
   const isDataReady = !isLoadingDoctor && doctor;
 
   // Effect to open modal when data is ready
   useEffect(() => {
     if (wantsToOpenModal && isDataReady) {
-      setIsAddModalOpen(true);
+      // Si hay medicación actual, abrir modal de edición, sino de creación
+      if (currentMedication) {
+        setIsEditModalOpen(true);
+      } else {
+        setIsAddModalOpen(true);
+      }
       setWantsToOpenModal(false);
     }
-  }, [wantsToOpenModal, isDataReady]);
+  }, [wantsToOpenModal, isDataReady, currentMedication]);
 
   const handleOpenModal = () => {
     setWantsToOpenModal(true);
@@ -81,6 +95,7 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
 
   const handleCloseModal = () => {
     setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
     setWantsToOpenModal(false);
   };
 
@@ -89,81 +104,59 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
     setSelectedMedicationToView(null);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
-  const renderMedicaciones = () => {
-    if (!medicacionActual || medicacionActual.length === 0) {
+  const renderMedicacion = () => {
+    if (!currentMedication) {
       return (
         <div className="text-center py-8">
           <Pill className="h-12 w-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 text-sm">
-            No hay medicamentos registrados
+            No hay medicación registrada
           </p>
           <p className="text-gray-400 text-xs mt-1">
             {showEditActions && !readOnly
-              ? 'Haz clic en "+" para agregar el primer medicamento'
-              : 'No se encontraron medicamentos registrados'}
+              ? 'Haz clic en "Actualizar" para registrar la medicación actual'
+              : 'No se encontró medicación registrada'}
           </p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-3">
-        {medicacionActual.map((medication) => (
-          <div
-            key={medication.id}
-            className="border-l-4 border-purple-500 pl-4 py-3 bg-white rounded-r-lg shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleMedicationClick(medication)}
-          >
-            {/* Solo mostrar badge si está suspendido */}
-            {medication.status === 'SUSPENDED' && (
-              <div className="flex items-start justify-between mb-2">
-                <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-2 py-1">
-                  Suspendido
-                </span>
-              </div>
-            )}
+      <div
+        className="border border-gray-100 border-l-4 border-l-purple-500 pl-4 py-3 bg-white rounded-r-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => handleMedicationClick(currentMedication)}
+      >
+        <div className="space-y-2">
+          {currentMedication.medicationName && (
+            <p className="text-sm font-semibold text-gray-800">
+              {currentMedication.medicationName}
+            </p>
+          )}
 
-            <div className="space-y-2">
-              {medication.medicationName && (
-                <p className="text-sm font-semibold text-gray-800">
-                  {medication.medicationName}
-                </p>
-              )}
+          {currentMedication.dosage && (
+            <p className="text-xs text-gray-600">
+              <strong>Dosis:</strong> {currentMedication.dosage}
+            </p>
+          )}
 
-              {medication.dosage && (
-                <p className="text-xs text-gray-600">
-                  <strong>Dosis:</strong> {medication.dosage}
-                </p>
-              )}
+          {currentMedication.frequency && (
+            <p className="text-xs text-gray-600">
+              <strong>Frecuencia:</strong> {currentMedication.frequency}
+            </p>
+          )}
 
-              {medication.frequency && (
-                <p className="text-xs text-gray-600">
-                  <strong>Frecuencia:</strong> {medication.frequency}
-                </p>
-              )}
-
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Calendar className="h-3 w-3" />
-                <span>Desde: {formatDate(medication.startDate)}</span>
-              </div>
-
-              {medication.observations && (
-                <div className="flex items-start gap-1 text-xs text-gray-500">
-                  <FileText className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                  <span className="line-clamp-2">{medication.observations}</span>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Calendar className="h-3 w-3" />
+            <span>Desde: {formatDateArgentina(currentMedication.startDate)}</span>
           </div>
-        ))}
+
+          {currentMedication.observations && (
+            <div className="flex items-start gap-1 text-xs text-gray-500">
+              <FileText className="h-3 w-3 mt-0.5 flex-shrink-0" />
+              <span className="line-clamp-2">{currentMedication.observations}</span>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -183,14 +176,16 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
             {showEditActions && !readOnly && (
               <Button
                 size="sm"
-                className="bg-purple-600 hover:bg-purple-700 text-white w-8 h-8 rounded-full p-0 shadow-sm"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-3 h-8 shadow-sm"
                 onClick={handleOpenModal}
                 disabled={wantsToOpenModal}
               >
                 {wantsToOpenModal ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Plus className="h-4 w-4" />
+                  <span className="text-xs font-medium">
+                    {currentMedication ? 'Actualizar' : 'Agregar'}
+                  </span>
                 )}
               </Button>
             )}
@@ -202,8 +197,8 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {renderMedicaciones()}
+          <div className="space-y-4">
+            {renderMedicacion()}
           </div>
         </CardContent>
       </Card>
@@ -216,6 +211,16 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
           userData={userData}
           userType={userType}
           doctor={doctor}
+        />
+      )}
+
+      {/* Dialog para Editar Medicación - Solo si se permite edición */}
+      {showEditActions && !readOnly && currentMedication && (
+        <EditCurrentMedicationModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseModal}
+          medication={currentMedication}
+          userType={currentUserType}
         />
       )}
 

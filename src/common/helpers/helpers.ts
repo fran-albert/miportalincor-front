@@ -231,3 +231,43 @@ export const formatDoctorInfo = (doctor: DoctorInfo) => {
   };
 };
 
+/**
+ * Formatea una fecha en zona horaria de Argentina (formato: "6 de octubre de 2025")
+ */
+export const formatDateArgentina = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("es-AR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
+};
+
+/**
+ * Formatea una fecha con hora en zona horaria de Argentina (formato: "6 de octubre de 2025, 11:09")
+ */
+export const formatDateTimeArgentina = (dateString: string): string => {
+  return new Date(dateString).toLocaleString("es-AR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
+};
+
+/**
+ * Formatea una fecha con día de la semana en zona horaria de Argentina (formato: "lunes, 6 de octubre de 2025")
+ */
+export const formatDateWithWeekdayArgentina = (date: Date): string => {
+  return date.toLocaleDateString("es-AR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
+};
+
