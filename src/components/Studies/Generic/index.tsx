@@ -31,16 +31,82 @@ interface GenericStudiesProps {
   onViewStudy?: (study: StudiesWithURL) => void;
 }
 
+// Función para categorizar estudios de forma inteligente
+const categorizeStudy = (studyTypeName?: string): string => {
+  if (!studyTypeName) return "Otros";
+
+  const studyType = studyTypeName.toLowerCase();
+
+  // Imagenología - Solo estudios de imagen
+  if (
+    studyType.includes("ecograf") ||
+    studyType.includes("radiograf") ||
+    studyType.includes("tomograf") ||
+    studyType.includes("resonancia") ||
+    studyType.includes("rx ") ||
+    studyType.includes("rx-")
+  ) {
+    return "Imagenología";
+  }
+
+  // Cardiología - Estudios del corazón
+  if (
+    studyType.includes("cardio") ||
+    studyType.includes("electrocardiograma") ||
+    studyType.includes("ecg") ||
+    studyType.includes("ekg") ||
+    studyType.includes("ergometr") ||
+    studyType.includes("holter") ||
+    studyType.includes("ecocardio")
+  ) {
+    return "Cardiología";
+  }
+
+  // Laboratorios - Análisis clínicos
+  if (
+    studyType.includes("laboratorio") ||
+    studyType.includes("laboratorios") ||
+    studyType.includes("análisis") ||
+    studyType.includes("analisis") ||
+    studyType.includes("hemograma") ||
+    studyType.includes("sangre") ||
+    studyType.includes("glucemia") ||
+    studyType.includes("perfil") ||
+    studyType.includes("orina") ||
+    studyType.includes("hepatograma") ||
+    studyType.includes("lipidograma")
+  ) {
+    return "Laboratorio";
+  }
+
+  // Neurología
+  if (
+    studyType.includes("neuro") ||
+    studyType.includes("electroencefalograma") ||
+    studyType.includes("eeg")
+  ) {
+    return "Neurología";
+  }
+
+  // Endocrinología
+  if (
+    studyType.includes("endocrin") ||
+    studyType.includes("hormona") ||
+    studyType.includes("tiroides") ||
+    studyType.includes("tsh")
+  ) {
+    return "Endocrinología";
+  }
+
+  return "Otros";
+};
+
 // Transform StudiesWithURL to the format expected by PatientStudies
 const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
   return studies.map((study, index) => ({
     id: study.id || index,
     tipo: study.studyType?.name || "Estudio",
-    categoria:
-      study.studyType?.name?.includes("Laboratorio") ||
-      study.studyType?.name?.includes("Análisis")
-        ? "Laboratorio"
-        : "Imagenología",
+    categoria: categorizeStudy(study.studyType?.name),
     descripcion: study.note || "Sin descripción",
     fecha: new Date(study.date).toLocaleDateString("es-ES"),
     medico: "Dr. No especificado", // No viene del backend
@@ -171,23 +237,23 @@ const GenericStudies: React.FC<GenericStudiesProps> = ({
   role,
   idUser,
 }) => {
-  const { session } = useUserRole();
+  const { session, isDoctor } = useUserRole();
 
-  // Get laboratory data for the third tab
+  // Get laboratory data for the third tab - ONLY if user is a doctor
   const { studiesByUserId = [], isLoading: isLoadingStudies } = useStudy({
     idUser: idUser || 0,
-    fetchStudiesByUserId: !!idUser,
+    fetchStudiesByUserId: !!idUser && isDoctor,
   });
 
-  const studyIds = studiesByUserId.map((study) => study.id);
+  const studyIds = isDoctor ? studiesByUserId.map((study) => study.id) : [];
 
   const { bloodTestsData = [], isLoadingBloodTestsData } = useBloodTestData({
-    auth: true,
+    auth: isDoctor,
     idStudies: studyIds,
   });
 
   const { blodTests = [], isLoading: isLoadingBloodTests } = useBlodTest({
-    auth: true,
+    auth: isDoctor,
   });
 
   // Transform data to the new component format
@@ -198,7 +264,6 @@ const GenericStudies: React.FC<GenericStudiesProps> = ({
   const handleBack = () => {
     window.history.back();
   };
-
 
   // Create lab table component for the third tab
   const labTableComponent =
@@ -244,7 +309,9 @@ const GenericStudies: React.FC<GenericStudiesProps> = ({
         canDelete={true}
         labTableComponent={labTableComponent}
         studiesWithURL={studies}
-        patient={userData && 'dni' in userData ? userData as Patient : undefined}
+        patient={
+          userData && "dni" in userData ? (userData as Patient) : undefined
+        }
       />
     </div>
   );

@@ -11,16 +11,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Download,
-  Eye,
   Plus,
   Search,
-  Calendar,
   FileImageIcon,
   Activity,
   TestTubeIcon,
+  Zap,
+  StethoscopeIcon,
+  FileText,
+  Folder,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import moment from "moment-timezone";
 import { StudyTypeSelect } from "@/components/Select/Study/select";
@@ -30,9 +31,10 @@ import { StudyType } from "@/types/Study-Type/Study-Type";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StudiesWithURL } from "@/types/Study/Study";
-import DeleteStudyDialog from "./Delete/dialog";
 import PatientInformation from "@/components/Patients/Dashboard/Patient-Information";
 import { Patient } from "@/types/Patient/Patient";
+import { DataTable } from "@/components/Table/table";
+import { createStudiesColumns } from "./Table/columns";
 
 interface PatientData {
   name: string;
@@ -94,61 +96,105 @@ interface PatientStudiesProps {
 
 export default function PatientStudies({
   patientData,
-  initialStudies: studies = [],
+  initialStudies = [],
   initialLaboratories = [],
   userRole = [],
   canDelete = false,
   labTableComponent,
-  studiesWithURL = [],
   patient,
 }: PatientStudiesProps) {
-  const [activeTab, setActiveTab] = useState<
-    "estudios" | "laboratorios" | "tabla-laboratorios"
-  >("estudios");
-
-  const [laboratories] = useState<Laboratory[]>(initialLaboratories);
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todas");
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
   const { register, handleSubmit, reset, setValue, control } = useForm();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { uploadStudyMutation } = useStudyMutations();
   const { promiseToast } = useToastContext();
 
-  const categorias = [
-    "Todas",
-    "Imagenología",
-    "Laboratorio",
-    "Cardiología",
-    "Neurología",
-    "Endocrinología",
-    "Otros",
+  // Combinar todos los estudios (incluyendo laboratorios) para los tabs de categorías
+  const studies = React.useMemo(() => {
+    const labStudies: Study[] = initialLaboratories.map((lab) => ({
+      id: lab.id,
+      tipo: lab.tipo,
+      categoria: "Laboratorio",
+      descripcion: "",
+      fecha: lab.fecha,
+      medico: lab.medico,
+      archivo: {
+        nombre: lab.archivo.nombre,
+        tipo: lab.archivo.tipo as "PDF" | "JPG" | "PNG" | "DICOM",
+        tamaño: lab.archivo.tamaño,
+        url: lab.archivo.url,
+      },
+      signedUrl: lab.signedUrl,
+      estado: lab.estado as "Completado" | "Pendiente" | "En proceso",
+    }));
+
+    return [...initialStudies, ...labStudies];
+  }, [initialStudies, initialLaboratories]);
+
+  // Definir categorías con metadata
+  const categoriesConfig = [
+    { key: "Todos", label: "Estudios Médicos", icon: Folder, color: "teal" },
+    {
+      key: "Imagenología",
+      label: "Imagenología",
+      icon: FileImageIcon,
+      color: "blue",
+    },
+    {
+      key: "Laboratorio",
+      label: "Laboratorios",
+      icon: TestTubeIcon,
+      color: "green",
+    },
+    { key: "Cardiología", label: "Cardiología", icon: Activity, color: "red" },
+    { key: "Neurología", label: "Neurología", icon: Zap, color: "purple" },
+    {
+      key: "Endocrinología",
+      label: "Endocrinología",
+      icon: StethoscopeIcon,
+      color: "orange",
+    },
+    { key: "Otros", label: "Otros", icon: FileText, color: "gray" },
   ];
 
-  const getCategoryIcon = (categoria: string) => {
-    switch (categoria) {
-      case "Imagenología":
-        return <FileImageIcon className="h-5 w-5 text-blue-500" />;
-      case "Laboratorio":
-        return <TestTubeIcon className="h-5 w-5 text-green-500" />;
-      case "Cardiología":
-        return <Activity className="h-5 w-5 text-red-500" />;
-      default:
-        return <FileImageIcon className="h-5 w-5 text-gray-500" />;
-    }
-  };
+  // Agrupar estudios por categoría
+  const studiesByCategory = React.useMemo(() => {
+    const grouped: Record<string, Study[]> = {
+      Todos: studies, // Todos muestra todos los estudios
+    };
 
-  const filteredStudies = studies.filter((study) => {
-    const matchesSearch =
-      study.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.medico.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "Todas" || study.categoria === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+    categoriesConfig.forEach((cat) => {
+      if (cat.key !== "Todos") {
+        grouped[cat.key] = studies.filter(
+          (study) => study.categoria === cat.key
+        );
+      }
+    });
+
+    return grouped;
+  }, [studies]);
+
+  // Tab inicial siempre será "Todos" (Estudios Médicos)
+  const [activeTab, setActiveTab] = useState<string>("Todos");
+
+  // Filtrar estudios de la categoría activa por búsqueda
+  const filteredStudies = React.useMemo(() => {
+    const categoryStudies =
+      activeTab === "tabla-laboratorios"
+        ? []
+        : studiesByCategory[activeTab] || [];
+
+    if (!searchTerm) return categoryStudies;
+
+    return categoryStudies.filter(
+      (study) =>
+        study.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        study.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        study.medico.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [activeTab, studiesByCategory, searchTerm]);
 
   // Check if user can delete studies
   const canDeleteStudies =
@@ -156,7 +202,9 @@ export default function PatientStudies({
     userRole.some((role) => role === "Administrador" || role === "Secretaria");
 
   // Check if user can add studies
-  const canAddStudies = userRole.some((role) => role === "Administrador" || role === "Secretaria");
+  const canAddStudies = userRole.some(
+    (role) => role === "Administrador" || role === "Secretaria"
+  );
 
   const handleAddStudy: SubmitHandler<any> = async (data) => {
     const formData = new FormData();
@@ -241,50 +289,59 @@ export default function PatientStudies({
   }, [isAddModalOpen, setValue, reset]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto space-y-6">
         {patient && <PatientInformation patient={patient} />}
 
         {/* Tabs */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex gap-4">
-                <Button
-                  variant={activeTab === "estudios" ? "default" : "outline"}
-                  onClick={() => setActiveTab("estudios")}
-                  className={activeTab === "estudios" ? "text-white" : ""}
-                  style={
-                    activeTab === "estudios"
-                      ? { backgroundColor: "#187B80" }
-                      : {}
-                  }
-                >
-                  <FileImageIcon className="h-4 w-4 mr-2" />
-                  Estudios Médicos ({filteredStudies.length})
-                </Button>
-                <Button
-                  variant={activeTab === "laboratorios" ? "default" : "outline"}
-                  onClick={() => setActiveTab("laboratorios")}
-                  className={activeTab === "laboratorios" ? "text-white" : ""}
-                  style={
-                    activeTab === "laboratorios"
-                      ? { backgroundColor: "#187B80" }
-                      : {}
-                  }
-                >
-                  <TestTubeIcon className="h-4 w-4 mr-2" />
-                  Laboratorios ({laboratories.length})
-                </Button>
-                {labTableComponent && userRole.includes("Médico") && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+              <div
+                className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#cbd5e0 transparent",
+                }}
+              >
+                {categoriesConfig.map((category) => {
+                  const count = studiesByCategory[category.key]?.length || 0;
+                  const Icon = category.icon;
+
+                  // Ocultar categorías con 0 estudios, excepto "Todos"
+                  if (count === 0 && category.key !== "Todos") return null;
+
+                  return (
+                    <Button
+                      key={category.key}
+                      variant={
+                        activeTab === category.key ? "default" : "outline"
+                      }
+                      onClick={() => setActiveTab(category.key)}
+                      className={`whitespace-nowrap ${
+                        activeTab === category.key ? "text-white" : ""
+                      }`}
+                      style={
+                        activeTab === category.key
+                          ? { backgroundColor: "#187B80" }
+                          : {}
+                      }
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {category.label} ({count})
+                    </Button>
+                  );
+                })}
+                {/* Tabla de Laboratorios para Médicos */}
+                {labTableComponent && userRole.includes("Medico") && (
                   <Button
                     variant={
                       activeTab === "tabla-laboratorios" ? "default" : "outline"
                     }
                     onClick={() => setActiveTab("tabla-laboratorios")}
-                    className={
+                    className={`whitespace-nowrap ${
                       activeTab === "tabla-laboratorios" ? "text-white" : ""
-                    }
+                    }`}
                     style={
                       activeTab === "tabla-laboratorios"
                         ? { backgroundColor: "#187B80" }
@@ -300,7 +357,7 @@ export default function PatientStudies({
               {/* Add Study Button - Only for Administrators and Secretaries */}
               {canAddStudies && (
                 <Button
-                  className="text-white"
+                  className="text-white whitespace-nowrap w-full sm:w-auto"
                   style={{ backgroundColor: "#187B80" }}
                   onClick={() => setIsAddModalOpen(true)}
                 >
@@ -310,43 +367,13 @@ export default function PatientStudies({
               )}
             </div>
 
-            {/* Filtros solo para estudios */}
-            {activeTab === "estudios" && (
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Buscar estudios..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="md:w-64">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  >
-                    {categorias.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Filtro simple para laboratorios */}
-            {activeTab === "laboratorios" && (
+            {/* Barra de búsqueda - Solo mostrar si no es la tabla de laboratorios */}
+            {activeTab !== "tabla-laboratorios" && (
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Buscar laboratorios..."
+                    placeholder="Buscar estudios..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -357,193 +384,35 @@ export default function PatientStudies({
           </CardContent>
         </Card>
 
-        {/* Tabla de Estudios o Laboratorios */}
+        {/* Tabla de Estudios */}
         <Card>
           <CardHeader>
             <CardTitle className="text-xl font-bold text-gray-800">
-              {activeTab === "estudios"
-                ? `Lista de Estudios (${filteredStudies.length})`
-                : activeTab === "laboratorios"
-                ? `Análisis de Laboratorio (${laboratories.length})`
-                : `Tabla de Laboratorios Completa`}
+              {activeTab === "tabla-laboratorios"
+                ? `Tabla de Laboratorios Completa`
+                : `${
+                    categoriesConfig.find((c) => c.key === activeTab)?.label ||
+                    "Estudios"
+                  } (${filteredStudies.length})`}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              {activeTab === "estudios" ? (
-                // Tabla de estudios existente
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Tipo de Estudio
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Fecha
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStudies.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="text-center py-12">
-                          <FileImageIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                          <p className="text-gray-500">
-                            No se encontraron estudios
-                          </p>
-                          <p className="text-gray-400 text-sm mt-1">
-                            {searchTerm || selectedCategory !== "Todas"
-                              ? "Intenta cambiar los filtros de búsqueda"
-                              : "Haz clic en 'Agregar Estudio' para comenzar"}
-                          </p>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredStudies.map((study) => (
-                        <tr
-                          key={study.id}
-                          className="border-b border-gray-100 hover:bg-gray-50"
-                        >
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-3">
-                              {getCategoryIcon(study.categoria)}
-                              <div>
-                                <p className="font-medium text-gray-800">
-                                  {study.tipo}
-                                </p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {study.descripcion}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-1 text-sm text-gray-600">
-                              <Calendar className="h-3 w-3" />
-                              <span>{study.fecha}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() =>
-                                  window.open(
-                                    study.signedUrl || study.archivo.url,
-                                    "_blank"
-                                  )
-                                }
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() =>
-                                  window.open(
-                                    study.signedUrl || study.archivo.url,
-                                    "_blank"
-                                  )
-                                }
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              {canDeleteStudies && (
-                                <DeleteStudyDialog
-                                  idStudy={study.id}
-                                  userId={parseInt(patientData.id)}
-                                  studies={studiesWithURL}
-                                />
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              ) : activeTab === "laboratorios" ? (
-                // Nueva tabla de laboratorios simplificada
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Tipo de Análisis
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Fecha
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {laboratories.map((lab) => (
-                      <tr
-                        key={lab.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
-                            <TestTubeIcon className="h-5 w-5 text-green-500" />
-                            <div>
-                              <p className="font-medium text-gray-800">
-                                {lab.tipo}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Calendar className="h-3 w-3" />
-                            <span>{lab.fecha}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() =>
-                                window.open(
-                                  lab.signedUrl || lab.archivo.url,
-                                  "_blank"
-                                )
-                              }
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() =>
-                                window.open(
-                                  lab.signedUrl || lab.archivo.url,
-                                  "_blank"
-                                )
-                              }
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : activeTab === "tabla-laboratorios" ? (
-                // Tabla de Laboratorios completa
+              {activeTab === "tabla-laboratorios" ? (
+                // Tabla de Laboratorios completa para médicos
                 <div className="mt-4">{labTableComponent}</div>
-              ) : null}
+              ) : (
+                // Tabla de estudios con paginación para cualquier categoría
+                <DataTable
+                  columns={createStudiesColumns(
+                    canDeleteStudies,
+                    patientData.id
+                  )}
+                  data={filteredStudies}
+                  showSearch={false}
+                  canAddUser={false}
+                />
+              )}
             </div>
           </CardContent>
         </Card>

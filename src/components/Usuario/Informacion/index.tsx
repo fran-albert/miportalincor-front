@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Phone, Mail, IdCard, Stethoscope } from "lucide-react";
+import { Phone, Mail, IdCard, Stethoscope } from "lucide-react";
 import { calculateAge, formatDni } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
@@ -25,40 +25,38 @@ const isDoctor = (user: UserData): user is Doctor => {
 };
 
 const UserInformation: React.FC<Props> = ({ userData, userType }) => {
+  // Obtener las iniciales del usuario
+  const initials = `${userData.firstName?.[0] || ""}${
+    userData.lastName?.[0] || ""
+  }`.toUpperCase();
+
   const renderPatientInfo = (patient: Patient) => (
     <>
       <p className="text-gray-600 mt-1 flex items-center gap-2">
-        <IdCard className="h-6 w-6" />
-        <span className="flex items-center gap-1">
-          {formatDni(patient.dni)}
-        </span>
+        <IdCard className="h-4 w-4 text-gray-400" />
+        <span className="text-sm">{formatDni(patient.dni)}</span>
       </p>
-      <div className="flex gap-4 mt-2">
-        <Badge variant="outline">{patient.gender}</Badge>
-        <Badge variant="secondary">
+      <div className="flex gap-2 mt-3 flex-wrap">
+        <Badge variant="outline" className="text-gray-600 border-gray-300">
+          {patient.gender}
+        </Badge>
+        <Badge variant="outline" className="text-gray-600 border-gray-300">
           {calculateAge(String(patient.birthDate))} años
         </Badge>
       </div>
-      <div className="flex gap-4 mt-3">
-        <div className="text-sm">
+      <div className="mt-3">
+        <p className="text-sm text-gray-600">
           <span className="font-medium text-gray-700">
             {patient?.healthPlans?.[0]?.healthInsurance.name ??
-              "Obra Social No Asignada"}{" "}
-            -{" "}
-            {patient?.affiliationNumber ??
-              "No tiene número de obra social asignado."}
+              "Obra Social No Asignada"}
           </span>
-        </div>
-      </div>
-      <div className="flex gap-4 mt-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Phone className="h-4 w-4" />
-          <span>{patient.phoneNumber}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Mail className="h-4 w-4" />
-          <span>{patient.email}</span>
-        </div>
+          {patient?.affiliationNumber && (
+            <span className="text-gray-500">
+              {" "}
+              • {patient.affiliationNumber}
+            </span>
+          )}
+        </p>
       </div>
     </>
   );
@@ -66,27 +64,19 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
   const renderDoctorInfo = (doctor: Doctor) => (
     <>
       <p className="text-gray-600 mt-1 flex items-center gap-2">
-        <Stethoscope className="h-6 w-6" />
-        <span className="flex items-center gap-1">
-          Matrícula: {doctor.matricula}
-        </span>
+        <Stethoscope className="h-4 w-4 text-gray-400" />
+        <span className="text-sm">Matrícula: {doctor.matricula}</span>
       </p>
-      <div className="flex gap-4 mt-2">
+      <div className="flex gap-2 mt-3 flex-wrap">
         {doctor.specialities?.map((speciality, index) => (
-          <Badge key={index} variant="outline">
+          <Badge
+            key={index}
+            variant="outline"
+            className="text-gray-600 border-gray-300"
+          >
             {speciality.name || speciality}
           </Badge>
         ))}
-      </div>
-      <div className="flex gap-4 mt-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Phone className="h-4 w-4" />
-          <span>{doctor.phoneNumber}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Mail className="h-4 w-4" />
-          <span>{doctor.email}</span>
-        </div>
       </div>
       {doctor.healthInsurances && doctor.healthInsurances.length > 0 && (
         <div className="mt-3">
@@ -95,7 +85,11 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
           </span>
           <div className="flex flex-wrap gap-2 mt-1">
             {doctor.healthInsurances.map((insurance, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
+              <Badge
+                key={index}
+                variant="outline"
+                className="text-xs text-gray-600 border-gray-300"
+              >
                 {insurance.name}
               </Badge>
             ))}
@@ -105,23 +99,32 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
     </>
   );
 
+  const renderContactInfo = () => (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-gray-600">
+        <Phone className="h-4 w-4 text-gray-400" />
+        <span className="text-sm">{userData.phoneNumber}</span>
+      </div>
+      <div className="flex items-center gap-2 text-gray-600">
+        <Mail className="h-4 w-4 text-gray-400" />
+        <span className="text-sm truncate">{userData.email}</span>
+      </div>
+    </div>
+  );
+
   return (
     <Card>
-      <CardHeader className="bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-teal-100">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#187B80" }}
-            >
-              {userType === "doctor" ? (
-                <Stethoscope className="h-8 w-8 text-white" />
-              ) : (
-                <User className="h-8 w-8 text-white" />
-              )}
+      <CardHeader className="border-b">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Sección principal - Información del usuario */}
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl font-semibold text-gray-700">
+                {initials}
+              </span>
             </div>
-            <div>
-              <CardTitle className="text-2xl font-bold text-gray-800">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-2xl font-bold text-gray-800 truncate">
                 {userData.firstName} {userData.lastName}
               </CardTitle>
 
@@ -129,16 +132,25 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
               {isDoctor(userData) && renderDoctorInfo(userData)}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" asChild>
+
+          {/* Sección de contacto y acciones */}
+          <div className="flex flex-col justify-between">
+            {renderContactInfo()}
+            <div className="mt-4 md:mt-0">
               <Link
                 to={`/${userType === "patient" ? "pacientes" : "medicos"}/${
                   userData.slug
                 }`}
               >
-                Ver Perfil
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full md:w-auto hover:bg-gray-50"
+                >
+                  Ver perfil completo
+                </Button>
               </Link>
-            </Button>
+            </div>
           </div>
         </div>
       </CardHeader>

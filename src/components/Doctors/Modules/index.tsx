@@ -1,7 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import useUserRole from "@/hooks/useRoles";
-import { Stethoscope, Calendar, Pill, FileImage, FileText, ClipboardPlus, Users, Building2 } from "lucide-react";
+import {
+  Stethoscope,
+  Calendar,
+  FileImage,
+  ClipboardPlus,
+  Users,
+  Building2,
+} from "lucide-react";
 
 interface DoctorModulesProps {
   onHistoriaClinicaClick: () => void;
@@ -79,22 +86,6 @@ export default function DoctorModules({
             </div>
           </Button>
 
-          {/* Medicamentos */}
-          <Button
-            variant="outline"
-            className="h-32 flex flex-col items-center justify-center gap-3 border-2 hover:bg-gray-50 bg-transparent"
-            disabled
-          >
-            <Pill className="h-10 w-10 text-gray-400" />
-            <div className="text-center">
-              <span className="font-semibold text-lg text-gray-400">
-                Prescripciones
-              </span>
-              <p className="text-xs text-gray-400 mt-1">
-                Recetas y tratamientos
-              </p>
-            </div>
-          </Button>
 
           {/* Estudios */}
           {onEstudiosClick && (
@@ -130,7 +121,7 @@ export default function DoctorModules({
           )}
 
           {/* Documentos */}
-          <Button
+          {/* <Button
             variant="outline"
             className="h-32 flex flex-col items-center justify-center gap-3 border-2 hover:bg-gray-50 bg-transparent"
             disabled
@@ -144,7 +135,7 @@ export default function DoctorModules({
                 Certificados y archivos
               </p>
             </div>
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
     </Card>
