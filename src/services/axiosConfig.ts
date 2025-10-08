@@ -17,6 +17,14 @@ const apiLaboral = axios.create({
   },
 });
 
+const apiTurnos = axios.create({
+  baseURL: environment.API_TURNOS_URL,
+  timeout: currentConfig.apiTimeout,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 const apiIncorHC = axios.create({
   baseURL: environment.API_INCOR_HC_URL,
   timeout: currentConfig.apiTimeout,
@@ -36,5 +44,6 @@ const addAuthToken = (config: any) => {
 apiIncor.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiIncorHC.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
-
-export { apiIncor, apiLaboral, apiIncorHC };
+apiTurnos.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+  
+export { apiIncor, apiLaboral, apiIncorHC, apiTurnos };

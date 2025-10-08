@@ -7,6 +7,7 @@ import {
   PatientCardSkeleton,
   StudiesTableSkeleton,
 } from "@/components/Skeleton/Patient";
+import MedicoDetallePage from "./component";
 
 interface Props {
   doctor: Doctor | undefined;
@@ -31,17 +32,16 @@ export function DoctorComponent({
       href: `/medicos/${doctor?.slug}`,
     },
   ];
-  return (
-    <div className="container space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-        {isLoadingDoctor ? (
-          <PatientCardSkeleton />
-        ) : (
-          doctor && <DoctorCardComponent doctor={doctor} />
-        )}
+  if (!doctor) return null;
 
-        <div className="md:grid md:gap-6 space-y-4">
+  return (
+    <div className="">
+      {isLoadingDoctor ? (
+        <PatientCardSkeleton />
+      ) : (
+        doctor && <MedicoDetallePage doctor={doctor} />
+      )}
+      {/* <div className="md:grid md:gap-6 space-y-4">
           {isFetchingStudies ? (
             <StudiesTableSkeleton />
           ) : (
@@ -55,8 +55,7 @@ export function DoctorComponent({
               />
             )
           )}
-        </div>
-      </div>
+        </div> */}
     </div>
   );
 }
