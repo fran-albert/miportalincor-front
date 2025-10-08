@@ -4,8 +4,9 @@ import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
 import { Speciality } from "@/types/Speciality/Speciality";
 import EditSpecialityDialog from "../Edit";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
 import AddSpecialityDialog from "../Add/button";
+import { Heart } from "lucide-react";
 
 export const SpecialityTable = ({
   specialities,
@@ -30,18 +31,21 @@ export const SpecialityTable = ({
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Especialidades", href: "/especialidades" },
+    { label: "Especialidades" },
   ];
 
   const customFilterFunction = (speciality: Speciality, query: string) =>
     speciality.name.toLowerCase().includes(query.toLowerCase());
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Especialidades
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Especialidades"
+        description="Configura y gestiona las especialidades médicas del centro"
+        icon={<Heart className="h-6 w-6" />}
+        badge={specialities.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={specialityColumns}

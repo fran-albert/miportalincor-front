@@ -2,7 +2,8 @@ import { getColumns } from "./columns";
 import { Patient } from "@/types/Patient/Patient";
 import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { Users } from "lucide-react";
 
 interface PatientTableProps {
   patients: Patient[];
@@ -29,15 +30,18 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Pacientes", href: "/pacientes" },
+    { label: "Pacientes" },
   ];
 
   return (
-    <div className="container space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Pacientes
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Pacientes"
+        description="Gestiona la información y historias clínicas de los pacientes"
+        icon={<Users className="h-6 w-6" />}
+        badge={patients.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={patientColumns}

@@ -36,7 +36,7 @@ const PatientEvolucionesPage: React.FC = () => {
 
   if (isFirstLoadingPatient) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
           <PatientCardSkeleton />
         </div>

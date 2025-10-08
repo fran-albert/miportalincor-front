@@ -22,7 +22,7 @@ export function DoctorDashboardComponent({
   ];
 
   return (
-    <div className="container space-y-2 mt-2">
+    <div className="space-y-4 p-6">
       <BreadcrumbComponent items={breadcrumbItems} />
       <div className="gap-6">
         {isLoadingDoctor ? (

@@ -1,93 +1,140 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { FaUsers } from "react-icons/fa";
-import { FaUserDoctor } from "react-icons/fa6";
-import { GiHospitalCross, GiHypodermicTest } from "react-icons/gi";
-import { MdHealthAndSafety } from "react-icons/md";
-import { Link } from "react-router-dom";
-import { CiMedicalClipboard } from "react-icons/ci";
+import { WelcomeHero } from "./Dashboard/WelcomeHero";
+import { StatsCard } from "./Dashboard/StatsCard";
+import { QuickAccessCard } from "./Dashboard/QuickAccessCard";
+import { useDashboardStats } from "@/hooks/Dashboard/useDashboardStats";
+import { Users, Stethoscope, FileText, UserCog, Heart, Shield, TestTube, Building2, Calendar } from "lucide-react";
+import useUserRole from "@/hooks/useRoles";
 
 export default function HomeComponent({ name }: { name: string }) {
-  const cards = [
+  const { isAuthenticated } = useUserRole();
+  const { stats, isLoading } = useDashboardStats(isAuthenticated);
+  const { isSecretary, isAdmin } = useUserRole();
+
+  const quickAccessCards = [
     {
       title: "Pacientes",
-      description:
-        "Ingrese al módulo de pacientes para ver la lista de pacientes.",
-      icon: <FaUsers className="h-8 w-8 text-greenPrimary" />,
+      description: "Gestiona la información y historias clínicas de los pacientes",
+      icon: Users,
       href: "/pacientes",
     },
     {
       title: "Médicos",
-      description: "Ingrese al módulo de médicos para ver la lista de médicos.",
-      icon: <FaUserDoctor className="h-8 w-8 text-greenPrimary" />,
+      description: "Administra el equipo médico y sus especialidades",
+      icon: Stethoscope,
       href: "/medicos",
     },
     {
       title: "Especialidades",
-      description:
-        "Ingrese al módulo de especialidades para ver la lista de especialidades.",
-      icon: <GiHospitalCross className="h-8 w-8 text-greenPrimary" />,
+      description: "Configura y gestiona las especialidades médicas del centro",
+      icon: Heart,
       href: "/especialidades",
     },
     {
       title: "Obras Sociales",
-      description:
-        "Ingrese al módulo de obras sociales para ver la lista de obras sociales.",
-      icon: <MdHealthAndSafety className="h-8 w-8 text-greenPrimary" />,
+      description: "Administra las obras sociales y planes de salud",
+      icon: Shield,
       href: "/obras-sociales",
     },
     {
-      title: "Laboratorios",
-      description:
-        "Ingrese al módulo de laboratorios para ver la lista de laboratorios.",
-      icon: <GiHypodermicTest className="h-8 w-8 text-greenPrimary" />,
+      title: "Análisis Bioquímicos",
+      description: "Configura y gestiona los análisis bioquímicos del laboratorio",
+      icon: TestTube,
       href: "/analisis-bioquimicos",
     },
     {
       title: "Tipos de Estudios",
-      description:
-        "Ingrese al módulo de tipos de estudios para ver la lista de tipos de estudios.",
-      icon: <CiMedicalClipboard className="h-8 w-8 text-greenPrimary" />,
+      description: "Administra las categorías de estudios médicos disponibles",
+      icon: FileText,
       href: "/tipos-de-estudios",
     },
+  ];
+
+  // Solo Admin y Secretaria ven Incor Laboral y Turnos
+  if (isSecretary || isAdmin) {
+    quickAccessCards.push(
+      {
+        title: "Incor Laboral",
+        description: "Gestiona colaboradores y exámenes preocupacionales",
+        icon: UserCog,
+        href: "/incor-laboral",
+      },
+      {
+        title: "Turnos",
+        description: "Administra y visualiza las citas médicas del centro",
+        icon: Calendar,
+        href: "/turnos",
+      }
+    );
+  }
+
+  const statsCards = [
     {
-      title: "Incor Laboral - Colaboradores",
-      description:
-        "Ingrese al módulo de Incor Laboral.",
-      icon: <FaUsers className="h-8 w-8 text-greenPrimary" />,
-      href: "/incor-laboral",
+      title: "Total Pacientes",
+      value: stats.patients.total,
+      lastMonthValue: stats.patients.lastMonth,
+      icon: Users,
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+    },
+    {
+      title: "Total Médicos",
+      value: stats.doctors.total,
+      lastMonthValue: stats.doctors.lastMonth,
+      icon: Stethoscope,
+      gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
+    },
+    {
+      title: "Total Estudios",
+      value: stats.studies.total,
+      lastMonthValue: stats.studies.lastMonth,
+      icon: FileText,
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+    },
+    {
+      title: "Empresas Activas",
+      value: 0, // TODO: Agregar cuando esté disponible
+      icon: Building2,
+      gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
     },
   ];
 
   return (
-    <div className="container mx-auto px-4 py-4 sm:py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-greenPrimary">
-        Hola, {name}
-      </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {cards.map((card, index) => (
-          <Card
-            key={index}
-            className="flex flex-col items-center text-center transition duration-300 ease-in-out transform hover:-translate-y-2 cursor-pointer h-full"
-          >
-            <Link to={card.href}>
-              <CardHeader>
-                <div className="rounded-full bg-primary-50 p-3 mb-4 mx-auto">
-                  {card.icon}
-                </div>
-                <CardTitle>{card.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{card.description}</CardDescription>
-              </CardContent>
-            </Link>
-          </Card>
-        ))}
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      {/* Hero Section */}
+      <WelcomeHero name={name} />
+
+      {/* Stats Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-gray-900">Estadísticas Generales</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsCards.map((stat, index) => (
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              lastMonthValue={stat.lastMonthValue}
+              icon={stat.icon}
+              gradient={stat.gradient}
+              isLoading={isLoading}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Access Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-gray-900">Acceso Rápido</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {quickAccessCards.map((card, index) => (
+            <QuickAccessCard
+              key={index}
+              title={card.title}
+              description={card.description}
+              icon={card.icon}
+              href={card.href}
+              index={index}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

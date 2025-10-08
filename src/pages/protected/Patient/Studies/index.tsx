@@ -39,7 +39,7 @@ const PatientStudiesPage = () => {
 
   if (isFirstLoadingPatient && isFirstLoadingStudies) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
           <PatientCardSkeleton />
           <StudiesCardSkeleton />
@@ -85,7 +85,7 @@ const PatientStudiesPage = () => {
         </div>
       )}
 
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="mb-6">
           <BreadcrumbComponent items={breadcrumbItems} />
         </div>

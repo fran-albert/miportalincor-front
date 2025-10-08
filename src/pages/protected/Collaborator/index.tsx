@@ -98,9 +98,9 @@ const CollaboratorPage = () => {
       <Helmet>
         <title>Incor Laboral</title>
       </Helmet>
-      <div className="space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <BreadcrumbComponent items={breadcrumbItems} />
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="space-y-6">
           <CollaboratorInformationCard
             collaborator={collaborator}
             canEdit={canEdit}

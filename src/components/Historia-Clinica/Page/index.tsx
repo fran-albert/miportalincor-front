@@ -57,7 +57,7 @@ export function HistoryPage({
   // Mostrar loading si el usuario está cargando (independientemente de antecedentes)
   if (isFirstLoadingUser) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         {userType === "doctor" ? (
           <DoctorCardSkeleton />
         ) : (
@@ -70,7 +70,7 @@ export function HistoryPage({
   // Solo mostrar "no encontrado" si no está cargando Y no hay datos
   if (!userData && !isLoadingUser) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <BreadcrumbComponent items={breadcrumbItems} />
         <div className="p-4 text-red-500">
           {userType === "patient"
@@ -82,7 +82,7 @@ export function HistoryPage({
   }
 
   return (
-    <div className="container space-y-2 mt-2">
+    <div className="space-y-4 p-6">
       <BreadcrumbComponent items={breadcrumbItems} />
 
       {userError && (
