@@ -17,10 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useCollaboratorMedicalEvaluationMutations } from "@/hooks/Collaborator-Medical-Evaluation/useCollaboratorMedicalEvaluationMutations";
 import { useNavigate } from "react-router-dom";
 import { parseSlug } from "@/common/helpers/helpers";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useDispatch } from "react-redux";
 import { resetForm } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
@@ -58,6 +55,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
     defaultValues: { DoctorId: "" },
   });
   const selectedDoctor = watch("DoctorId");
+  const { promiseToast } = useToastContext();
   const handleCheckboxChange = (optionId: number) => {
     setSelectedOption(optionId === selectedOption ? null : optionId);
     reset({ DoctorId: "" }); // Reset doctor selection when changing evaluation type
@@ -65,7 +63,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
 
   const dispatch = useDispatch();
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedOption && selectedDoctor) {
       setIsOpen(false);
       const mutationPromise =
@@ -75,13 +73,22 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
           doctorId: Number.parseInt(selectedDoctor), // Asumiendo que el doctorId es número
         });
 
-      toast.promise(mutationPromise, {
-        loading: <LoadingToast message="Creando examen..." />,
-        success: <SuccessToast message="Examen creado con éxito" />,
-        error: <ErrorToast message="Error al crear el examen" />,
-      });
+      try {
+        const response = await promiseToast(mutationPromise, {
+          loading: {
+            title: "Creando examen",
+            description: "Por favor espera mientras procesamos tu solicitud",
+          },
+          success: {
+            title: "Examen creado",
+            description: "El examen se creó exitosamente",
+          },
+          error: (error: any) => ({
+            title: "Error al crear el examen",
+            description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+          }),
+        });
 
-      mutationPromise.then((response) => {
         if (response?.medicalEvaluation?.id) {
           dispatch(resetForm());
           setIsOpen(false);
@@ -89,7 +96,9 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
             `/incor-laboral/colaboradores/${slug}/examen/${response.medicalEvaluation.id}`
           );
         }
-      });
+      } catch (error) {
+        console.error("Error creating exam:", error);
+      }
     }
   };
 

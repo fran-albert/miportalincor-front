@@ -10,10 +10,7 @@ import type {
 } from "@/types/Nutrition-Data/NutritionData";
 import { Button } from "@/components/ui/button";
 import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDataMutation";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import ExcelUploader from "../Upload-Excel";
 import WeightEvolutionCard from "../Weight-Evolution";
 import { pdf } from "@react-pdf/renderer";
@@ -44,6 +41,7 @@ const NutritionCard: React.FC<Props> = ({
     updateNutritionDataMutation,
     deleteNutritionDataMutation,
   } = useNutritionDataMutations();
+  const { promiseToast } = useToastContext();
 
   // — Estados para el chart / PDF
   const [startDate, setStartDate] = useState<Date>();
@@ -65,46 +63,79 @@ const NutritionCard: React.FC<Props> = ({
     setPdfUrl(undefined);
   }, [startDate, endDate]);
 
-  const handleAddEntry = (newEntry: CreateNutritionDataDto) => {
-    toast.promise(addNutritionDataMutation.mutateAsync(newEntry), {
-      loading: <LoadingToast message="Agregando nueva entrada..." />,
-      success: (data) => {
-        setNutritionData((prev) => [...prev, data]);
-        return <SuccessToast message="Nueva entrada agregada con éxito" />;
-      },
-      error: <ErrorToast message="Error al agregar nueva entrada" />,
-    });
-  };
-
-  const handleUpdateEntry = (updatedEntry: NutritionData) => {
-    const { id, ...data } = updatedEntry;
-    toast.promise(
-      updateNutritionDataMutation.mutateAsync({ id, data } as {
-        id: number;
-        data: UpdateNutritionDataDto;
-      }),
-      {
-        loading: <LoadingToast message="Actualizando entrada..." />,
-        success: () => {
-          setNutritionData((prev) =>
-            prev.map((e) => (e.id === id ? updatedEntry : e))
-          );
-          return <SuccessToast message="Entrada actualizada con éxito" />;
+  const handleAddEntry = async (newEntry: CreateNutritionDataDto) => {
+    try {
+      const data = await promiseToast(addNutritionDataMutation.mutateAsync(newEntry), {
+        loading: {
+          title: "Agregando nueva entrada",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
-        error: <ErrorToast message="Error al actualizar entrada" />,
-      }
-    );
+        success: {
+          title: "Nueva entrada agregada",
+          description: "La entrada se agregó exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al agregar nueva entrada",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
+      });
+      setNutritionData((prev) => [...prev, data]);
+    } catch (error) {
+      console.error("Error adding entry:", error);
+    }
   };
 
-  const handleDeleteEntry = (ids: number[]) => {
-    toast.promise(deleteNutritionDataMutation.mutateAsync(ids), {
-      loading: <LoadingToast message="Eliminando entradas..." />,
-      success: () => {
-        setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
-        return <SuccessToast message="Entradas eliminadas con éxito" />;
-      },
-      error: <ErrorToast message="Error al eliminar entradas" />,
-    });
+  const handleUpdateEntry = async (updatedEntry: NutritionData) => {
+    const { id, ...data } = updatedEntry;
+    try {
+      await promiseToast(
+        updateNutritionDataMutation.mutateAsync({ id, data } as {
+          id: number;
+          data: UpdateNutritionDataDto;
+        }),
+        {
+          loading: {
+            title: "Actualizando entrada",
+            description: "Por favor espera mientras procesamos tu solicitud",
+          },
+          success: {
+            title: "Entrada actualizada",
+            description: "La entrada se actualizó exitosamente",
+          },
+          error: (error: any) => ({
+            title: "Error al actualizar entrada",
+            description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
+      setNutritionData((prev) =>
+        prev.map((e) => (e.id === id ? updatedEntry : e))
+      );
+    } catch (error) {
+      console.error("Error updating entry:", error);
+    }
+  };
+
+  const handleDeleteEntry = async (ids: number[]) => {
+    try {
+      await promiseToast(deleteNutritionDataMutation.mutateAsync(ids), {
+        loading: {
+          title: "Eliminando entradas",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Entradas eliminadas",
+          description: "Las entradas se eliminaron exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar entradas",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
+      });
+      setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
+    } catch (error) {
+      console.error("Error deleting entries:", error);
+    }
   };
 
   // — Preparar PDF (captura + blob)

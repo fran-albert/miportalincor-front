@@ -21,7 +21,6 @@ import { City } from "@/types/City/City";
 import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { State } from "@/types/State/State";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 import { z } from "zod";
 import { PatientSchema } from "@/validators/patient.schema";
@@ -30,15 +29,14 @@ import { Patient } from "@/types/Patient/Patient";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import CustomDatePicker from "@/components/Date-Picker";
 import { Edit2, Save, X } from "lucide-react";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
-import LoadingToast from "@/components/Toast/Loading";
 import TooltipInfo from "@/components/Tooltip";
 import ChangePasswordDialog from "../Change-Password";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 type FormValues = z.infer<typeof PatientSchema>;
 
 function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   const { updatePatientMutation } = usePatientMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(PatientSchema),
     defaultValues: {
@@ -161,19 +159,22 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
         patient: dataToSend,
       });
 
-      toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Actualizando datos del paciente..." />,
-        success: <SuccessToast message="Paciente actualizado con éxito!" />,
-        error: <ErrorToast message="Error al actualizar el Paciente" />,
+      await promiseToast(patientCreationPromise, {
+        loading: {
+          title: "Actualizando datos del paciente",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Paciente actualizado",
+          description: "Paciente actualizado con éxito",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar paciente",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      patientCreationPromise
-        .then(() => {
-          goBack();
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el paciente", error);
-        });
+      goBack();
     } catch (error) {
       console.error("Error al actualizar el paciente", error);
     }
@@ -215,19 +216,22 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
         patient: dataToSend,
       });
 
-      toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Actualizando datos del paciente..." />,
-        success: <SuccessToast message="Paciente actualizado con éxito!" />,
-        error: <ErrorToast message="Error al actualizar el Paciente" />,
+      await promiseToast(patientCreationPromise, {
+        loading: {
+          title: "Actualizando datos del paciente",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Paciente actualizado",
+          description: "Paciente actualizado con éxito",
+        },
+        error: (error: any) => ({
+          title: "Error al actualizar paciente",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
 
-      patientCreationPromise
-        .then(() => {
-          setIsEditing(false);
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el paciente", error);
-        });
+      setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar el paciente", error);
     }

@@ -1,14 +1,25 @@
 import axios from "axios";
+import { environment, currentConfig } from "@/config/environment";
 
 const apiIncor = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API, 
+  baseURL: environment.API_BASE_URL,
+  timeout: currentConfig.apiTimeout,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 const apiLaboral = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_INCOR_LABORAL_API, 
+  baseURL: environment.API_INCOR_LABORAL_URL,
+  timeout: currentConfig.apiTimeout,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const apiIncorHC = axios.create({
+  baseURL: environment.API_INCOR_HC_URL,
+  timeout: currentConfig.apiTimeout,
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,5 +35,6 @@ const addAuthToken = (config: any) => {
 
 apiIncor.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+apiIncorHC.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 
-export { apiIncor, apiLaboral };
+export { apiIncor, apiLaboral, apiIncorHC };

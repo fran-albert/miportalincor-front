@@ -9,10 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { DataType } from "@/types/Data-Type/Data-Type";
 
@@ -22,8 +19,8 @@ interface ConclusionAccordionProps {
   recomendaciones: string;
   setConclusion: (c: string) => void;
   setRecomendaciones: (r: string) => void;
-  fields: DataType[];              
-  dataValues?: DataValue[];        
+  fields: DataType[];
+  dataValues?: DataValue[];
   medicalEvaluationId: number;
 }
 
@@ -38,17 +35,21 @@ export default function ConclusionAccordion({
   medicalEvaluationId,
 }: ConclusionAccordionProps) {
   const { createDataValuesMutation } = useDataValuesMutations();
+  const { promiseToast } = useToastContext();
 
-  const handleSave = () => {
-    const payloadItems: { id?: number; dataTypeId: number; value: string }[] = [];
+  const handleSave = async () => {
+    const payloadItems: { id?: number; dataTypeId: number; value: string }[] =
+      [];
 
     // Arma el objeto para "Conclusion"
     const conclField = fields.find((f) => f.name === "Conclusion");
     if (conclField && conclusion.trim() !== "") {
-      const existing = dataValues?.find((dv) => dv.dataType.id === conclField.id);
+      const existing = dataValues?.find(
+        (dv) => dv.dataType.id === conclField.id
+      );
       payloadItems.push({
-        id: existing?.id,
-        dataTypeId: conclField.id,
+        id: Number(existing?.id),
+        dataTypeId: Number(conclField.id),
         value: conclusion,
       });
     }
@@ -58,22 +59,32 @@ export default function ConclusionAccordion({
     if (recField && recomendaciones.trim() !== "") {
       const existing = dataValues?.find((dv) => dv.dataType.id === recField.id);
       payloadItems.push({
-        id: existing?.id,
-        dataTypeId: recField.id,
+        id: Number(existing?.id),
+        dataTypeId: Number(recField.id),
         value: recomendaciones,
       });
     }
 
     // Lanza la mutación
-    toast.promise(
+    await promiseToast(
       createDataValuesMutation.mutateAsync({
         medicalEvaluationId,
         dataValues: payloadItems,
       }),
       {
-        loading: <LoadingToast message="Guardando datos..." />,
-        success: <SuccessToast message="Datos guardados exitosamente!" />,
-        error: <ErrorToast message="Error al guardar los datos" />,
+        loading: {
+          title: "Guardando datos",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Datos guardados",
+          description: "Los datos se guardaron exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al guardar los datos",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       }
     );
   };

@@ -8,10 +8,7 @@ import { Label } from "@/components/ui/label";
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface ExamsResultsAccordionProps {
   isEditing: boolean;
@@ -62,23 +59,32 @@ export default function ExamsResultsAccordion({
   }));
 
   const { createDataValuesMutation } = useDataValuesMutations();
+  const { promiseToast } = useToastContext();
 
-  const handleSaveResults = () => {
+  const handleSaveResults = async () => {
     const payload = {
       medicalEvaluationId,
       dataValues: mappedExams
         .map((exam) => ({
-          dataTypeId:
-            fields.find((f) => f.name === exam.label)!.id,
+          dataTypeId: Number(fields.find((f) => f.name === exam.label)!.id),
           value: examResults[exam.id] || "",
         }))
         .filter((dv) => dv.value.trim() !== ""),
     };
 
-    toast.promise(createDataValuesMutation.mutateAsync(payload), {
-      loading: <LoadingToast message="Guardando datos..." />,
-      success: <SuccessToast message="Datos guardados exitosamente!" />,
-      error: <ErrorToast message="Error al guardar los datos" />,
+    await promiseToast(createDataValuesMutation.mutateAsync(payload), {
+      loading: {
+        title: "Guardando datos",
+        description: "Por favor espera mientras procesamos tu solicitud",
+      },
+      success: {
+        title: "Datos guardados",
+        description: "Los datos se guardaron exitosamente",
+      },
+      error: (error: any) => ({
+        title: "Error al guardar los datos",
+        description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+      }),
     });
   };
 

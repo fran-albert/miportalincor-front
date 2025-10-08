@@ -7,12 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -39,6 +36,7 @@ export default function EditStudyTypeDialog({
   studyType,
 }: Props) {
   const { updateStudyTypeMutation } = useStudyTypeMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof studyTypeSchema>>({
     resolver: zodResolver(studyTypeSchema),
@@ -66,18 +64,23 @@ export default function EditStudyTypeDialog({
           name: values.name,
         },
       });
-      toast.promise(studyTypeCreationPromise, {
-        loading: <LoadingToast message="Editando tipo de estudio..." />,
-        success: <SuccessToast message="Tipo de estudio editado con éxito!" />,
-        error: <ErrorToast message="Error al editar el Tipo de Estudio" />,
+      await promiseToast(studyTypeCreationPromise, {
+        loading: {
+          title: "Editando tipo de estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Tipo de estudio editado!",
+          description: "El tipo de estudio se ha editado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al editar tipo de estudio",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      studyTypeCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al editar el Tipo de Estudio", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al editar el Tipo de Estudio", error);
     }

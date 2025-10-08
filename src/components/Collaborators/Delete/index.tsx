@@ -10,11 +10,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
 
 interface Props {
@@ -25,22 +22,31 @@ export default function DeleteCollaboratorDialog({ id }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteCollaboratorMutation } = useCollaboratorMutations();
+  const { promiseToast } = useToastContext();
 
   const handleConfirmDelete = async () => {
     try {
-      const deletePromise = deleteCollaboratorMutation.mutateAsync(id);
-      toast.promise(deletePromise, {
-        loading: <LoadingToast message="Eliminando Colaborador..." />,
-        success: <SuccessToast message="Colaborador eliminado con éxito" />,
-        error: (err) => {
-          console.error("Error al eliminar el Colaborador", err);
-          return <ErrorToast message="Error al eliminar el Colaborador" />;
+      const promise = deleteCollaboratorMutation.mutateAsync(id);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando colaborador...",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "¡Colaborador eliminado!",
+          description: "El colaborador se ha eliminado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar colaborador",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al eliminar el Colaborador", error);
-    } finally {
-      setIsOpen(false);
     }
   };
 

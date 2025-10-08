@@ -7,12 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   Form,
   FormField,
@@ -42,6 +39,7 @@ interface Props {
 
 export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
   const { addBlodTestMutation } = useBlodTestMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof bloodTestSchema>>({
     resolver: zodResolver(bloodTestSchema),
@@ -64,23 +62,25 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
         idUnit: values.unit?.id,
       };
 
-      const blodTestCreationPromise = addBlodTestMutation.mutateAsync(payload);
-      toast.promise(blodTestCreationPromise, {
-        loading: <LoadingToast message="Creando análisis bioquímico..." />,
-        success: (
-          <SuccessToast message="Análisis bioquímico creado con éxito!" />
-        ),
-        error: (
-          <ErrorToast message="Hubo un error al crear el Análisis Bioquímico." />
-        ),
+      const promise = addBlodTestMutation.mutateAsync(payload);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando análisis bioquímico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Análisis bioquímico creado!",
+          description: "El análisis bioquímico se ha creado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al crear análisis bioquímico",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      blodTestCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear el análisis bioquímico", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al crear el análisis bioquímico", error);
     }

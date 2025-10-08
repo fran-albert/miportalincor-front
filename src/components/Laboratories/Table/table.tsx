@@ -12,10 +12,7 @@ import { Search } from "@/components/ui/search";
 import { formatDate, normalizeDate } from "@/common/helpers/helpers";
 import LabDialog from "../Dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   BloodTestData,
   BloodTestDataRequest,
@@ -57,6 +54,7 @@ export const LabPatientTable = ({
   const [transformedBloodTestsData, setTransformedBloodTestsData] = useState<
     BloodTestDataResponse[]
   >([]);
+  const { promiseToast } = useToastContext();
 
   useEffect(() => {
     const transformedData = transformData(bloodTestsData);
@@ -175,19 +173,24 @@ export const LabPatientTable = ({
       if (updates.length > 0) {
         await Promise.all(
           updates.map((update) =>
-            toast.promise(
+            promiseToast(
               updateBlodTestMutation.mutateAsync({
                 idStudy: update.idStudy,
                 bloodTestDataRequests: update.blodTest,
               }),
               {
-                loading: <LoadingToast message="Actualizando laboratorio..." />,
-                success: (
-                  <SuccessToast message="Laboratorio actualizado con éxito" />
-                ),
-                error: (
-                  <ErrorToast message="Error al actualizar el laboratorio" />
-                ),
+                loading: {
+                  title: "Actualizando laboratorio",
+                  description: "Por favor espera mientras procesamos tu solicitud",
+                },
+                success: {
+                  title: "Laboratorio actualizado",
+                  description: "El laboratorio se actualizó exitosamente",
+                },
+                error: (error: any) => ({
+                  title: "Error al actualizar el laboratorio",
+                  description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+                }),
               }
             )
           )
@@ -198,10 +201,19 @@ export const LabPatientTable = ({
       if (newEntries.length > 0) {
         await Promise.all(
           newEntries.map((entry) =>
-            toast.promise(addBlodTestDataMutation.mutateAsync(entry), {
-              loading: <LoadingToast message="Creando laboratorio..." />,
-              success: <SuccessToast message="Laboratorio creado con éxito" />,
-              error: <ErrorToast message="Error al crear el laboratorio" />,
+            promiseToast(addBlodTestDataMutation.mutateAsync(entry), {
+              loading: {
+                title: "Creando laboratorio",
+                description: "Por favor espera mientras procesamos tu solicitud",
+              },
+              success: {
+                title: "Laboratorio creado",
+                description: "El laboratorio se creó exitosamente",
+              },
+              error: (error: any) => ({
+                title: "Error al crear el laboratorio",
+                description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+              }),
             })
           )
         );

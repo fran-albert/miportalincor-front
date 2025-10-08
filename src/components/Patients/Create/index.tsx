@@ -23,7 +23,6 @@ import { State } from "@/types/State/State";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { toast } from "sonner";
 import { goBack } from "@/common/helpers/helpers";
 import { RHFactorSelect } from "@/components/Select/RHFactor/select";
 import { GenderSelect } from "@/components/Select/Gender/select";
@@ -38,14 +37,13 @@ import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import { City } from "@/types/City/City";
 import useUserRole from "@/hooks/useRoles";
 import { HealthPlans } from "@/types/Health-Plans/HealthPlan";
-import SuccessToast from "@/components/Toast/Success";
-import LoadingToast from "@/components/Toast/Loading";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 type FormValues = z.infer<typeof PatientSchema>;
 export function CreatePatientComponent() {
   const { session } = useUserRole();
   const { addPatientMutation } = usePatientMutations();
+  const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(PatientSchema),
   });
@@ -121,23 +119,35 @@ export function CreatePatientComponent() {
     };
 
     try {
-      const patientCreationPromise = addPatientMutation.mutateAsync(payload);
-      toast.promise(patientCreationPromise, {
-        loading: <LoadingToast message="Creando Paciente..." />,
-        success: <SuccessToast message="Paciente creado con éxito" />,
-        error: (err) => {
-          if (err.response && err.response.status === 409) {
-            return <ErrorToast message="El paciente ya existe" />;
+      const promise = addPatientMutation.mutateAsync(payload);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando paciente...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Paciente creado!",
+          description: "El paciente se ha creado exitosamente",
+        },
+        error: (error: any) => {
+          if (error.response && error.response.status === 409) {
+            return {
+              title: "Paciente ya existe",
+              description: "El paciente ya se encuentra registrado en el sistema",
+            };
           }
-          return <ErrorToast message="Error al crear el paciente" />;
+          return {
+            title: "Error al crear paciente",
+            description:
+              error.response?.data?.message || "Ha ocurrido un error inesperado",
+          };
         },
       });
-      patientCreationPromise.then(() => {
-        goBack();
-      });
+
+      goBack();
     } catch (error) {
       console.error("Error al crear el paciente", error);
-      throw error;
     }
   }
 

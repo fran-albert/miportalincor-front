@@ -9,7 +9,7 @@ interface PatientTableProps {
   prefetchPatients: (id: number) => void;
   isFetching?: boolean;
   searchQuery: string;
-  setSearch: (query: string) => void; 
+  setSearch: (query: string) => void;
 }
 
 export const PatientsTable: React.FC<PatientTableProps> = ({
@@ -33,7 +33,7 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
   ];
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className="container space-y-2 mt-2">
       <BreadcrumbComponent items={breadcrumbItems} />
       <h2 className="text-2xl font-bold text-greenPrimary mb-6">
         Lista de Pacientes
@@ -44,8 +44,8 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
           data={patients}
           searchPlaceholder="Buscar pacientes..."
           showSearch={true}
-          searchQuery={searchQuery} 
-          onSearchSubmit={setSearch} 
+          searchQuery={searchQuery}
+          onSearchSubmit={setSearch}
           addLinkPath="/pacientes/agregar"
           addLinkText="Agregar Paciente"
           isFetching={isFetching}

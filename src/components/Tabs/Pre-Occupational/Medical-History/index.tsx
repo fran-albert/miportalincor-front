@@ -10,10 +10,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { DataType } from "@/types/Data-Type/Data-Type";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useInitializeMedicalEvaluation } from "@/common/helpers/maps";
 // const workerMapping: Record<string, string> = {
@@ -599,6 +596,7 @@ export default function MedicalHistoryTab({
     ],
   });
   const { createDataValuesMutation } = useDataValuesMutations();
+  const { promiseToast } = useToastContext();
   useInitializeMedicalEvaluation(dataValues);
   const formData = useSelector(
     (state: RootState) => state.preOccupational.formData
@@ -623,15 +621,25 @@ export default function MedicalHistoryTab({
     ...medicalEvaluationDataValues,
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const payload = {
       medicalEvaluationId: medicalEvaluationId,
       dataValues: combinedDataValues,
     };
-    toast.promise(createDataValuesMutation.mutateAsync(payload), {
-      loading: <LoadingToast message="Guardando datos..." />,
-      success: <SuccessToast message="Datos guardados exitosamente!" />,
-      error: <ErrorToast message="Error al guardar los datos" />,
+    await promiseToast(createDataValuesMutation.mutateAsync(payload), {
+      loading: {
+        title: "Guardando datos",
+        description: "Por favor espera mientras procesamos tu solicitud",
+      },
+      success: {
+        title: "Datos guardados",
+        description: "Los datos se guardaron exitosamente",
+      },
+      error: (error: any) => ({
+        title: "Error al guardar los datos",
+        description:
+          error.response?.data?.message || "Ha ocurrido un error inesperado",
+      }),
     });
   };
 

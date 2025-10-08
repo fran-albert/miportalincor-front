@@ -14,15 +14,13 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { toast } from "sonner";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { RequestEmailPasswordSchema } from "@/validators/user.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
-import LoadingToast from "../Toast/Loading";
-import SuccessToast from "../Toast/Success";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 type FormValues = z.infer<typeof RequestEmailPasswordSchema>;
 
 function RequestEmailPassword() {
@@ -30,13 +28,25 @@ function RequestEmailPassword() {
     resolver: zodResolver(RequestEmailPasswordSchema),
   });
   const { forgotPasswordMutation } = useUserMutations();
+  const { promiseToast } = useToastContext();
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const sendMailPromise = forgotPasswordMutation.mutateAsync(data);
-      toast.promise(sendMailPromise, {
-        loading: <LoadingToast message="Enviando correo electrónico..." />,
-        success: <SuccessToast message="Correo enviado éxito!" />,
-        duration: 3000,
+      const promise = forgotPasswordMutation.mutateAsync(data);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Enviando correo electrónico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Correo enviado!",
+          description: "Revisa tu bandeja de entrada para restablecer tu contraseña",
+        },
+        error: (error: any) => ({
+          title: "Error al enviar correo",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
     } catch (error) {
       console.error("Error al enviar el enlace. Inténtalo de nuevo.", error);

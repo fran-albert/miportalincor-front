@@ -10,7 +10,14 @@ lerna-debug.log*
 .claude
 
 
-.env*
+# Environment files
+.env.local
+.env.*.local
+
+# Keep example and template files
+.env.development
+.env.staging
+.env.production
 node_modules
 dist
 dist-ssr

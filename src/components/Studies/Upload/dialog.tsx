@@ -9,17 +9,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaUpload } from "react-icons/fa";
-import { toast } from "sonner";
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import moment from "moment-timezone";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { StudyTypeSelect } from "@/components/Select/Study/select";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,6 +31,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
   const { register, handleSubmit, reset, setValue, control } = useForm();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { uploadStudyMutation } = useStudyMutations();
+  const { promiseToast } = useToastContext();
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     const formData = new FormData();
@@ -67,22 +64,29 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     }
 
     try {
-      toast.promise(
-        uploadStudyMutation.mutateAsync(formData).then(() => {
-          // Only close the modal and reset form upon successful submission
-          reset();
-          setSelectedFiles([]);
-          setSelectedStudy(null);
-          setIsOpen(false);
+      const promise = uploadStudyMutation.mutateAsync(formData);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Subiendo estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Estudio subido!",
+          description: "El estudio se ha subido exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al subir estudio",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),
-        {
-          loading: <LoadingToast message="Subiendo nuevo estudio..." />,
-          success: <SuccessToast message="Nuevo estudio subido con exito." />,
-          error: (
-            <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
-          ),
-        }
-      );
+      });
+
+      // Only close the modal and reset form upon successful submission
+      reset();
+      setSelectedFiles([]);
+      setSelectedStudy(null);
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }

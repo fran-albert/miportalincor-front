@@ -90,6 +90,7 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onPaginationChange: setPagination,
     state: {
       sorting,
       columnFilters,
@@ -182,19 +183,23 @@ export function DataTable<TData, TValue>({
                 <thead className="bg-greenPrimary">
                   {table.getHeaderGroups().map((headerGroup, groupIndex) => (
                     <tr key={`header-group-${headerGroup.id}-${groupIndex}`}>
-                      {headerGroup.headers.map((header, headerIndex) => (
-                        <th
-                          key={`header-${headerGroup.id}-${header.id}-${headerIndex}`}
-                          className="py-2 px-2 sm:px-4 lg:px-6 text-left text-xs sm:text-sm font-semibold text-white uppercase tracking-wider"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </th>
-                      ))}
+                      {headerGroup.headers.map((header, headerIndex) => {
+                        const meta = header.column.columnDef.meta as any;
+                        const headerClassName = meta?.headerClassName || "";
+                        return (
+                          <th
+                            key={`header-${headerGroup.id}-${header.id}-${headerIndex}`}
+                            className={`py-2 px-2 sm:px-4 lg:px-6 text-left text-xs sm:text-sm font-semibold text-white uppercase tracking-wider ${headerClassName}`}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </th>
+                        );
+                      })}
                     </tr>
                   ))}
                 </thead>
@@ -234,17 +239,21 @@ export function DataTable<TData, TValue>({
                             : "hover:bg-gray-50"
                         } transition duration-150 ease-in-out`}
                       >
-                        {row.getVisibleCells().map((cell, cellIndex) => (
-                          <td
-                            key={`cell-${row.id}-${cell.id}-${cellIndex}`}
-                            className="py-2 px-2 sm:px-4 lg:px-6 border-b border-gray-200 text-xs sm:text-sm"
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        ))}
+                        {row.getVisibleCells().map((cell, cellIndex) => {
+                          const meta = cell.column.columnDef.meta as any;
+                          const cellClassName = meta?.cellClassName || "";
+                          return (
+                            <td
+                              key={`cell-${row.id}-${cell.id}-${cellIndex}`}
+                              className={`py-2 px-2 sm:px-4 lg:px-6 border-b border-gray-200 text-xs sm:text-sm ${cellClassName}`}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))
                   ) : (
@@ -263,7 +272,33 @@ export function DataTable<TData, TValue>({
             </div>
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
-            <div className="text-gray-500 text-sm w-full"></div>
+            <div className="flex items-center gap-4">
+              <div className="text-gray-500 text-sm">
+                Mostrando {Math.min((pagination.pageIndex * pagination.pageSize) + 1, filteredData.length)} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} de {filteredData.length} resultados
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="pageSize" className="text-sm text-gray-500">
+                  Mostrar:
+                </label>
+                <select
+                  id="pageSize"
+                  value={pagination.pageSize}
+                  onChange={(e) => {
+                    setPagination({
+                      pageIndex: 0,
+                      pageSize: Number(e.target.value),
+                    });
+                  }}
+                  className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-greenPrimary"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={16}>16</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
             <Pagination className="mt-2 sm:mt-6 justify-center sm:justify-end px-2 sm:px-4 py-2">
               <PaginationContent>
                 {/* Botón para la página anterior */}
