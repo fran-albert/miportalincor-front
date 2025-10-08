@@ -64,7 +64,6 @@ export const NutritionTable: React.FC<Props> = ({
     }
   };
 
-  // 3. Acción de borrar todos los seleccionados
   const handleDeleteSelected = () => {
     if (selectedIds.length === 0) return;
     onDeleteEntry(selectedIds);
