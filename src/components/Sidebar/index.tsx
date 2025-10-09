@@ -17,6 +17,7 @@ import {
   TestTube,
   Calendar,
   Shield,
+  UserCircle,
   Stethoscope,
   UserCheck,
   Users,
@@ -46,6 +47,12 @@ const navigationItems = [
     url: "/inicio",
     icon: Home,
     allowedRoles: PERMISSIONS.DASHBOARD,
+  },
+  {
+    title: "Mi Perfil",
+    url: "/mi-perfil",
+    icon: UserCircle,
+    allowedRoles: PERMISSIONS.MY_PROFILE,
   },
   {
     title: "Pacientes",

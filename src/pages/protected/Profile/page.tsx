@@ -1,3 +1,4 @@
+import PatientProfileComponent from "@/components/Patients/Profile";
 import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
@@ -73,7 +74,12 @@ const MyProfilePage = () => {
   if (isPatient && patient) {
     return (
       <div className="space-y-6 p-6">
-        <MyProfilePatientComponent patient={patient} />
+        {patient && (
+          <PatientProfileComponent
+            patient={patient}
+            breadcrumbItems={breadcrumbItems}
+          />
+        )}
       </div>
     );
   }

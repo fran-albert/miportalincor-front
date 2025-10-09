@@ -94,8 +94,8 @@ export default function GenericHistory({
         </div>
 
         {/* Sección de Medicación Actual */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {(isLoadingMedicacionActual && !medicacionActual) ? (
+        <div>
+          {isLoadingMedicacionActual && !medicacionActual ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
               <p className="text-gray-500 text-sm mt-2">
@@ -111,11 +111,7 @@ export default function GenericHistory({
               showEditActions={true}
             />
           )}
-          <div className="lg:col-span-2">
-            {/* Espacio vacío para mantener el layout */}
-          </div>
         </div>
-
       </div>
     </div>
   );

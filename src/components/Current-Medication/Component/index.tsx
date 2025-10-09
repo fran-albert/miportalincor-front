@@ -184,68 +184,58 @@ export default function MedicacionActualComponent({
               </CardContent>
             </Card>
           ) : (
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div
-                  className="cursor-pointer"
-                  onClick={() => handleMedicationClick(currentMedication)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="text-xs text-gray-500">
-                      Registrado: {formatDateTimeArgentina(currentMedication.startDate)}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Medication Info */}
-                    {currentMedication.medicationName && (
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700">Medicamento</Label>
-                        <p className="text-base font-semibold text-gray-900 mt-1">
-                          {currentMedication.medicationName}
-                        </p>
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500" onClick={() => handleMedicationClick(currentMedication)}>
+              <CardContent className="pt-4 pb-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5 text-purple-600" />
+                        <span className="font-medium">{formatDateArgentina(currentMedication.startDate)}</span>
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {currentMedication.dosage && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700">Dosis</Label>
-                          <p className="text-sm text-gray-800 mt-1">{currentMedication.dosage}</p>
-                        </div>
-                      )}
-
-                      {currentMedication.frequency && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700">Frecuencia</Label>
-                          <p className="text-sm text-gray-800 mt-1">{currentMedication.frequency}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {currentMedication.observations && (
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700">Observaciones</Label>
-                        <p className="text-sm text-gray-800 mt-1 leading-relaxed">
-                          {currentMedication.observations}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-4 w-4" />
-                        <span>Inicio: {formatDateArgentina(currentMedication.startDate)}</span>
-                      </div>
-
                       {currentMedication.doctor && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User className="h-4 w-4" />
-                          <span>Dr. {currentMedication.doctor.firstName} {currentMedication.doctor.lastName}</span>
+                        <div className="flex items-center gap-1">
+                          <User className="h-3.5 w-3.5 text-gray-400" />
+                          <span className="font-semibold text-gray-900">
+                            Dr. {currentMedication.doctor.firstName} {currentMedication.doctor.lastName}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {currentMedication.medicationName && (
+                    <div>
+                      <p className="text-base font-bold text-gray-900">
+                        {currentMedication.medicationName}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {currentMedication.dosage && (
+                      <div className="bg-purple-50 p-2 rounded-md border border-purple-100">
+                        <Label className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Dosis</Label>
+                        <p className="text-sm text-gray-800 mt-0.5 font-medium">{currentMedication.dosage}</p>
+                      </div>
+                    )}
+
+                    {currentMedication.frequency && (
+                      <div className="bg-purple-50 p-2 rounded-md border border-purple-100">
+                        <Label className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Frecuencia</Label>
+                        <p className="text-sm text-gray-800 mt-0.5 font-medium">{currentMedication.frequency}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {currentMedication.observations && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Observaciones</Label>
+                      <p className="text-sm text-gray-700 mt-1 leading-relaxed line-clamp-2">
+                        {currentMedication.observations}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -272,15 +262,15 @@ export default function MedicacionActualComponent({
               {suspendedMedications.map((medication) => (
                 <Card
                   key={medication.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-gray-300"
+                  className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-gray-400"
                   onClick={() => handleMedicationClick(medication)}
                 >
                   <CardContent className="pt-4 pb-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           {medication.medicationName && (
-                            <p className="text-sm font-semibold text-gray-700">
+                            <p className="text-sm font-bold text-gray-800">
                               {medication.medicationName}
                             </p>
                           )}
@@ -290,36 +280,37 @@ export default function MedicacionActualComponent({
                             </p>
                           )}
                         </div>
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-medium flex-shrink-0">
                           Suspendida
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 flex-wrap text-xs text-gray-500">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>Inicio: {formatDateArgentina(medication.startDate)}</span>
+                          <Calendar className="h-3.5 w-3.5 text-gray-500" />
+                          <span className="font-medium">Inicio: {formatDateArgentina(medication.startDate)}</span>
                         </div>
                         {medication.suspensionDate && (
                           <div className="flex items-center gap-1 text-red-600">
-                            <Calendar className="h-3 w-3" />
-                            <span>Suspensión: {formatDateArgentina(medication.suspensionDate)}</span>
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span className="font-medium">Suspensión: {formatDateArgentina(medication.suspensionDate)}</span>
+                          </div>
+                        )}
+                        {medication.doctor && (
+                          <div className="flex items-center gap-1">
+                            <User className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="font-semibold text-gray-900">
+                              Dr. {medication.doctor.firstName} {medication.doctor.lastName}
+                            </span>
                           </div>
                         )}
                       </div>
 
                       {medication.suspensionReason && (
                         <div className="pt-2 border-t border-gray-100">
-                          <p className="text-xs text-gray-500">
-                            <span className="font-medium">Motivo:</span> {medication.suspensionReason}
+                          <p className="text-xs text-gray-700">
+                            <span className="font-semibold text-gray-900">Motivo:</span> {medication.suspensionReason}
                           </p>
-                        </div>
-                      )}
-
-                      {medication.doctor && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <User className="h-3 w-3" />
-                          <span>Dr. {medication.doctor.firstName} {medication.doctor.lastName}</span>
                         </div>
                       )}
                     </div>

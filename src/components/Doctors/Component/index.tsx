@@ -1,9 +1,8 @@
 import { Doctor } from "@/types/Doctor/Doctor";
 import { StudiesWithURL } from "@/types/Study/Study";
-import {
-  PatientCardSkeleton,
-} from "@/components/Skeleton/Patient";
+
 import MedicoDetallePage from "./component";
+import { DoctorDashboardSkeleton } from "@/components/Skeleton/Doctor";
 
 interface Props {
   doctor: Doctor | undefined;
@@ -20,7 +19,7 @@ export function DoctorComponent({ doctor, isLoadingDoctor }: Props) {
   return (
     <div className="">
       {isLoadingDoctor ? (
-        <PatientCardSkeleton />
+        <DoctorDashboardSkeleton />
       ) : (
         doctor && <MedicoDetallePage doctor={doctor} />
       )}

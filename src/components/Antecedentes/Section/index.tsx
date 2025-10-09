@@ -103,19 +103,23 @@ const AntecedentesSection: React.FC<Props> = ({
     return Object.entries(antecedentesPorCategoria).map(
       ([categoria, antecedentesCategoria]) => (
         <div key={categoria} className="space-y-2">
-          <div className="font-bold text-sm text-gray-700 uppercase tracking-wide border-b border-gray-200 pb-1">
-            {categoria}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-px flex-1 bg-greenPrimary/30"></div>
+            <h4 className="text-xs font-bold text-greenPrimary uppercase tracking-wider px-2">
+              {categoria}
+            </h4>
+            <div className="h-px flex-1 bg-greenPrimary/30"></div>
           </div>
-          <div className="space-y-1 ml-2">
+          <div className="space-y-2">
             {antecedentesCategoria.map((ant) => (
               <div
                 key={ant.id}
-                className="flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+                className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md hover:border-greenPrimary/50 transition-all duration-200 bg-white border-l-4 border-l-greenPrimary"
                 onClick={() => handleAntecedenteClick(ant)}
               >
-                <span className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium text-gray-800 leading-relaxed">
                   {ant.observaciones}
-                </span>
+                </p>
               </div>
             ))}
           </div>
@@ -126,47 +130,61 @@ const AntecedentesSection: React.FC<Props> = ({
 
   return (
     <div>
-      <Card className="lg:col-span-1">
-        <CardHeader className="pb-4 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-teal-100">
+      <Card className="lg:col-span-1 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
           <div className="flex items-center justify-between">
-            <CardTitle
-              className="text-xl font-bold text-gray-800 flex items-center gap-2 cursor-pointer hover:text-teal-600 transition-colors"
-              onClick={handleNavigateToAntecedentes}
-            >
-              <Stethoscope className="h-5 w-5 text-teal-600" />
-              ANTECEDENTES MÉDICOS
-            </CardTitle>
-            {showEditActions && !readOnly && (
-              <Button
-                size="sm"
-                className="bg-greenPrimary hover:bg-teal-700 text-white w-8 h-8 rounded-full p-0 shadow-sm"
-                onClick={handleOpenModal}
-                disabled={wantsToOpenModal}
+            <div className="flex items-center gap-2">
+              <Stethoscope className="h-5 w-5" />
+              <CardTitle
+                className="cursor-pointer hover:opacity-80 transition-opacity underline decoration-white/40 decoration-2 underline-offset-4"
+                onClick={handleNavigateToAntecedentes}
               >
-                {wantsToOpenModal ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-              </Button>
-            )}
-            {readOnly && (
-              <span className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600">
-                Solo lectura
-              </span>
-            )}
+                Antecedentes Médicos
+              </CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              {antecedentes && antecedentes.antecedentes.length > 0 && (
+                <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                  {antecedentes.antecedentes.length} registro
+                  {antecedentes.antecedentes.length !== 1 ? "s" : ""}
+                </span>
+              )}
+              {showEditActions && !readOnly && (
+                <Button
+                  size="sm"
+                  className="bg-white text-greenPrimary hover:bg-white/90 w-8 h-8 rounded-full p-0 shadow-md"
+                  onClick={handleOpenModal}
+                  disabled={wantsToOpenModal}
+                >
+                  {wantsToOpenModal ? (
+                    <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+              {readOnly && (
+                <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">
+                  Solo lectura
+                </span>
+              )}
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="p-6">
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {antecedentes?.antecedentes.length === 0 ? (
-              <div className="text-center py-8">
-                <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 text-sm">
-                  No hay antecedentes registrados
-                </p>
-                <p className="text-gray-400 text-xs mt-1">
-                  Haz clic en "+" para agregar el primer antecedente
+            {!antecedentes || antecedentes.antecedentes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Stethoscope className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Sin antecedentes registrados
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {showEditActions && !readOnly
+                    ? 'Haz clic en el botón "+" para agregar el primer antecedente'
+                    : "No hay antecedentes médicos para este usuario"}
                 </p>
               </div>
             ) : (

@@ -163,7 +163,7 @@ export default function AntecedentesComponent({
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <Card>
-          <CardHeader className="bg-gradient-to-r from-teal-50 to-indigo-50">
+          <CardHeader className="bg-gradient-to-r from-teal-50 to-emerald-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
@@ -262,47 +262,45 @@ export default function AntecedentesComponent({
             </Card>
           ) : (
             filteredAntecedentes.map((ant) => (
-              <Card key={ant.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => handleAntecedenteClick(ant)}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <Badge
-                          className={`${getCategoryColor(
-                            ant.dataType.name
-                          )} border`}
-                        >
-                          {ant.dataType.name}
-                        </Badge>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(ant.createdAt)}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            <span>
-                              Dr. {ant.doctor.firstName} {ant.doctor.lastName}
-                            </span>
+              <Card
+                key={ant.id}
+                className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-teal-500"
+                onClick={() => handleAntecedenteClick(ant)}
+              >
+                <CardContent className="pt-4 pb-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Badge
+                            className={`${getCategoryColor(
+                              ant.dataType.name
+                            )} border text-xs font-semibold`}
+                          >
+                            {ant.dataType.name}
+                          </Badge>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5 text-teal-600" />
+                              <span className="font-medium">{formatDate(ant.createdAt)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <User className="h-3.5 w-3.5 text-gray-400" />
+                              <span className="font-semibold text-gray-900">
+                                Dr. {ant.doctor.firstName} {ant.doctor.lastName}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        {ant.observaciones && (
+                          <p className="text-sm font-medium text-gray-800">
+                            {ant.observaciones}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {truncateText(ant.value)}
+                        </p>
                       </div>
-                      <p className="text-gray-800 leading-relaxed">
-                        {ant.observaciones}
-                      </p>
-                      <p className="text-gray-800 leading-relaxed">
-                        {truncateText(ant.value)}
-                      </p>
-                    </div>
-                    <div className="ml-4 flex items-center">
-                      <DeleteDataValueDialog
-                        idDataValue={String(ant.id)}
-                        itemType="antecedente"
-                        itemDescription={truncateText(ant.value, 50)}
-                      />
                     </div>
                   </div>
                 </CardContent>
