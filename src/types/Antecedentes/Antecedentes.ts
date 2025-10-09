@@ -54,7 +54,7 @@ export interface AntecedentesResponse {
   antecedentes: Antecedente[];
 }
 
-export interface MedicacionActualResponse extends Array<MedicacionActual> {}
+export type MedicacionActualResponse = MedicacionActual[];
 
 export interface EvolucionesResponse {
   evoluciones: Evolucion[];

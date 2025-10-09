@@ -16,7 +16,7 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   BloodTestData,
   BloodTestDataRequest,
-  BloodTestDataUpdateRequest,
+  BloodTestDataUpdateRequestItem,
 } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
@@ -102,7 +102,7 @@ export const LabPatientTable = ({
     try {
       const updates: {
         idStudy: number;
-        blodTest: BloodTestDataUpdateRequest[];
+        blodTest: BloodTestDataUpdateRequestItem[];
       }[] = [];
       const newEntries: BloodTestDataRequest[] = [];
 
@@ -117,7 +117,7 @@ export const LabPatientTable = ({
         if (existingStudyForDate) {
           const updateGroup = {
             idStudy: existingStudyForDate.id,
-            blodTest: [] as BloodTestDataUpdateRequest[],
+            blodTest: [] as BloodTestDataUpdateRequestItem[],
           };
 
           Object.entries(tests).forEach(([bloodTestId, value]) => {

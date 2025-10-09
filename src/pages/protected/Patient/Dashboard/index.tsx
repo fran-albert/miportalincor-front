@@ -8,11 +8,11 @@ import useUserRole from "@/hooks/useRoles";
 
 export default function PatientDashboard({ patient }: { patient: Patient }) {
   const navigate = useNavigate();
-  const { isAuthenticated } = useUserRole();
+  const { session } = useUserRole();
 
   const { stats, isLoading: isLoadingStats } = usePatientStats({
     userId: patient.userId,
-    isAuthenticated,
+    isAuthenticated: !!session,
   });
 
   const handleHistoriaClinicaClick = () => {
@@ -34,7 +34,7 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
 
       {/* Estadísticas */}
       <StatsCards
-        patientSlug={patient.slug}
+        patientSlug={patient.slug || ''}
         stats={stats}
         isLoading={isLoadingStats}
       />

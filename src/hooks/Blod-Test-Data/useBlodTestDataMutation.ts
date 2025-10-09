@@ -1,6 +1,6 @@
 import { createBlodTestData } from "@/api/Blod-Test-Data/create-blod-test-data.action";
 import { updateBlodTestData } from "@/api/Blod-Test-Data/update-blod-test-data.action";
-import { BloodTestDataUpdateRequest } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { BloodTestDataUpdateRequestItem } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useBlodTestDataMutations = () => {
@@ -29,7 +29,7 @@ export const useBlodTestDataMutations = () => {
             bloodTestDataRequests,
         }: {
             idStudy: number;
-            bloodTestDataRequests: BloodTestDataUpdateRequest[];
+            bloodTestDataRequests: BloodTestDataUpdateRequestItem[];
         }) => updateBlodTestData(idStudy, bloodTestDataRequests),
         onSuccess: async () => {
             // Invalidar y refetch inmediato

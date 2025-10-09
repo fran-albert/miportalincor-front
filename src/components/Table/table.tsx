@@ -50,12 +50,10 @@ export function DataTable<TData, TValue>({
   searchQuery,
   onSearchSubmit,
   isFetching = false,
-  searchQueryFilterTable,
   addLinkText = "Agregar",
   // searchColumn = "name",
   customFilter,
   canAddUser = true,
-  querySearchFilter,
   onAddClick,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {

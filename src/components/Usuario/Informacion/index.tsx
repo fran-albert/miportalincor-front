@@ -74,7 +74,7 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
             variant="outline"
             className="text-gray-600 border-gray-300"
           >
-            {speciality.name || speciality}
+            {typeof speciality === 'object' && speciality.name ? speciality.name : String(speciality)}
           </Badge>
         ))}
       </div>
