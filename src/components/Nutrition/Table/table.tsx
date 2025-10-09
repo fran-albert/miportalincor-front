@@ -290,7 +290,7 @@ export const NutritionTable: React.FC<Props> = ({
                       />
                     ) : (
                       <span className="block truncate">
-                        {formatDate(entry.date)}
+                        {formatDate(String(entry.date))}
                       </span>
                     )}
                   </TableCell>

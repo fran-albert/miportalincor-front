@@ -14,7 +14,6 @@ import {
 import {
   User,
   ChevronDown,
-  Microscope,
   TestTube,
   Calendar,
   Shield,
@@ -28,7 +27,6 @@ import {
   TrendingUp,
   FileBarChart,
 } from "lucide-react";
-import { Badge } from "../ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -75,7 +75,7 @@ const PatientAntecedentesPage = () => {
           Hubo un error al cargar los antecedentes.
         </div>
       )}
-      
+
       <AntecedentesComponent
         onBack={() => navigate(-1)}
         idUser={String(id)}

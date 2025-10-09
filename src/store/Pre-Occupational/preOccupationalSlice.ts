@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Collaborator } from "@/types/Collaborator/Collaborator";
 
 export interface ExamResults {
   clinico: string;
@@ -180,11 +181,11 @@ interface FormData {
   workerInformation: WorkerInformation;
   occupationalHistory: OccupationalHistoryItem[];
   medicalEvaluation: IMedicalEvaluation;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface PreOccupationalState {
-  collaborator: any;
+  collaborator: Collaborator | null;
   formData: FormData;
 }
 
@@ -280,7 +281,7 @@ const preOccupationalSlice = createSlice({
   name: "preOccupational",
   initialState,
   reducers: {
-    setCollaborator(state, action: PayloadAction<any>) {
+    setCollaborator(state, action: PayloadAction<Collaborator | null>) {
       state.collaborator = action.payload;
     },
     setFormData(state, action: PayloadAction<Partial<FormData>>) {

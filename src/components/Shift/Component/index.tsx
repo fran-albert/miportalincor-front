@@ -202,7 +202,6 @@ export default function ShifComponent({ specialities, doctors }: ShiftProps) {
   const [filtroEspecialidad, setFiltroEspecialidad] = useState<string>("all");
   const [filtroMedico, setFiltroMedico] = useState<string>("all");
   const [filtroEstado, setFiltroEstado] = useState<string>("all");
-  const [busqueda, setBusqueda] = useState("");
   const [vistaCalendario, setVistaCalendario] = useState(false);
   const turnosFiltrados = appointments.filter((turno) => {
     const matchEspecialidad =

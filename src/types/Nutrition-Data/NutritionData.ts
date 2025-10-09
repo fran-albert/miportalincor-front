@@ -1,6 +1,6 @@
 export interface NutritionData {
     id: number;
-    date: any;
+    date: string | Date;
     weight: number;
     difference: number;
     fatPercentage: number;
