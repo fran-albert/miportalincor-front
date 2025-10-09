@@ -95,13 +95,11 @@ export default function TestsAccordion({
           return acc;
         }, {} as Record<string, any>);
   
-      const testsPerformed = {
-        ...(typeof flatFormData.testsPerformed === 'object' && flatFormData.testsPerformed !== null ? flatFormData.testsPerformed : {}),
-        ...initialTests,
-      };
-
-      const newFormData: any = {
-        testsPerformed,
+      const newFormData = {
+        testsPerformed: {
+          ...flatFormData.testsPerformed,
+          ...initialTests,
+        },
         ...(dataValues.find((dv) => dv.dataType.name === "Otras pruebas realizadas")
           ? {
               otrasPruebas: dataValues.find(
@@ -110,8 +108,8 @@ export default function TestsAccordion({
             }
           : {}),
       };
-
-      if (JSON.stringify(flatFormData.testsPerformed) !== JSON.stringify(testsPerformed)) {
+  
+      if (JSON.stringify(flatFormData.testsPerformed) !== JSON.stringify(newFormData.testsPerformed)) {
         dispatch(setFormData(newFormData));
       }
     }
@@ -126,14 +124,13 @@ export default function TestsAccordion({
 
   const handleToggleTest = (testName: string) => {
     const key = getTestKey(testName);
-    const testsPerformed = {
-      ...(typeof flatFormData.testsPerformed === 'object' && flatFormData.testsPerformed !== null ? flatFormData.testsPerformed : {}),
-      [key.replace("tests_", "")]: !getFieldValue(testName), // Usamos getFieldValue para el toggle
-    };
     dispatch(
       setFormData({
-        testsPerformed,
-      } as any)
+        testsPerformed: {
+          ...flatFormData.testsPerformed,
+          [key.replace("tests_", "")]: !getFieldValue(testName), // Usamos getFieldValue para el toggle
+        },
+      })
     );
   };
 
@@ -202,7 +199,7 @@ export default function TestsAccordion({
               placeholder="Ingrese otras pruebas realizadas..."
               disabled={!isEditing}
               value={
-                String(getFieldValue("Otras pruebas realizadas") || otrasPruebas || "")
+                getFieldValue("Otras pruebas realizadas") || otrasPruebas || ""
               } // Usamos getFieldValue para este campo también
               onChange={handleOtrasPruebasChange}
               className="min-h-[100px] disabled:opacity-50"

@@ -44,7 +44,9 @@ export interface SuspendCurrentMedicationDto {
   suspensionReason: string;
 }
 
-export type ReactivateCurrentMedicationDto = Record<string, never>;
+export interface ReactivateCurrentMedicationDto {
+  // No additional fields needed for reactivation
+}
 
 export interface CurrentMedicationFilters {
   status?: MedicationStatus;

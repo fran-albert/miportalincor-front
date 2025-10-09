@@ -1,3 +1,4 @@
+import LoadingAnimation from "@/components/Loading/loading";
 import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
@@ -25,57 +26,31 @@ const MyProfilePage = () => {
     id: userId !== undefined ? userId : -1,
   });
 
-  if (isDoctor && isLoadingDoctor) {
-    return (
-      <div className="space-y-6 p-6">
-        <div>Cargando perfil del médico...</div>
-      </div>
-    );
-  }
-
-  if (isSecretary && isLoadingSecretary) {
-    return (
-      <div className="space-y-6 p-6">
-        <div>Cargando perfil del secretario...</div>
-      </div>
-    );
-  }
-
-  if (isPatient && isLoadingPatient) {
-    return (
-      <div className="space-y-6 p-6">
-        <div>Cargando perfil del paciente...</div>
-      </div>
-    );
+  if (
+    (isDoctor && isLoadingDoctor) ||
+    (isPatient && isLoadingPatient) ||
+    (isSecretary && isLoadingSecretary)
+  ) {
+    return <LoadingAnimation />;
   }
 
   if (isDoctor && doctor) {
     return (
       <>
         <Helmet>
-          <title>Mi Perfil</title>
+          <title>{isLoadingDoctor ? "" : `Mi Perfil`}</title>
         </Helmet>
-        <div className="space-y-6 p-6">
-          <ProfileDoctorCardComponent data={doctor} />
-        </div>
+        <ProfileDoctorCardComponent data={doctor} />
       </>
     );
   }
 
   if (isSecretary && secretary) {
-    return (
-      <div className="space-y-6 p-6">
-        <SecretaryProfileComponent user={secretary} />
-      </div>
-    );
+    return <SecretaryProfileComponent user={secretary} />;
   }
 
   if (isPatient && patient) {
-    return (
-      <div className="space-y-6 p-6">
-        <MyProfilePatientComponent patient={patient} />
-      </div>
-    );
+    return <MyProfilePatientComponent patient={patient} />;
   }
 
   return null;

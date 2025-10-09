@@ -6,8 +6,9 @@ import { Users, Stethoscope, FileText, UserCog, Heart, Shield, TestTube, Buildin
 import useUserRole from "@/hooks/useRoles";
 
 export default function HomeComponent({ name }: { name: string }) {
-  const { isSecretary, isAdmin, session } = useUserRole();
-  const { stats, isLoading } = useDashboardStats(!!session);
+  const { isAuthenticated } = useUserRole();
+  const { stats, isLoading } = useDashboardStats(isAuthenticated);
+  const { isSecretary, isAdmin } = useUserRole();
 
   const quickAccessCards = [
     {

@@ -1,7 +1,11 @@
 import { Doctor } from "@/types/Doctor/Doctor";
+import BreadcrumbComponent from "@/components/Breadcrumb";
 import { StudiesWithURL } from "@/types/Study/Study";
+import StudiesComponent from "@/components/Studies/Component";
+import DoctorCardComponent from "../View/Card/card";
 import {
   PatientCardSkeleton,
+  StudiesTableSkeleton,
 } from "@/components/Skeleton/Patient";
 import MedicoDetallePage from "./component";
 
@@ -14,7 +18,20 @@ interface Props {
   isRefetching?: boolean;
 }
 
-export function DoctorComponent({ doctor, isLoadingDoctor }: Props) {
+export function DoctorComponent({
+  doctor,
+  studies,
+  isLoadingDoctor,
+  isFetchingStudies,
+}: Props) {
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Médicos", href: "/medicos" },
+    {
+      label: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médico",
+      href: `/medicos/${doctor?.slug}`,
+    },
+  ];
   if (!doctor) return null;
 
   return (

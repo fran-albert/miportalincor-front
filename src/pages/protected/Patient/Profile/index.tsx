@@ -1,3 +1,5 @@
+import BreadcrumbComponent from "@/components/Breadcrumb";
+import LoadingAnimation from "@/components/Loading/loading";
 import PatientProfileComponent from "@/components/Patients/Profile";
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useParams } from "react-router-dom";
@@ -14,12 +16,21 @@ const PatientProfilePage = () => {
     id,
   });
 
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Pacientes", href: "/pacientes" },
+    {
+      label: patient ? `${patient.firstName} ${patient.lastName}` : "Pacientes",
+      href: `/pacientes/${patient?.slug}`,
+    },
+    {
+      label: patient ? `Perfil Completo` : "Pacientes",
+      href: `/pacientes/${patient?.slug}`,
+    },
+  ];
+
   if (isLoading) {
-    return (
-      <div className="space-y-4 p-6">
-        <div>Cargando perfil del paciente...</div>
-      </div>
-    );
+    return <LoadingAnimation />;
   }
 
   if (error) {
@@ -28,7 +39,10 @@ const PatientProfilePage = () => {
 
   return (
     <div className="space-y-4 p-6">
-      {patient && <PatientProfileComponent patient={patient} />}
+      <BreadcrumbComponent items={breadcrumbItems} />
+      <div className="">
+        {patient && <PatientProfileComponent patient={patient} />}
+      </div>
     </div>
   );
 };

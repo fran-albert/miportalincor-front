@@ -22,11 +22,7 @@ export interface User {
   description: string;
   currentPassword: string;
   password: string;
-  registerBy?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-  };
+  registerBy: any;
   newPassword: string;
   code: string;
   confirmPassword: string;

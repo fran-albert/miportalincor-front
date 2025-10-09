@@ -3,6 +3,7 @@ import {
   Plus,
   Clock,
   CheckCircle,
+  XCircle,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,

@@ -25,15 +25,15 @@ export function DashboardLayout() {
 
   return (
     <>
+      {isStaging() && (
+        <div className="bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium">
+          🚧 ENTORNO DE STAGING - VERSIÓN DE PRUEBA
+        </div>
+      )}
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          {isStaging() && (
-            <div className="sticky top-0 z-50 bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium">
-              🚧 ENTORNO DE STAGING - VERSIÓN DE PRUEBA
-            </div>
-          )}
-          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b px-4 bg-white shadow-sm">
+          <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <div className="flex flex-1 items-center gap-4 justify-between">
               <div className="relative flex-1">

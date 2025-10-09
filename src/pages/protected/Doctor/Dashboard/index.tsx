@@ -27,18 +27,18 @@ export default function DoctorDashboard({ doctor }: { doctor: Doctor }) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header del Médico */}
-      <UserInformation userData={doctor} userType="doctor" />
-
-      {/* Módulos de Acceso */}
-      <DoctorModules
-        onHistoriaClinicaClick={handleHistoriaClinicaClick}
-        onEstudiosClick={handleEstudiosClick}
-        onControlNutricionalClick={handleControlNutricionalClick}
-        onPacientesClick={handlePacientesClick}
-        onEspecialidadesClick={handleEspecialidadesClick}
-      />
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header del Médico */}
+        <UserInformation userData={doctor} userType="doctor" />
+        <DoctorModules
+          onHistoriaClinicaClick={handleHistoriaClinicaClick}
+          onEstudiosClick={handleEstudiosClick}
+          onControlNutricionalClick={handleControlNutricionalClick}
+          onPacientesClick={handlePacientesClick}
+          onEspecialidadesClick={handleEspecialidadesClick}
+        />
+      </div>
     </div>
   );
 }

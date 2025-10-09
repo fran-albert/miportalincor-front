@@ -81,11 +81,9 @@ const CollaboratorPage = () => {
     allowedEvaluationTypes.includes(type.name)
   );
 
-  const { data, isFetching } = useCollaboratorMedicalEvaluation({
-    id: id || 0,
-    auth: true,
-    enabled: !!id
-  });
+  const { data, isFetching } = id
+    ? useCollaboratorMedicalEvaluation({ id, auth: true })
+    : { data: undefined, isFetching: false };
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -103,12 +101,10 @@ const CollaboratorPage = () => {
       <div className="space-y-4 p-6">
         <BreadcrumbComponent items={breadcrumbItems} />
         <div className="space-y-6">
-          {collaborator && (
-            <CollaboratorInformationCard
-              collaborator={collaborator}
-              canEdit={canEdit}
-            />
-          )}
+          <CollaboratorInformationCard
+            collaborator={collaborator}
+            canEdit={canEdit}
+          />
 
           {/* Pestañas */}
           <Tabs defaultValue="examenes" className="w-full">
@@ -135,15 +131,13 @@ const CollaboratorPage = () => {
 
             {/* Pestaña de Exámenes */}
             <TabsContent value="examenes" className="space-y-4">
-              {collaborator && (
-                <ListPreoccupationalExamsTable
-                  data={data || []}
-                  isFetching={isFetching}
-                  evaluationTypes={evaluationTypes}
-                  slug={slug}
-                  collaborator={collaborator}
-                />
-              )}
+              <ListPreoccupationalExamsTable
+                data={data || []}
+                isFetching={isFetching}
+                evaluationTypes={evaluationTypes}
+                slug={slug}
+                collaborator={collaborator}
+              />
             </TabsContent>
 
             {/* Pestaña de Evoluciones */}
@@ -179,7 +173,7 @@ const CollaboratorPage = () => {
                 />
               )}
 
-              {evolutionView === "new" && collaborator && (
+              {evolutionView === "new" && (
                 <CreateCollaboratorEvolution
                   setEvolutionView={setEvolutionView}
                   companyEmail={collaborator.company.email}

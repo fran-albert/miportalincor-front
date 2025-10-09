@@ -1,5 +1,4 @@
 import axios from "axios";
-import type { InternalAxiosRequestConfig } from "axios";
 import { environment, currentConfig } from "@/config/environment";
 
 const apiIncor = axios.create({
@@ -34,7 +33,7 @@ const apiIncorHC = axios.create({
   },
 });
 
-const addAuthToken = (config: InternalAxiosRequestConfig) => {
+const addAuthToken = (config: any) => {
   const token = localStorage.getItem("authToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
