@@ -29,7 +29,7 @@ export function DashboardLayout() {
         <AppSidebar />
         <SidebarInset>
           {isStaging() && (
-            <div className="sticky top-0 z-50 bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium ">
+            <div className="sticky top-0 z-50 bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium">
               🚧 ENTORNO DE STAGING - VERSIÓN DE PRUEBA
             </div>
           )}
