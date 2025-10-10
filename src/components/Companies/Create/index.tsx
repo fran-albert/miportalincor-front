@@ -24,6 +24,8 @@ import { State } from "@/types/State/State";
 import { City } from "@/types/City/City";
 import { companySchema } from "@/validators/Company/company.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   isOpen: boolean;
@@ -31,7 +33,7 @@ interface Props {
 }
 
 export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
-  const form = useForm<any>({
+  const form = useForm<z.infer<typeof companySchema>>({
     resolver: zodResolver(companySchema),
   });
   const { addCompanyMutations } = useCompanyMutations();
@@ -46,7 +48,11 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
   const handleStateChange = (state: State) => {
     setSelectedState(state);
     setSelectedCity(undefined);
-    setValue("address.city.state", String(state.id));
+    setValue("address.city.state", {
+      id: state.id,
+      name: state.name,
+      country: state.country,
+    });
   };
 
   const handleCityChange = (city: City) => {
@@ -63,18 +69,18 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
     }
   }, [isOpen, form]);
 
-  async function onSubmit(values: any) {
+  async function onSubmit(values: z.infer<typeof companySchema>) {
     const addressData = {
-      street: values.address.street,
-      number: values.address.number,
-      description: values.address.description,
-      phoneNumber: values.address.phoneNumber,
+      street: values.address.street || "",
+      number: values.address.number || "",
+      description: values.address.description || "",
+      phoneNumber: values.address.phoneNumber || "",
       city: {
-        id: selectedCity?.id,
-        name: selectedCity?.name,
+        id: selectedCity?.id || 0,
+        name: selectedCity?.name || "",
         state: {
-          id: selectedState?.id,
-          name: selectedState?.name,
+          id: selectedState?.id || 0,
+          name: selectedState?.name || "",
           country: {
             id: 1,
             name: "Argentina",
@@ -83,7 +89,10 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
       },
     };
     const payload = {
-      ...values,
+      name: values.name,
+      taxId: values.taxId,
+      email: values.email,
+      phone: values.phone,
       addressData
     };
     try {
@@ -98,7 +107,7 @@ export default function CreateCompanyDialog({ isOpen, setIsOpen }: Props) {
           title: "¡Empresa creada!",
           description: "La empresa se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al crear empresa",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

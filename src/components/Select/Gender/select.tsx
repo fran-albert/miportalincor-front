@@ -5,18 +5,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface GenderSelectProps {
-  control: any;
+interface GenderSelectProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name?: Path<T>;
   defaultValue?: string;
   disabled?: boolean;
 }
-export const GenderSelect = ({
+export const GenderSelect = <T extends FieldValues = FieldValues>({
   control,
+  name = "gender" as Path<T>,
   defaultValue,
   disabled,
-}: GenderSelectProps) => {
+}: GenderSelectProps<T>) => {
   const genderTypes = [
     { id: "Masculino", name: "Masculino" },
     { id: "Femenino", name: "Femenino" },
@@ -24,10 +26,10 @@ export const GenderSelect = ({
 
   return (
     <Controller
-      name="gender"
+      name={name}
       control={control}
       rules={{ required: "Este campo es obligatorio" }}
-      defaultValue={defaultValue || ""}
+      defaultValue={(defaultValue || "") as PathValue<T, Path<T>>}
       render={({ field }) => (
         <div>
           <Select

@@ -31,13 +31,63 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Edit } from "lucide-react";
+import { AppointmentResponseDto, AppointmentWithPatientDto } from "@/types/Appointment/Appointment";
 
 interface Props {
   doctorId: number;
 }
 
-function VerDetallesTurnoDialog({ turno }: { turno: any }) {
+function VerDetallesTurnoDialog({ turno }: { turno: AppointmentResponseDto | AppointmentWithPatientDto }) {
   const [open, setOpen] = useState(false);
+
+  // Helper para obtener el nombre del paciente
+  const getPatientName = () => {
+    if ('paciente' in turno && turno.paciente) {
+      return turno.paciente;
+    }
+    if (turno.patient) {
+      return `${turno.patient.lastName || ''} ${turno.patient.firstName || ''}`.trim();
+    }
+    return 'Paciente';
+  };
+
+  // Helper para obtener el estado
+  const getEstado = () => {
+    if ('estado' in turno && turno.estado) {
+      return turno.estado;
+    }
+    return turno.status;
+  };
+
+  // Helper para obtener la fecha
+  const getFecha = () => {
+    if ('fecha' in turno && turno.fecha) {
+      return new Date(turno.fecha).toLocaleDateString("es-ES");
+    }
+    return new Date(turno.date).toLocaleDateString("es-ES");
+  };
+
+  // Helper para obtener la hora
+  const getHora = () => {
+    if ('hora' in turno && turno.hora) {
+      return turno.hora;
+    }
+    return turno.hour;
+  };
+
+  // Helper para obtener el tipo
+  const getTipo = () => {
+    if ('tipo' in turno && turno.tipo) {
+      return turno.tipo;
+    }
+    return 'Consulta';
+  };
+
+  const patientName = getPatientName();
+  const estado = getEstado();
+  const fecha = getFecha();
+  const hora = getHora();
+  const tipo = getTipo();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -50,23 +100,23 @@ function VerDetallesTurnoDialog({ turno }: { turno: any }) {
         <DialogHeader>
           <DialogTitle>Detalles del Turno</DialogTitle>
           <DialogDescription>
-            Información completa del turno de {turno.paciente}
+            Información completa del turno de {patientName}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium">Paciente</Label>
-              <p className="text-sm">{turno.paciente}</p>
+              <p className="text-sm">{patientName}</p>
             </div>
             <div>
               <Label className="text-sm font-medium">Estado</Label>
               <Badge
                 variant={
-                  turno.estado === "completado" ? "default" : "secondary"
+                  estado === "completado" || estado === "COMPLETED" ? "default" : "secondary"
                 }
               >
-                {turno.estado}
+                {estado}
               </Badge>
             </div>
           </div>
@@ -74,20 +124,18 @@ function VerDetallesTurnoDialog({ turno }: { turno: any }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium">Fecha</Label>
-              <p className="text-sm">
-                {new Date(turno.fecha).toLocaleDateString("es-ES")}
-              </p>
+              <p className="text-sm">{fecha}</p>
             </div>
             <div>
               <Label className="text-sm font-medium">Hora</Label>
-              <p className="text-sm">{turno.hora}</p>
+              <p className="text-sm">{hora}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium">Tipo de Consulta</Label>
-              <p className="text-sm">{turno.tipo}</p>
+              <p className="text-sm">{tipo}</p>
             </div>
             <div>
               <Label className="text-sm font-medium">Duración</Label>
@@ -98,9 +146,9 @@ function VerDetallesTurnoDialog({ turno }: { turno: any }) {
           <div>
             <Label className="text-sm font-medium">Motivo de Consulta</Label>
             <p className="text-sm text-muted-foreground">
-              {turno.tipo === "Control"
+              {tipo === "Control"
                 ? "Control de rutina programado"
-                : turno.tipo === "Consulta"
+                : tipo === "Consulta"
                 ? "Primera consulta por síntomas"
                 : "Procedimiento especializado"}
             </p>
@@ -109,13 +157,13 @@ function VerDetallesTurnoDialog({ turno }: { turno: any }) {
           <div>
             <Label className="text-sm font-medium">Observaciones</Label>
             <p className="text-sm text-muted-foreground">
-              {turno.estado === "completado"
+              {estado === "completado" || estado === "COMPLETED"
                 ? "Consulta realizada sin complicaciones. Paciente en buen estado."
                 : "Turno programado - Sin observaciones previas"}
             </p>
           </div>
 
-          {turno.estado === "completado" && (
+          {(estado === "completado" || estado === "COMPLETED") && (
             <div>
               <Label className="text-sm font-medium">Diagnóstico</Label>
               <p className="text-sm text-muted-foreground">
@@ -129,7 +177,7 @@ function VerDetallesTurnoDialog({ turno }: { turno: any }) {
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cerrar
           </Button>
-          {turno.estado === "programado" && (
+          {(estado === "programado" || estado === "PENDING") && (
             <Button>
               <Edit className="mr-2 h-4 w-4" />
               Editar Turno

@@ -22,6 +22,7 @@ import {
 } from "@/common/helpers/evolutionHelpers";
 import ActionIcon from "@/components/Icons/action";
 import useUserRole from "@/hooks/useRoles";
+import { Evolucion, EvolucionData } from "@/types/Antecedentes/Antecedentes";
 
 // Tipo para las evoluciones procesadas en la tabla
 export interface EvolutionTableRow {
@@ -38,7 +39,19 @@ export interface EvolutionTableRow {
   enfermedadActual: string | null;
   examenFisico: string | null;
   diagnosticosPresuntivos: string | null;
-  evolucionCompleta: any;
+  evolucionCompleta: {
+    fechaConsulta: string;
+    fechaCreacion: string;
+    doctor: Evolucion['doctor'];
+    especialidad: string | null;
+    motivoConsulta: string | null;
+    enfermedadActual: string | null;
+    examenFisico: string | null;
+    diagnosticosPresuntivos: string | null;
+    evolucionPrincipal: Evolucion | null;
+    mediciones: EvolucionData[];
+    evoluciones: Evolucion[];
+  };
 }
 
 interface ColumnsProps {

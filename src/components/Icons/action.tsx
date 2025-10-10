@@ -5,8 +5,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import React from "react";
 
 const ActionIcon = ({ icon, tooltip, color, onClick }: IActionIcon) => {
+  // Si icon es un componente (LucideIcon o ComponentType), lo renderizamos como JSX
+  const IconElement = React.isValidElement(icon)
+    ? icon
+    : React.createElement(icon as React.ComponentType);
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -15,7 +21,7 @@ const ActionIcon = ({ icon, tooltip, color, onClick }: IActionIcon) => {
             className={`text-lg cursor-pointer active:opacity-50 ${color}`}
             onClick={onClick}
           >
-            {icon}
+            {IconElement}
           </div>
         </TooltipTrigger>
         <TooltipContent>{tooltip}</TooltipContent>

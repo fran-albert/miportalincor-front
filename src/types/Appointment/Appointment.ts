@@ -37,6 +37,9 @@ export interface AppointmentWithPatientDto {
         lastName: string;
         userId: number;
     } | null;
+
+    // Propiedad opcional para compatibilidad
+    doctor?: Partial<Doctor> | null;
 }
 
 export interface AppointmentResponseDto {
@@ -48,6 +51,13 @@ export interface AppointmentResponseDto {
 
     doctor: Partial<Doctor> | null;
     patient: Partial<Patient> | null;
+
+    // Propiedades temporales para compatibilidad con backend no actualizado
+    paciente?: string;
+    fecha?: string;
+    hora?: string;
+    tipo?: string;
+    estado?: string;
 }
 
 export interface AppointmentDetailedDto {

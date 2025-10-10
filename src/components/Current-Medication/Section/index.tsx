@@ -12,7 +12,7 @@ import CreateCurrentMedicationModal from "../Create";
 import EditCurrentMedicationModal from "../Edit";
 import ViewMedicacionActualModal from "../View-Simple";
 import { formatDateArgentina } from "@/common/helpers/helpers";
-import { MedicationStatus } from "@/types/Current-Medication/Current-Medication";
+import { MedicationStatus, CurrentMedication } from "@/types/Current-Medication/Current-Medication";
 
 type UserData = Patient | Doctor;
 
@@ -31,10 +31,22 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
   readOnly = false,
   showEditActions = true,
 }) => {
-  if (!userData) return null;
-
+  // Todos los Hooks deben ir ANTES de cualquier return condicional
   const navigate = useNavigate();
   const { session } = useUserRole();
+  const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedMedicationToView, setSelectedMedicationToView] = useState<CurrentMedication | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const { doctor, isLoading: isLoadingDoctor } = useDoctor({
+    auth: wantsToOpenModal && !!session?.id,
+    id: parseInt(session?.id || "0"),
+  });
+
+  // Ahora el early return después de todos los Hooks
+  if (!userData) return null;
 
   // Determinar el tipo de usuario basado en la sesión, no en la página
   const currentUserType = (Array.isArray(session?.role) && session.role.includes('Medico')) ? 'doctor' : 'patient';
@@ -51,15 +63,6 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
     const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
     navigate(`/${basePath}/${userData.slug}/historia-clinica/medicacion-actual`);
   };
-
-  const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const { doctor, isLoading: isLoadingDoctor } = useDoctor({
-    auth: wantsToOpenModal && !!session?.id,
-    id: parseInt(session?.id || "0"),
-  });
 
   // Obtener solo la medicación activa más reciente
   const currentMedication = medicacionActual && medicacionActual.length > 0
@@ -85,10 +88,7 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
     setWantsToOpenModal(true);
   };
 
-  const [selectedMedicationToView, setSelectedMedicationToView] = useState<any | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-
-  const handleMedicationClick = (medication: any) => {
+  const handleMedicationClick = (medication: CurrentMedication) => {
     setSelectedMedicationToView(medication);
     setIsViewModalOpen(true);
   };

@@ -13,6 +13,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import ActionIcon from "@/components/Icons/action";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   id: number;
@@ -37,7 +38,7 @@ export default function DeleteCollaboratorDialog({ id }: Props) {
           title: "¡Colaborador eliminado!",
           description: "El colaborador se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar colaborador",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

@@ -119,7 +119,7 @@ export default function EditCurrentMedicationModal({
       });
 
       handleClose();
-    } catch (error) {
+    } catch (e) {
       // Error already handled by promiseToast
     }
   };

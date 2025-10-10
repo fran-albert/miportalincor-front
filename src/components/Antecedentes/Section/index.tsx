@@ -36,15 +36,16 @@ const AntecedentesSection: React.FC<Props> = ({
 }) => {
   // Usar userData si está disponible, si no usar patient para compatibilidad
   const currentUser = userData || patient;
-  if (!currentUser) return null;
+
+  // All hooks must be called before any conditional returns
   const navigate = useNavigate();
   const { session } = useUserRole();
-  const handleNavigateToAntecedentes = () => {
-    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
-    navigate(`/${basePath}/${currentUser.slug}/historia-clinica/antecedentes`);
-  };
   const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedAntecedenteToView, setSelectedAntecedenteToView] =
+    useState<Antecedente | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
   const { data: antecedentesData, isLoading: isLoadingAntecedentes } =
     useDataTypes({
       auth: true,
@@ -69,13 +70,17 @@ const AntecedentesSection: React.FC<Props> = ({
     }
   }, [wantsToOpenModal, isDataReady]);
 
+  // Early return after all hooks have been called
+  if (!currentUser) return null;
+
+  const handleNavigateToAntecedentes = () => {
+    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
+    navigate(`/${basePath}/${currentUser.slug}/historia-clinica/antecedentes`);
+  };
+
   const handleOpenModal = () => {
     setWantsToOpenModal(true);
   };
-
-  const [selectedAntecedenteToView, setSelectedAntecedenteToView] =
-    useState<Antecedente | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const handleAntecedenteClick = (antecedente: Antecedente) => {
     setSelectedAntecedenteToView(antecedente);
     setIsViewModalOpen(true);

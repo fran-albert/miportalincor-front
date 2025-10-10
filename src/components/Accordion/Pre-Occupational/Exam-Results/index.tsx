@@ -81,9 +81,9 @@ export default function ExamsResultsAccordion({
         title: "Datos guardados",
         description: "Los datos se guardaron exitosamente",
       },
-      error: (error: any) => ({
+      error: (error: unknown) => ({
         title: "Error al guardar los datos",
-        description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        description: (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
       }),
     });
   };

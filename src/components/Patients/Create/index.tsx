@@ -27,12 +27,14 @@ import { z } from "zod";
 import { PatientSchema } from "@/validators/patient.schema";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import { City } from "@/types/City/City";
+import { Patient } from "@/types/Patient/Patient";
 import useUserRole from "@/hooks/useRoles";
 import { HealthPlans } from "@/types/Health-Plans/HealthPlan";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import CustomDatePicker from "@/components/Date-Picker";
 import { motion } from "framer-motion";
 import { User, Phone, Heart, MapPin } from "lucide-react";
+import { ApiError } from "@/types/Error/ApiError";
 type FormValues = z.infer<typeof PatientSchema>;
 export function CreatePatientComponent() {
   const { session } = useUserRole();
@@ -79,7 +81,8 @@ export function CreatePatientComponent() {
     const dateInArgentina = moment(data.birthDate).tz(
       "America/Argentina/Buenos_Aires"
     );
-    const payload: any = {
+
+    const payload = {
       ...data,
       email: data.email || "",
       address: {
@@ -101,7 +104,7 @@ export function CreatePatientComponent() {
       photo: "",
       birthDate: dateInArgentina.format(),
       registeredById: Number(session?.id),
-    };
+    } as Patient;
     try {
       const promise = addPatientMutation.mutateAsync(payload);
       await promiseToast(promise, {
@@ -113,7 +116,7 @@ export function CreatePatientComponent() {
           title: "¡Paciente creado!",
           description: "El paciente se ha creado exitosamente",
         },
-        error: (error: any) => {
+        error: (error: ApiError) => {
           if (error.response && error.response.status === 409) {
             return {
               title: "Paciente ya existe",

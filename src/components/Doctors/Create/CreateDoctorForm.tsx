@@ -34,6 +34,8 @@ import useUserRole from "@/hooks/useRoles";
 import { motion } from "framer-motion";
 import { Heart, MapPin, Phone, Stethoscope, User } from "lucide-react";
 import CustomDatePicker from "@/components/Date-Picker";
+import { ApiError } from "@/types/Error/ApiError";
+import { CreateDoctorDto } from "@/types/Doctor/Doctor";
 
 type FormValues = z.infer<typeof DoctorSchema>;
 
@@ -76,23 +78,48 @@ function CreateDoctorComponent() {
       "America/Argentina/Buenos_Aires"
     );
 
-    const payload: any = {
-      ...values,
-      specialities: selectedSpecialities.map((speciality) => ({
-        id: speciality.id,
-        name: speciality.name,
-      })),
-      healthInsurances: selectedHealthInsurances.map((insurance) => ({
-        id: insurance.id,
-        name: insurance.name,
-      })),
-      address: {
-        ...values.address,
-        city: selectedCity,
-        id: values.address.id,
-      },
-      photo: "",
+    const payload: CreateDoctorDto = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      userName: values.userName,
+      email: values.email || "",
+      phoneNumber: values.phoneNumber,
+      phoneNumber2: values.phoneNumber2,
       birthDate: dateInArgentina.format(),
+      gender: values.gender,
+      maritalStatus: values.maritalStatus || "",
+      matricula: values.matricula,
+      bloodType: values.bloodType,
+      rhFactor: values.rhFactor,
+      observations: values.observations,
+      photo: "",
+      specialities: selectedSpecialities
+        .filter((speciality) => speciality.id !== undefined)
+        .map((speciality) => ({
+          id: speciality.id!,
+          name: speciality.name,
+        })),
+      healthInsurances: selectedHealthInsurances
+        .filter((insurance) => insurance.id !== undefined)
+        .map((insurance) => ({
+          id: insurance.id!,
+          name: insurance.name,
+        })),
+      address: {
+        street: values.address.street,
+        number: values.address.number,
+        description: values.address.description || "",
+        phoneNumber: values.address.phoneNumber || "",
+        city: selectedCity || {
+          id: 0,
+          name: "",
+          state: {
+            id: 0,
+            name: "",
+            country: { id: 0, name: "" }
+          }
+        },
+      },
       registeredById: Number(session?.id),
     };
 
@@ -108,7 +135,7 @@ function CreateDoctorComponent() {
           title: "¡Médico creado!",
           description: "El médico se ha creado exitosamente",
         },
-        error: (error: any) => {
+        error: (error: ApiError) => {
           if (error.response && error.response.status === 409) {
             return {
               title: "Médico ya existe",

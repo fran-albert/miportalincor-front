@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { ApiError } from "@/types/Error/ApiError"
 
 interface Toast {
   id: string
@@ -67,7 +68,7 @@ export const useToast = () => {
       messages: {
         loading: { title: string; description?: string }
         success: { title: string; description?: string }
-        error: { title: string; description?: string } | ((error: unknown) => { title: string; description?: string })
+        error: { title: string; description?: string } | ((error: ApiError) => { title: string; description?: string })
       },
     ): Promise<T> => {
       // Mostrar loading toast
@@ -85,7 +86,7 @@ export const useToast = () => {
         // Remover loading y mostrar error
         removeToast(loadingId)
 
-        const errorMessage = typeof messages.error === "function" ? messages.error(error) : messages.error
+        const errorMessage = typeof messages.error === "function" ? messages.error(error as ApiError) : messages.error
 
         showError(errorMessage.title, errorMessage.description)
 

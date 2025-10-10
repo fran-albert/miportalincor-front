@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { capitalizeWords } from "@/common/helpers/helpers";
 import { toPng } from "html-to-image";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -76,7 +77,7 @@ const NutritionCard: React.FC<Props> = ({
             title: "Nueva entrada agregada",
             description: "La entrada se agregó exitosamente",
           },
-          error: (error: any) => ({
+          error: (error: ApiError) => ({
             title: "Error al agregar nueva entrada",
             description:
               error.response?.data?.message ||
@@ -107,7 +108,7 @@ const NutritionCard: React.FC<Props> = ({
             title: "Entrada actualizada",
             description: "La entrada se actualizó exitosamente",
           },
-          error: (error: any) => ({
+          error: (error: ApiError) => ({
             title: "Error al actualizar entrada",
             description:
               error.response?.data?.message ||
@@ -134,7 +135,7 @@ const NutritionCard: React.FC<Props> = ({
           title: "Entradas eliminadas",
           description: "Las entradas se eliminaron exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar entradas",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

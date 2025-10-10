@@ -35,6 +35,7 @@ import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
 import { useToast } from "@/hooks/Toast/useToast";
 import { useEvolutionMutation } from "@/hooks/Evolution/useEvolutionMutation";
 import DeleteEvolutionDialog from "../Delete/DeleteEvolutionDialog";
+import { ApiError } from "@/types/Error/ApiError";
 import {
   Tooltip,
   TooltipContent,
@@ -149,10 +150,11 @@ export default function EvolucionesComponent({
       await deleteEvolutionMutation.mutateAsync(String(firstEvolutionId));
 
       showSuccess("Evolución Eliminada", "La evolución ha sido eliminada exitosamente");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting evolution:", error);
 
-      const errorMessage = error.response?.data?.message || error.message || "Error desconocido";
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || apiError.message || "Error desconocido";
       showError("Error", `No se pudo eliminar la evolución: ${errorMessage}`);
     }
   };

@@ -14,6 +14,7 @@ import {
 } from "@/types/Data-Value/Data-Value";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useEvolutionMutation } from "@/hooks/Evolution/useEvolutionMutation";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Parametro {
   id: number;
@@ -190,7 +191,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
           title: "Evolución creada!",
           description: "La evolución se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al crear evolución",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

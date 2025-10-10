@@ -3,6 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useToast } from "./useToast";
 import { ToastContainer } from "@/components/Toast/Container/toast-container";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Toast {
   id: string;
@@ -24,7 +25,7 @@ interface ToastContextType {
       success: { title: string; description?: string };
       error:
         | { title: string; description?: string }
-        | ((error: unknown) => { title: string; description?: string });
+        | ((error: ApiError) => { title: string; description?: string });
     }
   ) => Promise<T>;
 }

@@ -38,7 +38,7 @@ export default function DynamicFormFields({
               dv.dataType.dataType === "NUMBER" ? Number(dv.value) : dv.value;
           }
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, string | number | boolean>);
 
       if (Object.keys(initialData).length > 0) {
         dispatch(setFormData(initialData));
@@ -46,9 +46,10 @@ export default function DynamicFormFields({
     }
   }, [dataValues, dispatch, fields, formData]);
 
-  const getFieldValue = (fieldName: string) => {
+  const getFieldValue = (fieldName: string): string | number | boolean => {
     if (fieldName in formData) {
-      return (formData as any)[fieldName];
+      const value = formData[fieldName as keyof typeof formData];
+      return value as string | number | boolean;
     }
     const dataValue = dataValues?.find((dv) => dv.dataType.name === fieldName);
     return dataValue ? dataValue.value : "";
@@ -71,7 +72,7 @@ export default function DynamicFormFields({
                 {isEditing ? (
                   <Input
                     id={field.name}
-                    value={fieldValue}
+                    value={String(fieldValue)}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     className="disabled:opacity-50"
                   />
@@ -90,7 +91,7 @@ export default function DynamicFormFields({
                   <Input
                     id={field.name}
                     type="number"
-                    value={fieldValue}
+                    value={typeof fieldValue === 'number' ? fieldValue : Number(fieldValue) || ''}
                     onChange={(e) => handleChange(field.name, Number(e.target.value))}
                     className="disabled:opacity-50"
                   />

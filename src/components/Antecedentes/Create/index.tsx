@@ -81,10 +81,10 @@ export const CreateAntecedenteDialog = ({
           title: "¡Antecedente creado!",
           description: "El antecedente se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al crear antecedente",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

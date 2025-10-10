@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface ImageUploadBoxProps {
   id: string;
@@ -55,7 +56,7 @@ export function ImageUploadBox({
           title: "¡Imagen subida!",
           description: "La imagen se ha subido exitosamente",
         },
-        error: (error: any) => {
+        error: (error: ApiError) => {
           if (error?.response?.status === 409) {
             return {
               title: "Imagen ya existe",

@@ -20,18 +20,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UseFormSetValue } from "react-hook-form";
+import { UseFormSetValue, FieldValues, Path, PathValue } from "react-hook-form";
 moment.locale("es");
-interface CustomDatePickerProps {
+interface CustomDatePickerProps<T extends FieldValues = FieldValues> {
   setStartDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
-  setValue: UseFormSetValue<any>;
-  fieldName: string;
+  setValue: UseFormSetValue<T>;
+  fieldName: Path<T>;
   initialDate?: Date | null;
   disabled?: boolean;
   compact?: boolean;
   whiteBg?: boolean;
 }
-export default function CustomDatePicker({
+export default function CustomDatePicker<T extends FieldValues = FieldValues>({
   setStartDate,
   setValue,
   fieldName,
@@ -39,7 +39,7 @@ export default function CustomDatePicker({
   initialDate = null,
   compact = false,
   whiteBg = false,
-}: CustomDatePickerProps) {
+}: CustomDatePickerProps<T>) {
   const [date, setDate] = useState<moment.Moment | null>(
     initialDate ? moment(initialDate) : null
   );
@@ -86,7 +86,7 @@ export default function CustomDatePicker({
       if (parsedDate.isValid()) {
         setDate(parsedDate);
         setStartDate(parsedDate.toDate());
-        setValue(fieldName, parsedDate.toISOString());
+        setValue(fieldName, parsedDate.toISOString() as PathValue<T, Path<T>>);
         setInputError(false);
         setMonth(parsedDate.month());
         setYear(parsedDate.year());
@@ -127,7 +127,7 @@ export default function CustomDatePicker({
     setInputValue("");
     setDate(null);
     setStartDate(undefined);
-    setValue(fieldName, "");
+    setValue(fieldName, "" as PathValue<T, Path<T>>);
     setInputError(false);
   };
   const handleDateChange = (newDate: Date | undefined) => {
@@ -136,7 +136,7 @@ export default function CustomDatePicker({
     if (momentDate) {
       const formattedDateISO = momentDate.toISOString();
       setStartDate(momentDate.toDate());
-      setValue(fieldName, formattedDateISO);
+      setValue(fieldName, formattedDateISO as PathValue<T, Path<T>>);
       setInputValue(momentDate.format("DD/MM/YYYY"));
       setInputError(false);
     }

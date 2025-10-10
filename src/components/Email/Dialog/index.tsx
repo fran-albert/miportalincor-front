@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { SendEmailDto } from "@/types/Email/Email";
 import { useEmailMutations } from "@/hooks/Email/useEmailMutations";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   collaborator: Collaborator;
@@ -83,7 +84,7 @@ export default function SendEmailDialog({
           title: "PDF enviado",
           description: "El PDF se envió exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al enviar el PDF",
           description: error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),
