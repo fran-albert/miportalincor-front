@@ -2,12 +2,10 @@ import { usePatient } from "@/hooks/Patient/usePatient";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
-import {
-  PatientCardSkeleton,
-  StudiesCardSkeleton,
-} from "@/components/Skeleton/Patient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { PatientStudiesPage as GenericPatientStudiesPage } from "@/components/Studies/Page";
 import BreadcrumbComponent from "@/components/Breadcrumb";
+import { StudiesCardSkeleton } from "@/components/Skeleton/Doctor";
 
 const PatientStudiesPage = () => {
   const params = useParams();
@@ -41,7 +39,7 @@ const PatientStudiesPage = () => {
     return (
       <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
           <StudiesCardSkeleton />
         </div>
       </div>

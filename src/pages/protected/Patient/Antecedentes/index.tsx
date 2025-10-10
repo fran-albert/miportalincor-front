@@ -40,7 +40,7 @@ const PatientAntecedentesPage = () => {
     return (
       <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
         </div>
       </div>
     );
@@ -80,6 +80,7 @@ const PatientAntecedentesPage = () => {
         onBack={() => navigate(-1)}
         idUser={String(id)}
         idDoctor={idDoctor}
+        patient={patient}
       />
     </>
   );

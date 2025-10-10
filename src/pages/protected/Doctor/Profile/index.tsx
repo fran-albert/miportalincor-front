@@ -1,4 +1,5 @@
 import DoctorProfileComponent from "@/components/Doctors/Profile";
+import { DoctorCardSkeleton } from "@/components/Skeleton/Doctor";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
 
@@ -13,10 +14,19 @@ const DoctorProfilePage = () => {
     id,
   });
 
+   const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Médicos", href: "/medicos" },
+    {
+      label: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médico", href: "/medicos/" + (slug || "")
+    },
+    { label: "Perfil Completo", href: "#" }
+  ];
+
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
-        <div>Cargando perfil del médico...</div>
+        <DoctorCardSkeleton />
       </div>
     );
   }
@@ -27,7 +37,7 @@ const DoctorProfilePage = () => {
 
   return (
     <div className="space-y-4 p-6">
-      {doctor && <DoctorProfileComponent doctor={doctor} />}
+      {doctor && <DoctorProfileComponent doctor={doctor} breadcrumbItems={breadcrumbItems} />}
     </div>
   );
 };

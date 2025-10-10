@@ -2,17 +2,28 @@ import { WelcomeHero } from "./Dashboard/WelcomeHero";
 import { StatsCard } from "./Dashboard/StatsCard";
 import { QuickAccessCard } from "./Dashboard/QuickAccessCard";
 import { useDashboardStats } from "@/hooks/Dashboard/useDashboardStats";
-import { Users, Stethoscope, FileText, UserCog, Heart, Shield, TestTube, Building2, Calendar } from "lucide-react";
+import {
+  Users,
+  Stethoscope,
+  FileText,
+  UserCog,
+  Heart,
+  Shield,
+  TestTube,
+  Building2,
+  Calendar,
+} from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 
 export default function HomeComponent({ name }: { name: string }) {
-  const { isSecretary, isAdmin, session } = useUserRole();
+  const { isSecretary, isAdmin, session, isDoctor } = useUserRole();
   const { stats, isLoading } = useDashboardStats(!!session);
 
   const quickAccessCards = [
     {
       title: "Pacientes",
-      description: "Gestiona la información y historias clínicas de los pacientes",
+      description:
+        "Gestiona la información y historias clínicas de los pacientes",
       icon: Users,
       href: "/pacientes",
     },
@@ -36,7 +47,8 @@ export default function HomeComponent({ name }: { name: string }) {
     },
     {
       title: "Análisis Bioquímicos",
-      description: "Configura y gestiona los análisis bioquímicos del laboratorio",
+      description:
+        "Configura y gestiona los análisis bioquímicos del laboratorio",
       icon: TestTube,
       href: "/analisis-bioquimicos",
     },
@@ -49,7 +61,7 @@ export default function HomeComponent({ name }: { name: string }) {
   ];
 
   // Solo Admin y Secretaria ven Incor Laboral y Turnos
-  if (isSecretary || isAdmin) {
+  if (isSecretary || isAdmin || isDoctor) {
     quickAccessCards.push(
       {
         title: "Incor Laboral",
@@ -103,7 +115,9 @@ export default function HomeComponent({ name }: { name: string }) {
 
       {/* Stats Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">Estadísticas Generales</h2>
+        <h2 className="text-xl font-bold text-gray-900">
+          Estadísticas Generales
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsCards.map((stat, index) => (
             <StatsCard

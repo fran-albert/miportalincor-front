@@ -79,6 +79,7 @@ const PatientEvolucionesPage: React.FC = () => {
         userData={patient}
         userType="patient"
         patientId={id}
+        patient={patient}
       />
     </>
   );

@@ -1,6 +1,6 @@
 import { Patient } from "@/types/Patient/Patient";
 import { StudiesWithURL } from "@/types/Study/Study";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { AntecedentesResponse } from "@/types/Antecedentes/Antecedentes";
 import { PatientHistoryWrapper } from "@/components/Historia-Clinica/Wrapper";
 
@@ -35,7 +35,7 @@ export function PatientHistoryComponent({
   if (isLoadingPatient) {
     return (
       <div className="space-y-4 p-6">
-        <PatientCardSkeleton />
+        <PatientProfileSkeleton />
       </div>
     );
   }

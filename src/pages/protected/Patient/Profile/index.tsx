@@ -1,6 +1,6 @@
 import PatientProfileComponent from "@/components/Patients/Profile";
 import { usePatient } from "@/hooks/Patient/usePatient";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { useParams } from "react-router-dom";
 import BreadcrumbComponent from "@/components/Breadcrumb";
 
@@ -16,11 +16,20 @@ const PatientProfilePage = () => {
     id,
   });
 
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Pacientes", href: "/pacientes" },
+    {
+      label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente", href: "/pacientes/" + (slug || "")
+    },
+    { label: "Perfil Completo", href: "#" }
+  ];
+
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
         <BreadcrumbComponent items={breadcrumbItems} />
-        <PatientCardSkeleton />
+        <PatientProfileSkeleton />
       </div>
     );
   }
@@ -40,5 +49,4 @@ const PatientProfilePage = () => {
     </div>
   );
 };
-
 export default PatientProfilePage;

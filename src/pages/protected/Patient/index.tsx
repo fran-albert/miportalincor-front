@@ -3,8 +3,8 @@ import { PatientDashboardComponent } from "@/components/Patients/Dashboard/Compo
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
-  PatientCardSkeleton,
-  StudiesCardSkeleton,
+  PatientProfileSkeleton,
+  StudyRowSkeleton,
 } from "@/components/Skeleton/Patient";
 
 const PatientDashboardPage = () => {
@@ -28,8 +28,8 @@ const PatientDashboardPage = () => {
     return (
       <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
-          <StudiesCardSkeleton />
+          <PatientProfileSkeleton />
+          <StudyRowSkeleton />
         </div>
       </div>
     );

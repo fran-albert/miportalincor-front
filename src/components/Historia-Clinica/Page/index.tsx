@@ -7,8 +7,8 @@ import {
   MedicacionActualResponse,
 } from "@/types/Antecedentes/Antecedentes";
 import GenericHistory from "@/components/Historia-Clinica/Generic";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import { DoctorDashboardSkeleton } from "@/components/Skeleton/Doctor";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 
 type UserData = Patient | Doctor;
 
@@ -61,7 +61,7 @@ export function HistoryPage({
         {userType === "doctor" ? (
           <DoctorDashboardSkeleton />
         ) : (
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
         )}
       </div>
     );

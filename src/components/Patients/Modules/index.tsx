@@ -1,6 +1,6 @@
 import useUserRole from "@/hooks/useRoles";
 import { Stethoscope, Calendar, FileImage, ClipboardPlus } from "lucide-react";
-import { ModuleCard } from "../Dashboard/ModuleCard";
+import { ModuleCard } from "@/components/shared/ModuleCard";
 
 interface PatientModulesProps {
   onHistoriaClinicaClick: () => void;

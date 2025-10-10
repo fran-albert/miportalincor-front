@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import useUserRole from "@/hooks/useRoles";
 import {
   Stethoscope,
@@ -9,6 +7,7 @@ import {
   Users,
   Building2,
 } from "lucide-react";
+import { ModuleCard } from "@/components/shared/ModuleCard";
 
 interface DoctorModulesProps {
   onHistoriaClinicaClick: () => void;
@@ -27,117 +26,83 @@ export default function DoctorModules({
 }: DoctorModulesProps) {
   const { isDoctor, isAdmin } = useUserRole();
 
+  const modules = [
+    {
+      title: "Historia Clínica",
+      description: "Accede al historial médico completo del paciente",
+      icon: Stethoscope,
+      gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
+      onClick: onHistoriaClinicaClick,
+      visible: true,
+    },
+    {
+      title: "Control Nutricional",
+      description: "Gestiona el plan nutricional y seguimiento del paciente",
+      icon: ClipboardPlus,
+      gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
+      onClick: onControlNutricionalClick || (() => {}),
+      visible: true,
+    },
+    {
+      title: "Mis Pacientes",
+      description: "Pacientes bajo mi cuidado médico",
+      icon: Users,
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+      onClick: onPacientesClick || (() => {}),
+      visible: true,
+    },
+    {
+      title: "Agenda Médica",
+      description: "Horarios y citas programadas",
+      icon: Calendar,
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      onClick: () => {},
+      visible: true,
+      disabled: true,
+    },
+    {
+      title: "Estudios",
+      description: "Imágenes y laboratorios del paciente",
+      icon: FileImage,
+      gradient: "bg-gradient-to-br from-cyan-500 to-cyan-600",
+      onClick: onEstudiosClick || (() => {}),
+      visible: !!onEstudiosClick,
+    },
+    {
+      title: "Especialidades",
+      description: "Gestión de especialidades médicas",
+      icon: Building2,
+      gradient: "bg-gradient-to-br from-teal-500 to-teal-600",
+      onClick: onEspecialidadesClick || (() => {}),
+      visible: isDoctor || isAdmin,
+    },
+  ];
+
+  const visibleModules = modules.filter((module) => module.visible);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl font-bold text-gray-800">
-          Módulos del Médico
-        </CardTitle>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Módulos del Médico</h2>
         <p className="text-gray-600">
           Accede a la información y servicios profesionales
         </p>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Historia Clínica */}
-          <Button
-            onClick={onHistoriaClinicaClick}
-            className="h-32 flex flex-col items-center justify-center gap-3 bg-greenPrimary hover:bg-teal-700 text-white"
-          >
-            <Stethoscope className="h-10 w-10" />
-            <span className="font-semibold text-lg">Historia Clínica</span>
-          </Button>
+      </div>
 
-          {/* Control Nutricional */}
-          <Button
-            onClick={onControlNutricionalClick}
-            className="h-32 flex flex-col items-center justify-center gap-3 bg-greenPrimary hover:bg-teal-700 text-white"
-          >
-            <ClipboardPlus className="h-10 w-10" />
-            <span className="font-semibold text-lg">Control Nutricional</span>
-          </Button>
-
-          {/* Mis Pacientes */}
-          <Button
-            onClick={onPacientesClick}
-            className="h-32 flex flex-col items-center justify-center gap-3 bg-greenPrimary hover:bg-teal-700 text-white"
-          >
-            <Users className="h-10 w-10" />
-            <div className="text-center">
-              <span className="font-semibold text-lg">Mis Pacientes</span>
-              <p className="text-xs mt-1">Pacientes bajo mi cuidado</p>
-            </div>
-          </Button>
-
-          {/* Citas Médicas */}
-          <Button
-            variant="outline"
-            className="h-32 flex flex-col items-center justify-center gap-3 border-2 hover:bg-gray-50 bg-transparent"
-            disabled
-          >
-            <Calendar className="h-10 w-10 text-gray-400" />
-            <div className="text-center">
-              <span className="font-semibold text-lg text-gray-400">
-                Agenda Médica
-              </span>
-              <p className="text-xs text-gray-400 mt-1">
-                Horarios y citas programadas
-              </p>
-            </div>
-          </Button>
-
-
-          {/* Estudios */}
-          {onEstudiosClick && (
-            <Button
-              onClick={onEstudiosClick}
-              className="h-32 flex flex-col items-center justify-center gap-3 bg-greenPrimary hover:bg-teal-700 text-white"
-            >
-              <FileImage className="h-10 w-10" />
-              <div className="text-center">
-                <span className="font-semibold text-lg">Estudios</span>
-                <p className="text-xs mt-1">Imágenes y laboratorios</p>
-              </div>
-            </Button>
-          )}
-
-          {/* Especialidades - Solo para médicos con permisos */}
-          {(isDoctor || isAdmin) && (
-            <Button
-              onClick={onEspecialidadesClick}
-              variant="outline"
-              className="h-32 flex flex-col items-center justify-center gap-3 border-2 border-teal-300 hover:bg-teal-50 bg-transparent"
-            >
-              <Building2 className="h-10 w-10 text-teal-600" />
-              <div className="text-center">
-                <span className="font-semibold text-lg text-teal-600">
-                  Especialidades
-                </span>
-                <p className="text-xs text-teal-600 mt-1">
-                  Gestión de especialidades
-                </p>
-              </div>
-            </Button>
-          )}
-
-          {/* Documentos */}
-          {/* <Button
-            variant="outline"
-            className="h-32 flex flex-col items-center justify-center gap-3 border-2 hover:bg-gray-50 bg-transparent"
-            disabled
-          >
-            <FileText className="h-10 w-10 text-gray-400" />
-            <div className="text-center">
-              <span className="font-semibold text-lg text-gray-400">
-                Documentos
-              </span>
-              <p className="text-xs text-gray-400 mt-1">
-                Certificados y archivos
-              </p>
-            </div>
-          </Button> */}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {visibleModules.map((module, index) => (
+          <ModuleCard
+            key={index}
+            title={module.title}
+            description={module.description}
+            icon={module.icon}
+            gradient={module.gradient}
+            onClick={module.onClick}
+            index={index}
+            disabled={module.disabled}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

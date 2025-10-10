@@ -196,7 +196,7 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
                 <Link
                   to={`/${userType === "patient" ? "pacientes" : "medicos"}/${
                     userData.slug
-                  }`}
+                  }/perfil`}
                   className="w-full"
                 >
                   <Button className="w-full bg-greenPrimary hover:bg-teal-600 text-white shadow-md hover:shadow-lg transition-all">

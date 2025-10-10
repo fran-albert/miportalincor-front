@@ -1,9 +1,9 @@
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import MedicacionActualComponent from "@/components/Current-Medication/Component";
 import useUserRole from "@/hooks/useRoles";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 
 const DoctorMedicacionActualPage = () => {
   const params = useParams();
@@ -31,7 +31,7 @@ const DoctorMedicacionActualPage = () => {
     return (
       <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
         </div>
       </div>
     );

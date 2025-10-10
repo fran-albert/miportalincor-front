@@ -67,6 +67,7 @@ const PatientMedicacionActualPage = () => {
           userData={patient}
           userType="patient"
           currentUserType={currentUserType}
+          patient={patient}
         />
       )}
     </>
