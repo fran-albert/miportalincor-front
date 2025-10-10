@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
           title: "¡Análisis bioquímico creado!",
           description: "El análisis bioquímico se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al crear análisis bioquímico",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",
@@ -155,7 +156,7 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
                     <FormField
                       control={form.control}
                       name="unit"
-                      render={({}) => (
+                      render={() => (
                         <FormItem>
                           <FormControl>
                             <UnitSelect control={form.control} />

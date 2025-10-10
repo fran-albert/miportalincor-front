@@ -58,21 +58,22 @@ interface ColumnsProps {
   onView: (evolucion: EvolutionTableRow) => void;
   onDelete: (evolucion: EvolutionTableRow) => void;
   onPrint: (evolucion: EvolutionTableRow) => void;
+  currentUserId?: number;
 }
 
 export const getEvolutionColumns = ({
   onView,
   onDelete,
-  onPrint
+  onPrint,
+  currentUserId
 }: ColumnsProps): ColumnDef<EvolutionTableRow>[] => [
   {
     id: "acciones",
     header: "Acciones",
     cell: ({ row }) => {
       const evolucion = row.original;
-      const { session } = useUserRole();
       const canDelete = canDeleteEvolution(evolucion.fechaCreacion);
-      const isOwner = session?.id && parseInt(session.id, 10) === evolucion.doctor.userId;
+      const isOwner = currentUserId && currentUserId === evolucion.doctor.userId;
       const canDeleteThis = canDelete && isOwner;
 
       return (

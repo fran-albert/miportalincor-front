@@ -45,25 +45,6 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
     id: parseInt(session?.id || "0"),
   });
 
-  // Ahora el early return después de todos los Hooks
-  if (!userData) return null;
-
-  // Determinar el tipo de usuario basado en la sesión, no en la página
-  const currentUserType = (Array.isArray(session?.role) && session.role.includes('Medico')) ? 'doctor' : 'patient';
-
-  // Debug temporal
-  console.log('🔍 Debug session:', {
-    session,
-    sessionRole: session?.role,
-    currentUserType,
-    originalUserType: userType
-  });
-
-  const handleNavigateToMedicacionActual = () => {
-    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
-    navigate(`/${basePath}/${userData.slug}/historia-clinica/medicacion-actual`);
-  };
-
   // Obtener solo la medicación activa más reciente
   const currentMedication = medicacionActual && medicacionActual.length > 0
     ? medicacionActual.find(m => m.status === MedicationStatus.ACTIVE) || medicacionActual[0]
@@ -83,6 +64,25 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
       setWantsToOpenModal(false);
     }
   }, [wantsToOpenModal, isDataReady, currentMedication]);
+
+  // Ahora el early return después de todos los Hooks
+  if (!userData) return null;
+
+  // Determinar el tipo de usuario basado en la sesión, no en la página
+  const currentUserType = (Array.isArray(session?.role) && session.role.includes('Medico')) ? 'doctor' : 'patient';
+
+  // Debug temporal
+  console.log('🔍 Debug session:', {
+    session,
+    sessionRole: session?.role,
+    currentUserType,
+    originalUserType: userType
+  });
+
+  const handleNavigateToMedicacionActual = () => {
+    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
+    navigate(`/${basePath}/${userData.slug}/historia-clinica/medicacion-actual`);
+  };
 
   const handleOpenModal = () => {
     setWantsToOpenModal(true);

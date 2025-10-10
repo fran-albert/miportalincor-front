@@ -90,7 +90,7 @@ export default function CreateCurrentMedicationModal({
       });
 
       handleClose();
-    } catch (error) {
+    } catch {
       // Error already handled by promiseToast
     }
   };

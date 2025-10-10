@@ -76,7 +76,7 @@ export default function EditCurrentMedicationModal({
       });
 
       handleClose();
-    } catch (error) {
+    } catch {
       // Error already handled by promiseToast
     }
   };
@@ -119,7 +119,7 @@ export default function EditCurrentMedicationModal({
       });
 
       handleClose();
-    } catch (e) {
+    } catch {
       // Error already handled by promiseToast
     }
   };
