@@ -1,6 +1,9 @@
 import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
+import { DoctorProfileSkeleton } from "@/components/Skeleton/Doctor";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
+import { SecretaryProfileSkeleton } from "@/components/Skeleton/Secretary";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useUser } from "@/hooks/User/useUser";
@@ -28,7 +31,7 @@ const MyProfilePage = () => {
   if (isDoctor && isLoadingDoctor) {
     return (
       <div className="space-y-6 p-6">
-        <div>Cargando perfil del médico...</div>
+        <DoctorProfileSkeleton />
       </div>
     );
   }
@@ -36,7 +39,7 @@ const MyProfilePage = () => {
   if (isSecretary && isLoadingSecretary) {
     return (
       <div className="space-y-6 p-6">
-        <div>Cargando perfil del secretario...</div>
+        <SecretaryProfileSkeleton />
       </div>
     );
   }
@@ -44,7 +47,7 @@ const MyProfilePage = () => {
   if (isPatient && isLoadingPatient) {
     return (
       <div className="space-y-6 p-6">
-        <div>Cargando perfil del paciente...</div>
+        <PatientProfileSkeleton />
       </div>
     );
   }
