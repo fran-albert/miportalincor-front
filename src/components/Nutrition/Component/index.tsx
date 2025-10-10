@@ -1,6 +1,7 @@
 import BreadcrumbComponent from "@/components/Breadcrumb";
 import NutritionCard from "../Card";
 import { NutritionData } from "@/types/Nutrition-Data/NutritionData";
+import { motion } from "framer-motion";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -12,14 +13,26 @@ interface Props {
   role: "patient" | "doctor";
 }
 
-const NutritionComponent = ({ nutritionData, slug, slugParts, role }: Props) => {
+const NutritionComponent = ({
+  nutritionData,
+  slug,
+  slugParts,
+  role,
+}: Props) => {
   const baseRoute = role === "patient" ? "pacientes" : "medicos";
-  
+
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: role === "patient" ? "Pacientes" : "Medicos", href: `/${baseRoute}` },
     {
-      label: slugParts ? slugParts.formattedName : (role === "patient" ? "Paciente" : "Doctor"),
+      label: role === "patient" ? "Pacientes" : "Medicos",
+      href: `/${baseRoute}`,
+    },
+    {
+      label: slugParts
+        ? slugParts.formattedName
+        : role === "patient"
+        ? "Paciente"
+        : "Doctor",
       href: `/${baseRoute}/${slug}`,
     },
     {
@@ -32,7 +45,12 @@ const NutritionComponent = ({ nutritionData, slug, slugParts, role }: Props) => 
   const lastName = last.join(" ");
 
   return (
-    <div className="space-y-4 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6 p-6"
+    >
       <BreadcrumbComponent items={breadcrumbItems} />
       <NutritionCard
         nutritionData={nutritionData}
@@ -40,7 +58,7 @@ const NutritionComponent = ({ nutritionData, slug, slugParts, role }: Props) => 
         userLastname={lastName}
         userId={Number(slugParts.id)}
       />
-    </div>
+    </motion.div>
   );
 };
 

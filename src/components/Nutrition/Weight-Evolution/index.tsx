@@ -1,11 +1,12 @@
 // WeightEvolutionCard.tsx
 import { useMemo, forwardRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ClipboardPlus } from "lucide-react";
+import { ClipboardPlus, TrendingUp } from "lucide-react";
 import type { NutritionData } from "@/types/Nutrition-Data/NutritionData";
 import { Label } from "@/components/ui/label";
 import { NutritionChart } from "../Chart";
-
+import { Badge } from "@/components/ui/badge";
+import CustomDatePicker from "@/components/Date-Picker";
 interface Props {
   nutritionData: NutritionData[];
   startDate?: Date;
@@ -38,7 +39,57 @@ const WeightEvolutionCard = forwardRef<HTMLDivElement, Props>(
     }, [initialData, startDate, endDate]);
 
     return (
-      <Card>
+      <Card className="overflow-hidden border-0 shadow-xl">
+        {/* Hero Background con Gradiente */}
+        <div className="relative bg-gradient-to-r from-greenPrimary to-teal-600 px-8 py-6">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="relative">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-7 w-7 text-white" />
+                <CardTitle className="text-white text-2xl font-bold">
+                  Evolución de Peso
+                </CardTitle>
+                <Badge className="bg-white/20 text-white border-white/30">
+                  {filteredData.length} registros
+                </Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <div className="flex-1 sm:w-48">
+                  <Label
+                    htmlFor="startDate"
+                    className="text-white text-sm mb-2 block"
+                  >
+                    Desde
+                  </Label>
+                  <CustomDatePicker
+                    setStartDate={onStartDateChange}
+                    setValue={() => {}}
+                    fieldName="startDate"
+                    initialDate={startDate}
+                    whiteBg={true}
+                  />
+                </div>
+                <div className="flex-1 sm:w-48">
+                  <Label
+                    htmlFor="endDate"
+                    className="text-white text-sm mb-2 block"
+                  >
+                    Hasta
+                  </Label>
+                  <CustomDatePicker
+                    setStartDate={onEndDateChange}
+                    setValue={() => {}}
+                    fieldName="endDate"
+                    initialDate={endDate}
+                    whiteBg={true}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
           <div className="flex items-center">
             <ClipboardPlus className="mr-2 text-greenPrimary" />
