@@ -1,7 +1,7 @@
 import { Outlet, Link } from "react-router-dom";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/Sidebar";
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +18,13 @@ import useUserRole from "@/hooks/useRoles";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
-  const { session } = useUserRole();
+  const { session, isPatient } = useUserRole();
 
   const userName = session?.firstName || "Usuario";
   const userInitials = userName.substring(0, 2).toUpperCase();
+
+  // Determinar si mostrar el buscador (no mostrar para pacientes)
+  const showSearchBar = !isPatient;
 
   return (
     <>
@@ -36,18 +39,23 @@ export function DashboardLayout() {
           <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b px-4 bg-white shadow-sm">
             <SidebarTrigger className="-ml-1" />
             <div className="flex flex-1 items-center gap-4 justify-between">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Buscar pacientes, médicos..."
-                  className="pl-8 w-full"
-                />
-              </div>
+              {/* Buscador - Solo visible para médicos, secretarias y administradores */}
+              {showSearchBar && (
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar pacientes, médicos..."
+                    className="pl-8 w-full"
+                  />
+                </div>
+              )}
+
+              {/* Espaciador para pacientes cuando no hay buscador */}
+              {!showSearchBar && <div className="flex-1" />}
+
+              {/* Menú de usuario */}
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon">
-                  <Bell className="h-4 w-4" />
-                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">

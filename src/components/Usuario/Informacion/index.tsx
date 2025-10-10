@@ -132,7 +132,9 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
                                 className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20"
                               >
                                 <Stethoscope className="h-3 w-3 mr-1" />
-                                {speciality.name || speciality}
+                                {typeof speciality === "string"
+                                  ? speciality
+                                  : speciality.name}
                               </Badge>
                             ))}
                           </div>

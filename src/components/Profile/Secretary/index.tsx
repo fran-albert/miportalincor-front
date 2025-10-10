@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { CitySelect } from "@/components/Select/City/select";
 import { StateSelect } from "@/components/Select/State/select";
 import { User } from "@/types/User/User";
-import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +47,57 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
   const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(UserSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      userName: user?.dni || "",
+      birthDate: user?.birthDate
+        ? typeof user.birthDate === "string" || user.birthDate instanceof Date
+          ? new Date(user.birthDate).toISOString()
+          : ""
+        : "",
+      phoneNumber: user?.phoneNumber || "",
+      phoneNumber2: user?.phoneNumber2 || "",
+      bloodType: user?.bloodType || "",
+      rhFactor: user?.rhFactor || "",
+      gender: user?.gender || "",
+      maritalStatus: user?.maritalStatus || "",
+      observations: user?.observations || "",
+      address: {
+        street: user?.address?.street || "",
+        number: user?.address?.number || "",
+        description: user?.address?.description || "",
+        phoneNumber: user?.address?.phoneNumber || "",
+        city: user?.address?.city
+          ? {
+              id: user.address.city.id,
+              name: user.address.city.name,
+              state: user.address.city.state
+                ? {
+                    id: user.address.city.state.id,
+                    name: user.address.city.state.name,
+                    country: user.address.city.state.country || {
+                      id: 1,
+                      name: "Argentina"
+                    }
+                  }
+                : String(user.address.city.state)
+            }
+          : {
+              id: 0,
+              name: "",
+              state: {
+                id: 0,
+                name: "",
+                country: {
+                  id: 1,
+                  name: "Argentina"
+                }
+              }
+            },
+      },
+    },
   });
   const { setValue, control } = form;
   const [isEditing, setIsEditing] = useState(false);
@@ -98,8 +148,20 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
   };
   const handleSave = async () => {
     try {
+      console.log("🔵 handleSave called");
+      console.log("🔵 Form values:", form.getValues());
+      console.log("🔵 Form errors before trigger:", form.formState.errors);
+
       const isValid = await form.trigger();
-      if (!isValid) return;
+      console.log("🔵 Form is valid:", isValid);
+      console.log("🔵 Form errors after trigger:", form.formState.errors);
+
+      if (!isValid) {
+        console.log("❌ Validation failed, stopping");
+        return;
+      }
+
+      console.log("✅ Validation passed, proceeding with save");
       const formattedUserName = removeDotsFromDni(form.getValues("userName"));
       const { address, ...rest } = form.getValues();
       const addressToSend = {
@@ -149,7 +211,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
     { label: "Mi Perfil" },
   ];
   return (
-    <>
+    <div className="space-y-6 p-6">
       {/* PageHeader */}
       <PageHeader
         breadcrumbItems={breadcrumbItems}
@@ -175,9 +237,19 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
                 onClick={handleSave}
                 type="button"
                 className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
+                disabled={updateUserMutation.isPending}
               >
-                <Save className="h-4 w-4 mr-2" />
-                Guardar
+                {updateUserMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Guardar
+                  </>
+                )}
               </Button>
               <Button onClick={() => setIsEditing(false)} variant="outline">
                 <X className="h-4 w-4 mr-2" />
@@ -187,6 +259,24 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
           )
         }
       />
+
+      {/* Edit Mode Indicator */}
+      {isEditing && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <Edit2 className="h-4 w-4 text-blue-600" />
+            <p className="text-sm text-blue-900 font-medium">
+              Modo de edición activo - Modifica los campos que necesites
+              actualizar
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       <Form {...form}>
         <form className="space-y-6">
           {/* Avatar Card */}
@@ -624,6 +714,6 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
           </motion.div>
         </form>
       </Form>
-    </>
+    </div>
   );
 }

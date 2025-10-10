@@ -93,7 +93,7 @@ export default function EditCurrentMedicationModal({
   const handleSuspendMedication = async () => {
     try {
       const suspendData: SuspendCurrentMedicationDto = {
-        suspensionDate: new Date().toISOString(),
+        suspensionReason: "Suspendido por el médico",
       };
 
       const promise = suspendMutation.mutateAsync({

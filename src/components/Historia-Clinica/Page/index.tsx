@@ -1,6 +1,7 @@
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { Activity } from "lucide-react";
 import {
   AntecedentesResponse,
   EvolucionesResponse,
@@ -70,8 +71,13 @@ export function HistoryPage({
   // Solo mostrar "no encontrado" si no está cargando Y no hay datos
   if (!userData && !isLoadingUser) {
     return (
-      <div className="space-y-4 p-6">
-        <BreadcrumbComponent items={breadcrumbItems} />
+      <div className="space-y-6 p-6">
+        <PageHeader
+          breadcrumbItems={breadcrumbItems}
+          title="Historia Clínica"
+          description={`Historia clínica del ${userType === "patient" ? "paciente" : "doctor"}`}
+          icon={<Activity className="h-6 w-6" />}
+        />
         <div className="p-4 text-red-500">
           {userType === "patient"
             ? "Paciente no encontrado"
@@ -82,8 +88,13 @@ export function HistoryPage({
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <BreadcrumbComponent items={breadcrumbItems} />
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Historia Clínica"
+        description={`Antecedentes, evoluciones y medicación actual del ${userType === "patient" ? "paciente" : "doctor"}`}
+        icon={<Activity className="h-6 w-6" />}
+      />
 
       {userError && (
         <div className="p-4 text-red-500">

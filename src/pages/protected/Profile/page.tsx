@@ -58,7 +58,7 @@ const MyProfilePage = () => {
         <Helmet>
           <title>Mi Perfil</title>
         </Helmet>
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
           <ProfileDoctorCardComponent data={doctor} />
         </div>
       </>
@@ -67,7 +67,7 @@ const MyProfilePage = () => {
 
   if (isSecretary && secretary) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         <SecretaryProfileComponent user={secretary} />
       </div>
     );
@@ -75,7 +75,7 @@ const MyProfilePage = () => {
 
   if (isPatient && patient) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         {patient && <MyProfilePatientComponent patient={patient} />}
       </div>
     );

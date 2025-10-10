@@ -20,7 +20,7 @@ import { StateSelect } from "@/components/Select/State/select";
 import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
 import { Doctor } from "@/types/Doctor/Doctor";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { DoctorSchema } from "@/validators/doctor.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,7 +42,6 @@ import {
   MapPin,
   FileText,
   User,
-  Building2,
 } from "lucide-react";
 import { ImageUploadBox } from "@/components/Doctors/Signature-Boxs";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -214,6 +213,24 @@ export default function ProfileDoctorCardComponent({
           )
         }
       />
+
+      {/* Edit Mode Indicator */}
+      {isEditing && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <Edit2 className="h-4 w-4 text-blue-600" />
+            <p className="text-sm text-blue-900 font-medium">
+              Modo de edición activo - Modifica los campos que necesites
+              actualizar
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       <Form {...form}>
         <form className="space-y-6">
           {/* Avatar Card */}

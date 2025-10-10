@@ -110,7 +110,7 @@ export function CustomToast({
       {type !== "loading" && (
         <div className="absolute bottom-0 left-0 h-1.5 bg-gray-100 w-full">
           <div
-            className={`h-full ${accentGradient} transition-all duration-[4000ms] ease-linear{isVisible ? "w-0" : "w-full"}`}
+            className={`h-full ${accentGradient} transition-all duration-[4000ms] ease-linear ${isVisible ? "w-0" : "w-full"}`}
           />
         </div>
       )}
@@ -118,7 +118,7 @@ export function CustomToast({
         <div className="flex items-start gap-3">
           {/* Icon with gradient */}
           <div
-            className={`flex-shrink-0 w-10 h-10 rounded-full ${iconBg} flex items-centerustify-center ${iconColor} shadow-lg`}
+            className={`flex-shrink-0 w-10 h-10 rounded-full ${iconBg} flex items-center justify-center ${iconColor} shadow-lg`}
           >
             {icon}
           </div>
@@ -140,7 +140,7 @@ export function CustomToast({
         variant="ghost"
         size="sm"
         onClick={handleClose}
-        className="absolute top-3 right-3 h-7 w-7 p-0 hover:bg-gray-100 rounded-fullransition-colors"
+        className="absolute top-3 right-3 h-7 w-7 p-0 hover:bg-gray-100 rounded-full transition-colors"
       >
         <X className="w-4 h-4 text-gray-600" />
       </Button>

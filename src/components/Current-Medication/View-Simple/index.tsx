@@ -10,15 +10,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Pill, Calendar, FileText, Clock, User, AlignLeft, Activity } from "lucide-react";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Pill,
+  Calendar,
+  FileText,
+  Clock,
+  User,
+  AlignLeft,
+  Activity,
+} from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
-import { formatDateArgentina, formatDateTimeArgentina } from "@/common/helpers/helpers";
+import { formatDateArgentina } from "@/common/helpers/helpers";
 
 interface ViewMedicacionActualModalProps {
   isOpen: boolean;
@@ -70,7 +73,7 @@ export const ViewMedicacionActualModal = ({
 
           <div className="space-y-6 p-6 -mx-6">
             {/* Status Badge si está suspendida */}
-            {medication.status === 'SUSPENDED' && (
+            {medication.status === "SUSPENDED" && (
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border-l-4 border-l-red-500">
                 <Badge className="text-base px-4 py-2 bg-red-100 text-red-800 border-red-200">
                   Medicación Suspendida
@@ -139,19 +142,20 @@ export const ViewMedicacionActualModal = ({
             )}
 
             {/* Motivo de Suspensión si aplica */}
-            {medication.status === 'SUSPENDED' && medication.suspensionReason && (
-              <div className="space-y-3">
-                <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <AlignLeft className="h-4 w-4 text-red-600" />
-                  Motivo de Suspensión
-                </Label>
-                <div className="p-4 bg-red-50 rounded-lg border border-red-200 shadow-sm">
-                  <p className="text-sm text-red-800 leading-relaxed whitespace-pre-wrap">
-                    {medication.suspensionReason}
-                  </p>
+            {medication.status === "SUSPENDED" &&
+              medication.suspensionReason && (
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <AlignLeft className="h-4 w-4 text-red-600" />
+                    Motivo de Suspensión
+                  </Label>
+                  <div className="p-4 bg-red-50 rounded-lg border border-red-200 shadow-sm">
+                    <p className="text-sm text-red-800 leading-relaxed whitespace-pre-wrap">
+                      {medication.suspensionReason}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Timeline de información */}
             <div className="space-y-3">
@@ -173,21 +177,22 @@ export const ViewMedicacionActualModal = ({
                   </div>
                 </div>
 
-                {medication.status === 'SUSPENDED' && medication.suspensionDate && (
-                  <div className="relative flex items-start gap-4">
-                    <div className="absolute -left-[29px] p-1.5 bg-red-600 rounded-full shadow-sm">
-                      <Calendar className="h-3 w-3 text-white" />
+                {medication.status === "SUSPENDED" &&
+                  medication.suspensionDate && (
+                    <div className="relative flex items-start gap-4">
+                      <div className="absolute -left-[29px] p-1.5 bg-red-600 rounded-full shadow-sm">
+                        <Calendar className="h-3 w-3 text-white" />
+                      </div>
+                      <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <Label className="text-xs text-gray-500 font-medium">
+                          Fecha de Suspensión
+                        </Label>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          {formatDateArgentina(medication.suspensionDate)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                      <Label className="text-xs text-gray-500 font-medium">
-                        Fecha de Suspensión
-                      </Label>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">
-                        {formatDateArgentina(medication.suspensionDate)}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="relative flex items-start gap-4">
                   <div className="absolute -left-[29px] p-1.5 bg-greenPrimary rounded-full shadow-sm">

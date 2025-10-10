@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { User, FileText, Calendar, Activity, ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,6 +19,7 @@ export default function PatientHomePage({ name }: { name: string }) {
       icon: FileText,
       href: "/mis-estudios",
       gradient: "from-blue-500 to-blue-600",
+      comingSoon: false,
     },
     {
       title: "Mi Perfil",
@@ -25,20 +27,23 @@ export default function PatientHomePage({ name }: { name: string }) {
       icon: User,
       href: "/mi-perfil",
       gradient: "from-greenPrimary to-teal-600",
+      comingSoon: false,
     },
     {
       title: "Mis Turnos",
       description: "Visualiza tus próximas citas médicas",
       icon: Calendar,
-      href: "/mis-turnos",
+      href: "#",
       gradient: "from-purple-500 to-purple-600",
+      comingSoon: true,
     },
     {
       title: "Mi Salud",
       description: "Accede a tu información de salud y bienestar",
       icon: Activity,
-      href: "/mi-salud",
+      href: "#",
       gradient: "from-orange-500 to-orange-600",
+      comingSoon: true,
     },
   ];
 
@@ -82,29 +87,57 @@ export default function PatientHomePage({ name }: { name: string }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Link to={card.href}>
-                  <Card className="group relative overflow-hidden border-2 border-transparent hover:border-greenPrimary/20 transition-all duration-300 h-full hover:shadow-xl hover:-translate-y-1">
-                    <div className="absolute inset-0 bg-gradient-to-br from-greenPrimary/5 to-teal-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                {card.comingSoon ? (
+                  // Card deshabilitado para funcionalidades próximamente
+                  <Card className="relative overflow-hidden border-2 border-gray-200 transition-all duration-300 h-full opacity-75 cursor-not-allowed">
+                    <div className="absolute inset-0 bg-gray-50/80" />
 
                     <CardHeader className="relative pb-4">
                       <div className="flex items-start justify-between mb-3">
-                        <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} group-hover:scale-110 transition-transform duration-300`}>
+                        <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} opacity-60`}>
                           <card.icon className="h-6 w-6 text-white" />
                         </div>
-                        <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-greenPrimary group-hover:translate-x-1 transition-all duration-300" />
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
+                          Próximamente
+                        </Badge>
                       </div>
-                      <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-greenPrimary transition-colors">
+                      <CardTitle className="text-lg font-bold text-gray-600">
                         {card.title}
                       </CardTitle>
                     </CardHeader>
 
                     <CardContent className="relative">
-                      <CardDescription className="text-sm text-gray-600">
+                      <CardDescription className="text-sm text-gray-500">
                         {card.description}
                       </CardDescription>
                     </CardContent>
                   </Card>
-                </Link>
+                ) : (
+                  // Card activo con link
+                  <Link to={card.href}>
+                    <Card className="group relative overflow-hidden border-2 border-transparent hover:border-greenPrimary/20 transition-all duration-300 h-full hover:shadow-xl hover:-translate-y-1">
+                      <div className="absolute inset-0 bg-gradient-to-br from-greenPrimary/5 to-teal-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      <CardHeader className="relative pb-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient} group-hover:scale-110 transition-transform duration-300`}>
+                            <card.icon className="h-6 w-6 text-white" />
+                          </div>
+                          <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-greenPrimary group-hover:translate-x-1 transition-all duration-300" />
+                        </div>
+                        <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-greenPrimary transition-colors">
+                          {card.title}
+                        </CardTitle>
+                      </CardHeader>
+
+                      <CardContent className="relative">
+                        <CardDescription className="text-sm text-gray-600">
+                          {card.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )}
               </motion.div>
             ))}
           </div>

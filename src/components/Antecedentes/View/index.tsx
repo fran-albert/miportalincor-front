@@ -226,7 +226,7 @@ export const ViewAntecedenteDialog = ({
         <DeleteDataValueDialog
           idDataValue={String(antecedente.id)}
           itemType="antecedente"
-          itemDescription={antecedente.observaciones}
+          itemDescription={antecedente.observaciones ?? undefined}
           triggerButton={<div />}
         />
       )}

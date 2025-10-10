@@ -56,10 +56,9 @@ export default function GenericHistory({
   // Las evoluciones vienen como prop desde el backend
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Información del Usuario */}
-        <UserInformation userData={userData} userType={userType} />
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Información del Usuario */}
+      <UserInformation userData={userData} userType={userType} />
 
         {/* Sección de Antecedentes y Evoluciones */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -112,7 +111,6 @@ export default function GenericHistory({
             />
           )}
         </div>
-      </div>
     </div>
   );
 }

@@ -224,7 +224,11 @@ export const NutritionTable: React.FC<Props> = ({
     onDeleteEntry([id]);
   };
 
-  const handleDateChange = (date: Date | undefined, entryId: number) => {
+  const handleDateChange = (
+    value: React.SetStateAction<Date | undefined>,
+    entryId: number
+  ) => {
+    const date = typeof value === "function" ? value(editDates[entryId]) : value;
     if (!date) return;
     setEditDates((prev) => ({ ...prev, [entryId]: date }));
 
@@ -237,7 +241,11 @@ export const NutritionTable: React.FC<Props> = ({
   };
 
   // Helper para manejar cambios de fecha en nueva entrada
-  const handleNewEntryDateChange = (date: Date | undefined) => {
+  const handleNewEntryDateChange: React.Dispatch<
+    React.SetStateAction<Date | undefined>
+  > = (value) => {
+    const date =
+      typeof value === "function" ? value(newEntryDate) : value;
     if (!date) return;
     setNewEntryDate(date);
 
@@ -309,8 +317,7 @@ export const NutritionTable: React.FC<Props> = ({
               </TableHead>
             </TableRow>
           </TableHeader>
-        </Table>
-        <TableBody>
+          <TableBody>
           {nutritionData.map((entry) => (
             <TableRow
               key={entry.id}
@@ -343,7 +350,11 @@ export const NutritionTable: React.FC<Props> = ({
                   </div>
                 ) : (
                   <span className="block truncate">
-                    {formatDate(entry.date)}
+                    {formatDate(
+                      typeof entry.date === "string"
+                        ? entry.date
+                        : entry.date.toISOString()
+                    )}
                   </span>
                 )}
               </TableCell>
@@ -402,6 +413,20 @@ export const NutritionTable: React.FC<Props> = ({
                 )}
               </TableCell>
 
+              <TableCell className="hidden xl:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="visceralFat"
+                    value={String(entry.visceralFat)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.visceralFat.toFixed(1)
+                )}
+              </TableCell>
+
               <TableCell className="hidden md:table-cell">
                 {editingId === entry.id ? (
                   <Input
@@ -437,7 +462,8 @@ export const NutritionTable: React.FC<Props> = ({
                   (entry.height ?? 0).toFixed(1)
                 )}
               </TableCell>
-              <TableCell className={columnWidths.targetWeight}>
+
+              <TableCell className="hidden lg:table-cell">
                 {editingId === entry.id ? (
                   <Input
                     type="number"
@@ -448,20 +474,6 @@ export const NutritionTable: React.FC<Props> = ({
                   />
                 ) : (
                   entry.targetWeight.toFixed(1)
-                )}
-              </TableCell>
-
-              <TableCell className="hidden xl:table-cell">
-                {editingId === entry.id ? (
-                  <Input
-                    type="number"
-                    name="visceralFat"
-                    value={String(entry.visceralFat)}
-                    onChange={(e) => handleInputChange(e, entry.id)}
-                    className="w-full text-sm p-1"
-                  />
-                ) : (
-                  entry.visceralFat.toFixed(1)
                 )}
               </TableCell>
 
@@ -576,7 +588,7 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.difference}>
+              <TableCell className="hidden md:table-cell">
                 <Input
                   type="number"
                   name="difference"
@@ -586,7 +598,7 @@ export const NutritionTable: React.FC<Props> = ({
                 />
               </TableCell>
 
-              <TableCell className={columnWidths.fatPercentage}>
+              <TableCell className="hidden lg:table-cell">
                 <Input
                   type="number"
                   name="fatPercentage"
@@ -595,7 +607,7 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.musclePercentage}>
+              <TableCell className="hidden lg:table-cell">
                 <Input
                   type="number"
                   name="musclePercentage"
@@ -604,7 +616,8 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.visceralFat}>
+
+              <TableCell className="hidden xl:table-cell">
                 <Input
                   type="number"
                   name="visceralFat"
@@ -613,7 +626,8 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.imc}>
+
+              <TableCell className="hidden md:table-cell">
                 <Input
                   type="number"
                   name="imc"
@@ -622,7 +636,8 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.height}>
+
+              <TableCell className="hidden lg:table-cell">
                 <Input
                   type="number"
                   name="height"
@@ -632,7 +647,8 @@ export const NutritionTable: React.FC<Props> = ({
                   className="w-full text-sm p-1"
                 />
               </TableCell>
-              <TableCell className={columnWidths.targetWeight}>
+
+              <TableCell className="hidden lg:table-cell">
                 <Input
                   type="number"
                   name="targetWeight"
@@ -671,22 +687,23 @@ export const NutritionTable: React.FC<Props> = ({
               </TableCell>
             </TableRow>
           )}
-        </TableBody>
-        {selectedIds.length > 0 && (
-          <tfoot>
-            <tr>
-              <td colSpan={12} className="p-2">
-                <Button
-                  onClick={handleDeleteSelected}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 shadow-sm"
-                >
-                  <Trash className="h-4 w-4 mr-2" />
-                  Eliminar seleccionados
-                </Button>
-              </td>
-            </tr>
-          </tfoot>
-        )}
+          </TableBody>
+          {selectedIds.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan={12} className="p-2">
+                  <Button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 shadow-sm"
+                  >
+                    <Trash className="h-4 w-4 mr-2" />
+                    Eliminar seleccionados
+                  </Button>
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </Table>
       </div>
     </div>
   );

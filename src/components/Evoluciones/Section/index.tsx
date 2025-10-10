@@ -28,7 +28,6 @@ import {
   EvolucionData,
 } from "@/types/Antecedentes/Antecedentes";
 import useUserRole from "@/hooks/useRoles";
-import { formatDoctorInfo } from "@/common/helpers/helpers";
 
 type UserData = Patient | Doctor;
 
@@ -196,11 +195,6 @@ const EvolutionSection: React.FC<Props> = ({
     navigate(`/${basePath}/${currentUser.slug}/historia-clinica/evoluciones`);
   };
 
-  const truncateText = (text: string, maxLength = 100) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
-
   return (
     <>
       <Card className="lg:col-span-2 shadow-lg">
@@ -280,9 +274,6 @@ const EvolutionSection: React.FC<Props> = ({
                       minute: "2-digit",
                     }
                   );
-
-                  // Formatear información del doctor
-                  const doctorInfo = formatDoctorInfo(evolucion.doctor);
 
                   // Obtener iniciales del doctor
                   const doctorInitials = `${
@@ -437,6 +428,8 @@ const EvolutionSection: React.FC<Props> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Contenido del Modal */}
               <div className="p-6 space-y-4">
                 {/* Motivo de Consulta */}
                 {selectedConsultaToView.motivoConsulta && (
@@ -452,82 +445,86 @@ const EvolutionSection: React.FC<Props> = ({
                     </p>
                   </div>
                 )}
-              </div>
 
-              {selectedConsultaToView.enfermedadActual && (
-                <div className="border-l-4 border-l-orange-500 bg-orange-50/50 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-5 w-5 text-orange-600" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      Enfermedad Actual
-                    </h3>
+                {/* Enfermedad Actual */}
+                {selectedConsultaToView.enfermedadActual && (
+                  <div className="border-l-4 border-l-orange-500 bg-orange-50/50 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-5 w-5 text-orange-600" />
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Enfermedad Actual
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      {selectedConsultaToView.enfermedadActual}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                    {selectedConsultaToView.enfermedadActual}
-                  </p>
-                </div>
-              )}
+                )}
 
-              {selectedConsultaToView.examenFisico && (
-                <div className="border-l-4 border-l-teal-500 bg-teal-50/50 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clipboard className="h-5 w-5 text-teal-600" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      Examen Físico
-                    </h3>
+                {/* Examen Físico */}
+                {selectedConsultaToView.examenFisico && (
+                  <div className="border-l-4 border-l-teal-500 bg-teal-50/50 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clipboard className="h-5 w-5 text-teal-600" />
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Examen Físico
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      {selectedConsultaToView.examenFisico}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                    {selectedConsultaToView.examenFisico}
-                  </p>
-                </div>
-              )}
-              {/* Diagnósticos Presuntivos */}
-              {selectedConsultaToView.diagnosticosPresuntivos && (
-                <div className="border-l-4 border-l-green-500 bg-green-50/50 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      Diagnósticos Presuntivos
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                    {selectedConsultaToView.diagnosticosPresuntivos}
-                  </p>
-                </div>
-              )}
+                )}
 
-              {selectedConsultaToView.mediciones.length > 0 && (
-                <div className="border-l-4 border-l-purple-500 bg-purple-50/50 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Activity className="h-5 w-5 text-purple-600" />
-                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      Mediciones y Parámetros Vitales
-                    </h3>
+                {/* Diagnósticos Presuntivos */}
+                {selectedConsultaToView.diagnosticosPresuntivos && (
+                  <div className="border-l-4 border-l-green-500 bg-green-50/50 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Diagnósticos Presuntivos
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      {selectedConsultaToView.diagnosticosPresuntivos}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {selectedConsultaToView.mediciones.map(
-                      (medicion, index) => (
-                        <div
-                          key={index}
-                          className="bg-white p-3 rounded-lg border border-purple-200 text-center shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-1">
-                            {medicion.dataType.name}
-                          </p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {medicion.value}
-                          </p>
-                          {medicion.observaciones && (
-                            <p className="text-xs text-gray-600 mt-2 italic">
-                              {medicion.observaciones}
+                )}
+
+                {/* Mediciones y Parámetros Vitales */}
+                {selectedConsultaToView.mediciones.length > 0 && (
+                  <div className="border-l-4 border-l-purple-500 bg-purple-50/50 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Activity className="h-5 w-5 text-purple-600" />
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Mediciones y Parámetros Vitales
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {selectedConsultaToView.mediciones.map(
+                        (medicion, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-3 rounded-lg border border-purple-200 text-center shadow-sm hover:shadow-md transition-shadow"
+                          >
+                            <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-1">
+                              {medicion.dataType.name}
                             </p>
-                          )}
-                        </div>
-                      )
-                    )}
+                            <p className="text-2xl font-bold text-gray-900">
+                              {medicion.value}
+                            </p>
+                            {medicion.observaciones && (
+                              <p className="text-xs text-gray-600 mt-2 italic">
+                                {medicion.observaciones}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Footer con Botón Cerrar */}
               <div className="sticky bottom-0 bg-white border-t p-4 rounded-b-lg">

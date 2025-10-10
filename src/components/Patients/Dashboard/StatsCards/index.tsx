@@ -100,6 +100,24 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
     }).format(date);
   };
 
+  const getLastStudyText = () => {
+    if (!stats.lastStudy) return undefined;
+
+    // Intentar primero con 'date', luego con 'created'
+    const dateValue = stats.lastStudy.date || stats.lastStudy.created;
+    if (!dateValue) return undefined;
+
+    try {
+      const date = new Date(dateValue);
+      // Verificar si la fecha es válida
+      if (isNaN(date.getTime())) return undefined;
+
+      return `Último: ${date.toLocaleDateString("es-ES")}`;
+    } catch (error) {
+      return undefined;
+    }
+  };
+
   const statsData = [
     {
       title: "Total de Estudios",
@@ -107,7 +125,7 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
       icon: FileText,
       gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
       linkTo: `/pacientes/${patientSlug}/estudios`,
-      subtitle: stats.lastStudy ? `Último: ${new Date(stats.lastStudy.createdAt).toLocaleDateString("es-ES")}` : undefined,
+      subtitle: getLastStudyText(),
     },
     {
       title: "Próxima Cita",

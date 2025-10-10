@@ -2,16 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Plus,
   Search,
   FileImageIcon,
   Activity,
@@ -21,20 +13,16 @@ import {
   FileText,
   Folder,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import moment from "moment-timezone";
-import { StudyTypeSelect } from "@/components/Select/Study/select";
-import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
-import { useToastContext } from "@/hooks/Toast/toast-context";
-import { StudyType } from "@/types/Study-Type/Study-Type";
-import { DoctorSelect } from "@/components/Select/Doctor/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useState } from "react";
 import { StudiesWithURL } from "@/types/Study/Study";
 import PatientInformation from "@/components/Patients/Dashboard/Patient-Information";
 import { Patient } from "@/types/Patient/Patient";
 import { DataTable } from "@/components/Table/table";
 import { createStudiesColumns } from "./Table/columns";
+import StudyDialog from "./Upload/dialog";
+import { StudyCard } from "./Card/StudyCard";
+import { useIsMobile } from "@/hooks/use-mobile/use-mobile";
+import { MobilePagination } from "./Pagination/MobilePagination";
 
 interface PatientData {
   name: string;
@@ -103,13 +91,12 @@ export default function PatientStudies({
   labTableComponent,
   patient,
 }: PatientStudiesProps) {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { register, handleSubmit, reset, setValue, control } = useForm();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const { uploadStudyMutation } = useStudyMutations();
-  const { promiseToast } = useToastContext();
+  const isMobile = useIsMobile();
+
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = isMobile ? 6 : 10;
 
   // Combinar todos los estudios (incluyendo laboratorios) para los tabs de categorías
   const studies = React.useMemo(() => {
@@ -196,6 +183,30 @@ export default function PatientStudies({
     );
   }, [activeTab, studiesByCategory, searchTerm]);
 
+  // Calcular datos paginados (solo para vista mobile)
+  const paginatedStudies = React.useMemo(() => {
+    if (!isMobile) return filteredStudies; // En desktop, DataTable maneja su propia paginación
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredStudies.slice(startIndex, endIndex);
+  }, [filteredStudies, currentPage, pageSize, isMobile]);
+
+  // Calcular total de páginas
+  const totalPages = Math.ceil(filteredStudies.length / pageSize);
+
+  // Reset a página 1 cuando cambia el filtro, búsqueda o tab
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
+
+  // Manejar cambio de página
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // Scroll al inicio de la lista
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Check if user can delete studies
   const canDeleteStudies =
     canDelete &&
@@ -206,177 +217,108 @@ export default function PatientStudies({
     (role) => role === "Administrador" || role === "Secretaria"
   );
 
-  const handleAddStudy: SubmitHandler<any> = async (data) => {
-    const formData = new FormData();
-
-    if (selectedStudy) {
-      formData.append("studyTypeId", String(selectedStudy.id));
-      formData.append("studyTypeName", selectedStudy.name);
-    } else {
-      formData.append("studyTypeId", data.StudyTypeId);
-      formData.append("studyTypeName", data.StudyTypeName);
-    }
-
-    // Add patient ID from props
-    if (patientData.id) {
-      formData.append("userId", String(patientData.id));
-    }
-
-    if (selectedFiles.length > 0) {
-      selectedFiles.forEach((file) => {
-        formData.append("file", file);
-      });
-    }
-
-    const date = data.date;
-    const formattedDateISO = moment(date).toISOString();
-    formData.append("date", formattedDateISO);
-    formData.append("note", data.Note);
-
-    if (data.DoctorId) {
-      formData.append("doctorId", data.DoctorId);
-    }
-
-    try {
-      const promise = uploadStudyMutation.mutateAsync(formData);
-
-      await promiseToast(promise, {
-        loading: {
-          title: "Subiendo estudio...",
-          description: "Por favor espera mientras procesamos tu solicitud",
-        },
-        success: {
-          title: "¡Estudio subido!",
-          description: "El estudio se ha subido exitosamente",
-        },
-        error: (error: any) => ({
-          title: "Error al subir estudio",
-          description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
-        }),
-      });
-
-      // Reset form and close modal on success
-      reset();
-      setSelectedFiles([]);
-      setSelectedStudy(null);
-      setIsAddModalOpen(false);
-    } catch (error) {
-      console.error("Error al agregar el estudio", error);
-    }
-  };
-
-  const handleStudyChange = (studyType: StudyType) => {
-    setSelectedStudy(studyType);
-    setValue("StudyTypeId", studyType.id);
-    setValue("StudyTypeName", studyType.name);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedFiles(Array.from(e.target.files));
-    }
-  };
-
-  useEffect(() => {
-    if (!isAddModalOpen) {
-      setValue("DoctorId", "");
-      setValue("StudyTypeId", "");
-      setValue("StudyTypeName", "");
-      setSelectedStudy(null);
-      reset();
-    }
-  }, [isAddModalOpen, setValue, reset]);
-
   return (
-    <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {patient && <PatientInformation patient={patient} />}
 
         {/* Tabs */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-              <div
-                className="flex gap-2 overflow-x-auto pb-2 w-full sm:w-auto"
-                style={{
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "#cbd5e0 transparent",
-                }}
-              >
-                {categoriesConfig.map((category) => {
-                  const count = studiesByCategory[category.key]?.length || 0;
-                  const Icon = category.icon;
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex flex-col gap-4">
+              {/* Tabs Container - Optimizado para mobile */}
+              <div className="relative -mx-4 sm:mx-0">
+                {/* Scroll Container */}
+                <div
+                  className="flex gap-2 overflow-x-auto px-4 sm:px-0 pb-2 snap-x snap-mandatory scrollbar-hide"
+                  style={{
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                    WebkitOverflowScrolling: "touch",
+                  }}
+                >
+                  {categoriesConfig.map((category) => {
+                    const count = studiesByCategory[category.key]?.length || 0;
+                    const Icon = category.icon;
 
-                  // Ocultar categorías con 0 estudios, excepto "Todos"
-                  if (count === 0 && category.key !== "Todos") return null;
+                    // Ocultar categorías con 0 estudios, excepto "Todos"
+                    if (count === 0 && category.key !== "Todos") return null;
 
-                  return (
+                    return (
+                      <Button
+                        key={category.key}
+                        variant={
+                          activeTab === category.key ? "default" : "outline"
+                        }
+                        onClick={() => setActiveTab(category.key)}
+                        className={`whitespace-nowrap snap-start flex-shrink-0 ${
+                          activeTab === category.key ? "text-white" : ""
+                        } ${isMobile ? "min-w-[140px] justify-start" : ""}`}
+                        size={isMobile ? "sm" : "default"}
+                        style={
+                          activeTab === category.key
+                            ? { backgroundColor: "#187B80" }
+                            : {}
+                        }
+                      >
+                        <Icon className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} mr-2 flex-shrink-0`} />
+                        <span className="truncate">
+                          {isMobile
+                            ? category.label.length > 12
+                              ? category.label.substring(0, 10) + "..."
+                              : category.label
+                            : category.label}{" "}
+                          ({count})
+                        </span>
+                      </Button>
+                    );
+                  })}
+                  {/* Tabla de Laboratorios para Médicos */}
+                  {labTableComponent && userRole.includes("Medico") && (
                     <Button
-                      key={category.key}
                       variant={
-                        activeTab === category.key ? "default" : "outline"
+                        activeTab === "tabla-laboratorios"
+                          ? "default"
+                          : "outline"
                       }
-                      onClick={() => setActiveTab(category.key)}
-                      className={`whitespace-nowrap ${
-                        activeTab === category.key ? "text-white" : ""
-                      }`}
+                      onClick={() => setActiveTab("tabla-laboratorios")}
+                      className={`whitespace-nowrap snap-start flex-shrink-0 ${
+                        activeTab === "tabla-laboratorios" ? "text-white" : ""
+                      } ${isMobile ? "min-w-[140px] justify-start" : ""}`}
+                      size={isMobile ? "sm" : "default"}
                       style={
-                        activeTab === category.key
+                        activeTab === "tabla-laboratorios"
                           ? { backgroundColor: "#187B80" }
                           : {}
                       }
                     >
-                      <Icon className="h-4 w-4 mr-2" />
-                      {category.label} ({count})
+                      <Activity className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} mr-2 flex-shrink-0`} />
+                      <span className="truncate">
+                        {isMobile ? "Labs" : "Tabla de Laboratorios"}
+                      </span>
                     </Button>
-                  );
-                })}
-                {/* Tabla de Laboratorios para Médicos */}
-                {labTableComponent && userRole.includes("Medico") && (
-                  <Button
-                    variant={
-                      activeTab === "tabla-laboratorios" ? "default" : "outline"
-                    }
-                    onClick={() => setActiveTab("tabla-laboratorios")}
-                    className={`whitespace-nowrap ${
-                      activeTab === "tabla-laboratorios" ? "text-white" : ""
-                    }`}
-                    style={
-                      activeTab === "tabla-laboratorios"
-                        ? { backgroundColor: "#187B80" }
-                        : {}
-                    }
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Tabla de Laboratorios
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Add Study Button - Only for Administrators and Secretaries */}
-              {canAddStudies && (
-                <Button
-                  className="text-white whitespace-nowrap w-full sm:w-auto"
-                  style={{ backgroundColor: "#187B80" }}
-                  onClick={() => setIsAddModalOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar Estudio
-                </Button>
+              {canAddStudies && patient && (
+                <div className="flex justify-center sm:justify-end w-full">
+                  <StudyDialog idUser={patient.userId} />
+                </div>
               )}
             </div>
 
             {/* Barra de búsqueda - Solo mostrar si no es la tabla de laboratorios */}
             {activeTab !== "tabla-laboratorios" && (
-              <div className="flex-1">
+              <div className="flex-1 mt-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
                   <Input
-                    placeholder="Buscar estudios..."
+                    placeholder={isMobile ? "Buscar..." : "Buscar estudios..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className={`${isMobile ? "pl-11 h-11 text-base" : "pl-10"}`}
                   />
                 </div>
               </div>
@@ -384,10 +326,10 @@ export default function PatientStudies({
           </CardContent>
         </Card>
 
-        {/* Tabla de Estudios */}
+        {/* Tabla de Estudios / Cards para Mobile */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800">
+            <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800`}>
               {activeTab === "tabla-laboratorios"
                 ? `Tabla de Laboratorios Completa`
                 : `${
@@ -397,12 +339,60 @@ export default function PatientStudies({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              {activeTab === "tabla-laboratorios" ? (
-                // Tabla de Laboratorios completa para médicos
-                <div className="mt-4">{labTableComponent}</div>
-              ) : (
-                // Tabla de estudios con paginación para cualquier categoría
+            {activeTab === "tabla-laboratorios" ? (
+              // Tabla de Laboratorios completa para médicos
+              <div className="mt-4">{labTableComponent}</div>
+            ) : isMobile ? (
+              // Vista de Cards para Mobile con Paginación
+              <>
+                <div className="space-y-4">
+                  {paginatedStudies.length > 0 ? (
+                    paginatedStudies.map((study) => (
+                      <StudyCard
+                        key={study.id}
+                        id={study.id}
+                        tipo={study.tipo}
+                        categoria={study.categoria}
+                        descripcion={study.descripcion}
+                        fecha={study.fecha}
+                        medico={study.medico}
+                        archivo={study.archivo}
+                        signedUrl={study.signedUrl}
+                        estado={study.estado}
+                        canDelete={canDeleteStudies}
+                        patientId={patientData.id}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <FileText className="h-16 w-16 text-gray-300 mb-4" />
+                      <p className="text-gray-500 text-base font-medium">
+                        No hay estudios disponibles
+                      </p>
+                      <p className="text-gray-400 text-sm mt-2">
+                        {searchTerm
+                          ? "Intenta con otros términos de búsqueda"
+                          : "Los estudios aparecerán aquí cuando estén disponibles"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Paginación Mobile */}
+                {filteredStudies.length > 0 && (
+                  <MobilePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredStudies.length}
+                    pageSize={pageSize}
+                    onPageChange={handlePageChange}
+                    isMobile={isMobile}
+                  />
+                )}
+              </>
+            ) : (
+              // Vista de Tabla para Desktop
+              <div className="overflow-x-auto">
                 <DataTable
                   columns={createStudiesColumns(
                     canDeleteStudies,
@@ -412,115 +402,10 @@ export default function PatientStudies({
                   showSearch={false}
                   canAddUser={false}
                 />
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Modal para Agregar Estudio */}
-        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader className="pb-4">
-              <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FileImageIcon
-                  className="h-5 w-5"
-                  style={{ color: "#187B80" }}
-                />
-                Agregar Nuevo Estudio
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(handleAddStudy)}>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="studyType"
-                    className="block text-black font-medium mb-2"
-                  >
-                    Tipo de Estudio
-                  </Label>
-                  <StudyTypeSelect
-                    selected={selectedStudy || undefined}
-                    onStudyChange={handleStudyChange}
-                  />
-                  <input type="hidden" {...register("StudyTypeId")} />
-                  <input type="hidden" {...register("StudyTypeName")} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="file">Archivos</Label>
-                  <Input
-                    type="file"
-                    className="text-black"
-                    multiple
-                    onChange={handleFileChange}
-                  />
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-2">
-                      <ScrollArea className="h-32 rounded-md border">
-                        <ul className="list-disc pl-5 space-y-1 pr-2">
-                          {selectedFiles.map((file, index) => (
-                            <li
-                              key={index}
-                              className="flex justify-between items-center text-sm text-gray-700"
-                            >
-                              {file.name}
-                            </li>
-                          ))}
-                        </ul>
-                      </ScrollArea>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="comment"
-                    className="block text-black font-medium mb-2"
-                  >
-                    Comentario
-                  </Label>
-                  <Input
-                    {...register("Note", { required: true })}
-                    placeholder="Ingresar un comentario..."
-                    className="text-black"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="mb-2" htmlFor="date">
-                    Fecha
-                  </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    {...register("date", { required: true })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="mb-2" htmlFor="date">
-                    Firma Médico (Opcional)
-                  </Label>
-                  <DoctorSelect control={control} />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-6"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={uploadStudyMutation.isPending}
-                  className="px-6 text-white"
-                  style={{ backgroundColor: "#187B80" }}
-                >
-                  Agregar Estudio
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );

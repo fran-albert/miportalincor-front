@@ -1,10 +1,10 @@
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import AntecedentesComponent from "@/components/Antecedentes/Component";
 import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import useUserRole from "@/hooks/useRoles";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 
 const PatientAntecedentesPage = () => {
   const params = useParams();

@@ -169,7 +169,6 @@ export function AppSidebar() {
                   <span className="truncate font-semibold">
                     Incor Centro Médico
                   </span>
-                  <span className="truncate text-xs">Sistema de Gestión</span>
                 </div>
               </Link>
             </SidebarMenuButton>

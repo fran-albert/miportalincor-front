@@ -58,10 +58,20 @@
   .container {
     @apply max-w-7xl;
   }
-  
+
   @media (max-width: 640px) {
     .container {
       @apply px-2;
     }
+  }
+
+  /* Hide scrollbar for mobile tabs while maintaining functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

@@ -163,7 +163,7 @@ export default function CustomDatePicker({
     "Diciembre",
   ];
   const currentYear = moment().year();
-  const years = Array.from({ length: 201 }, (_, i) => currentYear);
+  const years = Array.from({ length: 201 }, (_, i) => currentYear - 100 + i);
 
   if (compact) {
     return (

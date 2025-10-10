@@ -7,7 +7,8 @@ import {
 } from "@/contexts/StudiesContext";
 import { StudiesWithURL } from "@/types/Study/Study";
 import { StudyType } from "@/types/Study-Type/Study-Type";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { FileText } from "lucide-react";
 
 export interface BreadcrumbItem {
   label: string;
@@ -56,14 +57,34 @@ export const StudiesWrapper: React.FC<BaseStudiesWrapperProps> = ({
   actions = {},
   breadcrumbItems = [],
 }) => {
+  // Determinar el título basado en el tipo de usuario
+  const getPageTitle = () => {
+    if (userType === "personal") return "Mis Estudios";
+    if (userType === "doctor") return "Estudios del Médico";
+    if (userType === "patient") return "Estudios del Paciente";
+    return "Estudios Médicos";
+  };
+
+  const getPageDescription = () => {
+    if (userType === "personal")
+      return "Visualiza y descarga todos tus estudios médicos, laboratorios e imágenes";
+    return "Gestión y visualización de estudios médicos";
+  };
+
   return (
     <div className="w-full min-h-screen bg-background">
       {breadcrumbItems.length > 0 && (
-        <div className="bg-white border-b px-6 py-4">
-          <BreadcrumbComponent items={breadcrumbItems} />
+        <div className="bg-white border-b px-4 sm:px-6 py-4">
+          <PageHeader
+            breadcrumbItems={breadcrumbItems}
+            title={getPageTitle()}
+            description={getPageDescription()}
+            icon={<FileText className="h-6 w-6" />}
+            badge={studies.length}
+          />
         </div>
       )}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <StudiesProvider
           userType={userType}
           userData={userData}
