@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,23 +28,32 @@ interface AddStudyProps {
   idUser: number;
 }
 
+interface StudyFormData {
+  StudyTypeId?: string;
+  StudyTypeName?: string;
+  date: Date;
+  Note: string;
+  DoctorId?: string;
+}
+
 export default function StudyDialog({ idUser }: AddStudyProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { register, handleSubmit, reset, setValue, control } = useForm();
+  const { register, handleSubmit, reset, setValue, control } =
+    useForm<StudyFormData>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const { uploadStudyMutation } = useStudyMutations();
   const { promiseToast } = useToastContext();
 
-  const onSubmit: SubmitHandler<any> = async (data) => {
+  const onSubmit: SubmitHandler<StudyFormData> = async (data) => {
     const formData = new FormData();
 
     if (selectedStudy) {
       formData.append("studyTypeId", String(selectedStudy.id));
       formData.append("studyTypeName", selectedStudy.name);
-    } else {
+    } else if (data.StudyTypeId && data.StudyTypeName) {
       formData.append("studyTypeId", data.StudyTypeId);
       formData.append("studyTypeName", data.StudyTypeName);
     }
@@ -84,10 +89,11 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
           title: "¡Estudio subido!",
           description: "El estudio se ha subido exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al subir estudio",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 
@@ -103,7 +109,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
 
   const handleStudyChange = (studyType: StudyType) => {
     setSelectedStudy(studyType);
-    setValue("StudyTypeId", studyType.id);
+    setValue("StudyTypeId", String(studyType.id));
     setValue("StudyTypeName", studyType.name);
   };
 

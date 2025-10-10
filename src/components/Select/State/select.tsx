@@ -5,25 +5,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 import { useState } from "@/hooks/State/useState";
 import { State } from "@/types/State/State";
 
-interface StateSelectProps {
-  control: any;
-  name: string;
+interface StateSelectProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
   defaultValue?: State;
   onStateChange?: (value: State) => void;
   disabled?: boolean;
 }
 
-export const StateSelect = ({
+export const StateSelect = <T extends FieldValues = FieldValues>({
   control,
   name,
   defaultValue,
   disabled,
   onStateChange,
-}: StateSelectProps) => {
+}: StateSelectProps<T>) => {
   const { states } = useState();
 
   const handleValueChange = (selectedId: string) => {
@@ -40,7 +40,7 @@ export const StateSelect = ({
       name={name}
       control={control}
       rules={{ required: "Este campo es obligatorio" }}
-      defaultValue={defaultValue?.id ? String(defaultValue.id) : ""}
+      defaultValue={(defaultValue?.id ? String(defaultValue.id) : "") as PathValue<T, Path<T>>}
       render={({ field }) => (
         <div>
           <Select

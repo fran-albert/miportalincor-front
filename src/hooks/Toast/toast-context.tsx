@@ -17,16 +17,16 @@ interface ToastContextType {
   showError: (title: string, description?: string) => string;
   showLoading: (title: string, description?: string) => string;
   removeToast: (id: string) => void;
-  promiseToast: (
-    promise: Promise<any>,
+  promiseToast: <T = unknown>(
+    promise: Promise<T>,
     messages: {
       loading: { title: string; description?: string };
       success: { title: string; description?: string };
       error:
         | { title: string; description?: string }
-        | ((error: any) => { title: string; description?: string });
+        | ((error: unknown) => { title: string; description?: string });
     }
-  ) => Promise<any>;
+  ) => Promise<T>;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -42,6 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToastContext() {
   const context = useContext(ToastContext);
   if (context === undefined) {

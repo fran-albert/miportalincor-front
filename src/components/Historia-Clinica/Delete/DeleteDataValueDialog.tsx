@@ -88,8 +88,8 @@ export default function DeleteDataValueDialog({
           title: messages.success,
           description: messages.successDescription,
         },
-        error: (error: any) => {
-          const errorMessage = error.response?.data?.message || "Ha ocurrido un error inesperado";
+        error: (error: unknown) => {
+          const errorMessage = (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado";
 
           // Detectar error de restricción de 24 horas
           const is24HourError = errorMessage.includes("24 hours") || errorMessage.includes("24 horas");

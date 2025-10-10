@@ -22,6 +22,12 @@ import {
   PaginationPrevious,
 } from "../ui/pagination";
 import { Search, X, Plus, ChevronsLeft, ChevronsRight, FileX } from "lucide-react";
+
+interface ColumnMeta {
+  headerClassName?: string;
+  cellClassName?: string;
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -71,8 +77,6 @@ export function DataTable<TData, TValue>({
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
-  // @ts-ignore
-  const [isAdding, setIsAdding] = React.useState(false);
   const filteredData = React.useMemo(() => {
     if (customFilter && searchInput) {
       return data.filter((item) => customFilter(item, searchInput));
@@ -95,7 +99,8 @@ export function DataTable<TData, TValue>({
       pagination,
     },
     getRowId: (row: TData, index: number) => {
-      return (row as any).id ? `row-${(row as any).id}` : `row-index-${index}`;
+      const rowWithId = row as { id?: string | number };
+      return rowWithId.id ? `row-${rowWithId.id}` : `row-index-${index}`;
     },
   });
 
@@ -123,10 +128,6 @@ export function DataTable<TData, TValue>({
       pageIndex,
     }));
   };
-
-  if (isAdding) {
-    return null;
-  }
 
   const renderPageNumbers = () => {
     const pages: number[] = [];
@@ -194,7 +195,7 @@ export function DataTable<TData, TValue>({
                   {table.getHeaderGroups().map((headerGroup, groupIndex) => (
                     <tr key={`header-group-${headerGroup.id}-${groupIndex}`}>
                       {headerGroup.headers.map((header, headerIndex) => {
-                        const meta = header.column.columnDef.meta as any;
+                        const meta = header.column.columnDef.meta as ColumnMeta | undefined;
                         const headerClassName = meta?.headerClassName || "";
                         return (
                           <th
@@ -263,7 +264,7 @@ export function DataTable<TData, TValue>({
                         } transition-all duration-200 ease-in-out`}
                       >
                         {row.getVisibleCells().map((cell, cellIndex) => {
-                          const meta = cell.column.columnDef.meta as any;
+                          const meta = cell.column.columnDef.meta as ColumnMeta | undefined;
                           const cellClassName = meta?.cellClassName || "";
                           return (
                             <td

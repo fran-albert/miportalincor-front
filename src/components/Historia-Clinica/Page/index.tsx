@@ -29,10 +29,10 @@ interface HistoryPageProps {
   isLoadingEvoluciones?: boolean;
   isLoadingMedicacionActual?: boolean;
   breadcrumbItems: BreadcrumbItem[];
-  userError?: any;
-  antecedentesError?: any;
-  evolucionesError?: any;
-  medicacionActualError?: any;
+  userError?: Error | null;
+  antecedentesError?: Error | null;
+  evolucionesError?: Error | null;
+  medicacionActualError?: Error | null;
   patientId?: number; // ID del paciente extraído del slug
 }
 

@@ -67,10 +67,10 @@ export default function EditCurrentMedicationModal({
           title: "¡Medicación actualizada!",
           description: "Los cambios se han guardado correctamente",
         },
-        error: (error) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar",
           description:
-            error?.message ||
+            (error instanceof Error ? error.message : undefined) ||
             "No se pudo actualizar la medicación. Intenta nuevamente.",
         }),
       });
@@ -110,10 +110,10 @@ export default function EditCurrentMedicationModal({
           title: "¡Medicación suspendida!",
           description: "La medicación se ha movido al historial",
         },
-        error: (error) => ({
+        error: (error: unknown) => ({
           title: "Error al suspender",
           description:
-            error?.message ||
+            (error instanceof Error ? error.message : undefined) ||
             "No se pudo suspender la medicación. Intenta nuevamente.",
         }),
       });

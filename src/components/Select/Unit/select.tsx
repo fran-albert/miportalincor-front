@@ -6,22 +6,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUnit } from "@/hooks/Units/useUnit";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface Props {
-  control: any;
+
+interface Props<T extends FieldValues = FieldValues> {
+  control: Control<T>;
   defaultValue?: { id: number; name: string; shortName: string } | null;
   disabled?: boolean;
 }
 
-export const UnitSelect = ({ control, defaultValue, disabled }: Props) => {
+export const UnitSelect = <T extends FieldValues = FieldValues>({ control, defaultValue, disabled }: Props<T>) => {
   const { units } = useUnit({});
 
   return (
     <Controller
-      name="unit"
+      name={"unit" as Path<T>}
       control={control}
-      defaultValue={defaultValue || null}
+      defaultValue={(defaultValue || null) as PathValue<T, Path<T>>}
       render={({ field }) => (
         <Select
           value={field.value?.id?.toString() || ""}

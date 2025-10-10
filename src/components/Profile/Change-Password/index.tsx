@@ -55,7 +55,14 @@ export default function ChangePasswordDialog({
   };
 
   async function onSubmit(data: z.infer<typeof ChangePasswordSchema>) {
-    const dataToSend: any = {
+    interface ChangePasswordData {
+      userId: string;
+      currentPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    }
+
+    const dataToSend: ChangePasswordData = {
       userId: String(idUser),
       currentPassword: data.currentPassword,
       newPassword: data.newPassword,
@@ -74,9 +81,9 @@ export default function ChangePasswordDialog({
           title: "¡Contraseña cambiada!",
           description: "La contraseña se ha cambiado exitosamente",
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           const errorMessage =
-            error.response?.data?.message ||
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
             "Error al cambiar la contraseña. Verifica los datos ingresados.";
           setErrorMessage(errorMessage);
           return {
@@ -88,9 +95,9 @@ export default function ChangePasswordDialog({
 
       form.reset();
       toggleDialog();
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage =
-        error.response?.data?.message ||
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
         "Error desconocido al cambiar la contraseña.";
       setErrorMessage(errorMessage);
     }

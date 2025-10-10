@@ -1,17 +1,17 @@
 import { format, parse } from "date-fns";
 import moment from "moment-timezone";
-import { UseFormSetValue } from "react-hook-form";
+import { FieldValues, Path, PathValue, UseFormSetValue } from "react-hook-form";
 
 export function formatDni(dni: string): string {
-  let dniStr = dni?.toString();
-  let dniReversed = dniStr?.split("").reverse().join("");
-  let dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
+  const dniStr = dni?.toString();
+  const dniReversed = dniStr?.split("").reverse().join("");
+  const dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
   return dniConPuntos.split("").reverse().join("");
 }
 export function formatMatricula(matricula: string): string {
-  let dniStr = matricula?.toString();
-  let dniReversed = dniStr?.split("").reverse().join("");
-  let dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
+  const dniStr = matricula?.toString();
+  const dniReversed = dniStr?.split("").reverse().join("");
+  const dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
   return dniConPuntos.split("").reverse().join("");
 }
 
@@ -97,8 +97,8 @@ export function calculateAgeCollaborator(birthDate: string): number {
 
   return age;
 }
-export function capitalizeWords(input: any) {
-  return input.toLowerCase().replace(/(?:^|\s)\S/g, function (a: any) { return a.toUpperCase(); });
+export function capitalizeWords(input: string) {
+  return input.toLowerCase().replace(/(?:^|\s)\S/g, function (a: string) { return a.toUpperCase(); });
 }
 
 export function getInitials(name: string, lastName: string): string {
@@ -107,22 +107,22 @@ export function getInitials(name: string, lastName: string): string {
   return `${nameInitial}${lastNameInitial}`;
 }
 
-export const handleDateChange = (
+export const handleDateChange = <T extends FieldValues>(
   e: React.ChangeEvent<HTMLInputElement>,
   setStartDate: React.Dispatch<React.SetStateAction<Date | undefined>>,
-  setValue: UseFormSetValue<any>,
-  fieldName: string
+  setValue: UseFormSetValue<T>,
+  fieldName: Path<T>
 ) => {
   const value = e.target.value;
   const dateInArgentina = moment.tz(value, "America/Argentina/Buenos_Aires");
   const formattedDateISO = dateInArgentina.toISOString();
 
   setStartDate(new Date(value));
-  setValue(fieldName, formattedDateISO);
+  setValue(fieldName, formattedDateISO as PathValue<T, Path<T>>);
 };
 
 export const formatCuilCuit = (numero: number | string): string => {
-  let str: string = numero.toString().replace(/\D/g, '');
+  const str: string = numero.toString().replace(/\D/g, '');
 
   if (str.length !== 11) {
     return "Número inválido, debe tener 11 dígitos.";
@@ -166,7 +166,18 @@ export const parseSlug = (slug: string) => {
   return { id, formattedName };
 };
 
-export const formatAddress = (addressData: any) => {
+export const formatAddress = (addressData?: {
+  street?: string;
+  number?: string | number;
+  description?: string;
+  phoneNumber?: string;
+  city?: {
+    name?: string;
+    state?: {
+      name?: string;
+    };
+  };
+}) => {
   if (!addressData) return "S/D";
 
   const { street, number, description, phoneNumber, city } = addressData;
@@ -207,7 +218,7 @@ export const normalizeDate = (date: string): string => {
     }
 
     throw new Error(`Formato de fecha no reconocido: ${date}`);
-  } catch (error) {
+  } catch {
     console.error("Fecha problemática:", date);
     return "";
   }

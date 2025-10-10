@@ -81,10 +81,10 @@ export default function CreateCurrentMedicationModal({
           title: "¡Medicación agregada!",
           description: "La medicación se ha registrado correctamente",
         },
-        error: (error) => ({
+        error: (error: unknown) => ({
           title: "Error al guardar",
           description:
-            error?.message ||
+            (error instanceof Error ? error.message : undefined) ||
             "No se pudo registrar la medicación. Intenta nuevamente.",
         }),
       });

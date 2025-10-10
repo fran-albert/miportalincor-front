@@ -7,11 +7,11 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues } from "react-hook-form";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 
 interface Props {
-  control: any;
+  control: Control<FieldValues>;
   defaultValue?: string;
   disabled?: boolean;
   name?: string;

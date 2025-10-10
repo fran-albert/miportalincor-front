@@ -114,7 +114,7 @@ function PatientProfileComponent({
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
   );
-  const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
+  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -152,7 +152,7 @@ function PatientProfileComponent({
     }
   }, [patient, form]);
 
-  const onSubmit: SubmitHandler<any> = async (formData) => {
+  const onSubmit: SubmitHandler<FormValues> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);
     const { address, ...rest } = formData;
     const addressToSend = {
@@ -180,7 +180,23 @@ function PatientProfileComponent({
       photo: patient.photo,
       registeredById: patient.registeredById,
       healthPlans: healthPlansToSend,
-    };
+      id: patient.id,
+      userId: patient.userId,
+      dni: patient.dni,
+      cuil: patient.cuil,
+      affiliationNumber: patient.affiliationNumber,
+      registrationDate: patient.registrationDate,
+      roles: patient.roles,
+      priority: patient.priority,
+      module: patient.module,
+      description: patient.description,
+      currentPassword: patient.currentPassword,
+      password: patient.password,
+      newPassword: patient.newPassword,
+      code: patient.code,
+      confirmPassword: patient.confirmPassword,
+      registeredByName: patient.registeredByName,
+    } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
         id: Number(patient?.userId),
@@ -196,10 +212,10 @@ function PatientProfileComponent({
           title: "¡Paciente actualizado!",
           description: "El paciente se ha actualizado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar paciente",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 
@@ -232,14 +248,14 @@ function PatientProfileComponent({
         },
       },
     ];
-    const dataToSend: any = {
+    const dataToSend = {
       ...rest,
       userName: formattedUserName,
       address: addressToSend,
       photo: patient.photo,
       registeredById: patient.registeredById,
       healthPlans: healthPlansToSend,
-    };
+    } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
         id: Number(patient?.userId),
@@ -255,10 +271,10 @@ function PatientProfileComponent({
           title: "Paciente actualizado",
           description: "Los datos del paciente se actualizaron exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar el paciente",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

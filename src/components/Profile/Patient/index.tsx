@@ -114,7 +114,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
   );
-  const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
+  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -140,7 +140,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
     setSelectedHealthInsurance(healthInsurance);
   };
 
-  const onSubmit: SubmitHandler<any> = async (formData) => {
+  const onSubmit: SubmitHandler<FormValues> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);
     const { address, ...rest } = formData;
     const addressToSend = {
@@ -168,7 +168,23 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
       photo: patient.photo,
       registeredById: patient.registeredById,
       healthPlans: healthPlansToSend,
-    };
+      id: patient.id,
+      userId: patient.userId,
+      dni: patient.dni,
+      cuil: patient.cuil,
+      affiliationNumber: patient.affiliationNumber,
+      registrationDate: patient.registrationDate,
+      roles: patient.roles,
+      priority: patient.priority,
+      module: patient.module,
+      description: patient.description,
+      currentPassword: patient.currentPassword,
+      password: patient.password,
+      newPassword: patient.newPassword,
+      code: patient.code,
+      confirmPassword: patient.confirmPassword,
+      registeredByName: patient.registeredByName,
+    } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
         id: Number(patient?.userId),
@@ -184,10 +200,10 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
           title: "Paciente actualizado",
           description: "Paciente actualizado con éxito",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar paciente",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 
@@ -220,14 +236,14 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
         },
       },
     ];
-    const dataToSend: any = {
+    const dataToSend: Patient = {
       ...rest,
       userName: formattedUserName,
       address: addressToSend,
       photo: patient.photo,
       registeredById: patient.registeredById,
       healthPlans: healthPlansToSend,
-    };
+    } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
         id: Number(patient?.userId),
@@ -243,10 +259,10 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
           title: "Paciente actualizado",
           description: "Paciente actualizado con éxito",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar paciente",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 
@@ -822,7 +838,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
                       <FormField
                         control={form.control}
                         name="address.city.state"
-                        render={({}) => (
+                        render={() => (
                           <FormItem>
                             <FormLabel className="text-black flex items-center justify-between">
                               Provincia
@@ -844,7 +860,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
                       <FormField
                         control={form.control}
                         name="address.city"
-                        render={({}) => (
+                        render={() => (
                           <FormItem>
                             <FormLabel className="text-black flex items-center justify-between">
                               Ciudad

@@ -119,7 +119,7 @@ function DoctorProfileComponent({
     doctor?.birthDate ? new Date(doctor.birthDate.toString()) : undefined
   );
 
-  const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
+  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   useEffect(() => {
     if (doctor) {
@@ -160,7 +160,7 @@ function DoctorProfileComponent({
     setSelectedCity(city);
   };
 
-  const onSubmit: SubmitHandler<any> = async (formData) => {
+  const onSubmit: SubmitHandler<FormValues> = async (formData) => {
     const specialitiesToSend = selectedSpecialities.map((s) => ({
       id: s.id,
       name: s.name,
@@ -181,7 +181,7 @@ function DoctorProfileComponent({
       },
     };
 
-    const dataToSend: any = {
+    const dataToSend = {
       ...rest,
       userName: formattedUserName,
       address: addressToSend,
@@ -189,7 +189,26 @@ function DoctorProfileComponent({
       healthInsurances: healthInsuranceToSend,
       photo: doctor?.photo,
       registeredById: doctor?.registeredById,
-    };
+      id: doctor.id,
+      dni: doctor.dni,
+      userId: doctor.userId,
+      registrationDate: doctor.registrationDate,
+      roles: doctor.roles,
+      priority: doctor.priority,
+      module: doctor.module,
+      description: doctor.description,
+      currentPassword: doctor.currentPassword,
+      password: doctor.password,
+      newPassword: doctor.newPassword,
+      code: doctor.code,
+      confirmPassword: doctor.confirmPassword,
+      registeredByName: doctor.registeredByName,
+      slug: doctor.slug,
+      token: doctor.token,
+      firma: doctor.firma,
+      sello: doctor.sello,
+      matricula: formData.matricula,
+    } as Doctor;
 
     try {
       const promise = updateDoctorMutation.mutateAsync({
@@ -206,10 +225,10 @@ function DoctorProfileComponent({
           title: "¡Médico actualizado!",
           description: "El médico se ha actualizado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar médico",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 
@@ -440,7 +459,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="birthDate"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Fecha de Nacimiento</FormLabel>
                         <FormControl>
@@ -522,7 +541,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="specialities"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Especialidades</FormLabel>
                         <FormControl>
@@ -539,7 +558,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="healthInsurances"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Obras Sociales</FormLabel>
                         <FormControl>
@@ -619,7 +638,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="gender"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Género</FormLabel>
                         <FormControl>
@@ -636,7 +655,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="maritalStatus"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Estado Civil</FormLabel>
                         <FormControl>
@@ -682,7 +701,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="bloodType"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Tipo de Sangre</FormLabel>
                         <FormControl>
@@ -699,7 +718,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="rhFactor"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Factor RH</FormLabel>
                         <FormControl>
@@ -764,7 +783,7 @@ function DoctorProfileComponent({
                     </label>
                     <StateSelect
                       control={control}
-                      name="address.state"
+                      name={"address.city.state"}
                       defaultValue={selectedState}
                       onStateChange={handleStateChange}
                       disabled={!isEditing}
@@ -773,7 +792,7 @@ function DoctorProfileComponent({
                   <FormField
                     control={control}
                     name="address.city"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Ciudad</FormLabel>
                         <FormControl>

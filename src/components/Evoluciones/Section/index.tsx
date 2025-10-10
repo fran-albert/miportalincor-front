@@ -55,16 +55,9 @@ const EvolutionSection: React.FC<Props> = ({
   patientId,
   patient, // Para compatibilidad hacia atrás
 }) => {
-  // Usar userData si está disponible, si no usar patient para compatibilidad
-  const currentUser = userData || patient;
-  if (!currentUser) return null;
-
+  // ⚠️ TODOS LOS HOOKS DEBEN ESTAR ANTES DE CUALQUIER RETURN
   // Obtener ID del usuario de la sesión usando useUserRole
   const { session } = useUserRole();
-  const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
-
-  // Usar patientId prop o fallback a currentUser.id
-  const idUser = patientId || currentUser.id;
   const [isAddEvolucionModalOpen, setIsAddEvolucionModalOpen] = useState(false);
   const [selectedConsultaToView, setSelectedConsultaToView] = useState<{
     fechaConsulta: string;
@@ -82,6 +75,15 @@ const EvolutionSection: React.FC<Props> = ({
   const [isViewEvolucionModalOpen, setIsViewEvolucionModalOpen] =
     useState(false);
   const navigate = useNavigate();
+
+  // Usar userData si está disponible, si no usar patient para compatibilidad
+  const currentUser = userData || patient;
+  if (!currentUser) return null;
+
+  const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
+
+  // Usar patientId prop o fallback a currentUser.id
+  const idUser = patientId || currentUser.id;
   const handleConsultaClick = (evolucion: (typeof evolucionesLista)[0]) => {
     const consultaData = {
       fechaConsulta: evolucion.fechaConsulta,

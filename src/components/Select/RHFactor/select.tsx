@@ -5,18 +5,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface RHFactorSelectProps {
-  control: any;
+interface RHFactorSelectProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
   defaultValue?: string;
   disabled?: boolean;
 }
-export const RHFactorSelect = ({
+export const RHFactorSelect = <T extends FieldValues = FieldValues>({
   control,
   disabled,
   defaultValue,
-}: RHFactorSelectProps) => {
+}: RHFactorSelectProps<T>) => {
   const rhTypes = [
     { id: "Positivo", name: "Positivo" },
     { id: "Negativo", name: "Negativo" },
@@ -24,9 +24,9 @@ export const RHFactorSelect = ({
 
   return (
     <Controller
-      name="rhFactor"
+      name={"rhFactor" as Path<T>}
       control={control}
-      defaultValue={defaultValue || ""}
+      defaultValue={(defaultValue || "") as PathValue<T, Path<T>>}
       // rules={{ required: "Este campo es obligatorio" }}
       render={({ field }) => (
         <div>

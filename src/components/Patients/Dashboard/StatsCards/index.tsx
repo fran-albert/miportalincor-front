@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { Study } from "@/types/Study/Study";
 
 interface StatCardProps {
   title: string;
@@ -75,9 +76,9 @@ interface StatsCardsProps {
   patientSlug: string;
   stats: {
     totalStudies: number;
-    lastStudy: any;
-    nextAppointment: any;
-    lastVisit: any;
+    lastStudy?: Study | null;
+    nextAppointment?: string | Date | null;
+    lastVisit?: string | Date | null;
   };
   isLoading?: boolean;
 }
@@ -104,7 +105,7 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
     if (!stats.lastStudy) return undefined;
 
     // Intentar primero con 'date', luego con 'created'
-    const dateValue = stats.lastStudy.date || stats.lastStudy.created;
+    const dateValue = stats.lastStudy.date || (stats.lastStudy.created ? new Date(stats.lastStudy.created).toISOString() : undefined);
     if (!dateValue) return undefined;
 
     try {
@@ -113,7 +114,7 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
       if (isNaN(date.getTime())) return undefined;
 
       return `Último: ${date.toLocaleDateString("es-ES")}`;
-    } catch (error) {
+    } catch {
       return undefined;
     }
   };

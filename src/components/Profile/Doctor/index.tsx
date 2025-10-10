@@ -69,7 +69,7 @@ export default function ProfileDoctorCardComponent({
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     data?.birthDate ? new Date(data.birthDate.toString()) : undefined
   );
-  const removeDotsFromDni = (dni: any) => dni.replace(/\./g, "");
+  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -106,11 +106,9 @@ export default function ProfileDoctorCardComponent({
       setSelectedCity(data?.address?.city);
     }
   }, [data, setValue]);
-  1;
   const handleSave = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
-    1;
     const specialitiesToSend = data?.specialities.map((s) => ({
       id: s.id,
       name: s.name,
@@ -119,7 +117,6 @@ export default function ProfileDoctorCardComponent({
       id: h.id,
       name: h.name,
     }));
-    1;
     const { address, ...rest } = form.getValues();
     const formattedUserName = removeDotsFromDni(form.getValues("userName"));
     const addressToSend = {
@@ -130,8 +127,7 @@ export default function ProfileDoctorCardComponent({
         state: selectedState,
       },
     };
-    1;
-    const dataToSend: any = {
+    const dataToSend: Doctor = {
       ...rest,
       userName: formattedUserName,
       address: addressToSend,
@@ -139,14 +135,12 @@ export default function ProfileDoctorCardComponent({
       healthInsurances: healthInsuranceToSend,
       photo: data?.photo,
       registeredById: data?.registeredById,
-    };
-    1;
+    } as Doctor;
     try {
       const dataCreationPromise = updateDoctorMutation.mutateAsync({
         id: Number(data?.userId),
         doctor: dataToSend,
       });
-      1;
       await promiseToast(dataCreationPromise, {
         loading: {
           title: "Actualizando datos del médico",
@@ -156,24 +150,22 @@ export default function ProfileDoctorCardComponent({
           title: "Médico actualizado",
           description: "Médico actualizado con éxito",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar médico",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
-      1;
       setIsEditing(false);
     } catch (error) {
       console.error("Error al actualizar el Médico", error);
     }
   };
-  1;
+
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Mi Perfil" },
   ];
-  1;
   return (
     <>
       {/* PageHeader */}

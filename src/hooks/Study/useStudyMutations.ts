@@ -14,8 +14,10 @@ export const useStudyMutations = () => {
             console.log("Study created", patient, variables, context);
         },
 
-        onError: (error: any, variables, context) => {
-            console.log("Error details:", error.response?.data || error.message, variables, context);
+        onError: (error: unknown, variables, context) => {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const responseData = (error as { response?: { data?: unknown } }).response?.data;
+            console.log("Error details:", responseData || errorMessage, variables, context);
         },
 
     });

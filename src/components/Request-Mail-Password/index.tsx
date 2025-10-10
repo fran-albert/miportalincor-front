@@ -37,10 +37,10 @@ function RequestEmailPassword() {
           title: "¡Correo enviado!",
           description: "Revisa tu bandeja de entrada para restablecer tu contraseña",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al enviar correo",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
     } catch (error) {

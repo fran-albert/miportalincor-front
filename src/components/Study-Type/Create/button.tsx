@@ -54,10 +54,10 @@ export default function AddStudyTypeDialog({ isOpen, setIsOpen }: Props) {
           title: "¡Tipo de estudio creado!",
           description: "El tipo de estudio se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al crear tipo de estudio",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

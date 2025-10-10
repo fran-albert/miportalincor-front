@@ -47,7 +47,7 @@ export default function EditSpecialityDialog({
     if (isOpen && speciality) {
       form.reset(speciality);
     }
-  }, [isOpen, speciality]);
+  }, [isOpen, speciality, form]);
 
   async function onSubmit(values: z.infer<typeof specialitySchema>) {
     try {
@@ -67,10 +67,10 @@ export default function EditSpecialityDialog({
           title: "¡Especialidad editada!",
           description: "La especialidad se ha editado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al editar especialidad",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

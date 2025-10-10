@@ -6,19 +6,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path } from "react-hook-form";
 
-interface Props {
-  control: any;
-  name?: string;
+interface Props<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name?: Path<T>;
   disabled?: boolean;
 }
 
-export const DoctorSelect = ({
+export const DoctorSelect = <T extends FieldValues = FieldValues>({
   control,
-  name = "DoctorId",
+  name = "DoctorId" as Path<T>,
   disabled,
-}: Props) => {
+}: Props<T>) => {
   const { doctors } = useDoctors({ auth: true, fetchDoctors: true });
   return (
     <Controller

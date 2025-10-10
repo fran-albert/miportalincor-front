@@ -52,10 +52,10 @@ function ResetPasswordForm() {
           title: "¡Contraseña actualizada!",
           description: "La contraseña se ha actualizado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar contraseña",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

@@ -87,9 +87,15 @@ export default function ScheduleDoctor({ doctorId }: Props) {
       const mapped: HorarioEditable[] = DIAS_SEMANA.map(
         ({ nombre, weekDay }) => {
           // todos los bloques de ese día, ordenados
+          interface AvailabilityBlock {
+            weekDay: number;
+            startTime: string;
+            endTime: string;
+            slotDuration?: number;
+          }
           const bloques = availData
-            .filter((h: any) => h.weekDay === weekDay)
-            .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
+            .filter((h: AvailabilityBlock) => h.weekDay === weekDay)
+            .sort((a: AvailabilityBlock, b: AvailabilityBlock) => a.startTime.localeCompare(b.startTime));
 
           const manana = bloques[0];
           const tarde = bloques[1];
@@ -130,7 +136,7 @@ export default function ScheduleDoctor({ doctorId }: Props) {
   const actualizarHorario = (
     index: number,
     campo: keyof HorarioEditable,
-    valor: any
+    valor: string | number | boolean
   ) => {
     const nuevos = [...horariosEditables];
     nuevos[index] = { ...nuevos[index], [campo]: valor };

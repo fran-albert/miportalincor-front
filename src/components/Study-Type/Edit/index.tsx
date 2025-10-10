@@ -53,7 +53,7 @@ export default function EditStudyTypeDialog({
         id: Number(studyType.id),
       });
     }
-  }, [isOpen, studyType]);
+  }, [isOpen, studyType, form]);
 
   async function onSubmit(values: z.infer<typeof studyTypeSchema>) {
     try {
@@ -73,10 +73,10 @@ export default function EditStudyTypeDialog({
           title: "¡Tipo de estudio editado!",
           description: "El tipo de estudio se ha editado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al editar tipo de estudio",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

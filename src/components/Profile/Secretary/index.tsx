@@ -176,12 +176,12 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
           state: selectedState,
         },
       };
-      const dataToSend: any = {
+      const dataToSend: User = {
         ...rest,
         userName: formattedUserName,
         address: addressToSend,
         photo: user?.photo,
-      };
+      } as User;
       const patientUpdatePromise = updateUserMutation.mutateAsync({
         id: Number(user?.id),
         user: dataToSend,
@@ -195,10 +195,10 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
           title: "Datos actualizados",
           description: "Datos actualizados con éxito",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al actualizar datos",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
       setIsEditing(false);

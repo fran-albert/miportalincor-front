@@ -26,6 +26,7 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
   const entity = role === "paciente" ? patient : doctor;
   const isAllLoading = isLoading || isLoadingBloodTests;
   const hasEntityData = entity?.firstName && entity?.lastName;
+  const displayRole = role === "medico" ? "doctor" : role;
 
   return (
     <>
@@ -44,7 +45,7 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
         bloodTests={blodTests}
         entity={entity}
         idUser={id}
-        role={role}
+        role={displayRole}
       />
     </>
   );

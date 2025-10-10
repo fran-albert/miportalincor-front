@@ -68,11 +68,11 @@ const StatCard = ({
 interface SummaryCardsProps {
   stats: {
     totalEvoluciones: number;
-    lastEvolucion: any;
+    lastEvolucion?: { createdAt: string | Date };
     totalAntecedentes: number;
     antecedentesPorCategoria: Record<string, number>;
     totalMedicacionActiva: number;
-    lastDoctor: any;
+    lastDoctor?: { firstName: string; lastName: string; specialities?: { name: string }[] };
   };
   isLoading?: boolean;
 }
