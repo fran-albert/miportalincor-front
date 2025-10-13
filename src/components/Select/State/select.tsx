@@ -39,7 +39,6 @@ export const StateSelect = <T extends FieldValues = FieldValues>({
     <Controller
       name={name}
       control={control}
-      rules={{ required: "Este campo es obligatorio" }}
       defaultValue={(defaultValue?.id ? String(defaultValue.id) : "") as PathValue<T, Path<T>>}
       render={({ field }) => (
         <div>

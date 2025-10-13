@@ -218,12 +218,11 @@ export default function PatientStudies({
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        {patient && <PatientInformation patient={patient} />}
+    <>
+      {patient && <PatientInformation patient={patient} />}
 
-        {/* Tabs */}
-        <Card>
+      {/* Tabs */}
+      <Card>
           <CardContent className="pt-4 sm:pt-6">
             <div className="flex flex-col gap-4">
               {/* Tabs Container - Optimizado para mobile */}
@@ -300,34 +299,37 @@ export default function PatientStudies({
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Barra de búsqueda y botón de agregar estudio */}
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center mt-4">
+              {/* Barra de búsqueda - Solo mostrar si no es la tabla de laboratorios */}
+              {activeTab !== "tabla-laboratorios" && (
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+                    <Input
+                      placeholder={isMobile ? "Buscar..." : "Buscar estudios..."}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={`${isMobile ? "pl-11 h-11 text-base" : "pl-10"}`}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Add Study Button - Only for Administrators and Secretaries */}
               {canAddStudies && patient && (
-                <div className="flex justify-center sm:justify-end w-full">
+                <div className={activeTab === "tabla-laboratorios" ? "ml-auto" : ""}>
                   <StudyDialog idUser={patient.userId} />
                 </div>
               )}
             </div>
-
-            {/* Barra de búsqueda - Solo mostrar si no es la tabla de laboratorios */}
-            {activeTab !== "tabla-laboratorios" && (
-              <div className="flex-1 mt-4">
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                  <Input
-                    placeholder={isMobile ? "Buscar..." : "Buscar estudios..."}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`${isMobile ? "pl-11 h-11 text-base" : "pl-10"}`}
-                  />
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Tabla de Estudios / Cards para Mobile */}
-        <Card>
+      {/* Tabla de Estudios / Cards para Mobile */}
+      <Card>
           <CardHeader>
             <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800`}>
               {activeTab === "tabla-laboratorios"
@@ -406,7 +408,6 @@ export default function PatientStudies({
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </>
   );
 }

@@ -81,31 +81,25 @@ const DoctorStudiesPage = () => {
         </div>
       )}
 
-      <div className="space-y-4 p-6">
-        <div className="mb-6">
-          <BreadcrumbComponent items={breadcrumbItems} />
-        </div>
+      <div className="space-y-6 p-6">
+        <BreadcrumbComponent items={breadcrumbItems} />
 
-        <div className="space-y-6">
-          {/* Studies Section with Modern Table */}
-          <div className="w-full">
-            {studies && (
-              <GenericStudiesPage
-                userData={doctor}
-                studies={studies}
-                loading={isFetching}
-                role="medicos"
-                slug={String(doctor?.slug)}
-                idUser={Number(doctor?.userId)}
-                showUserInfo={false}
-                breadcrumbItems={[]}
-                onRefresh={() => {
-                  window.location.reload();
-                }}
-              />
-            )}
-          </div>
-        </div>
+        {/* Studies Section with Modern Table */}
+        {studies && (
+          <GenericStudiesPage
+            userData={doctor}
+            studies={studies}
+            loading={isFetching}
+            role="medicos"
+            slug={String(doctor?.slug)}
+            idUser={Number(doctor?.userId)}
+            showUserInfo={false}
+            breadcrumbItems={[]}
+            onRefresh={() => {
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     </>
   );

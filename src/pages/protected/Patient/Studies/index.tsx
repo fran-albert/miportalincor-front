@@ -83,32 +83,25 @@ const PatientStudiesPage = () => {
         </div>
       )}
 
-      <div className="space-y-4 p-6">
-        <div className="mb-6">
-          <BreadcrumbComponent items={breadcrumbItems} />
-        </div>
+      <div className="space-y-6 p-6">
+        <BreadcrumbComponent items={breadcrumbItems} />
 
-        <div className="space-y-6">
-          {/* Studies Section with Modern Table */}
-          <div className="w-full">
-            {studies && (
-              <GenericPatientStudiesPage
-                userData={patient}
-                studies={studies}
-                loading={isFetching}
-                role="pacientes"
-                slug={String(patient?.slug)}
-                idUser={Number(patient?.userId)}
-                showUserInfo={false} // Ya mostramos la info del paciente arriba
-                breadcrumbItems={[]} // Sin breadcrumbs porque ya los mostramos
-                onRefresh={() => {
-                  // Aquí puedes agregar lógica de refresh si es necesaria
-                  window.location.reload();
-                }}
-              />
-            )}
-          </div>
-        </div>
+        {studies && (
+          <GenericPatientStudiesPage
+            userData={patient}
+            studies={studies}
+            loading={isFetching}
+            role="pacientes"
+            slug={String(patient?.slug)}
+            idUser={Number(patient?.userId)}
+            showUserInfo={false} // Ya mostramos la info del paciente arriba
+            breadcrumbItems={[]} // Sin breadcrumbs porque ya los mostramos
+            onRefresh={() => {
+              // Aquí puedes agregar lógica de refresh si es necesaria
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     </>
   );

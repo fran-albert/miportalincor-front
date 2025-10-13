@@ -39,7 +39,6 @@ export const CitySelect = <T extends FieldValues = FieldValues>({
     <Controller
       name={name}
       control={control}
-      rules={{ required: "Este campo es obligatorio" }}
       defaultValue={(defaultValue ? String(defaultValue.id) : "") as PathValue<T, Path<T>>}
       render={({ field }) => (
         <div>

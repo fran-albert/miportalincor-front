@@ -78,6 +78,9 @@ export function CreatePatientComponent() {
     setValue("address.city.state", String(state.id));
   };
   async function onSubmit(data: z.infer<typeof PatientSchema>) {
+    console.log("✅ onSubmit ejecutado - Formulario válido");
+    console.log("📋 Data recibida:", data);
+
     const dateInArgentina = moment(data.birthDate).tz(
       "America/Argentina/Buenos_Aires"
     );
@@ -139,7 +142,21 @@ export function CreatePatientComponent() {
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(
+          onSubmit,
+          (errors) => {
+            console.log("❌ Errores de validación encontrados:");
+            console.log("📝 form.formState.errors:", form.formState.errors);
+            console.log("📝 errors del handleSubmit:", errors);
+
+            // Mostrar cada error individualmente
+            Object.entries(errors).forEach(([field, error]) => {
+              console.log(`  🔴 Campo "${field}":`, error?.message || error);
+            });
+          }
+        )}
+        className="space-y-6">
         {/* Card 1: Información Personal (Blue) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -196,17 +213,24 @@ export function CreatePatientComponent() {
                     </FormItem>
                   )}
                 />
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Fecha de Nacimiento
-                  </label>
-                  <CustomDatePicker
-                    setStartDate={setStartDate}
-                    setValue={setValue}
-                    fieldName="birthDate"
-                    initialDate={startDate}
-                  />
-                </div>
+                <FormField
+                  control={control}
+                  name="birthDate"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Fecha de Nacimiento</FormLabel>
+                      <FormControl>
+                        <CustomDatePicker
+                          setStartDate={setStartDate}
+                          setValue={setValue}
+                          fieldName="birthDate"
+                          initialDate={startDate}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={control}
                   name="gender"
@@ -412,26 +436,52 @@ export function CreatePatientComponent() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Provincia
-                  </label>
-                  <StateSelect
-                    control={control}
-                    name="address.city.state"
-                    onStateChange={handleStateChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Ciudad
-                  </label>
-                  <CitySelect
-                    control={control}
-                    idState={selectedState ? Number(selectedState.id) : 0}
-                    onCityChange={handleCityChange}
-                  />
-                </div>
+                <FormField
+                  control={control}
+                  name="address.city.state"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Provincia</FormLabel>
+                      <FormControl>
+                        <StateSelect
+                          control={control}
+                          name="address.city.state"
+                          onStateChange={handleStateChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="address.city"
+                  render={() => {
+                    const cityError = form.formState.errors?.address?.city;
+                    const errorMessage =
+                      (cityError?.id as { message?: string })?.message ||
+                      (cityError?.name as { message?: string })?.message ||
+                      (cityError && typeof cityError === 'object' && 'message' in cityError ? cityError.message as string : undefined);
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Ciudad</FormLabel>
+                        <FormControl>
+                          <CitySelect
+                            control={control}
+                            idState={selectedState ? Number(selectedState.id) : 0}
+                            onCityChange={handleCityChange}
+                          />
+                        </FormControl>
+                        {errorMessage && (
+                          <p className="text-sm font-medium text-destructive">
+                            {errorMessage}
+                          </p>
+                        )}
+                      </FormItem>
+                    );
+                  }}
+                />
                 <FormField
                   control={control}
                   name="address.street"

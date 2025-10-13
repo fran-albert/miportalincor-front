@@ -90,10 +90,10 @@ function DoctorProfileComponent({
       maritalStatus: doctor?.maritalStatus || "",
       observations: doctor?.observations || "",
       address: {
-        street: doctor?.address?.street || "",
-        number: doctor?.address?.number || "",
-        description: doctor?.address?.description || "",
-        phoneNumber: doctor?.address?.phoneNumber || "",
+        street: doctor?.address?.street ?? "",
+        number: doctor?.address?.number ?? "",
+        description: doctor?.address?.description ?? "",
+        phoneNumber: doctor?.address?.phoneNumber ?? "",
         city: doctor?.address?.city || null,
       },
       healthInsurances: doctor?.healthInsurances || [],
@@ -139,8 +139,8 @@ function DoctorProfileComponent({
       setValue("gender", String(doctor.gender) || "");
       setValue("maritalStatus", String(doctor.maritalStatus) || "");
       setValue("observations", doctor.observations || "");
-      setValue("address.street", doctor?.address?.street);
-      setValue("address.number", doctor?.address?.number);
+      setValue("address.street", doctor?.address?.street ?? "");
+      setValue("address.number", doctor?.address?.number ?? "");
       setValue("address.description", doctor?.address?.description || "");
       setValue("address.phoneNumber", doctor?.address?.phoneNumber || "");
       setValue("address.city", doctor?.address?.city);
@@ -777,18 +777,25 @@ function DoctorProfileComponent({
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Provincia
-                    </label>
-                    <StateSelect
-                      control={control}
-                      name={"address.city.state"}
-                      defaultValue={selectedState}
-                      onStateChange={handleStateChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                  <FormField
+                    control={control}
+                    name="address.city.state"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Provincia</FormLabel>
+                        <FormControl>
+                          <StateSelect
+                            control={control}
+                            name="address.city.state"
+                            defaultValue={selectedState}
+                            onStateChange={handleStateChange}
+                            disabled={!isEditing}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={control}
                     name="address.city"
