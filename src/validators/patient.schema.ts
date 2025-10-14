@@ -6,6 +6,6 @@ export const PatientSchema = UserSchema.extend({
     healthPlans: z.array(z.object({
         id: z.number(),
         name: z.string(),
-    })).optional(),
+    }), { required_error: "Debe seleccionar una obra social." }).min(1, { message: "Debe seleccionar al menos una obra social." }),
 
 });

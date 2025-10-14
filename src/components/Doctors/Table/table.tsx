@@ -2,7 +2,8 @@ import { getColumns } from "./columns";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { DataTable } from "@/components/Table/table";
 import useRoles from "@/hooks/useRoles";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { Stethoscope } from "lucide-react";
 
 interface DoctorsTableProps {
   doctors: Doctor[];
@@ -34,15 +35,18 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   });
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Médicos", href: "/medicos" },
+    { label: "Médicos" },
   ];
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Médicos
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Médicos"
+        description="Administra el equipo médico y sus especialidades"
+        icon={<Stethoscope className="h-6 w-6" />}
+        badge={doctors.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={doctorColumns}

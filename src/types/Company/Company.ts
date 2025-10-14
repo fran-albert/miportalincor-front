@@ -15,7 +15,8 @@ export interface Company extends Base {
 export interface CreateCompanyDto {
     name: string;
     taxId: string;
-    address: string;
+    address?: string;
+    addressData?: Omit<Address, 'id'>;
     phone: string;
     email: string;
 }

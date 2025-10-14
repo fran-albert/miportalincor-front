@@ -4,18 +4,18 @@ import { CustomToast } from "../Custom-Toast";
 export function ToastContainer() {
   const { toasts, removeToast } = useToastContext();
 
-  console.log("ToastContainer render - toasts:", toasts);
-
   return (
-    <div className="fixed top-4 right-4 z-[9999] space-y-2 max-w-sm">
+    <div className="fixed top-6 right-6 z-[9999] space-y-3 max-w-md pointer-events-none">
       {toasts.map((toast) => (
-        <CustomToast
-          key={toast.id}
-          type={toast.type}
-          title={toast.title}
-          description={toast.description}
-          onClose={() => removeToast(toast.id)}
-        />
+        <div className="pointer-events-auto" key={toast.id}>
+          <CustomToast
+            key={toast.id}
+            type={toast.type}
+            title={toast.title}
+            description={toast.description}
+            onClose={() => removeToast(toast.id)}
+          />
+        </div>
       ))}
     </div>
   );

@@ -88,11 +88,19 @@ export default function DeleteDataValueDialog({
           title: messages.success,
           description: messages.successDescription,
         },
-        error: (error: any) => ({
-          title: messages.error,
-          description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
-        }),
+        error: (error: unknown) => {
+          const errorMessage = (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado";
+
+          // Detectar error de restricción de 24 horas
+          const is24HourError = errorMessage.includes("24 hours") || errorMessage.includes("24 horas");
+
+          return {
+            title: is24HourError ? "Restricción de tiempo" : messages.error,
+            description: is24HourError
+              ? "No se puede eliminar este elemento porque fue creado hace más de 24 horas. Los antecedentes solo pueden eliminarse dentro de las primeras 24 horas de su registro."
+              : errorMessage,
+          };
+        },
       });
 
       setIsOpen(false);

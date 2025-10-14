@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { bloodTestSchema } from "@/validators/Blod-Test/blod-test.schema";
 import { UnitSelect } from "@/components/Select/Unit/select";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   isOpen: boolean;
@@ -56,7 +57,7 @@ export default function EditBlodTestDialog({
         referenceValue: blodTest.referenceValue,
       });
     }
-  }, [isOpen, blodTest]);
+  }, [isOpen, blodTest, form]);
 
   async function onSubmit(values: z.infer<typeof bloodTestSchema>) {
     try {
@@ -80,7 +81,7 @@ export default function EditBlodTestDialog({
           title: "¡Análisis bioquímico editado!",
           description: "El análisis bioquímico se ha editado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al editar análisis bioquímico",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",
@@ -119,7 +120,7 @@ export default function EditBlodTestDialog({
             <FormField
               control={form.control}
               name="unit"
-              render={({}) => (
+              render={() => (
                 <FormItem>
                   <FormLabel className="text-black capitalize">
                     Unidad

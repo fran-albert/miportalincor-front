@@ -2,12 +2,13 @@ import ActionIcon from "@/components/Icons/action";
 import { Button } from "@/components/ui/button";
 import { FaPencilAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { HTMLAttributes } from "react";
 
 interface EditButtonIconProps {
   id?: number;
   text?: string;
   path?: string;
-  props?: any;
+  props?: HTMLAttributes<HTMLButtonElement>;
   slug?: string;
   onClick?: () => void;
   className?: string;

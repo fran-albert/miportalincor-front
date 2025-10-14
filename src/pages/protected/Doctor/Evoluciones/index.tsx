@@ -1,7 +1,7 @@
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { DoctorCardSkeleton } from "@/components/Skeleton/Doctor";
+import { DoctorDashboardSkeleton } from "@/components/Skeleton/Doctor";
 import React from "react";
 import EvolucionesComponent from "@/components/Evoluciones/Component";
 import { useEvoluciones } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
@@ -36,9 +36,9 @@ const DoctorEvolucionesPage: React.FC = () => {
 
   if (isFirstLoadingDoctor) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <DoctorCardSkeleton />
+          <DoctorDashboardSkeleton />
         </div>
       </div>
     );

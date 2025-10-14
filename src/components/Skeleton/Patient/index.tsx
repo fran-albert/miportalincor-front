@@ -1,108 +1,24 @@
-import React from "react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Skeleton para la tarjeta de información del paciente
- */
-export const PatientCardSkeleton: React.FC = () => {
-  return (
-    <div className="bg-white shadow rounded-lg p-4 animate-pulse">
-      <div className="flex items-center space-x-4 mb-4">
-        {/* Avatar skeleton */}
-        <div className="rounded-full bg-gray-200 h-16 w-16"></div>
-        
-        {/* Nombre y datos básicos */}
-        <div className="space-y-2 flex-1">
-          <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-      
-      {/* Información de contacto */}
-      <div className="space-y-3 mt-4">
-        <div className="h-4 bg-gray-200 rounded w-full"></div>
-        <div className="h-4 bg-gray-200 rounded w-full"></div>
-        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-      </div>
-      
-      {/* Datos adicionales */}
-      <div className="grid grid-cols-2 gap-2 mt-4">
-        <div className="h-10 bg-gray-200 rounded"></div>
-        <div className="h-10 bg-gray-200 rounded"></div>
-        <div className="h-10 bg-gray-200 rounded"></div>
-        <div className="h-10 bg-gray-200 rounded"></div>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Skeleton para la tabla de estudios
- */
-export const StudiesTableSkeleton: React.FC = () => {
-  return (
-    <div className="animate-pulse">
-      {/* Filtros */}
-      <div className="flex gap-2 mb-4">
-        <div className="h-10 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-10 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-10 bg-gray-200 rounded w-1/3"></div>
-      </div>
-      
-      {/* Encabezado de la tabla */}
-      <div className="h-12 bg-gray-200 rounded w-full mb-2"></div>
-      
-      {/* Filas de la tabla */}
-      {Array(5).fill(0).map((_, index) => (
-        <div 
-          key={index} 
-          className="h-16 bg-gray-200 rounded w-full mb-2"
-          style={{opacity: 1 - index * 0.15}} // Degradado para efecto visual
-        ></div>
-      ))}
-      
-      {/* Paginación */}
-      <div className="flex justify-between mt-4">
-        <div className="h-5 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Skeleton para la tarjeta completa de estudios (incluye encabezado y tabla)
- */
-export const StudiesCardSkeleton: React.FC = () => {
-  return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      {/* Encabezado de la tarjeta */}
-      <div className="p-4 border-b animate-pulse">
-        <div className="flex items-center">
-          <div className="h-5 w-5 bg-gray-200 rounded mr-2"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        </div>
-      </div>
-      
-      {/* Contenido */}
-      <div className="p-4">
-        <StudiesTableSkeleton />
-      </div>
-    </div>
-  );
-};
-
-/**
- * Componente de Row Skeleton para usar dentro de la tabla real
- */
 export const StudyRowSkeleton: React.FC = () => {
   return (
     <tr className="animate-pulse">
-      <td className="py-3 px-4"><div className="h-5 w-5 bg-gray-200 rounded mx-auto"></div></td>
-      <td className="py-3 px-4"><div className="h-5 w-5 bg-gray-200 rounded mx-auto"></div></td>
-      <td className="py-3 px-4"><div className="h-5 bg-gray-200 rounded w-full"></div></td>
-      <td className="py-3 px-4"><div className="h-5 bg-gray-200 rounded w-full"></div></td>
-      <td className="py-3 px-4"><div className="h-5 bg-gray-200 rounded w-2/3"></div></td>
+      <td className="py-3 px-4">
+        <div className="h-5 w-5 bg-gray-200 rounded mx-auto"></div>
+      </td>
+      <td className="py-3 px-4">
+        <div className="h-5 w-5 bg-gray-200 rounded mx-auto"></div>
+      </td>
+      <td className="py-3 px-4">
+        <div className="h-5 bg-gray-200 rounded w-full"></div>
+      </td>
+      <td className="py-3 px-4">
+        <div className="h-5 bg-gray-200 rounded w-full"></div>
+      </td>
+      <td className="py-3 px-4">
+        <div className="h-5 bg-gray-200 rounded w-2/3"></div>
+      </td>
       <td className="py-3 px-4">
         <div className="flex justify-center gap-2">
           <div className="h-8 bg-gray-200 rounded w-16"></div>
@@ -112,3 +28,111 @@ export const StudyRowSkeleton: React.FC = () => {
     </tr>
   );
 };
+export const PatientProfileSkeleton: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      {/* PageHeader skeleton */}
+      <div className="space-y-4 animate-pulse">
+          <div className="h-10 bg-gray-200 rounded w-48"></div>
+          <div className="h-6 bg-gray-200 rounded w-96"></div>
+        </div>
+        {/* Avatar Card skeleton */}
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
+          <div className="p-6 pt-20 animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+            <div className="h-5 bg-gray-200 rounded w-48 mb-4"></div>
+            <div className="flex gap-2">
+              <div className="h-6 bg-gray-200 rounded w-32"></div>
+              <div className="h-6 bg-gray-200 rounded w-40"></div>
+            </div>
+          </div>
+        </div>
+        {/* 5 Sectional Cards skeletons */}
+        {[...Array(5)].fill(0).map((_, i) => (
+          <div
+            key={i}
+            className="bg-white shadow-md rounded-lg overflow-hidden"
+          >
+            <div className="p-4 border-b animate-pulse">
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                <div className="h-6 bg-gray-200 rounded w-48"></div>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-6">
+                {[...Array(4)].fill(0).map((_, j) => (
+                  <div
+                    key={j}
+                    className="h-10 bg-gray-200 rounded w-full animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+
+export function PatientCardSkeleton() {
+  return (
+    <Card className="overflow-hidden border-0 shadow-xl">
+      <CardHeader>
+        {/* Hero Background con Gradiente */}
+        <div className="relative bg-gradient-to-r from-greenPrimary to-teal-600 p-8 pb-20">
+          {/* Decorative Blob */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+        </div>
+
+
+        {/* Card Principal Elevada */}
+        <div className="relative px-8 -mt-12 pb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Avatar con Gradiente */}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-greenPrimary to-teal-600 flex items-center justify-center border-4 border-white shadow-xl flex-shrink-0">
+                <Skeleton className="h-12 w-12 rounded-full" />
+              </div>
+
+              {/* Información del Usuario */}
+              <div className="flex-1 min-w-0 space-y-3">
+                {/* Nombre */}
+                <Skeleton className="h-8 w-48" />
+                
+                {/* Información Específica */}
+                <div className="space-y-3">
+                  {/* DNI */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-32 rounded" />
+                  </div>
+                  
+                  {/* Badges de Género y Edad */}   
+                  <div className="flex gap-2 flex-wrap">
+                    <Skeleton className="h-6 w-20 rounded" />
+                    <Skeleton className="h-6 w-24 rounded" />
+                  </div>
+
+                  {/* Obra Social */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-48 rounded" />
+                  </div>
+
+                  {/* Contacto */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-5 w-48 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+}

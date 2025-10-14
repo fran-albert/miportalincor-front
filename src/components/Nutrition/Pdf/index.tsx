@@ -213,7 +213,7 @@ export function NutritionPdfDocument({
 }
 
 // Formatea celdas numéricas con un decimal
-function formatCell(value: any, key: keyof NutritionData) {
+function formatCell(value: string | number | Date | null | undefined, key: keyof NutritionData) {
   if (key === 'date') {
     return new Date(value as string).toLocaleDateString('es-AR');
   }

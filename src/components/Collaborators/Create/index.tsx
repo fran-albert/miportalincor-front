@@ -24,6 +24,7 @@ import { z } from "zod";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
+import { ApiError } from "@/types/Error/ApiError";
 import { CompanySelect } from "@/components/Select/Company/select";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
 import { StateSelect } from "@/components/Select/State/select";
@@ -50,7 +51,7 @@ function dataURLtoFile(dataurl: string, filename: string): File {
 export function CreateCollaboratorComponent() {
   const { addCollaboratorMutation } = useCollaboratorMutations();
   const { promiseToast } = useToastContext();
-  const form = useForm<any>({});
+  const form = useForm<z.infer<typeof collaboratorSchema>>({});
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
     undefined
@@ -76,7 +77,11 @@ export function CreateCollaboratorComponent() {
   const handleStateChange = (state: State) => {
     setSelectedState(state);
     setSelectedCity(undefined);
-    setValue("address.city.state", String(state.id));
+    setValue("address.city.state", {
+      id: state.id,
+      name: state.name,
+      country: state.country,
+    });
   };
   async function onSubmit(data: z.infer<typeof collaboratorSchema>) {
     try {
@@ -132,7 +137,7 @@ export function CreateCollaboratorComponent() {
           title: "¡Colaborador creado!",
           description: "El colaborador se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al crear colaborador",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",
@@ -330,7 +335,7 @@ export function CreateCollaboratorComponent() {
                     <FormField
                       control={form.control}
                       name="gender"
-                      render={({}) => (
+                      render={() => (
                         <FormItem>
                           <FormLabel className="text-black">Sexo</FormLabel>
                           <FormControl>
@@ -387,7 +392,7 @@ export function CreateCollaboratorComponent() {
                   <FormField
                     control={form.control}
                     name="address.city.state"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel className="text-black">Provincia</FormLabel>
                         <FormControl>
@@ -406,7 +411,7 @@ export function CreateCollaboratorComponent() {
                   <FormField
                     control={form.control}
                     name="address.city.name"
-                    render={({}) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel className="text-black">Ciudad</FormLabel>
                         <FormControl>

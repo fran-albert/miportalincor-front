@@ -84,19 +84,7 @@ const CollaboratorListEvolution: React.FC<Props> = ({
     return dataValue?.value || "-";
   };
 
-  const uniqueDoctorIds = [
-    ...new Set(
-      evolutions.map((evolution) => evolution.medicalEvaluation.doctorId)
-    ),
-  ];
-
-  const doctorQueries = uniqueDoctorIds.map((doctorId) =>
-    useDoctor({ auth: true, id: doctorId })
-  );
-
-  const isLoadingDoctors = doctorQueries.some((query) => query.isLoading);
-
-  const isLoading = isLoadingEvolutions || isLoadingDoctors;
+  const isLoading = isLoadingEvolutions;
 
   return (
     <div>

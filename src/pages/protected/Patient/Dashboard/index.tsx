@@ -1,10 +1,20 @@
 import PatientInformation from "@/components/Patients/Dashboard/Patient-Information";
 import { Patient } from "@/types/Patient/Patient";
 import PatientModules from "@/components/Patients/Modules";
+import { StatsCards } from "@/components/Patients/Dashboard/StatsCards";
 import { useNavigate } from "react-router-dom";
+import { usePatientStats } from "@/hooks/Patient/usePatientStats";
+import useUserRole from "@/hooks/useRoles";
 
 export default function PatientDashboard({ patient }: { patient: Patient }) {
   const navigate = useNavigate();
+  const { session } = useUserRole();
+
+  const { stats, isLoading: isLoadingStats } = usePatientStats({
+    userId: patient.userId,
+    isAuthenticated: !!session,
+  });
+
   const handleHistoriaClinicaClick = () => {
     navigate(`/pacientes/${patient.slug}/historia-clinica`);
   };
@@ -18,16 +28,24 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
   };
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header del Paciente */}
-        <PatientInformation patient={patient} />
-        <PatientModules
-          onHistoriaClinicaClick={handleHistoriaClinicaClick}
-          onEstudiosClick={handleEstudiosClick}
-          onControlNutricionalClick={handleControlNutricionalClick}
-        />
-      </div>
+    <div className="space-y-6">
+      {/* Header del Paciente */}
+      <PatientInformation patient={patient} />
+
+      {/* Estadísticas */}
+      <StatsCards
+        patientSlug={patient.slug || ''}
+        stats={stats}
+        isLoading={isLoadingStats}
+      />
+
+      {/* Módulos de Acceso */}
+      <PatientModules
+        onHistoriaClinicaClick={handleHistoriaClinicaClick}
+        onEstudiosClick={handleEstudiosClick}
+        onControlNutricionalClick={handleControlNutricionalClick}
+        totalStudies={stats.totalStudies}
+      />
     </div>
   );
 }

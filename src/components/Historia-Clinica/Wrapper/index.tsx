@@ -41,7 +41,7 @@ export default function HistoryWrapper({
       evoluciones={evoluciones}
       actions={actions}
     >
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         {breadcrumbItems && <BreadcrumbComponent items={breadcrumbItems} />}
         
         <div className="gap-6">

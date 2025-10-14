@@ -56,10 +56,9 @@ export default function GenericHistory({
   // Las evoluciones vienen como prop desde el backend
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Información del Usuario */}
-        <UserInformation userData={userData} userType={userType} />
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Información del Usuario */}
+      <UserInformation userData={userData} userType={userType} />
 
         {/* Sección de Antecedentes y Evoluciones */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -94,8 +93,8 @@ export default function GenericHistory({
         </div>
 
         {/* Sección de Medicación Actual */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {(isLoadingMedicacionActual && !medicacionActual) ? (
+        <div>
+          {isLoadingMedicacionActual && !medicacionActual ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
               <p className="text-gray-500 text-sm mt-2">
@@ -111,12 +110,7 @@ export default function GenericHistory({
               showEditActions={true}
             />
           )}
-          <div className="lg:col-span-2">
-            {/* Espacio vacío para mantener el layout */}
-          </div>
         </div>
-
-      </div>
     </div>
   );
 }

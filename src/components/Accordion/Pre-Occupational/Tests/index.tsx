@@ -87,19 +87,38 @@ export default function TestsAccordion({
 
   useEffect(() => {
     if (dataValues) {
-      const initialTests = dataValues
+      const initialTests: Record<string, boolean> = {};
+
+      dataValues
         .filter((dv) => testFields.some((tf) => tf.name === dv.dataType.name))
-        .reduce((acc, dv) => {
+        .forEach((dv) => {
           const key = getTestKey(dv.dataType.name).replace("tests_", "");
-          acc[key] = dv.value;
-          return acc;
-        }, {} as Record<string, any>);
-  
+          initialTests[key] = Boolean(dv.value);
+        });
+
+      const testsPerformed = {
+        examenFisico: false,
+        glucemia: false,
+        tuberculosis: false,
+        espirometria: false,
+        capacidadFisica: false,
+        examenVisual: false,
+        radiografia: false,
+        otros: false,
+        audiometria: false,
+        hemograma: false,
+        historiaClinica: false,
+        examenOrina: false,
+        electrocardiograma: false,
+        panelDrogas: false,
+        hepaticas: false,
+        psicotecnico: false,
+        ...(typeof flatFormData.testsPerformed === 'object' && flatFormData.testsPerformed !== null ? flatFormData.testsPerformed : {}),
+        ...initialTests,
+      };
+
       const newFormData = {
-        testsPerformed: {
-          ...flatFormData.testsPerformed,
-          ...initialTests,
-        },
+        testsPerformed,
         ...(dataValues.find((dv) => dv.dataType.name === "Otras pruebas realizadas")
           ? {
               otrasPruebas: dataValues.find(
@@ -108,12 +127,12 @@ export default function TestsAccordion({
             }
           : {}),
       };
-  
-      if (JSON.stringify(flatFormData.testsPerformed) !== JSON.stringify(newFormData.testsPerformed)) {
+
+      if (JSON.stringify(flatFormData.testsPerformed) !== JSON.stringify(testsPerformed)) {
         dispatch(setFormData(newFormData));
       }
     }
-  }, [dataValues, dispatch, testFields]);
+  }, [dataValues, dispatch, testFields, flatFormData.testsPerformed]);
   
 
   const getFieldValue = (testName: string) => {
@@ -123,13 +142,30 @@ export default function TestsAccordion({
   };
 
   const handleToggleTest = (testName: string) => {
-    const key = getTestKey(testName);
+    const key = getTestKey(testName).replace("tests_", "");
+    const testsPerformed = {
+      examenFisico: false,
+      glucemia: false,
+      tuberculosis: false,
+      espirometria: false,
+      capacidadFisica: false,
+      examenVisual: false,
+      radiografia: false,
+      otros: false,
+      audiometria: false,
+      hemograma: false,
+      historiaClinica: false,
+      examenOrina: false,
+      electrocardiograma: false,
+      panelDrogas: false,
+      hepaticas: false,
+      psicotecnico: false,
+      ...(typeof flatFormData.testsPerformed === 'object' && flatFormData.testsPerformed !== null ? flatFormData.testsPerformed : {}),
+      [key]: !getFieldValue(testName), // Usamos getFieldValue para el toggle
+    };
     dispatch(
       setFormData({
-        testsPerformed: {
-          ...flatFormData.testsPerformed,
-          [key.replace("tests_", "")]: !getFieldValue(testName), // Usamos getFieldValue para el toggle
-        },
+        testsPerformed,
       })
     );
   };
@@ -199,7 +235,7 @@ export default function TestsAccordion({
               placeholder="Ingrese otras pruebas realizadas..."
               disabled={!isEditing}
               value={
-                getFieldValue("Otras pruebas realizadas") || otrasPruebas || ""
+                String(getFieldValue("Otras pruebas realizadas") || otrasPruebas || "")
               } // Usamos getFieldValue para este campo también
               onChange={handleOtrasPruebasChange}
               className="min-h-[100px] disabled:opacity-50"

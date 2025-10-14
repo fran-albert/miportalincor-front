@@ -1,10 +1,10 @@
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import AntecedentesComponent from "@/components/Antecedentes/Component";
 import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import useUserRole from "@/hooks/useRoles";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 
 const PatientAntecedentesPage = () => {
   const params = useParams();
@@ -38,9 +38,9 @@ const PatientAntecedentesPage = () => {
 
   if (isFirstLoadingPatient) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
         </div>
       </div>
     );
@@ -75,11 +75,12 @@ const PatientAntecedentesPage = () => {
           Hubo un error al cargar los antecedentes.
         </div>
       )}
-      
+
       <AntecedentesComponent
         onBack={() => navigate(-1)}
         idUser={String(id)}
         idDoctor={idDoctor}
+        patient={patient}
       />
     </>
   );

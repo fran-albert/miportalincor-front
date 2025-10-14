@@ -16,21 +16,31 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   BloodTestData,
   BloodTestDataRequest,
-  BloodTestDataUpdateRequest,
+  BloodTestDataUpdateRequestItem,
 } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
 import { BloodTestDataResponse } from "@/types/Blod-Test-Data/Blod-Test-Data";
 
-const transformData = (originalData: any[]): BloodTestDataResponse[] => {
-  return originalData.map((item) => ({
-    study: { ...item.study },
-    bloodTestData: item.bloodTestData.map((testData: any) => ({
-      id: testData.id,
-      value: testData.value,
-      bloodTest: { ...testData.bloodTest },
-    })),
-  }));
+const transformData = (originalData: BloodTestData[]): BloodTestDataResponse[] => {
+  // Agrupar los datos por estudio
+  const groupedByStudy = originalData.reduce((acc, item) => {
+    const studyId = item.study.id;
+    if (!acc[studyId]) {
+      acc[studyId] = {
+        study: item.study,
+        bloodTestData: [],
+      };
+    }
+    acc[studyId].bloodTestData.push({
+      id: item.id ?? 0,
+      value: item.value,
+      bloodTest: item.bloodTest,
+    });
+    return acc;
+  }, {} as Record<number, BloodTestDataResponse>);
+
+  return Object.values(groupedByStudy);
 };
 
 export const LabPatientTable = ({
@@ -102,7 +112,7 @@ export const LabPatientTable = ({
     try {
       const updates: {
         idStudy: number;
-        blodTest: BloodTestDataUpdateRequest[];
+        blodTest: BloodTestDataUpdateRequestItem[];
       }[] = [];
       const newEntries: BloodTestDataRequest[] = [];
 
@@ -117,7 +127,7 @@ export const LabPatientTable = ({
         if (existingStudyForDate) {
           const updateGroup = {
             idStudy: existingStudyForDate.id,
-            blodTest: [] as BloodTestDataUpdateRequest[],
+            blodTest: [] as BloodTestDataUpdateRequestItem[],
           };
 
           Object.entries(tests).forEach(([bloodTestId, value]) => {
@@ -187,9 +197,9 @@ export const LabPatientTable = ({
                   title: "Laboratorio actualizado",
                   description: "El laboratorio se actualizó exitosamente",
                 },
-                error: (error: any) => ({
+                error: (error: unknown) => ({
                   title: "Error al actualizar el laboratorio",
-                  description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+                  description: (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
                 }),
               }
             )
@@ -210,9 +220,9 @@ export const LabPatientTable = ({
                 title: "Laboratorio creado",
                 description: "El laboratorio se creó exitosamente",
               },
-              error: (error: any) => ({
+              error: (error: unknown) => ({
                 title: "Error al crear el laboratorio",
-                description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+                description: (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
               }),
             })
           )

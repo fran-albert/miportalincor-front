@@ -13,6 +13,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import ActionIcon from "@/components/Icons/action";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface DeleteDoctorDialogProps {
   idDoctor: number;
@@ -38,7 +39,7 @@ export default function DeleteDoctorDialog({
           title: "¡Médico eliminado!",
           description: "El médico se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar médico",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

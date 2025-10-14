@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
 import { logout } from '@/store/authSlice';
 import { useEffect } from 'react';
+import { RootState } from '@/store/store';
 
 interface DecodedToken {
   id: string;
@@ -21,8 +22,8 @@ const ROLES = {
 
 const useUserRole = () => {
   const dispatch = useDispatch();
-  const token = useSelector((state: any) => state.auth.token);
-  const tokenExpiration = useSelector((state: any) => state.auth.tokenExpiration);
+  const token = useSelector((state: RootState) => state.auth.token);
+  const tokenExpiration = useSelector((state: RootState) => state.auth.tokenExpiration);
 
   useEffect(() => {
     if (!token || !tokenExpiration) return;

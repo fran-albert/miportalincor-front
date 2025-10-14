@@ -8,7 +8,7 @@ import { StudyTypeSelect } from "@/components/Select/Study/By-Type/select";
 import { StudyYearSelect } from "@/components/Select/Study/By-Year/select";
 import StudiesTable from "../Table";
 import { Link } from "react-router-dom";
-import { StudiesTableSkeleton } from "@/components/Skeleton/Patient";
+import { StudyRowSkeleton } from "@/components/Skeleton/Patient";
 
 interface Props {
   studies: StudiesWithURL[];
@@ -118,7 +118,7 @@ const StudiesComponent = ({
           </div>
         )}
         {isFetchingStudies ? (
-          <StudiesTableSkeleton />
+          <StudyRowSkeleton />
         ) : (
           <StudiesTable studies={filteredStudies} idUser={Number(idUser)} />
         )}

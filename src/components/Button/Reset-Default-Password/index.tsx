@@ -9,9 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { SubmitHandler } from "react-hook-form";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
+
 interface Props {
   idUser: number;
 }
@@ -21,7 +22,7 @@ export default function ResetDefaultPasswordDialog({ idUser }: Props) {
   const toggleDialog = () => setIsOpen(!isOpen);
   const { resetDefaultPasswordMutation } = useUserMutations();
   const { promiseToast } = useToastContext();
-  const onSubmit: SubmitHandler<any> = async () => {
+  const onSubmit = async () => {
     try {
       await promiseToast(resetDefaultPasswordMutation.mutateAsync(idUser), {
         loading: {
@@ -32,7 +33,7 @@ export default function ResetDefaultPasswordDialog({ idUser }: Props) {
           title: "Contraseña restablecida",
           description: "La contraseña se restableció exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al restablecer la contraseña",
           description: error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),

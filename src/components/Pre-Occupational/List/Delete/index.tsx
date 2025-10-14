@@ -13,6 +13,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import ActionIcon from "@/components/Icons/action";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useCollaboratorMedicalEvaluationMutations } from "@/hooks/Collaborator-Medical-Evaluation/useCollaboratorMedicalEvaluationMutations";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   id: number;
@@ -37,7 +38,7 @@ export default function DeleteMedicalEvaluation({ id }: Props) {
           title: "Examen eliminado",
           description: "El examen se eliminó exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar el examen",
           description: error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),

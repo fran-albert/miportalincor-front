@@ -14,6 +14,7 @@ import ActionIcon from "@/components/Icons/action";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   blodTest: BloodTest;
@@ -41,7 +42,7 @@ export default function DeleteBlodTestDialog({
           title: "¡Análisis bioquímico eliminado!",
           description: "El análisis bioquímico se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar análisis bioquímico",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

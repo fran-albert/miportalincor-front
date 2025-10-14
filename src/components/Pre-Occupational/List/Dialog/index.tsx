@@ -22,6 +22,7 @@ import { useDispatch } from "react-redux";
 import { resetForm } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
 import { useForm } from "react-hook-form";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export default function CreateExamDialog({ isOpen, setIsOpen, slug }: Props) {
             title: "Examen creado",
             description: "El examen se creó exitosamente",
           },
-          error: (error: any) => ({
+          error: (error: ApiError) => ({
             title: "Error al crear el examen",
             description: error.response?.data?.message || "Ha ocurrido un error inesperado",
           }),

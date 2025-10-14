@@ -2,12 +2,10 @@ import { usePatient } from "@/hooks/Patient/usePatient";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
-import {
-  PatientCardSkeleton,
-  StudiesCardSkeleton,
-} from "@/components/Skeleton/Patient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { PatientStudiesPage as GenericPatientStudiesPage } from "@/components/Studies/Page";
 import BreadcrumbComponent from "@/components/Breadcrumb";
+import { StudiesCardSkeleton } from "@/components/Skeleton/Doctor";
 
 const PatientStudiesPage = () => {
   const params = useParams();
@@ -39,9 +37,9 @@ const PatientStudiesPage = () => {
 
   if (isFirstLoadingPatient && isFirstLoadingStudies) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
+          <PatientProfileSkeleton />
           <StudiesCardSkeleton />
         </div>
       </div>
@@ -85,32 +83,25 @@ const PatientStudiesPage = () => {
         </div>
       )}
 
-      <div className="container space-y-2 mt-2">
-        <div className="mb-6">
-          <BreadcrumbComponent items={breadcrumbItems} />
-        </div>
+      <div className="space-y-6 p-6">
+        <BreadcrumbComponent items={breadcrumbItems} />
 
-        <div className="space-y-6">
-          {/* Studies Section with Modern Table */}
-          <div className="w-full">
-            {studies && (
-              <GenericPatientStudiesPage
-                userData={patient}
-                studies={studies}
-                loading={isFetching}
-                role="pacientes"
-                slug={String(patient?.slug)}
-                idUser={Number(patient?.userId)}
-                showUserInfo={false} // Ya mostramos la info del paciente arriba
-                breadcrumbItems={[]} // Sin breadcrumbs porque ya los mostramos
-                onRefresh={() => {
-                  // Aquí puedes agregar lógica de refresh si es necesaria
-                  window.location.reload();
-                }}
-              />
-            )}
-          </div>
-        </div>
+        {studies && (
+          <GenericPatientStudiesPage
+            userData={patient}
+            studies={studies}
+            loading={isFetching}
+            role="pacientes"
+            slug={String(patient?.slug)}
+            idUser={Number(patient?.userId)}
+            showUserInfo={false} // Ya mostramos la info del paciente arriba
+            breadcrumbItems={[]} // Sin breadcrumbs porque ya los mostramos
+            onRefresh={() => {
+              // Aquí puedes agregar lógica de refresh si es necesaria
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     </>
   );

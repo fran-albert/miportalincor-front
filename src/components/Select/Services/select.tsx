@@ -5,10 +5,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues } from "react-hook-form";
 interface ServiceSelectProps {
   selected?: string;
-  control: any;
+  control: Control<FieldValues>;
   defaultValue?: string;
   onService?: (value: string) => void;
 }

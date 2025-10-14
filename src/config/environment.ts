@@ -13,6 +13,7 @@ export interface EnvironmentConfig {
   BASE_URL: string;
   DEBUG_MODE: boolean;
   SHOW_DEV_TOOLS: boolean;
+  API_TURNOS_URL: string;
 }
 
 /**
@@ -63,6 +64,7 @@ export const environment: EnvironmentConfig = {
   BASE_URL: requireEnvVar('VITE_BASE_URL', import.meta.env.VITE_BASE_URL),
   DEBUG_MODE: envToBoolean(import.meta.env.VITE_DEBUG_MODE, false),
   SHOW_DEV_TOOLS: envToBoolean(import.meta.env.VITE_SHOW_DEV_TOOLS, false),
+  API_TURNOS_URL: requireEnvVar('VITE_BACKEND_API_TURNOS', import.meta.env.VITE_BACKEND_API_TURNOS),
 };
 
 /**

@@ -43,16 +43,13 @@ const StudiesTable = ({
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
-  // @ts-ignore
-  const [selectedStudyType, setSelectedStudyType] = useState<string | null>(
+  const [selectedStudyType] = useState<string | null>(
     "Seleccionar tipo de estudio..."
   );
-  // @ts-ignore
-  const [selectedYear, setSelectedYear] = useState<string | null>(
+  const [selectedYear] = useState<string | null>(
     "Seleccionar año..."
   );
-  // @ts-ignore
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedStudies, setExpandedStudies] = useState<Set<number>>(
     new Set()

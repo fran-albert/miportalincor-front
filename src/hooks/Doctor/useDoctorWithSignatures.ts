@@ -15,6 +15,14 @@ export interface DoctorSignatures {
     sealDataUrl?: string
 }
 
+interface DoctorSignatureResponse {
+    fullName?: string
+    matricula?: string
+    doctorSpeciality?: string
+    signature?: string
+    sello?: string
+}
+
 interface Params {
     id: number
     auth?: boolean
@@ -25,7 +33,7 @@ export const useDoctorWithSignatures = ({ id, auth = true }: Params) => {
         queryKey: ["doctor", id, "signatures"],
         queryFn: async () => {
             // 1) Consulta al endpoint con axios
-            const res = await apiIncor.get<{ doctorSignature: any }>(
+            const res = await apiIncor.get<{ doctorSignature: DoctorSignatureResponse }>(
                 `/Study/signature?doctorUserId=${id}`
             )
 

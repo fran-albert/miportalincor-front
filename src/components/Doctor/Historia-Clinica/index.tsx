@@ -18,7 +18,7 @@ export function DoctorHistoryComponent({
 }: DoctorHistoryComponentProps) {
   if (isLoadingDoctor) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <p>Cargando...</p>
       </div>
     );
@@ -26,7 +26,7 @@ export function DoctorHistoryComponent({
 
   if (!doctor || !patient) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <p>Error: Doctor o paciente no encontrado</p>
       </div>
     );

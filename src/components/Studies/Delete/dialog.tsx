@@ -46,10 +46,10 @@ export default function DeleteStudyDialog({
           title: "¡Estudio eliminado!",
           description: "El estudio se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al eliminar estudio",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

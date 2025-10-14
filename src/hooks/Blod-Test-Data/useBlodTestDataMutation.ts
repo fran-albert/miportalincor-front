@@ -1,6 +1,6 @@
 import { createBlodTestData } from "@/api/Blod-Test-Data/create-blod-test-data.action";
 import { updateBlodTestData } from "@/api/Blod-Test-Data/update-blod-test-data.action";
-import { BloodTestDataUpdateRequest } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { BloodTestDataUpdateRequestItem, BloodTestDataResponse } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useBlodTestDataMutations = () => {
@@ -11,9 +11,9 @@ export const useBlodTestDataMutations = () => {
         onSuccess: async (response) => {
             // Invalidar la query y esperar a que se actualice
             await queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });
-            
+
             // Actualizar los datos en caché inmediatamente
-            queryClient.setQueryData(['bloodTestsData'], (oldData: any) => {
+            queryClient.setQueryData(['bloodTestsData'], (oldData: BloodTestDataResponse[] | undefined) => {
                 if (!oldData) return oldData;
                 return [...oldData, response];
             });
@@ -29,7 +29,7 @@ export const useBlodTestDataMutations = () => {
             bloodTestDataRequests,
         }: {
             idStudy: number;
-            bloodTestDataRequests: BloodTestDataUpdateRequest[];
+            bloodTestDataRequests: BloodTestDataUpdateRequestItem[];
         }) => updateBlodTestData(idStudy, bloodTestDataRequests),
         onSuccess: async () => {
             // Invalidar y refetch inmediato

@@ -41,10 +41,10 @@ export default function DeleteSpecialityDialog({
           title: "¡Especialidad eliminada!",
           description: "La especialidad se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al eliminar especialidad",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

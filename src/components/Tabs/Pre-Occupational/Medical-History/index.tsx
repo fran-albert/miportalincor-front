@@ -13,6 +13,7 @@ import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useInitializeMedicalEvaluation } from "@/common/helpers/maps";
+import type { IMedicalEvaluation, Torax, Circulatorio, Gastrointestinal, Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
 // const workerMapping: Record<string, string> = {
 //   lugarNacimiento: "Lugar de nacimiento",
 //   nacionalidad: "Nacionalidad",
@@ -71,7 +72,7 @@ const buildOccupationalHistoryPayload = (
 
 const buildMedicalEvaluationPayload = (
   fields: DataType[],
-  medicalEvaluation: any
+  medicalEvaluation: IMedicalEvaluation
 ): { dataTypeId: number; value: string; observations?: string }[] => {
   const payloadItems: {
     dataTypeId: number;
@@ -188,7 +189,7 @@ const buildMedicalEvaluationPayload = (
     payloadItems.push({
       dataTypeId: normoField.id,
       value: medicalEvaluation.piel.normocoloreada === "si" ? "true" : "false",
-      observations: medicalEvaluation.piel.observaciones?.trim() || null,
+      observations: medicalEvaluation.piel.observaciones?.trim() || undefined,
     });
   }
 
@@ -237,9 +238,10 @@ const buildMedicalEvaluationPayload = (
       (f) => f.category === "EXAMEN_FISICO" && f.name === name
     );
     if (dt && medicalEvaluation.bucodental) {
+      const value = medicalEvaluation.bucodental[key as keyof typeof medicalEvaluation.bucodental];
       payloadItems.push({
         dataTypeId: dt.id,
-        value: (medicalEvaluation.bucodental as any)[key] ? "true" : "false",
+        value: value ? "true" : "false",
       });
     }
   });
@@ -264,12 +266,13 @@ const buildMedicalEvaluationPayload = (
       (f) => f.category === "EXAMEN_FISICO" && f.name === name
     );
     if (dt && medicalEvaluation.torax) {
+      const torax: Torax = medicalEvaluation.torax;
+      const value = torax[key as keyof Torax];
+      const obsKey = `${key}Obs` as keyof Torax;
       payloadItems.push({
         dataTypeId: dt.id,
-        value:
-          (medicalEvaluation.torax as any)[key] === "si" ? "true" : "false",
-        observations:
-          (medicalEvaluation.torax as any)[`${key}Obs`]?.trim() || null,
+        value: value === "si" ? "true" : "false",
+        observations: (torax[obsKey] as string)?.trim() || undefined,
       });
     }
   });
@@ -287,7 +290,7 @@ const buildMedicalEvaluationPayload = (
           ? "true"
           : "false",
         observations:
-          medicalEvaluation.respiratorio.observaciones?.trim() || null,
+          medicalEvaluation.respiratorio.observaciones?.trim() || undefined,
       });
     }
 
@@ -324,7 +327,7 @@ const buildMedicalEvaluationPayload = (
       payloadItems.push({
         dataTypeId: circBool.id,
         value: circ.sinAlteraciones ? "true" : "false",
-        observations: circ.observaciones?.trim() || null,
+        observations: circ.observaciones?.trim() || undefined,
       });
     }
 
@@ -338,7 +341,7 @@ const buildMedicalEvaluationPayload = (
       const dt = fields.find(
         (f) => f.category === "EXAMEN_CLINICO" && f.name === name
       );
-      const val = (circ as any)[key];
+      const val = circ[key as keyof Circulatorio];
       if (dt && val != null && val !== "") {
         payloadItems.push({
           dataTypeId: dt.id,
@@ -355,7 +358,7 @@ const buildMedicalEvaluationPayload = (
       payloadItems.push({
         dataTypeId: varicesField.id,
         value: circ.varices ? "true" : "false",
-        observations: circ.varicesObs?.trim() || null,
+        observations: circ.varicesObs?.trim() || undefined,
       });
     }
   }
@@ -372,7 +375,7 @@ const buildMedicalEvaluationPayload = (
         ? "true"
         : "false",
       observations:
-        medicalEvaluation.gastrointestinal.observaciones?.trim() || null,
+        medicalEvaluation.gastrointestinal.observaciones?.trim() || undefined,
     });
   }
   if (medicalEvaluation.gastrointestinal) {
@@ -388,20 +391,18 @@ const buildMedicalEvaluationPayload = (
       const dt = fields.find(
         (f) => f.category === "EXAMEN_FISICO" && f.name === fieldName
       );
-      if (!dt) return;
+      if (!dt || !medicalEvaluation.gastrointestinal) return;
 
-      const val = (medicalEvaluation.gastrointestinal as any)[key] as
-        | boolean
-        | undefined;
+      const gi: Gastrointestinal = medicalEvaluation.gastrointestinal;
+      const val = gi[key as keyof Gastrointestinal] as boolean | undefined;
       // marcó SI o NO (true o false)
       if (val !== undefined) {
+        const obsKey = `${key}Obs` as keyof Gastrointestinal;
         payloadItems.push({
           dataTypeId: dt.id,
           value: val ? "true" : "false",
-          // si hay observaciones, las agregamos; si no, null
-          observations:
-            (medicalEvaluation.gastrointestinal as any)[`${key}Obs`]?.trim() ||
-            null,
+          // si hay observaciones, las agregamos; si no, undefined
+          observations: (gi[obsKey] as string)?.trim() || undefined,
         });
       }
     });
@@ -415,7 +416,7 @@ const buildMedicalEvaluationPayload = (
     payloadItems.push({
       dataTypeId: neuroBool.id,
       value: medicalEvaluation.neurologico.sinAlteraciones ? "true" : "false",
-      observations: medicalEvaluation.neurologico.observaciones?.trim() || null,
+      observations: medicalEvaluation.neurologico.observaciones?.trim() || undefined,
     });
   }
 
@@ -430,7 +431,7 @@ const buildMedicalEvaluationPayload = (
         ? "true"
         : "false",
       observations:
-        medicalEvaluation.genitourinario.observaciones?.trim() || null,
+        medicalEvaluation.genitourinario.observaciones?.trim() || undefined,
     });
   }
   const varicoField = fields.find(
@@ -441,7 +442,7 @@ const buildMedicalEvaluationPayload = (
       dataTypeId: varicoField.id,
       value: medicalEvaluation.genitourinario.varicocele ? "true" : "false",
       observations:
-        medicalEvaluation.genitourinario.varicoceleObs?.trim() || null,
+        medicalEvaluation.genitourinario.varicoceleObs?.trim() || undefined,
     });
   }
   const fumField = fields.find(
@@ -501,9 +502,9 @@ const buildMedicalEvaluationPayload = (
       if (!dt) return;
 
       // true/false
-      const val = (osteo as any)[key] === true;
+      const val = osteo[key as keyof Osteoarticular] === true;
       // lee la propiedad correcta
-      const obs = (osteo as any)[obsKey]?.trim() || null;
+      const obs = (osteo[obsKey as keyof Osteoarticular] as string)?.trim() || undefined;
 
       payloadItems.push({
         dataTypeId: dt.id,
@@ -568,7 +569,7 @@ const buildMedicalEvaluationPayload = (
       // valor "normal" o "anormal"
       value: medicalEvaluation.visionCromatica,
       // aquí guardo tus observaciones (antes usabas notasVision)
-      observations: medicalEvaluation.notasVision?.trim() || null,
+      observations: medicalEvaluation.notasVision?.trim() || undefined,
     });
   }
   return payloadItems;
@@ -635,10 +636,10 @@ export default function MedicalHistoryTab({
         title: "Datos guardados",
         description: "Los datos se guardaron exitosamente",
       },
-      error: (error: any) => ({
+      error: (error: unknown) => ({
         title: "Error al guardar los datos",
         description:
-          error.response?.data?.message || "Ha ocurrido un error inesperado",
+          (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
       }),
     });
   };

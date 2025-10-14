@@ -81,9 +81,11 @@ const CollaboratorPage = () => {
     allowedEvaluationTypes.includes(type.name)
   );
 
-  const { data, isFetching } = id
-    ? useCollaboratorMedicalEvaluation({ id, auth: true })
-    : { data: undefined, isFetching: false };
+  const { data, isFetching } = useCollaboratorMedicalEvaluation({
+    id: id || 0,
+    auth: true,
+    enabled: !!id
+  });
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -98,13 +100,15 @@ const CollaboratorPage = () => {
       <Helmet>
         <title>Incor Laboral</title>
       </Helmet>
-      <div className="space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <BreadcrumbComponent items={breadcrumbItems} />
-        <div className="container mx-auto p-6 space-y-6">
-          <CollaboratorInformationCard
-            collaborator={collaborator}
-            canEdit={canEdit}
-          />
+        <div className="space-y-6">
+          {collaborator && (
+            <CollaboratorInformationCard
+              collaborator={collaborator}
+              canEdit={canEdit}
+            />
+          )}
 
           {/* Pestañas */}
           <Tabs defaultValue="examenes" className="w-full">
@@ -131,13 +135,15 @@ const CollaboratorPage = () => {
 
             {/* Pestaña de Exámenes */}
             <TabsContent value="examenes" className="space-y-4">
-              <ListPreoccupationalExamsTable
-                data={data || []}
-                isFetching={isFetching}
-                evaluationTypes={evaluationTypes}
-                slug={slug}
-                collaborator={collaborator}
-              />
+              {collaborator && (
+                <ListPreoccupationalExamsTable
+                  data={data || []}
+                  isFetching={isFetching}
+                  evaluationTypes={evaluationTypes}
+                  slug={slug}
+                  collaborator={collaborator}
+                />
+              )}
             </TabsContent>
 
             {/* Pestaña de Evoluciones */}
@@ -173,7 +179,7 @@ const CollaboratorPage = () => {
                 />
               )}
 
-              {evolutionView === "new" && (
+              {evolutionView === "new" && collaborator && (
                 <CreateCollaboratorEvolution
                   setEvolutionView={setEvolutionView}
                   companyEmail={collaborator.company.email}

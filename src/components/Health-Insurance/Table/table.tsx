@@ -4,8 +4,9 @@ import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
 import EditHealthInsuranceDialog from "../Edit";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
 import AddHealthInsuranceDialog from "../Add/button";
+import { Shield } from "lucide-react";
 
 export const HealthInsuranceTable = ({
   healthInsurances,
@@ -37,16 +38,19 @@ export const HealthInsuranceTable = ({
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Obras Sociales", href: "/obras-sociales" },
+    { label: "Obras Sociales" },
   ];
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Obras Sociales
-      </h2>
-      <div className="overflow-hidden sm:rounded-lg p-4 ">
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Obras Sociales"
+        description="Administra las obras sociales y planes de salud"
+        icon={<Shield className="h-6 w-6" />}
+        badge={healthInsurances.length}
+      />
+      <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={healthInsuranceColumns}
           data={healthInsurances}

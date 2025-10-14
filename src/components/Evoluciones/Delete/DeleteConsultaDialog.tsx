@@ -13,9 +13,11 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import ActionIcon from "@/components/Icons/action";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
+import { Evolucion } from "@/types/Antecedentes/Antecedentes";
 
 interface DeleteConsultaDialogProps {
-  evoluciones: any[];
+  evoluciones: Evolucion[];
   consultaDescription?: string;
   triggerButton?: React.ReactNode;
 }
@@ -53,7 +55,7 @@ export default function DeleteConsultaDialog({
           title: "¡Consulta eliminada!",
           description: "La consulta completa se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar consulta",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

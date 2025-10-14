@@ -24,6 +24,7 @@ import { z } from "zod";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { collaboratorSchema } from "@/validators/Colaborator/collaborator.schema";
 import { useCollaboratorMutations } from "@/hooks/Collaborator/useCollaboratorMutation";
+import { ApiError } from "@/types/Error/ApiError";
 import { CompanySelect } from "@/components/Select/Company/select";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,7 +43,7 @@ const getValidDateString = (date: string | undefined | null): string => {
   if (!date) return "";
   const ddmmyyyyMatch = date.match(/^(\d{2})-(\d{2})-(\d{4})$/);
   if (ddmmyyyyMatch) {
-    const [_, day, month, year] = ddmmyyyyMatch;
+    const [, day, month, year] = ddmmyyyyMatch;
     const formattedDate = `${year}-${month}-${day}`;
     const parsedDate = new Date(formattedDate);
     return !isNaN(parsedDate.getTime())
@@ -87,7 +88,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
     collaborator.email && collaborator.email !== "undefined"
       ? collaborator.email
       : "";
-  const form = useForm<any>({
+  const form = useForm<FormValues>({
     defaultValues: {
       firstName: collaborator.firstName || "",
       lastName: collaborator.lastName || "",
@@ -109,9 +110,11 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
         city: {
           id: collaborator.addressData?.city?.id || 0,
           name: collaborator.addressData?.city?.name || "",
-          state: collaborator.addressData?.city?.state?.id
-            ? String(collaborator.addressData.city.state.id)
-            : "",
+          state: {
+            id: collaborator.addressData?.city?.state?.id || 0,
+            name: collaborator.addressData?.city?.state?.name || "",
+            country: collaborator.addressData?.city?.state?.country,
+          },
         },
       },
       file: collaborator.photoUrl || undefined,
@@ -140,7 +143,11 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
-    setValue("address.city.state", String(state.id));
+    setValue("address.city.state", {
+      id: state.id,
+      name: state.name,
+      country: state.country,
+    });
     setValue("address.city.id", 0);
     setValue("address.city.name", "");
   };
@@ -223,7 +230,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
           title: "¡Colaborador actualizado!",
           description: "El colaborador se ha actualizado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al actualizar colaborador",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

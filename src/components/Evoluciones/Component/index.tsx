@@ -16,6 +16,10 @@ import {
   Activity,
   Plus,
   Search,
+  FileText,
+  ClipboardList,
+  Stethoscope,
+  FileCheck,
 } from "lucide-react";
 import { useState } from "react";
 import CreateEvolucionDialog from "../Create";
@@ -23,6 +27,7 @@ import { EvolucionesResponse, Evolucion as EvolucionType, EvolucionData } from "
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
+import BreadcrumbComponent from "@/components/Breadcrumb";
 import EvolutionTable from "../Table/table";
 import { EvolutionTableRow } from "../Table/columns";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
@@ -30,6 +35,13 @@ import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
 import { useToast } from "@/hooks/Toast/useToast";
 import { useEvolutionMutation } from "@/hooks/Evolution/useEvolutionMutation";
 import DeleteEvolutionDialog from "../Delete/DeleteEvolutionDialog";
+import { ApiError } from "@/types/Error/ApiError";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type UserData = Patient | Doctor;
 
@@ -39,6 +51,7 @@ interface Props {
   userData: UserData | undefined;
   userType: "patient" | "doctor";
   patientId?: number;
+  patient?: Patient;
 }
 
 export default function EvolucionesComponent({
@@ -46,6 +59,7 @@ export default function EvolucionesComponent({
   evoluciones,
   userData,
   patientId,
+  patient,
 }: Props) {
   const { session } = useUserRole();
   const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
@@ -136,10 +150,11 @@ export default function EvolucionesComponent({
       await deleteEvolutionMutation.mutateAsync(String(firstEvolutionId));
 
       showSuccess("Evolución Eliminada", "La evolución ha sido eliminada exitosamente");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error deleting evolution:", error);
 
-      const errorMessage = error.response?.data?.message || error.message || "Error desconocido";
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || apiError.message || "Error desconocido";
       showError("Error", `No se pudo eliminar la evolución: ${errorMessage}`);
     }
   };
@@ -322,30 +337,52 @@ export default function EvolucionesComponent({
     return matchesSearch && matchesEspecialidad;
   });
 
+  // Breadcrumb items
+  const breadcrumbItems = patient
+    ? [
+        { label: "Home", href: "/home" },
+        { label: "Pacientes", href: "/pacientes" },
+        {
+          label: `${patient.firstName} ${patient.lastName}`,
+          href: `/pacientes/${patient.slug}`,
+        },
+        {
+          label: "Historia Clínica",
+          href: `/pacientes/${patient.slug}/historia-clinica`,
+        },
+        {
+          label: "Evoluciones Médicas",
+          icon: <Activity className="h-4 w-4" />,
+        },
+      ]
+    : [];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6 p-6">
+        {/* Breadcrumb */}
+        {patient && <BreadcrumbComponent items={breadcrumbItems} />}
+
         {/* Header */}
         <Card>
-          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+          <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onBack}
-                  className="hover:bg-white/50"
+                  className="hover:bg-white/20 text-white"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver
                 </Button>
-                <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <Activity className="h-6 w-6 text-teal-600" />
+                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                  <Activity className="h-6 w-6" />
                   Evoluciones Médicas Completas
                 </CardTitle>
               </div>
               <Button
-                className="bg-teal-600 hover:bg-teal-700 text-white"
+                className="bg-white text-greenPrimary hover:bg-white/90"
                 onClick={() => setIsAddEvolucionModalOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -422,58 +459,62 @@ export default function EvolucionesComponent({
           isDeleting={deleteEvolutionMutation.isPending}
         />
         {/* Modal para Ver Evolución Completa */}
-        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="pb-4">
-              <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-600" />
-                Detalle de la Evolución
-              </DialogTitle>
-            </DialogHeader>
-            {selectedConsultaToView && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
-                      Fecha de Consulta
-                    </Label>
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">
-                        {(() => {
-                          const dateTime = formatEvolutionDateTime(selectedConsultaToView.fechaConsulta);
-                          return `${dateTime.date} - ${dateTime.time}`;
-                        })()}
-                      </span>
-                    </div>
+        <TooltipProvider>
+          <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="pb-4 bg-gradient-to-r from-greenPrimary/5 to-teal-50 -m-6 mb-0 p-6 rounded-t-lg border-b border-greenPrimary/10">
+                <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-greenPrimary/20">
+                    <Activity className="h-5 w-5 text-greenPrimary" />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
-                      Doctor
-                    </Label>
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium">
-                          Dr. {selectedConsultaToView.doctor.firstName}{" "}
-                          {selectedConsultaToView.doctor.lastName}
-                        </span>
+                  Detalle de la Evolución
+                </DialogTitle>
+              </DialogHeader>
+            {selectedConsultaToView && (
+              <div className="space-y-6 p-6 -mx-6">
+                {/* Timeline de información */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-gray-700">
+                    Información del Registro
+                  </Label>
+                  <div className="border-l-2 border-greenPrimary/30 pl-6 space-y-4 ml-2">
+                    <div className="relative flex items-start gap-4">
+                      <div className="absolute -left-[29px] p-1.5 bg-greenPrimary rounded-full shadow-sm">
+                        <Calendar className="h-3 w-3 text-white" />
+                      </div>
+                      <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <Label className="text-xs text-gray-500 font-medium">Fecha de Consulta</Label>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          {(() => {
+                            const dateTime = formatEvolutionDateTime(selectedConsultaToView.fechaConsulta);
+                            return `${dateTime.date} - ${dateTime.time}`;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-start gap-4">
+                      <div className="absolute -left-[29px] p-1.5 bg-greenPrimary rounded-full shadow-sm">
+                        <User className="h-3 w-3 text-white" />
+                      </div>
+                      <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <Label className="text-xs text-gray-500 font-medium">Registrado por</Label>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          Dr. {selectedConsultaToView.doctor.firstName} {selectedConsultaToView.doctor.lastName}
+                        </p>
                         {selectedConsultaToView.doctor.specialities &&
                          selectedConsultaToView.doctor.specialities.length > 0 && (
-                          <>
-                            <span className="text-gray-400">-</span>
-                            <div className="flex flex-wrap gap-1">
-                              {selectedConsultaToView.doctor.specialities.map((specialty, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                                >
-                                  {specialty.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          </>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {selectedConsultaToView.doctor.specialities.map((specialty, index) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                              >
+                                {specialty.name}
+                              </Badge>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -481,11 +522,12 @@ export default function EvolucionesComponent({
                 </div>
 
                 {selectedConsultaToView.especialidad && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <FileText className="h-4 w-4 text-greenPrimary" />
                       Especialidad
                     </Label>
-                    <div className="p-2 bg-gray-50 rounded border">
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                       <Badge
                         variant="outline"
                         className="bg-blue-50 text-blue-700 border-blue-200"
@@ -497,12 +539,13 @@ export default function EvolucionesComponent({
                 )}
 
                 {selectedConsultaToView.motivoConsulta && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <ClipboardList className="h-4 w-4 text-greenPrimary" />
                       Motivo de Consulta
                     </Label>
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {selectedConsultaToView.motivoConsulta}
                       </p>
                     </div>
@@ -510,12 +553,13 @@ export default function EvolucionesComponent({
                 )}
 
                 {selectedConsultaToView.enfermedadActual && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Activity className="h-4 w-4 text-greenPrimary" />
                       Enfermedad Actual
                     </Label>
-                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {selectedConsultaToView.enfermedadActual}
                       </p>
                     </div>
@@ -523,12 +567,13 @@ export default function EvolucionesComponent({
                 )}
 
                 {selectedConsultaToView.examenFisico && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <Stethoscope className="h-4 w-4 text-greenPrimary" />
                       Examen Físico
                     </Label>
-                    <div className="p-3 bg-teal-50 rounded-lg border border-teal-200">
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {selectedConsultaToView.examenFisico}
                       </p>
                     </div>
@@ -536,12 +581,13 @@ export default function EvolucionesComponent({
                 )}
 
                 {selectedConsultaToView.diagnosticosPresuntivos && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <FileCheck className="h-4 w-4 text-greenPrimary" />
                       Diagnósticos Presuntivos
                     </Label>
-                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {selectedConsultaToView.diagnosticosPresuntivos}
                       </p>
                     </div>
@@ -581,12 +627,25 @@ export default function EvolucionesComponent({
                 )}
               </div>
             )}
-            <div className="flex justify-end pt-4 border-t">
-              <Button onClick={() => setIsViewModalOpen(false)}>Cerrar</Button>
+            <div className="flex justify-end pt-4 border-t -mx-6 px-6">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="min-w-[100px]"
+                  >
+                    Cerrar
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-xs">Cerrar ventana de detalle</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+        </TooltipProvider>
     </div>
   );
 }

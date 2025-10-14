@@ -39,8 +39,9 @@ export function DataTable<TData, TValue>({
 
   const filteredData = React.useMemo(() => {
     if (selectedEvaluationType && selectedEvaluationType !== "all") {
-      return data.filter((item: any) => {
-        const evaluationTypeId = item.medicalEvaluation?.evaluationType?.id;
+      return data.filter((item) => {
+        const itemWithEvaluation = item as { medicalEvaluation?: { evaluationType?: { id: number } } };
+        const evaluationTypeId = itemWithEvaluation.medicalEvaluation?.evaluationType?.id;
 
         return evaluationTypeId === Number(selectedEvaluationType);
       });

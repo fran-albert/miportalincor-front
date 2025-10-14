@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash, Save } from "lucide-react";
+import { Pencil, Trash, Save, ChevronDown, ChevronUp, X } from "lucide-react";
 import type {
   NutritionData,
   CreateNutritionDataDto,
@@ -21,7 +21,8 @@ import type {
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import CustomDatePicker from "@/components/Date-Picker";
+import { cn } from "@/lib/utils";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -32,6 +33,7 @@ interface Props {
   isAddingNewEntry: boolean;
   setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>;
   setNutritionData: React.Dispatch<React.SetStateAction<NutritionData[]>>;
+  onCancelNewEntry: () => void;
 }
 
 const formatDateForBackend = (dateString: string): string => {
@@ -46,11 +48,19 @@ export const NutritionTable: React.FC<Props> = ({
   onUpdateEntry,
   isAddingNewEntry,
   setIsAddingNewEntry,
+  onCancelNewEntry,
   setNutritionData,
 }) => {
   const [newEntry, setNewEntry] = useState<CreateNutritionDataDto | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [expandedObservations, setExpandedObservations] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [editDates, setEditDates] = useState<{
+    [key: number]: Date | undefined;
+  }>({});
+  const [newEntryDate, setNewEntryDate] = useState<Date | undefined>(undefined);
   const handleSelect = (id: number) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -64,6 +74,12 @@ export const NutritionTable: React.FC<Props> = ({
     }
   };
 
+  const handleCancelNewEntry = () => {
+    setNewEntry(null);
+    setNewEntryDate(undefined);
+    onCancelNewEntry();
+  };
+
   const handleDeleteSelected = () => {
     if (selectedIds.length === 0) return;
     onDeleteEntry(selectedIds);
@@ -71,9 +87,11 @@ export const NutritionTable: React.FC<Props> = ({
   };
   useEffect(() => {
     if (isAddingNewEntry) {
+      const today = new Date();
+      setNewEntryDate(today);
       setNewEntry({
         userId: userId,
-        date: format(new Date(), "yyyy-MM-dd"),
+        date: format(today, "yyyy-MM-dd"),
         weight: 0,
         difference: 0,
         fatPercentage: 0,
@@ -206,6 +224,35 @@ export const NutritionTable: React.FC<Props> = ({
     onDeleteEntry([id]);
   };
 
+  const handleDateChange = (
+    value: React.SetStateAction<Date | undefined>,
+    entryId: number
+  ) => {
+    const date = typeof value === "function" ? value(editDates[entryId]) : value;
+    if (!date) return;
+    setEditDates((prev) => ({ ...prev, [entryId]: date }));
+
+    const dateString = format(date, "yyyy-MM-dd");
+    setNutritionData((prev) =>
+      prev.map((entry) =>
+        entry.id === entryId ? { ...entry, date: dateString } : entry
+      )
+    );
+  };
+
+  // Helper para manejar cambios de fecha en nueva entrada
+  const handleNewEntryDateChange: React.Dispatch<
+    React.SetStateAction<Date | undefined>
+  > = (value) => {
+    const date =
+      typeof value === "function" ? value(newEntryDate) : value;
+    if (!date) return;
+    setNewEntryDate(date);
+
+    const dateString = format(date, "yyyy-MM-dd");
+    setNewEntry((prev) => (prev ? { ...prev, date: dateString } : null));
+  };
+
   const columnWidths = {
     index: "w-12 md:w-16",
     date: "w-24 md:w-32",
@@ -222,392 +269,442 @@ export const NutritionTable: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full h-[400px] ">
-      <ScrollArea className="w-full h-full">
-        <div className="min-w-[1200px]">
-          <Table className="w-full table-fixed">
-          <TableHeader className="bg-white shadow-sm sticky top-0 z-10">
-            <TableRow>
+    <div className="w-full">
+      <div className="max-h-[500px] overflow-y-auto rounded-lg border border-gray-200">
+        <Table className="w-full table-auto">
+          <TableHeader className="bg-gradient-to-r from-teal-50 to-teal-100 shadow-sm sticky top-0 z-10">
+            <TableRow className="border-b-2 border-teal-200">
               <TableHead className="w-12">
                 <Checkbox
                   checked={selectedIds.length === nutritionData.length}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead className={columnWidths.index}>#</TableHead>
-              <TableHead className={columnWidths.date}>Fecha</TableHead>
-              <TableHead className={columnWidths.weight}>Peso (kg)</TableHead>
-              <TableHead className={columnWidths.difference}>
-                Diferencia
+              <TableHead className="font-semibold text-teal-900">
+                Fecha
               </TableHead>
-              <TableHead className={columnWidths.fatPercentage}>
+              <TableHead className="font-semibold text-teal-900">
+                Peso
+              </TableHead>
+              <TableHead className="hidden md:table-cell font-semibold text-teal-900">
+                Dif.
+              </TableHead>
+
+              <TableHead className="hidden lg:table-cell font-semibold text-teal-900">
                 % Grasa
               </TableHead>
-              <TableHead className={columnWidths.musclePercentage}>
+              <TableHead className="hidden lg:table-cell font-semibold text-teal-900">
                 % Músculo
               </TableHead>
-              <TableHead className={columnWidths.visceralFat}>
-                Grasa Visceral
+              <TableHead className="hidden xl:table-cell font-semibold text-teal-900">
+                G. Visceral
               </TableHead>
-              <TableHead className={columnWidths.imc}>IMC</TableHead>
-              <TableHead className={columnWidths.height}>Talla (cm)</TableHead>
-              <TableHead className={columnWidths.targetWeight}>
-                Peso Objetivo
+              <TableHead className="hidden md:table-cell font-semibold text-teal-900">
+                IMC
               </TableHead>
-              <TableHead className={columnWidths.observations}>
+              <TableHead className="hidden lg:table-cell font-semibold text-teal-900">
+                Talla
+              </TableHead>
+              <TableHead className="hidden lg:table-cell font-semibold text-teal-900">
+                Peso Obj.
+              </TableHead>
+
+              <TableHead className="hidden lg:table-cell font-semibold text-teal-900 max-w-[180px]">
                 Observaciones
               </TableHead>
-              <TableHead className={columnWidths.actions}>Acciones</TableHead>
+              <TableHead className="font-semibold text-teal-900">
+                Acciones
+              </TableHead>
             </TableRow>
           </TableHeader>
-        </Table>
-          <ScrollArea className="h-[350px]">
-            <Table className="w-full table-fixed">
-              <TableBody>
-              {nutritionData.map((entry, index) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="w-12">
-                    <Checkbox
-                      checked={selectedIds.includes(entry.id)}
-                      onCheckedChange={() => handleSelect(entry.id)}
+          <TableBody>
+          {nutritionData.map((entry) => (
+            <TableRow
+              key={entry.id}
+              className={cn(
+                "hover:bg-gray-50 transition-colors duration-150",
+                editingId === entry.id && "h-32"
+              )}
+            >
+              <TableCell className="w-12">
+                <Checkbox
+                  checked={selectedIds.includes(entry.id)}
+                  onCheckedChange={() => handleSelect(entry.id)}
+                />
+              </TableCell>
+              <TableCell className={columnWidths.date}>
+                {editingId === entry.id ? (
+                  <div className="w-full">
+                    <CustomDatePicker
+                      setStartDate={(date) => handleDateChange(date, entry.id)}
+                      setValue={() => {}}
+                      fieldName="date"
+                      initialDate={
+                        editDates[entry.id] ||
+                        (typeof entry.date === "string"
+                          ? new Date(entry.date)
+                          : new Date(entry.date))
+                      }
+                      compact={true}
                     />
-                  </TableCell>
-                  <TableCell className={columnWidths.index}>
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className={columnWidths.date}>
-                    {editingId === entry.id ? (
-                      <input
-                        type="date"
-                        name="date"
-                        value={
-                          typeof entry.date === "string"
-                            ? entry.date
-                            : format(new Date(entry.date), "yyyy-MM-dd")
-                        }
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      <span className="block truncate">
-                        {formatDate(entry.date)}
-                      </span>
+                  </div>
+                ) : (
+                  <span className="block truncate">
+                    {formatDate(
+                      typeof entry.date === "string"
+                        ? entry.date
+                        : entry.date.toISOString()
                     )}
-                  </TableCell>
+                  </span>
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.weight}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="weight"
-                        value={String(entry.weight)}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      entry.weight.toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.difference}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="difference"
-                        value={entry.difference.toFixed(1)}
-                        readOnly
-                        className="w-full bg-gray-50 cursor-not-allowed"
-                      />
-                    ) : (
-                      entry.difference.toFixed(1)
-                    )}
-                  </TableCell>
+              <TableCell className={columnWidths.weight}>
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="weight"
+                    value={String(entry.weight)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.weight.toFixed(1)
+                )}
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="difference"
+                    value={entry.difference.toFixed(1)}
+                    readOnly
+                    className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
+                  />
+                ) : (
+                  entry.difference.toFixed(1)
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.fatPercentage}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="fatPercentage"
-                        value={String(entry.fatPercentage)}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      entry.fatPercentage.toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.musclePercentage}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="musclePercentage"
-                        value={String(entry.musclePercentage)}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      entry.musclePercentage.toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.visceralFat}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="visceralFat"
-                        value={String(entry.visceralFat)}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      entry.visceralFat.toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.imc}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="imc"
-                        value={entry.imc.toFixed(2)}
-                        readOnly
-                        className="w-full bg-gray-50 cursor-not-allowed"
-                      />
-                    ) : (
-                      entry.imc.toFixed(2)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.height}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="height"
-                        step={0.1}
-                        min={0}
-                        value={entry.height ?? 0}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        onKeyDown={(e) => {
-                          // Evita punto y coma decimal
-                          if (e.key === "." || e.key === ",") {
-                            e.preventDefault();
-                          }
-                        }}
-                        className="w-full"
-                      />
-                    ) : (
-                      (entry.height ?? 0).toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.targetWeight}>
-                    {editingId === entry.id ? (
-                      <Input
-                        type="number"
-                        name="targetWeight"
-                        value={String(entry.targetWeight)}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full"
-                      />
-                    ) : (
-                      entry.targetWeight.toFixed(1)
-                    )}
-                  </TableCell>
-                  <TableCell className={columnWidths.observations}>
-                    {editingId === entry.id ? (
-                      <Textarea
-                        name="observations"
-                        value={entry.observations || ""}
-                        onChange={(e) => handleInputChange(e, entry.id)}
-                        className="w-full min-h-[80px]"
-                        rows={3}
-                      />
-                    ) : (
-                      <TableCell className={columnWidths.observations}>
-                        <div className="relative group">
-                          {/* Texto truncado por defecto */}
-                          <span className="block truncate max-w-[200px]">
-                            {entry.observations}
-                          </span>
+              <TableCell className="hidden lg:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="fatPercentage"
+                    value={String(entry.fatPercentage)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.fatPercentage.toFixed(1)
+                )}
+              </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="musclePercentage"
+                    value={String(entry.musclePercentage)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.musclePercentage.toFixed(1)
+                )}
+              </TableCell>
 
-                          {/* Overlay que aparece en hover */}
-                          <div
-                            className={`
-        hidden group-hover:block transition-all duration-200 ease-out
-        absolute
-        top-0 left-0
-        w-auto
-        max-w-md      /* ancho máximo al expandirse */
-        bg-white
-        p-2
-        rounded
-        shadow-lg
-        z-50
-      `}
-                          >
-                            {entry.observations}
-                          </div>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableCell>
+              <TableCell className="hidden xl:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="visceralFat"
+                    value={String(entry.visceralFat)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.visceralFat.toFixed(1)
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.actions}>
-                    <div className="flex gap-1 items-center justify-center">
-                      {editingId === entry.id ? (
-                        <Button
-                          onClick={() => handleSaveEdit(entry.id)}
-                          className="p-1.5 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                          size="sm"
-                        >
-                          <Save size={16} className="text-green-600" />
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => handleEdit(entry.id)}
-                          className="p-1.5 rounded bg-blue-100 hover:bg-blue-200 transition-colors duration-200"
-                          size="sm"
-                        >
-                          <Pencil size={16} className="text-blue-600" />
-                        </Button>
-                      )}
-                      <Button
-                        onClick={() => handleDelete(entry.id)}
-                        className="p-1.5 rounded bg-red-100 hover:bg-red-200 transition-colors duration-200"
-                        size="sm"
-                      >
-                        <Trash size={16} className="text-red-600" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {newEntry && (
-                <TableRow>
-                  <TableCell className="w-12"></TableCell>
-                  <TableCell className={columnWidths.index}>
-                    {nutritionData.length + 1}
-                  </TableCell>
-                  <TableCell className={columnWidths.date}>
-                    <input
-                      type="date"
-                      name="date"
-                      value={newEntry.date}
-                      onChange={(e) => handleInputChange(e)}
-                      className="w-full"
-                    />
-                  </TableCell>
+              <TableCell className="hidden md:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="imc"
+                    value={entry.imc.toFixed(2)}
+                    readOnly
+                    className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
+                  />
+                ) : (
+                  entry.imc.toFixed(2)
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.weight}>
-                    <Input
-                      type="number"
-                      name="weight"
-                      value={(newEntry?.weight ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.difference}>
-                    <Input
-                      type="number"
-                      name="difference"
-                      value={(newEntry?.difference ?? 0).toFixed(1)}
-                      readOnly
-                      className="w-full bg-gray-50 cursor-not-allowed"
-                    />
-                  </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="height"
+                    step={0.1}
+                    min={0}
+                    value={entry.height ?? 0}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    onKeyDown={(e) => {
+                      // Evita punto y coma decimal
+                      if (e.key === "." || e.key === ",") {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  (entry.height ?? 0).toFixed(1)
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.fatPercentage}>
-                    <Input
-                      type="number"
-                      name="fatPercentage"
-                      value={(newEntry?.fatPercentage ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.musclePercentage}>
-                    <Input
-                      type="number"
-                      name="musclePercentage"
-                      value={(newEntry?.musclePercentage ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.visceralFat}>
-                    <Input
-                      type="number"
-                      name="visceralFat"
-                      value={(newEntry?.visceralFat ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.imc}>
-                    <Input
-                      type="number"
-                      name="imc"
-                      value={(newEntry?.imc ?? 0).toFixed(2)}
-                      readOnly
-                      className="w-full bg-gray-50 cursor-not-allowed"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.height}>
-                    <Input
-                      type="number"
-                      name="height"
-                      min={0}
-                      value={(newEntry.height ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.targetWeight}>
-                    <Input
-                      type="number"
-                      name="targetWeight"
-                      value={(newEntry?.targetWeight ?? 0).toString()}
-                      onChange={handleInputChange}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell className={columnWidths.observations}>
-                    <Textarea
-                      name="observations"
-                      value={newEntry.observations || ""}
-                      onChange={handleInputChange}
-                      className="w-full min-h-[80px]"
-                      rows={3}
-                    />
-                  </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="targetWeight"
+                    value={String(entry.targetWeight)}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : (
+                  entry.targetWeight.toFixed(1)
+                )}
+              </TableCell>
 
-                  <TableCell className={columnWidths.actions}>
+              <TableCell className="hidden lg:table-cell max-w-[180px]">
+                {editingId === entry.id ? (
+                  <Textarea
+                    name="observations"
+                    value={entry.observations || ""}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full min-h-[100px] max-w-[180px] resize-none"
+                    rows={4}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {(() => {
+                      const isExpanded =
+                        expandedObservations[entry.id] || false;
+                      const MAX_LENGTH = 50;
+                      const observations = entry.observations || "-";
+                      const shouldTruncate = observations.length > MAX_LENGTH;
+
+                      return (
+                        <>
+                          <p className="text-sm text-gray-700 break-words whitespace-normal overflow-hidden">
+                            {isExpanded || !shouldTruncate
+                              ? observations
+                              : `${observations.substring(0, MAX_LENGTH)}...`}
+                          </p>
+                          {shouldTruncate && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              onClick={() =>
+                                setExpandedObservations((prev) => ({
+                                  ...prev,
+                                  [entry.id]: !prev[entry.id],
+                                }))
+                              }
+                              className="h-auto p-0 text-blue-600 hover:text-blue-800 text-xs"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="h-3 w-3 mr-1" />
+                                  Ver menos
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="h-3 w-3 mr-1" />
+                                  Leer más
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </TableCell>
+
+              <TableCell className={columnWidths.actions}>
+                <div className="flex gap-2 items-center justify-center">
+                  {editingId === entry.id ? (
                     <Button
-                      onClick={handleSaveNewEntry}
-                      className="p-1.5 rounded bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                      onClick={() => handleSaveEdit(entry.id)}
+                      className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-all duration-200 border border-green-500/20"
                       size="sm"
                     >
                       <Save size={16} className="text-green-600" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-            {selectedIds.length > 0 && (
-              <tfoot>
-                <tr>
-                  <td colSpan={12} className="p-2">
+                  ) : (
                     <Button
-                      onClick={handleDeleteSelected}
-                      className="bg-red-100 hover:bg-red-200 text-red-600"
+                      onClick={() => handleEdit(entry.id)}
+                      className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 transition-all duration-200 border border-blue-500/20"
+                      size="sm"
                     >
-                      Eliminar seleccionados
+                      <Pencil size={16} className="text-blue-600" />
                     </Button>
-                  </td>
-                </tr>
-              </tfoot>
-            )}
-            </Table>
-          </ScrollArea>
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+                  )}
+                  <Button
+                    onClick={() => handleDelete(entry.id)}
+                    className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all duration-200 border border-red-500/20"
+                    size="sm"
+                  >
+                    <Trash size={16} className="text-red-600" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {newEntry && (
+            <TableRow>
+              <TableCell className="w-12"></TableCell>
+              <TableCell className={columnWidths.date}>
+                <div className="w-full">
+                  <CustomDatePicker
+                    setStartDate={handleNewEntryDateChange}
+                    setValue={() => {}}
+                    fieldName="date"
+                    initialDate={newEntryDate}
+                    compact={true}
+                  />
+                </div>
+              </TableCell>
+
+              <TableCell className={columnWidths.weight}>
+                <Input
+                  type="number"
+                  name="weight"
+                  value={(newEntry?.weight ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                <Input
+                  type="number"
+                  name="difference"
+                  value={(newEntry?.difference ?? 0).toFixed(1)}
+                  readOnly
+                  className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
+                />
+              </TableCell>
+
+              <TableCell className="hidden lg:table-cell">
+                <Input
+                  type="number"
+                  name="fatPercentage"
+                  value={(newEntry?.fatPercentage ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                <Input
+                  type="number"
+                  name="musclePercentage"
+                  value={(newEntry?.musclePercentage ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+
+              <TableCell className="hidden xl:table-cell">
+                <Input
+                  type="number"
+                  name="visceralFat"
+                  value={(newEntry?.visceralFat ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+
+              <TableCell className="hidden md:table-cell">
+                <Input
+                  type="number"
+                  name="imc"
+                  value={(newEntry?.imc ?? 0).toFixed(2)}
+                  readOnly
+                  className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
+                />
+              </TableCell>
+
+              <TableCell className="hidden lg:table-cell">
+                <Input
+                  type="number"
+                  name="height"
+                  min={0}
+                  value={(newEntry.height ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+
+              <TableCell className="hidden lg:table-cell">
+                <Input
+                  type="number"
+                  name="targetWeight"
+                  value={(newEntry?.targetWeight ?? 0).toString()}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+              <TableCell className="hidden lg:table-cell max-w-[180px]">
+                <Textarea
+                  name="observations"
+                  value={newEntry.observations || ""}
+                  onChange={handleInputChange}
+                  className="w-full min-h-[100px] text-sm max-w-[180px] resize-none"
+                  rows={4}
+                />
+              </TableCell>
+
+              <TableCell>
+                <div className="flex gap-2 items-center justify-center">
+                  <Button
+                    onClick={handleSaveNewEntry}
+                    className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 transition-all duration-200 border border-green-500/20"
+                    size="sm"
+                  >
+                    <Save size={16} className="text-green-600" />
+                  </Button>
+                  <Button
+                    onClick={handleCancelNewEntry}
+                    className="p-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/20 transition-all duration-200 border border-gray-500/20"
+                    size="sm"
+                  >
+                    <X size={16} className="text-gray-600" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+          </TableBody>
+          {selectedIds.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan={12} className="p-2">
+                  <Button
+                    onClick={handleDeleteSelected}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 shadow-sm"
+                  >
+                    <Trash className="h-4 w-4 mr-2" />
+                    Eliminar seleccionados
+                  </Button>
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </Table>
+      </div>
     </div>
   );
 };

@@ -1,11 +1,13 @@
 import BreadcrumbComponent from "..";
+import { Patient } from "@/types/Patient/Patient";
+import { Doctor } from "@/types/Doctor/Doctor";
 
 export const BreadcrumbComponentGenerator = ({
   role,
   entity,
 }: {
   role: "paciente" | "doctor";
-  entity: any;
+  entity: Patient | Doctor | undefined;
 }) => {
   const basePath =
     role === "paciente" ? "/pacientes" : "/medicos";

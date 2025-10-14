@@ -40,10 +40,10 @@ export default function DeleteStudyTypeDialog({
           title: "¡Tipo de estudio eliminado!",
           description: "El tipo de estudio se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: unknown) => ({
           title: "Error al eliminar tipo de estudio",
           description:
-            error.response?.data?.message || "Ha ocurrido un error inesperado",
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
 

@@ -17,28 +17,33 @@ import {
   Stethoscope,
   Plus,
   Search,
+  Clock,
+  Lock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CreateAntecedenteDialog } from "@/components/Antecedentes/Create";
 import { ViewAntecedenteDialog } from "@/components/Antecedentes/View";
-import DeleteDataValueDialog from "@/components/Historia-Clinica/Delete/DeleteDataValueDialog";
+import BreadcrumbComponent from "@/components/Breadcrumb";
 import useUserRole from "@/hooks/useRoles";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { formatDate } from "@/common/helpers/helpers";
+import { Patient } from "@/types/Patient/Patient";
 
 interface AntecedenteProps {
   onBack: () => void;
   idUser?: string;
   idDoctor?: string;
+  patient?: Patient;
 }
 
 export default function AntecedentesComponent({
   onBack,
   idUser,
   idDoctor,
+  patient,
 }: AntecedenteProps) {
   const { session } = useUserRole();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -52,6 +57,26 @@ export default function AntecedentesComponent({
   // Use session IDs if not provided as props
   const userId = idUser || String(session?.id);
   const doctorId = idDoctor || String(session?.id);
+
+  // Función para validar si se puede eliminar (< 24 horas)
+  const canDeleteAntecedente = (createdAt: string): boolean => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const hoursDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+    return hoursDiff < 24;
+  };
+
+  // Función para obtener tiempo restante
+  const getTimeRemaining = (createdAt: string): string => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const hoursPassed = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+
+    if (hoursPassed >= 24) return "Tiempo expirado";
+
+    const hoursRemaining = Math.ceil(24 - hoursPassed);
+    return `${hoursRemaining}h restantes`;
+  };
 
   // Obtener antecedentes reales
   const {
@@ -158,35 +183,57 @@ export default function AntecedentesComponent({
     return colors[colorIndex];
   };
 
+  // Breadcrumb items
+  const breadcrumbItems = patient
+    ? [
+        { label: "Home", href: "/home" },
+        { label: "Pacientes", href: "/pacientes" },
+        {
+          label: `${patient.firstName} ${patient.lastName}`,
+          href: `/pacientes/${patient.slug}`,
+        },
+        {
+          label: "Historia Clínica",
+          href: `/pacientes/${patient.slug}/historia-clinica`,
+        },
+        {
+          label: "Antecedentes",
+          icon: <Stethoscope className="h-4 w-4" />,
+        },
+      ]
+    : [];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6 p-6">
+        {/* Breadcrumb */}
+        {patient && <BreadcrumbComponent items={breadcrumbItems} />}
+
         {/* Header */}
         <Card>
-          <CardHeader className="bg-gradient-to-r from-teal-50 to-indigo-50">
+          <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onBack}
-                  className="hover:bg-white/50"
+                  className="hover:bg-white/20 text-white"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver
                 </Button>
-                <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <Stethoscope className="h-6 w-6 text-teal-600" />
+                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                  <Stethoscope className="h-6 w-6" />
                   Antecedentes Médicos Completos
                 </CardTitle>
               </div>
               <Button
-                className="bg-teal-600 hover:bg-teal-700 text-white"
+                className="bg-white text-greenPrimary hover:bg-white/90"
                 onClick={handleOpenModal}
                 disabled={wantsToOpenModal}
               >
                 {wantsToOpenModal ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mr-2" />
                 ) : (
                   <Plus className="h-4 w-4 mr-2" />
                 )}
@@ -244,16 +291,20 @@ export default function AntecedentesComponent({
           {isLoadingAntecedentesData ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-8 h-8 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-gray-500">Cargando antecedentes...</p>
               </CardContent>
             </Card>
           ) : filteredAntecedentes.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No se encontraron antecedentes</p>
-                <p className="text-gray-400 text-sm mt-1">
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Stethoscope className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No se encontraron antecedentes
+                </h3>
+                <p className="text-sm text-gray-500">
                   {searchTerm || selectedCategory !== "Todas"
                     ? "Intenta cambiar los filtros de búsqueda"
                     : "Haz clic en 'Agregar Antecedente' para comenzar"}
@@ -261,53 +312,73 @@ export default function AntecedentesComponent({
               </CardContent>
             </Card>
           ) : (
-            filteredAntecedentes.map((ant) => (
-              <Card key={ant.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => handleAntecedenteClick(ant)}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <Badge
-                          className={`${getCategoryColor(
-                            ant.dataType.name
-                          )} border`}
-                        >
-                          {ant.dataType.name}
-                        </Badge>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(ant.createdAt)}</span>
+            filteredAntecedentes.map((ant) => {
+              const canDelete = canDeleteAntecedente(ant.createdAt);
+              return (
+                <Card
+                  key={ant.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-greenPrimary"
+                  onClick={() => handleAntecedenteClick(ant)}
+                >
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <Badge
+                              className={`${getCategoryColor(
+                                ant.dataType.name
+                              )} border text-xs font-semibold`}
+                            >
+                              {ant.dataType.name}
+                            </Badge>
+                            {canDelete ? (
+                              <Badge
+                                variant="outline"
+                                className="text-green-600 border-green-600"
+                              >
+                                <Clock className="h-3 w-3 mr-1" />
+                                {getTimeRemaining(ant.createdAt)}
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="text-gray-500 border-gray-400"
+                              >
+                                <Lock className="h-3 w-3 mr-1" />
+                                No eliminable
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            <span>
-                              Dr. {ant.doctor.firstName} {ant.doctor.lastName}
-                            </span>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5 text-greenPrimary" />
+                              <span className="font-medium">
+                                {formatDate(ant.createdAt)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <User className="h-3.5 w-3.5 text-gray-400" />
+                              <span className="font-semibold text-gray-900">
+                                Dr. {ant.doctor.firstName} {ant.doctor.lastName}
+                              </span>
+                            </div>
                           </div>
+                          {ant.observaciones && (
+                            <p className="text-sm font-medium text-gray-800">
+                              {ant.observaciones}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {truncateText(ant.value)}
+                          </p>
                         </div>
                       </div>
-                      <p className="text-gray-800 leading-relaxed">
-                        {ant.observaciones}
-                      </p>
-                      <p className="text-gray-800 leading-relaxed">
-                        {truncateText(ant.value)}
-                      </p>
                     </div>
-                    <div className="ml-4 flex items-center">
-                      <DeleteDataValueDialog
-                        idDataValue={String(ant.id)}
-                        itemType="antecedente"
-                        itemDescription={truncateText(ant.value, 50)}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
 
@@ -329,8 +400,17 @@ export default function AntecedentesComponent({
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           antecedente={selectedAntecedenteToView}
+          canDelete={
+            selectedAntecedenteToView
+              ? canDeleteAntecedente(selectedAntecedenteToView.createdAt)
+              : false
+          }
+          timeRemaining={
+            selectedAntecedenteToView
+              ? getTimeRemaining(selectedAntecedenteToView.createdAt)
+              : ""
+          }
         />
-      </div>
     </div>
   );
 }

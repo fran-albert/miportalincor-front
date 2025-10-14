@@ -1,6 +1,6 @@
 import { Patient } from "@/types/Patient/Patient";
 import { StudiesWithURL } from "@/types/Study/Study";
-import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { AntecedentesResponse } from "@/types/Antecedentes/Antecedentes";
 import { PatientHistoryWrapper } from "@/components/Historia-Clinica/Wrapper";
 
@@ -34,15 +34,15 @@ export function PatientHistoryComponent({
   ];
   if (isLoadingPatient) {
     return (
-      <div className="container space-y-2 mt-2">
-        <PatientCardSkeleton />
+      <div className="space-y-4 p-6">
+        <PatientProfileSkeleton />
       </div>
     );
   }
 
   if (!patient) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <p>Paciente no encontrado</p>
       </div>
     );

@@ -21,7 +21,7 @@ import {
   getDeleteTimeRemaining
 } from "@/common/helpers/evolutionHelpers";
 import ActionIcon from "@/components/Icons/action";
-import useUserRole from "@/hooks/useRoles";
+import { Evolucion, EvolucionData } from "@/types/Antecedentes/Antecedentes";
 
 // Tipo para las evoluciones procesadas en la tabla
 export interface EvolutionTableRow {
@@ -38,28 +38,41 @@ export interface EvolutionTableRow {
   enfermedadActual: string | null;
   examenFisico: string | null;
   diagnosticosPresuntivos: string | null;
-  evolucionCompleta: any;
+  evolucionCompleta: {
+    fechaConsulta: string;
+    fechaCreacion: string;
+    doctor: Evolucion['doctor'];
+    especialidad: string | null;
+    motivoConsulta: string | null;
+    enfermedadActual: string | null;
+    examenFisico: string | null;
+    diagnosticosPresuntivos: string | null;
+    evolucionPrincipal: Evolucion | null;
+    mediciones: EvolucionData[];
+    evoluciones: Evolucion[];
+  };
 }
 
 interface ColumnsProps {
   onView: (evolucion: EvolutionTableRow) => void;
   onDelete: (evolucion: EvolutionTableRow) => void;
   onPrint: (evolucion: EvolutionTableRow) => void;
+  currentUserId?: number;
 }
 
 export const getEvolutionColumns = ({
   onView,
   onDelete,
-  onPrint
+  onPrint,
+  currentUserId
 }: ColumnsProps): ColumnDef<EvolutionTableRow>[] => [
   {
     id: "acciones",
     header: "Acciones",
     cell: ({ row }) => {
       const evolucion = row.original;
-      const { session } = useUserRole();
       const canDelete = canDeleteEvolution(evolucion.fechaCreacion);
-      const isOwner = session?.id && parseInt(session.id, 10) === evolucion.doctor.userId;
+      const isOwner = currentUserId && currentUserId === evolucion.doctor.userId;
       const canDeleteThis = canDelete && isOwner;
 
       return (

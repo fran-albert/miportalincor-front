@@ -5,19 +5,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface BloodSelectProps {
-  control: any;
+interface BloodSelectProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name?: Path<T>;
   defaultValue?: string;
   disabled?: boolean;
 }
 
-export const BloodSelect = ({
+export const BloodSelect = <T extends FieldValues = FieldValues>({
   control,
+  name = "bloodType" as Path<T>,
   defaultValue,
   disabled,
-}: BloodSelectProps) => {
+}: BloodSelectProps<T>) => {
   const bloodTypes = [
     { id: "A", name: "A" },
     { id: "B", name: "B" },
@@ -26,9 +28,9 @@ export const BloodSelect = ({
 
   return (
     <Controller
-      name="bloodType"
+      name={name}
       control={control}
-      defaultValue={defaultValue || ""}
+      defaultValue={(defaultValue || "") as PathValue<T, Path<T>>}
       render={({ field }) => (
         <div>
           <Select

@@ -1,6 +1,5 @@
-import BreadcrumbComponent from "@/components/Breadcrumb";
 import DoctorProfileComponent from "@/components/Doctors/Profile";
-import LoadingAnimation from "@/components/Loading/loading";
+import { DoctorCardSkeleton } from "@/components/Skeleton/Doctor";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
 
@@ -15,36 +14,32 @@ const DoctorProfilePage = () => {
     id,
   });
 
-  const breadcrumbItems = [
+   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Médicos", href: "/medicos" },
     {
-      label: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médico",
-      href: `/medicos/${doctor?.slug}`,
+      label: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médico", href: "/medicos/" + (slug || "")
     },
-    {
-      label: doctor ? `Perfil Completo` : "Médico",
-      href: `/medicos/${doctor?.slug}`,
-    },
+    { label: "Perfil Completo", href: "#" }
   ];
+
   if (isLoading) {
-    return <LoadingAnimation />;
+    return (
+      <div className="space-y-4 p-6">
+        <DoctorCardSkeleton />
+      </div>
+    );
   }
 
   if (error) {
     return <div>Error: {error.message}</div>;
   }
 
-  if (doctor) {
-    return (
-      <div className="container space-y-2 mt-2">
-        <BreadcrumbComponent items={breadcrumbItems} />
-        <div className="">
-          {doctor && <DoctorProfileComponent doctor={doctor} />}
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="space-y-4 p-6">
+      {doctor && <DoctorProfileComponent doctor={doctor} breadcrumbItems={breadcrumbItems} />}
+    </div>
+  );
 };
 
 export default DoctorProfilePage;

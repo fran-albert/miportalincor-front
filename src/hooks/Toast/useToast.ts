@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { ApiError } from "@/types/Error/ApiError"
 
 interface Toast {
   id: string
@@ -11,6 +12,10 @@ interface Toast {
 
 export const useToast = () => {
   const [toasts, setToasts] = useState<Toast[]>([])
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }, [])
 
   const addToast = useCallback((type: "success" | "error" | "loading", title: string, description?: string) => {
     const id = Math.random().toString(36).substr(2, 9)
@@ -31,11 +36,7 @@ export const useToast = () => {
     }
 
     return id // Retorna el ID para poder cerrar manualmente si es necesario
-  }, [])
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [])
+  }, [removeToast])
 
   const showSuccess = useCallback(
     (title: string, description?: string) => {
@@ -62,14 +63,14 @@ export const useToast = () => {
 
   // Función especial para promesas
   const promiseToast = useCallback(
-    async (
-      promise: Promise<any>,
+    async <T = unknown>(
+      promise: Promise<T>,
       messages: {
         loading: { title: string; description?: string }
         success: { title: string; description?: string }
-        error: { title: string; description?: string } | ((error: any) => { title: string; description?: string })
+        error: { title: string; description?: string } | ((error: ApiError) => { title: string; description?: string })
       },
-    ) => {
+    ): Promise<T> => {
       // Mostrar loading toast
       const loadingId = showLoading(messages.loading.title, messages.loading.description)
 
@@ -85,7 +86,7 @@ export const useToast = () => {
         // Remover loading y mostrar error
         removeToast(loadingId)
 
-        const errorMessage = typeof messages.error === "function" ? messages.error(error) : messages.error
+        const errorMessage = typeof messages.error === "function" ? messages.error(error as ApiError) : messages.error
 
         showError(errorMessage.title, errorMessage.description)
 

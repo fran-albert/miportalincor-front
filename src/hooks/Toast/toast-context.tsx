@@ -3,6 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { useToast } from "./useToast";
 import { ToastContainer } from "@/components/Toast/Container/toast-container";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Toast {
   id: string;
@@ -17,16 +18,16 @@ interface ToastContextType {
   showError: (title: string, description?: string) => string;
   showLoading: (title: string, description?: string) => string;
   removeToast: (id: string) => void;
-  promiseToast: (
-    promise: Promise<any>,
+  promiseToast: <T = unknown>(
+    promise: Promise<T>,
     messages: {
       loading: { title: string; description?: string };
       success: { title: string; description?: string };
       error:
         | { title: string; description?: string }
-        | ((error: any) => { title: string; description?: string });
+        | ((error: ApiError) => { title: string; description?: string });
     }
-  ) => Promise<any>;
+  ) => Promise<T>;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -42,6 +43,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToastContext() {
   const context = useContext(ToastContext);
   if (context === undefined) {

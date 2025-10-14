@@ -1,8 +1,8 @@
 import { Patient } from "@/types/Patient/Patient";
-import BreadcrumbComponent from "@/components/Breadcrumb";
-
+import { PageHeader } from "@/components/PageHeader";
 import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import PatientDashboard from "@/pages/protected/Patient/Dashboard";
+import { Users } from "lucide-react";
 
 interface PatientComponentProps {
   patient: Patient | undefined;
@@ -20,13 +20,18 @@ export function PatientDashboardComponent({
     { label: "Pacientes", href: "/pacientes" },
     {
       label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente",
-      href: `/pacientes/${patient?.slug}`,
     },
   ];
 
   return (
-    <div className="container space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title={patient ? `${patient.firstName} ${patient.lastName}` : "Paciente"}
+        description="Información completa del paciente y acceso a módulos"
+        icon={<Users className="h-6 w-6" />}
+      />
+
       <div className="gap-6">
         {isLoadingPatient ? (
           <PatientCardSkeleton />

@@ -1,7 +1,7 @@
 // NutritionCard.tsx
 import React, { useRef, useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ClipboardPlus } from "lucide-react";
+import { ClipboardPlus, Plus, FileDown } from "lucide-react";
 import { NutritionTable } from "../Table/table";
 import type {
   CreateNutritionDataDto,
@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { capitalizeWords } from "@/common/helpers/helpers";
 import { toPng } from "html-to-image";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -65,20 +66,25 @@ const NutritionCard: React.FC<Props> = ({
 
   const handleAddEntry = async (newEntry: CreateNutritionDataDto) => {
     try {
-      const data = await promiseToast(addNutritionDataMutation.mutateAsync(newEntry), {
-        loading: {
-          title: "Agregando nueva entrada",
-          description: "Por favor espera mientras procesamos tu solicitud",
-        },
-        success: {
-          title: "Nueva entrada agregada",
-          description: "La entrada se agregó exitosamente",
-        },
-        error: (error: any) => ({
-          title: "Error al agregar nueva entrada",
-          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
-        }),
-      });
+      const data = await promiseToast(
+        addNutritionDataMutation.mutateAsync(newEntry),
+        {
+          loading: {
+            title: "Agregando nueva entrada",
+            description: "Por favor espera mientras procesamos tu solicitud",
+          },
+          success: {
+            title: "Nueva entrada agregada",
+            description: "La entrada se agregó exitosamente",
+          },
+          error: (error: ApiError) => ({
+            title: "Error al agregar nueva entrada",
+            description:
+              error.response?.data?.message ||
+              "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
       setNutritionData((prev) => [...prev, data]);
     } catch (error) {
       console.error("Error adding entry:", error);
@@ -102,9 +108,11 @@ const NutritionCard: React.FC<Props> = ({
             title: "Entrada actualizada",
             description: "La entrada se actualizó exitosamente",
           },
-          error: (error: any) => ({
+          error: (error: ApiError) => ({
             title: "Error al actualizar entrada",
-            description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+            description:
+              error.response?.data?.message ||
+              "Ha ocurrido un error inesperado",
           }),
         }
       );
@@ -127,9 +135,10 @@ const NutritionCard: React.FC<Props> = ({
           title: "Entradas eliminadas",
           description: "Las entradas se eliminaron exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar entradas",
-          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
         }),
       });
       setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
@@ -168,41 +177,46 @@ const NutritionCard: React.FC<Props> = ({
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center text-greenPrimary">
-            <ClipboardPlus className="mr-2" />
-            Control Nutricional
-          </CardTitle>
-          <div className="div">
-            <Button
-              onClick={() => setIsAddingNewEntry(true)}
-              variant="link"
-              className="text-greenPrimary"
-            >
-              Nueva Fila
-            </Button>
-            <ExcelUploader userId={userId} />
-            {!pdfUrl ? (
+      <Card className="overflow-hidden border-0 shadow-xl">
+        {/* Hero Background con Gradiente */}
+        <div className="relative bg-gradient-to-r from-greenPrimary to-teal-600 px-8 py-6">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center text-white text-2xl font-bold">
+              <ClipboardPlus className="mr-3 h-7 w-7" />
+              Control Nutricional
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
               <Button
-                onClick={preparePdf}
-                disabled={loadingPdf}
-                className="bg-teal-800 hover:bg-teal-950"
+                onClick={() => setIsAddingNewEntry(true)}
+                className="bg-white hover:bg-white/90 text-greenPrimary font-medium shadow-md"
               >
-                {loadingPdf ? "Generando…" : "Generar PDF"}
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Fila
               </Button>
-            ) : (
-              <a href={pdfUrl} download={fileName}>
+              <ExcelUploader userId={userId} />
+              {!pdfUrl ? (
                 <Button
-                  variant="outline"
-                  className="text-greenPrimary hover:text-teal-950"
+                  onClick={preparePdf}
+                  disabled={loadingPdf}
+                  className="bg-white hover:bg-white/90 text-greenPrimary font-medium shadow-md disabled:opacity-50"
                 >
-                  Descargar PDF
+                  <FileDown className="h-4 w-4 mr-2" />
+                  {loadingPdf ? "Generando…" : "Generar PDF"}
                 </Button>
-              </a>
-            )}
+              ) : (
+                <a href={pdfUrl} download={fileName}>
+                  <Button className="bg-white text-greenPrimary hover:bg-gray-100 shadow-md font-medium">
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </Button>
+                </a>
+              )}
+            </div>
           </div>
-        </CardHeader>
+        </div>
+
+        <CardHeader className="sr-only"></CardHeader>
 
         <CardContent>
           <NutritionTable
@@ -214,6 +228,7 @@ const NutritionCard: React.FC<Props> = ({
             onAddEntry={handleAddEntry}
             onUpdateEntry={handleUpdateEntry}
             onDeleteEntry={handleDeleteEntry}
+            onCancelNewEntry={() => setIsAddingNewEntry(false)}
           />
         </CardContent>
       </Card>

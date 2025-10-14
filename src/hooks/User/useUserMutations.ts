@@ -7,6 +7,10 @@ import { updateUser } from "@/api/User/update-user.action";
 import { User } from "@/types/User/User";
 import { useMutation } from "@tanstack/react-query";
 
+interface ResetPasswordDto {
+    password: string;
+    confirmPassword: string;
+}
 
 export const useUserMutations = () => {
 
@@ -32,7 +36,7 @@ export const useUserMutations = () => {
     });
 
     const requestSupportMutation = useMutation({
-        mutationFn: (user: any) => requestSupport(user),
+        mutationFn: (user: User) => requestSupport(user),
         onSuccess: (patient, variables, context) => {
             console.log("OK", patient, variables, context);
         },
@@ -42,7 +46,7 @@ export const useUserMutations = () => {
     });
 
     const resetPasswordMutation = useMutation({
-        mutationFn: (password: any) => resetPassword(password),
+        mutationFn: (password: ResetPasswordDto) => resetPassword(password),
         onSuccess: (password, variables, context) => {
             console.log("OK", password, variables, context);
         },

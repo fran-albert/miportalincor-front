@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
 import { environment, currentConfig } from "@/config/environment";
 
 const apiIncor = axios.create({
@@ -17,6 +18,14 @@ const apiLaboral = axios.create({
   },
 });
 
+const apiTurnos = axios.create({
+  baseURL: environment.API_TURNOS_URL,
+  timeout: currentConfig.apiTimeout,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 const apiIncorHC = axios.create({
   baseURL: environment.API_INCOR_HC_URL,
   timeout: currentConfig.apiTimeout,
@@ -25,7 +34,7 @@ const apiIncorHC = axios.create({
   },
 });
 
-const addAuthToken = (config: any) => {
+const addAuthToken = (config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem("authToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -36,5 +45,6 @@ const addAuthToken = (config: any) => {
 apiIncor.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiIncorHC.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
-
-export { apiIncor, apiLaboral, apiIncorHC };
+apiTurnos.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+  
+export { apiIncor, apiLaboral, apiIncorHC, apiTurnos };

@@ -1,7 +1,9 @@
-import LoadingAnimation from "@/components/Loading/loading";
 import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
+import { DoctorProfileSkeleton } from "@/components/Skeleton/Doctor";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
+import { SecretaryProfileSkeleton } from "@/components/Skeleton/Secretary";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { usePatient } from "@/hooks/Patient/usePatient";
 import { useUser } from "@/hooks/User/useUser";
@@ -26,31 +28,57 @@ const MyProfilePage = () => {
     id: userId !== undefined ? userId : -1,
   });
 
-  if (
-    (isDoctor && isLoadingDoctor) ||
-    (isPatient && isLoadingPatient) ||
-    (isSecretary && isLoadingSecretary)
-  ) {
-    return <LoadingAnimation />;
+  if (isDoctor && isLoadingDoctor) {
+    return (
+      <div className="space-y-6 p-6">
+        <DoctorProfileSkeleton />
+      </div>
+    );
+  }
+
+  if (isSecretary && isLoadingSecretary) {
+    return (
+      <div className="space-y-6 p-6">
+        <SecretaryProfileSkeleton />
+      </div>
+    );
+  }
+
+  if (isPatient && isLoadingPatient) {
+    return (
+      <div className="space-y-6 p-6">
+        <PatientProfileSkeleton />
+      </div>
+    );
   }
 
   if (isDoctor && doctor) {
     return (
       <>
         <Helmet>
-          <title>{isLoadingDoctor ? "" : `Mi Perfil`}</title>
+          <title>Mi Perfil</title>
         </Helmet>
-        <ProfileDoctorCardComponent data={doctor} />
+        <div className="space-y-6">
+          <ProfileDoctorCardComponent data={doctor} />
+        </div>
       </>
     );
   }
 
   if (isSecretary && secretary) {
-    return <SecretaryProfileComponent user={secretary} />;
+    return (
+      <div className="space-y-6">
+        <SecretaryProfileComponent user={secretary} />
+      </div>
+    );
   }
 
   if (isPatient && patient) {
-    return <MyProfilePatientComponent patient={patient} />;
+    return (
+      <div className="space-y-6">
+        {patient && <MyProfilePatientComponent patient={patient} />}
+      </div>
+    );
   }
 
   return null;
