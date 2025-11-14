@@ -10,17 +10,21 @@ import { Building2 } from "lucide-react";
 interface Props {
   companies: Company[];
   isFetching?: boolean;
+  prefetchCompanies: (id: number) => void;
 }
 
-export const CompaniesTable: React.FC<Props> = ({ companies, isFetching }) => {
+export const CompaniesTable: React.FC<Props> = ({ companies, isFetching, prefetchCompanies }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
   const openDialog = () => setIsDialogOpen(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const columns = getColumns({
-    isSecretary,
-    isDoctor,
-    isAdmin,
-  });
+  const columns = getColumns(
+    prefetchCompanies,
+    {
+      isSecretary,
+      isDoctor,
+      isAdmin,
+    }
+  );
 
   const customFilterFunction = (company: Company, query: string) => {
     const fullName = `${company.name.toLowerCase()}`;
