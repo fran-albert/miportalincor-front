@@ -54,11 +54,22 @@ function dataURLtoFile(dataurl: string, filename: string): File {
   return new File([u8arr], filename, { type: mime });
 }
 
-export function CreateCollaboratorComponent() {
+interface CreateCollaboratorComponentProps {
+  preselectedCompanyId?: string | null;
+}
+
+export function CreateCollaboratorComponent({
+  preselectedCompanyId,
+}: CreateCollaboratorComponentProps) {
   const { addCollaboratorMutation } = useCollaboratorMutations();
   const { promiseToast } = useToastContext();
   const form = useForm<z.infer<typeof collaboratorSchema>>({
     resolver: zodResolver(collaboratorSchema),
+    defaultValues: preselectedCompanyId
+      ? {
+          idCompany: preselectedCompanyId,
+        }
+      : undefined,
   });
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
@@ -366,7 +377,10 @@ export function CreateCollaboratorComponent() {
                     <FormItem>
                       <FormLabel>Empresa</FormLabel>
                       <FormControl>
-                        <CompanySelect control={control} />
+                        <CompanySelect
+                          control={control}
+                          disabled={!!preselectedCompanyId}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

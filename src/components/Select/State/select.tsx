@@ -26,15 +26,6 @@ export const StateSelect = <T extends FieldValues = FieldValues>({
 }: StateSelectProps<T>) => {
   const { states } = useState();
 
-  const handleValueChange = (selectedId: string) => {
-    const selectedState = states?.find(
-      (state) => String(state.id) === selectedId
-    );
-    if (onStateChange && selectedState) {
-      onStateChange(selectedState);
-    }
-  };
-
   return (
     <Controller
       name={name}
@@ -46,13 +37,26 @@ export const StateSelect = <T extends FieldValues = FieldValues>({
 
         console.log('StateSelect render - field.value:', field.value, 'selectValue:', selectValue);
 
+        const handleValueChange = (selectedId: string) => {
+          const selectedState = states?.find(
+            (state) => String(state.id) === selectedId
+          );
+          if (selectedState) {
+            // Actualizar la UI del Select con el ID
+            field.onChange(selectedId);
+            // Si hay callback, ejecutarlo con el objeto completo
+            if (onStateChange) {
+              onStateChange(selectedState);
+            }
+          }
+        };
+
         return (
           <div>
             <Select
               value={selectValue}
               onValueChange={(value) => {
                 console.log('StateSelect onChange - new value:', value);
-                field.onChange(value);
                 handleValueChange(value);
               }}
               disabled={disabled || !states?.length}
