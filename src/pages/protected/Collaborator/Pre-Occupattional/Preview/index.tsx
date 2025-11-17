@@ -30,6 +30,9 @@ export default function PreOccupationalPreviewPage() {
       medicalEvaluationId: Number(medicalEvaluationId),
     });
 
+  // Filtrar estudios de tipo "Preocupacional" para evitar duplicación de PDFs previos
+  const filteredUrls = urls?.filter(study => study.dataTypeName !== "Preocupacional");
+
   const { data: dataValues, isLoading: dataValuesLoading, error: dataValuesError } = useDataValuesByMedicalEvaluationId({
     id: Number(medicalEvaluationId),
     auth: true,
@@ -62,7 +65,7 @@ export default function PreOccupationalPreviewPage() {
         <PreOccupationalPreviewComponent
           collaborator={collaborator}
           medicalEvaluation={data}
-          urls={urls}
+          urls={filteredUrls}
           dataValues={dataValues}
         />
       ) : (
