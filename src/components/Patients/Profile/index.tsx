@@ -81,6 +81,7 @@ function PatientProfileComponent({
       gender: patient?.gender || "",
       maritalStatus: patient?.maritalStatus || "",
       observations: patient?.observations || "",
+      affiliationNumber: patient?.affiliationNumber || "",
       address: {
         street: patient?.address?.street || "",
         number: patient?.address?.number || "",
@@ -144,13 +145,34 @@ function PatientProfileComponent({
   };
 
   useEffect(() => {
-    if (patient?.address?.city?.state) {
-      form.setValue(
-        "address.city.state",
-        String(patient.address.city.state.id)
-      );
+    if (patient) {
+      setValue("firstName", patient.firstName);
+      setValue("lastName", patient.lastName);
+      setValue("email", patient.email);
+      setValue("userName", formatDni(String(patient.dni)));
+      if (patient?.birthDate) {
+        setStartDate(new Date(patient.birthDate.toString()));
+        setValue("birthDate", patient.birthDate.toString());
+      }
+      setValue("phoneNumber", patient.phoneNumber);
+      setValue("phoneNumber2", patient.phoneNumber2 || "");
+      setValue("bloodType", String(patient.bloodType) || "");
+      setValue("rhFactor", String(patient.rhFactor) || "");
+      setValue("gender", String(patient.gender) || "");
+      setValue("maritalStatus", String(patient.maritalStatus) || "");
+      setValue("observations", patient.observations || "");
+      setValue("affiliationNumber", patient.affiliationNumber || "");
+      setValue("address.street", patient?.address?.street || "");
+      setValue("address.number", patient?.address?.number || "");
+      setValue("address.description", patient?.address?.description || "");
+      setValue("address.phoneNumber", patient?.address?.phoneNumber || "");
+      setSelectedState(patient?.address?.city?.state);
+      setSelectedCity(patient?.address?.city);
+      if (patient?.address?.city?.state) {
+        setValue("address.city.state", String(patient.address.city.state.id));
+      }
     }
-  }, [patient, form]);
+  }, [patient, setValue]);
 
   const onSubmit: SubmitHandler<FormValues> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);

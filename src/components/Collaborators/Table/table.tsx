@@ -20,6 +20,7 @@ export const CollaboratorsTable: React.FC<Props> = ({
     isSecretary,
     isDoctor,
     isAdmin,
+    showCompanyColumn: true,
   });
 
   // Sort collaborators by company name (A-Z) then by collaborator name (A-Z)

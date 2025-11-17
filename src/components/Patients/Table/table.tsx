@@ -11,6 +11,10 @@ interface PatientTableProps {
   isFetching?: boolean;
   searchQuery: string;
   setSearch: (query: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 export const PatientsTable: React.FC<PatientTableProps> = ({
@@ -19,6 +23,10 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
   prefetchPatients,
   searchQuery,
   setSearch,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
@@ -49,11 +57,16 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
           searchPlaceholder="Buscar pacientes..."
           showSearch={true}
           searchQuery={searchQuery}
-          onSearchSubmit={setSearch}
+          setSearch={setSearch}
+          useServerSideSearch={true}
           addLinkPath="/pacientes/agregar"
           addLinkText="Agregar Paciente"
           isFetching={isFetching}
           canAddUser={isSecretary || isAdmin}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNextPage={onNextPage}
+          onPrevPage={onPrevPage}
         />
       </div>
     </div>

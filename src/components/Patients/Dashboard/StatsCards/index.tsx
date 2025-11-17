@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { Study } from "@/types/Study/Study";
+import useUserRole from "@/hooks/useRoles";
 
 interface StatCardProps {
   title: string;
@@ -84,6 +85,8 @@ interface StatsCardsProps {
 }
 
 export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCardsProps) => {
+  const { isDoctor } = useUserRole();
+
   const getLastVisitText = () => {
     if (!stats.lastVisit) return "Sin visitas";
     const date = new Date(stats.lastVisit);
@@ -148,12 +151,15 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
       gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
       linkTo: `/pacientes/${patientSlug}/historia-clinica`,
       subtitle: "Ver completa",
+      visible: isDoctor,
     },
   ];
 
+  const visibleStats = statsData.filter((stat) => stat.visible !== false);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {statsData.map((stat, index) => (
+      {visibleStats.map((stat, index) => (
         <StatCard
           key={index}
           {...stat}

@@ -133,6 +133,9 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
       setValue("address.phoneNumber", user?.address?.phoneNumber);
       setSelectedState(user?.address?.city?.state);
       setSelectedCity(user?.address?.city);
+      if (user?.address?.city?.state) {
+        setValue("address.city.state", String(user.address.city.state.id));
+      }
     }
   }, [user, setValue]);
   const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
@@ -289,7 +292,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
               <div className="bg-gradient-to-r from-greenPrimary to-teal-600 h-32" />
               <CardContent className="relative pb-6">
                 <div className="absolute -top-16 left-6">
-                  <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-xllex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center">
                     {user?.photo ? (
                       <img
                         src={user.photo}
@@ -297,7 +300,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-gradient-to-brrom-greenPrimary to-teal-600 flex items-center justify-center">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-greenPrimary to-teal-600 flex items-center justify-center">
                         <UserCircle className="h-20 w-20 text-white" />
                       </div>
                     )}
@@ -342,7 +345,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             <Card className="shadow-md border-0">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-border-blue-200">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 <CardTitle className="flex items-center gap-3 text-blue-900">
                   <div className="p-2 bg-blue-600 rounded-full">
                     <UserIcon className="h-6 w-6 text-white" />
@@ -406,7 +409,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
                     )}
                   />
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       Fecha de Nacimiento
                     </label>
                     <CustomDatePicker
@@ -462,7 +465,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <Card className="shadow-md border-0">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-border-purple-200">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200">
                 <CardTitle className="flex items-center gap-3 text-purple-900">
                   <div className="p-2 bg-purple-600 rounded-full">
                     <Phone className="h-6 w-6 text-white" />
@@ -534,7 +537,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
             transition={{ duration: 0.3, delay: 0.3 }}
           >
             <Card className="shadow-md border-0">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 border-border-red-200">
+              <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 border-b border-red-200">
                 <CardTitle className="flex items-center gap-3 text-red-900">
                   <div className="p-2 bg-red-600 rounded-full">
                     <Heart className="h-6 w-6 text-white" />
@@ -606,7 +609,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
             transition={{ duration: 0.3, delay: 0.4 }}
           >
             <Card className="shadow-md border-0">
-              <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-border-orange-200">
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
                 <CardTitle className="flex items-center gap-3 text-orange-900">
                   <div className="p-2 bg-orange-600 rounded-full">
                     <MapPin className="h-6 w-6 text-white" />
@@ -616,30 +619,48 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Provincia
-                    </label>
-                    <StateSelect
-                      control={control}
-                      name="address.city.state"
-                      disabled={!isEditing}
-                      defaultValue={user?.address?.city?.state}
-                      onStateChange={handleStateChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-noneeer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Ciudad
-                    </label>
-                    <CitySelect
-                      control={control}
-                      disabled={!isEditing}
-                      defaultValue={selectedCity}
-                      idState={selectedState ? selectedState.id : 0}
-                      onCityChange={handleCityChange}
-                    />
-                  </div>
+                  <FormField
+                    control={control}
+                    name="address.city.state"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">
+                          Provincia
+                        </FormLabel>
+                        <FormControl>
+                          <StateSelect
+                            control={control}
+                            name="address.city.state"
+                            disabled={!isEditing}
+                            defaultValue={user?.address?.city?.state}
+                            onStateChange={handleStateChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={control}
+                    name="address.city"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">
+                          Ciudad
+                        </FormLabel>
+                        <FormControl>
+                          <CitySelect
+                            control={control}
+                            disabled={!isEditing}
+                            defaultValue={selectedCity}
+                            idState={selectedState ? selectedState.id : 0}
+                            onCityChange={handleCityChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={control}
                     name="address.street"

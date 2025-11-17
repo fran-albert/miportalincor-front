@@ -72,6 +72,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
       gender: patient?.gender || "",
       maritalStatus: patient?.maritalStatus || "",
       observations: patient?.observations || "",
+      affiliationNumber: patient?.affiliationNumber || "",
       address: {
         street: patient?.address?.street || "",
         number: patient?.address?.number || "",
@@ -797,7 +798,6 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
                           <FormControl>
                             <Input
                               {...field}
-                              defaultValue={patient?.affiliationNumber}
                               disabled={true}
                               placeholder="Ingresar número de afiliación..."
                             />

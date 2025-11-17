@@ -148,6 +148,9 @@ function DoctorProfileComponent({
       setSelectedSpecialities(doctor.specialities || []);
       setSelectedCity(doctor?.address?.city);
       setSelectedState(doctor?.address?.city?.state);
+      if (doctor?.address?.city?.state) {
+        setValue("address.city.state", String(doctor.address.city.state.id));
+      }
     }
   }, [doctor, setValue]);
 

@@ -23,6 +23,7 @@ export default function CollaboratorsSection({
     isSecretary,
     isDoctor,
     isAdmin,
+    showCompanyColumn: false,
   });
 
   // Sort collaborators by name (A-Z)

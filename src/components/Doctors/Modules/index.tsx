@@ -24,7 +24,7 @@ export default function DoctorModules({
   onPacientesClick,
   onEspecialidadesClick,
 }: DoctorModulesProps) {
-  const { isDoctor, isAdmin } = useUserRole();
+  const { isDoctor, isAdmin, isSecretary } = useUserRole();
 
   const modules = [
     {
@@ -33,7 +33,7 @@ export default function DoctorModules({
       icon: Stethoscope,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
       onClick: onHistoriaClinicaClick,
-      visible: true,
+      visible: isDoctor,
     },
     {
       title: "Control Nutricional",
@@ -41,7 +41,7 @@ export default function DoctorModules({
       icon: ClipboardPlus,
       gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
       onClick: onControlNutricionalClick || (() => {}),
-      visible: true,
+      visible: isDoctor,
     },
     {
       title: "Mis Pacientes",
@@ -49,7 +49,7 @@ export default function DoctorModules({
       icon: Users,
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
       onClick: onPacientesClick || (() => {}),
-      visible: true,
+      visible: isDoctor,
     },
     {
       title: "Agenda Médica",
@@ -57,7 +57,7 @@ export default function DoctorModules({
       icon: Calendar,
       gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
       onClick: () => {},
-      visible: true,
+      visible: isDoctor || isSecretary || isAdmin,
       disabled: true,
     },
     {
@@ -66,7 +66,7 @@ export default function DoctorModules({
       icon: FileImage,
       gradient: "bg-gradient-to-br from-cyan-500 to-cyan-600",
       onClick: onEstudiosClick || (() => {}),
-      visible: !!onEstudiosClick,
+      visible: (isDoctor || isSecretary || isAdmin) && !!onEstudiosClick,
     },
     {
       title: "Especialidades",

@@ -79,7 +79,9 @@ export const getColumns = (
       header: "DNI",
       cell: ({ row }) => (
         <div className="flex items-center">
-          <p className="text-sm font-medium">{formatDni(row.original.dni)}</p>
+          <p className="text-sm font-medium">
+            {formatDni(row.original.dni || row.original.userName)}
+          </p>
         </div>
       ),
     },
@@ -97,13 +99,18 @@ export const getColumns = (
       cell: ({ row }) => (
         <div className="flex items-center">
           <p className="text-sm font-medium">
-            {row.original.specialities.slice(0, 1).map((speciality, index) => (
-              <span key={index}>
-                {speciality.name}
-                {index < 1 && row.original.specialities.length > 1 ? "" : ""}
-              </span>
-            ))}
-            {row.original.specialities.length > 1 && "..."}
+            {row.original.specialities && row.original.specialities.length > 0 ? (
+              <>
+                {row.original.specialities.slice(0, 1).map((speciality, index) => (
+                  <span key={index}>
+                    {speciality.name}
+                  </span>
+                ))}
+                {row.original.specialities.length > 1 && "..."}
+              </>
+            ) : (
+              <span className="text-gray-400">Sin especialidades</span>
+            )}
           </p>
         </div>
       ),

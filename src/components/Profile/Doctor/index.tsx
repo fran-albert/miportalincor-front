@@ -104,6 +104,9 @@ export default function ProfileDoctorCardComponent({
       setValue("address.phoneNumber", data?.address.phoneNumber || "");
       setSelectedState(data?.address?.city?.state);
       setSelectedCity(data?.address?.city);
+      if (data?.address?.city?.state) {
+        setValue("address.city.state", String(data.address.city.state.id));
+      }
     }
   }, [data, setValue]);
   const handleSave = async () => {

@@ -151,22 +151,25 @@ export const DoctorProfileSkeleton: React.FC = () => {
         </div>
       </div>
 
-      {/* 6 Sectional Cards skeletons */}
-      {[...Array(6)].fill(0).map((_, i) => (
-        <div key={i} className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="p-4 border-b animate-pulse">
+      {/* 7 Sectional Cards skeletons (matching DoctorProfileComponent structure) */}
+      {[...Array(7)].fill(0).map((_, i) => (
+        <div key={i} className="bg-white shadow-md rounded-lg overflow-hidden border-0">
+          <div className="p-4 border-b bg-gray-50/50 animate-pulse">
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-full bg-gray-200"></div>
-              <div className="h-6 bg-gray-200 rounded w-48"></div>
+              <div>
+                <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-64"></div>
+              </div>
             </div>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[...Array(4)].fill(0).map((_, j) => (
-                <div
-                  key={j}
-                  className="h-10 bg-gray-200 rounded w-full animate-pulse"
-                ></div>
+                <div key={j} className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                  <div className="h-10 bg-gray-200 rounded w-full"></div>
+                </div>
               ))}
             </div>
           </div>
