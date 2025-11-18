@@ -116,11 +116,11 @@ function CreateDoctorComponent() {
           state: {
             id: 0,
             name: "",
-            country: { id: 0, name: "" }
-          }
+            country: { id: 0, name: "" },
+          },
         },
       },
-      registeredById: Number(session?.id),
+      registeredById: String(session?.id),
     };
 
     try {
@@ -517,8 +517,10 @@ function CreateDoctorComponent() {
                       const errorMessage =
                         (cityError?.id as { message?: string })?.message ||
                         (cityError?.name as { message?: string })?.message ||
-                        (cityError && typeof cityError === 'object' && 'message' in cityError
-                          ? cityError.message as string
+                        (cityError &&
+                        typeof cityError === "object" &&
+                        "message" in cityError
+                          ? (cityError.message as string)
                           : undefined);
 
                       return (
@@ -527,7 +529,9 @@ function CreateDoctorComponent() {
                           <FormControl>
                             <CitySelect
                               control={control}
-                              idState={selectedState ? Number(selectedState.id) : 0}
+                              idState={
+                                selectedState ? Number(selectedState.id) : 0
+                              }
                               onCityChange={handleCityChange}
                             />
                           </FormControl>

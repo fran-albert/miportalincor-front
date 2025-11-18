@@ -42,6 +42,10 @@ import DoctorAntecedentesPage from "./pages/protected/Doctor/Antecedentes";
 import DoctorMedicacionActualPage from "./pages/protected/Doctor/Medicacion-Actual";
 import ShiftsPage from "./pages/protected/Shift/page";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import CollaboratorExamenesPage from "./pages/protected/Collaborator/Examenes";
+import CollaboratorEvolucionesPage from "./pages/protected/Collaborator/Evoluciones";
+import CollaboratorProfilePage from "./pages/protected/Collaborator/Profile";
+import CollaboratorStudiesPage from "./pages/protected/Collaborator/Estudios";
 
 function App() {
   return (
@@ -344,6 +348,38 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorEditPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/incor-laboral/colaboradores/:slug/perfil"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                <CollaboratorProfilePage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/incor-laboral/colaboradores/:slug/examenes"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                <CollaboratorExamenesPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/incor-laboral/colaboradores/:slug/evoluciones"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                <CollaboratorEvolucionesPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/incor-laboral/colaboradores/:slug/estudios"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+                <CollaboratorStudiesPage />
               </Private_Routes>
             }
           />

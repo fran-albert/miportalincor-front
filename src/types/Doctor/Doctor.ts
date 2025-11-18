@@ -29,5 +29,5 @@ export interface CreateDoctorDto {
   specialities: Array<{ id: number; name: string }>;
   healthInsurances: Array<{ id: number; name: string }>;
   address: Omit<Address, 'id'>;
-  registeredById: number;
+  registeredById: string;
 }

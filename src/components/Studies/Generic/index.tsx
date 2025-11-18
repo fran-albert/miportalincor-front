@@ -3,6 +3,7 @@ import { StudiesWithURL } from "@/types/Study/Study";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
+import { Collaborator } from "@/types/Collaborator/Collaborator";
 import PatientStudies from "../index";
 import useUserRole from "@/hooks/useRoles";
 import LabCard from "@/components/Laboratories/Card/card";
@@ -10,8 +11,8 @@ import { useStudy } from "@/hooks/Study/useStudy";
 import { useBloodTestData } from "@/hooks/Blod-Test-Data/useBlodTestData";
 import { useBlodTest } from "@/hooks/Blod-Test/useBlodTest";
 
-export type GenericStudiesUserType = "patient" | "doctor" | "personal";
-export type GenericStudiesUserData = Patient | Doctor;
+export type GenericStudiesUserType = "patient" | "doctor" | "personal" | "colaborador";
+export type GenericStudiesUserData = Patient | Doctor | Collaborator;
 
 interface GenericStudiesProps {
   userType: GenericStudiesUserType;
@@ -170,7 +171,7 @@ const transformPatientData = (userData?: GenericStudiesUserData) => {
   };
 
   // Check if it's a Patient
-  if ("dni" in userData) {
+  if ("dni" in userData && "cuil" in userData) {
     const patient = userData as Patient;
     return {
       name: `${patient.firstName} ${patient.lastName}`,
@@ -195,7 +196,7 @@ const transformPatientData = (userData?: GenericStudiesUserData) => {
   }
 
   // Check if it's a Doctor
-  if ("matricula" in userData) {
+  if ("matricula" in userData && "specialities" in userData) {
     const doctor = userData as Doctor;
     return {
       name: `${doctor.firstName} ${doctor.lastName}`,
@@ -216,6 +217,31 @@ const transformPatientData = (userData?: GenericStudiesUserData) => {
           ? doctor.birthDate.toLocaleDateString("es-ES")
           : "",
       bloodType: doctor.bloodType || "",
+    };
+  }
+
+  // Check if it's a Collaborator
+  if ("company" in userData && "positionJob" in userData) {
+    const collaborator = userData as Collaborator;
+    return {
+      name: `${collaborator.firstName} ${collaborator.lastName}`,
+      age: calculateAge(collaborator.birthDate),
+      gender: collaborator.gender || "No especificado",
+      id: collaborator.id?.toString() || "0",
+      phone: collaborator.phone || "",
+      address:
+        typeof collaborator.addressData === "object"
+          ? `${collaborator.addressData.street || ""} ${
+              collaborator.addressData.number || ""
+            }`.trim() || "Sin dirección"
+          : "Sin dirección",
+      birthDate:
+        typeof collaborator.birthDate === "string"
+          ? collaborator.birthDate
+          : collaborator.birthDate instanceof Date
+          ? collaborator.birthDate.toLocaleDateString("es-ES")
+          : "",
+      bloodType: "",
     };
   }
 

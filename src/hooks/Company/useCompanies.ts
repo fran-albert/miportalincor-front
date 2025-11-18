@@ -11,7 +11,8 @@ export const useCompanies = ({ auth, fetch }: Props) => {
     const { isLoading, isError, error, data: companies = [], isFetching } = useQuery({
         queryKey: ['companies'],
         queryFn: () => getAllCompany(),
-        staleTime: 1000 * 60,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 15,
         enabled: auth && fetch
     });
 

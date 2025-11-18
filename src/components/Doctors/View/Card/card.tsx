@@ -100,8 +100,11 @@ const DoctorCardComponent = ({ doctor }: { doctor: Doctor | null }) => {
         <div className="flex items-center space-x-2">
           <Droplet className="h-4 w-4 text-gray-500" />
           <div className="flex flex-col">
-            <span>{doctor?.bloodType}</span>
-            <span className="text-sm text-gray-500">{doctor?.rhFactor}</span>
+            <span>
+              {doctor?.bloodType && doctor?.rhFactor
+                ? `${doctor.bloodType} ${doctor.rhFactor}`
+                : "No especificado"}
+            </span>
           </div>
         </div>
         <Separator className="bg-greenPrimary" />

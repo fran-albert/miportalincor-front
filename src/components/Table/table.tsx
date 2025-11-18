@@ -44,7 +44,13 @@ interface DataTableProps<TData, TValue> {
   searchQueryFilterTable?: string;
   querySearchFilter?: string;
   searchQuery?: string;
+  setSearch?: (query: string) => void;
   onSearchSubmit?: (query: string) => void;
+  useServerSideSearch?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -54,6 +60,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "",
   addLinkPath = "/",
   searchQuery,
+  setSearch,
   onSearchSubmit,
   isFetching = false,
   addLinkText = "Agregar",
@@ -62,6 +69,11 @@ export function DataTable<TData, TValue>({
   canAddUser = true,
   onAddClick,
   isLoading = false,
+  useServerSideSearch = false,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -77,12 +89,27 @@ export function DataTable<TData, TValue>({
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
+  // Debounced server-side search
+  React.useEffect(() => {
+    if (useServerSideSearch && setSearch) {
+      const timer = setTimeout(() => {
+        setSearch(searchInput || "");
+      }, 300); // 300ms debounce
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchInput, useServerSideSearch, setSearch]);
+
   const filteredData = React.useMemo(() => {
+    // Skip client-side filtering if using server-side search
+    if (useServerSideSearch) {
+      return data;
+    }
     if (customFilter && searchInput) {
       return data.filter((item) => customFilter(item, searchInput));
     }
     return data;
-  }, [data, customFilter, searchInput]);
+  }, [data, customFilter, searchInput, useServerSideSearch]);
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -306,7 +333,7 @@ export function DataTable<TData, TValue>({
               </table>
             </div>
           </div>
-          {searchQuery !== "" && (
+          {searchQuery !== "" && !useServerSideSearch && (
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-lg">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="text-gray-600 text-sm font-medium">
@@ -419,6 +446,48 @@ export function DataTable<TData, TValue>({
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
+            </div>
+          )}
+          {useServerSideSearch && currentPage && totalPages && (
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-lg">
+              <div className="text-gray-600 text-sm font-medium">
+                Página <span className="text-greenPrimary font-semibold">{currentPage}</span> de <span className="text-greenPrimary font-semibold">{totalPages}</span>
+              </div>
+              <Pagination className="justify-center sm:justify-end">
+                <PaginationContent className="gap-1">
+                  {/* Botón Anterior */}
+                  <PaginationPrevious
+                    onClick={onPrevPage}
+                    aria-disabled={currentPage === 1}
+                    className={`cursor-pointer transition-all duration-200 ${
+                      currentPage === 1
+                        ? "cursor-not-allowed opacity-50"
+                        : "hover:bg-greenPrimary hover:text-white hover:scale-105"
+                    }`}
+                  />
+
+                  {/* Página actual */}
+                  <PaginationItem>
+                    <PaginationLink
+                      isActive={true}
+                      className="cursor-default h-9 w-9 bg-greenPrimary text-white font-bold shadow-md"
+                    >
+                      {currentPage}
+                    </PaginationLink>
+                  </PaginationItem>
+
+                  {/* Botón Siguiente */}
+                  <PaginationNext
+                    onClick={onNextPage}
+                    aria-disabled={currentPage === totalPages}
+                    className={`cursor-pointer transition-all duration-200 ${
+                      currentPage === totalPages
+                        ? "cursor-not-allowed opacity-50"
+                        : "hover:bg-greenPrimary hover:text-white hover:scale-105"
+                    }`}
+                  />
+                </PaginationContent>
+              </Pagination>
             </div>
           )}
         </>

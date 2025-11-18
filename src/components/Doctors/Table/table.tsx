@@ -9,23 +9,25 @@ interface DoctorsTableProps {
   doctors: Doctor[];
   prefetchDoctors: (id: number) => void;
   isLoading?: boolean;
+  searchQuery?: string;
+  setSearch?: (search: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   doctors,
   isLoading,
   prefetchDoctors,
+  searchQuery = "",
+  setSearch,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
 }) => {
-  const customFilterFunction = (doctor: Doctor, query: string) => {
-    const fullName = `${doctor.firstName.toLowerCase()} ${doctor.lastName.toLowerCase()}`;
-    const reversedFullName = `${doctor.lastName.toLowerCase()} ${doctor.firstName.toLowerCase()}`; 
-    return (
-      fullName.includes(query.toLowerCase()) ||
-      reversedFullName.includes(query.toLowerCase()) || 
-      doctor.dni.toLowerCase().includes(query.toLowerCase()) 
-    );
-  };
-  
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   const doctorColumns = getColumns(prefetchDoctors, {
@@ -53,12 +55,17 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
           data={doctors}
           searchPlaceholder="Buscar médicos..."
           showSearch={true}
-          customFilter={customFilterFunction}
-          searchColumn="firstName"
+          searchQuery={searchQuery}
+          setSearch={setSearch}
+          useServerSideSearch={true}
           addLinkPath="/medicos/agregar"
           isLoading={isLoading}
           addLinkText="Agregar Médico"
           canAddUser={isSecretary}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNextPage={onNextPage}
+          onPrevPage={onPrevPage}
         />
       </div>
     </div>

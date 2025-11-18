@@ -196,32 +196,45 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
                 multiple
                 onChange={handleFileChange}
               />
-              {selectedFiles.length > 0 && (
-                <div className="mt-3 bg-gray-50 rounded-lg border border-gray-200 p-3">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">
-                    Archivos seleccionados ({selectedFiles.length})
-                  </p>
-                  <ScrollArea className="max-h-32">
-                    <ul className="space-y-2 pr-2">
-                      {selectedFiles.map((file, index) => (
-                        <li
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-gray-700 bg-white p-2 rounded border border-gray-200"
-                        >
-                          <File className="h-4 w-4 text-greenPrimary flex-shrink-0" />
-                          <span className="truncate">{file.name}</span>
-                          <span className="text-xs text-gray-500 ml-auto">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+              {selectedFiles.length > 0 ? (
+                <div className="mt-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                      <File className="h-4 w-4 text-greenPrimary" />
+                      Archivos seleccionados ({selectedFiles.length})
+                    </p>
+                    {selectedFiles.length > 3 && (
+                      <p className="text-xs text-gray-500 italic">
+                        Desliza para ver más
+                      </p>
+                    )}
+                  </div>
+                  <ScrollArea className="h-60 w-full rounded-md">
+                    <div className="pr-4">
+                      <ul className="space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-3 text-sm text-gray-700 bg-white p-3 rounded-md border border-gray-200 hover:border-greenPrimary/30 hover:shadow-sm transition-all"
+                          >
+                            <File className="h-4 w-4 text-greenPrimary flex-shrink-0" />
+                            <span className="truncate flex-1 font-medium">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-gray-500 flex-shrink-0 bg-gray-100 px-2 py-1 rounded">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </ScrollArea>
                 </div>
+              ) : (
+                <p className="text-xs text-gray-500 mt-2">
+                  Puedes seleccionar múltiples archivos
+                </p>
               )}
-              <p className="text-xs text-gray-500">
-                Puedes seleccionar múltiples archivos
-              </p>
             </div>
 
             {/* Comentario */}

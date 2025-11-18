@@ -2,7 +2,10 @@ import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { DoctorDashboardComponent } from "@/components/Doctors/Dashboard/Component";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { DoctorDashboardSkeleton } from "@/components/Skeleton/Doctor";
+import {
+  PatientProfileSkeleton,
+  StudyRowSkeleton,
+} from "@/components/Skeleton/Patient";
 
 function DoctorPage() {
   const params = useParams();
@@ -24,7 +27,10 @@ function DoctorPage() {
   if (isFirstLoadingDoctor) {
     return (
       <div className="space-y-4 p-6">
-        <DoctorDashboardSkeleton />
+        <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
+          <PatientProfileSkeleton />
+          <StudyRowSkeleton />
+        </div>
       </div>
     );
   }

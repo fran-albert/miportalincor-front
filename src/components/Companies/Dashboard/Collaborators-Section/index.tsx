@@ -15,6 +15,7 @@ interface CollaboratorsSectionProps {
 export default function CollaboratorsSection({
   collaborators,
   isFetching,
+  companyId,
 }: CollaboratorsSectionProps) {
   const { isSecretary, isAdmin, isDoctor } = useUserRole();
 
@@ -22,6 +23,7 @@ export default function CollaboratorsSection({
     isSecretary,
     isDoctor,
     isAdmin,
+    showCompanyColumn: false,
   });
 
   // Sort collaborators by name (A-Z)
@@ -52,7 +54,7 @@ export default function CollaboratorsSection({
         </div>
 
         {(isSecretary || isAdmin) && (
-          <Link to="/incor-laboral/colaboradores/agregar">
+          <Link to={`/incor-laboral/colaboradores/agregar?companyId=${companyId}`}>
             <Button className="bg-greenPrimary hover:bg-teal-600 text-white shadow-md">
               <Plus className="h-4 w-4 mr-2" />
               Agregar Colaborador

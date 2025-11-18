@@ -40,29 +40,41 @@ export const CitySelect = <T extends FieldValues = FieldValues>({
       name={name}
       control={control}
       defaultValue={(defaultValue ? String(defaultValue.id) : "") as PathValue<T, Path<T>>}
-      render={({ field }) => (
-        <div>
-          <Select
-            value={field.value}
-            onValueChange={(value) => {
-              field.onChange(value);
-              handleValueChange(value);
-            }}
-            disabled={disabled}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccione la localidad..." />
-            </SelectTrigger>
-            <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={String(city.id)} value={String(city.id)}>
-                  {city.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      render={({ field }) => {
+        // Handle both string (ID) and object (City) values
+        let selectValue = "";
+        if (field.value) {
+          if (typeof field.value === "string") {
+            selectValue = field.value;
+          } else if (typeof field.value === "object" && "id" in field.value) {
+            selectValue = String(field.value.id);
+          }
+        }
+
+        return (
+          <div>
+            <Select
+              value={selectValue}
+              onValueChange={(value) => {
+                field.onChange(value);
+                handleValueChange(value);
+              }}
+              disabled={disabled || !idState || cities.length === 0}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccione la localidad..." />
+              </SelectTrigger>
+              <SelectContent>
+                {cities.map((city) => (
+                  <SelectItem key={String(city.id)} value={String(city.id)}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      }}
     />
   );
 };

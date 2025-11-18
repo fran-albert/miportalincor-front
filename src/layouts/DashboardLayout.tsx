@@ -1,8 +1,8 @@
+import { useState } from "react";
 import { Outlet, Link } from "react-router-dom";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/Sidebar";
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { GlobalSearchCommand } from "@/components/Search/GlobalSearchCommand";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
@@ -19,6 +20,7 @@ import useUserRole from "@/hooks/useRoles";
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
   const { session, isPatient } = useUserRole();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const userName = session?.firstName || "Usuario";
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -41,14 +43,18 @@ export function DashboardLayout() {
             <div className="flex flex-1 items-center gap-4 justify-between">
               {/* Buscador - Solo visible para médicos, secretarias y administradores */}
               {showSearchBar && (
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Buscar pacientes, médicos..."
-                    className="pl-8 w-full"
-                  />
-                </div>
+                <Button
+                  variant="outline"
+                  className="w-full max-w-md justify-start text-muted-foreground"
+                  onClick={() => setSearchOpen(true)}
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline-flex">Buscar pacientes, médicos...</span>
+                  <span className="inline-flex sm:hidden">Buscar...</span>
+                  <kbd className="pointer-events-none ml-auto hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
+                    <span className="text-xs">Ctrl+K</span>
+                  </kbd>
+                </Button>
               )}
 
               {/* Espaciador para pacientes cuando no hay buscador */}
@@ -86,6 +92,9 @@ export function DashboardLayout() {
           </div>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* Global Search Command Dialog */}
+      <GlobalSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
     </>
   );
 }

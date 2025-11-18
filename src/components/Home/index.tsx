@@ -109,7 +109,7 @@ export default function HomeComponent({ name }: { name: string }) {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
+    <div className="space-y-6 p-6">
       {/* Hero Section */}
       <WelcomeHero name={name} />
 

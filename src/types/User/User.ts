@@ -31,7 +31,7 @@ export interface User {
   code: string;
   confirmPassword: string;
   gender: string;
-  registeredById: number;
+  registeredById: number | string;
   registeredByName: string;
   maritalStatus: string;
   rhFactor: string;

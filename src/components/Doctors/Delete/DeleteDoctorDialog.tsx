@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { FaRegTrashAlt } from "react-icons/fa";
 import ActionIcon from "@/components/Icons/action";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
@@ -23,9 +25,14 @@ export default function DeleteDoctorDialog({
   idDoctor,
 }: DeleteDoctorDialogProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const toggleDialog = () => setIsOpen(!isOpen);
+  const [confirmText, setConfirmText] = useState<string>("");
+  const toggleDialog = () => {
+    setIsOpen(!isOpen);
+    setConfirmText(""); // Limpiar el input al cerrar
+  };
   const { deleteDoctorMutation } = useDoctorMutations();
   const { promiseToast } = useToastContext();
+  const isConfirmValid = confirmText === "ELIMINAR";
   const handleConfirmDelete = async () => {
     try {
       const promise = deleteDoctorMutation.mutateAsync(idDoctor);
@@ -47,6 +54,7 @@ export default function DeleteDoctorDialog({
       });
 
       setIsOpen(false);
+      setConfirmText(""); // Limpiar el input después de eliminar
     } catch (error) {
       console.error("Error al eliminar el médico", error);
     }
@@ -65,10 +73,25 @@ export default function DeleteDoctorDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Eliminar Médico</DialogTitle>
+          <DialogDescription>
+            ¿Estás seguro de que quieres eliminar el médico? Esta acción no se puede deshacer.
+          </DialogDescription>
         </DialogHeader>
-        <DialogDescription>
-          ¿Estás seguro de que quieres eliminar el médico?
-        </DialogDescription>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="confirm-text" className="text-sm font-medium">
+              Para confirmar, escribe: <span className="font-bold text-red-600">ELIMINAR</span>
+            </Label>
+            <Input
+              id="confirm-text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Escribe 'ELIMINAR' para confirmar"
+              className="w-full"
+              disabled={deleteDoctorMutation.isPending}
+            />
+          </div>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={toggleDialog}>
             Cancelar
@@ -76,7 +99,7 @@ export default function DeleteDoctorDialog({
           <Button
             className="bg-greenPrimary hover:bg-green-900"
             onClick={handleConfirmDelete}
-            disabled={deleteDoctorMutation.isPending}
+            disabled={!isConfirmValid || deleteDoctorMutation.isPending}
           >
             Confirmar
           </Button>

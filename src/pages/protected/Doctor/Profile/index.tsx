@@ -1,7 +1,8 @@
 import DoctorProfileComponent from "@/components/Doctors/Profile";
-import { DoctorCardSkeleton } from "@/components/Skeleton/Doctor";
+import { DoctorProfileSkeleton } from "@/components/Skeleton/Doctor";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
+import BreadcrumbComponent from "@/components/Breadcrumb";
 
 const DoctorProfilePage = () => {
   const params = useParams();
@@ -26,7 +27,8 @@ const DoctorProfilePage = () => {
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
-        <DoctorCardSkeleton />
+        <BreadcrumbComponent items={breadcrumbItems} />
+        <DoctorProfileSkeleton />
       </div>
     );
   }

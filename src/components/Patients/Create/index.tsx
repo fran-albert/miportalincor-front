@@ -57,7 +57,7 @@ export function CreatePatientComponent() {
     if (selectedState) {
       const cityWithState = { ...city, state: selectedState };
       setSelectedCity(cityWithState);
-      setValue("address.city", cityWithState);
+      setValue("address.city", cityWithState, { shouldValidate: true });
     }
   };
   const handleHealthInsuranceChange = (healthInsurance: HealthInsurance) => {
@@ -68,14 +68,19 @@ export function CreatePatientComponent() {
       };
       setSelectedHealthInsurance(healthInsurance);
       setSelectedPlan(selectedPlan);
+
+      // Actualizar el valor en el formulario para que pase la validación
+      setValue("healthPlans", [selectedPlan], { shouldValidate: true });
     } else {
       console.error("Health insurance does not have a valid ID");
     }
   };
   const handleStateChange = (state: State) => {
+    console.log('handleStateChange called with state:', state);
     setSelectedState(state);
     setSelectedCity(undefined);
-    setValue("address.city.state", String(state.id));
+    // Don't reset address.city.state here as it causes the select to reset
+    // The StateSelect component already handles updating this value
   };
   async function onSubmit(data: z.infer<typeof PatientSchema>) {
     console.log("✅ onSubmit ejecutado - Formulario válido");
@@ -106,7 +111,7 @@ export function CreatePatientComponent() {
         : [],
       photo: "",
       birthDate: dateInArgentina.format(),
-      registeredById: Number(session?.id),
+      registeredById: String(session?.id),
     } as Patient;
     try {
       const promise = addPatientMutation.mutateAsync(payload);

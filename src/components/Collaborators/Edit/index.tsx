@@ -1,9 +1,7 @@
 import {
   CardTitle,
-  CardDescription,
   CardHeader,
   CardContent,
-  CardFooter,
   Card,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm, useWatch } from "react-hook-form";
-import { IoMdArrowRoundBack } from "react-icons/io";
 import { goBack } from "@/common/helpers/helpers";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { z } from "zod";
@@ -28,7 +25,7 @@ import { ApiError } from "@/types/Error/ApiError";
 import { CompanySelect } from "@/components/Select/Company/select";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User } from "lucide-react";
+import { User, Phone, Briefcase, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StateSelect } from "@/components/Select/State/select";
 import { CitySelect } from "@/components/Select/City/select";
@@ -38,6 +35,8 @@ import { City } from "@/types/City/City";
 // import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { useState as useStatesHook } from "@/hooks/State/useState";
+import { motion } from "framer-motion";
+import CustomDatePicker from "@/components/Date-Picker";
 
 const getValidDateString = (date: string | undefined | null): string => {
   if (!date) return "";
@@ -81,6 +80,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
   const [selectedState, setSelectedState] = useState<State | undefined>(
     collaborator.addressData?.city?.state
   );
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const { updateCollaboratorMutation } = useCollaboratorMutations();
   const { promiseToast } = useToastContext();
   const { states } = useStatesHook();
@@ -244,74 +244,69 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
   }
 
   return (
-    <div key="1">
-      <Card>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardHeader>
-              <CardTitle>
-                <button
-                  className="flex items-center justify-start w-full text-greenPrimary"
-                  onClick={goBack}
-                  type="button"
-                >
-                  <IoMdArrowRoundBack
-                    className="text-greenPrimary mr-2"
-                    size={25}
-                  />
-                  Editar Colaborador
-                </button>
-              </CardTitle>
-              <CardDescription>
-                Completa los campos para actualizar el colaborador.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              {/* Imagen */}
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative flex flex-col items-center mb-2">
-                  {hasImageToShow && !imageLoaded && (
-                    <Skeleton className="w-[100px] h-[20px] rounded-full" />
-                  )}
-                  {hasImageToShow ? (
-                    <img
-                      src={imageSrc}
-                      alt={`${collaborator.firstName} ${collaborator.lastName}`}
-                      onLoad={() => setImageLoaded(true)}
-                      onError={() => setImageLoaded(false)}
-                      className={`h-32 w-32 object-cover border-2 border-greenPrimary shadow-md ${
-                        imageLoaded ? "block" : "hidden"
-                      }`}
-                    />
-                  ) : (
-                    <div className="h-24 w-24 flex items-center justify-center bg-gray-200 rounded-full border-2 border-gray-300 shadow-md">
-                      <User className="h-12 w-12 text-gray-500" />
-                    </div>
-                  )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Card 1: Información Personal (AZUL) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-blue-900">
+                <div className="p-2 bg-blue-600 rounded-full">
+                  <User className="h-6 w-6 text-white" />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="file"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col items-center">
-                      <FormControl>
-                        <ImagePickerDialog onImageSelect={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                Información Personal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {/* Avatar */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="relative flex flex-col items-center mb-2">
+                    {hasImageToShow && !imageLoaded && (
+                      <Skeleton className="w-[100px] h-[20px] rounded-full" />
+                    )}
+                    {hasImageToShow ? (
+                      <img
+                        src={imageSrc}
+                        alt={`${collaborator.firstName} ${collaborator.lastName}`}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageLoaded(false)}
+                        className={`h-32 w-32 object-cover border-4 border-blue-600 rounded-full shadow-md ${
+                          imageLoaded ? "block" : "hidden"
+                        }`}
+                      />
+                    ) : (
+                      <div className="h-32 w-32 flex items-center justify-center bg-blue-100 rounded-full border-4 border-blue-600 shadow-md">
+                        <User className="h-16 w-16 text-blue-600" />
+                      </div>
+                    )}
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="file"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col items-center">
+                        <FormControl>
+                          <ImagePickerDialog onImageSelect={field.onChange} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              {/* Datos Personales */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Campos Personales */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">Nombre</FormLabel>
+                        <FormLabel>Nombre</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ingresar nombre..." />
                         </FormControl>
@@ -324,42 +319,20 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">Apellido</FormLabel>
+                        <FormLabel>Apellido</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Ingresar apellido..."
-                          />
+                          <Input {...field} placeholder="Ingresar apellido..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <div className="grid grid-cols-1 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-black">
-                          Correo Electrónico
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Ingresar correo..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="userName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-black">D.N.I.</FormLabel>
+                        <FormLabel>D.N.I.</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ingresar D.N.I..." />
                         </FormControl>
@@ -370,35 +343,15 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                   <FormField
                     control={form.control}
                     name="birthDate"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
-                        <FormLabel className="text-black">
-                          Fecha de Nacimiento
-                        </FormLabel>
+                        <FormLabel>Fecha de Nacimiento</FormLabel>
                         <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-black">Teléfono</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Ingresar teléfono..."
+                          <CustomDatePicker
+                            setStartDate={setStartDate}
+                            setValue={setValue}
+                            fieldName="birthDate"
+                            initialDate={startDate}
                           />
                         </FormControl>
                         <FormMessage />
@@ -410,7 +363,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                     name="gender"
                     render={() => (
                       <FormItem>
-                        <FormLabel className="text-black">Sexo</FormLabel>
+                        <FormLabel>Sexo</FormLabel>
                         <FormControl>
                           <GenderSelect control={control} />
                         </FormControl>
@@ -420,79 +373,85 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-              {/* Datos Empresariales y Obra Social */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="idCompany"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel className="text-black">Empresa</FormLabel>
-                        <FormControl>
-                          <CompanySelect
-                            control={control}
-                            defaultValue={collaborator.company}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="positionJob"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-black">
-                          Puesto de Trabajo
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Ingresar puesto de trabajo..."
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        {/* Card 2: Información de Contacto (MORADO) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-purple-900">
+                <div className="p-2 bg-purple-600 rounded-full">
+                  <Phone className="h-6 w-6 text-white" />
                 </div>
-                {/* <FormField
+                Información de Contacto
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
                   control={form.control}
-                  name="affiliationNumber"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-black">
-                        Número de Obra Social
-                      </FormLabel>
+                      <FormLabel>Correo Electrónico</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Ingresar número de afiliado..."
-                        />
+                        <Input {...field} placeholder="Ingresar correo..." />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
-                /> */}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ingresar teléfono..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-              {/* Datos de Dirección */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Card 3: Información Laboral (TEAL) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+        >
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-teal-50 to-teal-100 border-b border-teal-200 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-teal-900">
+                <div className="p-2 bg-teal-600 rounded-full">
+                  <Briefcase className="h-6 w-6 text-white" />
+                </div>
+                Información Laboral
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="address.city.state" // Contiene solo el ID como string
+                  name="idCompany"
                   render={() => (
                     <FormItem>
-                      <FormLabel className="text-black">Provincia</FormLabel>
+                      <FormLabel>Empresa</FormLabel>
                       <FormControl>
-                        <StateSelect
+                        <CompanySelect
                           control={control}
-                          name="address.city.state"
-                          defaultValue={collaborator.addressData?.city?.state}
-                          onStateChange={handleStateChange}
+                          defaultValue={collaborator.company}
                         />
                       </FormControl>
                       <FormMessage />
@@ -501,77 +460,14 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                 />
                 <FormField
                   control={form.control}
-                  name="address.city.id"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel className="text-black">Ciudad</FormLabel>
-                      <FormControl>
-                        <CitySelect
-                          control={control}
-                          idState={
-                            selectedState?.id ??
-                            collaborator.addressData?.city?.state?.id ??
-                            0
-                          }
-                          defaultValue={collaborator.addressData?.city}
-                          onCityChange={handleCityChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-4 gap-6">
-                <FormField
-                  control={form.control}
-                  name="address.street"
+                  name="positionJob"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-black">Calle</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ingresar calle..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address.number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-black">N°</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ingresar número..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address.description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-black">Piso</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ingresar piso..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address.phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-black">Departamento</FormLabel>
+                      <FormLabel>Puesto de Trabajo</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Ingresar departamento..."
+                          placeholder="Ingresar puesto de trabajo..."
                         />
                       </FormControl>
                       <FormMessage />
@@ -580,21 +476,146 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline" type="button" onClick={goBack}>
-                Cancelar
-              </Button>
-              <Button
-                className="bg-greenPrimary hover:bg-greenSecondary text-white px-4 py-2 rounded-lg"
-                type="submit"
-                disabled={updateCollaboratorMutation.isPending}
-              >
-                Confirmar
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </Card>
-    </div>
+          </Card>
+        </motion.div>
+
+        {/* Card 4: Dirección (NARANJA) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
+          <Card className="shadow-md border-0">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-orange-900">
+                <div className="p-2 bg-orange-600 rounded-full">
+                  <MapPin className="h-6 w-6 text-white" />
+                </div>
+                Dirección
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="address.city.state"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Provincia</FormLabel>
+                        <FormControl>
+                          <StateSelect
+                            control={control}
+                            name="address.city.state"
+                            defaultValue={collaborator.addressData?.city?.state}
+                            onStateChange={handleStateChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.city.id"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Ciudad</FormLabel>
+                        <FormControl>
+                          <CitySelect
+                            control={control}
+                            idState={
+                              selectedState?.id ??
+                              collaborator.addressData?.city?.state?.id ??
+                              0
+                            }
+                            defaultValue={collaborator.addressData?.city}
+                            onCityChange={handleCityChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="address.street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Calle</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ingresar calle..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>N°</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Número..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Piso</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Piso..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="address.phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Depto.</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Depto..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Botones */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="flex justify-end gap-3"
+        >
+          <Button variant="outline" type="button" onClick={goBack}>
+            Cancelar
+          </Button>
+          <Button
+            className="bg-greenPrimary hover:bg-teal-600 text-white px-6"
+            type="submit"
+            disabled={updateCollaboratorMutation.isPending}
+          >
+            {updateCollaboratorMutation.isPending ? "Actualizando..." : "Confirmar"}
+          </Button>
+        </motion.div>
+      </form>
+    </Form>
   );
 }
