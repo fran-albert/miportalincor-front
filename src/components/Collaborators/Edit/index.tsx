@@ -343,16 +343,15 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
                   <FormField
                     control={form.control}
                     name="birthDate"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>Fecha de Nacimiento</FormLabel>
                         <FormControl>
                           <CustomDatePicker
+                            setStartDate={setStartDate}
+                            setValue={setValue}
                             fieldName="birthDate"
-                            value={field.value}
-                            onChange={field.onChange}
-                            selectedDate={startDate}
-                            onDateChange={setStartDate}
+                            initialDate={startDate}
                           />
                         </FormControl>
                         <FormMessage />

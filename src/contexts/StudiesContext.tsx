@@ -2,11 +2,12 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Patient } from '@/types/Patient/Patient';
 import { Doctor } from '@/types/Doctor/Doctor';
+import { Collaborator } from '@/types/Collaborator/Collaborator';
 import { StudiesWithURL } from '@/types/Study/Study';
 import { StudyType } from '@/types/Study-Type/Study-Type';
 
-export type StudiesUserType = 'patient' | 'doctor' | 'personal';
-export type StudiesUserData = Patient | Doctor;
+export type StudiesUserType = 'patient' | 'doctor' | 'personal' | 'colaborador';
+export type StudiesUserData = Patient | Doctor | Collaborator;
 
 export interface StudiesPermissions {
   canUploadStudies: boolean;

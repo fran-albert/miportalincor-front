@@ -6,7 +6,6 @@ import { Helmet } from "react-helmet-async";
 const PatientsComponent = () => {
   const {
     patients,
-    isLoading,
     isFetching,
     error,
     search,

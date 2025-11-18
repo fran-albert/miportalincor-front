@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Phone,
-  Mail,
   MapPin,
   IdCard,
   Briefcase,

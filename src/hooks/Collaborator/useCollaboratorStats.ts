@@ -32,7 +32,7 @@ export const useCollaboratorStats = ({
   const lastExamDate = lastExam
     ? new Date(lastExam.createdAt).toLocaleDateString("es-AR")
     : "Sin exámenes";
-  const lastExamType = lastExam?.evaluationType?.name || "N/A";
+  const lastExamType = lastExam?.medicalEvaluation.evaluationType?.name || "N/A";
 
   const isLoading = isFetchingEvaluations || isFetchingEvolutions;
 

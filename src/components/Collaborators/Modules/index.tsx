@@ -1,5 +1,5 @@
 import useUserRole from "@/hooks/useRoles";
-import { FileText, Activity, History, FileImage } from "lucide-react";
+import { FileText, Activity } from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
 import { useNavigate } from "react-router-dom";
 
@@ -14,7 +14,7 @@ export default function CollaboratorModules({
   totalExamenes,
   totalEvoluciones,
 }: CollaboratorModulesProps) {
-  const { isDoctor, isSecretary, isAdmin } = useUserRole();
+  const { isDoctor, isSecretary } = useUserRole();
   const navigate = useNavigate();
 
   const modules = [
@@ -34,7 +34,9 @@ export default function CollaboratorModules({
       icon: Activity,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
       onClick: () =>
-        navigate(`/incor-laboral/colaboradores/${collaboratorSlug}/evoluciones`),
+        navigate(
+          `/incor-laboral/colaboradores/${collaboratorSlug}/evoluciones`
+        ),
       visible: isDoctor || isSecretary,
       badge: totalEvoluciones,
     },

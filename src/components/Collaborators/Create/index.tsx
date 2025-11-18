@@ -67,7 +67,7 @@ export function CreateCollaboratorComponent({
     resolver: zodResolver(collaboratorSchema),
     defaultValues: preselectedCompanyId
       ? {
-          idCompany: preselectedCompanyId,
+          idCompany: parseInt(preselectedCompanyId),
         }
       : undefined,
   });

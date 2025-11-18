@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { searchDoctors, SearchDoctorsParams } from "@/api/Doctor/search-doctors.action";
+import { searchDoctors } from "@/api/Doctor/search-doctors.action";
 
 interface UseSearchDoctorsOptions {
   initialSearch?: string;

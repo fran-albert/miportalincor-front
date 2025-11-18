@@ -18,18 +18,6 @@ interface DoctorData {
   specialities?: Array<{ id: string; name: string }>;
 }
 
-interface PatientData {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  userName: string; // DNI
-  email?: string;
-  photo?: string;
-  cuil?: string;
-  healthPlans?: Array<{ id: string; name: string }>;
-}
-
 export class HealthcareApiSearchService implements ISearchService {
   async searchDoctors(
     search?: string,

@@ -116,18 +116,18 @@ const CollaboratorProfilePage = () => {
                       </div>
                     )}
                     {(collaborator.addressData?.number ||
-                      collaborator.addressData?.floorNumber ||
-                      collaborator.addressData?.departmentNumber) && (
+                      collaborator.addressData?.description ||
+                      collaborator.addressData?.phoneNumber) && (
                       <div>
                         <p className="text-sm text-gray-600 mb-1">
                           Número, Piso, Depto
                         </p>
                         <p className="text-lg font-semibold text-gray-900">
                           {collaborator.addressData.number || "-"}
-                          {collaborator.addressData.floorNumber &&
-                            `, Piso ${collaborator.addressData.floorNumber}`}
-                          {collaborator.addressData.departmentNumber &&
-                            `, Depto ${collaborator.addressData.departmentNumber}`}
+                          {collaborator.addressData.description &&
+                            `, Piso ${collaborator.addressData.description}`}
+                          {collaborator.addressData.phoneNumber &&
+                            `, Depto ${collaborator.addressData.phoneNumber}`}
                         </p>
                       </div>
                     )}

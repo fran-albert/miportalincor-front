@@ -35,7 +35,7 @@ export const searchPatients = async (
   // Add slugs to patients
   const patientsWithSlugs = data.data.map((patient) => ({
     ...patient,
-    slug: slugify(`${patient.firstName} ${patient.lastName}`, parseInt(patient.userId)),
+    slug: slugify(`${patient.firstName} ${patient.lastName}`, patient.userId),
   }));
 
   return {

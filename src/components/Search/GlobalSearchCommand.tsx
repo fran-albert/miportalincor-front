@@ -12,7 +12,6 @@ import {
 import { useGlobalSearch } from '@/hooks/Search/useGlobalSearch';
 import { SearchResult } from '@/api/Search/search-service.interface';
 import { User, Users, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { slugify } from '@/common/helpers/helpers';
 
 interface GlobalSearchCommandProps {
