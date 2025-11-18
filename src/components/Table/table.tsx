@@ -448,7 +448,7 @@ export function DataTable<TData, TValue>({
             </Pagination>
             </div>
           )}
-          {useServerSideSearch && currentPage && totalPages && (
+          {useServerSideSearch && currentPage !== undefined && totalPages !== undefined && totalPages > 0 && (
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-lg">
               <div className="text-gray-600 text-sm font-medium">
                 Página <span className="text-greenPrimary font-semibold">{currentPage}</span> de <span className="text-greenPrimary font-semibold">{totalPages}</span>

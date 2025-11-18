@@ -130,9 +130,9 @@ export function GlobalSearchCommand({
             {doctors.map((doctor) => (
               <CommandItem
                 key={`doctor-${doctor.id}`}
-                value={`${doctor.firstName} ${doctor.lastName}`}
+                value={`doctor-${doctor.id}-${doctor.firstName} ${doctor.lastName} ${doctor.userName}`}
                 onSelect={() => handleSelect(doctor)}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-greenPrimary/10 aria-selected:bg-greenPrimary/20 transition-colors duration-200"
               >
                 <User className="mr-2 h-4 w-4 flex-shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
@@ -163,9 +163,9 @@ export function GlobalSearchCommand({
             {patients.map((patient) => (
               <CommandItem
                 key={`patient-${patient.id}`}
-                value={`${patient.firstName} ${patient.lastName}`}
+                value={`patient-${patient.id}-${patient.firstName} ${patient.lastName} ${patient.userName}`}
                 onSelect={() => handleSelect(patient)}
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-greenPrimary/10 aria-selected:bg-greenPrimary/20 transition-colors duration-200"
               >
                 <Users className="mr-2 h-4 w-4 flex-shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
