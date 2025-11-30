@@ -42,7 +42,7 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!session?.id,
-    id: parseInt(session?.id || "0"),
+    id: session?.id || "0",
   });
 
   // Obtener solo la medicación activa más reciente

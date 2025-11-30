@@ -56,7 +56,7 @@ const AntecedentesSection: React.FC<Props> = ({
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!session?.id, // Only fetch when user wants to open modal and we have session
-    id: parseInt(session?.id || "0"),
+    id: session?.id || "0",
   });
 
   const isDataReady =

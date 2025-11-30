@@ -13,7 +13,7 @@ const PatientHistoryPage = () => {
   const slug = params.slug;
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const {
     patient,
@@ -30,7 +30,7 @@ const PatientHistoryPage = () => {
     error: antecedentesError,
   } = useAntecedentes({
     auth: true,
-    userId: id,
+    userId: patient?.userId ? Number(patient.userId) : 0,
   });
 
   const {
@@ -39,7 +39,7 @@ const PatientHistoryPage = () => {
     error: evolucionesError,
   } = useEvoluciones({
     auth: true,
-    userId: id,
+    userId: patient?.userId ? Number(patient.userId) : 0,
   });
 
   const {
@@ -48,7 +48,7 @@ const PatientHistoryPage = () => {
     error: medicacionActualError,
   } = useMedicacionActual({
     auth: true,
-    userId: id,
+    userId: patient?.userId ? Number(patient.userId) : 0,
     queryParams: {
       status: 'ACTIVE',
       includeDoctor: true
@@ -101,7 +101,7 @@ const PatientHistoryPage = () => {
         antecedentesError={antecedentesError}
         evolucionesError={evolucionesError}
         medicacionActualError={medicacionActualError}
-        patientId={id}
+        patientId={patient?.userId ? Number(patient.userId) : 0}
       />
     </>
   );

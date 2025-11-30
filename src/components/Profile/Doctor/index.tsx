@@ -69,7 +69,6 @@ export default function ProfileDoctorCardComponent({
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     data?.birthDate ? new Date(data.birthDate.toString()) : undefined
   );
-  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -112,36 +111,55 @@ export default function ProfileDoctorCardComponent({
   const handleSave = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
-    const specialitiesToSend = data?.specialities.map((s) => ({
-      id: s.id,
-      name: s.name,
-    }));
-    const healthInsuranceToSend = data?.healthInsurances.map((h) => ({
-      id: h.id,
-      name: h.name,
-    }));
-    const { address, ...rest } = form.getValues();
-    const formattedUserName = removeDotsFromDni(form.getValues("userName"));
-    const addressToSend = {
-      ...address,
-      id: data?.address?.id,
-      city: {
-        ...selectedCity,
-        state: selectedState,
+    const formValues = form.getValues();
+
+    // Especialidades y obras sociales del doctor (no editables en este form, se mantienen)
+    const specialitiesToSend = data?.specialities
+      .filter((s): s is { id: number; name: string } => s.id !== undefined)
+      .map((s) => ({ id: s.id, name: s.name }));
+
+    const healthInsurancesToSend = data?.healthInsurances
+      .filter((h): h is { id: number; name: string } => h.id !== undefined)
+      .map((h) => ({ id: h.id, name: h.name }));
+
+    const dataToSend = {
+      // Datos personales
+      firstName: formValues.firstName,
+      lastName: formValues.lastName,
+      userName: formValues.userName?.replace(/\./g, ""), // Remover puntos del DNI formateado
+      birthDate: formValues.birthDate,
+      gender: formValues.gender,
+      maritalStatus: formValues.maritalStatus,
+
+      // Datos de contacto
+      email: formValues.email,
+      phoneNumber: formValues.phoneNumber,
+      phoneNumber2: formValues.phoneNumber2 || "",
+
+      // Datos médicos
+      bloodType: formValues.bloodType,
+      rhFactor: formValues.rhFactor,
+      observations: formValues.observations || "",
+
+      // Datos profesionales
+      matricula: formValues.matricula,
+      specialities: specialitiesToSend,
+      healthInsurances: healthInsurancesToSend,
+
+      // Dirección
+      address: {
+        id: data?.address?.id,
+        street: formValues.address?.street || "",
+        number: formValues.address?.number || "",
+        description: formValues.address?.description || "",
+        phoneNumber: formValues.address?.phoneNumber || "",
+        city: selectedCity,
       },
     };
-    const dataToSend: Doctor = {
-      ...rest,
-      userName: formattedUserName,
-      address: addressToSend,
-      specialities: specialitiesToSend,
-      healthInsurances: healthInsuranceToSend,
-      photo: data?.photo,
-      registeredById: data?.registeredById,
-    } as Doctor;
+
     try {
       const dataCreationPromise = updateDoctorMutation.mutateAsync({
-        id: Number(data?.userId),
+        id: data?.id || "",
         doctor: dataToSend,
       });
       await promiseToast(dataCreationPromise, {
@@ -188,7 +206,7 @@ export default function ProfileDoctorCardComponent({
                 <Edit2 className="h-4 w-4 mr-2" />
                 Editar Perfil
               </Button>
-              <ChangePasswordDialog idUser={Number(data?.userId)} />
+              <ChangePasswordDialog idUser={data?.userId ?? 0} />
             </div>
           ) : (
             <div className="flex gap-2">
@@ -803,13 +821,13 @@ export default function ProfileDoctorCardComponent({
                     id="firma"
                     label="Firma"
                     image={data?.firma || null}
-                    doctorId={Number(data?.userId)}
+                    doctorId={data?.userId ?? 0}
                     isEditing={isEditing}
                   />
                   <ImageUploadBox
                     id="sello"
                     label="Sello"
-                    doctorId={Number(data?.userId)}
+                    doctorId={data?.userId ?? 0}
                     isEditing={isEditing}
                     image={data?.sello || null}
                   />

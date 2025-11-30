@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, User, Pill, Plus } from "lucide-react";
+import { ArrowLeft, Calendar, User, Pill, Plus, FileDown, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import CreateCurrentMedicationModal from "@/components/Current-Medication/Create";
 import EditCurrentMedicationModal from "@/components/Current-Medication/Edit";
@@ -14,6 +14,7 @@ import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
 import { formatDateArgentina } from "@/common/helpers/helpers";
+import { useMedicacionActualPDF } from "@/hooks/Current-Medication/useMedicacionActualPDF";
 
 type UserData = Patient | Doctor;
 
@@ -60,8 +61,11 @@ export default function MedicacionActualComponent({
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!session?.id,
-    id: parseInt(session?.id || "0"),
+    id: session?.id || "0",
   });
+
+  // Hook para generar PDF
+  const { generatePDF, isGenerating } = useMedicacionActualPDF();
 
   // Check if all data is loaded for modal
   const isModalDataReady = !isLoadingDoctor && doctor;
@@ -161,20 +165,43 @@ export default function MedicacionActualComponent({
                 Medicación Actual
               </CardTitle>
             </div>
-            {currentUserType === "doctor" && (
-              <Button
-                className="bg-white text-greenPrimary hover:bg-white/90"
-                onClick={handleOpenModal}
-                disabled={wantsToOpenModal}
-              >
-                {wantsToOpenModal ? (
-                  <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mr-2" />
-                ) : (
-                  <Plus className="h-4 w-4 mr-2" />
-                )}
-                {currentMedication ? "Actualizar" : "Agregar"} Medicación
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {patient && (
+                <Button
+                  variant="outline"
+                  className="bg-white/10 text-white border-white/30 hover:bg-white/20"
+                  onClick={() =>
+                    generatePDF({
+                      patient,
+                      medicacionActual: currentMedication,
+                      historialMedicaciones: suspendedMedications,
+                    })
+                  }
+                  disabled={isGenerating || (!currentMedication && suspendedMedications.length === 0)}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileDown className="h-4 w-4 mr-2" />
+                  )}
+                  Exportar PDF
+                </Button>
+              )}
+              {currentUserType === "doctor" && (
+                <Button
+                  className="bg-white text-greenPrimary hover:bg-white/90"
+                  onClick={handleOpenModal}
+                  disabled={wantsToOpenModal}
+                >
+                  {wantsToOpenModal ? (
+                    <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  {currentMedication ? "Actualizar" : "Agregar"} Medicación
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
       </Card>

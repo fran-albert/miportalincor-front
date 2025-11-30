@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 
 interface Props {
     auth: boolean;
-    id: number;
+    id: string;
     enabled?: boolean;
 }
 

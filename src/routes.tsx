@@ -46,6 +46,9 @@ import CollaboratorExamenesPage from "./pages/protected/Collaborator/Examenes";
 import CollaboratorEvolucionesPage from "./pages/protected/Collaborator/Evoluciones";
 import CollaboratorProfilePage from "./pages/protected/Collaborator/Profile";
 import CollaboratorStudiesPage from "./pages/protected/Collaborator/Estudios";
+import UsersComponent from "./pages/protected/Users";
+import RoleManagementPage from "./pages/protected/Role-Management";
+import AssignRolesPage from "./pages/protected/Assign-Roles";
 
 function App() {
   return (
@@ -82,6 +85,36 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                 <ShiftsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Usuarios del Sistema */}
+          <Route
+            path="/usuarios"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <UsersComponent />
+              </Private_Routes>
+            }
+          />
+
+          {/* Gestión de Roles */}
+          <Route
+            path="/gestion-roles"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <RoleManagementPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Asignar Roles */}
+          <Route
+            path="/asignar-roles"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <AssignRolesPage />
               </Private_Routes>
             }
           />

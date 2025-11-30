@@ -17,7 +17,7 @@ interface Props {
   isLoadingEvolutions?: boolean;
 }
 
-const DoctorInfo: React.FC<{ doctorId: number }> = ({ doctorId }) => {
+const DoctorInfo: React.FC<{ doctorId: string }> = ({ doctorId }) => {
   const { doctor } = useDoctor({
     auth: true,
     id: doctorId,
@@ -196,7 +196,7 @@ const CollaboratorListEvolution: React.FC<Props> = ({
                       </p>
                     </div>
                     <DoctorInfo
-                      doctorId={evolution.medicalEvaluation.doctorId}
+                      doctorId={String(evolution.medicalEvaluation.doctorId)}
                     />
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">

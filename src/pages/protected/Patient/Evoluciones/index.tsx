@@ -11,7 +11,7 @@ const PatientEvolucionesPage: React.FC = () => {
   const slug = params.slug;
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const {
     patient,
@@ -27,7 +27,7 @@ const PatientEvolucionesPage: React.FC = () => {
     error: evolucionesError,
   } = useEvoluciones({
     auth: true,
-    userId: id,
+    userId: patient?.userId ? Number(patient.userId) : 0,
   });
 
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ const PatientEvolucionesPage: React.FC = () => {
         evoluciones={evoluciones}
         userData={patient}
         userType="patient"
-        patientId={id}
+        patientId={patient?.userId ? Number(patient.userId) : 0}
         patient={patient}
       />
     </>

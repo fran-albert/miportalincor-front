@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import DeleteDoctorDialog from "../Delete/DeleteDoctorDialog";
 
 export const getColumns = (
-  prefetchDoctors: (id: number) => void,
+  prefetchDoctors: (id: string) => void,
   roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
 ): ColumnDef<Doctor>[] => {
   const columns: ColumnDef<Doctor>[] = [
@@ -26,8 +26,8 @@ export const getColumns = (
         <Link
           to={`/medicos/${row.original.slug}`}
           className="flex items-center cursor-pointer"
-          onMouseEnter={
-            prefetchDoctors && (() => prefetchDoctors(row.original.userId))
+          onMouseEnter={() =>
+            prefetchDoctors && row.original.userId && prefetchDoctors(String(row.original.userId))
           }
         >
           <Avatar>
@@ -126,7 +126,7 @@ export const getColumns = (
                 text="Ver Medico"
                 path="medicos"
               />
-              <DeleteDoctorDialog idDoctor={row.original.userId} />
+              <DeleteDoctorDialog idDoctor={row.original.id || String(row.original.userId)} />
             </>
           )}
           {roles.isDoctor && (

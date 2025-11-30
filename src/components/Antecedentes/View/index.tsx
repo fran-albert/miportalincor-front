@@ -37,6 +37,7 @@ interface ViewAntecedenteDialogProps {
   antecedente: Antecedente | null;
   canDelete?: boolean;
   timeRemaining?: string;
+  onDeleteSuccess?: () => void;
 }
 
 export const ViewAntecedenteDialog = ({
@@ -45,10 +46,11 @@ export const ViewAntecedenteDialog = ({
   antecedente,
   canDelete = false,
   timeRemaining,
+  onDeleteSuccess,
 }: ViewAntecedenteDialogProps) => {
-  if (!antecedente) return null;
-
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  if (!antecedente) return null;
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -222,12 +224,18 @@ export const ViewAntecedenteDialog = ({
       </Dialog>
 
       {/* Dialog de eliminación */}
-      {canDelete && showDeleteDialog && (
+      {canDelete && (
         <DeleteDataValueDialog
           idDataValue={String(antecedente.id)}
           itemType="antecedente"
           itemDescription={antecedente.observaciones ?? undefined}
-          triggerButton={<div />}
+          isOpen={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onSuccess={() => {
+            setShowDeleteDialog(false);
+            onClose();
+            onDeleteSuccess?.();
+          }}
         />
       )}
     </TooltipProvider>

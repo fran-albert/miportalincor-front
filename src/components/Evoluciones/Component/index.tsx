@@ -20,6 +20,8 @@ import {
   ClipboardList,
   Stethoscope,
   FileCheck,
+  FileDown,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 import CreateEvolucionDialog from "../Create";
@@ -32,6 +34,7 @@ import EvolutionTable from "../Table/table";
 import { EvolutionTableRow } from "../Table/columns";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
 import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
+import { useEvolucionesPDF } from "@/hooks/Evolution/useEvolucionesPDF";
 import { useToast } from "@/hooks/Toast/useToast";
 import { useEvolutionMutation } from "@/hooks/Evolution/useEvolutionMutation";
 import DeleteEvolutionDialog from "../Delete/DeleteEvolutionDialog";
@@ -66,6 +69,7 @@ export default function EvolucionesComponent({
   const idUser = patientId || userData?.id;
   const { showSuccess, showError, showLoading, removeToast } = useToast();
   const { generatePDF } = useEvolutionPDF();
+  const { generatePDF: generateAllPDF, isGenerating: isGeneratingAll } = useEvolucionesPDF();
   const { deleteEvolutionMutation } = useEvolutionMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -381,13 +385,30 @@ export default function EvolucionesComponent({
                   Evoluciones Médicas Completas
                 </CardTitle>
               </div>
-              <Button
-                className="bg-white text-greenPrimary hover:bg-white/90"
-                onClick={() => setIsAddEvolucionModalOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar Evolución
-              </Button>
+              <div className="flex gap-2">
+                {patient && (
+                  <Button
+                    variant="outline"
+                    className="bg-white/10 text-white border-white/30 hover:bg-white/20"
+                    onClick={() => generateAllPDF({ patient, evoluciones: tableRows })}
+                    disabled={isGeneratingAll || tableRows.length === 0}
+                  >
+                    {isGeneratingAll ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4 mr-2" />
+                    )}
+                    Exportar PDF
+                  </Button>
+                )}
+                <Button
+                  className="bg-white text-greenPrimary hover:bg-white/90"
+                  onClick={() => setIsAddEvolucionModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar Evolución
+                </Button>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -433,6 +454,7 @@ export default function EvolucionesComponent({
               onDelete={handleDeleteEvolution}
               onPrint={handlePrintEvolution}
               isLoading={false}
+              currentUserId={idDoctor}
             />
           </CardContent>
         </Card>

@@ -18,7 +18,7 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import { ApiError } from "@/types/Error/ApiError";
 
 interface DeleteDoctorDialogProps {
-  idDoctor: number;
+  idDoctor: string;
 }
 
 export default function DeleteDoctorDialog({

@@ -1,7 +1,8 @@
 import { Patient } from "@/types/Patient/Patient";
-import { apiIncor } from "@/services/axiosConfig";
+import { UpdatePatientDto } from "@/types/Patient/UpdatePatient.dto";
+import { apiIncorHC } from "@/services/axiosConfig";
 
-export const updatePatient = async (id: number, patient: Patient) => {
-    const { data } = await apiIncor.put<Patient>(`Patient/${id}`, patient);
+export const updatePatient = async (id: string, patient: UpdatePatientDto) => {
+    const { data } = await apiIncorHC.put<Patient>(`patient/${id}`, patient);
     return data;
 }

@@ -7,7 +7,7 @@ import { Users } from "lucide-react";
 
 interface PatientTableProps {
   patients: Patient[];
-  prefetchPatients: (id: number) => void;
+  prefetchPatients: (id: string) => void;
   isFetching?: boolean;
   searchQuery: string;
   setSearch: (query: string) => void;

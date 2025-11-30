@@ -74,7 +74,8 @@ const PatientInformation: React.FC<Props> = ({ patient }) => {
                     <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
                       {calculateAge(String(patient.birthDate))} años
                     </Badge>
-                    {patient.bloodType && patient.rhFactor && (
+                    {patient.bloodType && patient.rhFactor &&
+                      patient.bloodType !== 'null' && patient.rhFactor !== 'null' && (
                       <Badge className="bg-red-100 text-red-700 border-red-200">
                         <Droplet className="h-3 w-3 mr-1" />
                         {patient.bloodType} {patient.rhFactor}

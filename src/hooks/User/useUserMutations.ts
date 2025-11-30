@@ -4,6 +4,8 @@ import { requestSupport } from "@/api/User/request-support.action";
 import { resetDefaultPassword } from "@/api/User/reset-default-password.action";
 import { resetPassword } from "@/api/User/reset-password.action";
 import { updateUser } from "@/api/User/update-user.action";
+import { activateUser } from "@/api/User/activate-user.action";
+import { deactivateUser } from "@/api/User/deactivate-user.action";
 import { User } from "@/types/User/User";
 import { useMutation } from "@tanstack/react-query";
 
@@ -75,5 +77,34 @@ export const useUserMutations = () => {
         },
     });
 
-    return { changePasswordMutation, updateUserMutation, resetPasswordMutation, requestSupportMutation, forgotPasswordMutation, resetDefaultPasswordMutation };
+    const activateUserMutation = useMutation({
+        mutationFn: (userId: string) => activateUser(userId),
+        onSuccess: (user, variables, context) => {
+            console.log("User activated", user, variables, context);
+        },
+        onError: (error, variables, context) => {
+            console.log("Error activating user", error, variables, context);
+        },
+    });
+
+    const deactivateUserMutation = useMutation({
+        mutationFn: (userId: string) => deactivateUser(userId),
+        onSuccess: (user, variables, context) => {
+            console.log("User deactivated", user, variables, context);
+        },
+        onError: (error, variables, context) => {
+            console.log("Error deactivating user", error, variables, context);
+        },
+    });
+
+    return {
+        changePasswordMutation,
+        updateUserMutation,
+        resetPasswordMutation,
+        requestSupportMutation,
+        forgotPasswordMutation,
+        resetDefaultPasswordMutation,
+        activateUserMutation,
+        deactivateUserMutation
+    };
 };

@@ -26,6 +26,7 @@ import { z } from "zod";
 import { PatientSchema } from "@/validators/patient.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Patient } from "@/types/Patient/Patient";
+import { UpdatePatientDto } from "@/types/Patient/UpdatePatient.dto";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import CustomDatePicker from "@/components/Date-Picker";
 import {
@@ -58,7 +59,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
       firstName: patient?.firstName || "",
       lastName: patient?.lastName || "",
       email: patient?.email || "",
-      userName: patient?.dni ? formatDni(String(patient.dni)) : "",
+      userName: patient?.dni ? formatDni(String(patient.dni)) : (patient?.userName ? formatDni(String(patient.userName)) : ""),
       birthDate: patient?.birthDate
         ? typeof patient.birthDate === "string" ||
           patient.birthDate instanceof Date
@@ -112,9 +113,12 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   const [selectedHealthInsurance, setSelectedHealthInsurance] = useState<
     HealthInsurance | undefined
   >(patient?.healthPlans?.[0]?.healthInsurance);
-  const [startDate, setStartDate] = useState<Date | undefined>(() =>
-    patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
-  );
+  const [startDate, setStartDate] = useState<Date | undefined>(() => {
+    if (!patient?.birthDate) return undefined;
+    // Parsear fecha sin timezone issues: "2001-06-04" -> agregar T12:00:00 para evitar problemas de UTC
+    const dateStr = patient.birthDate.toString();
+    return new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`);
+  });
   const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
@@ -143,52 +147,67 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
 
   const onSubmit: SubmitHandler<FormValues> = async (formData) => {
     const formattedUserName = removeDotsFromDni(formData.userName);
-    const { address, ...rest } = formData;
+
+    // Build address with all expected fields
     const addressToSend = {
-      ...address,
       id: patient?.address?.id,
-      city: {
-        ...selectedCity,
-        state: selectedState,
-      },
+      street: formData.address?.street || "",
+      number: formData.address?.number || "",
+      description: formData.address?.description || "",
+      phoneNumber: formData.address?.phoneNumber || "",
+      city: selectedCity ? {
+        id: selectedCity.id,
+        name: selectedCity.name,
+        state: selectedState ? {
+          id: selectedState.id,
+          name: selectedState.name,
+          country: selectedState.country,
+        } : undefined,
+      } : undefined,
     };
-    const healthPlansToSend = [
+
+    // Build healthPlans with only id and name (filter out undefined ids)
+    const healthPlansToSend = selectedHealthInsurance ? [
       {
-        id: selectedHealthInsurance?.id,
-        name: selectedHealthInsurance?.name,
-        healthInsurance: {
-          id: selectedHealthInsurance?.id,
-          name: selectedHealthInsurance?.name,
-        },
+        id: selectedHealthInsurance.id,
+        name: selectedHealthInsurance.name,
       },
-    ];
-    const dataToSend = {
-      ...rest,
+    ].filter((hp): hp is { id: number; name: string } => hp.id !== undefined)
+     : patient?.healthPlans
+        ?.map(hp => ({ id: hp.id, name: hp.name }))
+        .filter((hp): hp is { id: number; name: string } => hp.id !== undefined) || [];
+
+    // Convert birthDate to string if it's a Date
+    const birthDateString = formData.birthDate instanceof Date
+      ? formData.birthDate.toISOString().split('T')[0]
+      : typeof formData.birthDate === 'string'
+        ? formData.birthDate
+        : undefined;
+
+    // Only send UpdatePatientDto fields - exclude form-only fields
+    const dataToSend: UpdatePatientDto = {
       userName: formattedUserName,
-      address: addressToSend,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      phoneNumber2: formData.phoneNumber2,
+      birthDate: birthDateString,
       photo: patient.photo,
-      registeredById: patient.registeredById,
+      address: addressToSend,
       healthPlans: healthPlansToSend,
-      id: patient.id,
-      userId: patient.userId,
-      dni: patient.dni,
+      registeredById: patient.registeredById?.toString(),
+      bloodType: formData.bloodType,
+      rhFactor: formData.rhFactor,
+      gender: formData.gender,
+      maritalStatus: formData.maritalStatus,
+      observations: formData.observations,
+      affiliationNumber: formData.affiliationNumber,
       cuil: patient.cuil,
-      affiliationNumber: patient.affiliationNumber,
-      registrationDate: patient.registrationDate,
-      roles: patient.roles,
-      priority: patient.priority,
-      module: patient.module,
-      description: patient.description,
-      currentPassword: patient.currentPassword,
-      password: patient.password,
-      newPassword: patient.newPassword,
-      code: patient.code,
-      confirmPassword: patient.confirmPassword,
-      registeredByName: patient.registeredByName,
-    } as Patient;
+    };
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
-        id: Number(patient?.userId),
+        id: patient?.id,
         patient: dataToSend,
       });
 
@@ -218,36 +237,68 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
     const isValid = await form.trigger();
     if (!isValid) return;
     const formattedUserName = removeDotsFromDni(form.getValues("userName"));
-    const { address, ...rest } = form.getValues();
+    const formValues = form.getValues();
+
+    // Build address with all expected fields
     const addressToSend = {
-      ...address,
       id: patient?.address?.id,
-      city: {
-        ...selectedCity,
-        state: selectedState,
-      },
+      street: formValues.address?.street || "",
+      number: formValues.address?.number || "",
+      description: formValues.address?.description || "",
+      phoneNumber: formValues.address?.phoneNumber || "",
+      city: selectedCity ? {
+        id: selectedCity.id,
+        name: selectedCity.name,
+        state: selectedState ? {
+          id: selectedState.id,
+          name: selectedState.name,
+          country: selectedState.country,
+        } : undefined,
+      } : undefined,
     };
-    const healthPlansToSend = [
+
+    // Build healthPlans with only id and name (filter out undefined ids)
+    const healthPlansToSend = selectedHealthInsurance ? [
       {
-        id: selectedHealthInsurance?.id,
-        name: selectedHealthInsurance?.name,
-        healthInsurance: {
-          id: selectedHealthInsurance?.id,
-          name: selectedHealthInsurance?.name,
-        },
+        id: selectedHealthInsurance.id,
+        name: selectedHealthInsurance.name,
       },
-    ];
-    const dataToSend: Patient = {
-      ...rest,
+    ].filter((hp): hp is { id: number; name: string } => hp.id !== undefined)
+     : patient?.healthPlans
+        ?.map(hp => ({ id: hp.id, name: hp.name }))
+        .filter((hp): hp is { id: number; name: string } => hp.id !== undefined) || [];
+
+    // Convert birthDate to string if it's a Date
+    const birthDateStr = formValues.birthDate instanceof Date
+      ? formValues.birthDate.toISOString().split('T')[0]
+      : typeof formValues.birthDate === 'string'
+        ? formValues.birthDate
+        : undefined;
+
+    // Only send UpdatePatientDto fields - exclude form-only fields like healthInsurance, city
+    const dataToSend: UpdatePatientDto = {
       userName: formattedUserName,
-      address: addressToSend,
+      firstName: formValues.firstName,
+      lastName: formValues.lastName,
+      email: formValues.email,
+      phoneNumber: formValues.phoneNumber,
+      phoneNumber2: formValues.phoneNumber2,
+      birthDate: birthDateStr,
       photo: patient.photo,
-      registeredById: patient.registeredById,
+      address: addressToSend,
       healthPlans: healthPlansToSend,
-    } as Patient;
+      registeredById: patient.registeredById?.toString(),
+      bloodType: formValues.bloodType,
+      rhFactor: formValues.rhFactor,
+      gender: formValues.gender,
+      maritalStatus: formValues.maritalStatus,
+      observations: formValues.observations,
+      affiliationNumber: formValues.affiliationNumber,
+      cuil: patient.cuil,
+    };
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
-        id: Number(patient?.userId),
+        id: patient?.id,
         patient: dataToSend,
       });
 

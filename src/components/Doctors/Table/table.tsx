@@ -7,7 +7,7 @@ import { Stethoscope } from "lucide-react";
 
 interface DoctorsTableProps {
   doctors: Doctor[];
-  prefetchDoctors: (id: number) => void;
+  prefetchDoctors: (id: string) => void;
   isLoading?: boolean;
   searchQuery?: string;
   setSearch?: (search: string) => void;

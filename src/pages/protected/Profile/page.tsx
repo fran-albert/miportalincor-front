@@ -12,20 +12,21 @@ import { Helmet } from "react-helmet-async";
 
 const MyProfilePage = () => {
   const { session, isDoctor, isPatient, isSecretary } = useUserRole();
-  const userId = Number(session?.id);
+  const userId = session?.id;
+  const numericUserId = userId ? Number(userId) : -1;
   const { user: secretary, isLoading: isLoadingSecretary } = useUser({
     auth: isSecretary && userId !== undefined,
-    id: userId !== undefined ? userId : -1,
+    id: numericUserId,
   });
 
   const { patient, isLoading: isLoadingPatient } = usePatient({
     auth: isPatient && userId !== undefined,
-    id: userId !== undefined ? userId : -1,
+    id: userId !== undefined ? userId : "",
   });
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: isDoctor && userId !== undefined,
-    id: userId !== undefined ? userId : -1,
+    id: userId !== undefined ? userId : "",
   });
 
   if (isDoctor && isLoadingDoctor) {

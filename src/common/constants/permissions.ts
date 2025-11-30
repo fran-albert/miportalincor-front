@@ -27,6 +27,8 @@ export const PERMISSIONS = {
   // Administración del Sistema
   SETTINGS: [Role.ADMINISTRADOR],
   SYSTEM_USERS: [Role.ADMINISTRADOR],
+  ROLE_MANAGEMENT: [Role.ADMINISTRADOR],
+  ASSIGN_ROLES: [Role.ADMINISTRADOR],
   AUDIT: [Role.ADMINISTRADOR],
 
   // Perfil y Estudios Personales

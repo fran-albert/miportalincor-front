@@ -82,8 +82,8 @@ const EvolutionSection: React.FC<Props> = ({
 
   const idDoctor = session?.id ? parseInt(session.id, 10) : undefined;
 
-  // Usar patientId prop o fallback a currentUser.id
-  const idUser = patientId || currentUser.id;
+  // Usar patientId prop o fallback a currentUser.userId (numérico de Healthcare.Api)
+  const idUser = patientId || (currentUser.userId ? Number(currentUser.userId) : 0);
   const handleConsultaClick = (evolucion: (typeof evolucionesLista)[0]) => {
     const consultaData = {
       fechaConsulta: evolucion.fechaConsulta,

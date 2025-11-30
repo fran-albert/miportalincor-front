@@ -16,11 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { PasswordInput } from "../ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/authSlice";
 import LoadingAnimation from "../Loading/loading";
 import { Mail, Lock, Stethoscope } from "lucide-react";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 const LoginComponent = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -34,16 +34,13 @@ const LoginComponent = () => {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setError(null);
-    setIsLoading(true); // Activamos el estado de carga al iniciar sesión
+    setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}Account/login`,
-        {
-          userName: values.userName,
-          password: values.password,
-        }
-      );
+      const response = await apiIncorHC.post("/auth/login", {
+        userName: values.userName,
+        password: values.password,
+      });
 
       const { token } = response.data;
       if (token) {
@@ -51,11 +48,15 @@ const LoginComponent = () => {
         dispatch(loginSuccess({ token }));
         navigate("/inicio");
       }
-    } catch (error) {
-      setError("Credenciales Incorrectas");
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setError(error.response?.data?.message || "Credenciales Incorrectas");
+      } else {
+        setError("Error al conectar con el servidor");
+      }
       console.error("Error during login:", error);
     } finally {
-      setIsLoading(false); // Desactivamos el estado de carga al finalizar
+      setIsLoading(false);
     }
   }
 

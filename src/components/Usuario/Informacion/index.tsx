@@ -8,6 +8,7 @@ import {
   Stethoscope,
   Shield,
   ArrowRight,
+  Droplet,
 } from "lucide-react";
 import { calculateAge, formatDni } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
@@ -24,10 +25,6 @@ interface Props {
 }
 
 // Type guards
-const isPatient = (user: UserData): user is Patient => {
-  return "dni" in user && "cuil" in user;
-};
-
 const isDoctor = (user: UserData): user is Doctor => {
   return "matricula" in user;
 };
@@ -71,48 +68,60 @@ const UserInformation: React.FC<Props> = ({ userData, userType }) => {
 
                 {/* Información Específica */}
                 <div className="space-y-3">
-                  {isPatient(userData) && (
-                    <>
-                      {/* DNI */}
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <IdCard className="h-5 w-5 text-greenPrimary" />
-                        <span className="font-medium">
-                          {formatDni(userData.dni)}
-                        </span>
-                      </div>
-
-                      {/* Badges de Género y Edad */}
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
-                          {userData.gender}
-                        </Badge>
-                        <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
-                          {calculateAge(String(userData.birthDate))} años
-                        </Badge>
-                      </div>
-
-                      {/* Obra Social */}
-                      {(userData.healthPlans?.[0]?.healthInsurance ||
-                        userData.affiliationNumber) && (
-                        <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                          <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {userData.healthPlans?.[0]?.healthInsurance
-                                .name || "Obra Social No Asignada"}
-                            </p>
-                            {userData.affiliationNumber && (
-                              <p className="text-sm text-gray-600">
-                                N° Afiliado: {userData.affiliationNumber}
-                              </p>
-                            )}
-                          </div>
+                  {userType === "patient" && (() => {
+                    const patient = userData as Patient;
+                    return (
+                      <>
+                        {/* DNI */}
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <IdCard className="h-5 w-5 text-greenPrimary" />
+                          <span className="font-medium">
+                            {formatDni(patient.dni)}
+                          </span>
                         </div>
-                      )}
-                    </>
-                  )}
 
-                  {isDoctor(userData) && (
+                        {/* Badges de Género, Edad y Tipo de Sangre */}
+                        <div className="flex gap-2 flex-wrap">
+                          {patient.gender && (
+                            <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
+                              {patient.gender}
+                            </Badge>
+                          )}
+                          <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
+                            {calculateAge(String(patient.birthDate))} años
+                          </Badge>
+                          {patient.bloodType && patient.rhFactor &&
+                            patient.bloodType !== 'null' && patient.rhFactor !== 'null' && (
+                            <Badge className="bg-red-100 text-red-700 border-red-200">
+                              <Droplet className="h-3 w-3 mr-1" />
+                              {patient.bloodType} {patient.rhFactor}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Obra Social */}
+                        {(patient.healthPlans?.[0]?.healthInsurance ||
+                          patient.affiliationNumber) && (
+                          <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <Shield className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {patient.healthPlans?.[0]?.healthInsurance
+                                  ?.name || "Obra Social No Asignada"}
+                              </p>
+                              {patient.affiliationNumber && (
+                                <p className="text-sm text-gray-600">
+                                  N° Afiliado: {patient.affiliationNumber}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+
+                  {userType === "doctor" && isDoctor(userData) && (
                     <>
                       {/* Matrícula */}
                       <div className="flex items-center gap-2 text-gray-700">
