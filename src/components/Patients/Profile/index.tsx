@@ -221,7 +221,7 @@ function PatientProfileComponent({
     } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
-        id: Number(patient?.userId),
+        id: patient?.id,
         patient: dataToSend,
       });
 
@@ -280,7 +280,7 @@ function PatientProfileComponent({
     } as Patient;
     try {
       const patientCreationPromise = updatePatientMutation.mutateAsync({
-        id: Number(patient?.userId),
+        id: patient?.id,
         patient: dataToSend,
       });
 

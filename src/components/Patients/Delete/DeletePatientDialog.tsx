@@ -17,7 +17,7 @@ import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface DeletePatientDialogProps {
-  idPatient: number;
+  idPatient: string;
 }
 
 export default function DeletePatientDialog({

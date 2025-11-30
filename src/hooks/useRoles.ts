@@ -7,10 +7,11 @@ import { RootState } from '@/store/store';
 interface DecodedToken {
   id: string;
   email: string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string | string[];
+  roles: string | string[];
   exp: number;
   iss: string;
   firstName: string;
+  lastName: string;
 }
 
 const ROLES = {
@@ -74,9 +75,9 @@ const useUserRole = () => {
     };
   }
 
-  const userRoles = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-
-  const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+  const rolesArray = Array.isArray(decodedToken.roles)
+    ? decodedToken.roles
+    : (decodedToken.roles ? [decodedToken.roles] : []);
 
   const session = {
     id: decodedToken.id,
@@ -86,6 +87,7 @@ const useUserRole = () => {
     iss: decodedToken.iss,
     token: token,
     firstName: decodedToken.firstName,
+    lastName: decodedToken.lastName,
   };
 
   return {

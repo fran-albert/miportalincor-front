@@ -23,6 +23,7 @@ interface EvolutionTableProps {
   onDelete: (evolucion: EvolutionTableRow) => void;
   onPrint: (evolucion: EvolutionTableRow) => void;
   isLoading?: boolean;
+  currentUserId?: number;
 }
 
 export default function EvolutionTable({
@@ -30,7 +31,8 @@ export default function EvolutionTable({
   onView,
   onDelete,
   onPrint,
-  isLoading = false
+  isLoading = false,
+  currentUserId
 }: EvolutionTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -42,7 +44,8 @@ export default function EvolutionTable({
   const columns = getEvolutionColumns({
     onView,
     onDelete,
-    onPrint
+    onPrint,
+    currentUserId
   });
 
   const table = useReactTable({

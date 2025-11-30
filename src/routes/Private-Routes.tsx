@@ -4,11 +4,9 @@ import { Navigate } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
 
 interface DecodedToken {
-  Id: string;
-  Email: string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
-    | string
-    | string[];
+  id: string;
+  email: string;
+  roles: string | string[];
   exp: number;
   iss: string;
 }
@@ -48,12 +46,8 @@ export const Private_Routes = ({
 
       // Verificar roles si se especificaron
       if (allowedRoles && allowedRoles.length > 0) {
-        const userRoles =
-          decodedToken[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-          ];
-
-        const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+        const userRoles = decodedToken.roles;
+        const rolesArray = Array.isArray(userRoles) ? userRoles : (userRoles ? [userRoles] : []);
         const hasAccess = rolesArray.some((role) =>
           allowedRoles.includes(role)
         );

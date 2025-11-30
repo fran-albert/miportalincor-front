@@ -1,7 +1,7 @@
 import { Address } from "@/types/Address/Address";
 
 export interface User {
-  id: number;
+  id: string; // UUID from new API
   dni: string;
   firstName: string;
   lastName: string;
@@ -14,7 +14,7 @@ export interface User {
   token?: string;
   address: Address;
   userName: string;
-  userId: number;
+  userId: number; // Numeric ID from old Healthcare.Api
   registrationDate: Date | string | undefined;
   roles: string[];
   priority: string;
@@ -37,6 +37,7 @@ export interface User {
   rhFactor: string;
   observations: string;
   bloodType: string;
+  active: boolean;
   // healthPlans: HealthPlans[]
   // healtInsurace: HealthInsurance[];
 }

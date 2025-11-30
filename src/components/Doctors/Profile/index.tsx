@@ -119,8 +119,6 @@ function DoctorProfileComponent({
     doctor?.birthDate ? new Date(doctor.birthDate.toString()) : undefined
   );
 
-  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
-
   useEffect(() => {
     if (doctor) {
       setValue("firstName", doctor.firstName);
@@ -164,58 +162,52 @@ function DoctorProfileComponent({
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (formData) => {
-    const specialitiesToSend = selectedSpecialities.map((s) => ({
-      id: s.id,
-      name: s.name,
-    }));
-    const healthInsuranceToSend = selectedHealthInsurances.map((h) => ({
-      id: h.id,
-      name: h.name,
-    }));
+    const specialitiesToSend = selectedSpecialities
+      .filter((s): s is { id: number; name: string } => s.id !== undefined)
+      .map((s) => ({ id: s.id, name: s.name }));
 
-    const { address, ...rest } = formData;
-    const formattedUserName = removeDotsFromDni(formData.userName);
-    const addressToSend = {
-      ...address,
-      id: doctor?.address?.id,
-      city: {
-        ...selectedCity,
-        state: selectedState,
+    const healthInsurancesToSend = selectedHealthInsurances
+      .filter((h): h is { id: number; name: string } => h.id !== undefined)
+      .map((h) => ({ id: h.id, name: h.name }));
+
+    const dataToSend = {
+      // Datos personales
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      userName: formData.userName?.replace(/\./g, ""), // Remover puntos del DNI formateado
+      birthDate: formData.birthDate,
+      gender: formData.gender,
+      maritalStatus: formData.maritalStatus,
+
+      // Datos de contacto
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      phoneNumber2: formData.phoneNumber2 || "",
+
+      // Datos médicos
+      bloodType: formData.bloodType,
+      rhFactor: formData.rhFactor,
+      observations: formData.observations || "",
+
+      // Datos profesionales
+      matricula: formData.matricula,
+      specialities: specialitiesToSend,
+      healthInsurances: healthInsurancesToSend,
+
+      // Dirección
+      address: {
+        id: doctor?.address?.id,
+        street: formData.address?.street || "",
+        number: formData.address?.number || "",
+        description: formData.address?.description || "",
+        phoneNumber: formData.address?.phoneNumber || "",
+        city: selectedCity,
       },
     };
 
-    const dataToSend = {
-      ...rest,
-      userName: formattedUserName,
-      address: addressToSend,
-      specialities: specialitiesToSend,
-      healthInsurances: healthInsuranceToSend,
-      photo: doctor?.photo,
-      registeredById: doctor?.registeredById,
-      id: doctor.id,
-      dni: doctor.dni,
-      userId: doctor.userId,
-      registrationDate: doctor.registrationDate,
-      roles: doctor.roles,
-      priority: doctor.priority,
-      module: doctor.module,
-      description: doctor.description,
-      currentPassword: doctor.currentPassword,
-      password: doctor.password,
-      newPassword: doctor.newPassword,
-      code: doctor.code,
-      confirmPassword: doctor.confirmPassword,
-      registeredByName: doctor.registeredByName,
-      slug: doctor.slug,
-      token: doctor.token,
-      firma: doctor.firma,
-      sello: doctor.sello,
-      matricula: formData.matricula,
-    } as Doctor;
-
     try {
       const promise = updateDoctorMutation.mutateAsync({
-        id: Number(doctor?.userId),
+        id: doctor?.id,
         doctor: dataToSend,
       });
 
@@ -920,7 +912,7 @@ function DoctorProfileComponent({
                   <ImageUploadBox
                     id="sello"
                     label="Sello"
-                    doctorId={doctor.userId}
+                    doctorId={doctor.userId ?? 0}
                     isEditing={isEditing}
                     image={doctor.sello || null}
                     onImageUploaded={() => setIsEditing(false)}
@@ -929,7 +921,7 @@ function DoctorProfileComponent({
                     id="firma"
                     label="Firma"
                     image={doctor.firma || null}
-                    doctorId={Number(doctor.userId)}
+                    doctorId={doctor.userId ?? 0}
                     isEditing={isEditing}
                     onImageUploaded={() => setIsEditing(false)}
                   />

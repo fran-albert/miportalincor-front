@@ -5,7 +5,7 @@ export const usePrefetchPatient = () => {
 
     const queryClient = useQueryClient();
 
-    const preFetchPatient = async (id: number) => {
+    const preFetchPatient = async (id: string) => {
 
         await queryClient.prefetchQuery({
             queryKey: ['patient', { id }],

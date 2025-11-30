@@ -11,7 +11,7 @@ export default function PreOccupationalPreviewPage() {
   const { slug, medicalEvaluationId } = useParams();
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = Number(slugParts[slugParts.length - 1]);
 
   const { isLoading: collaboratorLoading, collaborator, error: collaboratorError } = useCollaborator({
     auth: true,

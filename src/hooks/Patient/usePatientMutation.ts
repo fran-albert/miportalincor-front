@@ -1,8 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createPatient } from "@/api/Patient/create-patient.action";
 import { updatePatient } from "@/api/Patient/update-patient.action";
 import { deletePatient } from "@/api/Patient/delete-patient.action";
 import { Patient } from "@/types/Patient/Patient";
+import { UpdatePatientDto } from "@/types/Patient/UpdatePatient.dto";
 
 export const usePatientMutations = () => {
   const queryClient = useQueryClient();
@@ -22,7 +23,7 @@ export const usePatientMutations = () => {
   });
 
   const updatePatientMutation = useMutation({
-    mutationFn: ({ id, patient }: { id: number; patient: Patient }) => updatePatient(id, patient),
+    mutationFn: ({ id, patient }: { id: string; patient: UpdatePatientDto | Patient }) => updatePatient(id, patient as UpdatePatientDto),
     onSuccess: (patient, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['patient', variables.id] });
       console.log("Patient updated", patient, variables, context);
@@ -33,7 +34,7 @@ export const usePatientMutations = () => {
   });
 
   const deletePatientMutation = useMutation({
-    mutationFn: (id: number) => deletePatient(id),
+    mutationFn: (id: string) => deletePatient(id),
     onSuccess: (patient, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       console.log("Patient deleted", patient, variables, context);

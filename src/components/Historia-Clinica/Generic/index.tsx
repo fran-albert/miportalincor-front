@@ -43,12 +43,8 @@ export default function GenericHistory({
   // Validación de seguridad - no debería llegar aquí sin userData, pero por si acaso
   if (!userData) {
     return (
-      <div className="min-h-screen p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="p-4 text-red-500">
-            Error: No hay datos de usuario disponibles
-          </div>
-        </div>
+      <div className="p-4 text-red-500">
+        Error: No hay datos de usuario disponibles
       </div>
     );
   }
@@ -56,7 +52,7 @@ export default function GenericHistory({
   // Las evoluciones vienen como prop desde el backend
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Información del Usuario */}
       <UserInformation userData={userData} userType={userType} />
 

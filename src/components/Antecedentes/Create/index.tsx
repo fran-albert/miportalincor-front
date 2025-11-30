@@ -36,7 +36,7 @@ export const CreateAntecedenteDialog = ({
   idDoctor,
   onSuccess,
 }: CreateAntecedenteDialogProps) => {
-  const { doctor } = useDoctor({ auth: true, id: parseInt(idDoctor) });
+  const { doctor } = useDoctor({ auth: true, id: idDoctor });
   const { promiseToast } = useToastContext();
   const { control, handleSubmit, reset, watch } = useForm<FormData>({
     defaultValues: {

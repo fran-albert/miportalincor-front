@@ -19,6 +19,9 @@ interface DeleteDataValueDialogProps {
   itemType: "antecedente" | "medicación" | "evolución";
   itemDescription?: string;
   triggerButton?: React.ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export default function DeleteDataValueDialog({
@@ -26,8 +29,22 @@ export default function DeleteDataValueDialog({
   itemType,
   itemDescription,
   triggerButton,
+  isOpen: controlledIsOpen,
+  onOpenChange,
+  onSuccess,
 }: DeleteDataValueDialogProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [internalIsOpen, setInternalIsOpen] = useState<boolean>(false);
+
+  // Support both controlled and uncontrolled modes
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
+
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteDataValuesHCMutation } = useDataValuesMutations();
   const { promiseToast } = useToastContext();
@@ -104,6 +121,7 @@ export default function DeleteDataValueDialog({
       });
 
       setIsOpen(false);
+      onSuccess?.();
     } catch (error) {
       console.error(`Error al eliminar ${itemType}`, error);
     }
@@ -118,11 +136,16 @@ export default function DeleteDataValueDialog({
     </Button>
   );
 
+  // If controlled externally, don't render the trigger
+  const isControlled = controlledIsOpen !== undefined;
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {triggerButton || defaultTrigger}
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {triggerButton || defaultTrigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{messages.title}</DialogTitle>

@@ -27,6 +27,8 @@ import {
   Activity,
   TrendingUp,
   FileBarChart,
+  ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -128,9 +130,21 @@ const systemItems = [
   },
   {
     title: "Usuarios del Sistema",
-    url: "#",
+    url: "/usuarios",
     icon: User,
     allowedRoles: PERMISSIONS.SYSTEM_USERS,
+  },
+  {
+    title: "Gestión de Roles",
+    url: "/gestion-roles",
+    icon: ShieldCheck,
+    allowedRoles: PERMISSIONS.ROLE_MANAGEMENT,
+  },
+  {
+    title: "Asignar Roles",
+    url: "/asignar-roles",
+    icon: UserCog,
+    allowedRoles: PERMISSIONS.ASSIGN_ROLES,
   },
   {
     title: "Auditoría",
@@ -232,16 +246,26 @@ export function AppSidebar() {
             <SidebarGroupLabel>Administración</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filteredSystemItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>
-                        <item.icon className="text-greenPrimary" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {filteredSystemItems.map((item) => {
+                  const active = pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={active}>
+                        <Link
+                          to={item.url}
+                          className={`flex items-center gap-2 px-2 py-1 rounded ${
+                            active
+                              ? "font-bold bg-gray-100 text-greenPrimary"
+                              : "font-normal text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <item.icon className="text-greenPrimary" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

@@ -1,9 +1,9 @@
 import { sleep } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
-export const deletePatient = async (id: number) => {
+export const deletePatient = async (id: string) => {
     await sleep(2);
-    const { data } = await apiIncor.delete<Patient>(`Patient/${id}`);
+    const { data } = await apiIncorHC.delete<Patient>(`patient/${id}`);
     return data;
 }

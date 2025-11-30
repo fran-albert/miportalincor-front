@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import DeletePatientDialog from "../Delete/DeletePatientDialog";
 
 export const getColumns = (
-  prefetchPatients: (id: number) => void,
+  prefetchPatients: (id: string) => void,
   roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
 ): ColumnDef<Patient>[] => {
   const columns: ColumnDef<Patient>[] = [
@@ -26,7 +26,7 @@ export const getColumns = (
           to={`/pacientes/${row.original.slug}`}
           className="flex items-center cursor-pointer"
           onMouseEnter={() =>
-            prefetchPatients && prefetchPatients(row.original.userId)
+            prefetchPatients && row.original.userId && prefetchPatients(String(row.original.userId))
           }
         >
           <div className="flex flex-col ml-2">
@@ -92,7 +92,7 @@ export const getColumns = (
             />
           )}
           {(roles.isSecretary || roles.isAdmin) && (
-            <DeletePatientDialog idPatient={row.original.userId} />
+            <DeletePatientDialog idPatient={row.original.id || String(row.original.userId)} />
           )}
         </div>
       ),

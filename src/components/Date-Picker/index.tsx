@@ -40,9 +40,20 @@ export default function CustomDatePicker<T extends FieldValues = FieldValues>({
   compact = false,
   whiteBg = false,
 }: CustomDatePickerProps<T>) {
-  const [date, setDate] = useState<moment.Moment | null>(
-    initialDate ? moment(initialDate) : null
-  );
+  const [date, setDate] = useState<moment.Moment | null>(() => {
+    if (!initialDate) return null;
+    // Parsear fecha preservando día/mes/año sin ajuste de timezone
+    const d = moment(initialDate);
+    // Si la fecha viene como ISO string (con T), extraer solo la parte de fecha
+    if (typeof initialDate === 'string' || initialDate instanceof Date) {
+      const dateStr = initialDate instanceof Date
+        ? initialDate.toISOString().split('T')[0]
+        : String(initialDate).split('T')[0];
+      // Parsear como fecha local (sin timezone)
+      return moment(dateStr, 'YYYY-MM-DD');
+    }
+    return d;
+  });
   const [month, setMonth] = useState<number>(moment().month());
   const [year, setYear] = useState<number>(moment().year());
   const [isOpen, setIsOpen] = useState(false);

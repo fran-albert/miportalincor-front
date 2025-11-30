@@ -19,6 +19,8 @@ import {
   Search,
   Clock,
   Lock,
+  FileDown,
+  Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CreateAntecedenteDialog } from "@/components/Antecedentes/Create";
@@ -30,7 +32,9 @@ import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { formatDate } from "@/common/helpers/helpers";
+import { canDeleteEvolution, getDeleteTimeRemaining } from "@/common/helpers/evolutionHelpers";
 import { Patient } from "@/types/Patient/Patient";
+import { useAntecedentesPDF } from "@/hooks/Antecedentes/useAntecedentesPDF";
 
 interface AntecedenteProps {
   onBack: () => void;
@@ -58,25 +62,8 @@ export default function AntecedentesComponent({
   const userId = idUser || String(session?.id);
   const doctorId = idDoctor || String(session?.id);
 
-  // Función para validar si se puede eliminar (< 24 horas)
-  const canDeleteAntecedente = (createdAt: string): boolean => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const hoursDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-    return hoursDiff < 24;
-  };
-
-  // Función para obtener tiempo restante
-  const getTimeRemaining = (createdAt: string): string => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const hoursPassed = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-
-    if (hoursPassed >= 24) return "Tiempo expirado";
-
-    const hoursRemaining = Math.ceil(24 - hoursPassed);
-    return `${hoursRemaining}h restantes`;
-  };
+  // Hook para generar PDF
+  const { generatePDF, isGenerating } = useAntecedentesPDF();
 
   // Obtener antecedentes reales
   const {
@@ -98,7 +85,7 @@ export default function AntecedentesComponent({
 
   const { doctor, isLoading: isLoadingDoctor } = useDoctor({
     auth: wantsToOpenModal && !!doctorId,
-    id: parseInt(doctorId || "0"),
+    id: doctorId || "0",
   });
 
   // Check if all data is loaded for modal
@@ -227,18 +214,35 @@ export default function AntecedentesComponent({
                   Antecedentes Médicos Completos
                 </CardTitle>
               </div>
-              <Button
-                className="bg-white text-greenPrimary hover:bg-white/90"
-                onClick={handleOpenModal}
-                disabled={wantsToOpenModal}
-              >
-                {wantsToOpenModal ? (
-                  <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mr-2" />
-                ) : (
-                  <Plus className="h-4 w-4 mr-2" />
+              <div className="flex gap-2">
+                {patient && (
+                  <Button
+                    variant="outline"
+                    className="bg-white/10 text-white border-white/30 hover:bg-white/20"
+                    onClick={() => generatePDF({ patient, antecedentes })}
+                    disabled={isGenerating || antecedentes.length === 0}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4 mr-2" />
+                    )}
+                    Exportar PDF
+                  </Button>
                 )}
-                Agregar Antecedente
-              </Button>
+                <Button
+                  className="bg-white text-greenPrimary hover:bg-white/90"
+                  onClick={handleOpenModal}
+                  disabled={wantsToOpenModal}
+                >
+                  {wantsToOpenModal ? (
+                    <div className="w-4 h-4 border-2 border-greenPrimary border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  Agregar Antecedente
+                </Button>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -313,7 +317,7 @@ export default function AntecedentesComponent({
             </Card>
           ) : (
             filteredAntecedentes.map((ant) => {
-              const canDelete = canDeleteAntecedente(ant.createdAt);
+              const canDelete = canDeleteEvolution(ant.createdAt);
               return (
                 <Card
                   key={ant.id}
@@ -338,7 +342,7 @@ export default function AntecedentesComponent({
                                 className="text-green-600 border-green-600"
                               >
                                 <Clock className="h-3 w-3 mr-1" />
-                                {getTimeRemaining(ant.createdAt)}
+                                {getDeleteTimeRemaining(ant.createdAt)}
                               </Badge>
                             ) : (
                               <Badge
@@ -402,12 +406,12 @@ export default function AntecedentesComponent({
           antecedente={selectedAntecedenteToView}
           canDelete={
             selectedAntecedenteToView
-              ? canDeleteAntecedente(selectedAntecedenteToView.createdAt)
+              ? canDeleteEvolution(selectedAntecedenteToView.createdAt)
               : false
           }
           timeRemaining={
             selectedAntecedenteToView
-              ? getTimeRemaining(selectedAntecedenteToView.createdAt)
+              ? getDeleteTimeRemaining(selectedAntecedenteToView.createdAt)
               : ""
           }
         />

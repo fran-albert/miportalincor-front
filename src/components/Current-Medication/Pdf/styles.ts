@@ -1,0 +1,223 @@
+import { StyleSheet } from "@react-pdf/renderer";
+
+export const styles = StyleSheet.create({
+  page: {
+    paddingTop: 80,
+    paddingBottom: 50,
+    paddingHorizontal: 30,
+    fontSize: 10,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  // Header
+  headerContainer: {
+    position: "absolute",
+    top: 20,
+    left: 30,
+    right: 30,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "#2d5a4e",
+    paddingBottom: 10,
+  },
+  logo: {
+    width: 120,
+    height: 43,
+  },
+  headerInfo: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+  },
+  headerTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#2d5a4e",
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 9,
+    color: "#666666",
+  },
+  // Title
+  documentTitle: {
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 15,
+    marginBottom: 20,
+    fontWeight: "bold",
+    color: "#2d5a4e",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  // Patient Info Section
+  patientInfoContainer: {
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+  },
+  patientInfoTitle: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  patientInfoRow: {
+    flexDirection: "row",
+    marginBottom: 4,
+    flexWrap: "wrap",
+  },
+  patientInfoItem: {
+    flexDirection: "row",
+    marginRight: 20,
+    marginBottom: 4,
+  },
+  patientInfoLabel: {
+    fontSize: 9,
+    color: "#666666",
+    marginRight: 4,
+  },
+  patientInfoValue: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+  // Section titles
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#2d5a4e",
+    marginBottom: 10,
+    marginTop: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: "#e6f2ef",
+    borderRadius: 3,
+  },
+  // Medication Card
+  medicationCard: {
+    marginBottom: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: "#2d5a4e",
+  },
+  medicationCardSuspended: {
+    marginBottom: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: "#9ca3af",
+    backgroundColor: "#f9fafb",
+  },
+  medicationName: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#1f2937",
+    marginBottom: 8,
+  },
+  medicationRow: {
+    flexDirection: "row",
+    marginBottom: 6,
+    flexWrap: "wrap",
+  },
+  medicationItem: {
+    flexDirection: "row",
+    marginRight: 20,
+    marginBottom: 4,
+    minWidth: 120,
+  },
+  medicationLabel: {
+    fontSize: 9,
+    color: "#666666",
+    marginRight: 4,
+  },
+  medicationValue: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#374151",
+  },
+  medicationObservations: {
+    fontSize: 9,
+    color: "#666666",
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e5e5",
+    fontStyle: "italic",
+  },
+  suspensionInfo: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: "#fef2f2",
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  suspensionTitle: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#dc2626",
+    marginBottom: 4,
+  },
+  suspensionText: {
+    fontSize: 8,
+    color: "#991b1b",
+  },
+  // Status badges
+  statusBadgeActive: {
+    fontSize: 8,
+    color: "#166534",
+    backgroundColor: "#dcfce7",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 3,
+  },
+  statusBadgeSuspended: {
+    fontSize: 8,
+    color: "#6b7280",
+    backgroundColor: "#f3f4f6",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 3,
+  },
+  // Footer
+  footer: {
+    position: "absolute",
+    bottom: 20,
+    left: 30,
+    right: 30,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e5e5",
+    paddingTop: 8,
+  },
+  footerText: {
+    fontSize: 8,
+    color: "#888888",
+  },
+  pageNumber: {
+    fontSize: 8,
+    color: "#888888",
+  },
+  // Empty state
+  emptyState: {
+    textAlign: "center",
+    fontSize: 12,
+    color: "#666666",
+    marginTop: 50,
+    padding: 20,
+  },
+});

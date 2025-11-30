@@ -9,7 +9,7 @@ const PatientProfilePage = () => {
   const slug = params.slug;
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const { isLoading, patient, error } = usePatient({
     auth: true,

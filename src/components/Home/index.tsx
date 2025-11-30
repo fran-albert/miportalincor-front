@@ -10,7 +10,6 @@ import {
   Heart,
   Shield,
   TestTube,
-  Building2,
   Calendar,
 } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
@@ -93,19 +92,21 @@ export default function HomeComponent({ name }: { name: string }) {
       icon: Stethoscope,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
     },
-    {
-      title: "Total Estudios",
-      value: stats.studies.total,
-      lastMonthValue: stats.studies.lastMonth,
-      icon: FileText,
-      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
-    },
-    {
-      title: "Empresas Activas",
-      value: 0, // TODO: Agregar cuando esté disponible
-      icon: Building2,
-      gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
-    },
+    // TODO: Descomentar cuando esté la migración de estudios
+    // {
+    //   title: "Total Estudios",
+    //   value: stats.studies.total,
+    //   lastMonthValue: stats.studies.lastMonth,
+    //   icon: FileText,
+    //   gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+    // },
+    // TODO: Agregar cuando esté disponible el endpoint de empresas
+    // {
+    //   title: "Empresas Activas",
+    //   value: 0,
+    //   icon: Building2,
+    //   gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
+    // },
   ];
 
   return (

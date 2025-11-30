@@ -5,7 +5,7 @@ export const usePrefetchDoctor = () => {
 
     const queryClient = useQueryClient();
 
-    const preFetchDoctor = async (id: number) => {
+    const preFetchDoctor = async (id: string) => {
 
         await queryClient.prefetchQuery({
             queryKey: ['doctor', { id }],

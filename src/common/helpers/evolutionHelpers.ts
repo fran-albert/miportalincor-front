@@ -30,20 +30,6 @@ export const getDeleteTimeRemaining = (createdAt: string): string => {
   const timeDiff = nowTime - createdTime;
   const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-  console.log('Debug tiempo:', {
-    created: created.toISOString(),
-    now: now.toISOString(),
-    timeDiff,
-    hoursDiff,
-    createdAt,
-    'created local': created.toLocaleString('es-AR'),
-    'now local': now.toLocaleString('es-AR'),
-    'createdTime': createdTime,
-    'nowTime original': now.getTime(),
-    'nowTime corrected': nowTime,
-    'diff minutes': timeDiff / (1000 * 60)
-  });
-
   if (hoursDiff >= 24) {
     const daysAgo = Math.floor(hoursDiff / 24);
     return `No se puede eliminar (creada hace ${daysAgo} día${daysAgo !== 1 ? 's' : ''})`;
