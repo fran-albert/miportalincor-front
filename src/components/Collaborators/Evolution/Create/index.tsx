@@ -57,7 +57,7 @@ const CreateCollaboratorEvolution: React.FC<Props> = ({
   // Get doctor information when user is a doctor
   const { doctor, isLoading: isDoctorLoading } = useDoctor({ 
     auth: userRole?.isDoctor, 
-    id: doctorId 
+    id: String(doctorId) 
   });
 
   const showDoctorSelect = userRole?.isSecretary || userRole?.isAdmin;
