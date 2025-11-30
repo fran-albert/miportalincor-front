@@ -9,14 +9,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import ActionIcon from "@/components/Icons/action";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { useHealthInsuranceMutations } from "@/hooks/Health-Insurance/useHealthInsuranceMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface DeleteHealthInsuranceDialogProps {
   healthInsurance: HealthInsurance;
@@ -28,25 +25,30 @@ export default function DeleteHealthInsuranceDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteHealthInsuranceMutation } = useHealthInsuranceMutations();
+  const { promiseToast } = useToastContext();
   const handleConfirmDelete = async () => {
     try {
-      const healthInsuranceDeletionPromise =
-        deleteHealthInsuranceMutation.mutateAsync(Number(healthInsurance.id));
-        toast.promise(healthInsuranceDeletionPromise, {
-            loading: <LoadingToast message="Eliminando obra social..." />,
-            success: <SuccessToast message="Obra Social eliminada con éxito!" />,
-            error: <ErrorToast message="Error al eliminar la Obra Social" />,
-            duration: 3000,
-          });
-      healthInsuranceDeletionPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear la Obra Social", error);
-        });
+      const promise = deleteHealthInsuranceMutation.mutateAsync(Number(healthInsurance.id));
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando obra social...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Obra social eliminada!",
+          description: "La obra social se ha eliminado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al eliminar obra social",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
+      });
+
+      setIsOpen(false);
     } catch (error) {
-      console.error("Error al crear la Obra Social", error);
+      console.error("Error al eliminar la Obra Social", error);
     }
   };
 

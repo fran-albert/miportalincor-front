@@ -87,7 +87,7 @@ export default function ExcelUploader({ userId }: Props) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="link" className="text-greenPrimary">
+        <Button variant="link" className="bg-white hover:bg-white/90 text-greenPrimary font-medium shadow-md disabled:opacity-50">
           Subir archivo Excel
         </Button>
       </DialogTrigger>

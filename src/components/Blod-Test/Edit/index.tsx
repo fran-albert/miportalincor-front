@@ -7,14 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -27,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { bloodTestSchema } from "@/validators/Blod-Test/blod-test.schema";
 import { UnitSelect } from "@/components/Select/Unit/select";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   isOpen: boolean;
@@ -40,6 +38,7 @@ export default function EditBlodTestDialog({
   blodTest,
 }: Props) {
   const { updateBlodTestMutation } = useBlodTestMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof bloodTestSchema>>({
     resolver: zodResolver(bloodTestSchema),
@@ -58,11 +57,11 @@ export default function EditBlodTestDialog({
         referenceValue: blodTest.referenceValue,
       });
     }
-  }, [isOpen, blodTest]);
+  }, [isOpen, blodTest, form]);
 
   async function onSubmit(values: z.infer<typeof bloodTestSchema>) {
     try {
-      const specialityCreationPromise = updateBlodTestMutation.mutateAsync({
+      const promise = updateBlodTestMutation.mutateAsync({
         id: Number(blodTest.id),
         blodTest: {
           id: Number(blodTest.id),
@@ -72,20 +71,24 @@ export default function EditBlodTestDialog({
           ParsedName: values.originalName.toLowerCase().replace(/\s+/g, ""),
         },
       });
-      toast.promise(specialityCreationPromise, {
-        loading: <LoadingToast message="Editando análisis bioquímico..." />,
-        success: (
-          <SuccessToast message="Análisis bioquímico editado con éxito!" />
-        ),
-        error: <ErrorToast message="Error al editar el análisis bioquímico" />,
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Editando análisis bioquímico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Análisis bioquímico editado!",
+          description: "El análisis bioquímico se ha editado exitosamente",
+        },
+        error: (error: ApiError) => ({
+          title: "Error al editar análisis bioquímico",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      specialityCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al editar el análisis bioquímico", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al editar el análisis bioquímico", error);
     }
@@ -117,7 +120,7 @@ export default function EditBlodTestDialog({
             <FormField
               control={form.control}
               name="unit"
-              render={({}) => (
+              render={() => (
                 <FormItem>
                   <FormLabel className="text-black capitalize">
                     Unidad

@@ -9,6 +9,7 @@ export const getColumns = (roles: {
   isSecretary: boolean;
   isDoctor: boolean;
   isAdmin: boolean;
+  showCompanyColumn?: boolean;
 }): ColumnDef<Collaborator>[] => {
   const columns: ColumnDef<Collaborator>[] = [
     {
@@ -47,15 +48,6 @@ export const getColumns = (roles: {
       ),
     },
     {
-      accessorKey: "company",
-      header: "Empresa",
-      cell: ({ row }) => (
-        <div className="flex flex-col ml-2">
-          <p className="text-sm font-medium">{row.original.company.name}</p>
-        </div>
-      ),
-    },
-    {
       accessorKey: "dni",
       header: "D.N.I.",
       cell: ({ row }) => (
@@ -74,6 +66,21 @@ export const getColumns = (roles: {
         </div>
       ),
     },
+    ...(roles.showCompanyColumn
+      ? [
+          {
+            accessorKey: "company",
+            header: "Empresa",
+            cell: ({ row }: { row: any }) => (
+              <div className="flex items-center">
+                <p className="text-sm font-medium">
+                  {row.original.company?.name || "-"}
+                </p>
+              </div>
+            ),
+          } as ColumnDef<Collaborator>,
+        ]
+      : []),
 
     {
       header: " ",

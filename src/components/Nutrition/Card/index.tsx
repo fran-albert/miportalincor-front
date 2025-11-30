@@ -1,7 +1,7 @@
 // NutritionCard.tsx
 import React, { useRef, useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ClipboardPlus } from "lucide-react";
+import { ClipboardPlus, Plus, FileDown } from "lucide-react";
 import { NutritionTable } from "../Table/table";
 import type {
   CreateNutritionDataDto,
@@ -10,10 +10,7 @@ import type {
 } from "@/types/Nutrition-Data/NutritionData";
 import { Button } from "@/components/ui/button";
 import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDataMutation";
-import { toast } from "sonner";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import ExcelUploader from "../Upload-Excel";
 import WeightEvolutionCard from "../Weight-Evolution";
 import { pdf } from "@react-pdf/renderer";
@@ -22,6 +19,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { capitalizeWords } from "@/common/helpers/helpers";
 import { toPng } from "html-to-image";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   nutritionData: NutritionData[];
@@ -44,6 +42,7 @@ const NutritionCard: React.FC<Props> = ({
     updateNutritionDataMutation,
     deleteNutritionDataMutation,
   } = useNutritionDataMutations();
+  const { promiseToast } = useToastContext();
 
   // — Estados para el chart / PDF
   const [startDate, setStartDate] = useState<Date>();
@@ -65,46 +64,87 @@ const NutritionCard: React.FC<Props> = ({
     setPdfUrl(undefined);
   }, [startDate, endDate]);
 
-  const handleAddEntry = (newEntry: CreateNutritionDataDto) => {
-    toast.promise(addNutritionDataMutation.mutateAsync(newEntry), {
-      loading: <LoadingToast message="Agregando nueva entrada..." />,
-      success: (data) => {
-        setNutritionData((prev) => [...prev, data]);
-        return <SuccessToast message="Nueva entrada agregada con éxito" />;
-      },
-      error: <ErrorToast message="Error al agregar nueva entrada" />,
-    });
+  const handleAddEntry = async (newEntry: CreateNutritionDataDto) => {
+    try {
+      const data = await promiseToast(
+        addNutritionDataMutation.mutateAsync(newEntry),
+        {
+          loading: {
+            title: "Agregando nueva entrada",
+            description: "Por favor espera mientras procesamos tu solicitud",
+          },
+          success: {
+            title: "Nueva entrada agregada",
+            description: "La entrada se agregó exitosamente",
+          },
+          error: (error: ApiError) => ({
+            title: "Error al agregar nueva entrada",
+            description:
+              error.response?.data?.message ||
+              "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
+      setNutritionData((prev) => [...prev, data]);
+    } catch (error) {
+      console.error("Error adding entry:", error);
+    }
   };
 
-  const handleUpdateEntry = (updatedEntry: NutritionData) => {
+  const handleUpdateEntry = async (updatedEntry: NutritionData) => {
     const { id, ...data } = updatedEntry;
-    toast.promise(
-      updateNutritionDataMutation.mutateAsync({ id, data } as {
-        id: number;
-        data: UpdateNutritionDataDto;
-      }),
-      {
-        loading: <LoadingToast message="Actualizando entrada..." />,
-        success: () => {
-          setNutritionData((prev) =>
-            prev.map((e) => (e.id === id ? updatedEntry : e))
-          );
-          return <SuccessToast message="Entrada actualizada con éxito" />;
-        },
-        error: <ErrorToast message="Error al actualizar entrada" />,
-      }
-    );
+    try {
+      await promiseToast(
+        updateNutritionDataMutation.mutateAsync({ id, data } as {
+          id: number;
+          data: UpdateNutritionDataDto;
+        }),
+        {
+          loading: {
+            title: "Actualizando entrada",
+            description: "Por favor espera mientras procesamos tu solicitud",
+          },
+          success: {
+            title: "Entrada actualizada",
+            description: "La entrada se actualizó exitosamente",
+          },
+          error: (error: ApiError) => ({
+            title: "Error al actualizar entrada",
+            description:
+              error.response?.data?.message ||
+              "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
+      setNutritionData((prev) =>
+        prev.map((e) => (e.id === id ? updatedEntry : e))
+      );
+    } catch (error) {
+      console.error("Error updating entry:", error);
+    }
   };
 
-  const handleDeleteEntry = (ids: number[]) => {
-    toast.promise(deleteNutritionDataMutation.mutateAsync(ids), {
-      loading: <LoadingToast message="Eliminando entradas..." />,
-      success: () => {
-        setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
-        return <SuccessToast message="Entradas eliminadas con éxito" />;
-      },
-      error: <ErrorToast message="Error al eliminar entradas" />,
-    });
+  const handleDeleteEntry = async (ids: number[]) => {
+    try {
+      await promiseToast(deleteNutritionDataMutation.mutateAsync(ids), {
+        loading: {
+          title: "Eliminando entradas",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "Entradas eliminadas",
+          description: "Las entradas se eliminaron exitosamente",
+        },
+        error: (error: ApiError) => ({
+          title: "Error al eliminar entradas",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
+      });
+      setNutritionData((prev) => prev.filter((e) => !ids.includes(e.id)));
+    } catch (error) {
+      console.error("Error deleting entries:", error);
+    }
   };
 
   // — Preparar PDF (captura + blob)
@@ -137,41 +177,46 @@ const NutritionCard: React.FC<Props> = ({
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center text-greenPrimary">
-            <ClipboardPlus className="mr-2" />
-            Control Nutricional
-          </CardTitle>
-          <div className="div">
-            <Button
-              onClick={() => setIsAddingNewEntry(true)}
-              variant="link"
-              className="text-greenPrimary"
-            >
-              Nueva Fila
-            </Button>
-            <ExcelUploader userId={userId} />
-            {!pdfUrl ? (
+      <Card className="overflow-hidden border-0 shadow-xl">
+        {/* Hero Background con Gradiente */}
+        <div className="relative bg-gradient-to-r from-greenPrimary to-teal-600 px-8 py-6">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center text-white text-2xl font-bold">
+              <ClipboardPlus className="mr-3 h-7 w-7" />
+              Control Nutricional
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
               <Button
-                onClick={preparePdf}
-                disabled={loadingPdf}
-                className="bg-teal-800 hover:bg-teal-950"
+                onClick={() => setIsAddingNewEntry(true)}
+                className="bg-white hover:bg-white/90 text-greenPrimary font-medium shadow-md"
               >
-                {loadingPdf ? "Generando…" : "Generar PDF"}
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Fila
               </Button>
-            ) : (
-              <a href={pdfUrl} download={fileName}>
+              <ExcelUploader userId={userId} />
+              {!pdfUrl ? (
                 <Button
-                  variant="outline"
-                  className="text-greenPrimary hover:text-teal-950"
+                  onClick={preparePdf}
+                  disabled={loadingPdf}
+                  className="bg-white hover:bg-white/90 text-greenPrimary font-medium shadow-md disabled:opacity-50"
                 >
-                  Descargar PDF
+                  <FileDown className="h-4 w-4 mr-2" />
+                  {loadingPdf ? "Generando…" : "Generar PDF"}
                 </Button>
-              </a>
-            )}
+              ) : (
+                <a href={pdfUrl} download={fileName}>
+                  <Button className="bg-white text-greenPrimary hover:bg-gray-100 shadow-md font-medium">
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </Button>
+                </a>
+              )}
+            </div>
           </div>
-        </CardHeader>
+        </div>
+
+        <CardHeader className="sr-only"></CardHeader>
 
         <CardContent>
           <NutritionTable
@@ -183,6 +228,7 @@ const NutritionCard: React.FC<Props> = ({
             onAddEntry={handleAddEntry}
             onUpdateEntry={handleUpdateEntry}
             onDeleteEntry={handleDeleteEntry}
+            onCancelNewEntry={() => setIsAddingNewEntry(false)}
           />
         </CardContent>
       </Card>

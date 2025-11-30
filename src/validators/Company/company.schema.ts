@@ -14,16 +14,19 @@ export const companySchema = z.object({
         city: z.object({
           id: z.number({ required_error: "Ciudad requerida" }),
           name: z.string({ required_error: "Nombre de ciudad requerido" }),
-          state: z.object({
-            id: z.number({ required_error: "Provincia requerida" }),
-            name: z.string({ required_error: "Nombre de provincia requerido" }),
-            country: z
-              .object({
-                id: z.number(),
-                name: z.string(),
-              })
-              .optional(),
-          }),
+          state: z.union([
+            z.string({ required_error: "Provincia requerida" }),
+            z.object({
+              id: z.number({ required_error: "Provincia requerida" }),
+              name: z.string({ required_error: "Nombre de provincia requerido" }),
+              country: z
+                .object({
+                  id: z.number(),
+                  name: z.string(),
+                })
+                .optional(),
+            }),
+          ]),
         }),
       }),
     taxId: z.string({

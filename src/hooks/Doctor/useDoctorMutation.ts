@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createDoctor } from "@/api/Doctor/create-doctor.action";
 import { updateDoctor } from "@/api/Doctor/update-doctor.action";
-import { Doctor } from "@/types/Doctor/Doctor";
 import { deleteDoctor } from "@/api/Doctor/delete-doctor.action";
 import {
   uploadSignature,
@@ -11,6 +10,7 @@ import {
   uploadSello,
   UploadSelloProps,
 } from "@/api/Doctor/upload-sello.action";
+import { UpdateDoctorDto } from "@/types/Doctor/UpdateDoctor.dto";
 
 export const useDoctorMutations = () => {
   const queryClient = useQueryClient();
@@ -54,7 +54,7 @@ export const useDoctorMutations = () => {
   });
 
   const updateDoctorMutation = useMutation({
-    mutationFn: ({ id, doctor }: { id: number; doctor: Doctor }) =>
+    mutationFn: ({ id, doctor }: { id: string; doctor: UpdateDoctorDto }) =>
       updateDoctor(id, doctor),
     onSuccess: (doctor, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["doctor", variables.id] });
@@ -66,7 +66,7 @@ export const useDoctorMutations = () => {
   });
 
   const deleteDoctorMutation = useMutation({
-    mutationFn: (id: number) => deleteDoctor(id),
+    mutationFn: (id: string) => deleteDoctor(id),
     onSuccess: (doctor, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
       console.log("ok", doctor, variables, context);

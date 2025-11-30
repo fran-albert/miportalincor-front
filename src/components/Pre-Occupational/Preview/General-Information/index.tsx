@@ -23,8 +23,10 @@ export default function GeneralInfoPreview({
     otro: "Otro",
   };
 
-  const getValue = (value: string | undefined) =>
-    isForPdf ? value || "-" : value || "No definido";
+  const getValue = (value: unknown) => {
+    const stringValue = typeof value === 'string' ? value : String(value || '');
+    return isForPdf ? stringValue || "-" : stringValue || "No definido";
+  };
 
   return (
     <div className="border rounded-lg p-4">
@@ -57,7 +59,7 @@ export default function GeneralInfoPreview({
           ) : (
             <Input
               id="puesto"
-              value={formData.Puesto || "No definido"}
+              value={String(formData.Puesto || "No definido")}
               readOnly
               className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
             />
@@ -73,7 +75,7 @@ export default function GeneralInfoPreview({
           ) : (
             <Input
               id="area"
-              value={formData["Área de trabajo"] || "No definido"}
+              value={String(formData["Área de trabajo"] || "No definido")}
               readOnly
               className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
             />
@@ -89,7 +91,7 @@ export default function GeneralInfoPreview({
           ) : (
             <Input
               id="antiguedad"
-              value={formData["Antigüedad en el puesto"] || "No definido"}
+              value={String(formData["Antigüedad en el puesto"] || "No definido")}
               readOnly
               className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
             />
@@ -105,7 +107,7 @@ export default function GeneralInfoPreview({
           ) : (
             <Input
               id="tiempo"
-              value={formData["Tiempo en la empresa"] || "No definido"}
+              value={String(formData["Tiempo en la empresa"] || "No definido")}
               readOnly
               className="bg-background text-foreground cursor-default focus:ring-0 focus:ring-offset-0"
             />

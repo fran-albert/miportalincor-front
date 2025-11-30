@@ -3,16 +3,17 @@ import { useQuery } from "@tanstack/react-query"
 
 interface Props {
     auth?: boolean;
-    id: number
+    id: number;
+    enabled?: boolean;
 }
 
-export const useCollaboratorMedicalEvaluation = ({ auth, id }: Props) => {
+export const useCollaboratorMedicalEvaluation = ({ auth, id, enabled = true }: Props) => {
 
     const { isLoading, isError, error, data, isFetching } = useQuery({
         queryKey: ['collaborator-medical-evaluation', id],
         queryFn: () => getByIdCollaboratorMedicalEvaluation(id as number),
         staleTime: 1000 * 60,
-        enabled: auth && id !== undefined,
+        enabled: auth && id !== undefined && enabled,
     });
 
     return {

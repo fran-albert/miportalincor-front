@@ -9,14 +9,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { StudiesWithURL } from "@/types/Study/Study";
 import ActionIcon from "@/components/Icons/action";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface DeleteStudyDialogProps {
   idStudy: number;
@@ -32,23 +29,33 @@ export default function DeleteStudyDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteStudyMutation } = useStudyMutations();
+  const { promiseToast } = useToastContext();
   const handleConfirmDelete = async () => {
     try {
-      toast.promise(
-        deleteStudyMutation.mutateAsync({
-          studyId: idStudy,
-          userId: userId,
+      const promise = deleteStudyMutation.mutateAsync({
+        studyId: idStudy,
+        userId: userId,
+      });
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Estudio eliminado!",
+          description: "El estudio se ha eliminado exitosamente",
+        },
+        error: (error: unknown) => ({
+          title: "Error al eliminar estudio",
+          description:
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
         }),
-        {
-          loading: <LoadingToast message="Eliminando estudio..." />,
-          success: <SuccessToast message="Estudio eliminado con éxito!" />,
-          error: <ErrorToast message="Error al eliminar el estudio" />,
-        }
-      );
+      });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al eliminar el estudio", error);
-    } finally {
-      setIsOpen(false);
     }
   };
 

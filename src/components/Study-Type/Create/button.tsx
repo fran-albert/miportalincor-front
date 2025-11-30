@@ -6,12 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   Form,
   FormField,
@@ -33,6 +30,7 @@ interface Props {
 
 export default function AddStudyTypeDialog({ isOpen, setIsOpen }: Props) {
   const { addStudyTypeMutation } = useStudyTypeMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => {
     setIsOpen(!isOpen);
     form.reset();
@@ -43,23 +41,27 @@ export default function AddStudyTypeDialog({ isOpen, setIsOpen }: Props) {
 
   async function onSubmit(values: z.infer<typeof studyTypeSchema>) {
     try {
-      const studyTypeCreationPromise = addStudyTypeMutation.mutateAsync(
+      const promise = addStudyTypeMutation.mutateAsync(
         values as StudyType
       );
-      toast.promise(studyTypeCreationPromise, {
-        loading: <LoadingToast message="Creando tipo de estudio..." />,
-        success: <SuccessToast message="Tipo de estudio creado con exito!" />,
-        error: (
-          <ErrorToast message="Hubo un error al crear el Tipo de estudio." />
-        ),
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Creando tipo de estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Tipo de estudio creado!",
+          description: "El tipo de estudio se ha creado exitosamente",
+        },
+        error: (error: unknown) => ({
+          title: "Error al crear tipo de estudio",
+          description:
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      studyTypeCreationPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al crear el Tipo de Estudio", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al crear el Tipo de Estudio", error);
     }

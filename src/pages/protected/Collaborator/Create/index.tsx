@@ -1,5 +1,7 @@
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
 import { CreateCollaboratorComponent } from "@/components/Collaborators/Create";
+import { UserPlus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const breadcrumbItems = [
   { label: "Inicio", href: "/inicio" },
@@ -11,10 +13,18 @@ const breadcrumbItems = [
 ];
 
 const CreateCollaboratorPage = () => {
+  const [searchParams] = useSearchParams();
+  const companyId = searchParams.get('companyId');
+
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <CreateCollaboratorComponent />
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Agregar Colaborador"
+        description="Completa los campos para registrar un nuevo colaborador en el sistema"
+        icon={<UserPlus className="h-6 w-6" />}
+      />
+      <CreateCollaboratorComponent preselectedCompanyId={companyId} />
     </div>
   );
 };

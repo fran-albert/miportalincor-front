@@ -1,11 +1,12 @@
 import { getColumns } from "./columns";
 import { useState } from "react";
 import { DataTable } from "@/components/Table/table";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import AddBlodTestDialog from "../Add/button";
 import EditBlodTestDialog from "../Edit";
 import useUserRole from "@/hooks/useRoles";
+import { TestTube } from "lucide-react";
 
 export const BlodTestTable = ({ blodTests }: { blodTests: BloodTest[] }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -27,18 +28,21 @@ export const BlodTestTable = ({ blodTests }: { blodTests: BloodTest[] }) => {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Análisis Bioquímicos", href: "/analisis-bioquimicos" },
+    { label: "Análisis Bioquímicos" },
   ];
 
   const customFilterFunction = (blodTest: BloodTest, query: string) =>
     blodTest.originalName.toLowerCase().includes(query.toLowerCase());
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Análisis Bioquímicos
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Análisis Bioquímicos"
+        description="Configura y gestiona los análisis bioquímicos del laboratorio"
+        icon={<TestTube className="h-6 w-6" />}
+        badge={blodTests.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={blodTestColumns}

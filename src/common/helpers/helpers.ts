@@ -1,17 +1,17 @@
 import { format, parse } from "date-fns";
 import moment from "moment-timezone";
-import { UseFormSetValue } from "react-hook-form";
+import { FieldValues, Path, PathValue, UseFormSetValue } from "react-hook-form";
 
 export function formatDni(dni: string): string {
-  let dniStr = dni?.toString();
-  let dniReversed = dniStr?.split("").reverse().join("");
-  let dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
+  const dniStr = dni?.toString();
+  const dniReversed = dniStr?.split("").reverse().join("");
+  const dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
   return dniConPuntos.split("").reverse().join("");
 }
 export function formatMatricula(matricula: string): string {
-  let dniStr = matricula?.toString();
-  let dniReversed = dniStr?.split("").reverse().join("");
-  let dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
+  const dniStr = matricula?.toString();
+  const dniReversed = dniStr?.split("").reverse().join("");
+  const dniConPuntos = dniReversed?.match(/.{1,3}/g)?.join(".") || "";
   return dniConPuntos.split("").reverse().join("");
 }
 
@@ -97,8 +97,8 @@ export function calculateAgeCollaborator(birthDate: string): number {
 
   return age;
 }
-export function capitalizeWords(input: any) {
-  return input.toLowerCase().replace(/(?:^|\s)\S/g, function (a: any) { return a.toUpperCase(); });
+export function capitalizeWords(input: string) {
+  return input.toLowerCase().replace(/(?:^|\s)\S/g, function (a: string) { return a.toUpperCase(); });
 }
 
 export function getInitials(name: string, lastName: string): string {
@@ -107,22 +107,22 @@ export function getInitials(name: string, lastName: string): string {
   return `${nameInitial}${lastNameInitial}`;
 }
 
-export const handleDateChange = (
+export const handleDateChange = <T extends FieldValues>(
   e: React.ChangeEvent<HTMLInputElement>,
   setStartDate: React.Dispatch<React.SetStateAction<Date | undefined>>,
-  setValue: UseFormSetValue<any>,
-  fieldName: string
+  setValue: UseFormSetValue<T>,
+  fieldName: Path<T>
 ) => {
   const value = e.target.value;
   const dateInArgentina = moment.tz(value, "America/Argentina/Buenos_Aires");
   const formattedDateISO = dateInArgentina.toISOString();
 
   setStartDate(new Date(value));
-  setValue(fieldName, formattedDateISO);
+  setValue(fieldName, formattedDateISO as PathValue<T, Path<T>>);
 };
 
 export const formatCuilCuit = (numero: number | string): string => {
-  let str: string = numero.toString().replace(/\D/g, '');
+  const str: string = numero.toString().replace(/\D/g, '');
 
   if (str.length !== 11) {
     return "Número inválido, debe tener 11 dígitos.";
@@ -166,7 +166,18 @@ export const parseSlug = (slug: string) => {
   return { id, formattedName };
 };
 
-export const formatAddress = (addressData: any) => {
+export const formatAddress = (addressData?: {
+  street?: string;
+  number?: string | number;
+  description?: string;
+  phoneNumber?: string;
+  city?: {
+    name?: string;
+    state?: {
+      name?: string;
+    };
+  };
+}) => {
   if (!addressData) return "S/D";
 
   const { street, number, description, phoneNumber, city } = addressData;
@@ -207,9 +218,82 @@ export const normalizeDate = (date: string): string => {
     }
 
     throw new Error(`Formato de fecha no reconocido: ${date}`);
-  } catch (error) {
+  } catch {
     console.error("Fecha problemática:", date);
     return "";
   }
+};
+
+/**
+ * Formatea la información del doctor para mostrar nombre completo y especialidades
+ */
+export interface DoctorInfo {
+  firstName: string;
+  lastName: string;
+  specialities: { id: number; name: string }[];
+}
+
+export const formatDoctorInfo = (doctor: DoctorInfo) => {
+  const fullName = `Dr. ${doctor.firstName} ${doctor.lastName}`;
+  const primarySpeciality = doctor.specialities.length > 0 ? doctor.specialities[0].name : null;
+  const allSpecialities = doctor.specialities.map(spec => spec.name).join(", ");
+
+  // Formato en una línea: "Dr. Nombre - Especialidades"
+  const fullNameWithPrimarySpeciality = primarySpeciality
+    ? `${fullName} - ${primarySpeciality}`
+    : fullName;
+
+  const fullNameWithAllSpecialities = allSpecialities
+    ? `${fullName} - ${allSpecialities}`
+    : fullName;
+
+  return {
+    fullName,
+    primarySpeciality,
+    allSpecialities,
+    hasSpecialities: doctor.specialities.length > 0,
+    fullNameWithPrimarySpeciality,
+    fullNameWithAllSpecialities
+  };
+};
+
+/**
+ * Formatea una fecha en zona horaria de Argentina (formato: "6 de octubre de 2025")
+ */
+export const formatDateArgentina = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("es-AR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
+};
+
+/**
+ * Formatea una fecha con hora en zona horaria de Argentina (formato: "6 de octubre de 2025, 11:09")
+ */
+export const formatDateTimeArgentina = (dateString: string): string => {
+  return new Date(dateString).toLocaleString("es-AR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
+};
+
+/**
+ * Formatea una fecha con día de la semana en zona horaria de Argentina (formato: "lunes, 6 de octubre de 2025")
+ */
+export const formatDateWithWeekdayArgentina = (date: Date): string => {
+  return date.toLocaleDateString("es-AR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Argentina/Buenos_Aires"
+  });
 };
 

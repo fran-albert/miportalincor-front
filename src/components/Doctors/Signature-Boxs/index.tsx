@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
-import { toast } from "sonner";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface ImageUploadBoxProps {
   id: string;
@@ -26,6 +24,7 @@ export function ImageUploadBox({
   onImageUploaded,
 }: ImageUploadBoxProps) {
   const { uploadSignatureMutation, uploadSelloMutation } = useDoctorMutations();
+  const { promiseToast } = useToastContext();
   const [currentImage, setCurrentImage] = useState<string | null>(image);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -43,23 +42,34 @@ export function ImageUploadBox({
       setIsUploading(true);
       const formData = createFormDataFromBase64(croppedImage);
 
-      const uploadPromise = mutation.mutateAsync({
+      const promise = mutation.mutateAsync({
         idUser: doctorId,
         formData,
       });
 
-      toast.promise(uploadPromise, {
-        loading: <LoadingToast message="Subiendo imagen..." />,
-        success: <SuccessToast message="Imagen subida con éxito!" />,
-        error: (err) => {
-          if (err?.response?.status === 409) {
-            return <ErrorToast message="La imagen ya existe" />;
+      const returnedUrl = await promiseToast(promise, {
+        loading: {
+          title: "Subiendo imagen...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Imagen subida!",
+          description: "La imagen se ha subido exitosamente",
+        },
+        error: (error: ApiError) => {
+          if (error?.response?.status === 409) {
+            return {
+              title: "Imagen ya existe",
+              description: "La imagen ya se encuentra en el sistema",
+            };
           }
-          return <ErrorToast message="Error al subir la imagen" />;
+          return {
+            title: "Error al subir imagen",
+            description:
+              error.response?.data?.message || "Ha ocurrido un error inesperado",
+          };
         },
       });
-
-      const returnedUrl = await uploadPromise;
       setCurrentImage(returnedUrl);
 
       onImageUploaded?.();

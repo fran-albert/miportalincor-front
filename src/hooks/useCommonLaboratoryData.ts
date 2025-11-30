@@ -3,17 +3,26 @@ import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useStudy } from "@/hooks/Study/useStudy";
 import { useBloodTestData } from "./Blod-Test-Data/useBlodTestData";
 
-export const useCommonLaboratoryData = ({ id, role }: { id: number, role: "paciente" | "medico" }) => {
-  const { patient, isLoading: isLoadingPatient, error: patientError } = role === "paciente"
-    ? usePatient({ auth: true, id })
-    : { patient: null, isLoading: false, error: null };
+export const useCommonLaboratoryData = ({ id, role }: { id: string, role: "paciente" | "medico" }) => {
+  // SIEMPRE llamar ambos hooks, pero habilitar solo el que corresponde
+  const { patient, isLoading: isLoadingPatient, error: patientError } = usePatient({
+    auth: true,
+    id,
+    enabled: role === "paciente"
+  });
 
-  const { doctor, isLoading: isLoadingDoctor, error: doctorError } = role === "medico"
-    ? useDoctor({ auth: true, id })
-    : { doctor: null, isLoading: false, error: null };
+  const { doctor, isLoading: isLoadingDoctor, error: doctorError } = useDoctor({
+    auth: true,
+    id,
+    enabled: role === "medico"
+  });
+
+  // Get the numeric userId from the loaded doctor/patient entity
+  const entity = role === "paciente" ? patient : doctor;
+  const numericUserId = entity?.userId ? Number(entity.userId) : undefined;
 
   const { studiesByUserId = [], isLoading: isLoadingStudies } = useStudy({
-    idUser: id,
+    idUser: numericUserId,
     fetchStudiesByUserId: true,
   });
 

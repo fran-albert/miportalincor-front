@@ -10,13 +10,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestMutations } from "@/hooks/Blod-Test/useBlodTestMutation";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   blodTest: BloodTest;
@@ -28,24 +26,30 @@ export default function DeleteBlodTestDialog({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteBlodTestMutation } = useBlodTestMutations();
+  const { promiseToast } = useToastContext();
   const handleConfirmDelete = async () => {
     try {
-      const blodTestDeletionPromise = deleteBlodTestMutation.mutateAsync(
+      const promise = deleteBlodTestMutation.mutateAsync(
         Number(blodTest.id)
       );
-      toast.promise(blodTestDeletionPromise, {
-        loading: <LoadingToast message="Eliminando análisis bioquímico..." />,
-        success: <SuccessToast message="Análisis bioquímico eliminado con éxito!" />,
-        error: <ErrorToast message="Error al eliminar el Análisis Bioquímico" />,
-        duration: 3000,
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando análisis bioquímico...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Análisis bioquímico eliminado!",
+          description: "El análisis bioquímico se ha eliminado exitosamente",
+        },
+        error: (error: ApiError) => ({
+          title: "Error al eliminar análisis bioquímico",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      blodTestDeletionPromise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al eliminar el Análisis Bioquímico", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al eliminar el Análisis Bioquímico", error);
     }

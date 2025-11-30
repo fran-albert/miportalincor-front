@@ -8,7 +8,7 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
   const params = useParams();
   const slug = String(params.slug);
   const slugParts = slug.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const { blodTests, isLoading: isLoadingBloodTests } = useBlodTest({
     auth: true,
@@ -26,6 +26,8 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
   const entity = role === "paciente" ? patient : doctor;
   const isAllLoading = isLoading || isLoadingBloodTests;
   const hasEntityData = entity?.firstName && entity?.lastName;
+  const displayRole = role === "medico" ? "doctor" : role;
+  const numericUserId = entity?.userId ? Number(entity.userId) : 0;
 
   return (
     <>
@@ -43,8 +45,8 @@ const LaboratoriesPage = ({ role }: { role: "paciente" | "medico" }) => {
         bloodTestsData={bloodTestsData}
         bloodTests={blodTests}
         entity={entity}
-        idUser={id}
-        role={role}
+        idUser={numericUserId}
+        role={displayRole}
       />
     </>
   );

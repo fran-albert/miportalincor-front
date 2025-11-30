@@ -1,8 +1,9 @@
 import { getColumns } from "./columns";
 import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
+import { UserCog } from "lucide-react";
 
 interface Props {
   Collaborators: Collaborator[];
@@ -19,6 +20,7 @@ export const CollaboratorsTable: React.FC<Props> = ({
     isSecretary,
     isDoctor,
     isAdmin,
+    showCompanyColumn: true,
   });
 
   // Sort collaborators by company name (A-Z) then by collaborator name (A-Z)
@@ -51,15 +53,18 @@ export const CollaboratorsTable: React.FC<Props> = ({
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
-    { label: "Colaboradores", href: "/incor-laboral/colaboradores" },
+    { label: "Colaboradores" },
   ];
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Colaboradores
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Colaboradores"
+        description="Gestiona colaboradores y exámenes preocupacionales"
+        icon={<UserCog className="h-6 w-6" />}
+        badge={sortedCollaborators.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={columns}

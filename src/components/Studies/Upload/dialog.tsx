@@ -1,48 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { FaUpload } from "react-icons/fa";
-import { toast } from "sonner";
-
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import moment from "moment-timezone";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { StudyTypeSelect } from "@/components/Select/Study/select";
 import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 import { DoctorSelect } from "@/components/Select/Doctor/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  FileText,
+  Upload,
+  Calendar,
+  User,
+  MessageSquare,
+  Plus,
+  X,
+  File,
+} from "lucide-react";
+import CustomDatePicker from "@/components/Date-Picker";
 
 interface AddStudyProps {
   idUser: number;
+}
+
+interface StudyFormData {
+  StudyTypeId?: string;
+  StudyTypeName?: string;
+  date: Date;
+  Note: string;
+  DoctorId?: string;
 }
 
 export default function StudyDialog({ idUser }: AddStudyProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const [selectedStudy, setSelectedStudy] = useState<StudyType | null>(null);
-  const { register, handleSubmit, reset, setValue, control } = useForm();
+  const { register, handleSubmit, reset, setValue, control } =
+    useForm<StudyFormData>();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const { uploadStudyMutation } = useStudyMutations();
+  const { promiseToast } = useToastContext();
 
-  const onSubmit: SubmitHandler<any> = async (data) => {
+  const onSubmit: SubmitHandler<StudyFormData> = async (data) => {
     const formData = new FormData();
 
     if (selectedStudy) {
       formData.append("studyTypeId", String(selectedStudy.id));
       formData.append("studyTypeName", selectedStudy.name);
-    } else {
+    } else if (data.StudyTypeId && data.StudyTypeName) {
       formData.append("studyTypeId", data.StudyTypeId);
       formData.append("studyTypeName", data.StudyTypeName);
     }
@@ -67,22 +78,30 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     }
 
     try {
-      toast.promise(
-        uploadStudyMutation.mutateAsync(formData).then(() => {
-          // Only close the modal and reset form upon successful submission
-          reset();
-          setSelectedFiles([]);
-          setSelectedStudy(null);
-          setIsOpen(false);
+      const promise = uploadStudyMutation.mutateAsync(formData);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Subiendo estudio...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Estudio subido!",
+          description: "El estudio se ha subido exitosamente",
+        },
+        error: (error: unknown) => ({
+          title: "Error al subir estudio",
+          description:
+            (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Ha ocurrido un error inesperado",
         }),
-        {
-          loading: <LoadingToast message="Subiendo nuevo estudio..." />,
-          success: <SuccessToast message="Nuevo estudio subido con exito." />,
-          error: (
-            <ErrorToast message="Hubo un error al subir el estudio. Por favor intenta de nuevo." />
-          ),
-        }
-      );
+      });
+
+      // Only close the modal and reset form upon successful submission
+      reset();
+      setSelectedFiles([]);
+      setSelectedStudy(null);
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al agregar el estudio", error);
     }
@@ -90,7 +109,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
 
   const handleStudyChange = (studyType: StudyType) => {
     setSelectedStudy(studyType);
-    setValue("StudyTypeId", studyType.id);
+    setValue("StudyTypeId", String(studyType.id));
     setValue("StudyTypeName", studyType.name);
   };
 
@@ -110,29 +129,46 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
     }
   };
 
+  const [noteValue, setNoteValue] = useState("");
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button
+        <Button
           onClick={toggleDialog}
-          className="flex items-center justify-center w-full p-2 border border-dashed border-gray-300 rounded hover:bg-gray-50"
+          className="w-full bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
         >
-          <FaUpload className="w-4 h-4 mr-2 text-greenPrimary" />
-          <span className="text-greenPrimary">Nuevo Estudio</span>
-        </button>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Estudio
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Agregar Nuevo Estudio</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden p-0">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-4 py-4">
+          {/* Sticky Gradient Header */}
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-greenPrimary to-teal-600 text-white p-6 rounded-t-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg flex-shrink-0">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold">Agregar Nuevo Estudio</h2>
+                <p className="text-sm text-white/80 mt-1">
+                  Complete los datos del estudio médico
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            {/* Tipo de Estudio */}
             <div className="space-y-2">
               <Label
                 htmlFor="studyType"
-                className="block text-black font-medium mb-2"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
               >
-                Tipo de Estudio
+                <FileText className="h-4 w-4 text-greenPrimary" />
+                Tipo de Estudio *
               </Label>
               <StudyTypeSelect
                 selected={selectedStudy || undefined}
@@ -140,74 +176,164 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
               />
               <input type="hidden" {...register("StudyTypeId")} />
               <input type="hidden" {...register("StudyTypeName")} />
+              <p className="text-xs text-gray-500">
+                Selecciona el tipo de estudio médico
+              </p>
             </div>
+
+            {/* Archivos */}
             <div className="space-y-2">
-              <Label htmlFor="file">Archivos</Label>
+              <Label
+                htmlFor="file"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+              >
+                <Upload className="h-4 w-4 text-greenPrimary" />
+                Archivos del Estudio *
+              </Label>
               <Input
                 type="file"
-                className="text-black"
+                className="text-black focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary"
                 multiple
                 onChange={handleFileChange}
               />
-              {selectedFiles.length > 0 && (
-                <div className="mt-2">
-                  <ScrollArea className="h-32 rounded-md border">
-                    <ul className="list-disc pl-5 space-y-1 pr-2">
-                      {selectedFiles.map((file, index) => (
-                        <li
-                          key={index}
-                          className="flex justify-between items-center text-sm text-gray-700"
-                        >
-                          {file.name}
-                        </li>
-                      ))}
-                    </ul>
+              {selectedFiles.length > 0 ? (
+                <div className="mt-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                      <File className="h-4 w-4 text-greenPrimary" />
+                      Archivos seleccionados ({selectedFiles.length})
+                    </p>
+                    {selectedFiles.length > 3 && (
+                      <p className="text-xs text-gray-500 italic">
+                        Desliza para ver más
+                      </p>
+                    )}
+                  </div>
+                  <ScrollArea className="h-60 w-full rounded-md">
+                    <div className="pr-4">
+                      <ul className="space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-3 text-sm text-gray-700 bg-white p-3 rounded-md border border-gray-200 hover:border-greenPrimary/30 hover:shadow-sm transition-all"
+                          >
+                            <File className="h-4 w-4 text-greenPrimary flex-shrink-0" />
+                            <span className="truncate flex-1 font-medium">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-gray-500 flex-shrink-0 bg-gray-100 px-2 py-1 rounded">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </ScrollArea>
                 </div>
+              ) : (
+                <p className="text-xs text-gray-500 mt-2">
+                  Puedes seleccionar múltiples archivos
+                </p>
               )}
             </div>
+
+            {/* Comentario */}
             <div className="space-y-2">
               <Label
                 htmlFor="comment"
-                className="block text-black font-medium mb-2"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
               >
+                <MessageSquare className="h-4 w-4 text-greenPrimary" />
                 Comentario
               </Label>
-              <Input
+              <Textarea
+                id="comment"
                 {...register("Note", { required: true })}
-                placeholder="Ingresar un comentario..."
-                className="text-black"
+                value={noteValue}
+                onChange={(e) => setNoteValue(e.target.value)}
+                placeholder="Describe detalles adicionales del estudio..."
+                rows={4}
+                className="resize-none focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary"
+                maxLength={500}
               />
+              <div className="flex items-center justify-between text-xs">
+                <p className="text-gray-500">
+                  Observaciones o notas adicionales
+                </p>
+                <span className="text-gray-400">
+                  {noteValue?.length || 0} / 500
+                </span>
+              </div>
             </div>
+
+            {/* Fecha del Estudio */}
             <div className="space-y-2">
-              <Label className="mb-2" htmlFor="date">
-                Fecha
+              <Label
+                htmlFor="date"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4 text-greenPrimary" />
+                Fecha del Estudio *
               </Label>
-              <Input
-                id="date"
-                type="date"
-                {...register("date", { required: true })}
+              <CustomDatePicker
+                setStartDate={setStartDate}
+                setValue={setValue}
+                fieldName="date"
+                initialDate={startDate}
               />
+              <p className="text-xs text-gray-500">
+                Fecha en la que se realizó el estudio
+              </p>
             </div>
+
+            {/* Médico Responsable */}
             <div className="space-y-2">
-              <Label className="mb-2" htmlFor="date">
-                Firma Médico (Opcional)
+              <Label
+                htmlFor="doctor"
+                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+              >
+                <User className="h-4 w-4 text-greenPrimary" />
+                Médico Responsable (Opcional)
               </Label>
               <DoctorSelect control={control} />
+              <p className="text-xs text-gray-500">
+                Selecciona el médico que solicitó el estudio
+              </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" type="button" onClick={toggleDialog}>
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="incor"
-              disabled={uploadStudyMutation.isPending}
-            >
-              Agregar Estudio
-            </Button>
-          </DialogFooter>
+
+          {/* Sticky Footer */}
+          <div className="sticky bottom-0 bg-white border-t p-4 rounded-b-lg">
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={toggleDialog}
+                className="px-6 hover:bg-gray-50"
+                disabled={uploadStudyMutation.isPending}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadStudyMutation.isPending}
+                className="px-6 bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md min-w-[160px]"
+              >
+                {uploadStudyMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Estudio
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

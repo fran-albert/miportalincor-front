@@ -17,6 +17,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import LogoutButton from "../Button/Logout";
 import useUserRole from "@/hooks/useRoles";
+import { isStaging } from "@/config/environment";
 
 export function HeaderComponent() {
   const [activeLink, setActiveLink] = useState<string | null>(null);
@@ -25,7 +26,13 @@ export function HeaderComponent() {
   };
   const { isDoctor, isSecretary, session, isAdmin } = useUserRole();
   return (
-    <header className="flex h-16 sm:h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
+    <>
+      {isStaging() && (
+        <div className="bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium">
+          🚧 ENTORNO DE STAGING - VERSIÓN DE PRUEBA
+        </div>
+      )}
+      <header className="flex h-16 sm:h-20 w-full shrink-0 items-center px-4 md:px-6 bg-greenPrimary">
       <Link to="#" className="mr-2 sm:mr-4 lg:mr-6 flex items-center">
         <img
           src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1740059697/uboivjuv41dkkdeaqhfa.png"
@@ -257,6 +264,7 @@ export function HeaderComponent() {
         </Sheet>
       ) : null}
     </header>
+    </>
   );
 }
 

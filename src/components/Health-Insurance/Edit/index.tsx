@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -22,9 +21,7 @@ import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { useHealthInsuranceMutations } from "@/hooks/Health-Insurance/useHealthInsuranceMutation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { healthInsuranceSchema } from "@/validators/health.insurance.schema";
 interface EditHealthCareDialogProps {
   isOpen: boolean;
@@ -38,6 +35,7 @@ export default function EditHealthInsuranceDialog({
   healthInsurance,
 }: EditHealthCareDialogProps) {
   const { updateHealthInsuranceMutation } = useHealthInsuranceMutations();
+  const { promiseToast } = useToastContext();
   const toggleDialog = () => setIsOpen(!isOpen);
   const form = useForm<z.infer<typeof healthInsuranceSchema>>({
     resolver: zodResolver(healthInsuranceSchema),
@@ -57,18 +55,23 @@ export default function EditHealthInsuranceDialog({
         healthInsurance: values,
       });
 
-      toast.promise(promise, {
-        loading: <LoadingToast message="Editando obra social..." />,
-        success: <SuccessToast message="Obra social editada con éxito!" />,
-        error: <ErrorToast message="Error al editar la obra social" />,
+      await promiseToast(promise, {
+        loading: {
+          title: "Editando obra social...",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "¡Obra social editada!",
+          description: "La obra social se ha editado exitosamente",
+        },
+        error: (error: any) => ({
+          title: "Error al editar obra social",
+          description:
+            error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      promise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al editar la Obra Social", error);
-        });
+
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al editar la Obra Social", error);
     }

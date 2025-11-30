@@ -1,15 +1,15 @@
-import BreadcrumbComponent from "@/components/Breadcrumb";
-import LoadingAnimation from "@/components/Loading/loading";
 import PatientProfileComponent from "@/components/Patients/Profile";
 import { usePatient } from "@/hooks/Patient/usePatient";
+import { PatientProfileSkeleton } from "@/components/Skeleton/Patient";
 import { useParams } from "react-router-dom";
+import BreadcrumbComponent from "@/components/Breadcrumb";
 
 const PatientProfilePage = () => {
   const params = useParams();
   const slug = params.slug;
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const { isLoading, patient, error } = usePatient({
     auth: true,
@@ -20,17 +20,18 @@ const PatientProfilePage = () => {
     { label: "Inicio", href: "/inicio" },
     { label: "Pacientes", href: "/pacientes" },
     {
-      label: patient ? `${patient.firstName} ${patient.lastName}` : "Pacientes",
-      href: `/pacientes/${patient?.slug}`,
+      label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente", href: "/pacientes/" + (slug || "")
     },
-    {
-      label: patient ? `Perfil Completo` : "Pacientes",
-      href: `/pacientes/${patient?.slug}`,
-    },
+    { label: "Perfil Completo", href: "#" }
   ];
 
   if (isLoading) {
-    return <LoadingAnimation />;
+    return (
+      <div className="space-y-4 p-6">
+        <BreadcrumbComponent items={breadcrumbItems} />
+        <PatientProfileSkeleton />
+      </div>
+    );
   }
 
   if (error) {
@@ -38,13 +39,14 @@ const PatientProfilePage = () => {
   }
 
   return (
-    <div className="container space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <div className="">
-        {patient && <PatientProfileComponent patient={patient} />}
-      </div>
+    <div className="space-y-4 p-6">
+      {patient && (
+        <PatientProfileComponent
+          patient={patient}
+          breadcrumbItems={breadcrumbItems}
+        />
+      )}
     </div>
   );
 };
-
 export default PatientProfilePage;

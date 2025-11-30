@@ -5,18 +5,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface MaritalStatusSelectProps {
+interface MaritalStatusSelectProps<T extends FieldValues = FieldValues> {
   defaultValue?: string;
-  control: any;
+  control: Control<T>;
   disabled?: boolean;
 }
-export const MaritalStatusSelect = ({
+export const MaritalStatusSelect = <T extends FieldValues = FieldValues>({
   control,
   disabled,
   defaultValue,
-}: MaritalStatusSelectProps) => {
+}: MaritalStatusSelectProps<T>) => {
   const maritalStatus = [
     { id: "Soltero", name: "Soltero" },
     { id: "Casado", name: "Casado" },
@@ -25,8 +25,8 @@ export const MaritalStatusSelect = ({
 
   return (
     <Controller
-      name="maritalStatus"
-      defaultValue={defaultValue || ""}
+      name={"maritalStatus" as Path<T>}
+      defaultValue={(defaultValue || "") as PathValue<T, Path<T>>}
       control={control}
       // rules={{ required: "Este campo es obligatorio" }}
       render={({ field }) => (

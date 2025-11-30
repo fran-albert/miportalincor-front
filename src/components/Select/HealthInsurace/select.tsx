@@ -7,23 +7,23 @@ import {
 } from "@/components/ui/select";
 import { useHealthInsurance } from "@/hooks/Health-Insurance/useHealthInsurance";
 import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
-import { Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface HealthInsuranceSelectProps {
-  name?: string;
+interface HealthInsuranceSelectProps<T extends FieldValues = FieldValues> {
+  name?: Path<T>;
   defaultValue?: HealthInsurance;
-  control: any;
+  control: Control<T>;
   disabled?: boolean;
   onHealthInsuranceChange: (value: HealthInsurance) => void;
 }
 
-export const HealthInsuranceSelect = ({
-  name = "healthInsurance",
+export const HealthInsuranceSelect = <T extends FieldValues = FieldValues>({
+  name = "healthInsurance" as Path<T>,
   control,
   defaultValue,
   disabled,
   onHealthInsuranceChange,
-}: HealthInsuranceSelectProps) => {
+}: HealthInsuranceSelectProps<T>) => {
   const { healthInsurances } = useHealthInsurance({});
 
   const handleValueChange = (selectedId: string) => {
@@ -38,7 +38,7 @@ export const HealthInsuranceSelect = ({
   return (
     <Controller
       name={name}
-      defaultValue={defaultValue?.id?.toString() || ""}
+      defaultValue={(defaultValue?.id?.toString() || "") as PathValue<T, Path<T>>}
       control={control}
       render={({ field }) => (
         <div>

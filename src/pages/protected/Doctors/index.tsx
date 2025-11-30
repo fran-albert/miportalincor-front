@@ -1,15 +1,26 @@
 import { DoctorsTable } from "@/components/Doctors/Table/table";
 import LoadingAnimation from "@/components/Loading/loading";
-import { useDoctors } from "@/hooks/Doctor/useDoctors";
+import { useSearchDoctors } from "@/hooks/Doctor/useSearchDoctors";
 import { usePrefetchDoctor } from "@/hooks/Doctor/usePrefetchDoctor";
 import { Helmet } from "react-helmet-async";
 
 const DoctorsComponent = () => {
-  const { isLoading, doctors, error } = useDoctors({
-    auth: true,
-    fetchDoctors: true,
+  const {
+    doctors,
+    isLoading,
+    error,
+    search,
+    setSearch,
+    page,
+    totalPages,
+    nextPage,
+    prevPage,
+  } = useSearchDoctors({
+    initialLimit: 10,
   });
+
   const prefetchDoctors = usePrefetchDoctor();
+
   return (
     <>
       <Helmet>
@@ -20,9 +31,15 @@ const DoctorsComponent = () => {
         <LoadingAnimation />
       ) : (
         <DoctorsTable
-          doctors={doctors || []}
+          doctors={doctors}
           prefetchDoctors={prefetchDoctors}
           isLoading={isLoading}
+          searchQuery={search}
+          setSearch={setSearch}
+          currentPage={page}
+          totalPages={totalPages}
+          onNextPage={nextPage}
+          onPrevPage={prevPage}
         />
       )}
     </>

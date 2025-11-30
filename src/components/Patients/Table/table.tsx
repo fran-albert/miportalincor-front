@@ -2,14 +2,19 @@ import { getColumns } from "./columns";
 import { Patient } from "@/types/Patient/Patient";
 import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { Users } from "lucide-react";
 
 interface PatientTableProps {
   patients: Patient[];
-  prefetchPatients: (id: number) => void;
+  prefetchPatients: (id: string) => void;
   isFetching?: boolean;
   searchQuery: string;
-  setSearch: (query: string) => void; 
+  setSearch: (query: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 export const PatientsTable: React.FC<PatientTableProps> = ({
@@ -18,6 +23,10 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
   prefetchPatients,
   searchQuery,
   setSearch,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
@@ -29,27 +38,35 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Pacientes", href: "/pacientes" },
+    { label: "Pacientes" },
   ];
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Pacientes
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Pacientes"
+        description="Gestiona la información y historias clínicas de los pacientes"
+        icon={<Users className="h-6 w-6" />}
+        badge={patients.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={patientColumns}
           data={patients}
           searchPlaceholder="Buscar pacientes..."
           showSearch={true}
-          searchQuery={searchQuery} 
-          onSearchSubmit={setSearch} 
+          searchQuery={searchQuery}
+          setSearch={setSearch}
+          useServerSideSearch={true}
           addLinkPath="/pacientes/agregar"
           addLinkText="Agregar Paciente"
           isFetching={isFetching}
           canAddUser={isSecretary || isAdmin}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNextPage={onNextPage}
+          onPrevPage={onPrevPage}
         />
       </div>
     </div>

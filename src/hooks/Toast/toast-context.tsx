@@ -1,0 +1,53 @@
+"use client";
+
+import { createContext, useContext, type ReactNode } from "react";
+import { useToast } from "./useToast";
+import { ToastContainer } from "@/components/Toast/Container/toast-container";
+import { ApiError } from "@/types/Error/ApiError";
+
+interface Toast {
+  id: string;
+  type: "success" | "error" | "loading";
+  title: string;
+  description?: string;
+}
+
+interface ToastContextType {
+  toasts: Toast[];
+  showSuccess: (title: string, description?: string) => string;
+  showError: (title: string, description?: string) => string;
+  showLoading: (title: string, description?: string) => string;
+  removeToast: (id: string) => void;
+  promiseToast: <T = unknown>(
+    promise: Promise<T>,
+    messages: {
+      loading: { title: string; description?: string };
+      success: { title: string; description?: string };
+      error:
+        | { title: string; description?: string }
+        | ((error: ApiError) => { title: string; description?: string });
+    }
+  ) => Promise<T>;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const toast = useToast();
+
+  return (
+    <ToastContext.Provider value={toast}>
+      {children}
+      <ToastContainer />
+    </ToastContext.Provider>
+  );
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useToastContext() {
+  const context = useContext(ToastContext);
+  if (context === undefined) {
+    throw new Error("useToastContext must be used within a ToastProvider");
+  }
+  return context;
+}

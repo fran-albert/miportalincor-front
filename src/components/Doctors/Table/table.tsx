@@ -2,29 +2,32 @@ import { getColumns } from "./columns";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { DataTable } from "@/components/Table/table";
 import useRoles from "@/hooks/useRoles";
-import BreadcrumbComponent from "@/components/Breadcrumb";
+import { PageHeader } from "@/components/PageHeader";
+import { Stethoscope } from "lucide-react";
 
 interface DoctorsTableProps {
   doctors: Doctor[];
-  prefetchDoctors: (id: number) => void;
+  prefetchDoctors: (id: string) => void;
   isLoading?: boolean;
+  searchQuery?: string;
+  setSearch?: (search: string) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   doctors,
   isLoading,
   prefetchDoctors,
+  searchQuery = "",
+  setSearch,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
 }) => {
-  const customFilterFunction = (doctor: Doctor, query: string) => {
-    const fullName = `${doctor.firstName.toLowerCase()} ${doctor.lastName.toLowerCase()}`;
-    const reversedFullName = `${doctor.lastName.toLowerCase()} ${doctor.firstName.toLowerCase()}`; 
-    return (
-      fullName.includes(query.toLowerCase()) ||
-      reversedFullName.includes(query.toLowerCase()) || 
-      doctor.dni.toLowerCase().includes(query.toLowerCase()) 
-    );
-  };
-  
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
   const doctorColumns = getColumns(prefetchDoctors, {
@@ -34,27 +37,35 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   });
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Médicos", href: "/medicos" },
+    { label: "Médicos" },
   ];
 
   return (
-    <div className="space-y-2 mt-2">
-      <BreadcrumbComponent items={breadcrumbItems} />
-      <h2 className="text-2xl font-bold text-greenPrimary mb-6">
-        Lista de Médicos
-      </h2>
+    <div className="space-y-6 p-6">
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Lista de Médicos"
+        description="Administra el equipo médico y sus especialidades"
+        icon={<Stethoscope className="h-6 w-6" />}
+        badge={doctors.length}
+      />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
           columns={doctorColumns}
           data={doctors}
           searchPlaceholder="Buscar médicos..."
           showSearch={true}
-          customFilter={customFilterFunction}
-          searchColumn="firstName"
+          searchQuery={searchQuery}
+          setSearch={setSearch}
+          useServerSideSearch={true}
           addLinkPath="/medicos/agregar"
           isLoading={isLoading}
           addLinkText="Agregar Médico"
           canAddUser={isSecretary}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNextPage={onNextPage}
+          onPrevPage={onPrevPage}
         />
       </div>
     </div>

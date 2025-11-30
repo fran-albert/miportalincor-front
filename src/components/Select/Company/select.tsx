@@ -6,22 +6,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCompanies } from "@/hooks/Company/useCompanies";
-import { Controller } from "react-hook-form";
+import { Company } from "@/types/Company/Company";
+import { Controller, Control, FieldValues, Path, PathValue } from "react-hook-form";
 
-interface Props {
-  control: any;
-  defaultValue?: { id: number; name: string} | null;
+interface CompanySelectProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name?: Path<T>;
+  defaultValue?: Company | null;
   disabled?: boolean;
 }
 
-export const CompanySelect = ({ control, defaultValue, disabled }: Props) => {
+export const CompanySelect = <T extends FieldValues = FieldValues>({
+  control,
+  name = "idCompany" as Path<T>,
+  defaultValue,
+  disabled,
+}: CompanySelectProps<T>) => {
   const { companies } = useCompanies({ auth: true, fetch: true });
 
   return (
     <Controller
-      name="idCompany"
+      name={name}
       control={control}
-      defaultValue={defaultValue || null}
+      defaultValue={(defaultValue || null) as PathValue<T, Path<T>>}
       render={({ field }) => (
         <Select
           value={field.value?.toString() || ""}

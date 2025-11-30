@@ -16,11 +16,8 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { BiMailSend } from "react-icons/bi";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { SendEmailDto } from "@/types/Email/Email";
 import { useEmailMutations } from "@/hooks/Email/useEmailMutations";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   collaborator: Collaborator;
@@ -57,6 +55,7 @@ export default function SendEmailDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { reset } = form;
   const { sendEmailMutation } = useEmailMutations();
+  const { promiseToast } = useToastContext();
 
   useEffect(() => {
     if (isOpen) {
@@ -76,19 +75,21 @@ export default function SendEmailDialog({
         evaluationType: evaluationType,
         fileData: url,
       };
-      const promise = sendEmailMutation.mutateAsync(payload);
-      toast.promise(promise, {
-        loading: <LoadingToast message="Enviando PDF por Email..." />,
-        success: <SuccessToast message="PDF enviado con éxito!" />,
-        error: <ErrorToast message="Hubo un error al enviar el PDF." />,
+      await promiseToast(sendEmailMutation.mutateAsync(payload), {
+        loading: {
+          title: "Enviando PDF por Email",
+          description: "Por favor espera mientras procesamos tu solicitud",
+        },
+        success: {
+          title: "PDF enviado",
+          description: "El PDF se envió exitosamente",
+        },
+        error: (error: ApiError) => ({
+          title: "Error al enviar el PDF",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
-      promise
-        .then(() => {
-          setIsOpen(false);
-        })
-        .catch((error) => {
-          console.error("Error al enviar el PDF", error);
-        });
+      setIsOpen(false);
     } catch (error) {
       console.error("Error al enviar el PDF", error);
     } finally {

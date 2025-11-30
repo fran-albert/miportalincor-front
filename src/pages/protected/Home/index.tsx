@@ -6,16 +6,16 @@ import { Helmet } from "react-helmet-async";
 const HomePage = () => {
   const { isPatient, isDoctor, isSecretary, session, isAdmin } = useUserRole();
 
+  const userName = session?.firstName || session?.email || "Usuario";
+
   return (
     <div>
       <Helmet>
         <title>Inicio</title>
       </Helmet>
-      {(isSecretary || isAdmin) && (
-        <HomeComponent name={String(session?.firstName)} />
-      )}
-      {isDoctor && <HomeComponent name={String(session?.firstName)} />}
-      {isPatient && <PatientHomePage name={String(session?.firstName)} />}
+      {(isSecretary || isAdmin) && <HomeComponent name={userName} />}
+      {isDoctor && <HomeComponent name={userName} />}
+      {isPatient && <PatientHomePage name={userName} />}
     </div>
   );
 };

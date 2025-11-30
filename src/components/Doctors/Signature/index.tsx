@@ -2,7 +2,7 @@ import React from "react";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 
 interface Props {
-  doctorId: number;
+  doctorId: string;
 }
 
 export const DoctorSignature: React.FC<Props> = ({ doctorId }) => {

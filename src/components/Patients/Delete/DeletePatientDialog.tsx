@@ -9,40 +9,54 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface DeletePatientDialogProps {
-  idPatient: number;
+  idPatient: string;
 }
 
 export default function DeletePatientDialog({
   idPatient,
 }: DeletePatientDialogProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const toggleDialog = () => setIsOpen(!isOpen);
+  const [confirmText, setConfirmText] = useState<string>("");
+  const toggleDialog = () => {
+    setIsOpen(!isOpen);
+    setConfirmText(""); // Limpiar el input al cerrar
+  };
   const { deletePatientMutation } = usePatientMutations();
+  const { promiseToast } = useToastContext();
+  const isConfirmValid = confirmText === "ELIMINAR";
 
   const handleConfirmDelete = async () => {
     try {
-      const deletePromise = deletePatientMutation.mutateAsync(idPatient);
-      toast.promise(deletePromise, {
-        loading: <LoadingToast message="Eliminando Paciente..." />,
-        success: <SuccessToast message="Paciente eliminado con éxito" />,
-        error: (err) => {
-          console.error("Error al eliminar el Paciente", err);
-          return <ErrorToast message="Error al eliminar el Paciente" />;
+      const promise = deletePatientMutation.mutateAsync(idPatient);
+
+      await promiseToast(promise, {
+        loading: {
+          title: "Eliminando paciente...",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "¡Paciente eliminado!",
+          description: "El paciente se ha eliminado exitosamente",
+        },
+        error: (error: unknown) => ({
+          title: "Error al eliminar paciente",
+          description:
+            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
+
+      setIsOpen(false);
+      setConfirmText(""); // Limpiar el input después de eliminar
     } catch (error) {
       console.error("Error al eliminar el Paciente", error);
-    } finally {
-      setIsOpen(false);
     }
   };
 
@@ -59,10 +73,25 @@ export default function DeletePatientDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Eliminar Paciente</DialogTitle>
+          <DialogDescription>
+            ¿Estás seguro de que quieres eliminar el paciente? Esta acción no se puede deshacer.
+          </DialogDescription>
         </DialogHeader>
-        <DialogDescription>
-          ¿Estás seguro de que quieres eliminar el paciente?
-        </DialogDescription>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="confirm-text" className="text-sm font-medium">
+              Para confirmar, escribe: <span className="font-bold text-red-600">ELIMINAR</span>
+            </Label>
+            <Input
+              id="confirm-text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Escribe 'ELIMINAR' para confirmar"
+              className="w-full"
+              disabled={deletePatientMutation.isPending}
+            />
+          </div>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={toggleDialog}>
             Cancelar
@@ -70,7 +99,7 @@ export default function DeletePatientDialog({
           <Button
             className="bg-greenPrimary hover:bg-green-900"
             onClick={handleConfirmDelete}
-            disabled={deletePatientMutation.isPending}
+            disabled={!isConfirmValid || deletePatientMutation.isPending}
           >
             {deletePatientMutation.isPending ? "Eliminando..." : "Eliminar"}
           </Button>

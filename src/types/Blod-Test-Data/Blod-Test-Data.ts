@@ -19,11 +19,13 @@ export interface BloodTestDataRequest {
     }[]
 }
 
-export interface BloodTestDataUpdateRequest {
-    id: number
+export interface BloodTestDataUpdateRequestItem {
+    id: number;
     value: string;
-    idBloodtest: number
-}[]
+    idBloodtest: number;
+}
+
+export type BloodTestDataUpdateRequest = BloodTestDataUpdateRequestItem[];
 
 export interface BloodTestDatum {
     id: number;

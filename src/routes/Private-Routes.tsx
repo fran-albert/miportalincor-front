@@ -1,13 +1,12 @@
 import { jwtDecode } from "jwt-decode";
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+import LoadingAnimation from "@/components/Loading/loading";
 
 interface DecodedToken {
-  Id: string;
-  Email: string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role":
-    | string
-    | string[];
+  id: string;
+  email: string;
+  roles: string | string[];
   exp: number;
   iss: string;
 }
@@ -34,13 +33,21 @@ export const Private_Routes = ({
     try {
       const decodedToken: DecodedToken = jwtDecode(stateUser);
 
-      if (allowedRoles && allowedRoles.length > 0) {
-        const userRoles =
-          decodedToken[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-          ];
+      // Verificar si el token ha expirado
+      const currentTime = Date.now() / 1000; // Convertir a segundos
+      if (decodedToken.exp < currentTime) {
+        console.warn("Token expirado, redirigiendo a login...");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("tokenExpiration");
+        setRedirectPath("/iniciar-sesion");
+        setAuthChecked(true);
+        return;
+      }
 
-        const rolesArray = Array.isArray(userRoles) ? userRoles : [userRoles];
+      // Verificar roles si se especificaron
+      if (allowedRoles && allowedRoles.length > 0) {
+        const userRoles = decodedToken.roles;
+        const rolesArray = Array.isArray(userRoles) ? userRoles : (userRoles ? [userRoles] : []);
         const hasAccess = rolesArray.some((role) =>
           allowedRoles.includes(role)
         );
@@ -55,13 +62,15 @@ export const Private_Routes = ({
       setAuthChecked(true);
     } catch (error) {
       console.error("Error al decodificar el token:", error);
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("tokenExpiration");
       setRedirectPath("/iniciar-sesion");
       setAuthChecked(true);
     }
   }, [allowedRoles]);
 
   if (!authChecked) {
-    return <div>Cargando...</div>;
+    return <LoadingAnimation message="Verificando permisos..." />;
   }
 
   if (redirectPath) {

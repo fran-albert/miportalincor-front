@@ -1,19 +1,18 @@
 import { usePatient } from "@/hooks/Patient/usePatient";
-import { PatientComponent } from "@/components/Patients/Component";
+import { PatientDashboardComponent } from "@/components/Patients/Dashboard/Component";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
 import {
-  PatientCardSkeleton,
-  StudiesCardSkeleton,
+  PatientProfileSkeleton,
+  StudyRowSkeleton,
 } from "@/components/Skeleton/Patient";
 
-const PatientPage = () => {
+const PatientDashboardPage = () => {
   const params = useParams();
   const slug = params.slug;
   const slugString = slug as string;
   const slugParts = slugString.split("-");
-  const id = parseInt(slugParts[slugParts.length - 1], 10);
+  const id = slugParts[slugParts.length - 1];
 
   const {
     patient,
@@ -24,24 +23,13 @@ const PatientPage = () => {
     id,
   });
 
-  const {
-    data: studies,
-    isLoading: isLoadingStudies,
-    isFetching,
-  } = useGetStudyWithUrlByUserId({
-    userId: id,
-    auth: true,
-  });
-
   const isFirstLoadingPatient = isLoadingPatient && !patient;
-  const isFirstLoadingStudies = isLoadingStudies;
-
-  if (isFirstLoadingPatient && isFirstLoadingStudies) {
+  if (isFirstLoadingPatient) {
     return (
-      <div className="container space-y-2 mt-2">
+      <div className="space-y-4 p-6">
         <div className="md:grid md:grid-cols-[320px_1fr] gap-6">
-          <PatientCardSkeleton />
-          <StudiesCardSkeleton />
+          <PatientProfileSkeleton />
+          <StudyRowSkeleton />
         </div>
       </div>
     );
@@ -70,14 +58,12 @@ const PatientPage = () => {
           Hubo un error al cargar los datos del paciente.
         </div>
       )}
-      <PatientComponent
+      <PatientDashboardComponent
         patient={patient}
-        studies={studies}
         isLoadingPatient={isFirstLoadingPatient}
-        isFetchingStudies={isFetching}
       />
     </>
   );
 };
 
-export default PatientPage;
+export default PatientDashboardPage;

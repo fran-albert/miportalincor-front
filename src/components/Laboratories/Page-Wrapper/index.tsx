@@ -1,6 +1,22 @@
 import { BreadcrumbComponentGenerator } from "@/components/Breadcrumb/Component-Generator";
 import LoadingAnimation from "@/components/Loading/loading";
 import LabCard from "../Card/card";
+import { BloodTest } from "@/types/Blod-Test/Blod-Test";
+import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import { Study } from "@/types/Study/Study";
+import { Patient } from "@/types/Patient/Patient";
+import { Doctor } from "@/types/Doctor/Doctor";
+
+interface LaboratoriesPageWrapperProps {
+  isLoading: boolean;
+  error?: Error | null;
+  studiesByUserId: Study[];
+  entity: Patient | Doctor | undefined;
+  role: "paciente" | "doctor";
+  idUser: number;
+  bloodTests: BloodTest[];
+  bloodTestsData: BloodTestData[];
+}
 
 const LaboratoriesPageWrapper = ({
   isLoading,
@@ -11,7 +27,7 @@ const LaboratoriesPageWrapper = ({
   idUser,
   bloodTests,
   bloodTestsData,
-}: any) => {
+}: LaboratoriesPageWrapperProps) => {
   if (error) {
     return (
       <div className="text-red-500">
@@ -30,7 +46,7 @@ const LaboratoriesPageWrapper = ({
   }
 
   return (
-    <div className="container space-y-2 mt-2">
+    <div className="space-y-4 p-6">
       <BreadcrumbComponentGenerator role={role} entity={entity} />
       <LabCard
         bloodTests={bloodTests}

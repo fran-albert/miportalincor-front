@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import DeleteDoctorDialog from "../Delete/DeleteDoctorDialog";
 
 export const getColumns = (
-  prefetchDoctors: (id: number) => void,
+  prefetchDoctors: (id: string) => void,
   roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
 ): ColumnDef<Doctor>[] => {
   const columns: ColumnDef<Doctor>[] = [
@@ -26,8 +26,8 @@ export const getColumns = (
         <Link
           to={`/medicos/${row.original.slug}`}
           className="flex items-center cursor-pointer"
-          onMouseEnter={
-            prefetchDoctors && (() => prefetchDoctors(row.original.userId))
+          onMouseEnter={() =>
+            prefetchDoctors && row.original.userId && prefetchDoctors(String(row.original.userId))
           }
         >
           <Avatar>
@@ -79,7 +79,9 @@ export const getColumns = (
       header: "DNI",
       cell: ({ row }) => (
         <div className="flex items-center">
-          <p className="text-sm font-medium">{formatDni(row.original.dni)}</p>
+          <p className="text-sm font-medium">
+            {formatDni(row.original.dni || row.original.userName)}
+          </p>
         </div>
       ),
     },
@@ -97,13 +99,18 @@ export const getColumns = (
       cell: ({ row }) => (
         <div className="flex items-center">
           <p className="text-sm font-medium">
-            {row.original.specialities.slice(0, 1).map((speciality, index) => (
-              <span key={index}>
-                {speciality.name}
-                {index < 1 && row.original.specialities.length > 1 ? "" : ""}
-              </span>
-            ))}
-            {row.original.specialities.length > 1 && "..."}
+            {row.original.specialities && row.original.specialities.length > 0 ? (
+              <>
+                {row.original.specialities.slice(0, 1).map((speciality, index) => (
+                  <span key={index}>
+                    {speciality.name}
+                  </span>
+                ))}
+                {row.original.specialities.length > 1 && "..."}
+              </>
+            ) : (
+              <span className="text-gray-400">Sin especialidades</span>
+            )}
           </p>
         </div>
       ),
@@ -119,7 +126,7 @@ export const getColumns = (
                 text="Ver Medico"
                 path="medicos"
               />
-              <DeleteDoctorDialog idDoctor={row.original.userId} />
+              <DeleteDoctorDialog idDoctor={row.original.id || String(row.original.userId)} />
             </>
           )}
           {roles.isDoctor && (

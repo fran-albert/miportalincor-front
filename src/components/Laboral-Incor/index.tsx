@@ -1,33 +1,76 @@
-import { Building2, Users } from "lucide-react";
+import { Building2, Users, UserCog, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { PageHeader } from "@/components/PageHeader";
+import { motion } from "framer-motion";
 
 export default function LaboralIncorComponent() {
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Incor Laboral" },
+  ];
+
+  const quickAccessCards = [
+    {
+      title: "Empresas",
+      description:
+        "Gestiona empresas y clientes corporativos del centro médico",
+      icon: Building2,
+      href: "/incor-laboral/empresas",
+    },
+    {
+      title: "Colaboradores",
+      description: "Gestiona colaboradores y exámenes preocupacionales",
+      icon: Users,
+      href: "/incor-laboral/colaboradores",
+    },
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-12 ">
-      <h1 className="text-4xl font-bold text-center mb-6 text-greenPrimary">
-        Bienvenido a Incor Laboral
-      </h1>
-      <h2 className="text-2xl font-semibold text-center mb-10 text-muted-foreground">
-        ¿Qué desea gestionar?
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-          <Link to={"/incor-laboral/empresas"}>
-            <CardContent className="flex flex-col items-center justify-center p-10">
-              <Building2 className="w-24 h-24 mb-6 text-greenPrimary" />
-              <h3 className="text-2xl font-semibold">EMPRESAS</h3>
-            </CardContent>
-          </Link>
-        </Card>
-        <Card className="hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-          <Link to={"/incor-laboral/colaboradores"}>
-            <CardContent className="flex flex-col items-center justify-center p-10">
-              <Users className="w-24 h-24 mb-6 text-greenPrimary" />
-              <h3 className="text-2xl font-semibold">COLABORADORES</h3>
-            </CardContent>
-          </Link>
-        </Card>
+    <div className="space-y-6 p-6">
+      {/* PageHeader */}
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Incor Laboral"
+        description="Sistema de gestión para colaboradores y empresas"
+        icon={<UserCog className="h-6 w-6" />}
+      />
+
+      {/* Quick Access Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {quickAccessCards.map((card, index) => (
+          <motion.div
+            key={card.href}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <Link to={card.href}>
+              <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer border-0 shadow-md overflow-hidden group">
+                <CardContent className="p-8">
+                  {/* Icon Circle */}
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-greenPrimary to-teal-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <card.icon className="h-10 w-10 text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {card.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {card.description}
+                  </p>
+
+                  {/* Arrow Indicator */}
+                  <div className="flex items-center text-greenPrimary group-hover:translate-x-2 transition-transform duration-300">
+                    <span className="text-sm font-semibold">Acceder</span>
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

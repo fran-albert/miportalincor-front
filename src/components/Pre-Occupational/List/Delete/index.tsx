@@ -10,12 +10,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { toast } from "sonner";
 import ActionIcon from "@/components/Icons/action";
-import LoadingToast from "@/components/Toast/Loading";
-import SuccessToast from "@/components/Toast/Success";
-import ErrorToast from "@/components/Toast/Error";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import { useCollaboratorMedicalEvaluationMutations } from "@/hooks/Collaborator-Medical-Evaluation/useCollaboratorMedicalEvaluationMutations";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   id: number;
@@ -26,17 +24,24 @@ export default function DeleteMedicalEvaluation({ id }: Props) {
   const toggleDialog = () => setIsOpen(!isOpen);
   const { deleteCollaboratorMedicalEvaluationMutation } =
     useCollaboratorMedicalEvaluationMutations();
+  const { promiseToast } = useToastContext();
 
   const handleConfirmDelete = async () => {
     try {
       const deletePromise = deleteCollaboratorMedicalEvaluationMutation.mutateAsync(id);
-      toast.promise(deletePromise, {
-        loading: <LoadingToast message="Eliminando Examen..." />,
-        success: <SuccessToast message="Examnn eliminado con éxito" />,
-        error: (err) => {
-          console.error("Error al eliminar el Examen", err);
-          return <ErrorToast message="Error al eliminar el Examen" />;
+      await promiseToast(deletePromise, {
+        loading: {
+          title: "Eliminando Examen",
+          description: "Por favor espera mientras procesamos tu solicitud",
         },
+        success: {
+          title: "Examen eliminado",
+          description: "El examen se eliminó exitosamente",
+        },
+        error: (error: ApiError) => ({
+          title: "Error al eliminar el examen",
+          description: error.response?.data?.message || "Ha ocurrido un error inesperado",
+        }),
       });
     } catch (error) {
       console.error("Error al eliminar el Examen", error);
