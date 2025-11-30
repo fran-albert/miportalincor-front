@@ -46,7 +46,7 @@ function requireEnvVar(name: string, value: string | undefined): string {
 }
 
 /**
- * Convierte string a boolean para variables de entorno
+ * Convierte string a boolean para variables de entorno 
  */
 function envToBoolean(value: string | undefined, defaultValue: boolean = false): boolean {
   if (!value) return defaultValue;
