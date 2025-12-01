@@ -23,7 +23,7 @@ export const useStudyMutations = () => {
     });
 
     const deleteStudyMutation = useMutation({
-        mutationFn: ({ studyId }: { studyId: number, userId: number }) => deleteStudy(studyId),
+        mutationFn: ({ studyId }: { studyId: number, userId: number }) => deleteStudy(String(studyId)),
         onSuccess: (patient, variables, context) => {
             const id = variables.userId
             queryClient.invalidateQueries({

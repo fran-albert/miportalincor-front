@@ -1,9 +1,9 @@
 import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { StudyType } from "@/types/Study-Type/Study-Type";
 
-export const updateStudyType = async (id: number, newStudyType: StudyType) => {
+export const updateStudyType = async (id: number, newStudyType: { name: string }) => {
     await sleep(2);
-    const { data } = await apiIncor.put<StudyType>(`StudyType/${id}`, newStudyType);
+    const { data } = await apiIncorHC.put<StudyType>(`study-type/${id}`, newStudyType);
     return data;
 }
