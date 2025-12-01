@@ -2,6 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
+import { hasPermission } from "@/common/constants/permissions";
 
 interface DecodedToken {
   id: string;
@@ -48,9 +49,7 @@ export const Private_Routes = ({
       if (allowedRoles && allowedRoles.length > 0) {
         const userRoles = decodedToken.roles;
         const rolesArray = Array.isArray(userRoles) ? userRoles : (userRoles ? [userRoles] : []);
-        const hasAccess = rolesArray.some((role) =>
-          allowedRoles.includes(role)
-        );
+        const hasAccess = hasPermission(rolesArray, allowedRoles);
 
         if (!hasAccess) {
           setRedirectPath("/acceso-denegado");

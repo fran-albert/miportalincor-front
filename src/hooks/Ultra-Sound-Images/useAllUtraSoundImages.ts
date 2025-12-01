@@ -13,7 +13,7 @@ export const useAllUltraSoundImages = (idUser: number | undefined, studies: Stud
             await Promise.all(
                 studies.map(async (study) => {
                     if (Number(study.studyType?.id) === 2) {
-                        const images: UltraSoundImages[] = await getUltraSoundImages(study.id);
+                        const images: UltraSoundImages[] = await getUltraSoundImages(String(study.id));
                         const imageUrls = await Promise.all(
                             images.map(async (image) => {
                                 const url = await getUrlByUserId(idUser, image.locationS3);

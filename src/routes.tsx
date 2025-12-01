@@ -331,7 +331,7 @@ function App() {
           <Route
             path="/incor-laboral"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                 <LaboralIncorPage />
               </Private_Routes>
             }

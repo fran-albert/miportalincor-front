@@ -1,4 +1,4 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const getTotalStudies = async (studyTypeId?: number): Promise<number> => {
     let url = 'study/all';
@@ -6,6 +6,6 @@ export const getTotalStudies = async (studyTypeId?: number): Promise<number> => 
         url += `?studyTypeId=${studyTypeId}`;
     }
 
-    const { data } = await apiIncor.get(url);
+    const { data } = await apiIncorHC.get(url);
     return data;
 }

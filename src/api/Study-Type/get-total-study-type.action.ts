@@ -1,9 +1,7 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const getTotalStudyTypes = async (): Promise<number> => {
-    // await sleep(2);
-
-    const { data } = await apiIncor.get(`StudyType/all`);
+    const { data } = await apiIncorHC.get(`study-type/all`);
     const totalStudyTypes = data.length;
     return totalStudyTypes;
 }

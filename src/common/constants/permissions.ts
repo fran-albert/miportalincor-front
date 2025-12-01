@@ -43,6 +43,9 @@ export const hasPermission = (userRoles: string[], allowedRoles: readonly string
   if (!userRoles || userRoles.length === 0) return false;
   if (!allowedRoles || allowedRoles.length === 0) return true; // Si no hay restricciones, permitir
 
+  // El Administrador siempre tiene acceso a todo
+  if (userRoles.includes(Role.ADMINISTRADOR)) return true;
+
   return userRoles.some(role => allowedRoles.includes(role));
 };
 

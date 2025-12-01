@@ -1,8 +1,9 @@
 import { uploadStudyCollaborator } from "@/api/Study/Collaborator/upload-study.collaborator.action";
 import { StudySection } from "@/types/Study/Study";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import type { AxiosError } from "axios";
+import { useRef } from "react";
 
 interface Props {
   collaboratorId: number;
@@ -23,6 +24,8 @@ export const useUploadStudyFileMutation = ({
   setSections,
 }: Props) => {
   const queryClient = useQueryClient();
+  const { showLoading, showSuccess, showError, removeToast } = useToastContext();
+  const toastIdRef = useRef<string | null>(null);
 
   return useMutation<
     UploadResponse,
@@ -35,9 +38,7 @@ export const useUploadStudyFileMutation = ({
       const studyType = variables.formData.get("studyType") as string;
 
       if (studyType) {
-        toast.loading(`Cargando ${studyType}...`, {
-          id: "upload-toast",
-        });
+        toastIdRef.current = showLoading("Subiendo estudio", `Cargando ${studyType}...`);
       }
     },
 
@@ -68,16 +69,19 @@ export const useUploadStudyFileMutation = ({
         queryKey: ["collaborator-medical-evaluation", { collaboratorId }],
       });
 
-      toast.success(`${studyType} subido con éxito`, {
-        id: "upload-toast",
-      });
+      if (toastIdRef.current) {
+        removeToast(toastIdRef.current);
+      }
+      showSuccess("Estudio subido", `${studyType} subido con éxito`);
     },
 
     onError: (error: AxiosError<{ message: string }>) => {
       const backendMsg = error.response?.data?.message;
-      toast.error(backendMsg ?? "Error al subir el estudio", {
-        id: "upload-toast",
-      });
+
+      if (toastIdRef.current) {
+        removeToast(toastIdRef.current);
+      }
+      showError("Error al subir", backendMsg ?? "Error al subir el estudio");
 
       console.error("Error uploading study:", error.message);
     },
