@@ -26,7 +26,7 @@ export const useCommonLaboratoryData = ({ id, role }: { id: string, role: "pacie
     fetchStudiesByUserId: true,
   });
 
-  const studyIds = studiesByUserId.map((study) => study.id);
+  const studyIds = studiesByUserId.map((study) => String(study.id));
 
   const { bloodTestsData, isLoadingBloodTestsData: isLoadingBloodTest } = useBloodTestData({
     auth: true,

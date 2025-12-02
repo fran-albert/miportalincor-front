@@ -25,7 +25,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import CreateEvolucionDialog from "../Create";
-import { EvolucionesResponse, Evolucion as EvolucionType, EvolucionData } from "@/types/Antecedentes/Antecedentes";
+import EditEvolucionDialog from "../Edit";
+import { EvolucionesResponse, Evolucion, EvolucionData } from "@/types/Antecedentes/Antecedentes";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
@@ -77,19 +78,21 @@ export default function EvolucionesComponent({
   const [selectedConsultaToView, setSelectedConsultaToView] = useState<{
     fechaConsulta: string;
     fechaCreacion: string;
-    doctor: EvolucionType['doctor'];
+    doctor: Evolucion['doctor'];
     especialidad: string | null;
     motivoConsulta: string | null;
     enfermedadActual: string | null;
     examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
-    evolucionPrincipal: EvolucionType | null;
+    evolucionPrincipal: Evolucion | null;
     mediciones: EvolucionData[];
-    evoluciones: EvolucionType[];
+    evoluciones: Evolucion[];
   } | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [evolutionToDelete, setEvolutionToDelete] = useState<EvolutionTableRow | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [evolutionToEdit, setEvolutionToEdit] = useState<Evolucion | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const especialidades = [
     "Todas",
@@ -140,7 +143,7 @@ export default function EvolucionesComponent({
     try {
       // Necesitamos obtener el ID de la evolución desde evolucionCompleta
       // Ya que la tabla agrupa por consulta, necesitamos eliminar todas las evoluciones de la consulta
-      const evolutionIds = evolution.evolucionCompleta.evoluciones.map((ev: EvolucionType) => ev.id);
+      const evolutionIds = evolution.evolucionCompleta.evoluciones.map((ev: Evolucion) => ev.id);
 
       if (evolutionIds.length === 0) {
         showError("No se encontraron evoluciones para eliminar");
@@ -160,6 +163,15 @@ export default function EvolucionesComponent({
       const apiError = error as ApiError;
       const errorMessage = apiError.response?.data?.message || apiError.message || "Error desconocido";
       showError("Error", `No se pudo eliminar la evolución: ${errorMessage}`);
+    }
+  };
+
+  const handleEditEvolution = (row: EvolutionTableRow) => {
+    // Obtener la primera evolución del grupo para editar
+    const evolucionPrincipal = row.evolucionCompleta.evoluciones[0];
+    if (evolucionPrincipal) {
+      setEvolutionToEdit(evolucionPrincipal);
+      setIsEditDialogOpen(true);
     }
   };
 
@@ -193,7 +205,7 @@ export default function EvolucionesComponent({
   };
 
   // Función para obtener la fecha de consulta de una evolución
-  const getFechaConsulta = (evolucion: EvolucionType) => {
+  const getFechaConsulta = (evolucion: Evolucion) => {
     // Buscar el campo de fecha de consulta en el array data
     const fechaData = evolucion.data.find(d => 
       d.dataType && d.dataType.name.toLowerCase() === 'fecha de consulta'
@@ -203,25 +215,25 @@ export default function EvolucionesComponent({
   };
 
   // Función para transformar evoluciones a formato de tabla
-  const transformEvolucionesToTableRows = (evoluciones: EvolucionType[]): EvolutionTableRow[] => {
+  const transformEvolucionesToTableRows = (evoluciones: Evolucion[]): EvolutionTableRow[] => {
     const grouped: {
       [key: string]: {
         fechaConsulta: string;
         fechaCreacion: string;
-        doctor: EvolucionType['doctor'];
+        doctor: Evolucion['doctor'];
         especialidad: string | null;
         motivoConsulta: string | null;
         enfermedadActual: string | null;
         examenFisico: string | null;
         diagnosticosPresuntivos: string | null;
-        evolucionPrincipal: EvolucionType | null;
+        evolucionPrincipal: Evolucion | null;
         mediciones: EvolucionData[];
-        evoluciones: EvolucionType[];
+        evoluciones: Evolucion[];
       };
     } = {};
 
     // Procesar cada evolución
-    evoluciones.forEach((evolucion: EvolucionType) => {
+    evoluciones.forEach((evolucion: Evolucion) => {
       const fechaConsulta = getFechaConsulta(evolucion);
       const key = `${fechaConsulta}_${evolucion.doctor.userId}`; // Agrupar por fecha y doctor
 
@@ -451,6 +463,7 @@ export default function EvolucionesComponent({
             <EvolutionTable
               data={filteredRows}
               onView={handleViewEvolution}
+              onEdit={handleEditEvolution}
               onDelete={handleDeleteEvolution}
               onPrint={handlePrintEvolution}
               isLoading={false}
@@ -480,6 +493,19 @@ export default function EvolucionesComponent({
           onConfirm={handleConfirmDelete}
           isDeleting={deleteEvolutionMutation.isPending}
         />
+
+        {/* Diálogo de Edición */}
+        {evolutionToEdit && (
+          <EditEvolucionDialog
+            isOpen={isEditDialogOpen}
+            onClose={() => {
+              setIsEditDialogOpen(false);
+              setEvolutionToEdit(null);
+            }}
+            evolucion={evolutionToEdit}
+          />
+        )}
+
         {/* Modal para Ver Evolución Completa */}
         <TooltipProvider>
           <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>

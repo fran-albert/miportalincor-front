@@ -218,7 +218,7 @@ export default function PatientStudies({
   );
 
   return (
-    <>
+    <div className="space-y-6">
       {patient && <PatientInformation patient={patient} />}
 
       {/* Tabs */}
@@ -408,6 +408,6 @@ export default function PatientStudies({
             )}
           </CardContent>
         </Card>
-    </>
+    </div>
   );
 }

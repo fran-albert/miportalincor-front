@@ -1,6 +1,9 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { environment, currentConfig } from "@/config/environment";
+import { store } from "@/store/store";
+import { updateTokens, logout } from "@/store/authSlice";
+import { jwtDecode } from "jwt-decode";
 
 const apiIncor = axios.create({
   baseURL: environment.API_BASE_URL,
@@ -107,8 +110,14 @@ const handleAuthError = async (error: AxiosError) => {
 
     const { token: newToken } = response.data;
 
-    // Save new token
+    // Decode token to get expiration
+    const decodedToken = jwtDecode<{ exp: number }>(newToken);
+    const expirationTime = decodedToken.exp * 1000;
+
+    // Save new token in localStorage AND Redux
     localStorage.setItem("authToken", newToken);
+    localStorage.setItem("tokenExpiration", expirationTime.toString());
+    store.dispatch(updateTokens({ token: newToken }));
 
     // Update authorization header
     originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -121,11 +130,10 @@ const handleAuthError = async (error: AxiosError) => {
   } catch (refreshError) {
     // Refresh failed - clear token and redirect to login
     processQueue(refreshError, null);
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+    store.dispatch(logout());
 
     // Redirect to login page
-    window.location.href = "/login";
+    window.location.href = "/iniciar-sesion";
 
     return Promise.reject(refreshError);
   } finally {

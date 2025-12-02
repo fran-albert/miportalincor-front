@@ -11,14 +11,17 @@ import {
   Eye,
   Trash2,
   Printer,
-  Clock
+  Clock,
+  Pencil
 } from "lucide-react";
 import { formatDoctorInfo } from "@/common/helpers/helpers";
 import {
   canDeleteEvolution,
+  canEditEvolution,
   formatEvolutionDateTime,
   truncateEvolutionText,
-  getDeleteTimeRemaining
+  getDeleteTimeRemaining,
+  getEditTimeRemaining
 } from "@/common/helpers/evolutionHelpers";
 import ActionIcon from "@/components/Icons/action";
 import { Evolucion, EvolucionData } from "@/types/Antecedentes/Antecedentes";
@@ -55,6 +58,7 @@ export interface EvolutionTableRow {
 
 interface ColumnsProps {
   onView: (evolucion: EvolutionTableRow) => void;
+  onEdit: (evolucion: EvolutionTableRow) => void;
   onDelete: (evolucion: EvolutionTableRow) => void;
   onPrint: (evolucion: EvolutionTableRow) => void;
   currentUserId?: number;
@@ -62,6 +66,7 @@ interface ColumnsProps {
 
 export const getEvolutionColumns = ({
   onView,
+  onEdit,
   onDelete,
   onPrint,
   currentUserId
@@ -72,8 +77,10 @@ export const getEvolutionColumns = ({
     cell: ({ row }) => {
       const evolucion = row.original;
       const canDelete = canDeleteEvolution(evolucion.fechaCreacion);
+      const canEdit = canEditEvolution(evolucion.fechaCreacion);
       const isOwner = currentUserId && currentUserId === evolucion.doctor.userId;
       const canDeleteThis = canDelete && isOwner;
+      const canEditThis = canEdit && isOwner;
 
       return (
         <div className="flex items-center gap-1">
@@ -92,6 +99,29 @@ export const getEvolutionColumns = ({
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir PDF
               </DropdownMenuItem>
+
+              {canEditThis ? (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(evolucion);
+                  }}
+                  className="text-amber-600 focus:text-amber-600"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editar
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem disabled>
+                  <Clock className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>No se puede editar</span>
+                    <span className="text-xs text-gray-500">
+                      {getEditTimeRemaining(evolucion.fechaCreacion)}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              )}
 
               {canDeleteThis ? (
                 <DropdownMenuItem

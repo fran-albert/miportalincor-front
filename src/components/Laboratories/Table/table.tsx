@@ -33,12 +33,12 @@ const transformData = (originalData: BloodTestData[]): BloodTestDataResponse[] =
       };
     }
     acc[studyId].bloodTestData.push({
-      id: item.id ?? 0,
+      id: Number(item.id) || 0,
       value: item.value,
       bloodTest: item.bloodTest,
     });
     return acc;
-  }, {} as Record<number, BloodTestDataResponse>);
+  }, {} as Record<string | number, BloodTestDataResponse>);
 
   return Object.values(groupedByStudy);
 };
@@ -126,7 +126,7 @@ export const LabPatientTable = ({
         // Si existe un estudio para esta fecha, será una actualización
         if (existingStudyForDate) {
           const updateGroup = {
-            idStudy: existingStudyForDate.id,
+            idStudy: Number(existingStudyForDate.id),
             blodTest: [] as BloodTestDataUpdateRequestItem[],
           };
 
@@ -143,7 +143,7 @@ export const LabPatientTable = ({
               // Actualizar valor existente
               if (String(existingData.value).trim() !== String(value).trim()) {
                 updateGroup.blodTest.push({
-                  id: existingData.id,
+                  id: Number(existingData.id),
                   value,
                   idBloodtest: bloodTestIdAsNumber,
                 });

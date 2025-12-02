@@ -86,3 +86,47 @@ export const truncateEvolutionText = (text: string | null, maxLength: number = 8
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 };
+
+/**
+ * Valida si una evolución puede ser editada (dentro de 24 horas)
+ * Usa la misma lógica que canDeleteEvolution
+ */
+export const canEditEvolution = (createdAt: string): boolean => {
+  return canDeleteEvolution(createdAt);
+};
+
+/**
+ * Obtiene el tiempo restante para poder editar una evolución
+ */
+export const getEditTimeRemaining = (createdAt: string): string => {
+  const created = new Date(createdAt);
+  const now = new Date();
+
+  const createdTime = created.getTime();
+  const nowTime = now.getTime() + (3 * 60 * 60 * 1000);
+
+  const timeDiff = nowTime - createdTime;
+  const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+  if (hoursDiff >= 24) {
+    const daysAgo = Math.floor(hoursDiff / 24);
+    return `No se puede editar (creada hace ${daysAgo} día${daysAgo !== 1 ? 's' : ''})`;
+  }
+
+  const timeLeft = (24 * 60 * 60 * 1000) - timeDiff;
+  const hoursLeft = timeLeft / (1000 * 60 * 60);
+  const minutesLeft = (timeLeft % (1000 * 60 * 60)) / (1000 * 60);
+
+  const hours = Math.floor(hoursLeft);
+  const minutes = Math.floor(minutesLeft);
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours}h ${minutes}m restantes para editar`;
+  } else if (hours > 0) {
+    return `${hours}h restantes para editar`;
+  } else if (minutes > 0) {
+    return `${minutes}m restantes para editar`;
+  } else {
+    return "Menos de 1 minuto restante para editar";
+  }
+};

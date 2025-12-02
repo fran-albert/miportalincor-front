@@ -41,8 +41,20 @@ const authSlice = createSlice({
             localStorage.removeItem("authToken");
             localStorage.removeItem("tokenExpiration");
         },
+        updateTokens: (state, action) => {
+            const decodedToken = jwtDecode<DecodedToken>(action.payload.token);
+            if (decodedToken.exp) {
+                const expirationTime = decodedToken.exp * 1000;
+
+                state.token = action.payload.token;
+                state.tokenExpiration = expirationTime.toString();
+
+                localStorage.setItem("authToken", action.payload.token);
+                localStorage.setItem("tokenExpiration", expirationTime.toString());
+            }
+        },
     },
 });
 
-export const { loginSuccess, setUser, logout } = authSlice.actions;
+export const { loginSuccess, setUser, logout, updateTokens } = authSlice.actions;
 export default authSlice.reducer;

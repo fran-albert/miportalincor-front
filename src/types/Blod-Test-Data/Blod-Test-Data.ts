@@ -2,7 +2,7 @@ import { BloodTest } from "../Blod-Test/Blod-Test";
 import { Study } from "../Study/Study";
 
 export interface BloodTestData {
-    id?: number;
+    id?: number | string;
     value: string;
     bloodTest: BloodTest;
     study: Study;
