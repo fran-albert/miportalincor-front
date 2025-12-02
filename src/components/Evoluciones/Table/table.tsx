@@ -20,6 +20,7 @@ import { getEvolutionColumns, EvolutionTableRow } from "./columns";
 interface EvolutionTableProps {
   data: EvolutionTableRow[];
   onView: (evolucion: EvolutionTableRow) => void;
+  onEdit: (evolucion: EvolutionTableRow) => void;
   onDelete: (evolucion: EvolutionTableRow) => void;
   onPrint: (evolucion: EvolutionTableRow) => void;
   isLoading?: boolean;
@@ -29,6 +30,7 @@ interface EvolutionTableProps {
 export default function EvolutionTable({
   data,
   onView,
+  onEdit,
   onDelete,
   onPrint,
   isLoading = false,
@@ -43,6 +45,7 @@ export default function EvolutionTable({
 
   const columns = getEvolutionColumns({
     onView,
+    onEdit,
     onDelete,
     onPrint,
     currentUserId

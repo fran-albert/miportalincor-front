@@ -271,7 +271,7 @@ const GenericStudies: React.FC<GenericStudiesProps> = ({
     fetchStudiesByUserId: !!idUser && isDoctor,
   });
 
-  const studyIds = isDoctor ? studiesByUserId.map((study) => study.id) : [];
+  const studyIds = isDoctor ? studiesByUserId.map((study) => String(study.id)) : [];
 
   const { bloodTestsData = [], isLoadingBloodTestsData } = useBloodTestData({
     auth: isDoctor,

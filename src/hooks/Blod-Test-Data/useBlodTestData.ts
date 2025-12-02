@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 
 interface Props {
     auth?: boolean;
-    idStudies: number[];
+    idStudies: string[];
 }
 
 export const useBloodTestData = ({ auth = true, idStudies }: Props) => {

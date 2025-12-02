@@ -21,10 +21,11 @@ interface Props {
 interface MedicionInputsProps {
   onMedicionChange: (medicionId: string, value: string) => void;
   disabled?: boolean;
+  initialValues?: { [key: string]: string };
 }
 
 // Nuevo componente para inputs directos de mediciones
-export const MedicionInputs = ({ onMedicionChange, disabled }: MedicionInputsProps) => {
+export const MedicionInputs = ({ onMedicionChange, disabled, initialValues = {} }: MedicionInputsProps) => {
   const { data: medicionesData, isLoading } = useDataTypes({
     auth: true,
     fetch: true,
@@ -95,6 +96,7 @@ export const MedicionInputs = ({ onMedicionChange, disabled }: MedicionInputsPro
                 type="number"
                 step="0.1"
                 placeholder={getPlaceholder(medicion.name)}
+                defaultValue={initialValues[medicion.id.toString()] || ""}
                 onChange={(e) => onMedicionChange(medicion.id.toString(), e.target.value)}
                 className="text-sm h-8"
                 disabled={disabled}

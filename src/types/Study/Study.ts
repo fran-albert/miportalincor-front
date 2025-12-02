@@ -2,7 +2,7 @@ import { StudyType } from "../Study-Type/Study-Type";
 import { UltraSoundImages } from "../Ultra-Sound/Ultra-Sound";
 
 export interface Study {
-  id: number;
+  id: number | string;
   locationS3?: string;
   name?: string;
   date: string;

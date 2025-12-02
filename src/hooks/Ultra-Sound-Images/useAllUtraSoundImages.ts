@@ -9,7 +9,7 @@ export const useAllUltraSoundImages = (idUser: number | undefined, studies: Stud
         queryKey: ["ultraSoundImages", { idUser, studies }],
         queryFn: async () => {
             if (!idUser) return {};
-            const allImages: { [key: number]: string[] } = {};
+            const allImages: Record<string | number, string[]> = {};
             await Promise.all(
                 studies.map(async (study) => {
                     if (Number(study.studyType?.id) === 2) {

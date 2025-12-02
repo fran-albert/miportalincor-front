@@ -6,7 +6,7 @@ import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 
 interface Study {
-  id: number;
+  id: number | string;
   date: string;
 }
 
