@@ -75,7 +75,17 @@ export const LabPatientTable = ({
         transformedData.map((group) => formatDate(group.study.date ?? ""))
       )
     );
-    setDates(uniqueDates);
+
+    // Sort dates chronologically (format: DD-MM-YYYY)
+    const sortedDates = uniqueDates.sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split("-").map(Number);
+      const [dayB, monthB, yearB] = b.split("-").map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    setDates(sortedDates);
   }, [bloodTestsData]);
 
   const filteredBloodTests = bloodTests.filter((test) =>
@@ -101,9 +111,17 @@ export const LabPatientTable = ({
   };
   const handleAddNewColumn = (newDate: string) => {
     setDates((prevDates) => {
-      const updatedDates = !prevDates.includes(newDate)
-        ? [...prevDates, newDate]
-        : prevDates;
+      if (prevDates.includes(newDate)) {
+        return prevDates;
+      }
+      // Add new date and sort chronologically (format: DD-MM-YYYY)
+      const updatedDates = [...prevDates, newDate].sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split("-").map(Number);
+        const [dayB, monthB, yearB] = b.split("-").map(Number);
+        const dateA = new Date(yearA, monthA - 1, dayA);
+        const dateB = new Date(yearB, monthB - 1, dayB);
+        return dateA.getTime() - dateB.getTime();
+      });
       return updatedDates;
     });
   };

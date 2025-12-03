@@ -1,9 +1,7 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { BloodTestDataRequest } from "@/types/Blod-Test-Data/Blod-Test-Data";
 
 export const createBlodTestData = async (newBlodTestData: BloodTestDataRequest) => {
-    await sleep(2);
-    const { data } = await apiIncor.post<BloodTestDataRequest>(`BloodTestData/create`, newBlodTestData);
+    const { data } = await apiIncorHC.post<{ studyId: string; bloodTestData: unknown[] }>(`blood-test-data/create`, newBlodTestData);
     return data;
 }

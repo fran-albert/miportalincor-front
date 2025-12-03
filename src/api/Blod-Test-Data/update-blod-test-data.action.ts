@@ -1,13 +1,13 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { BloodTestDataUpdateRequestItem } from "@/types/Blod-Test-Data/Blod-Test-Data";
 
 export const updateBlodTestData = async (
-    idStudy: number,
+    idStudy: string,
     bloodTestData: BloodTestDataUpdateRequestItem[]
 ) => {
-    const { data } = await apiIncor.put(
-        `BloodTestData/${idStudy}`,
-        bloodTestData
+    const { data } = await apiIncorHC.put(
+        `blood-test-data/${idStudy}`,
+        { items: bloodTestData }
     );
     return data;
 };

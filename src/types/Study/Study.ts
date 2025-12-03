@@ -11,7 +11,9 @@ export interface Study {
   ultrasoundImages?: UltraSoundImages[];
   isOptimistic?: boolean;
   isUpdating?: boolean;
-  created?: Date | null
+  created?: Date | null;
+  isExternal?: boolean;
+  externalInstitution?: string;
 }
 
 export interface UploadedFile {
@@ -27,16 +29,18 @@ export interface StudySection {
 }
 export interface StudiesWithURL {
   id: number;
-  locationS3: string;
+  locationS3?: string;
   studyTypeId: number;
   studyType: StudyType;
   date: Date;
   note: string;
   created: Date;
-  signedUrl: string;
+  signedUrl?: string;
   ultrasoundImages: {
     id: number,
     locationS3: string,
     signedUrl: string,
-  }[]
+  }[];
+  isExternal?: boolean;
+  externalInstitution?: string;
 }
