@@ -9,10 +9,12 @@ import {
 import AntecedentesSection from "@/components/Antecedentes/Section";
 import EvolutionSection from "@/components/Evoluciones/Section";
 import CurrentMedicationSection from "@/components/Current-Medication/Section";
+import StudiesSection from "@/components/Studies/Section";
 import {
   AntecedentesSkeleton,
   EvolucionesSkeleton,
 } from "@/components/Skeleton/Historia-Clinica";
+import useUserRole from "@/hooks/useRoles";
 
 type UserData = Patient | Doctor;
 
@@ -40,6 +42,8 @@ export default function GenericHistory({
   isLoadingMedicacionActual = false,
   patientId,
 }: GenericHistoryProps) {
+  const { isDoctor } = useUserRole();
+
   // Validación de seguridad - no debería llegar aquí sin userData, pero por si acaso
   if (!userData) {
     return (
@@ -107,6 +111,16 @@ export default function GenericHistory({
             />
           )}
         </div>
+
+        {/* Sección de Estudios Médicos - Solo visible para médicos */}
+        {isDoctor && (
+          <StudiesSection
+            userData={userData}
+            userType={userType}
+            readOnly={false}
+            showEditActions={true}
+          />
+        )}
     </div>
   );
 }

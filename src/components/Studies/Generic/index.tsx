@@ -120,10 +120,12 @@ const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
         ? "JPG"
         : "PDF") as "PDF" | "JPG" | "PNG" | "DICOM",
       tamaño: "1.0 MB",
-      url: study.signedUrl || "#",
+      url: study.signedUrl || "",
     },
     signedUrl: study.signedUrl,
     estado: "Completado" as const,
+    isExternal: study.isExternal || false,
+    externalInstitution: study.externalInstitution,
   }));
 };
 

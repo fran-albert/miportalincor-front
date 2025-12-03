@@ -20,6 +20,7 @@ import { Patient } from "@/types/Patient/Patient";
 import { DataTable } from "@/components/Table/table";
 import { createStudiesColumns } from "./Table/columns";
 import StudyDialog from "./Upload/dialog";
+import ExternalStudyDialog from "./Upload/external-study-dialog";
 import { StudyCard } from "./Card/StudyCard";
 import { useIsMobile } from "@/hooks/use-mobile/use-mobile";
 import { MobilePagination } from "./Pagination/MobilePagination";
@@ -50,6 +51,8 @@ interface Study {
   };
   signedUrl?: string;
   estado: "Completado" | "Pendiente" | "En proceso";
+  isExternal?: boolean;
+  externalInstitution?: string;
 }
 
 interface Laboratory {
@@ -98,7 +101,11 @@ export default function PatientStudies({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = isMobile ? 6 : 10;
 
+  // Check if user is a doctor (can see external studies)
+  const isDoctor = userRole.some((role) => role === "Medico");
+
   // Combinar todos los estudios (incluyendo laboratorios) para los tabs de categorías
+  // Filtrar estudios externos para que solo los médicos puedan verlos
   const studies = React.useMemo(() => {
     const labStudies: Study[] = initialLaboratories.map((lab) => ({
       id: lab.id,
@@ -117,8 +124,15 @@ export default function PatientStudies({
       estado: lab.estado as "Completado" | "Pendiente" | "En proceso",
     }));
 
-    return [...initialStudies, ...labStudies];
-  }, [initialStudies, initialLaboratories]);
+    const allStudies = [...initialStudies, ...labStudies];
+
+    // Si no es médico, filtrar los estudios externos
+    if (!isDoctor) {
+      return allStudies.filter(study => !study.isExternal);
+    }
+
+    return allStudies;
+  }, [initialStudies, initialLaboratories, isDoctor]);
 
   // Definir categorías con metadata
   const categoriesConfig = [
@@ -318,10 +332,13 @@ export default function PatientStudies({
                 </div>
               )}
 
-              {/* Add Study Button - Only for Administrators and Secretaries */}
-              {canAddStudies && patient && (
-                <div className={activeTab === "tabla-laboratorios" ? "ml-auto" : ""}>
-                  <StudyDialog idUser={patient.userId} />
+              {/* Add Study Buttons */}
+              {(canAddStudies || isDoctor) && patient && (
+                <div className={`flex gap-2 ${activeTab === "tabla-laboratorios" ? "ml-auto" : ""}`}>
+                  {/* Regular study dialog - Solo Admin y Secretaria */}
+                  {canAddStudies && <StudyDialog idUser={patient.userId} />}
+                  {/* External study dialog - Solo para Médicos */}
+                  {isDoctor && <ExternalStudyDialog idUser={patient.userId} />}
                 </div>
               )}
             </div>
@@ -363,6 +380,8 @@ export default function PatientStudies({
                         estado={study.estado}
                         canDelete={canDeleteStudies}
                         patientId={patientData.id}
+                        isExternal={study.isExternal}
+                        externalInstitution={study.externalInstitution}
                       />
                     ))
                   ) : (

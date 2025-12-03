@@ -10,6 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowLeft,
   Calendar,
   User,
@@ -30,6 +37,7 @@ import { EvolucionesResponse, Evolucion, EvolucionData } from "@/types/Anteceden
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import useUserRole from "@/hooks/useRoles";
+import { useSpeciality } from "@/hooks/Speciality/useSpeciality";
 import BreadcrumbComponent from "@/components/Breadcrumb";
 import EvolutionTable from "../Table/table";
 import { EvolutionTableRow } from "../Table/columns";
@@ -94,21 +102,8 @@ export default function EvolucionesComponent({
   const [evolutionToEdit, setEvolutionToEdit] = useState<Evolucion | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const especialidades = [
-    "Todas",
-    "Medicina General",
-    "Cardiología",
-    "Endocrinología",
-    "Neurología",
-    "Gastroenterología",
-    "Neumología",
-    "Dermatología",
-    "Traumatología",
-    "Ginecología",
-    "Urología",
-    "Oftalmología",
-    "Otorrinolaringología",
-  ];
+  // Obtener especialidades desde el backend
+  const { specialities, isLoading: isLoadingSpecialities } = useSpeciality({});
 
   const [isAddEvolucionModalOpen, setIsAddEvolucionModalOpen] = useState(false);
 
@@ -441,17 +436,23 @@ export default function EvolucionesComponent({
                 </div>
               </div>
               <div className="md:w-64">
-                <select
+                <Select
                   value={selectedEspecialidad}
-                  onChange={(e) => setSelectedEspecialidad(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  onValueChange={setSelectedEspecialidad}
+                  disabled={isLoadingSpecialities}
                 >
-                  {especialidades.map((esp) => (
-                    <option key={esp} value={esp}>
-                      {esp}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filtrar por especialidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Todas">Todas las especialidades</SelectItem>
+                    {specialities.map((speciality) => (
+                      <SelectItem key={speciality.id} value={speciality.name}>
+                        {speciality.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>

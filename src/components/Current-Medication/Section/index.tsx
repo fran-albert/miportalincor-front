@@ -159,7 +159,7 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
             <div className="pt-2 border-t border-gray-100">
               <div className="flex items-start gap-1 text-xs text-gray-700">
                 <FileText className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-gray-400" />
-                <span className="line-clamp-2 leading-relaxed">{currentMedication.observations}</span>
+                <span className="leading-relaxed whitespace-pre-line">{currentMedication.observations}</span>
               </div>
             </div>
           )}

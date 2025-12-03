@@ -1,5 +1,6 @@
 import { deleteStudy } from "@/api/Study/delete-study.action";
 import { uploadStudy } from "@/api/Study/upload-study.action";
+import { uploadExternalStudy } from "@/api/Study/upload-external-study.action";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useStudyMutations = () => {
@@ -37,5 +38,21 @@ export const useStudyMutations = () => {
         },
     });
 
-    return { uploadStudyMutation, deleteStudyMutation, };
+    const uploadExternalStudyMutation = useMutation({
+        mutationFn: uploadExternalStudy,
+        onSuccess: (_data, variables) => {
+            const userId = Number(variables.get("userId"));
+            queryClient.invalidateQueries({
+                queryKey: ["studies-by-user-id", { userId }]
+            });
+            console.log("External study created successfully");
+        },
+        onError: (error: unknown, variables, context) => {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const responseData = (error as { response?: { data?: unknown } }).response?.data;
+            console.log("Error creating external study:", responseData || errorMessage, variables, context);
+        },
+    });
+
+    return { uploadStudyMutation, deleteStudyMutation, uploadExternalStudyMutation };
 };

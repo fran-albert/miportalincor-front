@@ -12,6 +12,8 @@ import {
   Zap,
   StethoscopeIcon,
   FileText,
+  Building2,
+  FileEdit,
 } from "lucide-react";
 import DeleteStudyDialog from "../Delete/dialog";
 
@@ -32,6 +34,8 @@ export interface StudyCardProps {
   estado: "Completado" | "Pendiente" | "En proceso";
   canDelete?: boolean;
   patientId?: string;
+  isExternal?: boolean;
+  externalInstitution?: string;
 }
 
 const getCategoryIcon = (categoria: string) => {
@@ -98,6 +102,8 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   estado,
   canDelete = false,
   patientId,
+  isExternal = false,
+  externalInstitution,
 }) => {
   const handleView = () => {
     window.open(signedUrl || archivo.url, "_blank");
@@ -118,12 +124,24 @@ export const StudyCard: React.FC<StudyCardProps> = ({
               <h3 className="font-semibold text-base text-gray-900 truncate">
                 {tipo}
               </h3>
-              <Badge
-                variant="outline"
-                className={`mt-1 text-xs ${getCategoryColor(categoria)}`}
-              >
-                {categoria}
-              </Badge>
+              <div className="flex items-center gap-1 mt-1 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${getCategoryColor(categoria)}`}
+                >
+                  {categoria}
+                </Badge>
+                {isExternal && (
+                  <Badge
+                    variant="outline"
+                    className="bg-orange-50 text-orange-700 border-orange-200 text-xs"
+                    title={externalInstitution || "Estudio externo"}
+                  >
+                    <Building2 className="h-3 w-3 mr-1" />
+                    Externo
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
           <Badge className={`${getEstadoColor(estado)} flex-shrink-0 text-xs`}>
@@ -142,6 +160,12 @@ export const StudyCard: React.FC<StudyCardProps> = ({
             <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
             <span className="truncate">{fecha}</span>
           </div>
+          {isExternal && externalInstitution && (
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-orange-500 flex-shrink-0" />
+              <span className="truncate text-orange-700">{externalInstitution}</span>
+            </div>
+          )}
           {medico && medico !== "Dr. No especificado" && (
             <div className="flex items-center gap-2">
               <StethoscopeIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -150,36 +174,55 @@ export const StudyCard: React.FC<StudyCardProps> = ({
           )}
         </div>
 
-        {/* Archivo info */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t">
-          <FileText className="h-3 w-3" />
-          <span className="truncate flex-1">{archivo.nombre}</span>
-          <span className="flex-shrink-0">
-            {archivo.tipo} • {archivo.tamaño}
-          </span>
-        </div>
+        {/* Archivo info - Solo mostrar si hay archivo */}
+        {(signedUrl || archivo?.url) ? (
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t">
+            <FileText className="h-3 w-3" />
+            <span className="truncate flex-1">{archivo.nombre}</span>
+            <span className="flex-shrink-0">
+              {archivo.tipo} • {archivo.tamaño}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t">
+            <FileEdit className="h-3 w-3 text-purple-500" />
+            <span className="text-purple-600">Laboratorio ingresado manualmente</span>
+          </div>
+        )}
 
         {/* Acciones */}
         <div className="flex gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-            onClick={handleView}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Ver
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 hover:bg-green-50 hover:text-green-600 hover:border-green-300"
-            onClick={handleDownload}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Descargar
-          </Button>
-          {canDelete && patientId && (
+          {(signedUrl || archivo?.url) ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                onClick={handleView}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Ver
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 hover:bg-green-50 hover:text-green-600 hover:border-green-300"
+                onClick={handleDownload}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Descargar
+              </Button>
+            </>
+          ) : (
+            <Badge
+              variant="outline"
+              className="bg-purple-50 text-purple-700 border-purple-200 text-sm py-2 px-4"
+            >
+              <FileEdit className="h-4 w-4 mr-2" />
+              Carga Manual
+            </Badge>
+          )}
+          {((canDelete && patientId) || (!(signedUrl || archivo?.url) && patientId)) && (
             <DeleteStudyDialog
               idStudy={id}
               userId={parseInt(patientId)}

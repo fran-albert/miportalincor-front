@@ -44,7 +44,8 @@ export default function HistoryBase() {
             showEditActions={config.showEditActions}
             allowNewEvolutions={config.allowNewEvolutions}
           />
-        </div>
+
+          </div>
 
         {/* Medicación Actual - Solo si está configurado para mostrarse */}
         {config.showMedicationSection && (

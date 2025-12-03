@@ -30,7 +30,7 @@ export const useBlodTestDataMutations = () => {
         }: {
             idStudy: number;
             bloodTestDataRequests: BloodTestDataUpdateRequestItem[];
-        }) => updateBlodTestData(idStudy, bloodTestDataRequests),
+        }) => updateBlodTestData(String(idStudy), bloodTestDataRequests),
         onSuccess: async () => {
             // Invalidar y refetch inmediato
             await queryClient.invalidateQueries({ queryKey: ['bloodTestsData'] });

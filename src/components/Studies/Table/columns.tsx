@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Calendar,
   Eye,
@@ -10,6 +11,8 @@ import {
   Zap,
   StethoscopeIcon,
   FileText,
+  Building2,
+  FileEdit,
 } from "lucide-react";
 import DeleteStudyDialog from "../Delete/dialog";
 
@@ -28,6 +31,8 @@ export interface Study {
   };
   signedUrl?: string;
   estado: "Completado" | "Pendiente" | "En proceso";
+  isExternal?: boolean;
+  externalInstitution?: string;
 }
 
 export interface Laboratory {
@@ -97,10 +102,27 @@ export const createStudiesColumns = (
         <div className="flex items-center gap-3">
           {getCategoryIcon(study.categoria)}
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-800 truncate">{study.tipo}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-gray-800 truncate">{study.tipo}</p>
+              {study.isExternal && (
+                <Badge
+                  variant="outline"
+                  className="bg-orange-50 text-orange-700 border-orange-200 text-xs flex-shrink-0"
+                  title={study.externalInstitution || "Estudio externo"}
+                >
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Externo
+                </Badge>
+              )}
+            </div>
             {study.descripcion && (
               <p className="text-sm text-gray-600 mt-1 truncate">
                 {study.descripcion}
+              </p>
+            )}
+            {study.isExternal && study.externalInstitution && (
+              <p className="text-xs text-orange-600 mt-0.5 truncate">
+                {study.externalInstitution}
               </p>
             )}
           </div>
@@ -125,31 +147,47 @@ export const createStudiesColumns = (
     header: "Acciones",
     cell: ({ row }) => {
       const study = row.original;
+      const hasFile = !!(study.signedUrl || study.archivo?.url);
+      const isManual = !hasFile;
+
       return (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-            onClick={() =>
-              window.open(study.signedUrl || study.archivo.url, "_blank")
-            }
-            title="Ver estudio"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
-            onClick={() =>
-              window.open(study.signedUrl || study.archivo.url, "_blank")
-            }
-            title="Descargar estudio"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          {canDelete && (
+        <div className="flex gap-2 items-center">
+          {hasFile ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                onClick={() =>
+                  window.open(study.signedUrl || study.archivo.url, "_blank")
+                }
+                title="Ver estudio"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                onClick={() =>
+                  window.open(study.signedUrl || study.archivo.url, "_blank")
+                }
+                title="Descargar estudio"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Badge
+              variant="outline"
+              className="bg-purple-50 text-purple-700 border-purple-200 text-xs"
+              title="Laboratorio ingresado manualmente"
+            >
+              <FileEdit className="h-3 w-3 mr-1" />
+              Manual
+            </Badge>
+          )}
+          {(canDelete || isManual) && (
             <DeleteStudyDialog
               idStudy={study.id}
               userId={parseInt(patientId)}
@@ -162,7 +200,10 @@ export const createStudiesColumns = (
   },
 ];
 
-export const createLaboratoriesColumns = (): ColumnDef<Laboratory>[] => [
+export const createLaboratoriesColumns = (
+  canDelete: boolean,
+  patientId: string
+): ColumnDef<Laboratory>[] => [
   {
     id: "index",
     header: "#",
@@ -212,30 +253,53 @@ export const createLaboratoriesColumns = (): ColumnDef<Laboratory>[] => [
     header: "Acciones",
     cell: ({ row }) => {
       const lab = row.original;
+      const hasFile = !!(lab.signedUrl || lab.archivo?.url);
+      const isManual = !hasFile;
+
       return (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-            onClick={() =>
-              window.open(lab.signedUrl || lab.archivo.url, "_blank")
-            }
-            title="Ver laboratorio"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
-            onClick={() =>
-              window.open(lab.signedUrl || lab.archivo.url, "_blank")
-            }
-            title="Descargar laboratorio"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
+        <div className="flex gap-2 items-center">
+          {hasFile ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                onClick={() =>
+                  window.open(lab.signedUrl || lab.archivo.url, "_blank")
+                }
+                title="Ver laboratorio"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600"
+                onClick={() =>
+                  window.open(lab.signedUrl || lab.archivo.url, "_blank")
+                }
+                title="Descargar laboratorio"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Badge
+              variant="outline"
+              className="bg-purple-50 text-purple-700 border-purple-200 text-xs"
+              title="Laboratorio ingresado manualmente"
+            >
+              <FileEdit className="h-3 w-3 mr-1" />
+              Manual
+            </Badge>
+          )}
+          {canDelete && isManual && (
+            <DeleteStudyDialog
+              idStudy={lab.id}
+              userId={parseInt(patientId)}
+              studies={[]}
+            />
+          )}
         </div>
       );
     },
