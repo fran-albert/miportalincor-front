@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Download,
   X,
+  FlaskConical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -25,6 +26,10 @@ import { StudiesWithURL } from "@/types/Study/Study";
 import { getStudiesWithUrls } from "@/api/Study/get-studies-with-urls.action";
 import ExternalStudyDialog from "../Upload/external-study-dialog";
 import useUserRole from "@/hooks/useRoles";
+import LabCard from "@/components/Laboratories/Card/card";
+import { useBlodTest } from "@/hooks/Blod-Test/useBlodTest";
+import { useBloodTestData } from "@/hooks/Blod-Test-Data/useBlodTestData";
+import { DialogTrigger } from "@/components/ui/dialog";
 
 type UserData = Patient | Doctor;
 
@@ -45,6 +50,7 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
   const { isDoctor } = useUserRole();
   const [selectedStudy, setSelectedStudy] = useState<StudiesWithURL | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [labsDialogOpen, setLabsDialogOpen] = useState(false);
 
   // Fetch studies with signed URLs
   const { data: studiesByUserId = [], isLoading } = useQuery({
@@ -52,6 +58,14 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
     queryFn: () => getStudiesWithUrls(userData?.userId || 0),
     enabled: !!userData?.userId,
     staleTime: 1000 * 60, // 1 minute
+  });
+
+  // Obtener datos de laboratorios (solo cuando el dialog está abierto para optimizar)
+  const studyIds = studiesByUserId.map((study) => String(study.id));
+  const { blodTests: bloodTests = [] } = useBlodTest({ auth: true });
+  const { bloodTestsData = [] } = useBloodTestData({
+    auth: true,
+    idStudies: studyIds,
   });
 
   if (!userData) return null;
@@ -213,7 +227,38 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
               )}
               {/* Solo médicos pueden agregar estudios externos desde Historia Clínica */}
               {showEditActions && !readOnly && userData?.userId && isDoctor && (
-                <ExternalStudyDialog idUser={userData.userId} />
+                <div className="flex items-center gap-2">
+                  {/* Botón Tabla Laboratorios */}
+                  <Dialog open={labsDialogOpen} onOpenChange={setLabsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="bg-white/20 text-white border border-white/60 hover:bg-white/30"
+                      >
+                        <FlaskConical className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Laboratorios</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <FlaskConical className="h-5 w-5 text-greenPrimary" />
+                          Tabla de Laboratorios
+                        </DialogTitle>
+                      </DialogHeader>
+                      <LabCard
+                        studiesByUserId={[]}
+                        bloodTests={bloodTests}
+                        bloodTestsData={bloodTestsData}
+                        role="Doctor"
+                        idUser={userData.userId}
+                      />
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Botón Estudio Externo */}
+                  <ExternalStudyDialog idUser={userData.userId} />
+                </div>
               )}
               {readOnly && (
                 <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">

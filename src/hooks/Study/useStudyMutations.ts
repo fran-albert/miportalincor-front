@@ -45,6 +45,10 @@ export const useStudyMutations = () => {
             queryClient.invalidateQueries({
                 queryKey: ["studies-by-user-id", { userId }]
             });
+            // Invalidar también la query que usa StudiesSection en Historia Clínica
+            queryClient.invalidateQueries({
+                queryKey: ["studies-with-urls", userId]
+            });
             console.log("External study created successfully");
         },
         onError: (error: unknown, variables, context) => {
