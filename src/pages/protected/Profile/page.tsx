@@ -76,9 +76,9 @@ const MyProfilePage = () => {
 
   if (isPatient && patient) {
     return (
-      <div className="space-y-6 p-6">
+      <>
         {patient && <MyProfilePatientComponent patient={patient} />}
-      </div>
+      </>
     );
   }
 
