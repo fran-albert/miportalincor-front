@@ -126,9 +126,16 @@ export default function PatientStudies({
 
     const allStudies = [...initialStudies, ...labStudies];
 
-    // Si no es médico, filtrar los estudios externos
+    // Si no es médico, filtrar los estudios externos y los manuales (sin archivo)
     if (!isDoctor) {
-      return allStudies.filter(study => !study.isExternal);
+      return allStudies.filter(study => {
+        // Ocultar estudios externos
+        if (study.isExternal) return false;
+        // Ocultar estudios manuales (sin archivo PDF)
+        const hasFile = !!(study.signedUrl || study.archivo?.url);
+        if (!hasFile) return false;
+        return true;
+      });
     }
 
     return allStudies;

@@ -330,56 +330,60 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      {/* PageHeader */}
-      <PageHeader
-        breadcrumbItems={breadcrumbItems}
-        title="Mi Perfil"
-        description="Gestiona tu información personal y configuración de cuenta"
-        icon={<User className="h-6 w-6" />}
-        actions={
-          !isEditing ? (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
-                type="button"
-              >
-                <Edit2 className="h-4 w-4 mr-2" />
-                Editar Perfil
-              </Button>
-              <ChangePasswordDialog idUser={patient.userId} />
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                type="button"
-                className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
-                disabled={updatePatientMutation.isPending}
-              >
-                {updatePatientMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar Cambios
-                  </>
-                )}
-              </Button>
-              <Button onClick={() => setIsEditing(false)} variant="outline">
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          )
-        }
-      />
+    <div className="w-full min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-white border-b px-4 sm:px-6 py-4">
+        <PageHeader
+          breadcrumbItems={breadcrumbItems}
+          title="Mi Perfil"
+          description="Gestiona tu información personal y configuración de cuenta"
+          icon={<User className="h-6 w-6" />}
+          actions={
+            !isEditing ? (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
+                  type="button"
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Editar Perfil
+                </Button>
+                <ChangePasswordDialog idUser={patient.userId} />
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSave}
+                  type="button"
+                  className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
+                  disabled={updatePatientMutation.isPending}
+                >
+                  {updatePatientMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </Button>
+                <Button onClick={() => setIsEditing(false)} variant="outline">
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+              </div>
+            )
+          }
+        />
+      </div>
 
-      <Form {...form}>
+      {/* Content */}
+      <div className="p-4 sm:p-6">
+        <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {/* Indicador de modo edición */}
           {isEditing && (
@@ -1020,6 +1024,7 @@ function MyProfilePatientComponent({ patient }: { patient: Patient }) {
           </div>
         </form>
       </Form>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { User, FileText, Calendar, Activity, ArrowRight, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { User, FileText, Calendar, Activity, ArrowRight, Sparkles, X, ClipboardList } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function PatientHomePage({ name }: { name: string }) {
+  const [showSurveyBanner, setShowSurveyBanner] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("surveyBannerDismissed");
+    const surveyEndDate = new Date("2025-12-31T23:59:59");
+    const now = new Date();
+
+    if (!dismissed && now <= surveyEndDate) {
+      setShowSurveyBanner(true);
+    }
+  }, []);
+
+  const handleDismissBanner = () => {
+    setShowSurveyBanner(false);
+    localStorage.setItem("surveyBannerDismissed", "true");
+  };
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Buenos días";
@@ -48,14 +67,63 @@ export default function PatientHomePage({ name }: { name: string }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="container mx-auto px-4 py-8 sm:py-12">
+    <div className="w-full min-h-screen bg-background">
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Survey Banner */}
+        <AnimatePresence>
+          {showSurveyBanner && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 p-4 sm:p-6 text-white shadow-lg"
+            >
+              {/* Botón cerrar en esquina superior derecha */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDismissBanner}
+                className="absolute top-2 right-2 text-white/70 hover:text-white hover:bg-white/20 h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pr-8">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="p-2 bg-white/20 rounded-full shrink-0">
+                    <ClipboardList className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">¡Tu opinión es importante!</h3>
+                    <p className="text-white/90 text-sm">
+                      Ayudanos a mejorar el portal respondiendo una breve encuesta. Disponible hasta el 31 de diciembre.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="https://forms.gle/13Rj9WtMSvEFudbq8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto shrink-0"
+                >
+                  <Button
+                    className="w-full bg-white text-purple-600 hover:bg-white/90 font-semibold"
+                  >
+                    Responder encuesta
+                  </Button>
+                </a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-greenPrimary to-teal-600 p-8 sm:p-12 text-white shadow-2xl mb-8"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-greenPrimary to-teal-600 p-8 sm:p-12 text-white shadow-2xl"
         >
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
@@ -77,7 +145,7 @@ export default function PatientHomePage({ name }: { name: string }) {
         </motion.div>
 
         {/* Quick Access Cards */}
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4">
           <h2 className="text-2xl font-bold text-gray-900">Acceso Rápido</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {actionCards.map((card, index) => (
