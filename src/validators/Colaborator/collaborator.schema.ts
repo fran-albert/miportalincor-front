@@ -29,8 +29,7 @@ export const collaboratorSchema = z.object({
     .email("Debe ser un correo válido"),
   idCompany: z
     .string({ required_error: "Campo Requerido." })
-    .transform((val) => Number(val))
-    .pipe(z.number({ invalid_type_error: "Debe ser un número" })),
+    .min(1, "Campo Requerido."),
   file: z.union([z.instanceof(File), z.string()]).optional(),
   address: z.object({
     id: z.number().optional(),
