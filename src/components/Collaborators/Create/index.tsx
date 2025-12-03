@@ -67,7 +67,7 @@ export function CreateCollaboratorComponent({
     resolver: zodResolver(collaboratorSchema),
     defaultValues: preselectedCompanyId
       ? {
-          idCompany: parseInt(preselectedCompanyId),
+          idCompany: preselectedCompanyId,
         }
       : undefined,
   });
@@ -103,7 +103,7 @@ export function CreateCollaboratorComponent({
       formData.append("firstName", data.firstName);
       formData.append("lastName", data.lastName);
       formData.append("userName", data.userName);
-      formData.append("birthDate", dateInArgentina.format());
+      formData.append("birthDate", dateInArgentina.format("YYYY-MM-DD"));
       formData.append("phone", data.phone);
       formData.append("gender", data.gender);
 

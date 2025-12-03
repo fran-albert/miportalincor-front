@@ -10,6 +10,7 @@ export const useCollaboratorMutations = () => {
     mutationFn: createCollaborator,
     onSuccess: (collaborator, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['collaborators'] })
+      queryClient.invalidateQueries({ queryKey: ['collaborators-by-company'] })
       console.log("OK", collaborator, variables, context);
     },
 
@@ -41,6 +42,7 @@ export const useCollaboratorMutations = () => {
     mutationFn: (id: number) => deleteCollaborator(id),
     onSuccess: (collaborator, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['collaborators'] })
+      queryClient.invalidateQueries({ queryKey: ['collaborators-by-company'] })
       console.log("collaborator deleted", collaborator, variables, context);
     },
     onError: (error, variables, context) => {
