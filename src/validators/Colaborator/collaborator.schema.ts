@@ -17,7 +17,10 @@ export const collaboratorSchema = z.object({
     .regex(/^\d{7,8}$/, "Debe ser un DNI válido de 7 u 8 dígitos"),
   birthDate: z
     .string({ required_error: "Campo Requerido." })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de fecha inválido (YYYY-MM-DD)"),
+    .refine((val) => {
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    }, "Formato de fecha inválido"),
   phone: z
     .string({ required_error: "Campo Requerido." }),
   gender: z.string({ required_error: "Campo Requerido." }),
@@ -26,8 +29,7 @@ export const collaboratorSchema = z.object({
     .email("Debe ser un correo válido"),
   idCompany: z
     .string({ required_error: "Campo Requerido." })
-    .transform((val) => Number(val))
-    .pipe(z.number({ invalid_type_error: "Debe ser un número" })),
+    .min(1, "Campo Requerido."),
   file: z.union([z.instanceof(File), z.string()]).optional(),
   address: z.object({
     id: z.number().optional(),

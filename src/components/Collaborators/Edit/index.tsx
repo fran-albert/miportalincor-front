@@ -37,6 +37,7 @@ import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { useState as useStatesHook } from "@/hooks/State/useState";
 import { motion } from "framer-motion";
 import CustomDatePicker from "@/components/Date-Picker";
+import moment from "moment-timezone";
 
 const getValidDateString = (date: string | undefined | null): string => {
   if (!date) return "";
@@ -98,7 +99,7 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       positionJob: collaborator.positionJob || "",
       gender: collaborator.gender || "",
       email: safeEmail,
-      idCompany: collaborator.company?.id || 0,
+      idCompany: collaborator.company?.id?.toString() || "",
       // healthInsuranceId: collaborator.healthInsuranceId || 0,
       // affiliationNumber: collaborator.affiliationNumber || "",
       address: {
@@ -167,11 +168,15 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
 
   async function onSubmit(data: FormValues) {
     try {
+      const dateInArgentina = moment(data.birthDate).tz(
+        "America/Argentina/Buenos_Aires"
+      );
+
       const formData = new FormData();
       formData.append("firstName", data.firstName);
       formData.append("lastName", data.lastName);
       formData.append("userName", data.userName);
-      formData.append("birthDate", data.birthDate);
+      formData.append("birthDate", dateInArgentina.format("YYYY-MM-DD"));
       formData.append("phone", data.phone);
       formData.append("positionJob", data.positionJob);
       formData.append("gender", data.gender);
