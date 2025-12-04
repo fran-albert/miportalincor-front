@@ -1,7 +1,7 @@
 import { changePassword } from "@/api/User/change-password.action";
 import { forgotPassword } from "@/api/User/forgot-password.action";
 import { requestSupport } from "@/api/User/request-support.action";
-import { resetDefaultPassword } from "@/api/User/reset-default-password.action";
+import { resetPasswordToDni } from "@/api/User/reset-password-to-dni.action";
 import { resetPassword } from "@/api/User/reset-password.action";
 import { updateUser } from "@/api/User/update-user.action";
 import { activateUser } from "@/api/User/activate-user.action";
@@ -57,13 +57,13 @@ export const useUserMutations = () => {
         },
     });
 
-    const resetDefaultPasswordMutation = useMutation({
-        mutationFn: (idUser: number) => resetDefaultPassword(idUser),
-        onSuccess: (password, variables, context) => {
-            console.log("OK", password, variables, context);
+    const resetPasswordToDniMutation = useMutation({
+        mutationFn: (userName: string) => resetPasswordToDni(userName),
+        onSuccess: (response, variables, context) => {
+            console.log("Password reset to DNI", response, variables, context);
         },
         onError: (error, variables, context) => {
-            console.log("Error", error, variables, context);
+            console.log("Error resetting password", error, variables, context);
         },
     });
 
@@ -103,7 +103,7 @@ export const useUserMutations = () => {
         resetPasswordMutation,
         requestSupportMutation,
         forgotPasswordMutation,
-        resetDefaultPasswordMutation,
+        resetPasswordToDniMutation,
         activateUserMutation,
         deactivateUserMutation
     };

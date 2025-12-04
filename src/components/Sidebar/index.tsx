@@ -30,6 +30,7 @@ import {
   ShieldCheck,
   UserCog,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +86,7 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
+    comingSoon: true,
   },
   {
     title: "Mis Estudios",
@@ -106,18 +108,21 @@ const reportsItems = [
     url: "#",
     icon: FileBarChart,
     allowedRoles: PERMISSIONS.REPORTS,
+    comingSoon: true,
   },
   {
     title: "Estadísticas",
     url: "#",
     icon: TrendingUp,
     allowedRoles: PERMISSIONS.STATISTICS,
+    comingSoon: true,
   },
   {
     title: "Actividad",
     url: "#",
     icon: Activity,
     allowedRoles: PERMISSIONS.ACTIVITY,
+    comingSoon: true,
   },
 ];
 
@@ -198,6 +203,22 @@ export function AppSidebar() {
               <SidebarMenu>
                 {filteredNavigationItems.map((item) => {
                   const active = pathname === item.url;
+                  const isComingSoon = "comingSoon" in item && item.comingSoon;
+
+                  if (isComingSoon) {
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton disabled className="opacity-60 cursor-not-allowed">
+                          <item.icon className="text-gray-400" />
+                          <span className="text-gray-400 flex-1">{item.title}</span>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
+                            Próximamente
+                          </Badge>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  }
+
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={active}>
@@ -223,19 +244,39 @@ export function AppSidebar() {
 
         {filteredReportsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Reportes y Análisis</SidebarGroupLabel>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              Reportes y Análisis
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
+                Próximamente
+              </Badge>
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filteredReportsItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>
-                        <item.icon className="text-greenPrimary" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {filteredReportsItems.map((item) => {
+                  const isComingSoon = "comingSoon" in item && item.comingSoon;
+
+                  if (isComingSoon) {
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton disabled className="opacity-60 cursor-not-allowed">
+                          <item.icon className="text-gray-400" />
+                          <span className="text-gray-400">{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  }
+
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link to={item.url}>
+                          <item.icon className="text-greenPrimary" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

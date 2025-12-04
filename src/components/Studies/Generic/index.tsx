@@ -126,6 +126,7 @@ const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
     estado: "Completado" as const,
     isExternal: study.isExternal || false,
     externalInstitution: study.externalInstitution,
+    signedDoctorId: study.signedDoctorId,
   }));
 };
 
@@ -340,6 +341,7 @@ const GenericStudies: React.FC<GenericStudiesProps> = ({
         patient={
           userData && "dni" in userData ? (userData as Patient) : undefined
         }
+        currentDoctorId={isDoctor ? session?.id : undefined}
       />
     </div>
   );

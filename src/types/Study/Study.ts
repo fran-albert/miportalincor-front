@@ -14,6 +14,7 @@ export interface Study {
   created?: Date | null;
   isExternal?: boolean;
   externalInstitution?: string;
+  signedDoctorId?: string;
 }
 
 export interface UploadedFile {
@@ -43,4 +44,5 @@ export interface StudiesWithURL {
   }[];
   isExternal?: boolean;
   externalInstitution?: string;
+  signedDoctorId?: string;
 }

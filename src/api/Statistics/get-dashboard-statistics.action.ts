@@ -6,6 +6,8 @@ export interface DashboardStatistics {
   totalUsers: number;
   patientsThisMonth: number;
   doctorsThisMonth: number;
+  totalStudies: number;
+  studiesThisMonth: number;
 }
 
 export const getDashboardStatistics = async (): Promise<DashboardStatistics> => {

@@ -58,7 +58,7 @@ export default function DoctorModules({
       gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
       onClick: () => {},
       visible: isDoctor || isSecretary || isAdmin,
-      disabled: true,
+      comingSoon: true,
     },
     {
       title: "Estudios",
@@ -99,7 +99,8 @@ export default function DoctorModules({
             gradient={module.gradient}
             onClick={module.onClick}
             index={index}
-            disabled={module.disabled}
+            disabled={"disabled" in module && Boolean(module.disabled)}
+            comingSoon={"comingSoon" in module && module.comingSoon}
           />
         ))}
       </div>

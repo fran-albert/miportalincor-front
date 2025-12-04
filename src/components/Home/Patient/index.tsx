@@ -244,7 +244,12 @@ export default function PatientHomePage({ name }: { name: string }) {
                     <Calendar className="h-5 w-5 text-greenPrimary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Gestión de turnos</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-gray-900">Gestión de turnos</h4>
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 text-xs">
+                        Próximamente
+                      </Badge>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Visualiza y administra tus citas médicas fácilmente
                     </p>

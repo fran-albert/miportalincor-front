@@ -36,6 +36,8 @@ export interface StudyCardProps {
   patientId?: string;
   isExternal?: boolean;
   externalInstitution?: string;
+  signedDoctorId?: string;
+  currentDoctorId?: string;
 }
 
 const getCategoryIcon = (categoria: string) => {
@@ -104,7 +106,11 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   patientId,
   isExternal = false,
   externalInstitution,
+  signedDoctorId,
+  currentDoctorId,
 }) => {
+  // Doctor can delete if it's an external study they created
+  const canDeleteAsDoctor = isExternal && signedDoctorId && currentDoctorId && signedDoctorId === currentDoctorId;
   const handleView = () => {
     window.open(signedUrl || archivo.url, "_blank");
   };
@@ -222,7 +228,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
               Carga Manual
             </Badge>
           )}
-          {((canDelete && patientId) || (!(signedUrl || archivo?.url) && patientId)) && (
+          {((canDelete && patientId) || (!(signedUrl || archivo?.url) && patientId) || (canDeleteAsDoctor && patientId)) && (
             <DeleteStudyDialog
               idStudy={id}
               userId={parseInt(patientId)}

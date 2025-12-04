@@ -50,7 +50,7 @@ export default function PatientModules({
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
       onClick: () => {},
       visible: true,
-      disabled: true,
+      comingSoon: true,
     },
   ];
 
@@ -74,7 +74,8 @@ export default function PatientModules({
             onClick={module.onClick}
             index={index}
             badge={module.badge}
-            disabled={module.disabled}
+            disabled={"disabled" in module && Boolean(module.disabled)}
+            comingSoon={"comingSoon" in module && module.comingSoon}
           />
         ))}
       </div>

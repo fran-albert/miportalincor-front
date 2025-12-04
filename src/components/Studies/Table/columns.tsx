@@ -33,6 +33,7 @@ export interface Study {
   estado: "Completado" | "Pendiente" | "En proceso";
   isExternal?: boolean;
   externalInstitution?: string;
+  signedDoctorId?: string;
 }
 
 export interface Laboratory {
@@ -74,7 +75,8 @@ const getCategoryIcon = (categoria: string) => {
 
 export const createStudiesColumns = (
   canDelete: boolean,
-  patientId: string
+  patientId: string,
+  currentDoctorId?: string
 ): ColumnDef<Study>[] => [
   {
     id: "index",
@@ -149,6 +151,8 @@ export const createStudiesColumns = (
       const study = row.original;
       const hasFile = !!(study.signedUrl || study.archivo?.url);
       const isManual = !hasFile;
+      // Doctor can delete if it's an external study they created
+      const canDeleteAsDoctor = study.isExternal && study.signedDoctorId && currentDoctorId && study.signedDoctorId === currentDoctorId;
 
       return (
         <div className="flex gap-2 items-center">
@@ -187,7 +191,7 @@ export const createStudiesColumns = (
               Manual
             </Badge>
           )}
-          {(canDelete || isManual) && (
+          {(canDelete || isManual || canDeleteAsDoctor) && (
             <DeleteStudyDialog
               idStudy={study.id}
               userId={parseInt(patientId)}

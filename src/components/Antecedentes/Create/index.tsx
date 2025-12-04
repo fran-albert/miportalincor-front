@@ -2,7 +2,6 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FileText, Plus, Stethoscope, User } from "lucide-react";
@@ -58,28 +57,40 @@ export const CreateAntecedenteDialog = ({
 
   const handleCreateAntecedente = async (data: FormData) => {
     try {
+      // Separar por líneas y filtrar vacíos
+      const antecedentes = data.observaciones
+        .split('\n')
+        .map(line => line.trim().toUpperCase())
+        .filter(line => line.length > 0);
+
+      if (antecedentes.length === 0) return;
+
       const payload: CreateDataValuesHCDto = {
         idUser,
         idDoctor,
-        dataValues: [
-          {
-            idDataType: data.categoria,
-            value: data.descripcion,
-            observaciones: data.observaciones,
-          },
-        ],
+        dataValues: antecedentes.map(titulo => ({
+          idDataType: data.categoria,
+          value: data.descripcion || titulo,
+          observaciones: titulo,
+        })),
       };
 
       const promise = createDataValuesHCMutation.mutateAsync(payload);
 
       await promiseToast(promise, {
         loading: {
-          title: "Creando antecedente...",
+          title: antecedentes.length > 1
+            ? `Creando ${antecedentes.length} antecedentes...`
+            : "Creando antecedente...",
           description: "Por favor espera mientras procesamos tu solicitud",
         },
         success: {
-          title: "¡Antecedente creado!",
-          description: "El antecedente se ha creado exitosamente",
+          title: antecedentes.length > 1
+            ? `¡${antecedentes.length} antecedentes creados!`
+            : "¡Antecedente creado!",
+          description: antecedentes.length > 1
+            ? `Se han registrado ${antecedentes.length} antecedentes exitosamente`
+            : "El antecedente se ha creado exitosamente",
         },
         error: (error: unknown) => ({
           title: "Error al crear antecedente",
@@ -181,35 +192,35 @@ export const CreateAntecedenteDialog = ({
             </p>
           </div>
 
-          {/* Título */}
+          {/* Título(s) */}
           <div className="space-y-2">
             <Label
               htmlFor="observaciones"
               className="text-sm font-semibold text-gray-700 flex items-center gap-2"
             >
               <Stethoscope className="h-4 w-4 text-greenPrimary" />
-              Título del Antecedente *
+              Antecedente(s) *
             </Label>
             <Controller
               name="observaciones"
               control={control}
               render={({ field }) => (
-                <Input
+                <Textarea
                   {...field}
                   id="observaciones"
-                  placeholder="FUMADOR, DIABETES, ETC."
-                  className="focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary uppercase"
+                  placeholder={"DISLIPEMIA\nHIPERTENSION ARTERIAL\nDIABETES TIPO 2"}
+                  className="focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary uppercase resize-none"
                   style={{ textTransform: "uppercase" }}
-                  maxLength={100}
+                  rows={4}
                 />
               )}
             />
             <div className="flex items-center justify-between text-xs">
               <p className="text-gray-500">
-                Nombre corto para identificar el antecedente
+                Ingrese uno o más antecedentes, uno por línea (presione Enter para agregar otro)
               </p>
               <span className="text-gray-400">
-                {observacionesValue?.length || 0} / 100
+                {observacionesValue?.split('\n').filter(line => line.trim()).length || 0} antecedente(s)
               </span>
             </div>
           </div>
@@ -221,7 +232,7 @@ export const CreateAntecedenteDialog = ({
               className="text-sm font-semibold text-gray-700 flex items-center gap-2"
             >
               <FileText className="h-4 w-4 text-greenPrimary" />
-              Descripción Detallada *
+              Descripción Detallada (opcional)
             </Label>
             <Controller
               name="descripcion"
@@ -230,8 +241,8 @@ export const CreateAntecedenteDialog = ({
                 <Textarea
                   {...field}
                   id="descripcion"
-                  placeholder="Describa detalladamente el antecedente médico, incluyendo fechas relevantes, tratamientos previos, evolución, etc..."
-                  rows={5}
+                  placeholder="Opcionalmente, agregue detalles adicionales que apliquen a todos los antecedentes ingresados..."
+                  rows={3}
                   className="resize-none focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary"
                   maxLength={500}
                 />
@@ -239,7 +250,7 @@ export const CreateAntecedenteDialog = ({
             />
             <div className="flex items-center justify-between text-xs">
               <p className="text-gray-500">
-                Información completa sobre el antecedente
+                Si se completa, se aplica a todos los antecedentes
               </p>
               <span className="text-gray-400">
                 {descripcionValue?.length || 0} / 500
@@ -261,8 +272,7 @@ export const CreateAntecedenteDialog = ({
                 onClick={handleSubmit(handleCreateAntecedente)}
                 disabled={
                   !categoriaValue ||
-                  !descripcionValue ||
-                  !observacionesValue ||
+                  !observacionesValue?.trim() ||
                   createDataValuesHCMutation.isPending
                 }
                 className="px-6 bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md min-w-[160px]"

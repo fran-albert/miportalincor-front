@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { LucideIcon, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -9,6 +10,7 @@ interface QuickAccessCardProps {
   icon: LucideIcon;
   href: string;
   index: number;
+  comingSoon?: boolean;
 }
 
 export const QuickAccessCard = ({
@@ -17,7 +19,42 @@ export const QuickAccessCard = ({
   icon: Icon,
   href,
   index,
+  comingSoon = false,
 }: QuickAccessCardProps) => {
+  if (comingSoon) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.1 }}
+      >
+        <Card className="relative overflow-hidden border-2 border-gray-200 transition-all duration-300 h-full opacity-75 cursor-not-allowed">
+          <div className="absolute inset-0 bg-gray-50/80" />
+
+          <CardHeader className="relative">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-greenPrimary to-teal-600 opacity-60">
+                <Icon className="h-6 w-6 text-white" />
+              </div>
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
+                Próximamente
+              </Badge>
+            </div>
+            <CardTitle className="text-lg font-bold text-gray-600">
+              {title}
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="relative">
+            <CardDescription className="text-sm text-gray-500">
+              {description}
+            </CardDescription>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
