@@ -3,6 +3,7 @@ import { formatDni } from "@/common/helpers/helpers";
 import { User } from "@/types/User/User";
 import { Badge } from "@/components/ui/badge";
 import ToggleUserStatusDialog from "../ToggleUserStatusDialog";
+import ResetPasswordDialog from "../ResetPasswordDialog";
 
 export const getColumns = (
   onStatusChange: () => void,
@@ -86,12 +87,18 @@ export const getColumns = (
         const isCurrentUser = row.original.userId === currentUserId;
 
         return (
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
             {!isCurrentUser && (
-              <ToggleUserStatusDialog
-                user={row.original}
-                onSuccess={onStatusChange}
-              />
+              <>
+                <ResetPasswordDialog
+                  user={row.original}
+                  onSuccess={onStatusChange}
+                />
+                <ToggleUserStatusDialog
+                  user={row.original}
+                  onSuccess={onStatusChange}
+                />
+              </>
             )}
             {isCurrentUser && (
               <span className="text-xs text-gray-500 italic">

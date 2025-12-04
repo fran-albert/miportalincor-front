@@ -53,6 +53,7 @@ interface Study {
   estado: "Completado" | "Pendiente" | "En proceso";
   isExternal?: boolean;
   externalInstitution?: string;
+  signedDoctorId?: string;
 }
 
 interface Laboratory {
@@ -83,6 +84,7 @@ interface PatientStudiesProps {
   labTableComponent?: React.ReactNode;
   studiesWithURL?: StudiesWithURL[];
   patient?: Patient;
+  currentDoctorId?: string;
 }
 
 export default function PatientStudies({
@@ -93,6 +95,7 @@ export default function PatientStudies({
   canDelete = false,
   labTableComponent,
   patient,
+  currentDoctorId,
 }: PatientStudiesProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const isMobile = useIsMobile();
@@ -389,6 +392,8 @@ export default function PatientStudies({
                         patientId={patientData.id}
                         isExternal={study.isExternal}
                         externalInstitution={study.externalInstitution}
+                        signedDoctorId={study.signedDoctorId}
+                        currentDoctorId={currentDoctorId}
                       />
                     ))
                   ) : (
@@ -424,7 +429,8 @@ export default function PatientStudies({
                 <DataTable
                   columns={createStudiesColumns(
                     canDeleteStudies,
-                    patientData.id
+                    patientData.id,
+                    currentDoctorId
                   )}
                   data={filteredStudies}
                   showSearch={false}

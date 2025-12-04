@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, Clock, Stethoscope, LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ interface StatCardProps {
   linkTo?: string;
   subtitle?: string;
   isLoading?: boolean;
+  comingSoon?: boolean;
 }
 
 const StatCard = ({
@@ -28,6 +30,7 @@ const StatCard = ({
   linkTo,
   subtitle,
   isLoading = false,
+  comingSoon = false,
 }: StatCardProps) => {
   if (isLoading) {
     return (
@@ -40,6 +43,36 @@ const StatCard = ({
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (comingSoon) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.1 }}
+      >
+        <Card className="overflow-hidden border-0 shadow-md opacity-75">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-500">{title}</p>
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 text-xs">
+                    Próximamente
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold text-gray-500">-</p>
+                <p className="text-xs text-gray-400">Disponible pronto</p>
+              </div>
+              <div className={`p-3 rounded-xl ${gradient} opacity-60`}>
+                <Icon className="h-5 w-5 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
@@ -137,12 +170,14 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
       icon: Calendar,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
       subtitle: stats.nextAppointment ? "Cita programada" : "Sin citas programadas",
+      comingSoon: true,
     },
     {
       title: "Última Visita",
       value: getLastVisitText(),
       icon: Clock,
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+      comingSoon: true,
     },
     {
       title: "Historia Clínica",

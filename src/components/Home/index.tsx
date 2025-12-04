@@ -11,6 +11,7 @@ import {
   Shield,
   TestTube,
   Calendar,
+  Building2,
 } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 
@@ -18,7 +19,13 @@ export default function HomeComponent({ name }: { name: string }) {
   const { isSecretary, isAdmin, session, isDoctor } = useUserRole();
   const { stats, isLoading } = useDashboardStats(!!session);
 
-  const quickAccessCards = [
+  const quickAccessCards: {
+    title: string;
+    description: string;
+    icon: typeof Users;
+    href: string;
+    comingSoon?: boolean;
+  }[] = [
     {
       title: "Pacientes",
       description:
@@ -73,6 +80,7 @@ export default function HomeComponent({ name }: { name: string }) {
         description: "Administra y visualiza las citas médicas del centro",
         icon: Calendar,
         href: "/turnos",
+        comingSoon: true,
       }
     );
   }
@@ -92,21 +100,19 @@ export default function HomeComponent({ name }: { name: string }) {
       icon: Stethoscope,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
     },
-    // TODO: Descomentar cuando esté la migración de estudios
-    // {
-    //   title: "Total Estudios",
-    //   value: stats.studies.total,
-    //   lastMonthValue: stats.studies.lastMonth,
-    //   icon: FileText,
-    //   gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
-    // },
-    // TODO: Agregar cuando esté disponible el endpoint de empresas
-    // {
-    //   title: "Empresas Activas",
-    //   value: 0,
-    //   icon: Building2,
-    //   gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
-    // },
+    {
+      title: "Total Estudios",
+      value: stats.studies.total,
+      lastMonthValue: stats.studies.lastMonth,
+      icon: FileText,
+      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+    },
+    {
+      title: "Empresas Activas",
+      value: stats.companies.total,
+      icon: Building2,
+      gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
+    },
   ];
 
   return (
@@ -146,6 +152,7 @@ export default function HomeComponent({ name }: { name: string }) {
               icon={card.icon}
               href={card.href}
               index={index}
+              comingSoon={"comingSoon" in card && Boolean(card.comingSoon)}
             />
           ))}
         </div>

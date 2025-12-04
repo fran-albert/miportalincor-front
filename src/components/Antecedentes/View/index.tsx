@@ -54,16 +54,24 @@ export const ViewAntecedenteDialog = ({
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
+
+    const formattedDate = date.toLocaleDateString("es-AR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      timeZone: "America/Argentina/Buenos_Aires",
+    });
+
+    const formattedTime = date.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "America/Argentina/Buenos_Aires",
+    });
+
     return {
-      date: date.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }),
-      time: date.toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      date: formattedDate,
+      time: formattedTime,
     };
   };
 

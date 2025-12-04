@@ -20,11 +20,11 @@ interface Props {
 export default function ResetDefaultPasswordDialog({ idUser }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
-  const { resetDefaultPasswordMutation } = useUserMutations();
+  const { resetPasswordToDniMutation } = useUserMutations();
   const { promiseToast } = useToastContext();
   const onSubmit = async () => {
     try {
-      await promiseToast(resetDefaultPasswordMutation.mutateAsync(idUser), {
+      await promiseToast(resetPasswordToDniMutation.mutateAsync(String(idUser)), {
         loading: {
           title: "Restableciendo contraseña",
           description: "Por favor espera mientras procesamos tu solicitud",

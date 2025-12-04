@@ -1,9 +1,7 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
+import { Speciality } from "@/types/Speciality/Speciality";
 
 export const getTotalSpecialities = async (): Promise<number> => {
-    // await sleep(2);
-
-    const { data } = await apiIncor.get(`speciality/all`);
-    const totalSpecialities = data.length;
-    return totalSpecialities;
+    const { data } = await apiIncorHC.get<Speciality[]>(`/speciality`);
+    return data.length;
 }
