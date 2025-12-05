@@ -19,12 +19,14 @@ interface DeleteStudyDialogProps {
   idStudy: number;
   studies: StudiesWithURL[];
   userId: number;
+  onDeleteSuccess?: () => void;
 }
 
 export default function DeleteStudyDialog({
   idStudy,
   userId,
   studies,
+  onDeleteSuccess,
 }: DeleteStudyDialogProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
@@ -54,6 +56,7 @@ export default function DeleteStudyDialog({
       });
 
       setIsOpen(false);
+      onDeleteSuccess?.();
     } catch (error) {
       console.error("Error al eliminar el estudio", error);
     }
