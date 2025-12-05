@@ -189,6 +189,11 @@ export const StudyCard: React.FC<StudyCardProps> = ({
               {archivo.tipo} • {archivo.tamaño}
             </span>
           </div>
+        ) : isExternal ? (
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t">
+            <Building2 className="h-3 w-3 text-orange-500" />
+            <span className="text-orange-600">Estudio externo sin documento adjunto</span>
+          </div>
         ) : (
           <div className="flex items-center gap-2 text-xs text-gray-500 pt-2 border-t">
             <FileEdit className="h-3 w-3 text-purple-500" />
@@ -219,7 +224,17 @@ export const StudyCard: React.FC<StudyCardProps> = ({
                 Descargar
               </Button>
             </>
+          ) : isExternal ? (
+            // Estudio externo sin documento: solo mostrar badge informativo
+            <Badge
+              variant="outline"
+              className="bg-orange-50 text-orange-700 border-orange-200 text-sm py-2 px-4"
+            >
+              <Building2 className="h-4 w-4 mr-2" />
+              Sin documento
+            </Badge>
           ) : (
+            // Laboratorio manual
             <Badge
               variant="outline"
               className="bg-purple-50 text-purple-700 border-purple-200 text-sm py-2 px-4"

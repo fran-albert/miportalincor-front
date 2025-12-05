@@ -181,6 +181,15 @@ export const createStudiesColumns = (
                 <Download className="h-4 w-4" />
               </Button>
             </>
+          ) : study.isExternal ? (
+            <Badge
+              variant="outline"
+              className="bg-orange-50 text-orange-700 border-orange-200 text-xs"
+              title="Estudio externo sin documento"
+            >
+              <Building2 className="h-3 w-3 mr-1" />
+              Sin documento
+            </Badge>
           ) : (
             <Badge
               variant="outline"

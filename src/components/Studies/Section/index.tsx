@@ -25,6 +25,7 @@ import { Doctor } from "@/types/Doctor/Doctor";
 import { StudiesWithURL } from "@/types/Study/Study";
 import { getStudiesWithUrls } from "@/api/Study/get-studies-with-urls.action";
 import ExternalStudyDialog from "../Upload/external-study-dialog";
+import DeleteStudyDialog from "../Delete/dialog";
 import useUserRole from "@/hooks/useRoles";
 import LabCard from "@/components/Laboratories/Card/card";
 import { useBlodTest } from "@/hooks/Blod-Test/useBlodTest";
@@ -47,7 +48,8 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
   showEditActions = true,
 }) => {
   const navigate = useNavigate();
-  const { isDoctor } = useUserRole();
+  const { isDoctor, session } = useUserRole();
+  const currentDoctorId = isDoctor ? session?.id : undefined;
   const [selectedStudy, setSelectedStudy] = useState<StudiesWithURL | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [labsDialogOpen, setLabsDialogOpen] = useState(false);
@@ -373,6 +375,19 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
                       Descargar
                     </Button>
                   </>
+                )}
+                {/* Botón eliminar para estudios externos creados por el doctor */}
+                {selectedStudy.isExternal &&
+                  selectedStudy.signedDoctorId &&
+                  currentDoctorId &&
+                  selectedStudy.signedDoctorId === currentDoctorId &&
+                  userData?.userId && (
+                  <DeleteStudyDialog
+                    idStudy={selectedStudy.id}
+                    userId={userData.userId}
+                    studies={[]}
+                    onDeleteSuccess={handleCloseModal}
+                  />
                 )}
                 <Button
                   variant="ghost"

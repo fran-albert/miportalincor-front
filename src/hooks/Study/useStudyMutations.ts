@@ -25,13 +25,14 @@ export const useStudyMutations = () => {
 
     const deleteStudyMutation = useMutation({
         mutationFn: ({ studyId }: { studyId: number, userId: number }) => deleteStudy(String(studyId)),
-        onSuccess: (patient, variables, context) => {
-            const id = variables.userId
+        onSuccess: () => {
+            // Invalidar todas las queries de estudios para asegurar que se refresquen
             queryClient.invalidateQueries({
-                queryKey: ["studies-by-user-id", { id }]
+                predicate: (query) =>
+                    query.queryKey[0] === "studies-by-user-id" ||
+                    query.queryKey[0] === "studies-with-urls"
             });
-
-            console.log("Study deleted", patient, variables, context);
+            console.log("Study deleted successfully");
         },
         onError: (error, variables, context) => {
             console.log("Error deleting Study", error, variables, context);
@@ -40,14 +41,13 @@ export const useStudyMutations = () => {
 
     const uploadExternalStudyMutation = useMutation({
         mutationFn: uploadExternalStudy,
-        onSuccess: (_data, variables) => {
-            const userId = Number(variables.get("userId"));
+        onSuccess: () => {
+            // Invalidar todas las queries de estudios para asegurar que se refresquen
+            // Usamos invalidación por prefijo para mayor compatibilidad
             queryClient.invalidateQueries({
-                queryKey: ["studies-by-user-id", { userId }]
-            });
-            // Invalidar también la query que usa StudiesSection en Historia Clínica
-            queryClient.invalidateQueries({
-                queryKey: ["studies-with-urls", userId]
+                predicate: (query) =>
+                    query.queryKey[0] === "studies-by-user-id" ||
+                    query.queryKey[0] === "studies-with-urls"
             });
             console.log("External study created successfully");
         },
