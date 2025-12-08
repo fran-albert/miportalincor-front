@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 interface Props {
   nutritionData: NutritionData[];
   slugParts: {
-    id: number;
+    id: string;
     formattedName: string;
   };
   slug: string;
@@ -56,7 +56,7 @@ const NutritionComponent = ({
         nutritionData={nutritionData}
         userName={firstName}
         userLastname={lastName}
-        userId={Number(slugParts.id)}
+        userId={slugParts.id}
       />
     </motion.div>
   );

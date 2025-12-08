@@ -1,14 +1,19 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 interface Props {
-    userId: number;
+    userId: string;
     formData: FormData;
 }
+
+interface UploadResponse {
+    message: string;
+    count: number;
+}
+
 export const uploadExcelNutritionData = async (values: Props) => {
-    await sleep(2);
-    const { data } = await apiIncor.post<string>(
-        `/NutritionData/upload-excel?userId=${values.userId}`,
+    values.formData.append('userId', values.userId);
+    const { data } = await apiIncorHC.post<UploadResponse>(
+        `/nutrition-data/upload-excel`,
         values.formData, {
         headers: {
             "Content-Type": "multipart/form-data",

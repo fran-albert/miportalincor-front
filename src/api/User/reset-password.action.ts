@@ -1,15 +1,19 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 interface ResetPasswordDto {
     password: string;
     confirmPassword: string;
+    code: string; // token from email link
 }
 
 export const resetPassword = async (passwordData: ResetPasswordDto) => {
-    // await sleep(2);
-    const { data } = await apiIncor.post(
-        `account/reset/password`,
-        passwordData
+    const { data } = await apiIncorHC.post(
+        `/auth/reset-password-token`,
+        {
+            token: passwordData.code,
+            password: passwordData.password,
+            confirmPassword: passwordData.confirmPassword,
+        }
     );
     return data;
 }

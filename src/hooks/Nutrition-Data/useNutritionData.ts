@@ -3,7 +3,7 @@ import { getNutritionDataByUserId } from "@/api/Nutrition-Data/get-by-user-id.nu
 
 interface Props {
   auth?: boolean;
-  userId?: number; 
+  userId?: string;
 }
 
 export const useNutritionData = ({ auth = true, userId }: Props) => {
@@ -11,7 +11,7 @@ export const useNutritionData = ({ auth = true, userId }: Props) => {
     queryKey: ["nutrition-data", userId],
     queryFn: () => getNutritionDataByUserId(userId!),
     staleTime: 1000 * 60,
-    enabled: auth && userId !== undefined && !isNaN(userId), 
+    enabled: auth && !!userId,
   });
 
   return { isLoading, isError, error, data, isFetching };

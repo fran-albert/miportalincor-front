@@ -28,8 +28,8 @@ interface Props {
   nutritionData: NutritionData[];
   onAddEntry: (newEntry: CreateNutritionDataDto) => void;
   onUpdateEntry: (updatedEntry: NutritionData) => void;
-  onDeleteEntry: (ids: number[]) => void;
-  userId: number;
+  onDeleteEntry: (ids: string[]) => void;
+  userId: string;
   isAddingNewEntry: boolean;
   setIsAddingNewEntry: React.Dispatch<React.SetStateAction<boolean>>;
   setNutritionData: React.Dispatch<React.SetStateAction<NutritionData[]>>;
@@ -52,16 +52,16 @@ export const NutritionTable: React.FC<Props> = ({
   setNutritionData,
 }) => {
   const [newEntry, setNewEntry] = useState<CreateNutritionDataDto | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedObservations, setExpandedObservations] = useState<{
-    [key: number]: boolean;
+    [key: string]: boolean;
   }>({});
   const [editDates, setEditDates] = useState<{
-    [key: number]: Date | undefined;
+    [key: string]: Date | undefined;
   }>({});
   const [newEntryDate, setNewEntryDate] = useState<Date | undefined>(undefined);
-  const handleSelect = (id: number) => {
+  const handleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
@@ -110,7 +110,7 @@ export const NutritionTable: React.FC<Props> = ({
   // evitando crear un objeto Date y así los desfases por zona horaria.
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    id?: number
+    id?: string
   ) => {
     const { name, value } = e.target;
 
@@ -176,8 +176,8 @@ export const NutritionTable: React.FC<Props> = ({
         };
 
         if (name === "weight" || name === "height") {
-          const weight = name === "weight" ? Number(value) : prev.weight;
-          const height = name === "height" ? Number(value) : prev.height;
+          const weight = name === "weight" ? Number(value) : (prev.weight ?? 0);
+          const height = name === "height" ? Number(value) : (prev.height ?? 0);
           const heightM = height / 100;
           updated.imc = heightM > 0 ? weight / (heightM * heightM) : 0;
         }
@@ -185,7 +185,7 @@ export const NutritionTable: React.FC<Props> = ({
         if (name === "weight") {
           if (nutritionData.length > 0) {
             const last = nutritionData[nutritionData.length - 1];
-            updated.difference = updated.weight - last.weight;
+            updated.difference = (updated.weight ?? 0) - (last.weight ?? 0);
           } else {
             updated.difference = 0;
           }
@@ -208,11 +208,11 @@ export const NutritionTable: React.FC<Props> = ({
     }
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     setEditingId(id);
   };
 
-  const handleSaveEdit = (id: number) => {
+  const handleSaveEdit = (id: string) => {
     const entryToUpdate = nutritionData.find((entry) => entry.id === id);
     if (entryToUpdate) {
       onUpdateEntry(entryToUpdate);
@@ -220,13 +220,13 @@ export const NutritionTable: React.FC<Props> = ({
     setEditingId(null);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     onDeleteEntry([id]);
   };
 
   const handleDateChange = (
     value: React.SetStateAction<Date | undefined>,
-    entryId: number
+    entryId: string
   ) => {
     const date = typeof value === "function" ? value(editDates[entryId]) : value;
     if (!date) return;
@@ -364,12 +364,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="weight"
-                    value={String(entry.weight)}
+                    value={String(entry.weight ?? 0)}
                     onChange={(e) => handleInputChange(e, entry.id)}
                     className="w-full text-sm p-1"
                   />
                 ) : (
-                  entry.weight.toFixed(1)
+                  (entry.weight ?? 0).toFixed(1)
                 )}
               </TableCell>
               <TableCell className="hidden md:table-cell">
@@ -377,12 +377,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="difference"
-                    value={entry.difference.toFixed(1)}
+                    value={(entry.difference ?? 0).toFixed(1)}
                     readOnly
                     className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
                   />
                 ) : (
-                  entry.difference.toFixed(1)
+                  (entry.difference ?? 0).toFixed(1)
                 )}
               </TableCell>
 
@@ -391,12 +391,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="fatPercentage"
-                    value={String(entry.fatPercentage)}
+                    value={String(entry.fatPercentage ?? 0)}
                     onChange={(e) => handleInputChange(e, entry.id)}
                     className="w-full text-sm p-1"
                   />
                 ) : (
-                  entry.fatPercentage.toFixed(1)
+                  (entry.fatPercentage ?? 0).toFixed(1)
                 )}
               </TableCell>
               <TableCell className="hidden lg:table-cell">
@@ -404,12 +404,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="musclePercentage"
-                    value={String(entry.musclePercentage)}
+                    value={String(entry.musclePercentage ?? 0)}
                     onChange={(e) => handleInputChange(e, entry.id)}
                     className="w-full text-sm p-1"
                   />
                 ) : (
-                  entry.musclePercentage.toFixed(1)
+                  (entry.musclePercentage ?? 0).toFixed(1)
                 )}
               </TableCell>
 
@@ -418,12 +418,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="visceralFat"
-                    value={String(entry.visceralFat)}
+                    value={String(entry.visceralFat ?? 0)}
                     onChange={(e) => handleInputChange(e, entry.id)}
                     className="w-full text-sm p-1"
                   />
                 ) : (
-                  entry.visceralFat.toFixed(1)
+                  (entry.visceralFat ?? 0).toFixed(1)
                 )}
               </TableCell>
 
@@ -432,12 +432,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="imc"
-                    value={entry.imc.toFixed(2)}
+                    value={(entry.imc ?? 0).toFixed(2)}
                     readOnly
                     className="w-full bg-gray-50 cursor-not-allowed text-sm p-1"
                   />
                 ) : (
-                  entry.imc.toFixed(2)
+                  (entry.imc ?? 0).toFixed(2)
                 )}
               </TableCell>
 
@@ -468,12 +468,12 @@ export const NutritionTable: React.FC<Props> = ({
                   <Input
                     type="number"
                     name="targetWeight"
-                    value={String(entry.targetWeight)}
+                    value={String(entry.targetWeight ?? 0)}
                     onChange={(e) => handleInputChange(e, entry.id)}
                     className="w-full text-sm p-1"
                   />
                 ) : (
-                  entry.targetWeight.toFixed(1)
+                  (entry.targetWeight ?? 0).toFixed(1)
                 )}
               </TableCell>
 

@@ -1,17 +1,23 @@
-import { sleep, slugify } from "@/common/helpers/helpers";
+import { slugify } from "@/common/helpers/helpers";
 import { Doctor } from "@/types/Doctor/Doctor";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
-export const getDoctors = async (page?: number): Promise<Doctor[]> => {
-    await sleep(2);
+interface PaginatedDoctorResponse {
+    data: Doctor[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
+export const getDoctors = async (page: number = 1, limit: number = 5): Promise<Doctor[]> => {
     const params = new URLSearchParams();
     params.append('page', `${page}`);
-    params.append('per_page', '5');
+    params.append('limit', `${limit}`);
 
-    const { data } = await apiIncor.get<Doctor[]>(`Doctor/all`, { params });
-    const doctorWithSlugs = data.map(doctor => ({
+    const { data } = await apiIncorHC.get<PaginatedDoctorResponse>(`doctor/search`, { params });
+    const doctorWithSlugs = data.data.map(doctor => ({
         ...doctor,
-        slug: slugify(`${doctor.firstName} ${doctor.lastName}`, doctor.userId)
+        slug: slugify(`${doctor.firstName} ${doctor.lastName}`, doctor.id)
     }));
 
     return doctorWithSlugs;

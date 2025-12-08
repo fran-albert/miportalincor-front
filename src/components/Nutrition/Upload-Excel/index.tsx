@@ -17,7 +17,7 @@ import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDa
 import axios from "axios";
 
 interface Props {
-  userId: number;
+  userId: string;
 }
 
 export default function ExcelUploader({ userId }: Props) {

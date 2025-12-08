@@ -6,7 +6,6 @@ import { NutritionTable } from "../Table/table";
 import type {
   CreateNutritionDataDto,
   NutritionData,
-  UpdateNutritionDataDto,
 } from "@/types/Nutrition-Data/NutritionData";
 import { Button } from "@/components/ui/button";
 import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDataMutation";
@@ -23,7 +22,7 @@ import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
   nutritionData: NutritionData[];
-  userId: number;
+  userId: string;
   userName: string;
   userLastname: string;
 }
@@ -92,13 +91,14 @@ const NutritionCard: React.FC<Props> = ({
   };
 
   const handleUpdateEntry = async (updatedEntry: NutritionData) => {
-    const { id, ...data } = updatedEntry;
+    const { id, userId: entryUserId, createdAt, updatedAt, date, ...rest } = updatedEntry;
+    const data = {
+      ...rest,
+      date: date instanceof Date ? date.toISOString() : date,
+    };
     try {
       await promiseToast(
-        updateNutritionDataMutation.mutateAsync({ id, data } as {
-          id: number;
-          data: UpdateNutritionDataDto;
-        }),
+        updateNutritionDataMutation.mutateAsync({ id, data, userId: entryUserId }),
         {
           loading: {
             title: "Actualizando entrada",
@@ -124,7 +124,7 @@ const NutritionCard: React.FC<Props> = ({
     }
   };
 
-  const handleDeleteEntry = async (ids: number[]) => {
+  const handleDeleteEntry = async (ids: string[]) => {
     try {
       await promiseToast(deleteNutritionDataMutation.mutateAsync(ids), {
         loading: {

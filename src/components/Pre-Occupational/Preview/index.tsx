@@ -36,7 +36,7 @@ export default function PreOccupationalPreviewComponent({
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const { data, isLoading, isError } = useDoctorWithSignatures({
-    id: medicalEvaluation.doctorId,
+    id: String(medicalEvaluation.doctorId),
   });
   if (isError) return <p>Error cargando datos del doctor.</p>;
   if (isLoading || !data) {

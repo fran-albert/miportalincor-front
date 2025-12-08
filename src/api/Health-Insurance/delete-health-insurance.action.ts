@@ -1,9 +1,6 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
-import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const deleteHealthInsurance = async (id: number) => {
-    await sleep(2);
-    const { data } = await apiIncor.delete<HealthInsurance>(`HealthInsurance/${id}`);
+    const { data } = await apiIncorHC.delete(`health-insurance/${id}`);
     return data;
 }

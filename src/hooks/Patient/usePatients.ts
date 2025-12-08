@@ -1,4 +1,4 @@
-import { getPatients } from "@/api/Patient/get-all-patients.action";
+import { searchPatients } from "@/api/Patient/search-patients.action";
 import { useQuery } from "@tanstack/react-query";
 
 interface Props {
@@ -8,15 +8,15 @@ interface Props {
 }
 
 export const usePatients = ({ auth, fetchPatients, search }: Props) => {
-    const { isLoading, isError, error, data: patients = [], isFetching } = useQuery({
+    const { isLoading, isError, error, data, isFetching } = useQuery({
         queryKey: ['patients', search],
-        queryFn: () => getPatients(search),
+        queryFn: () => searchPatients({ search }),
         staleTime: 1000 * 60,
         enabled: auth && fetchPatients,
     });
 
     return {
-        patients,
+        patients: data?.data ?? [],
         error,
         isLoading,
         isError,

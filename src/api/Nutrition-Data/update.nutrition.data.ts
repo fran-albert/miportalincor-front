@@ -1,9 +1,7 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { NutritionData, UpdateNutritionDataDto } from "@/types/Nutrition-Data/NutritionData";
 
-export const updateNutritionData = async (id: number, newValues: UpdateNutritionDataDto) => {
-    await sleep(2);
-    const { data } = await apiIncor.put<NutritionData>(`NutritionData/${id}`, newValues);
+export const updateNutritionData = async (id: string, newValues: UpdateNutritionDataDto) => {
+    const { data } = await apiIncorHC.put<NutritionData>(`/nutrition-data/${id}`, newValues);
     return data;
 }

@@ -1,9 +1,9 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const forgotPassword = async (email: string) => {
-    const { data } = await apiIncor.post(
-        `Account/forgot/password?email=${email}`,
-        email
+    const { data } = await apiIncorHC.post(
+        `/auth/forgot-password`,
+        { email }
     );
     return data;
 }

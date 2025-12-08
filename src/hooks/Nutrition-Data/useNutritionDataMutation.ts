@@ -11,48 +11,41 @@ export const useNutritionDataMutations = () => {
 
     const addNutritionDataMutation = useMutation({
         mutationFn: createNutritionData,
-        onSuccess: (data, variables, context) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.userId] });
-            console.log("data created", data, variables, context);
         },
-
-        onError: (error, variables, context) => {
-            console.log("Error creating data", error, variables, context);
+        onError: (error) => {
+            console.error("Error creating nutrition data", error);
         },
     });
 
-
     const uploadExcelNutritionDataMutation = useMutation({
         mutationFn: uploadExcelNutritionData,
-        onSuccess: (data, variables, context) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.userId] });
-            console.log("data created", data, variables, context);
         },
-
-        onError: (error, variables, context) => {
-            console.log("Error creating data", error, variables, context);
+        onError: (error) => {
+            console.error("Error uploading excel", error);
         },
-    })
+    });
 
     const updateNutritionDataMutation = useMutation({
-        mutationFn: ({ id, data }: { id: number; data: UpdateNutritionDataDto }) => updateNutritionData(id, data),
-        onSuccess: (data, variables, context) => {
-            queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.data.userId] });
-            console.log("data updated", data, variables, context);
+        mutationFn: ({ id, data }: { id: string; data: UpdateNutritionDataDto; userId: string }) => updateNutritionData(id, data),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['nutrition-data', variables.userId] });
         },
-        onError: (error, variables, context) => {
-            console.log("Error updating blodTest", error, variables, context);
+        onError: (error) => {
+            console.error("Error updating nutrition data", error);
         },
     });
 
     const deleteNutritionDataMutation = useMutation({
-        mutationFn: (id: number[]) => deleteNutritionData(id),
-        onSuccess: (blodTest, variables, context) => {
+        mutationFn: (ids: string[]) => deleteNutritionData(ids),
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['nutrition-data'] });
-            console.log("blodTest deleted", blodTest, variables, context);
         },
-        onError: (error, variables, context) => {
-            console.log("Error deleting blodTest", error, variables, context);
+        onError: (error) => {
+            console.error("Error deleting nutrition data", error);
         },
     });
 
