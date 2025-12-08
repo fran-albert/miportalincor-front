@@ -5,14 +5,6 @@ import { store } from "@/store/store";
 import { updateTokens, logout } from "@/store/authSlice";
 import { jwtDecode } from "jwt-decode";
 
-const apiIncor = axios.create({
-  baseURL: environment.API_BASE_URL,
-  timeout: currentConfig.apiTimeout,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
 const apiLaboral = axios.create({
   baseURL: environment.API_INCOR_LABORAL_URL,
   timeout: currentConfig.apiTimeout,
@@ -142,15 +134,13 @@ const handleAuthError = async (error: AxiosError) => {
 };
 
 // Request interceptors
-apiIncor.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiIncorHC.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiTurnos.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 
 // Response interceptors for auto-refresh
-apiIncor.interceptors.response.use((response) => response, handleAuthError);
 apiLaboral.interceptors.response.use((response) => response, handleAuthError);
 apiIncorHC.interceptors.response.use((response) => response, handleAuthError);
 apiTurnos.interceptors.response.use((response) => response, handleAuthError);
 
-export { apiIncor, apiLaboral, apiIncorHC, apiTurnos };
+export { apiLaboral, apiIncorHC, apiTurnos };

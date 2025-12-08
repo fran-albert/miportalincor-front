@@ -1,6 +1,5 @@
 import { changePassword } from "@/api/User/change-password.action";
 import { forgotPassword } from "@/api/User/forgot-password.action";
-import { requestSupport } from "@/api/User/request-support.action";
 import { resetPasswordToDni } from "@/api/User/reset-password-to-dni.action";
 import { resetPassword } from "@/api/User/reset-password.action";
 import { updateUser } from "@/api/User/update-user.action";
@@ -12,6 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 interface ResetPasswordDto {
     password: string;
     confirmPassword: string;
+    code: string; // token from email link
 }
 
 export const useUserMutations = () => {
@@ -31,16 +31,6 @@ export const useUserMutations = () => {
         mutationFn: ({ email }: { email: string }) => forgotPassword(email),
         onSuccess: (email, variables, context) => {
             console.log("OK", email, variables, context);
-        },
-        onError: (error, variables, context) => {
-            console.log("Error", error, variables, context);
-        },
-    });
-
-    const requestSupportMutation = useMutation({
-        mutationFn: (user: User) => requestSupport(user),
-        onSuccess: (patient, variables, context) => {
-            console.log("OK", patient, variables, context);
         },
         onError: (error, variables, context) => {
             console.log("Error", error, variables, context);
@@ -68,7 +58,7 @@ export const useUserMutations = () => {
     });
 
     const updateUserMutation = useMutation({
-        mutationFn: ({ user, id }: { user: User, id: number }) => updateUser(user, id),
+        mutationFn: ({ user, userId }: { user: Partial<User>, userId: string }) => updateUser(user, userId),
         onSuccess: (patient, variables, context) => {
             console.log("ok", patient, variables, context);
         },
@@ -101,7 +91,6 @@ export const useUserMutations = () => {
         changePasswordMutation,
         updateUserMutation,
         resetPasswordMutation,
-        requestSupportMutation,
         forgotPasswordMutation,
         resetPasswordToDniMutation,
         activateUserMutation,

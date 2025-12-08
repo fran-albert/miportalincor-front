@@ -1,10 +1,9 @@
 import { User } from "@/types/User/User";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
-export const updateUser = async (user: User, id: number) => {
-    // await sleep(2);
-    const { data } = await apiIncor.put(
-        `account/${id}`,
+export const updateUser = async (user: Partial<User>, userId: string) => {
+    const { data } = await apiIncorHC.put(
+        `/users/${userId}`,
         user
     );
     return data;

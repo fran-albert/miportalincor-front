@@ -1,4 +1,4 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 interface ChangePasswordDto {
     userId: string;
@@ -8,9 +8,8 @@ interface ChangePasswordDto {
 }
 
 export const changePassword = async (password: ChangePasswordDto) => {
-    // await sleep(2);
-    const { data } = await apiIncor.post(
-        `account/change/password`,
+    const { data } = await apiIncorHC.post(
+        `/auth/change-password`,
         password
     );
     return data;

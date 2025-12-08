@@ -7,7 +7,6 @@ export type Environment = 'development' | 'staging' | 'production';
 
 export interface EnvironmentConfig {
   NODE_ENV: Environment;
-  API_BASE_URL: string;
   API_INCOR_HC_URL: string;
   API_INCOR_LABORAL_URL: string;
   BASE_URL: string;
@@ -58,7 +57,6 @@ function envToBoolean(value: string | undefined, defaultValue: boolean = false):
  */
 export const environment: EnvironmentConfig = {
   NODE_ENV: getCurrentEnvironment(),
-  API_BASE_URL: requireEnvVar('VITE_BACKEND_API', import.meta.env.VITE_BACKEND_API),
   API_INCOR_HC_URL: requireEnvVar('VITE_BACKEND_API_INCOR_HC', import.meta.env.VITE_BACKEND_API_INCOR_HC),
   API_INCOR_LABORAL_URL: requireEnvVar('VITE_BACKEND_INCOR_LABORAL_API', import.meta.env.VITE_BACKEND_INCOR_LABORAL_API),
   BASE_URL: requireEnvVar('VITE_BASE_URL', import.meta.env.VITE_BASE_URL),
@@ -109,7 +107,7 @@ export const currentConfig = environmentConfigs[environment.NODE_ENV];
 if (isDevelopment()) {
   console.group('🔧 Environment Configuration');
   console.log('Environment:', environment.NODE_ENV);
-  console.log('API Base URL:', environment.API_BASE_URL);
+  console.log('API Incor HC URL:', environment.API_INCOR_HC_URL);
   console.log('Base URL:', environment.BASE_URL);
   console.log('Debug Mode:', environment.DEBUG_MODE);
   console.groupEnd();

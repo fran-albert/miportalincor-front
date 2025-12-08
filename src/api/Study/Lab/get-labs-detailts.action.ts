@@ -1,13 +1,10 @@
-import { apiIncor } from "@/services/axiosConfig";
-import { sleep } from "@/common/helpers/helpers";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { Lab } from "@/types/Lab/Lab";
 
-export const getLabsDetail = async (idStudies: number[]) => {
-    await sleep(2);
-    
-    const queryString = idStudies.map(id => `studiesId=${id}`).join('&');
-    const url = `Study/laboratoryDetails/byStudies?${queryString}`;
-    
-    const { data } = await apiIncor.get<Lab[]>(url);
+export const getLabsDetail = async (idStudies: string[]) => {
+    const queryString = idStudies.map(id => `studiesIds=${id}`).join('&');
+    const url = `blood-test-data/byStudies?${queryString}`;
+
+    const { data } = await apiIncorHC.get<Lab[]>(url);
     return data;
 }

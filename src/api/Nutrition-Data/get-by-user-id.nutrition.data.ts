@@ -1,9 +1,7 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 import { NutritionData } from "@/types/Nutrition-Data/NutritionData";
 
-export const getNutritionDataByUserId = async (userId: number): Promise<NutritionData[]> => {
-  const { data } = await apiIncor.get<NutritionData[]>(`NutritionData/userId`, {
-    params: { userId }
-  });
+export const getNutritionDataByUserId = async (userId: string): Promise<NutritionData[]> => {
+  const { data } = await apiIncorHC.get<NutritionData[]>(`/nutrition-data/user/${userId}`);
   return data;
 }

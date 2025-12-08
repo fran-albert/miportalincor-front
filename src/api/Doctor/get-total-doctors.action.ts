@@ -1,9 +1,15 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
+
+interface PaginatedDoctorResponse {
+    data: unknown[];
+    total: number;
+    page: number;
+    limit: number;
+}
 
 export const getTotalDoctors = async (): Promise<number> => {
-    // await sleep(2);
-
-    const { data } = await apiIncor.get(`Doctor/all`);
-    const totalDoctors = data.length;
-    return totalDoctors;
+    const { data } = await apiIncorHC.get<PaginatedDoctorResponse>(`doctor/search`, {
+        params: { page: 1, limit: 1 }
+    });
+    return data.total;
 }

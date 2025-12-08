@@ -1,26 +1,15 @@
 import { ISearchService } from './search-service.interface';
 import { IncorHCSearchService } from './incor-hc-search.service';
-import { HealthcareApiSearchService } from './healthcare-api-search.service';
 
 /**
- * Factory para obtener la implementación correcta del servicio de búsqueda
- * basada en la configuración de la variable de entorno VITE_USE_INCOR_HC_API
+ * Factory para obtener la implementación del servicio de búsqueda
  */
 export class SearchServiceFactory {
   private static instance: ISearchService;
 
   static getInstance(): ISearchService {
     if (!SearchServiceFactory.instance) {
-      const useIncorHCApi =
-        import.meta.env.VITE_USE_INCOR_HC_API === 'true';
-
-      if (useIncorHCApi) {
-        console.log('Using IncorHCSearchService');
-        SearchServiceFactory.instance = new IncorHCSearchService();
-      } else {
-        console.log('Using HealthcareApiSearchService');
-        SearchServiceFactory.instance = new HealthcareApiSearchService();
-      }
+      SearchServiceFactory.instance = new IncorHCSearchService();
     }
     return SearchServiceFactory.instance;
   }

@@ -1,9 +1,7 @@
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const getTotalBlodTests = async (): Promise<number> => {
-    // await sleep(2);
-
-    const { data } = await apiIncor.get(`BloodTest/all`);
+    const { data } = await apiIncorHC.get(`blood-test`);
     const totalBlodTests = data.length;
     return totalBlodTests;
 }

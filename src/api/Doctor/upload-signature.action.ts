@@ -1,14 +1,12 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export interface UploadSignatureProps {
   idUser: number;
   formData: FormData;
 }
 export const uploadSignature = async (values: UploadSignatureProps) => {
-  await sleep(2);
-  const { data } = await apiIncor.put<string>(
-    `/Doctor/${values.idUser}/firma`,
+  const { data } = await apiIncorHC.put<string>(
+    `/doctor/${values.idUser}/firma`,
     values.formData,
     {
       headers: {

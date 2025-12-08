@@ -1,7 +1,7 @@
 // src/hooks/Doctor/useDoctorWithSignatures.ts
 import { useQuery } from "@tanstack/react-query"
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action"
-import { apiIncor } from "@/services/axiosConfig"
+import { apiIncorHC } from "@/services/axiosConfig"
 
 // Firma por defecto
 const DEFAULT_SIGNATURE_URL =
@@ -24,7 +24,7 @@ interface DoctorSignatureResponse {
 }
 
 interface Params {
-    id: number
+    id: string
     auth?: boolean
 }
 
@@ -32,9 +32,9 @@ export const useDoctorWithSignatures = ({ id, auth = true }: Params) => {
     return useQuery<DoctorSignatures>({
         queryKey: ["doctor", id, "signatures"],
         queryFn: async () => {
-            // 1) Consulta al endpoint con axios
-            const res = await apiIncor.get<{ doctorSignature: DoctorSignatureResponse }>(
-                `/Study/signature?doctorUserId=${id}`
+            // 1) Consulta al endpoint con axios (patientUserId es opcional)
+            const res = await apiIncorHC.get<{ doctorSignature: DoctorSignatureResponse }>(
+                `/study/signature?doctorUserId=${id}`
             )
 
             const sig = res.data.doctorSignature

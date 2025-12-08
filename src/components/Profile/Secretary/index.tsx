@@ -186,7 +186,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
         photo: user?.photo,
       } as User;
       const patientUpdatePromise = updateUserMutation.mutateAsync({
-        id: Number(user?.id),
+        userId: user?.userId?.toString() ?? "",
         user: dataToSend,
       });
       await promiseToast(patientUpdatePromise, {

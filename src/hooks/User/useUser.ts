@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 
 interface Props {
     auth: boolean;
-    id: number
+    id: string;
 }
 
 export const useUser = ({ auth, id }: Props) => {
@@ -12,7 +12,7 @@ export const useUser = ({ auth, id }: Props) => {
         queryKey: ['user', id],
         queryFn: () => getUserById(id),
         staleTime: 1000 * 60,
-        enabled: auth && id !== undefined,
+        enabled: auth && !!id,
     });
 
 

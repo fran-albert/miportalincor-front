@@ -1,9 +1,6 @@
-import { sleep } from "@/common/helpers/helpers";
-import { apiIncor } from "@/services/axiosConfig";
-import { Unit } from "@/types/Unit/Unit";
+import { apiIncorHC } from "@/services/axiosConfig";
 
 export const deleteUnit = async (id: number) => {
-    await sleep(2);
-    const { data } = await apiIncor.delete<Unit>(`Unit/${id}`);
+    const { data } = await apiIncorHC.delete(`unit/${id}`);
     return data;
 }

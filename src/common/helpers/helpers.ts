@@ -143,7 +143,7 @@ export const goBack = () => {
   window.history.back();
 };
 
-export const slugify = (text: string, id: number) => {
+export const slugify = (text: string, id: number | string) => {
   return `${text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')

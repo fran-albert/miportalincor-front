@@ -1,5 +1,6 @@
 export interface NutritionData {
-    id: number;
+    id: string;
+    userId: string;
     date: string | Date;
     weight: number;
     difference: number;
@@ -7,34 +8,34 @@ export interface NutritionData {
     musclePercentage: number;
     visceralFat: number;
     imc: number;
-    height: number
+    height: number;
     targetWeight: number;
     observations: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface CreateNutritionDataDto {
-    userId: number;
+    userId: string;
     date: string;
-    weight: number;
+    weight?: number;
+    height?: number;
     difference?: number;
     fatPercentage?: number;
     musclePercentage?: number;
     visceralFat?: number;
-    height: number
     imc?: number;
     targetWeight?: number;
     observations?: string;
 }
 
 export interface UpdateNutritionDataDto {
-    id?: number;
-    userId: number;
-    date: string;
+    date?: string;
     weight?: number;
+    height?: number;
     difference?: number;
     fatPercentage?: number;
     musclePercentage?: number;
-    height?: number
     visceralFat?: number;
     imc?: number;
     targetWeight?: number;
