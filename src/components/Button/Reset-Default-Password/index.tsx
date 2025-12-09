@@ -14,17 +14,17 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import { ApiError } from "@/types/Error/ApiError";
 
 interface Props {
-  idUser: number;
+  userName: string;
 }
 
-export default function ResetDefaultPasswordDialog({ idUser }: Props) {
+export default function ResetDefaultPasswordDialog({ userName }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
   const { resetPasswordToDniMutation } = useUserMutations();
   const { promiseToast } = useToastContext();
   const onSubmit = async () => {
     try {
-      await promiseToast(resetPasswordToDniMutation.mutateAsync(String(idUser)), {
+      await promiseToast(resetPasswordToDniMutation.mutateAsync(userName), {
         loading: {
           title: "Restableciendo contraseña",
           description: "Por favor espera mientras procesamos tu solicitud",

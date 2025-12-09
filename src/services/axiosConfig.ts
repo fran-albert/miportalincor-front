@@ -89,9 +89,10 @@ const handleAuthError = async (error: AxiosError) => {
       throw new Error("No token available");
     }
 
-    // Call refresh endpoint
+    // Call refresh endpoint (remove trailing slash if present)
+    const baseUrl = environment.API_INCOR_HC_URL.replace(/\/$/, '');
     const response = await axios.post(
-      `${environment.API_INCOR_HC_URL}/auth/refresh`,
+      `${baseUrl}/auth/refresh`,
       {},
       {
         headers: {
