@@ -9,7 +9,7 @@ interface PaginatedDoctorResponse {
     limit: number;
 }
 
-export const getDoctors = async (page: number = 1, limit: number = 5): Promise<Doctor[]> => {
+export const getDoctors = async (page: number = 1, limit: number = 100): Promise<Doctor[]> => {
     const params = new URLSearchParams();
     params.append('page', `${page}`);
     params.append('limit', `${limit}`);

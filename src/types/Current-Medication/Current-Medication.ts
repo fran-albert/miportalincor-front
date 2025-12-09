@@ -38,6 +38,7 @@ export interface UpdateCurrentMedicationDto {
   dosage?: string;
   frequency?: string;
   observations?: string;
+  startDate?: string;
 }
 
 export interface SuspendCurrentMedicationDto {

@@ -49,8 +49,11 @@ export default function EditCurrentMedicationModal({
     }
 
     try {
+      const now = new Date();
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const updateData: UpdateCurrentMedicationDto = {
         observations: observations.trim(),
+        startDate: localDate,
       };
 
       const promise = updateMutation.mutateAsync({
