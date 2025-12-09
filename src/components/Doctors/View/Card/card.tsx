@@ -121,10 +121,9 @@ const DoctorCardComponent = ({ doctor }: { doctor: Doctor | null }) => {
             Ver perfil completo
           </Link>
         </Button>
-        {isSecretary ||
-          (isAdmin && (
-            <ResetDefaultPasswordDialog idUser={Number(doctor?.userId)} />
-          ))}
+        {(isSecretary || isAdmin) && (doctor?.userName || doctor?.dni) && (
+          <ResetDefaultPasswordDialog userName={doctor?.userName || doctor?.dni || ''} />
+        )}
         {isDoctor && (
           <Button className="w-full text-greenPrimary" variant={"link"}>
             <Link to={`/medicos/${doctor?.slug}/control-nutricional`}>

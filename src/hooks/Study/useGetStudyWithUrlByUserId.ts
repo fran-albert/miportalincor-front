@@ -7,11 +7,13 @@ interface Props {
 }
 
 export const useGetStudyWithUrlByUserId = ({ auth = true, userId }: Props) => {
+  const isValidUserId = userId && !isNaN(userId) && userId > 0;
+
   const { isLoading, isError, error, data, isFetching } = useQuery({
     queryKey: ["studies-by-user-id", { userId }],
     queryFn: () => getAllStudyWithUrl(userId),
     staleTime: 1000 * 60,
-    enabled: auth,
+    enabled: auth && isValidUserId,
   });
 
   return {

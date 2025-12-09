@@ -257,7 +257,7 @@ function DoctorProfileComponent({
                 <Edit2 className="h-4 w-4 mr-2" />
                 Editar Perfil
               </Button>
-              <ResetDefaultPasswordButton idUser={doctor.userId} />
+              <ResetDefaultPasswordButton userName={doctor.userName || doctor.dni} />
             </div>
           ) : (
             <div className="flex gap-2">
