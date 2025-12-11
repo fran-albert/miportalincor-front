@@ -1,7 +1,7 @@
-import { Circulatorio, ExamenClinico, Gastrointestinal, Genitourinario, IMedicalEvaluation, Neurologico, Osteoarticular, Respiratorio, setFormData, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { Circulatorio, ExamenClinico, Gastrointestinal, Genitourinario, IMedicalEvaluation, Neurologico, Osteoarticular, Respiratorio, resetForm, setFormData, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 import { useEffect } from "react";
 import { ExamResults } from "./examsResults.maps";
 import { Piel } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
@@ -474,20 +474,17 @@ export function aspectoGeneralyTiempolibre(dataValues: DataValue[]): MedicalEval
 
 export function useInitializeMedicalEvaluation(dataValues: DataValue[] | undefined) {
     const dispatch = useDispatch<AppDispatch>();
-    const medicalEvaluation = useSelector(
-        (state: RootState) => state.preOccupational.formData.medicalEvaluation
-    );
 
     useEffect(() => {
+        // SIEMPRE resetear primero para limpiar datos del paciente anterior
+        dispatch(resetForm());
+
         if (dataValues && dataValues.length > 0) {
             const fullEvaluation = mapMedicalEvaluation(dataValues);
-            // Actualizamos el estado con los valores mapeados
+            // Cargamos solo los datos del paciente actual (sin mezclar con anteriores)
             dispatch(
                 setFormData({
-                    medicalEvaluation: {
-                        ...medicalEvaluation,
-                        ...fullEvaluation,
-                    },
+                    medicalEvaluation: fullEvaluation,
                 })
             );
         }
