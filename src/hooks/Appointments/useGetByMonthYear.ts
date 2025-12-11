@@ -1,4 +1,4 @@
-import { getAllApointmentsByMonthYear } from "@/api/Appointments/get-all-by-month-year";
+import { getAllAppointmentsByMonthYear } from "@/api/Appointments/get-all-by-month-year";
 import { useQuery } from "@tanstack/react-query"
 
 interface Props {
@@ -10,7 +10,7 @@ export const useGetByMonthYear = ({ month, year }: Props) => {
 
     const { isLoading, isError, error, data, isFetching } = useQuery({
         queryKey: ['appointments', { year, month }],
-        queryFn: () => getAllApointmentsByMonthYear(year, month),
+        queryFn: () => getAllAppointmentsByMonthYear(year, month),
         staleTime: 1000 * 60,
         enabled: !!month && !!year,
     });

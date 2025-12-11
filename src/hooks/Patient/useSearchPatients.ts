@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { searchPatients } from "@/api/Patient/search-patients.action";
 
 interface UseSearchPatientsOptions {
@@ -7,6 +7,7 @@ interface UseSearchPatientsOptions {
   initialPage?: number;
   initialLimit?: number;
   enabled?: boolean;
+  debounceMs?: number;
 }
 
 export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
@@ -15,11 +16,22 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     initialPage = 1,
     initialLimit = 10,
     enabled = true,
+    debounceMs = 300,
   } = options;
 
   const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
+
+  // Debounce search to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, debounceMs);
+
+    return () => clearTimeout(timer);
+  }, [search, debounceMs]);
 
   const {
     isLoading,
@@ -28,10 +40,10 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     data,
     isFetching,
   } = useQuery({
-    queryKey: ["patients-search", search, page, limit],
-    queryFn: () => searchPatients({ search, page, limit }),
+    queryKey: ["patients-search", debouncedSearch, page, limit],
+    queryFn: () => searchPatients({ search: debouncedSearch, page, limit }),
     staleTime: 1000 * 60, // 1 minute
-    enabled,
+    enabled: enabled && debouncedSearch.length >= 2,
   });
 
   const nextPage = () => {

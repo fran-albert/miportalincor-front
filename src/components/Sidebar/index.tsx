@@ -16,6 +16,7 @@ import {
   ChevronDown,
   TestTube,
   Calendar,
+  CalendarCheck,
   Shield,
   UserCircle,
   Stethoscope,
@@ -86,13 +87,18 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
-    comingSoon: true,
   },
   {
     title: "Mis Estudios",
     url: "/mis-estudios",
     icon: TestTube,
     allowedRoles: PERMISSIONS.MY_STUDIES,
+  },
+  {
+    title: "Mis Turnos",
+    url: "/mis-turnos",
+    icon: CalendarCheck,
+    allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
   },
   {
     title: "Incor Laboral",
@@ -129,7 +135,7 @@ const reportsItems = [
 const systemItems = [
   {
     title: "Configuración",
-    url: "#",
+    url: "/configuracion",
     icon: Settings,
     allowedRoles: PERMISSIONS.SETTINGS,
   },
