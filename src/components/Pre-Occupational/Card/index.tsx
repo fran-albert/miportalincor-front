@@ -4,7 +4,9 @@ import { Eye, ExternalLink } from "lucide-react";
 import CollaboratorInformationCard from "../Collaborator-Information";
 import NavigationTabs from "@/components/Tabs/Pre-Occupational/Navigation-Tabs";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { resetForm } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
 import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/useGetAllUrlsByCollaboratorAndMedicalEvaluation";
@@ -50,6 +52,12 @@ export default function PreOccupationalCards({
 
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Reset form when medical evaluation changes (switching patients)
+  useEffect(() => {
+    dispatch(resetForm());
+  }, [medicalEvaluation.id, dispatch]);
 
   if (isLoadingUrls || isLoadingValues || isLoadingFields) {
     return <LoadingAnimation />;
