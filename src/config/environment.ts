@@ -80,19 +80,19 @@ export const environmentConfigs = {
     logLevel: 'debug',
     enablePerformanceDebugging: true,
     enableReduxDevTools: true,
-    apiTimeout: 30000,
+    apiTimeout: 120000, // 2 minutos para soportar uploads grandes
   },
   staging: {
     logLevel: 'info',
     enablePerformanceDebugging: true,
     enableReduxDevTools: true,
-    apiTimeout: 15000,
+    apiTimeout: 120000, // 2 minutos para soportar uploads grandes
   },
   production: {
     logLevel: 'error',
     enablePerformanceDebugging: false,
     enableReduxDevTools: false,
-    apiTimeout: 10000,
+    apiTimeout: 120000, // 2 minutos para soportar uploads grandes
   },
 } as const;
 
