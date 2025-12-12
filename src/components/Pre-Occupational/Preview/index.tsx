@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, Save, Send } from "lucide-react";
 import BreadcrumbComponent from "@/components/Breadcrumb";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { pdf } from "@react-pdf/renderer";
-import { useUploadStudyFileMutation } from "@/hooks/Study/useUploadStudyFileCollaborator";
 import { MedicalEvaluation } from "@/types/Medical-Evaluation/MedicalEvaluation";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,6 +14,8 @@ import { DataValue } from "@/types/Data-Value/Data-Value";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action";
 import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { useUploadStudyWithProgress } from "@/hooks/Study/useUploadStudyWithProgress";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface Props {
   collaborator: Collaborator;
@@ -30,14 +31,58 @@ export default function PreOccupationalPreviewComponent({
   dataValues,
 }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { mutate: uploadStudy } = useUploadStudyFileMutation({
-    collaboratorId: collaborator.id,
-  });
-  const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
+  const pdfBlobRef = useRef<Blob | null>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { showError } = useToastContext();
+
+  const { upload, cancel } = useUploadStudyWithProgress({
+    collaboratorId: collaborator.id,
+    onProgress: (progressValue, message) => {
+      setProgress(progressValue);
+      setStatusMessage(message);
+    },
+    onSuccess: async () => {
+      // Invalidar queries
+      await queryClient.invalidateQueries({
+        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
+      });
+
+      await queryClient.refetchQueries({
+        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
+      });
+
+      // Descargar el PDF
+      if (pdfBlobRef.current) {
+        const url = window.URL.createObjectURL(pdfBlobRef.current);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${collaborator.firstName}_${collaborator.lastName}_${medicalEvaluation.evaluationType.name}_${Date.now()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
+      setIsGenerating(false);
+      setProgress(0);
+      setStatusMessage("");
+      navigate(`/incor-laboral/colaboradores/${collaborator.slug}`);
+    },
+    onError: (error) => {
+      setIsGenerating(false);
+      setProgress(0);
+      setStatusMessage("");
+      showError("Error", error);
+    },
+  });
+
   const { data, isLoading, isError } = useDoctorWithSignatures({
     id: String(medicalEvaluation.doctorId),
   });
+
   if (isError) return <p>Error cargando datos del doctor.</p>;
   if (isLoading || !data) {
     return (
@@ -46,6 +91,7 @@ export default function PreOccupationalPreviewComponent({
       </div>
     );
   }
+
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -65,24 +111,33 @@ export default function PreOccupationalPreviewComponent({
       href: `/incor-laboral/colaboradores/${collaborator?.slug}/previsualizar-informe`,
     },
   ];
-  const queryClient = useQueryClient();
+
   const handleCancel = () => {
+    cancel();
     setIsGenerating(false);
     setProgress(0);
+    setStatusMessage("");
   };
+
   const handleSaveAndGeneratePdf = async () => {
     setIsGenerating(true);
-    setProgress(0);
+    setProgress(5);
+    setStatusMessage("Preparando imágenes...");
 
     try {
+      // Convertir URLs a DataURLs para el PDF
       const dataUrls = await Promise.all(
         urls!.map((u) => fetchImageAsDataUrl(u.url))
       );
+
+      setProgress(10);
+      setStatusMessage("Generando PDF...");
 
       const studiesWithDataUrls = urls!.map((u, i) => ({
         ...u,
         url: dataUrls[i],
       }));
+
       const MyPDFContent = (
         <PDFDocument
           collaborator={collaborator}
@@ -92,7 +147,14 @@ export default function PreOccupationalPreviewComponent({
           doctorData={data}
         />
       );
+
       const pdfBlob = await pdf(MyPDFContent).toBlob();
+      pdfBlobRef.current = pdfBlob;
+
+      setProgress(15);
+      setStatusMessage("Subiendo archivo...");
+
+      // Preparar FormData
       const fileName = `pre_occupational_preview_${collaborator.userName}.pdf`;
       const formData = new FormData();
       formData.append("file", pdfBlob, fileName);
@@ -102,40 +164,14 @@ export default function PreOccupationalPreviewComponent({
       formData.append("collaboratorId", String(collaborator.id));
       formData.append("medicalEvaluationId", String(medicalEvaluation.id));
 
-      await new Promise((resolve, reject) => {
-        uploadStudy(
-          { collaboratorId: Number(collaborator.id), formData },
-          {
-            onSuccess: () => resolve(true),
-            onError: (error) => reject(error),
-          }
-        );
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
-      });
-
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${collaborator.firstName}_${collaborator.lastName}_${
-        medicalEvaluation.evaluationType.name
-      }_${Date.now()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      navigate(`/incor-laboral/colaboradores/${collaborator.slug}`);
+      // Iniciar upload con progreso SSE
+      await upload(formData);
     } catch (error) {
       console.error("Error al generar el PDF:", error);
-    } finally {
+      showError("Error", "Error al generar el PDF");
       setIsGenerating(false);
       setProgress(0);
+      setStatusMessage("");
     }
   };
   if (urls === undefined) {
@@ -168,6 +204,7 @@ export default function PreOccupationalPreviewComponent({
           isGenerating={isGenerating}
           progress={progress}
           onCancel={handleCancel}
+          statusMessage={statusMessage}
         />
       )}
       <div className="flex justify-center gap-6 p-6">

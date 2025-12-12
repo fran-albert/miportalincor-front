@@ -5,12 +5,14 @@ interface LoadingOverlayProps {
   isGenerating: boolean;
   progress: number;
   onCancel?: () => void;
+  statusMessage?: string;
 }
 
 export default function PdfLoadingOverlay({
   isGenerating,
   progress,
   onCancel,
+  statusMessage,
 }: LoadingOverlayProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -25,7 +27,7 @@ export default function PdfLoadingOverlay({
 
   if (!isVisible) return null;
 
-  const status = progress < 100 ? "Generando PDF" : "Subiendo PDF";
+  const status = statusMessage || (progress < 100 ? "Procesando..." : "Completado");
 
   return (
     <div
