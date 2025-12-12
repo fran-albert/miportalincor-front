@@ -35,7 +35,6 @@ import {
 import {
   Upload,
   Trash2,
-  GripVertical,
   Video,
   Image as ImageIcon,
   Loader2,
@@ -48,7 +47,6 @@ import {
   useToggleMediaActive,
   useReorderMedia,
 } from "@/hooks/TvMedia";
-import type { TvMedia } from "@/types/TvMedia";
 
 function formatFileSize(bytes?: number): string {
   if (!bytes) return "-";

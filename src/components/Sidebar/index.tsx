@@ -30,6 +30,7 @@ import {
   FileBarChart,
   ShieldCheck,
   UserCog,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -87,6 +88,12 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
+  },
+  {
+    title: "Mi Sala de Espera",
+    url: "/mi-sala-de-espera",
+    icon: Clock,
+    allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
   },
   {
     title: "Mis Estudios",

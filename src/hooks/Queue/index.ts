@@ -10,3 +10,14 @@ export {
   useMarkAsCompleted,
   useMarkAsNoShow,
 } from './useQueue';
+
+export {
+  doctorQueueKeys,
+  useDoctorWaitingQueue,
+  useDoctorQueueStats,
+  useDoctorCallPatient,
+  useDoctorRecallPatient,
+  useDoctorMarkAsAttending,
+} from './useDoctorQueue';
+
+export { useDoctorQueueSocket } from './useDoctorQueueSocket';

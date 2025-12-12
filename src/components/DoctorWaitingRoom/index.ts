@@ -1,0 +1,1 @@
+export { DoctorQueueWidget } from './DoctorQueueWidget';

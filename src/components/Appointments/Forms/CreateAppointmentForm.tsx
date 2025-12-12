@@ -49,9 +49,6 @@ export const CreateAppointmentForm = ({
   const watchDoctorId = form.watch("doctorId");
   const watchDate = form.watch("date");
 
-  // Verificar si doctor y fecha están seleccionados para habilitar horarios
-  const canSelectHour = watchDoctorId && watchDoctorId > 0 && watchDate;
-
   const handleSubmit = async (data: CreateAppointmentFormData) => {
     await onSubmit(data);
   };

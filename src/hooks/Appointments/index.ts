@@ -5,6 +5,7 @@ export { useAvailableSlots } from './useAvailableSlots';
 export { useWaitingList } from './useWaitingList';
 export { useDoctorTodayAppointments } from './useDoctorTodayAppointments';
 export { usePatientAppointments } from './usePatientAppointments';
+export { useDoctorsWithAvailability } from './useDoctorsWithAvailability';
 
 // Legacy hooks (for backwards compatibility)
 export { useGetByDate } from './useGetByDate';
@@ -14,3 +15,4 @@ export { useCountFromMonthYear } from './useCountFromMonthYear';
 
 // Mutations
 export { useAppointmentMutations } from './useAppointmentMutations';
+export { useRequestAppointment } from './useRequestAppointment';

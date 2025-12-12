@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/Appointments/Select/StatusBadge";
+import { RequestAppointmentDialog } from "@/components/Appointments/RequestAppointmentDialog";
 import { usePatientAppointments, useAppointmentMutations } from "@/hooks/Appointments";
 import useUserRole from "@/hooks/useRoles";
 import {
@@ -31,7 +32,8 @@ import {
   XCircle,
   CalendarCheck,
   CalendarX,
-  Loader2
+  Loader2,
+  Plus
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +42,7 @@ const MyAppointmentsPage = () => {
   const { toast } = useToast();
   const { session } = useUserRole();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentFullResponseDto | null>(null);
 
   const patientId = session?.id ? Number(session.id) : 0;
@@ -162,12 +165,21 @@ const MyAppointmentsPage = () => {
             Consultá y gestioná tus turnos médicos
           </p>
         </div>
-        <Link to="/inicio">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al inicio
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setRequestDialogOpen(true)}
+            className="bg-greenPrimary hover:bg-greenPrimary/90"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Solicitar Turno
           </Button>
-        </Link>
+          <Link to="/inicio">
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al inicio
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -233,9 +245,16 @@ const MyAppointmentsPage = () => {
                 <h3 className="text-lg font-medium text-muted-foreground">
                   No tenés turnos agendados
                 </h3>
-                <p className="text-sm text-muted-foreground text-center mt-2">
-                  Contactá a la secretaría para agendar un nuevo turno
+                <p className="text-sm text-muted-foreground text-center mt-2 mb-4">
+                  Solicitá un nuevo turno o contactá a la secretaría
                 </p>
+                <Button
+                  onClick={() => setRequestDialogOpen(true)}
+                  className="bg-greenPrimary hover:bg-greenPrimary/90"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Solicitar Turno
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -315,6 +334,12 @@ const MyAppointmentsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Request Appointment Dialog */}
+      <RequestAppointmentDialog
+        open={requestDialogOpen}
+        onOpenChange={setRequestDialogOpen}
+      />
     </div>
   );
 };

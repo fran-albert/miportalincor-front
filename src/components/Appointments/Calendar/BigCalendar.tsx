@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Calendar, dateFnsLocalizer, View, SlotInfo } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { useAppointments, useAppointmentMutations } from "@/hooks/Appointments";
 import { useOverturns, useOverturnMutations } from "@/hooks/Overturns";
+import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
 import {
   AppointmentFullResponseDto,
   AppointmentStatus,
@@ -28,7 +29,6 @@ import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { CalendarDays, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
-import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -72,9 +72,11 @@ interface CalendarEvent {
 
 interface BigCalendarProps {
   className?: string;
+  /** Si es true, filtra automáticamente por el médico logueado y oculta el selector */
+  autoFilterForDoctor?: boolean;
 }
 
-export const BigCalendar = ({ className }: BigCalendarProps) => {
+export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalendarProps) => {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<View>("month");
@@ -83,6 +85,16 @@ export const BigCalendar = ({ className }: BigCalendarProps) => {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; hour?: string } | null>(null);
+
+  // Si autoFilterForDoctor, obtener el perfil del médico logueado
+  const { data: doctorProfile } = useMyDoctorProfile();
+
+  // Auto-seleccionar el médico si autoFilterForDoctor está activo
+  useEffect(() => {
+    if (autoFilterForDoctor && doctorProfile?.userId) {
+      setSelectedDoctorId(doctorProfile.userId);
+    }
+  }, [autoFilterForDoctor, doctorProfile?.userId]);
 
   // Calculate date range for queries
   const dateRange = useMemo(() => {
@@ -260,17 +272,19 @@ export const BigCalendar = ({ className }: BigCalendarProps) => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5" />
-              Calendario de Turnos
+              {autoFilterForDoctor ? "Mi Calendario de Turnos" : "Calendario de Turnos"}
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="w-64">
-                <DoctorSelect
-                  value={selectedDoctorId}
-                  onValueChange={setSelectedDoctorId}
-                  placeholder="Todos los médicos"
-                />
+            {!autoFilterForDoctor && (
+              <div className="flex items-center gap-2">
+                <div className="w-64">
+                  <DoctorSelect
+                    value={selectedDoctorId}
+                    onValueChange={setSelectedDoctorId}
+                    placeholder="Todos los médicos"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
           {/* Legend */}
           <div className="flex flex-wrap gap-2 mt-4">

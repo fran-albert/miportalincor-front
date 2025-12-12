@@ -26,6 +26,8 @@ export const useOverturnMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['overturn', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+      // Sincronizar con la agenda del día del médico
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 

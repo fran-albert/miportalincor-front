@@ -89,7 +89,7 @@ export const QueuePanel = () => {
 
   // Queries
   const { data: waitingQueue, isLoading: loadingWaiting } = useWaitingQueue();
-  const { data: activeQueue, isLoading: loadingActive } = useActiveQueue();
+  const { data: activeQueue } = useActiveQueue();
   const { data: stats, isLoading: loadingStats } = useQueueStats();
 
   // Mutations
@@ -111,13 +111,6 @@ export const QueuePanel = () => {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: queueKeys.all });
-  };
-
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const getWaitTime = (checkedInAt: string) => {

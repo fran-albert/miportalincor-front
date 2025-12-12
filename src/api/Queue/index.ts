@@ -78,3 +78,17 @@ export const changeQueueStatus = async (id: number, dto: ChangeQueueStatusDto): 
   const response = await apiTurnos.patch(`/queue/${id}/status`, dto);
   return response.data;
 };
+
+// GET - Obtener cola de espera del doctor logueado
+// El backend filtra automáticamente por el doctorId del usuario logueado
+export const getDoctorWaitingQueue = async (): Promise<QueueEntry[]> => {
+  const response = await apiTurnos.get('/queue/waiting');
+  return response.data;
+};
+
+// GET - Obtener estadísticas del doctor logueado
+// El backend filtra automáticamente por el doctorId del usuario logueado
+export const getDoctorQueueStats = async (): Promise<QueueStats> => {
+  const response = await apiTurnos.get('/queue/stats');
+  return response.data;
+};

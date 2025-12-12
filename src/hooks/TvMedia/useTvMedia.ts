@@ -9,7 +9,7 @@ import {
   toggleMediaActive,
   reorderMedia,
 } from "@/api/TvMedia";
-import type { TvMedia, UpdateTvMediaDto, ReorderMediaDto } from "@/types/TvMedia";
+import type { UpdateTvMediaDto, ReorderMediaDto } from "@/types/TvMedia";
 
 export const tvMediaKeys = {
   all: ["tv-media"] as const,

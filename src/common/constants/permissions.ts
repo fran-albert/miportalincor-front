@@ -35,6 +35,9 @@ export const PERMISSIONS = {
   MY_PROFILE: [Role.PACIENTE, Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
   MY_STUDIES: [Role.PACIENTE],
   MY_APPOINTMENTS: [Role.PACIENTE],
+
+  // Sala de Espera del Médico
+  DOCTOR_WAITING_ROOM: [Role.MEDICO],
 } as const;
 
 /**

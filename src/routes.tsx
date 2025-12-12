@@ -43,6 +43,7 @@ import DoctorMedicacionActualPage from "./pages/protected/Doctor/Medicacion-Actu
 import ShiftsPage from "./pages/protected/Shift/page";
 import MyAppointmentsPage from "./pages/protected/My-Appointments/page";
 import DoctorSchedulePage from "./pages/protected/Doctor-Schedule/page";
+import DoctorWaitingRoomPage from "./pages/protected/Doctor-Waiting-Room";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import CollaboratorExamenesPage from "./pages/protected/Collaborator/Examenes";
 import CollaboratorEvolucionesPage from "./pages/protected/Collaborator/Evoluciones";
@@ -78,6 +79,16 @@ function App() {
             element={
               <Private_Routes>
                 <HomePage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Sala de Espera del Médico */}
+          <Route
+            path="/mi-sala-de-espera"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <DoctorWaitingRoomPage />
               </Private_Routes>
             }
           />

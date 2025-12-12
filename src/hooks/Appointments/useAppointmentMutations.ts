@@ -46,6 +46,11 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
+      // Sincronizar con la cola: cuando el estado cambia, la cola tambien se actualiza
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+      // Sincronizar con la agenda del día del médico
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 
