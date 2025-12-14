@@ -44,6 +44,7 @@ import ShiftsPage from "./pages/protected/Shift/page";
 import MyAppointmentsPage from "./pages/protected/My-Appointments/page";
 import DoctorSchedulePage from "./pages/protected/Doctor-Schedule/page";
 import DoctorWaitingRoomPage from "./pages/protected/Doctor-Waiting-Room";
+import MySettingsPage from "./pages/protected/My-Settings";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import CollaboratorExamenesPage from "./pages/protected/Collaborator/Examenes";
 import CollaboratorEvolucionesPage from "./pages/protected/Collaborator/Evoluciones";
@@ -89,6 +90,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <DoctorWaitingRoomPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Configuración del Médico */}
+          <Route
+            path="/mi-configuracion"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <MySettingsPage />
               </Private_Routes>
             }
           />

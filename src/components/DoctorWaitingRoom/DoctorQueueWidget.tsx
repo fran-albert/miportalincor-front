@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Clock, ArrowRight, UserCheck } from 'lucide-react';
 import { useDoctorWaitingQueue, useDoctorQueueStats } from '@/hooks/Queue';
-import type { QueueEntry } from '@/types/Queue';
 
 /**
  * Widget compacto para mostrar en el Dashboard del médico.

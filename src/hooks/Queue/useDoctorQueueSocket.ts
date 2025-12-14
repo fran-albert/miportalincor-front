@@ -67,22 +67,22 @@ export function useDoctorQueueSocket(options: UseDoctorQueueSocketOptions) {
     const handlePatientCheckedIn = (data: PatientCheckedInEvent) => {
       console.log('[DoctorSocket] Paciente check-in:', data);
       // Invalidar queries para refrescar la lista
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting });
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting() });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats() });
       onPatientCheckedIn?.(data);
     };
 
     const handlePatientCalled = (data: PatientCalledEvent) => {
       console.log('[DoctorSocket] Paciente llamado:', data);
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting });
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting() });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats() });
       onPatientCalled?.(data);
     };
 
     const handleQueueUpdated = (data: QueueUpdatedEvent) => {
       console.log('[DoctorSocket] Cola actualizada:', data);
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting });
-      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.waiting() });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.stats() });
       onQueueUpdated?.(data);
     };
 

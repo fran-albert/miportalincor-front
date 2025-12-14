@@ -94,18 +94,28 @@ const navigationItems = [
     url: "/mi-sala-de-espera",
     icon: Clock,
     allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
+    strictRoles: true,
+  },
+  {
+    title: "Mi Configuración",
+    url: "/mi-configuracion",
+    icon: Settings,
+    allowedRoles: PERMISSIONS.MY_SETTINGS,
+    strictRoles: true,
   },
   {
     title: "Mis Estudios",
     url: "/mis-estudios",
     icon: TestTube,
     allowedRoles: PERMISSIONS.MY_STUDIES,
+    strictRoles: true,
   },
   {
     title: "Mis Turnos",
     url: "/mis-turnos",
     icon: CalendarCheck,
     allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
+    strictRoles: true,
   },
   {
     title: "Incor Laboral",
