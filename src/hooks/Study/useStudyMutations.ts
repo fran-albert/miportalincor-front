@@ -1,6 +1,7 @@
 import { deleteStudy } from "@/api/Study/delete-study.action";
 import { uploadStudy } from "@/api/Study/upload-study.action";
 import { uploadExternalStudy } from "@/api/Study/upload-external-study.action";
+import { dismissParsingAlert } from "@/api/Study/dismiss-parsing-alert.action";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useStudyMutations = () => {
@@ -58,5 +59,16 @@ export const useStudyMutations = () => {
         },
     });
 
-    return { uploadStudyMutation, deleteStudyMutation, uploadExternalStudyMutation };
+    const dismissParsingAlertMutation = useMutation({
+        mutationFn: (studyId: string) => dismissParsingAlert(studyId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === "blood-test-data" ||
+                    query.queryKey[0] === "studies-by-user-id"
+            });
+        },
+    });
+
+    return { uploadStudyMutation, deleteStudyMutation, uploadExternalStudyMutation, dismissParsingAlertMutation };
 };

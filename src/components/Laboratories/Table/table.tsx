@@ -306,7 +306,7 @@ export const LabPatientTable = ({
                         {bloodTest.referenceValue || "N/A"}
                       </TableCell>
                       <TableCell className="w-2/12 px-2 sm:px-4">
-                        {bloodTest.unit?.shortName || "N/A"}
+                        {bloodTest.unit?.name || "N/A"} - {bloodTest.unit?.shortName || ""}
                       </TableCell>
 
                       {dates.map((date) => {

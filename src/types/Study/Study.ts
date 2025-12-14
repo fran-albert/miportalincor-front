@@ -1,6 +1,14 @@
 import { StudyType } from "../Study-Type/Study-Type";
 import { UltraSoundImages } from "../Ultra-Sound/Ultra-Sound";
 
+export interface ParsingResult {
+  success: boolean;
+  errors?: string[];
+  warnings?: string[];
+  valuesCount: number;
+  dismissedAt?: string;
+}
+
 export interface Study {
   id: number | string;
   locationS3?: string;
@@ -15,6 +23,7 @@ export interface Study {
   isExternal?: boolean;
   externalInstitution?: string;
   signedDoctorId?: string;
+  parsingResult?: ParsingResult;
 }
 
 export interface UploadedFile {

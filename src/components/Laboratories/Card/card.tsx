@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { CardTitle, CardHeader, CardContent, Card } from "@/components/ui/card";
 import { GiHypodermicTest } from "react-icons/gi";
 import { LabPatientTable } from "../Table/table";
+import { ParsingAlert } from "../ParsingAlert";
 // import LabChartsGrid from "../Chart/LabsChartGrid";
 import { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
+import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
 
 interface Study {
   id: number | string;
@@ -14,6 +17,7 @@ const LabCard = ({
   bloodTestsData = [],
   idUser,
   bloodTests = [],
+  role,
 }: {
   studiesByUserId: Study[];
   bloodTestsData: BloodTestData[];
@@ -21,6 +25,35 @@ const LabCard = ({
   role: string;
   idUser: number;
 }) => {
+  const { dismissParsingAlertMutation } = useStudyMutations();
+
+  // Extract unique studies with parsing results
+  const studiesWithParsingIssues = useMemo(() => {
+    const studyMap = new Map<
+      string,
+      { studyId: string; date: string; parsingResult: NonNullable<BloodTestData["study"]["parsingResult"]> }
+    >();
+
+    bloodTestsData.forEach((item) => {
+      const studyId = String(item.study.id);
+      if (item.study.parsingResult && !studyMap.has(studyId)) {
+        studyMap.set(studyId, {
+          studyId,
+          date: item.study.date,
+          parsingResult: item.study.parsingResult,
+        });
+      }
+    });
+
+    return Array.from(studyMap.values());
+  }, [bloodTestsData]);
+
+  const handleDismissAlert = (studyId: string) => {
+    dismissParsingAlertMutation.mutate(studyId);
+  };
+
+  // Only show alerts to doctors
+  const showAlerts = role === "doctor";
   // const labKeys =
   //   bloodTestsData.length > 0
   //     ? Object.keys(bloodTestsData[0]).filter((key) => {
@@ -35,6 +68,13 @@ const LabCard = ({
 
   return (
     <>
+      {showAlerts && studiesWithParsingIssues.length > 0 && (
+        <ParsingAlert
+          parsingInfos={studiesWithParsingIssues}
+          onDismiss={handleDismissAlert}
+          isLoading={dismissParsingAlertMutation.isPending}
+        />
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-greenPrimary">
