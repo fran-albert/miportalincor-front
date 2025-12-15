@@ -73,6 +73,7 @@ export interface DoctorBasicDto {
   userId: number;
   firstName: string;
   lastName: string;
+  gender?: string;
   specialities?: { id: number; name: string }[];
 }
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import {
   AppointmentStatus
 } from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR, isPastDateAR } from "@/common/helpers/timezone";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import {
   Calendar,
   Clock,
@@ -37,6 +39,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { PageHeader } from "@/components/PageHeader";
 
 const MyAppointmentsPage = () => {
   const { toast } = useToast();
@@ -126,7 +129,7 @@ const MyAppointmentsPage = () => {
             <div className="flex items-center gap-2">
               <Stethoscope className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
-                Dr. {appointment.doctor?.firstName} {appointment.doctor?.lastName}
+                {appointment.doctor ? formatDoctorName(appointment.doctor) : 'No especificado'}
               </span>
               {appointment.doctor?.specialities && appointment.doctor.specialities.length > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -152,35 +155,40 @@ const MyAppointmentsPage = () => {
     </Card>
   );
 
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Mis Turnos" },
+  ];
+
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-greenPrimary flex items-center gap-3">
-            <Calendar className="h-8 w-8" />
-            Mis Turnos
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Consultá y gestioná tus turnos médicos
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setRequestDialogOpen(true)}
-            className="bg-greenPrimary hover:bg-greenPrimary/90"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Solicitar Turno
-          </Button>
-          <Link to="/inicio">
-            <Button variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver al inicio
+    <div className="space-y-6 p-6">
+      <Helmet>
+        <title>Mis Turnos</title>
+      </Helmet>
+
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Mis Turnos"
+        description="Consultá y gestioná tus turnos médicos"
+        icon={<Calendar className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setRequestDialogOpen(true)}
+              className="bg-greenPrimary hover:bg-greenPrimary/90 shadow-sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Solicitar Turno
             </Button>
-          </Link>
-        </div>
-      </div>
+            <Link to="/inicio">
+              <Button variant="outline" className="shadow-sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver al inicio
+              </Button>
+            </Link>
+          </div>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -310,7 +318,7 @@ const MyAppointmentsPage = () => {
                     <strong>Hora:</strong> {formatTimeAR(selectedAppointment.hour)}
                   </p>
                   <p>
-                    <strong>Médico:</strong> Dr. {selectedAppointment.doctor?.firstName} {selectedAppointment.doctor?.lastName}
+                    <strong>Médico:</strong> {selectedAppointment.doctor ? formatDoctorName(selectedAppointment.doctor) : 'No especificado'}
                   </p>
                 </div>
               )}

@@ -35,6 +35,7 @@ import PatientStudiesPage from "./pages/protected/Patient/Studies";
 import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
 import PatientEvolucionesPage from "./pages/protected/Patient/Evoluciones";
 import PatientMedicacionActualPage from "./pages/protected/Patient/Medicacion-Actual";
+import PatientAppointmentsPage from "./pages/protected/Patient/Appointments";
 import DoctorHistoryPage from "./pages/protected/Doctor/Historia-Clinica";
 import DoctorStudiesPage from "./pages/protected/Doctor/Studies";
 import DoctorEvolucionesPage from "./pages/protected/Doctor/Evoluciones";
@@ -54,6 +55,8 @@ import UsersComponent from "./pages/protected/Users";
 import RoleManagementPage from "./pages/protected/Role-Management";
 import AssignRolesPage from "./pages/protected/Assign-Roles";
 import SettingsPage from "./pages/protected/Settings";
+import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Requests/page";
+import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
 
 function App() {
   return (
@@ -199,6 +202,24 @@ function App() {
               </Private_Routes>
             }
           />
+          <Route
+            path="/mis-solicitudes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyPrescriptionRequestsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Solicitudes de Recetas - Médico */}
+          <Route
+            path="/solicitudes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <DoctorPrescriptionRequestsPage />
+              </Private_Routes>
+            }
+          />
 
           {/* Pacientes */}
           <Route
@@ -286,6 +307,14 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <NutritionPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/pacientes/:slug/turnos"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <PatientAppointmentsPage />
               </Private_Routes>
             }
           />

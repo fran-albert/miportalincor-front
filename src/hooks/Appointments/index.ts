@@ -5,6 +5,7 @@ export { useAvailableSlots } from './useAvailableSlots';
 export { useWaitingList } from './useWaitingList';
 export { useDoctorTodayAppointments } from './useDoctorTodayAppointments';
 export { usePatientAppointments } from './usePatientAppointments';
+export { usePatientAppointmentsByUserId } from './usePatientAppointmentsByUserId';
 export { useDoctorsWithAvailability } from './useDoctorsWithAvailability';
 
 // Legacy hooks (for backwards compatibility)

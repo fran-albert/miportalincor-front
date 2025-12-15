@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Evolution } from "@/types/Evolution/Evolution";
-import { formatDateOnly } from "@/common/helpers/helpers";
+import { formatDateOnly, formatDoctorName } from "@/common/helpers/helpers";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import DeleteEvolutionDialog from "../Delete";
 import { Label } from "@/components/ui/label";
@@ -49,7 +49,7 @@ const DoctorInfo: React.FC<{ doctorId: string }> = ({ doctorId }) => {
           Médico
         </label>
         <p className="text-sm">
-          Dr. {doctor.firstName} {doctor.lastName}
+          {formatDoctorName(doctor)}
         </p>
       </div>
       <div>

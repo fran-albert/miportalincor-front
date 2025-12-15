@@ -41,6 +41,10 @@ export const PERMISSIONS = {
 
   // Configuración del Médico
   MY_SETTINGS: [Role.MEDICO],
+
+  // Solicitudes de Recetas
+  MY_PRESCRIPTION_REQUESTS: [Role.PACIENTE],
+  DOCTOR_PRESCRIPTION_REQUESTS: [Role.MEDICO],
 } as const;
 
 /**
@@ -52,6 +56,8 @@ export const STRICT_PERMISSIONS = [
   'MY_SETTINGS',
   'MY_STUDIES',
   'MY_APPOINTMENTS',
+  'MY_PRESCRIPTION_REQUESTS',
+  'DOCTOR_PRESCRIPTION_REQUESTS',
 ] as const;
 
 /**

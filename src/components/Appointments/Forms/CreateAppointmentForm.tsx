@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -25,6 +26,12 @@ interface CreateAppointmentFormProps {
   isLoading?: boolean;
   defaultDoctorId?: number;
   defaultPatientId?: number;
+  defaultPatient?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    userName?: string;
+  };
   defaultDate?: string;
 }
 
@@ -33,14 +40,20 @@ export const CreateAppointmentForm = ({
   isLoading = false,
   defaultDoctorId,
   defaultPatientId,
+  defaultPatient,
   defaultDate
 }: CreateAppointmentFormProps) => {
+  // Determinar el patientId inicial: usar defaultPatientId o el userId del defaultPatient
+  const initialPatientId = defaultPatientId && defaultPatientId > 0
+    ? defaultPatientId
+    : (defaultPatient?.userId && defaultPatient.userId > 0 ? defaultPatient.userId : undefined);
+
   const form = useForm<CreateAppointmentFormData>({
     resolver: zodResolver(CreateAppointmentSchema),
     mode: "onSubmit",
     defaultValues: {
       doctorId: defaultDoctorId && defaultDoctorId > 0 ? defaultDoctorId : undefined,
-      patientId: defaultPatientId && defaultPatientId > 0 ? defaultPatientId : undefined,
+      patientId: initialPatientId,
       date: defaultDate || getTodayDateAR(),
       hour: "",
     },
@@ -48,6 +61,22 @@ export const CreateAppointmentForm = ({
 
   const watchDoctorId = form.watch("doctorId");
   const watchDate = form.watch("date");
+
+  // Setear el patientId cuando hay un defaultPatient (fix para react-hook-form)
+  useEffect(() => {
+    const patientIdFromDefault = defaultPatient?.userId ? Number(defaultPatient.userId) : 0;
+    const patientIdFromProp = defaultPatientId ? Number(defaultPatientId) : 0;
+    const finalPatientId = patientIdFromDefault > 0 ? patientIdFromDefault : patientIdFromProp;
+
+    if (finalPatientId > 0) {
+      // Usar reset para setear todos los valores correctamente
+      form.reset({
+        ...form.getValues(),
+        patientId: finalPatientId,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultPatient?.userId, defaultPatientId]);
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
     await onSubmit(data);
@@ -85,9 +114,11 @@ export const CreateAppointmentForm = ({
                   value={field.value}
                   onValueChange={field.onChange}
                   placeholder="Buscar paciente..."
+                  defaultPatient={defaultPatient}
+                  disabled={!!defaultPatient}
                 />
               </FormControl>
-              <FormMessage />
+              {!defaultPatient && <FormMessage />}
             </FormItem>
           )}
         />

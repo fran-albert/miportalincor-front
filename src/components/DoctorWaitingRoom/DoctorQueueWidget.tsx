@@ -4,26 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Clock, ArrowRight, UserCheck } from 'lucide-react';
-import { useDoctorWaitingQueue, useDoctorQueueStats } from '@/hooks/Queue';
+import { useDoctorDayAgenda, isWaiting } from '@/hooks/Doctor/useDoctorDayAgenda';
 
 /**
  * Widget compacto para mostrar en el Dashboard del médico.
  * Muestra un resumen de la sala de espera y acceso rápido.
+ * Usa la misma fuente de datos que la página de sala de espera.
  */
 export const DoctorQueueWidget = () => {
   const navigate = useNavigate();
-  const { data: queue, isLoading: loadingQueue } = useDoctorWaitingQueue();
-  const { data: stats, isLoading: loadingStats } = useDoctorQueueStats();
+  const { agenda, stats, isLoading } = useDoctorDayAgenda({ refetchInterval: 15000 });
 
-  const waitingPatients = queue?.filter((e) => e.status === 'WAITING') || [];
+  const waitingPatients = agenda.filter((item) => isWaiting(item.status));
   const nextPatient = waitingPatients[0];
 
-  const getWaitTime = (checkedInAt: string) => {
-    const diff = Date.now() - new Date(checkedInAt).getTime();
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ${minutes % 60}m`;
+  const getPatientName = (patient: { firstName: string; lastName: string } | null) => {
+    if (!patient) return 'Sin paciente';
+    return `${patient.lastName}, ${patient.firstName}`;
   };
 
   return (
@@ -34,15 +31,15 @@ export const DoctorQueueWidget = () => {
             <Users className="h-5 w-5 text-teal-600" />
             Mi Sala de Espera
           </CardTitle>
-          {!loadingStats && (stats?.waiting ?? 0) > 0 && (
+          {!isLoading && stats.waiting > 0 && (
             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              {stats?.waiting} en espera
+              {stats.waiting} en espera
             </Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {loadingQueue || loadingStats ? (
+        {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -59,17 +56,14 @@ export const DoctorQueueWidget = () => {
               <p className="text-xs text-muted-foreground mb-1">Próximo paciente</p>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold">{nextPatient.patientName}</p>
+                  <p className="font-semibold">{getPatientName(nextPatient.patient)}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-mono">{nextPatient.displayNumber}</span>
+                    <Clock className="h-3 w-3" />
+                    <span className="font-mono">{nextPatient.hour}</span>
                     <span>·</span>
-                    <span>{nextPatient.scheduledTime}</span>
+                    <span>{nextPatient.type === 'appointment' ? 'Turno' : 'Sobreturno'}</span>
                   </div>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {getWaitTime(nextPatient.checkedInAt)}
-                </Badge>
               </div>
             </div>
 

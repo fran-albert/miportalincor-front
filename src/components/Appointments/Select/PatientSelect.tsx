@@ -25,6 +25,12 @@ interface PatientSelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  defaultPatient?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    userName?: string;
+  };
 }
 
 export const PatientSelect = ({
@@ -32,7 +38,8 @@ export const PatientSelect = ({
   onValueChange,
   placeholder = "Seleccionar paciente",
   disabled = false,
-  className
+  className,
+  defaultPatient
 }: PatientSelectProps) => {
   const [open, setOpen] = useState(false);
 
@@ -42,10 +49,15 @@ export const PatientSelect = ({
   });
 
   // Memoize selected patient
-  const selectedPatient = useMemo(() =>
-    patients?.find(p => Number(p.userId) === value),
-    [patients, value]
-  );
+  const selectedPatient = useMemo(() => {
+    // If defaultPatient is provided, always use it (field will be disabled anyway)
+    if (defaultPatient) {
+      return defaultPatient as Patient;
+    }
+    // Otherwise check in search results
+    const fromSearch = patients?.find(p => Number(p.userId) === value);
+    return fromSearch || undefined;
+  }, [patients, value, defaultPatient]);
 
   // Memoize the select handler
   const handleSelect = useCallback((patient: Patient) => {

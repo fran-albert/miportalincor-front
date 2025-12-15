@@ -1,19 +1,27 @@
+import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TvMediaManager } from "@/components/TvMedia/TvMediaManager";
 import { Monitor, Settings } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export default function SettingsPage() {
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Configuración" },
+  ];
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="h-8 w-8 text-greenPrimary" />
-        <div>
-          <h1 className="text-2xl font-bold">Configuración</h1>
-          <p className="text-muted-foreground">
-            Gestiona las configuraciones del sistema
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 p-6">
+      <Helmet>
+        <title>Configuración</title>
+      </Helmet>
+
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Configuración"
+        description="Gestiona las configuraciones del sistema"
+        icon={<Settings className="h-6 w-6" />}
+      />
 
       <Tabs defaultValue="tv-media" className="w-full">
         <TabsList>

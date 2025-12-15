@@ -18,6 +18,12 @@ interface CreateAppointmentDialogProps {
   trigger?: React.ReactNode;
   defaultDoctorId?: number;
   defaultPatientId?: number;
+  defaultPatient?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    userName?: string;
+  };
   defaultDate?: string;
   onSuccess?: () => void;
 }
@@ -26,6 +32,7 @@ export const CreateAppointmentDialog = ({
   trigger,
   defaultDoctorId,
   defaultPatientId,
+  defaultPatient,
   defaultDate,
   onSuccess
 }: CreateAppointmentDialogProps) => {
@@ -78,6 +85,7 @@ export const CreateAppointmentDialog = ({
           isLoading={isCreating}
           defaultDoctorId={defaultDoctorId}
           defaultPatientId={defaultPatientId}
+          defaultPatient={defaultPatient}
           defaultDate={defaultDate}
         />
       </DialogContent>

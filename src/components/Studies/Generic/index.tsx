@@ -110,7 +110,7 @@ const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
     categoria: categorizeStudy(study.studyType?.name),
     descripcion: study.note || "Sin descripción",
     fecha: new Date(study.date).toLocaleDateString("es-ES"),
-    medico: "Dr. No especificado", // No viene del backend
+    medico: "No especificado", // No viene del backend
     archivo: {
       nombre: study.locationS3?.split("/").pop() || "archivo.pdf",
       tipo: (study.locationS3?.includes(".pdf")

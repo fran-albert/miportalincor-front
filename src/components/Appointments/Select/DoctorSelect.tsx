@@ -17,6 +17,7 @@ import { Check, ChevronsUpDown, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface DoctorSelectProps {
   value?: number;
@@ -77,7 +78,7 @@ export const DoctorSelect = ({
           {selectedDoctor ? (
             <span className="flex items-center gap-2">
               <Stethoscope className="h-4 w-4" />
-              Dr. {selectedDoctor.firstName} {selectedDoctor.lastName}
+              {formatDoctorName(selectedDoctor)}
             </span>
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>
@@ -111,7 +112,7 @@ export const DoctorSelect = ({
                     />
                     <div className="flex flex-col">
                       <span className="font-medium">
-                        Dr. {doctor.firstName} {doctor.lastName}
+                        {formatDoctorName(doctor)}
                       </span>
                       {doctor.specialities && doctor.specialities.length > 0 && (
                         <span className="text-xs text-muted-foreground">

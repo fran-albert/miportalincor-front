@@ -30,6 +30,7 @@ import {
   CheckCircle,
   Stethoscope,
 } from "lucide-react";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface RequestAppointmentDialogProps {
   open: boolean;
@@ -168,7 +169,7 @@ export function RequestAppointmentDialog({
           </DialogTitle>
           <DialogDescription>
             {step === "doctor" && "Elige el medico con el que deseas atenderte"}
-            {step === "date" && `Turnos con Dr. ${selectedDoctor?.firstName} ${selectedDoctor?.lastName}`}
+            {step === "date" && selectedDoctor && `Turnos con ${formatDoctorName(selectedDoctor)}`}
             {step === "time" && `Horarios disponibles para el ${selectedDate ? format(selectedDate, "d 'de' MMMM", { locale: es }) : ""}`}
             {step === "confirm" && "Revisa los datos y confirma tu turno"}
           </DialogDescription>
@@ -197,7 +198,7 @@ export function RequestAppointmentDialog({
                         <div className="flex items-center gap-2">
                           <Stethoscope className="h-4 w-4 text-greenPrimary" />
                           <span className="font-medium">
-                            Dr. {doctor.firstName} {doctor.lastName}
+                            {formatDoctorName(doctor)}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1">
@@ -275,7 +276,7 @@ export function RequestAppointmentDialog({
                   <Stethoscope className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Medico:</span>
                   <span className="font-medium">
-                    Dr. {selectedDoctor?.firstName} {selectedDoctor?.lastName}
+                    {selectedDoctor && formatDoctorName(selectedDoctor)}
                   </span>
                 </div>
                 {selectedDoctor?.specialities && selectedDoctor.specialities.length > 0 && (

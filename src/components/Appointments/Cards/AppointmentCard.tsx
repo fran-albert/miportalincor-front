@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface AppointmentCardProps {
   appointment: AppointmentFullResponseDto;
@@ -70,7 +71,7 @@ export const AppointmentCard = ({
               {appointment.patient?.firstName} {appointment.patient?.lastName}
             </span>
             <span className="text-xs text-muted-foreground">
-              Dr. {appointment.doctor?.firstName} {appointment.doctor?.lastName}
+              {appointment.doctor && formatDoctorName(appointment.doctor)}
             </span>
           </div>
         </div>
@@ -143,7 +144,7 @@ export const AppointmentCard = ({
             <div className="flex items-center gap-2">
               <Stethoscope className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                Dr. {appointment.doctor?.firstName} {appointment.doctor?.lastName}
+                {appointment.doctor && formatDoctorName(appointment.doctor)}
                 {appointment.doctor?.specialities && appointment.doctor.specialities.length > 0 && (
                   <span className="text-xs"> - {appointment.doctor.specialities[0].name}</span>
                 )}

@@ -26,6 +26,7 @@ import {
 } from "@/types/Appointment/Appointment";
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { CalendarDays, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
@@ -387,8 +388,7 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
                 <div>
                   <p className="text-sm text-muted-foreground">Médico</p>
                   <p className="font-medium">
-                    Dr. {selectedEvent.resource.data.doctor?.firstName}{" "}
-                    {selectedEvent.resource.data.doctor?.lastName}
+                    {selectedEvent.resource.data.doctor && formatDoctorName(selectedEvent.resource.data.doctor)}
                   </p>
                 </div>
               </div>

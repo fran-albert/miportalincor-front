@@ -31,6 +31,7 @@ import {
   ShieldCheck,
   UserCog,
   Clock,
+  FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -115,6 +116,20 @@ const navigationItems = [
     url: "/mis-turnos",
     icon: CalendarCheck,
     allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
+    strictRoles: true,
+  },
+  {
+    title: "Recetas",
+    url: "/mis-solicitudes-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.MY_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
+  },
+  {
+    title: "Solicitudes de Recetas",
+    url: "/solicitudes-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
     strictRoles: true,
   },
   {

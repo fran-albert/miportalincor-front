@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { User, FileText, Calendar, Activity, ArrowRight, Sparkles, X, ClipboardList } from "lucide-react";
+import { User, FileText, Calendar, ArrowRight, Sparkles, X, ClipboardList } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,20 +49,20 @@ export default function PatientHomePage({ name }: { name: string }) {
       comingSoon: false,
     },
     {
+      title: "Mis Solicitudes de Recetas",
+      description: "Solicita y gestiona tus recetas médicas",
+      icon: ClipboardList,
+      href: "/mis-solicitudes-recetas",
+      gradient: "from-cyan-500 to-cyan-600",
+      comingSoon: false,
+    },
+    {
       title: "Mis Turnos",
       description: "Visualiza tus próximas citas médicas",
       icon: Calendar,
-      href: "#",
+      href: "/mis-turnos",
       gradient: "from-purple-500 to-purple-600",
-      comingSoon: true,
-    },
-    {
-      title: "Mi Salud",
-      description: "Accede a tu información de salud y bienestar",
-      icon: Activity,
-      href: "#",
-      gradient: "from-orange-500 to-orange-600",
-      comingSoon: true,
+      comingSoon: false,
     },
   ];
 

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface OverturnCardProps {
   overturn: OverturnDetailedDto;
@@ -72,7 +73,7 @@ export const OverturnCard = ({
               </Badge>
             </span>
             <span className="text-xs text-muted-foreground">
-              Dr. {overturn.doctor?.firstName} {overturn.doctor?.lastName}
+              {overturn.doctor && formatDoctorName(overturn.doctor)}
             </span>
           </div>
         </div>
@@ -149,7 +150,7 @@ export const OverturnCard = ({
             <div className="flex items-center gap-2">
               <Stethoscope className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                Dr. {overturn.doctor?.firstName} {overturn.doctor?.lastName}
+                {overturn.doctor && formatDoctorName(overturn.doctor)}
                 {overturn.doctor?.specialities && overturn.doctor.specialities.length > 0 && (
                   <span className="text-xs"> - {overturn.doctor.specialities[0].name}</span>
                 )}

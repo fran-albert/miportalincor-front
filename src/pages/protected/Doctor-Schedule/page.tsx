@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailabil
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import { CreateDoctorAvailabilityDto } from "@/types/DoctorAvailability";
 import { useToast } from "@/hooks/use-toast";
+import { PageHeader } from "@/components/PageHeader";
 
 const DoctorSchedulePage = () => {
   const { toast } = useToast();
@@ -75,26 +77,32 @@ const DoctorSchedulePage = () => {
     }
   };
 
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Turnos", href: "/turnos" },
+    { label: "Horarios de Médicos" },
+  ];
+
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-greenPrimary flex items-center gap-3">
-            <Clock className="h-8 w-8" />
-            Horarios de Médicos
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Configure los horarios de atención de cada médico
-          </p>
-        </div>
-        <Link to="/turnos">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a Turnos
-          </Button>
-        </Link>
-      </div>
+    <div className="space-y-6 p-6">
+      <Helmet>
+        <title>Horarios de Médicos</title>
+      </Helmet>
+
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title="Horarios de Médicos"
+        description="Configure los horarios de atención de cada médico"
+        icon={<Clock className="h-6 w-6" />}
+        actions={
+          <Link to="/turnos">
+            <Button variant="outline" className="shadow-sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver a Turnos
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Doctor Selection */}
       <Card>

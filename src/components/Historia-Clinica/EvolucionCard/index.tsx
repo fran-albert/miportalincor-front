@@ -11,6 +11,7 @@ import { es } from "date-fns/locale";
 import { Evolucion } from "@/types/Antecedentes/Antecedentes";
 import { motion } from "framer-motion";
 import { Clock, Stethoscope } from "lucide-react";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface EvolucionCardProps {
   evolucion: Evolucion;
@@ -67,7 +68,7 @@ export const EvolucionCard = ({ evolucion, index }: EvolucionCardProps) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-gray-900">
-                    Dr. {evolucion.doctor.firstName} {evolucion.doctor.lastName}
+                    {formatDoctorName(evolucion.doctor)}
                   </h3>
                   {evolucion.doctor.specialities &&
                     evolucion.doctor.specialities.length > 0 && (

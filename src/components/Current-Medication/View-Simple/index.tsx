@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { formatDoctorName, getDoctorTitle } from "@/common/helpers/helpers";
 import {
   Pill,
   Calendar,
@@ -204,8 +205,8 @@ export const ViewMedicacionActualModal = ({
                     </Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
                       {medication.doctor
-                        ? `Dr. ${medication.doctor.firstName} ${medication.doctor.lastName}`
-                        : `Dr. ID: ${medication.idDoctor}`}
+                        ? formatDoctorName(medication.doctor)
+                        : `${getDoctorTitle()} ID: ${medication.idDoctor}`}
                     </p>
                   </div>
                 </div>

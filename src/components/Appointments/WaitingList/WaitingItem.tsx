@@ -5,6 +5,7 @@ import { formatTimeAR } from "@/common/helpers/timezone";
 import { User, Clock, PlayCircle, XCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 type WaitingItemType =
   | { type: 'appointment'; data: AppointmentFullResponseDto }
@@ -55,7 +56,7 @@ export const WaitingItem = ({
             <span>{formatTimeAR(data.hour)}</span>
             <span className="text-xs">•</span>
             <span>
-              Dr. {data.doctor?.firstName} {data.doctor?.lastName}
+              {data.doctor && formatDoctorName(data.doctor)}
             </span>
           </div>
         </div>

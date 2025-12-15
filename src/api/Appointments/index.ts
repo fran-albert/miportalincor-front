@@ -11,6 +11,7 @@ export { getAllAppointmentsByDoctor } from './get-all-by-doctor';
 export { getAllAppointmentsByMonthYear } from './get-all-by-month-year';
 export { getDoctorsWithAvailability } from './get-doctors-with-availability.action';
 export { getDoctorPublicInfo, getDoctorsPublicInfo, type DoctorPublicInfo } from './get-doctor-public-info.action';
+export { getAppointmentsByPatientId } from './get-by-patient-id.action';
 
 // MUTATIONS
 export { createAppointment } from './create.action';

@@ -2,7 +2,7 @@ import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { styles } from "./styles";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { Patient } from "@/types/Patient/Patient";
-import { formatDate, formatDni, calculateAge } from "@/common/helpers/helpers";
+import { formatDate, formatDni, calculateAge, formatDoctorName } from "@/common/helpers/helpers";
 
 interface AntecedentesPdfDocumentProps {
   patient: Patient;
@@ -156,7 +156,7 @@ export function AntecedentesPdfDocument({
                   )}
                   <View style={styles.antecedenteMeta}>
                     <Text style={styles.antecedenteDoctor}>
-                      Dr. {ant.doctor.firstName} {ant.doctor.lastName}
+                      {formatDoctorName(ant.doctor)}
                     </Text>
                     <Text style={styles.antecedenteDate}>
                       {formatDate(ant.createdAt)}

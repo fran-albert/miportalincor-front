@@ -22,6 +22,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
     },
   });
 
@@ -46,6 +47,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
       // Sincronizar con la cola: cuando el estado cambia, la cola tambien se actualiza
       queryClient.invalidateQueries({ queryKey: ['queue'] });
       queryClient.invalidateQueries({ queryKey: ['queueStats'] });
@@ -62,6 +64,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
     },
   });
 

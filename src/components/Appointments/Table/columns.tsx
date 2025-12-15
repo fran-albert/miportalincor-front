@@ -7,6 +7,7 @@ import {
   ALLOWED_TRANSITIONS
 } from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR } from "@/common/helpers/timezone";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { MoreHorizontal, ArrowUpDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -56,7 +57,7 @@ export const getAppointmentColumns = (config: ColumnsConfig): ColumnDef<Appointm
     header: "Médico",
     cell: ({ row }) => {
       const doctor = row.original.doctor;
-      return doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : "-";
+      return doctor ? formatDoctorName(doctor) : "-";
     },
   },
   {

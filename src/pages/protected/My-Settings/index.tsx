@@ -1,8 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
-import { MyAvailabilities, MyAbsences } from "@/components/MySettings";
-import { Settings, Calendar, CalendarOff } from "lucide-react";
+import { MyAvailabilities, MyAbsences, MyPrescriptionSettings } from "@/components/MySettings";
+import { Settings, Calendar, CalendarOff, FileText } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 
 export default function MySettingsPage() {
@@ -37,6 +37,10 @@ export default function MySettingsPage() {
             <CalendarOff className="h-4 w-4" />
             Mis Ausencias
           </TabsTrigger>
+          <TabsTrigger value="prescriptions" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Recetas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="availabilities" className="mt-6">
@@ -45,6 +49,10 @@ export default function MySettingsPage() {
 
         <TabsContent value="absences" className="mt-6">
           <MyAbsences doctorId={doctorId} />
+        </TabsContent>
+
+        <TabsContent value="prescriptions" className="mt-6">
+          <MyPrescriptionSettings />
         </TabsContent>
       </Tabs>
     </div>
