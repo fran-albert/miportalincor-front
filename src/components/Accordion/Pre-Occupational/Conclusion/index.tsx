@@ -1,5 +1,3 @@
-// src/components/Accordion/Pre-Occupational/Conclusion.tsx
-
 import {
   AccordionItem,
   AccordionTrigger,
