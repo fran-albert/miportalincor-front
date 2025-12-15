@@ -16,6 +16,7 @@ const MyPrescriptionRequestsPage = () => {
     id: doctor.id,
     firstName: doctor.firstName,
     lastName: doctor.lastName,
+    gender: doctor.gender,
     specialities: doctor.specialities?.map((s) => s.name) || [],
     notes: doctor.notes,
   }));

@@ -5,6 +5,7 @@ export interface AvailableDoctor {
   userId: string;
   firstName: string;
   lastName: string;
+  gender?: string;
   specialities: {
     id: number;
     name: string;
