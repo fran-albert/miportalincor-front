@@ -20,10 +20,12 @@ import {
   Lock,
   FileText,
   AlignLeft,
+  Pencil,
 } from "lucide-react";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { useState } from "react";
 import DeleteDataValueDialog from "@/components/Historia-Clinica/Delete/DeleteDataValueDialog";
+import { EditAntecedenteModal } from "@/components/Antecedentes/Edit";
 import {
   Tooltip,
   TooltipContent,
@@ -36,8 +38,10 @@ interface ViewAntecedenteDialogProps {
   onClose: () => void;
   antecedente: Antecedente | null;
   canDelete?: boolean;
+  canEdit?: boolean;
   timeRemaining?: string;
   onDeleteSuccess?: () => void;
+  onEditSuccess?: () => void;
 }
 
 export const ViewAntecedenteDialog = ({
@@ -45,10 +49,13 @@ export const ViewAntecedenteDialog = ({
   onClose,
   antecedente,
   canDelete = false,
+  canEdit = false,
   timeRemaining,
   onDeleteSuccess,
+  onEditSuccess,
 }: ViewAntecedenteDialogProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   if (!antecedente) return null;
 
@@ -208,6 +215,23 @@ export const ViewAntecedenteDialog = ({
             >
               Cerrar
             </Button>
+            {canEdit && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEditModal(true)}
+                    className="border-greenPrimary text-greenPrimary hover:bg-greenPrimary/10 min-w-[120px]"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-xs">Editar este antecedente</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             {canDelete && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -243,6 +267,20 @@ export const ViewAntecedenteDialog = ({
             setShowDeleteDialog(false);
             onClose();
             onDeleteSuccess?.();
+          }}
+        />
+      )}
+
+      {/* Modal de edición */}
+      {canEdit && (
+        <EditAntecedenteModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          antecedente={antecedente}
+          onEditSuccess={() => {
+            setShowEditModal(false);
+            onClose();
+            onEditSuccess?.();
           }}
         />
       )}

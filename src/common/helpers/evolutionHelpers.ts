@@ -8,9 +8,7 @@
 export const canDeleteEvolution = (createdAt: string): boolean => {
   const created = new Date(createdAt);
   const now = new Date();
-  // Corregir zona horaria sumando 3 horas al tiempo actual
-  const nowCorrected = now.getTime() + (3 * 60 * 60 * 1000);
-  const hoursDiff = (nowCorrected - created.getTime()) / (1000 * 60 * 60);
+  const hoursDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
   return hoursDiff <= 24 && hoursDiff >= 0;
 };
 
@@ -21,12 +19,9 @@ export const getDeleteTimeRemaining = (createdAt: string): string => {
   const created = new Date(createdAt);
   const now = new Date();
 
-  // Corregir zona horaria: el navegador reporta hora local como UTC
-  // Necesitamos sumar 3 horas al tiempo actual para convertir a UTC real
   const createdTime = created.getTime();
-  const nowTime = now.getTime() + (3 * 60 * 60 * 1000); // Sumar 3 horas
+  const nowTime = now.getTime();
 
-  // Calcular la diferencia correcta
   const timeDiff = nowTime - createdTime;
   const hoursDiff = timeDiff / (1000 * 60 * 60);
 
@@ -103,7 +98,7 @@ export const getEditTimeRemaining = (createdAt: string): string => {
   const now = new Date();
 
   const createdTime = created.getTime();
-  const nowTime = now.getTime() + (3 * 60 * 60 * 1000);
+  const nowTime = now.getTime();
 
   const timeDiff = nowTime - createdTime;
   const hoursDiff = timeDiff / (1000 * 60 * 60);

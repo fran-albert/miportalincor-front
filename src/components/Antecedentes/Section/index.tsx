@@ -14,6 +14,7 @@ import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { CreateAntecedenteDialog } from "../Create";
 import { ViewAntecedenteDialog } from "../View";
+import { canDeleteEvolution, getDeleteTimeRemaining } from "@/common/helpers/evolutionHelpers";
 
 type UserData = Patient | Doctor;
 
@@ -136,7 +137,7 @@ const AntecedentesSection: React.FC<Props> = ({
   return (
     <div>
       <Card className="lg:col-span-1 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
+        <CardHeader className="bg-gradient-to-r from-orange-400 to-orange-500 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5" />
@@ -218,6 +219,21 @@ const AntecedentesSection: React.FC<Props> = ({
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         antecedente={selectedAntecedenteToView}
+        canDelete={
+          selectedAntecedenteToView
+            ? canDeleteEvolution(selectedAntecedenteToView.createdAt)
+            : false
+        }
+        canEdit={
+          selectedAntecedenteToView && session?.id
+            ? selectedAntecedenteToView.doctor?.userId === Number(session.id)
+            : false
+        }
+        timeRemaining={
+          selectedAntecedenteToView
+            ? getDeleteTimeRemaining(selectedAntecedenteToView.createdAt)
+            : ""
+        }
       />
     </div>
   );

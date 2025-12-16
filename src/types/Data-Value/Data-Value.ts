@@ -42,3 +42,8 @@ export interface CreateDataValuesHCDto {
     idDoctor: string;
     dataValues: CreateDataValueHCItemDto[];
 }
+
+export interface UpdateDataValueHCDto {
+    value?: string;
+    observaciones?: string;
+}

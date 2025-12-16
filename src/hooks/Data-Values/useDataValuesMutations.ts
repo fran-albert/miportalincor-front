@@ -1,5 +1,7 @@
 import { createDataValues, createDataValuesHC } from "@/api/Data-Values/create-data-values.action";
 import { deleteDataValue, deleteDataValuesHC } from "@/api/Data-Values/delete-data-value.action";
+import { updateDataValueHC } from "@/api/Data-Values/update-data-value.action";
+import { UpdateDataValueHCDto } from "@/types/Data-Value/Data-Value";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 
@@ -56,6 +58,22 @@ export const useDataValuesMutations = () => {
         },
     });
 
+    const updateDataValuesHCMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateDataValueHCDto }) =>
+            updateDataValueHC(id, data),
+        onSuccess: (dataValue, variables, context) => {
+            // Invalidate historia-clinica queries to refresh antecedentes
+            queryClient.invalidateQueries({
+                queryKey: ['historia-clinica'],
+                type: 'all'
+            });
+            console.log("Data value updated", dataValue, variables, context);
+        },
+        onError: (error, variables, context) => {
+            console.log("Error updating data value", error, variables, context);
+        },
+    });
 
-    return { createDataValuesMutation, createDataValuesHCMutation, deleteDataValuesMutation, deleteDataValuesHCMutation };
+
+    return { createDataValuesMutation, createDataValuesHCMutation, deleteDataValuesMutation, deleteDataValuesHCMutation, updateDataValuesHCMutation };
 };
