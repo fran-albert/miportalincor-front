@@ -171,7 +171,7 @@ const CurrentMedicationSection: React.FC<CurrentMedicationSectionProps> = ({
   return (
     <div>
       <Card className="lg:col-span-1 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
+        <CardHeader className="bg-gradient-to-r from-purple-400 to-purple-500 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Pill className="h-5 w-5" />

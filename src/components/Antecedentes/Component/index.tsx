@@ -409,6 +409,11 @@ export default function AntecedentesComponent({
               ? canDeleteEvolution(selectedAntecedenteToView.createdAt)
               : false
           }
+          canEdit={
+            selectedAntecedenteToView
+              ? selectedAntecedenteToView.doctor?.userId === parseInt(doctorId)
+              : false
+          }
           timeRemaining={
             selectedAntecedenteToView
               ? getDeleteTimeRemaining(selectedAntecedenteToView.createdAt)

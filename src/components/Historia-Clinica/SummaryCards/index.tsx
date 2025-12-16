@@ -114,14 +114,14 @@ export const SummaryCards = ({ stats, isLoading = false }: SummaryCardsProps) =>
       title: "Antecedentes Registrados",
       value: stats.totalAntecedentes,
       icon: ClipboardList,
-      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      gradient: "bg-gradient-to-br from-sky-400 to-sky-500",
       subtitle: getAntecedentesText(),
     },
     {
       title: "Medicación Activa",
       value: stats.totalMedicacionActiva,
       icon: Pill,
-      gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
+      gradient: "bg-gradient-to-br from-sky-400 to-sky-500",
       subtitle: stats.totalMedicacionActiva > 0 ? `${stats.totalMedicacionActiva} medicamento${stats.totalMedicacionActiva > 1 ? "s" : ""} activo${stats.totalMedicacionActiva > 1 ? "s" : ""}` : "Sin medicación",
     },
     {
