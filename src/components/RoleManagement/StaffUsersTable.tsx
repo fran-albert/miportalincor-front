@@ -89,6 +89,18 @@ export const StaffUsersTable: React.FC<StaffUsersTableProps> = ({
     { label: "Asignar Roles" },
   ];
 
+  const customFilter = (user: StaffUser, query: string): boolean => {
+    const searchLower = query.toLowerCase();
+    return (
+      user.firstName?.toLowerCase().includes(searchLower) ||
+      user.lastName?.toLowerCase().includes(searchLower) ||
+      user.userName?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      `${user.lastName} ${user.firstName}`.toLowerCase().includes(searchLower) ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+    );
+  };
+
   return (
     <div className="space-y-6 p-6">
       <PageHeader
@@ -102,9 +114,11 @@ export const StaffUsersTable: React.FC<StaffUsersTableProps> = ({
         <DataTable
           columns={columns}
           data={users}
-          searchPlaceholder="Buscar personal..."
+          searchPlaceholder="Buscar por nombre, apellido o DNI..."
           showSearch={true}
           useServerSideSearch={false}
+          customFilter={customFilter}
+          searchQuery=" "
           isFetching={isFetching}
           canAddUser={false}
         />

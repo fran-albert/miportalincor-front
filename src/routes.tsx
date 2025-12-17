@@ -49,6 +49,8 @@ import CollaboratorStudiesPage from "./pages/protected/Collaborator/Estudios";
 import UsersComponent from "./pages/protected/Users";
 import RoleManagementPage from "./pages/protected/Role-Management";
 import AssignRolesPage from "./pages/protected/Assign-Roles";
+import SecretariesComponent from "./pages/protected/Secretaries";
+import CreateSecretaryPage from "./pages/protected/Secretary/Create";
 
 function App() {
   return (
@@ -115,6 +117,24 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <AssignRolesPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Secretarias */}
+          <Route
+            path="/secretarias"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <SecretariesComponent />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/secretarias/agregar"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <CreateSecretaryPage />
               </Private_Routes>
             }
           />

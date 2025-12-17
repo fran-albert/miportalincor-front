@@ -140,6 +140,12 @@ const systemItems = [
     allowedRoles: PERMISSIONS.SYSTEM_USERS,
   },
   {
+    title: "Secretarias",
+    url: "/secretarias",
+    icon: UserCog,
+    allowedRoles: PERMISSIONS.SECRETARIES,
+  },
+  {
     title: "Gestión de Roles",
     url: "/gestion-roles",
     icon: ShieldCheck,
@@ -148,7 +154,7 @@ const systemItems = [
   {
     title: "Asignar Roles",
     url: "/asignar-roles",
-    icon: UserCog,
+    icon: Users,
     allowedRoles: PERMISSIONS.ASSIGN_ROLES,
   },
   {
