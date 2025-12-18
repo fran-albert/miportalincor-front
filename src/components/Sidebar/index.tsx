@@ -159,7 +159,7 @@ const systemItems = [
   },
   {
     title: "Auditoría",
-    url: "#",
+    url: "/auditoria",
     icon: ClipboardList,
     allowedRoles: PERMISSIONS.AUDIT,
   },
