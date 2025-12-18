@@ -16,17 +16,20 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
 import { PasswordInput } from "../ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useDispatch } from "react-redux";
-import { loginSuccess } from "@/store/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { loginSuccess, setTwoFactorRequired } from "@/store/authSlice";
+import { RootState } from "@/store/store";
 import LoadingAnimation from "../Loading/loading";
 import { Mail, Lock, Stethoscope } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
+import TwoFactorForm from "./TwoFactorForm";
 
 const LoginComponent = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
   const dispatch = useDispatch();
+  const { twoFactor } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -42,7 +45,20 @@ const LoginComponent = () => {
         password: values.password,
       });
 
-      const { token } = response.data;
+      const data = response.data;
+
+      // Check if 2FA is required
+      if (data.requires2FA) {
+        dispatch(setTwoFactorRequired({
+          twoFactorToken: data.twoFactorToken,
+          maskedPhone: data.maskedPhone,
+          expiresIn: data.expiresIn,
+        }));
+        return;
+      }
+
+      // Normal login flow
+      const { token } = data;
       if (token) {
         localStorage.setItem("authToken", token);
         dispatch(loginSuccess({ token }));
@@ -59,6 +75,11 @@ const LoginComponent = () => {
       setIsLoading(false);
     }
   }
+
+  const handleBackFromTwoFactor = () => {
+    form.reset();
+    setError(null);
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -114,14 +135,16 @@ const LoginComponent = () => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-            {isLoading ? (
+            {twoFactor.requires2FA ? (
+              <TwoFactorForm onBack={handleBackFromTwoFactor} />
+            ) : isLoading ? (
               <div className="flex justify-center items-center h-96">
                 <LoadingAnimation />
               </div>
             ) : (
               <>
                 <div className="space-y-2 text-center">
-                  <h1 className="text-3xl font-bold text-greenPrimary">Iniciar Sesión</h1>
+                  <h1 className="text-3xl font-bold text-greenPrimary">Iniciar Sesion</h1>
                   <p className="text-gray-600">
                     Ingresa tus credenciales para acceder al sistema
                   </p>

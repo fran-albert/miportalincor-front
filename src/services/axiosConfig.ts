@@ -4,6 +4,16 @@ import { environment, currentConfig } from "@/config/environment";
 import { store } from "@/store/store";
 import { updateTokens, logout } from "@/store/authSlice";
 import { jwtDecode } from "jwt-decode";
+import { TOAST_EVENT, ToastEventDetail } from "@/hooks/Toast/toast-context";
+
+// Helper para disparar toasts desde fuera de React
+const showGlobalToast = (type: "success" | "error", title: string, description?: string) => {
+  window.dispatchEvent(
+    new CustomEvent<ToastEventDetail>(TOAST_EVENT, {
+      detail: { type, title, description },
+    })
+  );
+};
 
 const apiLaboral = axios.create({
   baseURL: environment.API_INCOR_LABORAL_URL,
@@ -65,6 +75,30 @@ const handleAuthError = async (error: AxiosError) => {
 
   // Don't try to refresh if we're already on the login or refresh endpoint
   if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+    return Promise.reject(error);
+  }
+
+  // Check if session was invalidated (logged in from another device)
+  const errorMessage = (error.response?.data as { message?: string })?.message || "";
+  const isSessionInvalidated = errorMessage.includes("sesion ha sido invalidada") ||
+                                errorMessage.includes("session has been invalidated");
+
+  if (isSessionInvalidated) {
+    // Clear local state
+    store.dispatch(logout());
+
+    // Show toast notification
+    showGlobalToast(
+      "error",
+      "Sesion cerrada",
+      "Se inicio sesion desde otro dispositivo"
+    );
+
+    // Small delay to show the toast before redirect
+    setTimeout(() => {
+      window.location.href = "/iniciar-sesion";
+    }, 1500);
+
     return Promise.reject(error);
   }
 

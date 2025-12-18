@@ -1,15 +1,36 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
     exp?: number;
 }
 
-const initialState = {
+interface TwoFactorState {
+    requires2FA: boolean;
+    twoFactorToken: string | null;
+    maskedPhone: string | null;
+    expiresIn: number | null;
+}
+
+interface AuthState {
+    user: any;
+    token: string | null;
+    tokenExpiration: string | null;
+    isAuthenticated: boolean;
+    twoFactor: TwoFactorState;
+}
+
+const initialState: AuthState = {
     user: null,
     token: localStorage.getItem("authToken") || null,
     tokenExpiration: localStorage.getItem("tokenExpiration") || null,
     isAuthenticated: !!localStorage.getItem("authToken"),
+    twoFactor: {
+        requires2FA: false,
+        twoFactorToken: null,
+        maskedPhone: null,
+        expiresIn: null,
+    },
 };
 
 const authSlice = createSlice({
@@ -53,8 +74,24 @@ const authSlice = createSlice({
                 localStorage.setItem("tokenExpiration", expirationTime.toString());
             }
         },
+        setTwoFactorRequired: (state, action: PayloadAction<{
+            twoFactorToken: string;
+            maskedPhone: string;
+            expiresIn: number;
+        }>) => {
+            state.twoFactor.requires2FA = true;
+            state.twoFactor.twoFactorToken = action.payload.twoFactorToken;
+            state.twoFactor.maskedPhone = action.payload.maskedPhone;
+            state.twoFactor.expiresIn = action.payload.expiresIn;
+        },
+        clearTwoFactor: (state) => {
+            state.twoFactor.requires2FA = false;
+            state.twoFactor.twoFactorToken = null;
+            state.twoFactor.maskedPhone = null;
+            state.twoFactor.expiresIn = null;
+        },
     },
 });
 
-export const { loginSuccess, setUser, logout, updateTokens } = authSlice.actions;
+export const { loginSuccess, setUser, logout, updateTokens, setTwoFactorRequired, clearTwoFactor } = authSlice.actions;
 export default authSlice.reducer;
