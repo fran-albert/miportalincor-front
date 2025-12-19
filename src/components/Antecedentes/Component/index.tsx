@@ -17,8 +17,6 @@ import {
   Stethoscope,
   Plus,
   Search,
-  Clock,
-  Lock,
   FileDown,
   Loader2,
 } from "lucide-react";
@@ -32,7 +30,6 @@ import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useAntecedentes } from "@/hooks/User-Historia-Clinica/useUserHistoriaClinica";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { formatDate } from "@/common/helpers/helpers";
-import { canDeleteEvolution, getDeleteTimeRemaining } from "@/common/helpers/evolutionHelpers";
 import { Patient } from "@/types/Patient/Patient";
 import { useAntecedentesPDF } from "@/hooks/Antecedentes/useAntecedentesPDF";
 
@@ -316,9 +313,7 @@ export default function AntecedentesComponent({
               </CardContent>
             </Card>
           ) : (
-            filteredAntecedentes.map((ant) => {
-              const canDelete = canDeleteEvolution(ant.createdAt);
-              return (
+            filteredAntecedentes.map((ant) => (
                 <Card
                   key={ant.id}
                   className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-greenPrimary"
@@ -336,23 +331,6 @@ export default function AntecedentesComponent({
                             >
                               {ant.dataType.name}
                             </Badge>
-                            {canDelete ? (
-                              <Badge
-                                variant="outline"
-                                className="text-green-600 border-green-600"
-                              >
-                                <Clock className="h-3 w-3 mr-1" />
-                                {getDeleteTimeRemaining(ant.createdAt)}
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="text-gray-500 border-gray-400"
-                              >
-                                <Lock className="h-3 w-3 mr-1" />
-                                No eliminable
-                              </Badge>
-                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
@@ -381,8 +359,7 @@ export default function AntecedentesComponent({
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })
+              ))
           )}
         </div>
 
@@ -406,18 +383,13 @@ export default function AntecedentesComponent({
           antecedente={selectedAntecedenteToView}
           canDelete={
             selectedAntecedenteToView
-              ? canDeleteEvolution(selectedAntecedenteToView.createdAt)
+              ? selectedAntecedenteToView.doctor?.userId === parseInt(doctorId)
               : false
           }
           canEdit={
             selectedAntecedenteToView
               ? selectedAntecedenteToView.doctor?.userId === parseInt(doctorId)
               : false
-          }
-          timeRemaining={
-            selectedAntecedenteToView
-              ? getDeleteTimeRemaining(selectedAntecedenteToView.createdAt)
-              : ""
           }
         />
     </div>
