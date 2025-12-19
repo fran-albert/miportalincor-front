@@ -126,7 +126,9 @@ export function CreateCollaboratorComponent({
         },
       };
       formData.append("addressData", JSON.stringify(addressData));
-      formData.append("email", data.email);
+      if (data.email && data.email.trim() !== "") {
+        formData.append("email", data.email);
+      }
       formData.append("idCompany", data.idCompany.toString());
       formData.append("positionJob", data.positionJob);
 

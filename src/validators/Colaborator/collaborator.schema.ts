@@ -25,8 +25,10 @@ export const collaboratorSchema = z.object({
     .string({ required_error: "Campo Requerido." }),
   gender: z.string({ required_error: "Campo Requerido." }),
   email: z
-    .string({ required_error: "Campo Requerido." })
-    .email("Debe ser un correo válido"),
+    .string()
+    .email("Debe ser un correo válido")
+    .optional()
+    .or(z.literal("")),
   idCompany: z
     .string({ required_error: "Campo Requerido." })
     .min(1, "Campo Requerido."),
