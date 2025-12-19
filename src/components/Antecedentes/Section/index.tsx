@@ -14,7 +14,7 @@ import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { CreateAntecedenteDialog } from "../Create";
 import { ViewAntecedenteDialog } from "../View";
-import { canDeleteEvolution, getDeleteTimeRemaining } from "@/common/helpers/evolutionHelpers";
+import { canDeleteEvolution } from "@/common/helpers/evolutionHelpers";
 
 type UserData = Patient | Doctor;
 
@@ -75,7 +75,7 @@ const AntecedentesSection: React.FC<Props> = ({
   if (!currentUser) return null;
 
   const handleNavigateToAntecedentes = () => {
-    const basePath = userType === 'doctor' ? 'medicos' : 'pacientes';
+    const basePath = userType === "doctor" ? "medicos" : "pacientes";
     navigate(`/${basePath}/${currentUser.slug}/historia-clinica/antecedentes`);
   };
 
@@ -228,11 +228,6 @@ const AntecedentesSection: React.FC<Props> = ({
           selectedAntecedenteToView && session?.id
             ? selectedAntecedenteToView.doctor?.userId === Number(session.id)
             : false
-        }
-        timeRemaining={
-          selectedAntecedenteToView
-            ? getDeleteTimeRemaining(selectedAntecedenteToView.createdAt)
-            : ""
         }
       />
     </div>
