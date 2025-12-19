@@ -180,7 +180,9 @@ export function EditCollaboratorComponent({ collaborator }: Props) {
       formData.append("phone", data.phone);
       formData.append("positionJob", data.positionJob);
       formData.append("gender", data.gender);
-      formData.append("email", data.email);
+      if (data.email && data.email.trim() !== "") {
+        formData.append("email", data.email);
+      }
       formData.append("idCompany", String(data.idCompany));
       // formData.append("healthInsuranceId", String(data.healthInsuranceId));
       // if (data.affiliationNumber) {

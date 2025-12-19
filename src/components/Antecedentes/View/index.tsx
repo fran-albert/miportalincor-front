@@ -15,9 +15,6 @@ import {
   Calendar,
   Stethoscope,
   Trash2,
-  AlertTriangle,
-  Clock,
-  Lock,
   FileText,
   AlignLeft,
   Pencil,
@@ -39,7 +36,6 @@ interface ViewAntecedenteDialogProps {
   antecedente: Antecedente | null;
   canDelete?: boolean;
   canEdit?: boolean;
-  timeRemaining?: string;
   onDeleteSuccess?: () => void;
   onEditSuccess?: () => void;
 }
@@ -50,7 +46,6 @@ export const ViewAntecedenteDialog = ({
   antecedente,
   canDelete = false,
   canEdit = false,
-  timeRemaining,
   onDeleteSuccess,
   onEditSuccess,
 }: ViewAntecedenteDialogProps) => {
@@ -107,23 +102,6 @@ export const ViewAntecedenteDialog = ({
                 <Badge className="text-base px-4 py-2" variant="greenPrimary">
                   {antecedente.dataType.name}
                 </Badge>
-                {canDelete ? (
-                  <Badge
-                    variant="outline"
-                    className="text-green-600 border-green-600 px-3 py-1"
-                  >
-                    <Clock className="h-3.5 w-3.5 mr-1.5" />
-                    {timeRemaining}
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="text-gray-500 border-gray-400 px-3 py-1"
-                  >
-                    <Lock className="h-3.5 w-3.5 mr-1.5" />
-                    No eliminable
-                  </Badge>
-                )}
               </div>
             </div>
 
@@ -190,20 +168,6 @@ export const ViewAntecedenteDialog = ({
               </div>
             </div>
 
-            {/* Alerta de restricción */}
-            {!canDelete && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
-                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-amber-800">
-                  <p className="font-semibold">Restricción de eliminación</p>
-                  <p className="text-xs mt-1.5 leading-relaxed">
-                    Los antecedentes solo pueden eliminarse dentro de las
-                    primeras 24 horas de su registro. Este antecedente ya no
-                    puede ser modificado o eliminado.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer mejorado con tooltips */}
