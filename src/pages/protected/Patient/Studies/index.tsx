@@ -28,7 +28,7 @@ const PatientStudiesPage = () => {
     isLoading: isLoadingStudies,
     isFetching,
   } = useGetStudyWithUrlByUserId({
-    userId: patient?.userId ? Number(patient.userId) : 0,
+    userId: patient?.userId ? String(patient.userId) : "",
     auth: true,
   });
 
