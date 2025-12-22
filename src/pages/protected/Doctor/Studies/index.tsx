@@ -30,7 +30,7 @@ const DoctorStudiesPage = () => {
     isLoading: isLoadingStudies,
     isFetching,
   } = useGetStudyWithUrlByUserId({
-    userId: doctor?.userId ? Number(doctor.userId) : 0,
+    userId: doctor?.userId ? String(doctor.userId) : "",
     auth: true,
   });
 

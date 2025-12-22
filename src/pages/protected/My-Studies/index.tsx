@@ -6,7 +6,7 @@ import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUs
 
 function MyStudiesPage() {
   const { session } = useUserRole();
-  const userId = session?.id ? Number(session.id) : 0;
+  const userId = session?.id || "";
 
   const { data: studies, isLoading: isLoadingStudies } =
     useGetStudyWithUrlByUserId({
