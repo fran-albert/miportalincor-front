@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   auth: boolean;
-  userId: number;
+  userId: string;
 }
 
 export const useGetStudyWithUrlByUserId = ({ auth = true, userId }: Props) => {
-  const isValidUserId = Boolean(userId && !isNaN(userId) && userId > 0);
+  const isValidUserId = Boolean(userId && userId.length > 0);
 
   const { isLoading, isError, error, data, isFetching } = useQuery({
     queryKey: ["studies-by-user-id", { userId }],

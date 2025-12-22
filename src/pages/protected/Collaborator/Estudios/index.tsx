@@ -28,7 +28,7 @@ const CollaboratorStudiesPage = () => {
     isLoading: isLoadingStudies,
     isFetching,
   } = useGetStudyWithUrlByUserId({
-    userId: id,
+    userId: String(id),
     auth: true,
   });
 
