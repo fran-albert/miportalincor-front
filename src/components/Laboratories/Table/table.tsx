@@ -111,11 +111,16 @@ export const LabPatientTable = ({
   };
   const handleAddNewColumn = (newDate: string) => {
     setDates((prevDates) => {
-      if (prevDates.includes(newDate)) {
+      // Convert YYYY-MM-DD (from input) to DD-MM-YYYY for display consistency
+      const formattedNewDate = newDate.includes("-") && newDate.split("-")[0].length === 4
+        ? newDate.split("-").reverse().join("-")  // YYYY-MM-DD -> DD-MM-YYYY
+        : newDate;
+
+      if (prevDates.includes(formattedNewDate)) {
         return prevDates;
       }
       // Add new date and sort chronologically (format: DD-MM-YYYY)
-      const updatedDates = [...prevDates, newDate].sort((a, b) => {
+      const updatedDates = [...prevDates, formattedNewDate].sort((a, b) => {
         const [dayA, monthA, yearA] = a.split("-").map(Number);
         const [dayB, monthB, yearB] = b.split("-").map(Number);
         const dateA = new Date(yearA, monthA - 1, dayA);
@@ -181,10 +186,11 @@ export const LabPatientTable = ({
           }
         } else {
           // Crear nuevo estudio con sus valores
+          // Normalize date to YYYY-MM-DD format for backend
           const newEntry: BloodTestDataRequest = {
             userId: idUser,
             note,
-            date: cleanDate,
+            date: normalizeDate(cleanDate),
             bloodTestDatas: Object.entries(tests).map(
               ([bloodTestId, value]) => ({
                 id: 0,
