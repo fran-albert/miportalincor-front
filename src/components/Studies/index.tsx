@@ -290,8 +290,7 @@ export default function PatientStudies({
                             ? category.label.length > 12
                               ? category.label.substring(0, 10) + "..."
                               : category.label
-                            : category.label}{" "}
-                          ({count})
+                            : category.label}
                         </span>
                       </Button>
                     );

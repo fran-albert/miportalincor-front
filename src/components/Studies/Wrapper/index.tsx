@@ -80,7 +80,6 @@ export const StudiesWrapper: React.FC<BaseStudiesWrapperProps> = ({
             title={getPageTitle()}
             description={getPageDescription()}
             icon={<FileText className="h-6 w-6" />}
-            badge={studies.length}
           />
         </div>
       )}
