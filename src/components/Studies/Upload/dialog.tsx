@@ -36,6 +36,10 @@ interface StudyFormData {
   DoctorId?: string;
 }
 
+// IDs de tipos de estudio que requieren médico obligatorio
+// 2 = Ecografía, 3 = Ergometría, 6 = Ecocardiograma (ajustar según tu base de datos)
+const STUDY_TYPES_REQUIRING_DOCTOR = [2, 3, 6];
+
 export default function StudyDialog({ idUser }: AddStudyProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const toggleDialog = () => setIsOpen(!isOpen);
@@ -45,7 +49,7 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const { uploadStudyMutation } = useStudyMutations();
-  const { promiseToast } = useToastContext();
+  const { promiseToast, showToast } = useToastContext();
 
   const onSubmit: SubmitHandler<StudyFormData> = async (data) => {
     const formData = new FormData();
