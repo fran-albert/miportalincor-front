@@ -57,6 +57,7 @@ import AssignRolesPage from "./pages/protected/Assign-Roles";
 import SettingsPage from "./pages/protected/Settings";
 import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Requests/page";
 import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
+import { FEATURE_FLAGS } from "./common/constants/featureFlags";
 
 function App() {
   return (
@@ -88,14 +89,16 @@ function App() {
           />
 
           {/* Sala de Espera del Médico */}
-          <Route
-            path="/mi-sala-de-espera"
-            element={
-              <Private_Routes allowedRoles={["Medico"]}>
-                <DoctorWaitingRoomPage />
-              </Private_Routes>
-            }
-          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/mi-sala-de-espera"
+              element={
+                <Private_Routes allowedRoles={["Medico"]}>
+                  <DoctorWaitingRoomPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Configuración del Médico */}
           <Route
@@ -108,24 +111,28 @@ function App() {
           />
 
           {/* Turnos */}
-          <Route
-            path="/turnos"
-            element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
-                <ShiftsPage />
-              </Private_Routes>
-            }
-          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/turnos"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                  <ShiftsPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Horarios de Médicos */}
-          <Route
-            path="/horarios-medicos"
-            element={
-              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
-                <DoctorSchedulePage />
-              </Private_Routes>
-            }
-          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/horarios-medicos"
+              element={
+                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                  <DoctorSchedulePage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Usuarios del Sistema */}
           <Route
@@ -194,14 +201,16 @@ function App() {
               </Private_Routes>
             }
           />
-          <Route
-            path="/mis-turnos"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyAppointmentsPage />
-              </Private_Routes>
-            }
-          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/mis-turnos"
+              element={
+                <Private_Routes allowedRoles={["Paciente"]}>
+                  <MyAppointmentsPage />
+                </Private_Routes>
+              }
+            />
+          )}
           <Route
             path="/mis-solicitudes-recetas"
             element={
@@ -310,14 +319,16 @@ function App() {
               </Private_Routes>
             }
           />
-          <Route
-            path="/pacientes/:slug/turnos"
-            element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
-                <PatientAppointmentsPage />
-              </Private_Routes>
-            }
-          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/pacientes/:slug/turnos"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                  <PatientAppointmentsPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Médicos */}
           <Route
