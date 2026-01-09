@@ -11,10 +11,14 @@ import useUserRole from "@/hooks/useRoles";
 import { Helmet } from "react-helmet-async";
 
 const MyProfilePage = () => {
-  const { session, isDoctor, isPatient, isSecretary } = useUserRole();
+  const { session, isDoctor, isPatient, isSecretary, isAdmin } = useUserRole();
   const userId = session?.id;
-  const { user: secretary, isLoading: isLoadingSecretary } = useUser({
-    auth: isSecretary && userId !== undefined,
+
+  // Admin y Secretaria usan el mismo componente de perfil
+  const isStaff = isSecretary || isAdmin;
+
+  const { user: staffUser, isLoading: isLoadingStaff } = useUser({
+    auth: isStaff && userId !== undefined,
     id: userId ?? "",
   });
 
@@ -36,7 +40,7 @@ const MyProfilePage = () => {
     );
   }
 
-  if (isSecretary && isLoadingSecretary) {
+  if (isStaff && isLoadingStaff) {
     return (
       <div className="space-y-6 p-6">
         <SecretaryProfileSkeleton />
@@ -65,12 +69,8 @@ const MyProfilePage = () => {
     );
   }
 
-  if (isSecretary && secretary) {
-    return (
-      <div className="space-y-6 p-6">
-        <SecretaryProfileComponent user={secretary} />
-      </div>
-    );
+  if (isStaff && staffUser) {
+    return <SecretaryProfileComponent user={staffUser} />;
   }
 
   if (isPatient && patient) {

@@ -2,7 +2,7 @@ import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { styles } from "./styles";
 import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
 import { Patient } from "@/types/Patient/Patient";
-import { formatDateArgentina, formatDni, calculateAge } from "@/common/helpers/helpers";
+import { formatDateArgentina, formatDni, calculateAge, formatDoctorName } from "@/common/helpers/helpers";
 
 interface MedicacionActualPdfDocumentProps {
   patient: Patient;
@@ -150,8 +150,7 @@ export function MedicacionActualPdfDocument({
                       <View style={styles.medicationItem}>
                         <Text style={styles.medicationLabel}>Médico:</Text>
                         <Text style={styles.medicationValue}>
-                          Dr. {medicacionActual.doctor.firstName}{" "}
-                          {medicacionActual.doctor.lastName}
+                          {formatDoctorName(medicacionActual.doctor)}
                         </Text>
                       </View>
                     )}
@@ -207,8 +206,7 @@ export function MedicacionActualPdfDocument({
                         <View style={styles.medicationItem}>
                           <Text style={styles.medicationLabel}>Médico:</Text>
                           <Text style={styles.medicationValue}>
-                            Dr. {medication.doctor.firstName}{" "}
-                            {medication.doctor.lastName}
+                            {formatDoctorName(medication.doctor)}
                           </Text>
                         </View>
                       )}

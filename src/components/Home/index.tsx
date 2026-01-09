@@ -1,6 +1,7 @@
 import { WelcomeHero } from "./Dashboard/WelcomeHero";
 import { StatsCard } from "./Dashboard/StatsCard";
 import { QuickAccessCard } from "./Dashboard/QuickAccessCard";
+import { DoctorQueueWidget } from "@/components/DoctorWaitingRoom";
 import { useDashboardStats } from "@/hooks/Dashboard/useDashboardStats";
 import {
   Users,
@@ -119,6 +120,15 @@ export default function HomeComponent({ name }: { name: string }) {
     <div className="space-y-6 p-6">
       {/* Hero Section */}
       <WelcomeHero name={name} />
+
+      {/* Doctor Waiting Room Widget - Solo para médicos */}
+      {isDoctor && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-1">
+            <DoctorQueueWidget />
+          </div>
+        </div>
+      )}
 
       {/* Stats Section */}
       <div className="space-y-4">

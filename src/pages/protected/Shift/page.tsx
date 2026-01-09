@@ -1,104 +1,123 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Helmet } from "react-helmet-async";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ArrowLeft, Bell, CheckCircle2 } from "lucide-react";
+import { Calendar, List, RefreshCcw, LayoutGrid, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import {
+  BigCalendar,
+  MonthCalendar,
+  AppointmentsTable,
+  CreateAppointmentDialog,
+  CreateOverturnDialog,
+} from "@/components/Appointments";
+import { QueuePanel } from "@/components/Queue";
+import { PageHeader } from "@/components/PageHeader";
+import { useQueryClient } from "@tanstack/react-query";
+import useUserRole from "@/hooks/useRoles";
+import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
-  const features = [
-    "Gestión completa de turnos médicos",
-    "Calendario visual e intuitivo",
-    "Recordatorios automáticos por email y SMS",
-    "Historial de citas por paciente",
-    "Integración con agenda de médicos",
+  const queryClient = useQueryClient();
+  const { isDoctor } = useUserRole();
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['overturns'] });
+    queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+    queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+    queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+    queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+  };
+
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: isDoctor ? "Mis Turnos" : "Turnos" },
   ];
 
-  return (
-    <div className="flex flex-1 flex-col gap-6 p-6 min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-greenPrimary flex items-center gap-3">
-            <Calendar className="h-8 w-8" />
-            Gestión de Turnos
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Sistema de administración de citas médicas
-          </p>
-        </div>
-        <Link to="/inicio">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al inicio
-          </Button>
-        </Link>
-      </div>
-
-      {/* Coming Soon Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex-1 flex items-center justify-center"
+  const headerActions = (
+    <div className="flex items-center gap-2 flex-wrap">
+      {!isDoctor && (
+        <>
+          <CreateAppointmentDialog />
+          <CreateOverturnDialog />
+          <Link to="/horarios-medicos">
+            <Button variant="outline" className="shadow-sm">
+              <Clock className="mr-2 h-4 w-4" />
+              Horarios
+            </Button>
+          </Link>
+        </>
+      )}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleRefresh}
+        className="shadow-sm hover:shadow-md transition-shadow"
       >
-        <Card className="max-w-2xl w-full border-2 border-dashed border-greenPrimary/30 bg-gradient-to-br from-greenPrimary/5 to-teal-600/5">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto mb-4 p-4 rounded-full bg-amber-100">
-              <Clock className="h-12 w-12 text-amber-600" />
-            </div>
-            <div className="flex justify-center mb-4">
-              <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200 px-4 py-1 text-sm">
-                <Bell className="w-4 h-4 mr-2" />
-                Próximamente
-              </Badge>
-            </div>
-            <CardTitle className="text-2xl font-bold text-gray-800">
-              Estamos trabajando en esta funcionalidad
-            </CardTitle>
-            <CardDescription className="text-base mt-2">
-              El sistema de gestión de turnos estará disponible muy pronto.
-              Estamos desarrollando una experiencia completa para la administración de citas médicas.
-            </CardDescription>
-          </CardHeader>
+        <RefreshCcw className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
-          <CardContent className="space-y-6">
-            {/* Features list */}
-            <div className="bg-white/50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-greenPrimary" />
-                Características que incluirá:
-              </h3>
-              <ul className="space-y-2">
-                {features.map((feature, index) => (
-                  <motion.li
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="flex items-center gap-2 text-gray-600"
-                  >
-                    <div className="h-1.5 w-1.5 rounded-full bg-greenPrimary" />
-                    {feature}
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
+  return (
+    <div className="space-y-6 p-6">
+      <Helmet>
+        <title>{isDoctor ? "Mis Turnos" : "Gestión de Turnos"}</title>
+      </Helmet>
 
-            {/* CTA */}
-            <div className="text-center pt-4">
-              <p className="text-sm text-gray-500 mb-4">
-                ¿Tenés alguna sugerencia para esta funcionalidad?
-              </p>
-              <Link to="/inicio">
-                <Button className="bg-greenPrimary hover:bg-greenPrimary/90">
-                  Explorar otras secciones
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <PageHeader
+        breadcrumbItems={breadcrumbItems}
+        title={isDoctor ? "Mis Turnos" : "Gestión de Turnos"}
+        description={
+          isDoctor
+            ? "Visualización de tus turnos y sobreturnos"
+            : "Administración de citas médicas y sobreturnos"
+        }
+        icon={<Calendar className="h-6 w-6" />}
+        actions={headerActions}
+      />
+
+      {/* Content: diferentes vistas según rol */}
+      {isDoctor ? (
+        <BigCalendar autoFilterForDoctor={true} />
+      ) : (
+        <Tabs defaultValue="queue" className="flex-1">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+            <TabsTrigger value="queue" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Cola
+            </TabsTrigger>
+            <TabsTrigger value="big-calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendario
+            </TabsTrigger>
+            <TabsTrigger value="simple-calendar" className="flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4" />
+              Vista Simple
+            </TabsTrigger>
+            <TabsTrigger value="table" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Lista
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="queue" className="mt-6">
+            <QueuePanel />
+          </TabsContent>
+
+          <TabsContent value="big-calendar" className="mt-6">
+            <BigCalendar />
+          </TabsContent>
+
+          <TabsContent value="simple-calendar" className="mt-6">
+            <MonthCalendar />
+          </TabsContent>
+
+          <TabsContent value="table" className="mt-6">
+            <AppointmentsTable />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };

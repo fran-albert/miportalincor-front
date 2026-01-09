@@ -11,6 +11,7 @@ import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutatio
 import { CreateDataValuesHCDto } from "@/types/Data-Value/Data-Value";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 interface CreateAntecedenteDialogProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export const CreateAntecedenteDialog = ({
       fechaAlta: new Date().toLocaleDateString("en-CA", {
         timeZone: "America/Argentina/Buenos_Aires",
       }),
-      medico: doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : "",
+      medico: doctor ? formatDoctorName(doctor) : "",
       observaciones: "",
     },
   });
@@ -165,7 +166,7 @@ export const CreateAntecedenteDialog = ({
                       Médico Responsable
                     </p>
                     <p className="text-xs text-blue-700 mt-1">
-                      Dr. {doctor.firstName} {doctor.lastName}
+                      {formatDoctorName(doctor)}
                     </p>
                   </div>
                 </div>

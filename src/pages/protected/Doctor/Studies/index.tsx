@@ -1,4 +1,5 @@
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useGetStudyWithUrlByUserId } from "@/hooks/Study/useGetStudyWithUrlByUserId";
@@ -71,7 +72,7 @@ const DoctorStudiesPage = () => {
         </title>
         <meta
           name="description"
-          content={`Estudios médicos del Dr./Dra. ${doctor?.firstName} ${doctor?.lastName}`}
+          content={`Estudios médicos del ${doctor ? formatDoctorName(doctor) : 'médico'}`}
         />
       </Helmet>
 

@@ -9,6 +9,7 @@ import { useCreateCurrentMedication } from "@/hooks/Current-Medication/useCurren
 import { CreateCurrentMedicationDto } from "@/types/Current-Medication/Current-Medication";
 import { Pill, Calendar, User, FileText, Plus } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 type UserData = Patient | Doctor;
 
@@ -154,7 +155,7 @@ export default function CreateCurrentMedicationModal({
                       Médico Responsable
                     </p>
                     <p className="text-xs text-blue-700 mt-1">
-                      Dr. {doctor.firstName} {doctor.lastName}
+                      {formatDoctorName(doctor)}
                     </p>
                   </div>
                 </div>

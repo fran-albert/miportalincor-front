@@ -1,7 +1,7 @@
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { StyleSheet } from "@react-pdf/renderer";
 import { Patient } from "@/types/Patient/Patient";
-import { formatDni, calculateAge } from "@/common/helpers/helpers";
+import { formatDni, calculateAge, formatDoctorName } from "@/common/helpers/helpers";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
 import { EvolutionTableRow } from "../Table/columns";
 
@@ -309,7 +309,7 @@ export function EvolucionesPdfDocument({
                       {dateTime.date} - {dateTime.time}
                     </Text>
                     <Text style={styles.evolutionDoctor}>
-                      Dr. {evolution.doctor.firstName} {evolution.doctor.lastName}
+                      {formatDoctorName(evolution.doctor)}
                       {evolution.doctor.specialities?.[0] &&
                         ` - ${evolution.doctor.specialities[0].name}`}
                     </Text>

@@ -21,6 +21,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { CreateAntecedenteDialog } from "@/components/Antecedentes/Create";
 import { ViewAntecedenteDialog } from "@/components/Antecedentes/View";
 import BreadcrumbComponent from "@/components/Breadcrumb";
@@ -342,7 +343,7 @@ export default function AntecedentesComponent({
                             <div className="flex items-center gap-1">
                               <User className="h-3.5 w-3.5 text-gray-400" />
                               <span className="font-semibold text-gray-900">
-                                Dr. {ant.doctor.firstName} {ant.doctor.lastName}
+                                {formatDoctorName(ant.doctor)}
                               </span>
                             </div>
                           </div>

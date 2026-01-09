@@ -1,5 +1,6 @@
 import React from "react";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
+import { getDoctorTitle } from "@/common/helpers/helpers";
 
 interface Props {
   doctorId: string;
@@ -19,14 +20,14 @@ export const DoctorSignature: React.FC<Props> = ({ doctorId }) => {
       {doctor.firma && (
         <img
           src={doctor.firma}
-          alt={`Firma Dr. ${doctor.lastName}`}
+          alt={`Firma ${getDoctorTitle(doctor.gender)} ${doctor.lastName}`}
           className="h-16 object-contain"
         />
       )}
       {doctor.sello && (
         <img
           src={doctor.sello}
-          alt={`Sello Dr. ${doctor.lastName}`}
+          alt={`Sello ${getDoctorTitle(doctor.gender)} ${doctor.lastName}`}
           className="h-12 object-contain"
         />
       )}

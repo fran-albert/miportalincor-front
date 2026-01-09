@@ -13,7 +13,7 @@ import useUserRole from "@/hooks/useRoles";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
-import { formatDateArgentina } from "@/common/helpers/helpers";
+import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
 import { useMedicacionActualPDF } from "@/hooks/Current-Medication/useMedicacionActualPDF";
 
 type UserData = Patient | Doctor;
@@ -254,8 +254,7 @@ export default function MedicacionActualComponent({
                       <div className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5 text-gray-400" />
                         <span className="font-semibold text-gray-900">
-                          Dr. {currentMedication.doctor.firstName}{" "}
-                          {currentMedication.doctor.lastName}
+                          {formatDoctorName(currentMedication.doctor)}
                         </span>
                       </div>
                     )}
@@ -373,8 +372,7 @@ export default function MedicacionActualComponent({
                         <div className="flex items-center gap-1">
                           <User className="h-3.5 w-3.5 text-gray-400" />
                           <span className="font-semibold text-gray-900">
-                            Dr. {medication.doctor.firstName}{" "}
-                            {medication.doctor.lastName}
+                            {formatDoctorName(medication.doctor)}
                           </span>
                         </div>
                       )}

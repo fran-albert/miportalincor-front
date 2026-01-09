@@ -35,12 +35,17 @@ import PatientStudiesPage from "./pages/protected/Patient/Studies";
 import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
 import PatientEvolucionesPage from "./pages/protected/Patient/Evoluciones";
 import PatientMedicacionActualPage from "./pages/protected/Patient/Medicacion-Actual";
+import PatientAppointmentsPage from "./pages/protected/Patient/Appointments";
 import DoctorHistoryPage from "./pages/protected/Doctor/Historia-Clinica";
 import DoctorStudiesPage from "./pages/protected/Doctor/Studies";
 import DoctorEvolucionesPage from "./pages/protected/Doctor/Evoluciones";
 import DoctorAntecedentesPage from "./pages/protected/Doctor/Antecedentes";
 import DoctorMedicacionActualPage from "./pages/protected/Doctor/Medicacion-Actual";
 import ShiftsPage from "./pages/protected/Shift/page";
+import MyAppointmentsPage from "./pages/protected/My-Appointments/page";
+import DoctorSchedulePage from "./pages/protected/Doctor-Schedule/page";
+import DoctorWaitingRoomPage from "./pages/protected/Doctor-Waiting-Room";
+import MySettingsPage from "./pages/protected/My-Settings";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import CollaboratorExamenesPage from "./pages/protected/Collaborator/Examenes";
 import CollaboratorEvolucionesPage from "./pages/protected/Collaborator/Evoluciones";
@@ -52,6 +57,10 @@ import AssignRolesPage from "./pages/protected/Assign-Roles";
 import SecretariesComponent from "./pages/protected/Secretaries";
 import CreateSecretaryPage from "./pages/protected/Secretary/Create";
 import AuditPage from "./pages/protected/Audit";
+import SettingsPage from "./pages/protected/Settings";
+import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Requests/page";
+import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
+import { FEATURE_FLAGS } from "./common/constants/featureFlags";
 
 function App() {
   return (
@@ -82,15 +91,51 @@ function App() {
             }
           />
 
-          {/* Turnos */}
+          {/* Sala de Espera del Médico */}
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/mi-sala-de-espera"
+              element={
+                <Private_Routes allowedRoles={["Medico"]}>
+                  <DoctorWaitingRoomPage />
+                </Private_Routes>
+              }
+            />
+          )}
+
+          {/* Configuración del Médico */}
           <Route
-            path="/turnos"
+            path="/mi-configuracion"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
-                <ShiftsPage />
+              <Private_Routes allowedRoles={["Medico"]}>
+                <MySettingsPage />
               </Private_Routes>
             }
           />
+
+          {/* Turnos */}
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/turnos"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                  <ShiftsPage />
+                </Private_Routes>
+              }
+            />
+          )}
+
+          {/* Horarios de Médicos */}
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/horarios-medicos"
+              element={
+                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                  <DoctorSchedulePage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Usuarios del Sistema */}
           <Route
@@ -150,6 +195,16 @@ function App() {
             }
           />
 
+          {/* Configuración */}
+          <Route
+            path="/configuracion"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <SettingsPage />
+              </Private_Routes>
+            }
+          />
+
           {/* Especialidades */}
           <Route
             path="/especialidades"
@@ -174,6 +229,34 @@ function App() {
             element={
               <Private_Routes>
                 <MyStudiesPage />
+              </Private_Routes>
+            }
+          />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/mis-turnos"
+              element={
+                <Private_Routes allowedRoles={["Paciente"]}>
+                  <MyAppointmentsPage />
+                </Private_Routes>
+              }
+            />
+          )}
+          <Route
+            path="/mis-solicitudes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyPrescriptionRequestsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Solicitudes de Recetas - Médico */}
+          <Route
+            path="/solicitudes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <DoctorPrescriptionRequestsPage />
               </Private_Routes>
             }
           />
@@ -267,6 +350,16 @@ function App() {
               </Private_Routes>
             }
           />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/pacientes/:slug/turnos"
+              element={
+                <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                  <PatientAppointmentsPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Médicos */}
           <Route

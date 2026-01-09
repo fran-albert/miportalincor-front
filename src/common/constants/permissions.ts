@@ -35,17 +35,46 @@ export const PERMISSIONS = {
   // Perfil y Estudios Personales
   MY_PROFILE: [Role.PACIENTE, Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
   MY_STUDIES: [Role.PACIENTE],
+  MY_APPOINTMENTS: [Role.PACIENTE],
+
+  // Sala de Espera del Médico
+  DOCTOR_WAITING_ROOM: [Role.MEDICO],
+
+  // Configuración del Médico
+  MY_SETTINGS: [Role.MEDICO],
+
+  // Solicitudes de Recetas
+  MY_PRESCRIPTION_REQUESTS: [Role.PACIENTE],
+  DOCTOR_PRESCRIPTION_REQUESTS: [Role.MEDICO],
 } as const;
 
 /**
- * Verifica si un usuario con roles específicos tiene acceso a un recurso
+ * Permisos que son exclusivos del rol (sin override de admin)
+ * Estos ítems solo aparecen para el rol específico
  */
-export const hasPermission = (userRoles: string[], allowedRoles: readonly string[]): boolean => {
-  if (!userRoles || userRoles.length === 0) return false;
-  if (!allowedRoles || allowedRoles.length === 0) return true; // Si no hay restricciones, permitir
+export const STRICT_PERMISSIONS = [
+  'DOCTOR_WAITING_ROOM',
+  'MY_SETTINGS',
+  'MY_STUDIES',
+  'MY_APPOINTMENTS',
+  'MY_PRESCRIPTION_REQUESTS',
+  'DOCTOR_PRESCRIPTION_REQUESTS',
+] as const;
 
-  // El Administrador siempre tiene acceso a todo
-  if (userRoles.includes(Role.ADMINISTRADOR)) return true;
+/**
+ * Verifica si un usuario con roles específicos tiene acceso a un recurso
+ * @param skipAdminOverride - Si es true, el admin NO tiene acceso automático
+ */
+export const hasPermission = (
+  userRoles: string[],
+  allowedRoles: readonly string[],
+  skipAdminOverride: boolean = false
+): boolean => {
+  if (!userRoles || userRoles.length === 0) return false;
+  if (!allowedRoles || allowedRoles.length === 0) return true;
+
+  // El Administrador siempre tiene acceso, excepto en permisos estrictos
+  if (!skipAdminOverride && userRoles.includes(Role.ADMINISTRADOR)) return true;
 
   return userRoles.some(role => allowedRoles.includes(role));
 };
@@ -53,15 +82,15 @@ export const hasPermission = (userRoles: string[], allowedRoles: readonly string
 /**
  * Filtra items de menú según los roles del usuario
  */
-export const filterMenuItems = <T extends { allowedRoles?: readonly string[] }>(
+export const filterMenuItems = <T extends { allowedRoles?: readonly string[]; strictRoles?: boolean }>(
   items: T[],
   userRoles: string[]
 ): T[] => {
   return items.filter(item => {
-    // Si el item no tiene restricciones de roles, mostrarlo a todos
     if (!item.allowedRoles || item.allowedRoles.length === 0) return true;
 
-    // Verificar si el usuario tiene al menos uno de los roles permitidos
-    return hasPermission(userRoles, item.allowedRoles);
+    // Si tiene strictRoles, no aplicar override de admin
+    const skipAdminOverride = item.strictRoles === true;
+    return hasPermission(userRoles, item.allowedRoles, skipAdminOverride);
   });
 };

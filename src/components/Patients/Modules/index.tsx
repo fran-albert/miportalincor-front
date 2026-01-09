@@ -6,6 +6,7 @@ interface PatientModulesProps {
   onHistoriaClinicaClick: () => void;
   onEstudiosClick: () => void;
   onControlNutricionalClick?: () => void;
+  onCitasMedicasClick?: () => void;
   totalStudies?: number;
 }
 
@@ -13,6 +14,7 @@ export default function PatientModules({
   onHistoriaClinicaClick,
   onEstudiosClick,
   onControlNutricionalClick,
+  onCitasMedicasClick,
   totalStudies,
 }: PatientModulesProps) {
   const { isDoctor } = useUserRole();
@@ -48,9 +50,8 @@ export default function PatientModules({
       description: "Programar y gestionar citas del paciente",
       icon: Calendar,
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
-      onClick: () => {},
+      onClick: onCitasMedicasClick || (() => {}),
       visible: true,
-      comingSoon: true,
     },
   ];
 
@@ -75,7 +76,7 @@ export default function PatientModules({
             index={index}
             badge={module.badge}
             disabled={"disabled" in module && Boolean(module.disabled)}
-            comingSoon={"comingSoon" in module && module.comingSoon}
+            comingSoon={"comingSoon" in module && Boolean((module as { comingSoon?: boolean }).comingSoon)}
           />
         ))}
       </div>

@@ -3,6 +3,8 @@ import { DoctorProfileSkeleton } from "@/components/Skeleton/Doctor";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { useParams } from "react-router-dom";
 import BreadcrumbComponent from "@/components/Breadcrumb";
+import { DoctorNotificationSettingsCard } from "@/components/Doctor/NotificationSettings/DoctorNotificationSettingsCard";
+import useUserRole from "@/hooks/useRoles";
 
 const DoctorProfilePage = () => {
   const params = useParams();
@@ -14,6 +16,8 @@ const DoctorProfilePage = () => {
     auth: true,
     id,
   });
+  const { isSecretary, isAdmin } = useUserRole();
+  const canConfigureNotifications = isSecretary || isAdmin;
 
    const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -39,7 +43,16 @@ const DoctorProfilePage = () => {
 
   return (
     <div className="space-y-4 p-6">
-      {doctor && <DoctorProfileComponent doctor={doctor} breadcrumbItems={breadcrumbItems} />}
+      {doctor && (
+        <>
+          <DoctorProfileComponent doctor={doctor} breadcrumbItems={breadcrumbItems} />
+          {canConfigureNotifications && (
+            <div className="mt-6">
+              <DoctorNotificationSettingsCard doctorId={doctor.userId} />
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

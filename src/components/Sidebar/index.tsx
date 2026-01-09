@@ -16,6 +16,7 @@ import {
   ChevronDown,
   TestTube,
   Calendar,
+  CalendarCheck,
   Shield,
   UserCircle,
   Stethoscope,
@@ -29,6 +30,8 @@ import {
   FileBarChart,
   ShieldCheck,
   UserCog,
+  Clock,
+  FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,6 +45,7 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
+import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import { Briefcase } from "lucide-react";
 
 const navigationItems = [
@@ -86,13 +90,51 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
-    comingSoon: true,
+    featureFlag: 'APPOINTMENTS_ENABLED' as const,
+  },
+  {
+    title: "Mi Sala de Espera",
+    url: "/mi-sala-de-espera",
+    icon: Clock,
+    allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
+    strictRoles: true,
+    featureFlag: 'APPOINTMENTS_ENABLED' as const,
+  },
+  {
+    title: "Mi Configuración",
+    url: "/mi-configuracion",
+    icon: Settings,
+    allowedRoles: PERMISSIONS.MY_SETTINGS,
+    strictRoles: true,
   },
   {
     title: "Mis Estudios",
     url: "/mis-estudios",
     icon: TestTube,
     allowedRoles: PERMISSIONS.MY_STUDIES,
+    strictRoles: true,
+  },
+  {
+    title: "Mis Turnos",
+    url: "/mis-turnos",
+    icon: CalendarCheck,
+    allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
+    strictRoles: true,
+    featureFlag: 'APPOINTMENTS_ENABLED' as const,
+  },
+  {
+    title: "Recetas",
+    url: "/mis-solicitudes-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.MY_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
+  },
+  {
+    title: "Solicitudes de Recetas",
+    url: "/solicitudes-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
   },
   {
     title: "Incor Laboral",
@@ -129,7 +171,7 @@ const reportsItems = [
 const systemItems = [
   {
     title: "Configuración",
-    url: "#",
+    url: "/configuracion",
     icon: Settings,
     allowedRoles: PERMISSIONS.SETTINGS,
   },
@@ -173,8 +215,10 @@ export function AppSidebar() {
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
 
-  // Filtrar items del menú según roles del usuario
-  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
+  // Filtrar items del menú según roles del usuario y feature flags
+  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles).filter(
+    (item) => !item.featureFlag || FEATURE_FLAGS[item.featureFlag]
+  );
   const filteredReportsItems = filterMenuItems(reportsItems, userRoles);
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
