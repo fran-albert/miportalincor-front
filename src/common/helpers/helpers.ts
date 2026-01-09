@@ -225,20 +225,45 @@ export const normalizeDate = (date: string): string => {
 };
 
 /**
+ * Retorna el título del doctor basado en género
+ * @param gender - "Masculino" | "Femenino" | undefined
+ * @returns "Dr." | "Dra."
+ */
+export function getDoctorTitle(gender?: string): string {
+  return gender === "Femenino" ? "Dra." : "Dr.";
+}
+
+/**
+ * Formatea el nombre completo del doctor con título según género
+ * @param doctor - Objeto con firstName, lastName, gender
+ * @returns "Dr. Juan Pérez" o "Dra. María García"
+ */
+export function formatDoctorName(doctor: {
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+}): string {
+  const title = getDoctorTitle(doctor.gender);
+  return `${title} ${doctor.firstName || ''} ${doctor.lastName || ''}`.trim();
+}
+
+/**
  * Formatea la información del doctor para mostrar nombre completo y especialidades
  */
 export interface DoctorInfo {
   firstName: string;
   lastName: string;
+  gender?: string;
   specialities: { id: number; name: string }[];
 }
 
 export const formatDoctorInfo = (doctor: DoctorInfo) => {
-  const fullName = `Dr. ${doctor.firstName} ${doctor.lastName}`;
+  const title = getDoctorTitle(doctor.gender);
+  const fullName = `${title} ${doctor.firstName} ${doctor.lastName}`;
   const primarySpeciality = doctor.specialities.length > 0 ? doctor.specialities[0].name : null;
   const allSpecialities = doctor.specialities.map(spec => spec.name).join(", ");
 
-  // Formato en una línea: "Dr. Nombre - Especialidades"
+  // Formato en una línea: "Dr./Dra. Nombre - Especialidades"
   const fullNameWithPrimarySpeciality = primarySpeciality
     ? `${fullName} - ${primarySpeciality}`
     : fullName;

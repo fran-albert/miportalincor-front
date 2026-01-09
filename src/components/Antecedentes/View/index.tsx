@@ -20,6 +20,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { useState } from "react";
 import DeleteDataValueDialog from "@/components/Historia-Clinica/Delete/DeleteDataValueDialog";
 import { EditAntecedenteModal } from "@/components/Antecedentes/Edit";
@@ -160,8 +161,7 @@ export const ViewAntecedenteDialog = ({
                       Registrado por
                     </Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                      Dr. {antecedente.doctor?.firstName}{" "}
-                      {antecedente.doctor?.lastName}
+                      {antecedente.doctor && formatDoctorName(antecedente.doctor)}
                     </p>
                   </div>
                 </div>

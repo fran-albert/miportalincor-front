@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileText, ClipboardList, Pill, UserCheck, LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -92,7 +93,7 @@ export const SummaryCards = ({ stats, isLoading = false }: SummaryCardsProps) =>
 
   const getLastDoctorText = () => {
     if (!stats.lastDoctor) return "Sin registro";
-    return `Dr. ${stats.lastDoctor.firstName} ${stats.lastDoctor.lastName}`;
+    return formatDoctorName(stats.lastDoctor);
   };
 
   const getLastDoctorSpeciality = () => {

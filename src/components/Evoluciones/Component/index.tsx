@@ -42,6 +42,7 @@ import BreadcrumbComponent from "@/components/Breadcrumb";
 import EvolutionTable from "../Table/table";
 import { EvolutionTableRow } from "../Table/columns";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
 import { useEvolucionesPDF } from "@/hooks/Evolution/useEvolucionesPDF";
 import { useToast } from "@/hooks/Toast/useToast";
@@ -549,7 +550,7 @@ export default function EvolucionesComponent({
                       <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                         <Label className="text-xs text-gray-500 font-medium">Registrado por</Label>
                         <p className="text-sm font-semibold text-gray-900 mt-1">
-                          Dr. {selectedConsultaToView.doctor.firstName} {selectedConsultaToView.doctor.lastName}
+                          {formatDoctorName(selectedConsultaToView.doctor)}
                         </p>
                         {selectedConsultaToView.doctor.specialities &&
                          selectedConsultaToView.doctor.specialities.length > 0 && (

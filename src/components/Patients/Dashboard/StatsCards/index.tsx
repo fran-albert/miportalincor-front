@@ -170,14 +170,13 @@ export const StatsCards = ({ patientSlug, stats, isLoading = false }: StatsCards
       icon: Calendar,
       gradient: "bg-gradient-to-br from-greenPrimary to-teal-600",
       subtitle: stats.nextAppointment ? "Cita programada" : "Sin citas programadas",
-      comingSoon: true,
     },
     {
       title: "Última Visita",
       value: getLastVisitText(),
       icon: Clock,
       gradient: "bg-gradient-to-br from-purple-500 to-purple-600",
-      comingSoon: true,
+      subtitle: stats.lastVisit ? "Visita completada" : "Sin visitas registradas",
     },
     {
       title: "Historia Clínica",

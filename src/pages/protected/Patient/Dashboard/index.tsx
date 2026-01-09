@@ -27,6 +27,10 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
     navigate(`/pacientes/${patient.slug}/control-nutricional`);
   };
 
+  const handleCitasMedicasClick = () => {
+    navigate(`/pacientes/${patient.slug}/turnos`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header del Paciente */}
@@ -44,6 +48,7 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
         onHistoriaClinicaClick={handleHistoriaClinicaClick}
         onEstudiosClick={handleEstudiosClick}
         onControlNutricionalClick={handleControlNutricionalClick}
+        onCitasMedicasClick={handleCitasMedicasClick}
         totalStudies={stats.totalStudies}
       />
     </div>

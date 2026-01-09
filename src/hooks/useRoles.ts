@@ -1,8 +1,10 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
-import { logout } from '@/store/authSlice';
+import { logout, updateTokens } from '@/store/authSlice';
 import { useEffect } from 'react';
 import { RootState } from '@/store/store';
+import axios from 'axios';
+import { environment } from '@/config/environment';
 
 interface DecodedToken {
   id: string;
@@ -29,25 +31,59 @@ const useUserRole = () => {
   useEffect(() => {
     if (!token || !tokenExpiration) return;
 
-    const checkAndHandleExpiration = () => {
-      const currentTime = Date.now();
-      const expirationTime = parseInt(tokenExpiration);
+    const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutos antes de expirar
+    const expirationTime = parseInt(tokenExpiration);
 
-      if (currentTime >= expirationTime) {
+    const attemptRefresh = async () => {
+      try {
+        const currentToken = localStorage.getItem("authToken");
+        if (!currentToken) {
+          dispatch(logout());
+          return;
+        }
+
+        const baseUrl = environment.API_INCOR_HC_URL?.replace(/\/$/, '');
+        const response = await axios.post(
+          `${baseUrl}/auth/refresh`,
+          {},
+          { headers: { Authorization: `Bearer ${currentToken}` } }
+        );
+
+        const { token: newToken } = response.data;
+        const decodedToken = jwtDecode<{ exp: number }>(newToken);
+        const newExpirationTime = decodedToken.exp * 1000;
+
+        localStorage.setItem("authToken", newToken);
+        localStorage.setItem("tokenExpiration", newExpirationTime.toString());
+        dispatch(updateTokens({ token: newToken }));
+      } catch (error) {
+        console.error("Error refreshing token:", error);
         dispatch(logout());
       }
     };
 
-    checkAndHandleExpiration();
+    // Verificar si ya expiró o está por expirar
+    const now = Date.now();
+    if (now >= expirationTime) {
+      // Ya expirado - intentar refresh inmediato
+      attemptRefresh();
+      return;
+    }
 
-    const timeUntilExpiration = parseInt(tokenExpiration) - Date.now();
-    if (timeUntilExpiration <= 0) return;
+    const timeUntilRefresh = expirationTime - now - REFRESH_BUFFER_MS;
 
-    const logoutTimer = setTimeout(() => {
-      dispatch(logout());
-    }, timeUntilExpiration);
+    if (timeUntilRefresh <= 0) {
+      // Menos de 5 minutos - refresh ahora
+      attemptRefresh();
+      return;
+    }
 
-    return () => clearTimeout(logoutTimer);
+    // Programar refresh 5 minutos antes de expirar
+    const refreshTimer = setTimeout(() => {
+      attemptRefresh();
+    }, timeUntilRefresh);
+
+    return () => clearTimeout(refreshTimer);
   }, [token, tokenExpiration, dispatch]);
 
   if (!token) {

@@ -28,6 +28,7 @@ import {
   EvolucionData,
 } from "@/types/Antecedentes/Antecedentes";
 import useUserRole from "@/hooks/useRoles";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 type UserData = Patient | Doctor;
 
@@ -322,8 +323,7 @@ const EvolutionSection: React.FC<Props> = ({
                               <div className="flex items-center gap-1.5">
                                 <User className="h-4 w-4 text-gray-400" />
                                 <span className="text-xs font-semibold text-gray-900">
-                                  Dr. {evolucion.doctor.firstName}{" "}
-                                  {evolucion.doctor.lastName}
+                                  {formatDoctorName(evolucion.doctor)}
                                 </span>
                               </div>
                               {primarySpeciality && (
@@ -388,8 +388,7 @@ const EvolutionSection: React.FC<Props> = ({
                   {/* Información del Doctor y Fecha */}
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-2">
-                      Dr. {selectedConsultaToView.doctor.firstName}{" "}
-                      {selectedConsultaToView.doctor.lastName}
+                      {formatDoctorName(selectedConsultaToView.doctor)}
                     </h2>
                     <div className="flex items-center gap-4 flex-wrap">
                       {/* Fecha */}

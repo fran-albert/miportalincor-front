@@ -1,0 +1,7 @@
+import { apiTurnos } from "@/services/axiosConfig";
+import { OverturnDetailedDto } from "@/types/Overturn/Overturn";
+
+export const getOverturnById = async (id: number): Promise<OverturnDetailedDto> => {
+  const { data } = await apiTurnos.get<OverturnDetailedDto>(`overturns/${id}`);
+  return data;
+};
