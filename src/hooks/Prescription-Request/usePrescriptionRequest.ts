@@ -9,6 +9,7 @@ import {
   completePrescriptionRequest,
   rejectPrescriptionRequest,
   cancelPrescriptionRequest,
+  uploadDoctorPrescription,
 } from "@/api/Prescription-Request";
 import {
   PrescriptionRequest,
@@ -188,6 +189,16 @@ export const useCancelPrescriptionRequest = () => {
     },
     onError: (error) => {
       console.error("Error cancelling prescription request:", error);
+    },
+  });
+};
+
+// Upload Doctor Prescription (Doctor)
+export const useUploadDoctorPrescription = () => {
+  return useMutation<{ url: string }, Error, { requestId: string; file: File }>({
+    mutationFn: ({ requestId, file }) => uploadDoctorPrescription(requestId, file),
+    onError: (error) => {
+      console.error("Error uploading prescription:", error);
     },
   });
 };

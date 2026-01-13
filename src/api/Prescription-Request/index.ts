@@ -8,3 +8,4 @@ export * from "./complete-request.action";
 export * from "./reject-request.action";
 export * from "./cancel-request.action";
 export * from "./upload-attachment.action";
+export * from "./upload-doctor-prescription.action";
