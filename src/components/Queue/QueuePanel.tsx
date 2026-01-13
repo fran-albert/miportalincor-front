@@ -37,6 +37,7 @@ import {
   Clock,
   CheckCircle,
   Volume2,
+  UserPlus,
 } from 'lucide-react';
 import {
   useWaitingQueue,
@@ -259,7 +260,18 @@ export const QueuePanel = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{entry.patientName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{entry.patientName}</p>
+                          {entry.isGuest && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
+                            >
+                              <UserPlus className="w-3 h-3 mr-1" />
+                              INVITADO
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           DNI: {entry.patientDocument}
                         </p>
@@ -370,10 +382,26 @@ export const QueuePanel = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{entry.patientName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{entry.patientName}</p>
+                          {entry.isGuest && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
+                            >
+                              <UserPlus className="w-3 h-3 mr-1" />
+                              INVITADO
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
                           DNI: {entry.patientDocument}
                         </p>
+                        {entry.isGuest && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Requiere registro en secretaria
+                          </p>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>

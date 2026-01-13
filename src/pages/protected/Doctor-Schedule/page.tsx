@@ -19,10 +19,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Calendar, Plus, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, Clock, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DoctorSelect } from "@/components/Appointments/Select/DoctorSelect";
 import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailability";
+import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import { CreateDoctorAvailabilityDto } from "@/types/DoctorAvailability";
 import { useToast } from "@/hooks/use-toast";
@@ -122,6 +123,21 @@ const DoctorSchedulePage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Booking Settings */}
+      {selectedDoctorId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configuración de Reservas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BookingSettingsToggle doctorId={selectedDoctorId} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Availability Management */}
       {selectedDoctorId && (

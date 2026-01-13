@@ -7,9 +7,10 @@ export interface QueueEntry {
   appointmentId?: number;
   overturnId?: number;
   appointmentType: AppointmentType;
-  patientId: number;
+  patientId: number | null;
   patientName: string;
   patientDocument: string;
+  isGuest: boolean;
   doctorId: number;
   doctorName: string;
   speciality: string;
