@@ -6,8 +6,11 @@ import {
   ClipboardPlus,
   Users,
   Building2,
+  Clock,
+  Bell,
 } from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
+import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 
 interface DoctorModulesProps {
   onHistoriaClinicaClick: () => void;
@@ -15,6 +18,8 @@ interface DoctorModulesProps {
   onControlNutricionalClick?: () => void;
   onPacientesClick?: () => void;
   onEspecialidadesClick?: () => void;
+  onHorariosClick?: () => void;
+  onNotificacionesClick?: () => void;
 }
 
 export default function DoctorModules({
@@ -23,6 +28,8 @@ export default function DoctorModules({
   onControlNutricionalClick,
   onPacientesClick,
   onEspecialidadesClick,
+  onHorariosClick,
+  onNotificacionesClick,
 }: DoctorModulesProps) {
   const { isDoctor, isAdmin, isSecretary } = useUserRole();
 
@@ -52,10 +59,26 @@ export default function DoctorModules({
       visible: isDoctor,
     },
     {
+      title: "Horarios de Atención",
+      description: "Configurar disponibilidad y reservas online",
+      icon: Clock,
+      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      onClick: onHorariosClick || (() => {}),
+      visible: (isSecretary || isAdmin) && FEATURE_FLAGS.APPOINTMENTS_ENABLED,
+    },
+    {
+      title: "Notificaciones",
+      description: "Configurar avisos de WhatsApp",
+      icon: Bell,
+      gradient: "bg-gradient-to-br from-green-500 to-green-600",
+      onClick: onNotificacionesClick || (() => {}),
+      visible: (isSecretary || isAdmin) && FEATURE_FLAGS.APPOINTMENTS_ENABLED,
+    },
+    {
       title: "Agenda Médica",
       description: "Horarios y citas programadas",
       icon: Calendar,
-      gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
+      gradient: "bg-gradient-to-br from-indigo-500 to-indigo-600",
       onClick: () => {},
       visible: isDoctor || isSecretary || isAdmin,
       comingSoon: true,

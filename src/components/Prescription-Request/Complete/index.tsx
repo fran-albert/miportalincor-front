@@ -18,8 +18,16 @@ import {
   X,
   Loader2,
   File as FileIcon,
+  Plus,
 } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+
+interface UploadedFile {
+  file: File;
+  previewUrl: string | null;
+  s3Url: string;
+  isUploading: boolean;
+}
 
 interface CompletePrescriptionRequestModalProps {
   isOpen: boolean;
@@ -33,13 +41,12 @@ export default function CompletePrescriptionRequestModal({
   request,
 }: CompletePrescriptionRequestModalProps) {
   // Form state
-  const [prescriptionUrl, setPrescriptionUrl] = useState("");
+  const [prescriptionUrls, setPrescriptionUrls] = useState<string[]>([]);
   const [prescriptionLink, setPrescriptionLink] = useState("");
   const [doctorNotes, setDoctorNotes] = useState("");
 
   // File upload state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<"file" | "link">("file");
 
@@ -74,66 +81,83 @@ export default function CompletePrescriptionRequestModal({
       return;
     }
 
-    setSelectedFile(file);
-
     // Create preview for images
+    let previewUrl: string | null = null;
     if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
+      previewUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.readAsDataURL(file);
+      });
     }
 
-    // Upload to S3
+    // Add file to list with uploading state
+    const newFile: UploadedFile = {
+      file,
+      previewUrl,
+      s3Url: "",
+      isUploading: true,
+    };
+    setUploadedFiles((prev) => [...prev, newFile]);
     setIsUploading(true);
+
+    // Upload to S3
     try {
       const response = await uploadMutation.mutateAsync({
         requestId: String(request.id),
         file,
       });
-      setPrescriptionUrl(response.url);
-      showSuccess(
-        "Archivo subido",
-        "El archivo de receta se subio correctamente"
+
+      // Update file with S3 URL
+      setUploadedFiles((prev) =>
+        prev.map((f) =>
+          f.file === file ? { ...f, s3Url: response.url, isUploading: false } : f
+        )
       );
+      setPrescriptionUrls((prev) => [...prev, response.url]);
+      showSuccess("Archivo subido", "El archivo se subio correctamente");
     } catch (error) {
       showError(
         "Error al subir archivo",
         error instanceof Error ? error.message : "No se pudo subir el archivo"
       );
-      setSelectedFile(null);
-      setPreviewUrl(null);
+      // Remove failed file from list
+      setUploadedFiles((prev) => prev.filter((f) => f.file !== file));
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.target.files;
+    if (files) {
+      // Process each file
+      Array.from(files).forEach((file) => {
+        handleFileSelect(file);
+      });
     }
     e.target.value = "";
   };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setPrescriptionUrl("");
+  const handleRemoveFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    if (fileToRemove.s3Url) {
+      setPrescriptionUrls((prev) =>
+        prev.filter((url) => url !== fileToRemove.s3Url)
+      );
+    }
   };
 
   const handleSubmit = async () => {
-    const hasFile = uploadMethod === "file" && prescriptionUrl;
+    const hasFiles = uploadMethod === "file" && prescriptionUrls.length > 0;
     const hasLink = uploadMethod === "link" && prescriptionLink;
 
-    if (!hasFile && !hasLink) {
+    if (!hasFiles && !hasLink) {
       showError(
         "Campo requerido",
         uploadMethod === "file"
-          ? "Debe subir un archivo de receta"
+          ? "Debe subir al menos un archivo de receta"
           : "Debe proporcionar un link externo"
       );
       return;
@@ -143,7 +167,7 @@ export default function CompletePrescriptionRequestModal({
       const promise = completeMutation.mutateAsync({
         id: String(request.id),
         data: {
-          ...(hasFile && { prescriptionUrl }),
+          ...(hasFiles && { prescriptionUrls }),
           ...(hasLink && { prescriptionLink }),
           ...(doctorNotes && { doctorNotes }),
         },
@@ -173,17 +197,16 @@ export default function CompletePrescriptionRequestModal({
   };
 
   const handleClose = () => {
-    setPrescriptionUrl("");
+    setPrescriptionUrls([]);
     setPrescriptionLink("");
     setDoctorNotes("");
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setUploadedFiles([]);
     setUploadMethod("file");
     onClose();
   };
 
   const isSubmitDisabled =
-    (uploadMethod === "file" && !prescriptionUrl) ||
+    (uploadMethod === "file" && prescriptionUrls.length === 0) ||
     (uploadMethod === "link" && !prescriptionLink) ||
     completeMutation.isPending ||
     isUploading;
@@ -255,7 +278,7 @@ export default function CompletePrescriptionRequestModal({
                 }
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Subir Archivo
+                Subir Archivos
               </Button>
               <Button
                 type="button"
@@ -275,10 +298,15 @@ export default function CompletePrescriptionRequestModal({
 
           {/* File Upload Section */}
           {uploadMethod === "file" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Upload className="h-4 w-4 text-green-600" />
-                Archivo de Receta (PDF o Imagen)
+                Archivos de Receta (PDF o Imagen)
+                {uploadedFiles.length > 0 && (
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    {uploadedFiles.length} archivo{uploadedFiles.length > 1 ? "s" : ""}
+                  </span>
+                )}
               </Label>
 
               {/* Hidden file input */}
@@ -288,70 +316,93 @@ export default function CompletePrescriptionRequestModal({
                 accept="image/jpeg,image/png,image/webp,application/pdf"
                 onChange={handleFileInputChange}
                 className="hidden"
+                multiple
               />
 
-              {/* Preview or upload button */}
-              {selectedFile ? (
-                <div className="relative border rounded-lg p-3 bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-20 w-20 object-cover rounded-lg border"
-                      />
-                    ) : (
-                      <div className="h-20 w-20 bg-green-100 rounded-lg flex items-center justify-center">
-                        <FileIcon className="h-8 w-8 text-green-600" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">
-                        {selectedFile.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                      {isUploading && (
-                        <div className="flex items-center gap-2 mt-1 text-green-600">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-xs">Subiendo...</span>
-                        </div>
-                      )}
-                      {prescriptionUrl && !isUploading && (
-                        <p className="text-xs text-green-600 mt-1">
-                          Subido correctamente
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRemoveFile}
-                      disabled={isUploading}
-                      className="text-gray-400 hover:text-red-500"
+              {/* Uploaded files list */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  {uploadedFiles.map((uploadedFile, index) => (
+                    <div
+                      key={index}
+                      className="relative border rounded-lg p-3 bg-gray-50"
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <div className="flex items-center gap-3">
+                        {uploadedFile.previewUrl ? (
+                          <img
+                            src={uploadedFile.previewUrl}
+                            alt="Preview"
+                            className="h-14 w-14 object-cover rounded-lg border"
+                          />
+                        ) : (
+                          <div className="h-14 w-14 bg-green-100 rounded-lg flex items-center justify-center">
+                            <FileIcon className="h-6 w-6 text-green-600" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-700 truncate">
+                            {uploadedFile.file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                          {uploadedFile.isUploading && (
+                            <div className="flex items-center gap-2 mt-1 text-green-600">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span className="text-xs">Subiendo...</span>
+                            </div>
+                          )}
+                          {uploadedFile.s3Url && !uploadedFile.isUploading && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Subido correctamente
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFile(index)}
+                          disabled={uploadedFile.isUploading}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-24 flex-col gap-2 border-dashed hover:border-green-500 hover:bg-green-50"
-                >
-                  <Upload className="h-8 w-8 text-green-600" />
-                  <span className="text-sm">
-                    Click para seleccionar archivo
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    PDF, JPG, PNG, WEBP (max. 10MB)
-                  </span>
-                </Button>
               )}
+
+              {/* Add more files button */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className={`w-full ${
+                  uploadedFiles.length > 0
+                    ? "h-12 border-dashed"
+                    : "h-24 flex-col gap-2 border-dashed"
+                } hover:border-green-500 hover:bg-green-50`}
+              >
+                {uploadedFiles.length > 0 ? (
+                  <>
+                    <Plus className="h-4 w-4 mr-2 text-green-600" />
+                    <span className="text-sm">Agregar mas archivos</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8 text-green-600" />
+                    <span className="text-sm">
+                      Click para seleccionar archivos
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      PDF, JPG, PNG, WEBP (max. 10MB por archivo)
+                    </span>
+                  </>
+                )}
+              </Button>
             </div>
           )}
 

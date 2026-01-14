@@ -1,8 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, RefreshCcw, LayoutGrid, Clock, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calendar, List, RefreshCcw, LayoutGrid, Users } from "lucide-react";
 import {
   BigCalendar,
   MonthCalendar,
@@ -40,12 +39,6 @@ const ShiftsPage = () => {
         <>
           <CreateAppointmentDialog />
           <CreateOverturnDialog />
-          <Link to="/horarios-medicos">
-            <Button variant="outline" className="shadow-sm">
-              <Clock className="mr-2 h-4 w-4" />
-              Horarios
-            </Button>
-          </Link>
         </>
       )}
       <Button

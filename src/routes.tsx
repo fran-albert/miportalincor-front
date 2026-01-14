@@ -43,7 +43,8 @@ import DoctorAntecedentesPage from "./pages/protected/Doctor/Antecedentes";
 import DoctorMedicacionActualPage from "./pages/protected/Doctor/Medicacion-Actual";
 import ShiftsPage from "./pages/protected/Shift/page";
 import MyAppointmentsPage from "./pages/protected/My-Appointments/page";
-import DoctorSchedulePage from "./pages/protected/Doctor-Schedule/page";
+import DoctorHorariosPage from "./pages/protected/Doctor/Horarios";
+import DoctorNotificacionesPage from "./pages/protected/Doctor/Notificaciones";
 import DoctorWaitingRoomPage from "./pages/protected/Doctor-Waiting-Room";
 import MySettingsPage from "./pages/protected/My-Settings";
 import { DashboardLayout } from "./layouts/DashboardLayout";
@@ -120,18 +121,6 @@ function App() {
               element={
                 <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                   <ShiftsPage />
-                </Private_Routes>
-              }
-            />
-          )}
-
-          {/* Horarios de Médicos */}
-          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
-            <Route
-              path="/horarios-medicos"
-              element={
-                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
-                  <DoctorSchedulePage />
                 </Private_Routes>
               }
             />
@@ -450,6 +439,26 @@ function App() {
               </Private_Routes>
             }
           />
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/medicos/:slug/horarios"
+              element={
+                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                  <DoctorHorariosPage />
+                </Private_Routes>
+              }
+            />
+          )}
+          {FEATURE_FLAGS.APPOINTMENTS_ENABLED && (
+            <Route
+              path="/medicos/:slug/notificaciones"
+              element={
+                <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                  <DoctorNotificacionesPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Incor Laboral */}
           <Route
