@@ -55,7 +55,7 @@ export default function CreatePrescriptionRequestModal({
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const createMutation = useCreatePrescriptionRequest();
-  const { promiseToast, showError, showSuccess } = useToastContext();
+  const { promiseToast, showError } = useToastContext();
 
   // Get selected doctor for showing notes
   const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);

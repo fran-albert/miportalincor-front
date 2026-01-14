@@ -63,7 +63,6 @@ const DoctorHorariosPage = () => {
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive",
       });
     }
   };
@@ -83,7 +82,6 @@ const DoctorHorariosPage = () => {
       toast({
         title: "Error",
         description: errorMessage,
-        variant: "destructive",
       });
     }
   };
