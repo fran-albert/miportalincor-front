@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function DoctorDashboard({ doctor }: { doctor: Doctor }) {
   const navigate = useNavigate();
-  
+
   const handleHistoriaClinicaClick = () => {
     navigate(`/medicos/${doctor.slug}/historia-clinica`);
   };
@@ -26,6 +26,14 @@ export default function DoctorDashboard({ doctor }: { doctor: Doctor }) {
     navigate(`/especialidades`);
   };
 
+  const handleHorariosClick = () => {
+    navigate(`/medicos/${doctor.slug}/horarios`);
+  };
+
+  const handleNotificacionesClick = () => {
+    navigate(`/medicos/${doctor.slug}/notificaciones`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header del Médico */}
@@ -38,6 +46,8 @@ export default function DoctorDashboard({ doctor }: { doctor: Doctor }) {
         onControlNutricionalClick={handleControlNutricionalClick}
         onPacientesClick={handlePacientesClick}
         onEspecialidadesClick={handleEspecialidadesClick}
+        onHorariosClick={handleHorariosClick}
+        onNotificacionesClick={handleNotificacionesClick}
       />
     </div>
   );
