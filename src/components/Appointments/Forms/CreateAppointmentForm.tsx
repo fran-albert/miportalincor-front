@@ -33,6 +33,7 @@ interface CreateAppointmentFormProps {
     userName?: string;
   };
   defaultDate?: string;
+  defaultHour?: string;
 }
 
 export const CreateAppointmentForm = ({
@@ -41,7 +42,8 @@ export const CreateAppointmentForm = ({
   defaultDoctorId,
   defaultPatientId,
   defaultPatient,
-  defaultDate
+  defaultDate,
+  defaultHour
 }: CreateAppointmentFormProps) => {
   // Determinar el patientId inicial: usar defaultPatientId o el userId del defaultPatient
   const initialPatientId = defaultPatientId && defaultPatientId > 0
@@ -55,7 +57,7 @@ export const CreateAppointmentForm = ({
       doctorId: defaultDoctorId && defaultDoctorId > 0 ? defaultDoctorId : undefined,
       patientId: initialPatientId,
       date: defaultDate || getTodayDateAR(),
-      hour: "",
+      hour: defaultHour || "",
     },
   });
 

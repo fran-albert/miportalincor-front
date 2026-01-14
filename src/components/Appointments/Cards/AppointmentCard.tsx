@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "../Select/StatusBadge";
 import { AppointmentFullResponseDto, AppointmentStatus, ALLOWED_TRANSITIONS } from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR } from "@/common/helpers/timezone";
-import { Calendar, Clock, User, Stethoscope, MoreVertical } from "lucide-react";
+import { Calendar, Clock, User, Stethoscope, MoreVertical, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,11 +55,31 @@ export const AppointmentCard = ({
     }
   };
 
+  // Backend returns 0/1 (numbers) not true/false (booleans)
+  const isGuestAppointment = appointment.isGuest === 1 || appointment.isGuest === true;
+
+  // Helper to get patient display name
+  const getPatientName = () => {
+    if (isGuestAppointment) {
+      return `${appointment.guestFirstName || ''} ${appointment.guestLastName || ''}`;
+    }
+    return `${appointment.patient?.firstName || ''} ${appointment.patient?.lastName || ''}`;
+  };
+
+  // Helper to get patient DNI
+  const getPatientDNI = () => {
+    if (isGuestAppointment) {
+      return appointment.guestDocumentNumber || '';
+    }
+    return appointment.patient?.userName || '';
+  };
+
   if (compact) {
     return (
       <div
         className={cn(
           "flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors",
+          isGuestAppointment && "border-l-4 border-l-purple-500",
           className
         )}
       >
@@ -67,8 +88,9 @@ export const AppointmentCard = ({
             {formatTimeAR(appointment.hour)}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium">
-              {appointment.patient?.firstName} {appointment.patient?.lastName}
+            <span className="text-sm font-medium flex items-center gap-2">
+              {isGuestAppointment && <span>🆕</span>}
+              {getPatientName()}
             </span>
             <span className="text-xs text-muted-foreground">
               {appointment.doctor && formatDoctorName(appointment.doctor)}
@@ -76,6 +98,12 @@ export const AppointmentCard = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isGuestAppointment && (
+            <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs">
+              <UserPlus className="w-3 h-3 mr-1" />
+              INVITADO
+            </Badge>
+          )}
           <StatusBadge status={appointment.status} size="sm" />
           {showActions && (
             <DropdownMenu>
@@ -115,12 +143,22 @@ export const AppointmentCard = ({
   }
 
   return (
-    <Card className={cn("hover:shadow-md transition-shadow", className)}>
+    <Card className={cn(
+      "hover:shadow-md transition-shadow",
+      isGuestAppointment && "border-l-4 border-l-purple-500",
+      className
+    )}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <StatusBadge status={appointment.status} />
+              {isGuestAppointment && (
+                <Badge className="bg-purple-100 text-purple-800 border-purple-300">
+                  <UserPlus className="w-3 h-3 mr-1" />
+                  INVITADO
+                </Badge>
+              )}
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -137,7 +175,10 @@ export const AppointmentCard = ({
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
-                {appointment.patient?.firstName} {appointment.patient?.lastName}
+                {getPatientName()}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                (DNI: {getPatientDNI()})
               </span>
             </div>
 

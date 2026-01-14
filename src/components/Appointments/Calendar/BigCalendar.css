@@ -1,0 +1,48 @@
+/* Custom styles for BigCalendar */
+
+/* Wider time gutter (left column with hours) for week/day views */
+.rbc-time-view .rbc-time-gutter {
+  min-width: 80px;
+}
+
+.rbc-time-view .rbc-time-header-gutter {
+  min-width: 80px;
+}
+
+/* Better slot visibility in week view */
+.rbc-time-view .rbc-event {
+  min-height: 25px;
+}
+
+/* Available slots specific styling - force black border */
+.available-slot-event {
+  border: 2px solid #000000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  margin: 1px 2px !important;
+}
+
+/* Improve readability in week view time slots */
+.rbc-time-slot {
+  min-height: 25px;
+}
+
+/* Visible border for each time slot cell (only in week/day time views) */
+.rbc-time-view .rbc-day-slot .rbc-time-slot {
+  border-bottom: 1px solid #d1d5db !important;
+}
+
+/* Border between day columns (only in week/day time views) */
+.rbc-time-view .rbc-day-slot {
+  border-left: 1px solid #d1d5db !important;
+}
+
+/* Stronger border between hours (only in week/day time views) */
+.rbc-time-view .rbc-timeslot-group {
+  border-bottom: 1px solid #9ca3af !important;
+}
+
+/* Make time labels more visible */
+.rbc-label {
+  font-weight: 500;
+  font-size: 12px;
+}

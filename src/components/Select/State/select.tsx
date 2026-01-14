@@ -17,6 +17,18 @@ interface StateSelectProps<T extends FieldValues = FieldValues> {
   disabled?: boolean;
 }
 
+// Helper to extract ID from either a State object or string
+const getStateId = (value: unknown): string => {
+  if (!value) return "";
+  if (typeof value === "object" && value !== null && "id" in value) {
+    return String((value as State).id);
+  }
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  return "";
+};
+
 export const StateSelect = <T extends FieldValues = FieldValues>({
   control,
   name,
@@ -30,23 +42,27 @@ export const StateSelect = <T extends FieldValues = FieldValues>({
     <Controller
       name={name}
       control={control}
-      defaultValue={(defaultValue?.id ? String(defaultValue.id) : "") as PathValue<T, Path<T>>}
+      defaultValue={(defaultValue ?? undefined) as PathValue<T, Path<T>>}
       render={({ field }) => {
-        // Ensure we always use a string value for the Select component
-        const selectValue = field.value && field.value !== "" ? String(field.value) : "";
-
-        console.log('StateSelect render - field.value:', field.value, 'selectValue:', selectValue);
+        // Get the ID for the Select component (works with both object and string values)
+        const selectValue = getStateId(field.value);
 
         const handleValueChange = (selectedId: string) => {
           const selectedState = states?.find(
             (state) => String(state.id) === selectedId
           );
           if (selectedState) {
-            // Actualizar la UI del Select con el ID
-            field.onChange(selectedId);
-            // Si hay callback, ejecutarlo con el objeto completo
+            // Ensure state has country (default to Argentina)
+            const stateWithCountry = {
+              ...selectedState,
+              country: selectedState.country || { id: 1, name: "Argentina" },
+            };
+
+            // Store the full State object in the form
+            field.onChange(stateWithCountry as PathValue<T, Path<T>>);
+            // If callback exists, execute it with the full object
             if (onStateChange) {
-              onStateChange(selectedState);
+              onStateChange(stateWithCountry);
             }
           }
         };
@@ -55,10 +71,7 @@ export const StateSelect = <T extends FieldValues = FieldValues>({
           <div>
             <Select
               value={selectValue}
-              onValueChange={(value) => {
-                console.log('StateSelect onChange - new value:', value);
-                handleValueChange(value);
-              }}
+              onValueChange={handleValueChange}
               disabled={disabled || !states?.length}
             >
               <SelectTrigger className="w-full">

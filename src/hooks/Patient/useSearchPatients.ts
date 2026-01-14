@@ -43,7 +43,7 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     queryKey: ["patients-search", debouncedSearch, page, limit],
     queryFn: () => searchPatients({ search: debouncedSearch, page, limit }),
     staleTime: 1000 * 60, // 1 minute
-    enabled: enabled && debouncedSearch.length >= 2,
+    enabled: enabled && debouncedSearch.length >= 7,
   });
 
   const nextPage = () => {
