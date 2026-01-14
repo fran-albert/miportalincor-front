@@ -28,9 +28,9 @@ export interface PrescriptionRequest extends Base {
   patientUserId: string;
   doctorUserId: string;
   description: string;
-  attachmentUrl?: string;
+  attachmentUrls?: string[];
   status: PrescriptionRequestStatus;
-  prescriptionUrl?: string;
+  prescriptionUrls?: string[];
   prescriptionLink?: string;
   doctorNotes?: string;
   rejectedReason?: string;
@@ -42,11 +42,11 @@ export interface PrescriptionRequest extends Base {
 export interface CreatePrescriptionRequestDto {
   doctorUserId: string;
   description: string;
-  attachmentUrl?: string;
+  attachmentUrls?: string[];
 }
 
 export interface CompletePrescriptionRequestDto {
-  prescriptionUrl?: string;
+  prescriptionUrls?: string[];
   prescriptionLink?: string;
   doctorNotes?: string;
 }

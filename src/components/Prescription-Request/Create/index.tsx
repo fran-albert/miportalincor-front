@@ -26,6 +26,14 @@ interface DoctorOption {
   notes?: string;
 }
 
+interface UploadedAttachment {
+  file: File;
+  previewUrl: string | null;
+  s3Url: string | null;
+  isUploading: boolean;
+  error?: string;
+}
+
 interface CreatePrescriptionRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,10 +49,7 @@ export default function CreatePrescriptionRequestModal({
 }: CreatePrescriptionRequestModalProps) {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [description, setDescription] = useState("");
-  const [attachmentUrl, setAttachmentUrl] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedAttachments, setUploadedAttachments] = useState<UploadedAttachment[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -55,68 +60,103 @@ export default function CreatePrescriptionRequestModal({
   // Get selected doctor for showing notes
   const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
 
-  const handleFileSelect = async (file: File) => {
-    // Validate file type
+  // Check if any attachment is currently uploading
+  const isAnyUploading = uploadedAttachments.some((a) => a.isUploading);
+
+  const handleFileSelect = async (files: FileList) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
-      showError(
-        "Tipo de archivo no permitido",
-        "Solo se permiten imagenes JPG, PNG, WEBP o archivos PDF"
-      );
-      return;
-    }
-
-    // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      showError("Archivo muy grande", "El archivo no debe superar los 5MB");
+    const maxFiles = 5;
+
+    // Check max files limit
+    if (uploadedAttachments.length + files.length > maxFiles) {
+      showError(
+        "Limite de archivos",
+        `Solo puede adjuntar hasta ${maxFiles} archivos`
+      );
       return;
     }
 
-    setSelectedFile(file);
+    for (const file of Array.from(files)) {
+      // Validate file type
+      if (!allowedTypes.includes(file.type)) {
+        showError(
+          "Tipo de archivo no permitido",
+          `${file.name}: Solo se permiten imagenes JPG, PNG, WEBP o archivos PDF`
+        );
+        continue;
+      }
 
-    // Create preview for images
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
+      // Validate file size (5MB max)
+      if (file.size > maxSize) {
+        showError("Archivo muy grande", `${file.name}: El archivo no debe superar los 5MB`);
+        continue;
+      }
+
+      // Create preview for images
+      let previewUrl: string | null = null;
+      if (file.type.startsWith("image/")) {
+        previewUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Add to state with uploading status
+      const newAttachment: UploadedAttachment = {
+        file,
+        previewUrl,
+        s3Url: null,
+        isUploading: true,
       };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
 
-    // Upload to S3
-    setIsUploading(true);
-    try {
-      const response = await uploadPrescriptionAttachment(file);
-      setAttachmentUrl(response.url);
-      showSuccess("Imagen subida", "La imagen se subio correctamente");
-    } catch (error) {
-      showError(
-        "Error al subir imagen",
-        error instanceof Error ? error.message : "No se pudo subir la imagen"
-      );
-      setSelectedFile(null);
-      setPreviewUrl(null);
-    } finally {
-      setIsUploading(false);
+      setUploadedAttachments((prev) => [...prev, newAttachment]);
+
+      // Upload to S3
+      try {
+        const response = await uploadPrescriptionAttachment(file);
+        setUploadedAttachments((prev) =>
+          prev.map((a) =>
+            a.file === file
+              ? { ...a, s3Url: response.url, isUploading: false }
+              : a
+          )
+        );
+      } catch (error) {
+        setUploadedAttachments((prev) =>
+          prev.map((a) =>
+            a.file === file
+              ? {
+                  ...a,
+                  isUploading: false,
+                  error:
+                    error instanceof Error
+                      ? error.message
+                      : "Error al subir archivo",
+                }
+              : a
+          )
+        );
+        showError(
+          "Error al subir archivo",
+          `${file.name}: ${error instanceof Error ? error.message : "No se pudo subir el archivo"}`
+        );
+      }
     }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileSelect(files);
     }
     // Reset input value to allow selecting the same file again
     e.target.value = "";
   };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setAttachmentUrl("");
+  const handleRemoveFile = (index: number) => {
+    setUploadedAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -133,11 +173,16 @@ export default function CreatePrescriptionRequestModal({
       return;
     }
 
+    // Collect all successfully uploaded URLs
+    const successfulUrls = uploadedAttachments
+      .filter((a) => a.s3Url && !a.error)
+      .map((a) => a.s3Url as string);
+
     try {
       const createData: CreatePrescriptionRequestDto = {
         doctorUserId: selectedDoctorId,
         description: description.trim(),
-        ...(attachmentUrl && { attachmentUrl }),
+        ...(successfulUrls.length > 0 && { attachmentUrls: successfulUrls }),
       };
 
       const promise = createMutation.mutateAsync(createData);
@@ -168,9 +213,7 @@ export default function CreatePrescriptionRequestModal({
   const handleClose = () => {
     setSelectedDoctorId("");
     setDescription("");
-    setAttachmentUrl("");
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setUploadedAttachments([]);
     onClose();
   };
 
@@ -293,7 +336,7 @@ export default function CreatePrescriptionRequestModal({
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
               <Image className="h-4 w-4 text-greenPrimary" />
-              Imagen Adjunta (opcional)
+              Imagenes Adjuntas (opcional)
             </Label>
 
             {/* Hidden file inputs */}
@@ -302,6 +345,7 @@ export default function CreatePrescriptionRequestModal({
               type="file"
               accept="image/jpeg,image/png,image/webp,application/pdf"
               onChange={handleFileInputChange}
+              multiple
               className="hidden"
             />
             <input
@@ -313,57 +357,75 @@ export default function CreatePrescriptionRequestModal({
               className="hidden"
             />
 
-            {/* Preview or upload buttons */}
-            {selectedFile ? (
-              <div className="relative border rounded-lg p-3 bg-gray-50">
-                <div className="flex items-center gap-3">
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="h-20 w-20 object-cover rounded-lg border"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-gray-400" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-700 truncate">
-                      {selectedFile.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(selectedFile.size / 1024).toFixed(1)} KB
-                    </p>
-                    {isUploading && (
-                      <div className="flex items-center gap-2 mt-1 text-greenPrimary">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-xs">Subiendo...</span>
-                      </div>
-                    )}
-                    {attachmentUrl && !isUploading && (
-                      <p className="text-xs text-green-600 mt-1">Subida correctamente</p>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRemoveFile}
-                    disabled={isUploading}
-                    className="text-gray-400 hover:text-red-500"
+            {/* Uploaded files list */}
+            {uploadedAttachments.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {uploadedAttachments.map((attachment, index) => (
+                  <div
+                    key={index}
+                    className="relative border rounded-lg p-3 bg-gray-50"
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <div className="flex items-center gap-3">
+                      {attachment.previewUrl ? (
+                        <img
+                          src={attachment.previewUrl}
+                          alt="Preview"
+                          className="h-16 w-16 object-cover rounded-lg border"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">
+                          {attachment.file.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(attachment.file.size / 1024).toFixed(1)} KB
+                        </p>
+                        {attachment.isUploading && (
+                          <div className="flex items-center gap-2 mt-1 text-greenPrimary">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-xs">Subiendo...</span>
+                          </div>
+                        )}
+                        {attachment.s3Url && !attachment.isUploading && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Subida correctamente
+                          </p>
+                        )}
+                        {attachment.error && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {attachment.error}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                        disabled={attachment.isUploading}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
+            )}
+
+            {/* Upload buttons */}
+            {uploadedAttachments.length < 5 && (
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => cameraInputRef.current?.click()}
                   className="flex-1 h-20 flex-col gap-1 border-dashed hover:border-greenPrimary hover:bg-green-50"
+                  disabled={isAnyUploading}
                 >
                   <Camera className="h-6 w-6 text-greenPrimary" />
                   <span className="text-xs">Tomar Foto</span>
@@ -373,15 +435,20 @@ export default function CreatePrescriptionRequestModal({
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   className="flex-1 h-20 flex-col gap-1 border-dashed hover:border-greenPrimary hover:bg-green-50"
+                  disabled={isAnyUploading}
                 >
                   <Image className="h-6 w-6 text-greenPrimary" />
-                  <span className="text-xs">Elegir Imagen</span>
+                  <span className="text-xs">
+                    {uploadedAttachments.length > 0
+                      ? "Agregar mas"
+                      : "Elegir Imagen"}
+                  </span>
                 </Button>
               </div>
             )}
             <p className="text-xs text-gray-500">
-              Puede adjuntar una foto de una receta anterior o la caja del
-              medicamento (max. 5MB)
+              Puede adjuntar hasta 5 fotos de recetas anteriores o cajas de
+              medicamentos (max. 5MB cada una)
             </p>
           </div>
 
@@ -402,7 +469,7 @@ export default function CreatePrescriptionRequestModal({
               variant="outline"
               onClick={handleClose}
               className="px-6 hover:bg-gray-50"
-              disabled={createMutation.isPending || isUploading}
+              disabled={createMutation.isPending || isAnyUploading}
             >
               Cancelar
             </Button>
@@ -412,7 +479,7 @@ export default function CreatePrescriptionRequestModal({
                 !selectedDoctorId ||
                 description.trim().length < 10 ||
                 createMutation.isPending ||
-                isUploading
+                isAnyUploading
               }
               className="px-6 bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md min-w-[160px]"
             >

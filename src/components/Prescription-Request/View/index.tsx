@@ -123,40 +123,71 @@ export default function ViewPrescriptionRequestModal({
             </div>
           </div>
 
-          {/* Attachment */}
-          {request.attachmentUrl && (
+          {/* Attachments */}
+          {request.attachmentUrls && request.attachmentUrls.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-gray-700">
-                Imagen Adjunta
+                {request.attachmentUrls.length > 1
+                  ? "Imagenes Adjuntas"
+                  : "Imagen Adjunta"}
               </h3>
-              <a
-                href={request.attachmentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Ver imagen adjunta
-              </a>
+              <div className="space-y-1">
+                {request.attachmentUrls.map((url, index) => (
+                  <a
+                    key={index}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {request.attachmentUrls && request.attachmentUrls.length > 1
+                      ? `Ver adjunto ${index + 1}`
+                      : "Ver imagen adjunta"}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Prescription (if completed) */}
-          {isCompleted && (request.prescriptionUrl || request.prescriptionLink) && (
+          {isCompleted && ((request.prescriptionUrls && request.prescriptionUrls.length > 0) || request.prescriptionLink) && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
               <h3 className="text-sm font-semibold text-green-800 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Receta
+                Receta{request.prescriptionUrls && request.prescriptionUrls.length > 1 ? "s" : ""}
               </h3>
-              <a
-                href={request.prescriptionUrl || request.prescriptionLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-green-700 hover:text-green-800 font-medium"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Descargar / Ver Receta
-              </a>
+              {/* Multiple prescription files */}
+              {request.prescriptionUrls && request.prescriptionUrls.length > 0 && (
+                <div className="space-y-2">
+                  {request.prescriptionUrls.map((url, index) => (
+                    <a
+                      key={index}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-green-700 hover:text-green-800 font-medium"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {request.prescriptionUrls && request.prescriptionUrls.length > 1
+                        ? `Receta ${index + 1}`
+                        : "Descargar / Ver Receta"}
+                    </a>
+                  ))}
+                </div>
+              )}
+              {/* External link */}
+              {request.prescriptionLink && (
+                <a
+                  href={request.prescriptionLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-green-700 hover:text-green-800 font-medium"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Ver Receta (Link Externo)
+                </a>
+              )}
               {request.doctorNotes && (
                 <div className="pt-2 border-t border-green-200">
                   <p className="text-xs font-semibold text-green-800">
