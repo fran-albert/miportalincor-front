@@ -107,19 +107,39 @@ export default function PrescriptionRequestCard({
             </p>
           </div>
 
-          {/* Prescription Link (if completed) */}
-          {isCompleted && (request.prescriptionUrl || request.prescriptionLink) && (
-            <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md">
+          {/* Prescription Links (if completed) */}
+          {isCompleted && ((request.prescriptionUrls && request.prescriptionUrls.length > 0) || request.prescriptionLink) && (
+            <div className="flex flex-wrap items-center gap-2 p-2 bg-green-50 rounded-md">
               <ExternalLink className="h-4 w-4 text-green-600" />
-              <a
-                href={request.prescriptionUrl || request.prescriptionLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-green-700 hover:underline font-medium"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Ver receta
-              </a>
+              {request.prescriptionUrls && request.prescriptionUrls.length > 0 && (
+                <>
+                  {request.prescriptionUrls.map((url, index) => (
+                    <a
+                      key={index}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-green-700 hover:underline font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {request.prescriptionUrls && request.prescriptionUrls.length > 1
+                        ? `Receta ${index + 1}`
+                        : "Ver receta"}
+                    </a>
+                  ))}
+                </>
+              )}
+              {request.prescriptionLink && (
+                <a
+                  href={request.prescriptionLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-green-700 hover:underline font-medium"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Link externo
+                </a>
+              )}
             </div>
           )}
 
