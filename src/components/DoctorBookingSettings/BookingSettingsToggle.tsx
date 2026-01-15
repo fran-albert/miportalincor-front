@@ -5,6 +5,7 @@ import { useDoctorBookingSettings } from "@/hooks/DoctorBookingSettings/useDocto
 import { useDoctorBookingSettingsMutation } from "@/hooks/DoctorBookingSettings/useDoctorBookingSettingsMutation";
 import { useToast } from "@/hooks/use-toast";
 
+
 interface BookingSettingsToggleProps {
   doctorId: number;
 }
