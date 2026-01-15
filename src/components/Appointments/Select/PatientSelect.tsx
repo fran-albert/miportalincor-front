@@ -90,9 +90,9 @@ export const PatientSelect = ({
       <PopoverContent className="w-[400px] p-0">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Buscar por nombre o DNI..."
+            placeholder="Buscar por DNI..."
             value={search}
-            onValueChange={setSearch}
+            onValueChange={(value) => setSearch(value.replace(/\D/g, ""))}
           />
           <CommandList>
             {isLoading || isFetching ? (
@@ -101,9 +101,9 @@ export const PatientSelect = ({
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
               </div>
-            ) : search.length < 2 ? (
+            ) : search.length < 7 ? (
               <CommandEmpty>
-                Ingrese al menos 2 caracteres para buscar
+                Ingrese al menos 7 dígitos del DNI
               </CommandEmpty>
             ) : patients?.length === 0 ? (
               <CommandEmpty>No se encontraron pacientes</CommandEmpty>

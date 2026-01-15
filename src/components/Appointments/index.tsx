@@ -18,3 +18,6 @@ export * from './Forms';
 
 // Dialog components
 export * from './Dialogs';
+
+// Modal components
+export * from './Modals';

@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TvMediaManager } from "@/components/TvMedia/TvMediaManager";
-import { Monitor, Settings } from "lucide-react";
+import { CheckupTypesManager } from "@/components/PeriodicCheckup";
+import { Monitor, Settings, CalendarClock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 export default function SettingsPage() {
@@ -29,10 +30,18 @@ export default function SettingsPage() {
             <Monitor className="h-4 w-4" />
             Pantalla TV
           </TabsTrigger>
+          <TabsTrigger value="checkups" className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            Chequeos Periódicos
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tv-media" className="mt-6">
           <TvMediaManager />
+        </TabsContent>
+
+        <TabsContent value="checkups" className="mt-6">
+          <CheckupTypesManager />
         </TabsContent>
       </Tabs>
     </div>

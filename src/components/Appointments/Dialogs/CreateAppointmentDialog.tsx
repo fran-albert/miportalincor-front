@@ -12,7 +12,7 @@ import { CreateAppointmentForm } from "../Forms/CreateAppointmentForm";
 import { useAppointmentMutations } from "@/hooks/Appointments";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
 import { CalendarPlus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface CreateAppointmentDialogProps {
   trigger?: React.ReactNode;
@@ -25,7 +25,11 @@ interface CreateAppointmentDialogProps {
     userName?: string;
   };
   defaultDate?: string;
+  defaultHour?: string;
   onSuccess?: () => void;
+  /** Control externo del estado del dialog */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const CreateAppointmentDialog = ({
@@ -34,10 +38,18 @@ export const CreateAppointmentDialog = ({
   defaultPatientId,
   defaultPatient,
   defaultDate,
-  onSuccess
+  defaultHour,
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: CreateAppointmentDialogProps) => {
-  const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Usar estado controlado si se provee, sino usar interno
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen;
+  const { showSuccess, showError } = useToastContext();
   const { createAppointment, isCreating } = useAppointmentMutations();
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
@@ -48,31 +60,28 @@ export const CreateAppointmentDialog = ({
         date: data.date,
         hour: data.hour,
       });
-      toast({
-        title: "Turno creado",
-        description: "El turno se creó correctamente",
-      });
+      showSuccess("Turno creado", "El turno se creó correctamente");
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo crear el turno";
-      toast({
-        title: "Error",
-        description: errorMessage,
-      });
+      showError("Error", errorMessage);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <CalendarPlus className="mr-2 h-4 w-4" />
-            Nuevo Turno
-          </Button>
-        )}
-      </DialogTrigger>
+      {/* Solo mostrar trigger si no está en modo controlado */}
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button>
+              <CalendarPlus className="mr-2 h-4 w-4" />
+              Nuevo Turno
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Crear Nuevo Turno</DialogTitle>
@@ -87,6 +96,7 @@ export const CreateAppointmentDialog = ({
           defaultPatientId={defaultPatientId}
           defaultPatient={defaultPatient}
           defaultDate={defaultDate}
+          defaultHour={defaultHour}
         />
       </DialogContent>
     </Dialog>
