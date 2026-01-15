@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearchCommand } from "@/components/Search/GlobalSearchCommand";
+import { AttendingPatientFAB } from "@/components/AttendingPatientFAB";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
@@ -95,6 +96,9 @@ export function DashboardLayout() {
 
       {/* Global Search Command Dialog */}
       <GlobalSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+
+      {/* Floating Action Button para paciente en atención */}
+      <AttendingPatientFAB />
     </>
   );
 }

@@ -93,9 +93,11 @@ interface BigCalendarProps {
   className?: string;
   /** Si es true, filtra automáticamente por el médico logueado y oculta el selector */
   autoFilterForDoctor?: boolean;
+  /** Si es true, solo permite ver turnos sin poder crearlos (modo solo lectura) */
+  readOnly?: boolean;
 }
 
-export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalendarProps) => {
+export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly = false }: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<View>("month");
@@ -294,11 +296,12 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
       return {
         className: "available-slot-event",
         style: {
-          backgroundColor: "#ffffff",
-          color: "#000000",
+          backgroundColor: readOnly ? "#f3f4f6" : "#ffffff",
+          color: readOnly ? "#9ca3af" : "#000000",
           fontSize: "11px",
-          cursor: "pointer",
+          cursor: readOnly ? "default" : "pointer",
           fontWeight: "600",
+          opacity: readOnly ? 0.6 : 1,
         },
       };
     }
@@ -363,12 +366,13 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
         fontSize: "12px",
       },
     };
-  }, []);
+  }, [readOnly]);
 
   // Handle event click
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    // If it's an available slot, open create dialog
+    // If it's an available slot, open create dialog (unless readOnly)
     if (event.resource.type === "available") {
+      if (readOnly) return; // Don't allow creating in readOnly mode
       setSelectedSlot({
         date: event.resource.slotDate!,
         hour: event.resource.slotHour,
@@ -380,10 +384,13 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
     // For appointments/overturns, show details dialog
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
-  }, []);
+  }, [readOnly]);
 
   // Handle slot selection (click on empty space)
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
+    // Don't allow creating in readOnly mode
+    if (readOnly) return;
+
     // In month view, do nothing (slots are shown in day/week views)
     if (currentView === "month") {
       return;
@@ -394,7 +401,7 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
     const hour = format(slotInfo.start, "HH:mm");
     setSelectedSlot({ date, hour });
     setIsCreateDialogOpen(true);
-  }, [currentView]);
+  }, [currentView, readOnly]);
 
   // Update current date when navigating calendar
   const handleNavigate = useCallback((newDate: Date) => {
@@ -537,7 +544,7 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false }: BigCalen
               eventPropGetter={getEventStyle}
               onSelectEvent={handleSelectEvent}
               onSelectSlot={handleSelectSlot}
-              selectable
+              selectable={!readOnly}
               popup
               step={slotDuration}
               timeslots={1}

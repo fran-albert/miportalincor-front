@@ -4,6 +4,7 @@ import { TvMediaManager } from "@/components/TvMedia/TvMediaManager";
 import { CheckupTypesManager } from "@/components/PeriodicCheckup";
 import { Monitor, Settings, CalendarClock } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 
 export default function SettingsPage() {
   const breadcrumbItems = [
@@ -24,21 +25,25 @@ export default function SettingsPage() {
         icon={<Settings className="h-6 w-6" />}
       />
 
-      <Tabs defaultValue="tv-media" className="w-full">
+      <Tabs defaultValue="checkups" className="w-full">
         <TabsList>
-          <TabsTrigger value="tv-media" className="flex items-center gap-2">
-            <Monitor className="h-4 w-4" />
-            Pantalla TV
-          </TabsTrigger>
+          {FEATURE_FLAGS.QUEUE_ENABLED && (
+            <TabsTrigger value="tv-media" className="flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              Pantalla TV
+            </TabsTrigger>
+          )}
           <TabsTrigger value="checkups" className="flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
             Chequeos Periódicos
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="tv-media" className="mt-6">
-          <TvMediaManager />
-        </TabsContent>
+        {FEATURE_FLAGS.QUEUE_ENABLED && (
+          <TabsContent value="tv-media" className="mt-6">
+            <TvMediaManager />
+          </TabsContent>
+        )}
 
         <TabsContent value="checkups" className="mt-6">
           <CheckupTypesManager />
