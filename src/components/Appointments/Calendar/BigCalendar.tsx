@@ -28,6 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { useAppointments, useAppointmentMutations, useAvailableSlotsRange } from "@/hooks/Appointments";
 import { useOverturns, useOverturnMutations } from "@/hooks/Overturns";
+import { useBlockedSlots } from "@/hooks/BlockedSlots";
+import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
 import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
 import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability/useDoctorAvailabilities";
 import {
@@ -41,9 +43,11 @@ import {
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building } from "lucide-react";
+import { CalendarDays, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
+import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
+import { SlotActionDialog } from "../Dialogs/SlotActionDialog";
 import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
 
 // Configure date-fns localizer for Spanish
@@ -80,8 +84,8 @@ interface CalendarEvent {
   start: Date;
   end: Date;
   resource: {
-    type: "appointment" | "overturn" | "available";
-    data?: AppointmentFullResponseDto | OverturnDetailedDto;
+    type: "appointment" | "overturn" | "available" | "blocked";
+    data?: AppointmentFullResponseDto | OverturnDetailedDto | BlockedSlotResponseDto;
     status?: AppointmentStatus | OverturnStatus;
     isGuest?: boolean;
     slotDate?: string;
@@ -91,33 +95,53 @@ interface CalendarEvent {
 
 interface BigCalendarProps {
   className?: string;
+  /** ID del médico a mostrar (usado por DoctorTabs) */
+  doctorId?: number;
+  /** Nombre del médico para mostrar en el título */
+  doctorName?: string;
   /** Si es true, filtra automáticamente por el médico logueado y oculta el selector */
   autoFilterForDoctor?: boolean;
   /** Si es true, solo permite ver turnos sin poder crearlos (modo solo lectura) */
   readOnly?: boolean;
 }
 
-export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly = false }: BigCalendarProps) => {
+export const BigCalendar = ({
+  className,
+  doctorId: propDoctorId,
+  doctorName,
+  autoFilterForDoctor = false,
+  readOnly = false
+}: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<View>("month");
-  const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>();
+  const [internalDoctorId, setInternalDoctorId] = useState<number | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; hour?: string } | null>(null);
   const [isRegisterGuestModalOpen, setIsRegisterGuestModalOpen] = useState(false);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [blockDialogMode, setBlockDialogMode] = useState<"block" | "unblock">("block");
+  const [selectedBlockedSlot, setSelectedBlockedSlot] = useState<BlockedSlotResponseDto | undefined>();
+  const [isSlotActionDialogOpen, setIsSlotActionDialogOpen] = useState(false);
 
   // Si autoFilterForDoctor, obtener el perfil del médico logueado
   const { data: doctorProfile } = useMyDoctorProfile();
 
-  // Auto-seleccionar el médico si autoFilterForDoctor está activo
+  // Determinar el doctorId a usar: prop > auto-filter > internal
+  const selectedDoctorId = propDoctorId ?? (autoFilterForDoctor ? doctorProfile?.userId : internalDoctorId);
+
+  // Determinar si mostrar el selector de médico (solo si no hay doctorId en prop y no es auto-filter)
+  const showDoctorSelector = !propDoctorId && !autoFilterForDoctor;
+
+  // Auto-seleccionar el médico si autoFilterForDoctor está activo (para compatibilidad)
   useEffect(() => {
-    if (autoFilterForDoctor && doctorProfile?.userId) {
-      setSelectedDoctorId(doctorProfile.userId);
+    if (autoFilterForDoctor && doctorProfile?.userId && !propDoctorId) {
+      setInternalDoctorId(doctorProfile.userId);
     }
-  }, [autoFilterForDoctor, doctorProfile?.userId]);
+  }, [autoFilterForDoctor, doctorProfile?.userId, propDoctorId]);
 
   // Calculate date range for queries
   const dateRange = useMemo(() => {
@@ -188,6 +212,14 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
     enabled: !!selectedDoctorId,
   });
 
+  // Fetch blocked slots
+  const { blockedSlots } = useBlockedSlots({
+    doctorId: selectedDoctorId ?? 0,
+    startDate: formatDateForCalendar(slotsDateRange.start),
+    endDate: formatDateForCalendar(slotsDateRange.end),
+    enabled: !!selectedDoctorId,
+  });
+
   const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
 
@@ -254,11 +286,39 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
       const key = `${ot.date}-${ot.hour.slice(0, 5)}`;
       occupiedSlots.add(key);
     });
+    // Also mark blocked slots as occupied
+    blockedSlots.forEach((blocked) => {
+      const key = `${blocked.date}-${blocked.hour.slice(0, 5)}`;
+      occupiedSlots.add(key);
+    });
 
     // Filter available slots that are not occupied
     const filteredAvailableSlots = availableSlots.filter((slot) => {
       const key = `${slot.date}-${slot.hour}`;
       return !occupiedSlots.has(key);
+    });
+
+    // Create events for blocked slots
+    const blockedSlotEvents: CalendarEvent[] = blockedSlots.map((blocked) => {
+      const [hours, minutes] = blocked.hour.split(":").map(Number);
+      const start = new Date(blocked.date + "T12:00:00");
+      start.setHours(hours, minutes, 0, 0);
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + slotDuration);
+
+      const reasonLabel = BlockReasonLabels[blocked.reason] || blocked.reason;
+      return {
+        id: `blocked-${blocked.id}`,
+        title: `🔒 ${reasonLabel}`,
+        start,
+        end,
+        resource: {
+          type: "blocked" as const,
+          data: blocked,
+          slotDate: blocked.date,
+          slotHour: blocked.hour.slice(0, 5),
+        },
+      };
     });
 
     // Create events for available slots (only in day/week view)
@@ -284,10 +344,10 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
 
     // Only include available slots in day/week views
     if (showAvailableSlots) {
-      return [...appointmentEvents, ...overturnEvents, ...availableSlotEvents];
+      return [...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
     }
-    return [...appointmentEvents, ...overturnEvents];
-  }, [appointments, overturns, availableSlots, slotDuration, showAvailableSlots]);
+    return [...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
+  }, [appointments, overturns, availableSlots, blockedSlots, slotDuration, showAvailableSlots]);
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
@@ -302,6 +362,22 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
           cursor: readOnly ? "default" : "pointer",
           fontWeight: "600",
           opacity: readOnly ? 0.6 : 1,
+        },
+      };
+    }
+
+    // Style for blocked slots - red dashed border
+    if (event.resource.type === "blocked") {
+      return {
+        className: "blocked-slot-event",
+        style: {
+          backgroundColor: "#fef2f2",
+          color: "#dc2626",
+          fontSize: "11px",
+          cursor: readOnly ? "default" : "pointer",
+          fontWeight: "600",
+          border: "2px dashed #dc2626",
+          borderRadius: "4px",
         },
       };
     }
@@ -370,14 +446,27 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
 
   // Handle event click
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    // If it's an available slot, open create dialog (unless readOnly)
+    // If it's an available slot, show action dialog (unless readOnly)
     if (event.resource.type === "available") {
       if (readOnly) return; // Don't allow creating in readOnly mode
       setSelectedSlot({
         date: event.resource.slotDate!,
         hour: event.resource.slotHour,
       });
-      setIsCreateDialogOpen(true);
+      setIsSlotActionDialogOpen(true);
+      return;
+    }
+
+    // If it's a blocked slot, open unblock dialog (unless readOnly)
+    if (event.resource.type === "blocked") {
+      if (readOnly) return; // Don't allow unblocking in readOnly mode
+      setSelectedSlot({
+        date: event.resource.slotDate!,
+        hour: event.resource.slotHour,
+      });
+      setSelectedBlockedSlot(event.resource.data as BlockedSlotResponseDto);
+      setBlockDialogMode("unblock");
+      setIsBlockDialogOpen(true);
       return;
     }
 
@@ -471,14 +560,18 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5" />
-              {autoFilterForDoctor ? "Mi Calendario de Turnos" : "Calendario de Turnos"}
+              {doctorName
+                ? `Calendario - ${doctorName}`
+                : autoFilterForDoctor
+                ? "Mi Calendario de Turnos"
+                : "Calendario de Turnos"}
             </CardTitle>
-            {!autoFilterForDoctor && (
+            {showDoctorSelector && (
               <div className="flex items-center gap-2">
                 <div className="w-64">
                   <DoctorSelect
-                    value={selectedDoctorId}
-                    onValueChange={setSelectedDoctorId}
+                    value={internalDoctorId}
+                    onValueChange={setInternalDoctorId}
                     placeholder="Todos los médicos"
                   />
                 </div>
@@ -522,6 +615,10 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
             <Badge variant="outline" className="border-l-4 border-l-orange-500 bg-orange-50 text-orange-700">
               <AlertCircle className="h-3 w-3 mr-1" />
               Sobreturno
+            </Badge>
+            <Badge variant="outline" className="border-2 border-dashed border-red-500 bg-red-50 text-red-700">
+              <Lock className="h-3 w-3 mr-1" />
+              Bloqueado
             </Badge>
           </div>
         </CardHeader>
@@ -599,13 +696,13 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
                   <p className="font-medium">
                     {selectedEvent.resource.isGuest
                       ? `${(selectedEvent.resource.data as AppointmentFullResponseDto).guestFirstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto).guestLastName}`
-                      : `${selectedEvent.resource.data.patient?.firstName} ${selectedEvent.resource.data.patient?.lastName}`
+                      : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
                     }
                   </p>
                   <p className="text-sm text-muted-foreground">
                     DNI: {selectedEvent.resource.isGuest
                       ? (selectedEvent.resource.data as AppointmentFullResponseDto).guestDocumentNumber
-                      : selectedEvent.resource.data.patient?.userName
+                      : (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.userName
                     }
                   </p>
                 </div>
@@ -617,7 +714,7 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
                 <div>
                   <p className="text-sm text-muted-foreground">Médico</p>
                   <p className="font-medium">
-                    {selectedEvent.resource.data.doctor && formatDoctorName(selectedEvent.resource.data.doctor)}
+                    {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).doctor && formatDoctorName((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).doctor!)}
                   </p>
                 </div>
               </div>
@@ -773,6 +870,28 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
         </DialogContent>
       </Dialog>
 
+      {/* Slot Action Dialog - Choose between create appointment or block */}
+      {selectedSlot && (
+        <SlotActionDialog
+          open={isSlotActionDialogOpen}
+          onOpenChange={(open) => {
+            setIsSlotActionDialogOpen(open);
+            if (!open) setSelectedSlot(null);
+          }}
+          date={selectedSlot.date}
+          hour={selectedSlot.hour || ""}
+          onCreateAppointment={() => {
+            setIsSlotActionDialogOpen(false);
+            setIsCreateDialogOpen(true);
+          }}
+          onBlockSlot={() => {
+            setIsSlotActionDialogOpen(false);
+            setBlockDialogMode("block");
+            setIsBlockDialogOpen(true);
+          }}
+        />
+      )}
+
       {/* Create Appointment Dialog */}
       <CreateAppointmentDialog
         open={isCreateDialogOpen && !!selectedSlot}
@@ -814,7 +933,7 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
                   <div className="mt-2 space-y-1 text-sm">
                     <p><strong>Paciente:</strong> {selectedEvent.resource.isGuest
                       ? `${(selectedEvent.resource.data as AppointmentFullResponseDto).guestFirstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto).guestLastName}`
-                      : `${selectedEvent.resource.data.patient?.firstName} ${selectedEvent.resource.data.patient?.lastName}`
+                      : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
                     }</p>
                     <p><strong>Fecha:</strong> {format(selectedEvent.start, "EEEE d 'de' MMMM, yyyy", { locale: es })}</p>
                     <p><strong>Hora:</strong> {formatTimeAR(selectedEvent.resource.data.hour)}</p>
@@ -837,6 +956,30 @@ export const BigCalendar = ({ className, autoFilterForDoctor = false, readOnly =
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Block/Unblock Slot Dialog */}
+      {selectedSlot && selectedDoctorId && (
+        <BlockSlotDialog
+          open={isBlockDialogOpen}
+          onOpenChange={(open) => {
+            setIsBlockDialogOpen(open);
+            if (!open) {
+              setSelectedSlot(null);
+              setSelectedBlockedSlot(undefined);
+            }
+          }}
+          mode={blockDialogMode}
+          doctorId={selectedDoctorId}
+          date={selectedSlot.date}
+          hour={selectedSlot.hour || ""}
+          blockedSlot={selectedBlockedSlot}
+          onSuccess={() => {
+            setIsBlockDialogOpen(false);
+            setSelectedSlot(null);
+            setSelectedBlockedSlot(undefined);
+          }}
+        />
+      )}
     </div>
   );
 };

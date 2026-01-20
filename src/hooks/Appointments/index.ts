@@ -1,6 +1,7 @@
 // Queries
 export { useAppointments } from './useAppointments';
 export { useAppointment } from './useAppointment';
+export { useDoctorTabs, type DoctorTab, type UseDoctorTabsReturn } from './useDoctorTabs';
 export { useAvailableSlots } from './useAvailableSlots';
 export { useAvailableSlotsRange } from './useAvailableSlotsRange';
 export { useWaitingList } from './useWaitingList';

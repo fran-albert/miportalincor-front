@@ -7,6 +7,7 @@ import {
   CreateAppointmentDialog,
   CreateOverturnDialog,
 } from "@/components/Appointments";
+import { DoctorTabsContainer } from "@/components/Appointments/DoctorTabs";
 import { QueuePanel } from "@/components/Queue";
 import { PageHeader } from "@/components/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
@@ -92,7 +93,7 @@ const ShiftsPage = () => {
           </TabsList>
 
           <TabsContent value="calendar" className="mt-6">
-            <BigCalendar />
+            <DoctorTabsContainer />
           </TabsContent>
 
           <TabsContent value="queue" className="mt-6">
@@ -100,7 +101,7 @@ const ShiftsPage = () => {
           </TabsContent>
         </Tabs>
       ) : (
-        <BigCalendar />
+        <DoctorTabsContainer />
       )}
     </div>
   );
