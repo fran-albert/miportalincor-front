@@ -105,6 +105,8 @@ export const MonthCalendar = ({
     const dateKey = formatDateForCalendar(day);
     const dayAppointments = appointmentsByDate[dateKey];
     const count = dayAppointments?.length || 0;
+    // Backend returns 0/1 (numbers) not true/false (booleans)
+    const hasGuests = dayAppointments?.some(apt => apt.isGuest === 1 || apt.isGuest === true) || false;
 
     return (
       <div className="relative w-full h-full flex items-center justify-center">
@@ -112,10 +114,15 @@ export const MonthCalendar = ({
         {count > 0 && (
           <Badge
             variant="default"
-            className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+            className={`absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] ${
+              hasGuests ? 'bg-purple-600' : ''
+            }`}
           >
             {count}
           </Badge>
+        )}
+        {hasGuests && (
+          <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[8px]">🆕</span>
         )}
       </div>
     );

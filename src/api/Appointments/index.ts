@@ -19,3 +19,4 @@ export { updateAppointment } from './update.action';
 export { changeAppointmentStatus } from './change-status.action';
 export { deleteAppointment } from './delete.action';
 export { requestAppointment, type RequestAppointmentDto } from './request-appointment.action';
+export { convertGuestToPatient, type ConvertGuestDto } from './convert-guest.action';

@@ -3,6 +3,7 @@ import { StatsCard } from "./Dashboard/StatsCard";
 import { QuickAccessCard } from "./Dashboard/QuickAccessCard";
 import { DoctorQueueWidget } from "@/components/DoctorWaitingRoom";
 import { useDashboardStats } from "@/hooks/Dashboard/useDashboardStats";
+import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import {
   Users,
   Stethoscope,
@@ -121,8 +122,8 @@ export default function HomeComponent({ name }: { name: string }) {
       {/* Hero Section */}
       <WelcomeHero name={name} />
 
-      {/* Doctor Waiting Room Widget - Solo para médicos */}
-      {isDoctor && (
+      {/* Doctor Waiting Room Widget - Solo para médicos y si queue está habilitado */}
+      {isDoctor && FEATURE_FLAGS.QUEUE_ENABLED && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-1">
             <DoctorQueueWidget />

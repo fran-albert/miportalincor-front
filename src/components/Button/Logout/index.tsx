@@ -1,24 +1,8 @@
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useState } from "react";
-import { logout } from "@/store/authSlice";
+import { useLogout } from "@/hooks/useLogout";
 import LoadingAnimation from "@/components/Loading/loading";
 
 const LogoutButton = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const handleLogout = () => {
-    setIsLoggingOut(true);
-
-    setTimeout(() => {
-      localStorage.removeItem("authToken");
-      dispatch(logout());
-      setIsLoggingOut(false);
-      navigate("/iniciar-sesion");
-    }, 2000);
-  };
+  const { handleLogout, isLoggingOut } = useLogout();
 
   return (
     <div className="flex justify-center items-center">

@@ -1,18 +1,18 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, RefreshCcw, LayoutGrid, Users } from "lucide-react";
+import { Calendar, RefreshCcw, Users } from "lucide-react";
 import {
   BigCalendar,
-  MonthCalendar,
-  AppointmentsTable,
   CreateAppointmentDialog,
   CreateOverturnDialog,
 } from "@/components/Appointments";
+import { DoctorTabsContainer } from "@/components/Appointments/DoctorTabs";
 import { QueuePanel } from "@/components/Queue";
 import { PageHeader } from "@/components/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserRole from "@/hooks/useRoles";
+import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
@@ -72,44 +72,36 @@ const ShiftsPage = () => {
 
       {/* Content: diferentes vistas según rol */}
       {isDoctor ? (
-        <BigCalendar autoFilterForDoctor={true} />
-      ) : (
-        <Tabs defaultValue="queue" className="flex-1">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
-            <TabsTrigger value="queue" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Cola
-            </TabsTrigger>
-            <TabsTrigger value="big-calendar" className="flex items-center gap-2">
+        <BigCalendar autoFilterForDoctor={true} readOnly={true} />
+      ) : FEATURE_FLAGS.QUEUE_ENABLED ? (
+        <Tabs defaultValue="calendar" className="flex-1">
+          <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">
+            <TabsTrigger
+              value="calendar"
+              className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-greenPrimary data-[state=active]:shadow-md"
+            >
               <Calendar className="h-4 w-4" />
               Calendario
             </TabsTrigger>
-            <TabsTrigger value="simple-calendar" className="flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4" />
-              Vista Simple
-            </TabsTrigger>
-            <TabsTrigger value="table" className="flex items-center gap-2">
-              <List className="h-4 w-4" />
-              Lista
+            <TabsTrigger
+              value="queue"
+              className="inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-greenPrimary data-[state=active]:shadow-md"
+            >
+              <Users className="h-4 w-4" />
+              Cola del Día
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="calendar" className="mt-6">
+            <DoctorTabsContainer />
+          </TabsContent>
 
           <TabsContent value="queue" className="mt-6">
             <QueuePanel />
           </TabsContent>
-
-          <TabsContent value="big-calendar" className="mt-6">
-            <BigCalendar />
-          </TabsContent>
-
-          <TabsContent value="simple-calendar" className="mt-6">
-            <MonthCalendar />
-          </TabsContent>
-
-          <TabsContent value="table" className="mt-6">
-            <AppointmentsTable />
-          </TabsContent>
         </Tabs>
+      ) : (
+        <DoctorTabsContainer />
       )}
     </div>
   );

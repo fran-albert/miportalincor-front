@@ -3,9 +3,11 @@
  *
  * Para habilitar/deshabilitar features, modificar las variables de entorno:
  * - VITE_FEATURE_APPOINTMENTS_ENABLED=true|false
+ * - VITE_FEATURE_QUEUE_ENABLED=true|false
  */
 export const FEATURE_FLAGS = {
   APPOINTMENTS_ENABLED: import.meta.env.VITE_FEATURE_APPOINTMENTS_ENABLED === 'true',
+  QUEUE_ENABLED: import.meta.env.VITE_FEATURE_QUEUE_ENABLED === 'true',
 } as const;
 
 /**

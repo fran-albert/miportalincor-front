@@ -12,7 +12,7 @@ import { CreateOverturnForm } from "../Forms/CreateOverturnForm";
 import { useOverturnMutations } from "@/hooks/Overturns";
 import { CreateOverturnFormData } from "@/validators/Appointment/appointment.schema";
 import { AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface CreateOverturnDialogProps {
   trigger?: React.ReactNode;
@@ -30,7 +30,7 @@ export const CreateOverturnDialog = ({
   onSuccess
 }: CreateOverturnDialogProps) => {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastContext();
   const { createOverturn, isCreating } = useOverturnMutations();
 
   const handleSubmit = async (data: CreateOverturnFormData) => {
@@ -42,18 +42,12 @@ export const CreateOverturnDialog = ({
         hour: data.hour,
         reason: data.reason,
       });
-      toast({
-        title: "Sobreturno creado",
-        description: "El sobreturno se creó correctamente",
-      });
+      showSuccess("Sobreturno creado", "El sobreturno se creó correctamente");
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo crear el sobreturno";
-      toast({
-        title: "Error",
-        description: errorMessage,
-      });
+      showError("Error", errorMessage);
     }
   };
 

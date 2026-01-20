@@ -22,6 +22,18 @@ export enum AppointmentStatus {
   CANCELLED_BY_SECRETARY = 'CANCELLED_BY_SECRETARY',
 }
 
+export enum AppointmentOrigin {
+  WEB_GUEST = 'WEB_GUEST',       // Invitado desde turnos.incor.ui (DNI no existe en BD)
+  WEB_PATIENT = 'WEB_PATIENT',   // Paciente registrado (desde su cuenta o web pública con DNI existente)
+  SECRETARY = 'SECRETARY',       // Secretaría desde miportalincor-front
+}
+
+export const AppointmentOriginLabels: Record<AppointmentOrigin, string> = {
+  [AppointmentOrigin.WEB_GUEST]: 'Invitado (web pública)',
+  [AppointmentOrigin.WEB_PATIENT]: 'Paciente (web)',
+  [AppointmentOrigin.SECRETARY]: 'Secretaría',
+};
+
 export const AppointmentStatusLabels: Record<AppointmentStatus, string> = {
   [AppointmentStatus.REQUESTED_BY_PATIENT]: 'Solicitado (paciente)',
   [AppointmentStatus.ASSIGNED_BY_SECRETARY]: 'Asignado (secretaria)',
@@ -84,12 +96,20 @@ export interface DoctorBasicDto {
 export interface AppointmentResponseDto {
   id: number;
   doctorId: number;
-  patientId: number;
+  patientId: number | null;
   date: string;
   hour: string;
   status: AppointmentStatus;
+  origin?: AppointmentOrigin | null;
   createdAt: string;
   updatedAt: string;
+  // Guest fields (backend returns 0/1 from MySQL, but may also return boolean)
+  isGuest?: boolean | number;
+  guestFirstName?: string;
+  guestLastName?: string;
+  guestDocumentNumber?: string;
+  guestPhone?: string;
+  guestEmail?: string;
 }
 
 export interface AppointmentWithPatientDto extends AppointmentResponseDto {
@@ -101,6 +121,8 @@ export interface AppointmentDetailedDto {
   date: string;
   hour: string;
   status: AppointmentStatus;
+  origin?: AppointmentOrigin | null;
+  isGuest?: boolean | number;
   patient?: PatientBasicDto | null;
   doctor?: DoctorBasicDto | null;
 }

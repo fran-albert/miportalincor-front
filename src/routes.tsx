@@ -36,6 +36,7 @@ import PatientAntecedentesPage from "./pages/protected/Patient/Antecedentes";
 import PatientEvolucionesPage from "./pages/protected/Patient/Evoluciones";
 import PatientMedicacionActualPage from "./pages/protected/Patient/Medicacion-Actual";
 import PatientAppointmentsPage from "./pages/protected/Patient/Appointments";
+import PatientPeriodicCheckupsPage from "./pages/protected/Patient/PeriodicCheckups";
 import DoctorHistoryPage from "./pages/protected/Doctor/Historia-Clinica";
 import DoctorStudiesPage from "./pages/protected/Doctor/Studies";
 import DoctorEvolucionesPage from "./pages/protected/Doctor/Evoluciones";
@@ -349,6 +350,14 @@ function App() {
               }
             />
           )}
+          <Route
+            path="/pacientes/:slug/chequeos-periodicos"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+                <PatientPeriodicCheckupsPage />
+              </Private_Routes>
+            }
+          />
 
           {/* Médicos */}
           <Route

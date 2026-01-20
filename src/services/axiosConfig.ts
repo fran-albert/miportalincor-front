@@ -57,6 +57,14 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
+// Helper to determine the correct axios instance for a request
+const getAxiosInstance = (config: InternalAxiosRequestConfig) => {
+  const url = config.baseURL || config.url || '';
+  if (url.includes(environment.API_INCOR_LABORAL_URL)) return apiLaboral;
+  if (url.includes(environment.API_TURNOS_URL)) return apiTurnos;
+  return apiIncorHC;
+};
+
 const addAuthToken = (config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem("authToken");
   if (token) {
@@ -109,7 +117,7 @@ const handleAuthError = async (error: AxiosError) => {
     })
       .then((token) => {
         originalRequest.headers.Authorization = `Bearer ${token}`;
-        return axios(originalRequest);
+        return getAxiosInstance(originalRequest)(originalRequest);
       })
       .catch((err) => Promise.reject(err));
   }
@@ -152,8 +160,8 @@ const handleAuthError = async (error: AxiosError) => {
     // Process queued requests
     processQueue(null, newToken);
 
-    // Retry the original request
-    return axios(originalRequest);
+    // Retry the original request with the correct axios instance
+    return getAxiosInstance(originalRequest)(originalRequest);
   } catch (refreshError) {
     // Refresh failed - clear token and redirect to login
     processQueue(refreshError, null);

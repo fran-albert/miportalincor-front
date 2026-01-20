@@ -1,7 +1,9 @@
 // Queries
 export { useAppointments } from './useAppointments';
 export { useAppointment } from './useAppointment';
+export { useDoctorTabs, type DoctorTab, type UseDoctorTabsReturn } from './useDoctorTabs';
 export { useAvailableSlots } from './useAvailableSlots';
+export { useAvailableSlotsRange } from './useAvailableSlotsRange';
 export { useWaitingList } from './useWaitingList';
 export { useDoctorTodayAppointments } from './useDoctorTodayAppointments';
 export { usePatientAppointments } from './usePatientAppointments';
@@ -17,3 +19,4 @@ export { useCountFromMonthYear } from './useCountFromMonthYear';
 // Mutations
 export { useAppointmentMutations } from './useAppointmentMutations';
 export { useRequestAppointment } from './useRequestAppointment';
+export { useConvertGuest } from './useConvertGuest';

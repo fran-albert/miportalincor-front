@@ -13,14 +13,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearchCommand } from "@/components/Search/GlobalSearchCommand";
+import { AttendingPatientFAB } from "@/components/AttendingPatientFAB";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
+import { useAuthSync } from "@/hooks/useAuthSync";
 import useUserRole from "@/hooks/useRoles";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
   const { session, isPatient } = useUserRole();
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Sync auth state across browser tabs
+  useAuthSync();
 
   const userName = session?.firstName || "Usuario";
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -95,6 +100,9 @@ export function DashboardLayout() {
 
       {/* Global Search Command Dialog */}
       <GlobalSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+
+      {/* Floating Action Button para paciente en atención */}
+      <AttendingPatientFAB />
     </>
   );
 }
