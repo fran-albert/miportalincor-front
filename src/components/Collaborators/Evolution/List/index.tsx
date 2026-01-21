@@ -81,7 +81,7 @@ const CollaboratorListEvolution: React.FC<Props> = ({
     const dataValue = evolution.medicalEvaluation.dataValues?.find(
       (dv) => dv.dataType.name === dataTypeName
     );
-    return dataValue?.value || "-";
+    return dataValue?.value != null ? String(dataValue.value) : "-";
   };
 
   const isLoading = isLoadingEvolutions;

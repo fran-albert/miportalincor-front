@@ -5,7 +5,7 @@ import { UserHistoriaClinica } from "../User-Historia-Clinica/User-Historia-Clin
 export interface DataValue extends Base {
     name: string
     dataType: DataType
-    value: string
+    value: string | number | boolean
     observations?: string
 }
 
