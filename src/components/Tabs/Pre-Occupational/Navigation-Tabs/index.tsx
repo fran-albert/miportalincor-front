@@ -51,11 +51,11 @@ export default function NavigationTabs({
     // mapExamResults es tu helper para pasar array a { id: valor }
     const initialExamResults = mapExamResults(generalStrings!);
 
-    const initialConclusion =
-      dataValues?.find((dv) => dv.dataType.name === "Conclusion")?.value ?? "";
-    const initialRecomendaciones =
-      dataValues?.find((dv) => dv.dataType.name === "Recomendaciones")?.value ??
-      "";
+    const conclusionValue = dataValues?.find((dv) => dv.dataType.name === "Conclusion")?.value;
+    const initialConclusion = conclusionValue != null ? String(conclusionValue) : "";
+
+    const recomendacionesValue = dataValues?.find((dv) => dv.dataType.name === "Recomendaciones")?.value;
+    const initialRecomendaciones = recomendacionesValue != null ? String(recomendacionesValue) : "";
 
     setFormData({
       examResults: initialExamResults,

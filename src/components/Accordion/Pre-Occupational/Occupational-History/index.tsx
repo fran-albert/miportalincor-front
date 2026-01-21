@@ -39,7 +39,7 @@ export default function OccupationalHistoryAccordion({
 
       const mappedItems = antecedentes.map((item) => ({
         id: item.id.toString(),
-        description: item.value || "",
+        description: String(item.value ?? ""),
       }));
 
       setHistoryItems(mappedItems);

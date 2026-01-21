@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { ExamResults } from "./examsResults.maps";
 import { Piel } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
 import { Bucodental } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/BucodentalSection";
+import { parseBoolean } from "./helpers";
 
 
 export interface ExamenFisicoItem {
@@ -22,13 +23,6 @@ interface MedicalEvaluation {
 export interface PhysicalEvaluation {
     [key: string]: ExamenFisicoItem;
 }
-
-const toBool = (val?: string | boolean): boolean => {
-    if (typeof val === "boolean") return val;
-    const low = (val ?? "").toString().toLowerCase();
-    return low === "true" || low === "si";
-};
-
 
 export function mapPhysicalEvaluation(dataValues: DataValue[]): PhysicalEvaluation {
     const physical: PhysicalEvaluation = {};
@@ -56,7 +50,7 @@ export function mapPhysicalEvaluation(dataValues: DataValue[]): PhysicalEvaluati
     dataValues.forEach((dv) => {
         const key = mapping[dv.dataType.name];
         if (key) {
-            const isTrue = typeof dv.value === "boolean" ? dv.value : dv.value === "true";
+            const isTrue = parseBoolean(dv.value);
             const selected: "" | "si" | "no" = isTrue ? "si" : "no";
             physical[key] = {
                 selected,
@@ -79,8 +73,8 @@ export function mapPiel(dataValues: DataValue[]): Piel {
     );
 
     return {
-        normocoloreada: toBool(dvNormo?.value as string) ? "si" : "no",
-        tatuajes: toBool(dvTatuajes?.value as string) ? "si" : "no",
+        normocoloreada: parseBoolean(dvNormo?.value) ? "si" : "no",
+        tatuajes: parseBoolean(dvTatuajes?.value) ? "si" : "no",
         observaciones: dvNormo?.observations ?? "",
     };
 }
@@ -90,7 +84,7 @@ export function mapConclusionText(dataValues: DataValue[]): string {
             dv.dataType.name === "Conclusion" &&
             typeof dv.value === "string"
     );
-    return conclusionData ? conclusionData.value : "";
+    return conclusionData ? String(conclusionData.value) : "";
 }
 export function mapRecomendacionesText(dataValues: DataValue[]): string {
     const recomendacionesData = dataValues.find(
@@ -98,7 +92,7 @@ export function mapRecomendacionesText(dataValues: DataValue[]): string {
             dv.dataType.name === "Recomendaciones" &&
             typeof dv.value === "string"
     );
-    return recomendacionesData ? recomendacionesData.value : "";
+    return recomendacionesData ? String(recomendacionesData.value) : "";
 }
 export function mapConclusionAndRecommendationsData(dataValues: DataValue[]): {
     conclusion: string;
@@ -188,13 +182,15 @@ export function mapMedicalEvaluation(dataValues: DataValue[]): IMedicalEvaluatio
         dataValues
     );
     const bucodental = mapBucodental(dataValues);
-    const aspectoGeneral = dataValues.find(
+    const aspectoGeneralData = dataValues.find(
         (dv) => dv.dataType.name === "Aspecto general" && typeof dv.value === "string"
-    )?.value || "";
+    );
+    const aspectoGeneral = aspectoGeneralData ? String(aspectoGeneralData.value) : "";
 
-    const tiempoLibre = dataValues.find(
+    const tiempoLibreData = dataValues.find(
         (dv) => dv.dataType.name === "Tiempo libre" && typeof dv.value === "string"
-    )?.value || "";
+    );
+    const tiempoLibre = tiempoLibreData ? String(tiempoLibreData.value) : "";
 
     const dvCabeza = dataValues.find(
         (dv) =>
@@ -208,8 +204,8 @@ export function mapMedicalEvaluation(dataValues: DataValue[]): IMedicalEvaluatio
     );
 
     const cabezaCuello = {
-        sinAlteraciones: toBool(dvCabeza?.value as string),
-        observaciones: dvCabezaObs?.value as string || "",
+        sinAlteraciones: parseBoolean(dvCabeza?.value),
+        observaciones: (dvCabezaObs?.value as string) || "",
     };
     const torax = mapTorax(dataValues);
     const examenFisico = mapPhysicalEvaluation(dataValues);
@@ -268,16 +264,16 @@ export function mapGastrointestinal(dataValues: DataValue[]): Gastrointestinal {
             dv.dataType.name === "Hemorroides"
     );
     return {
-        sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: dvSin?.observations as string || "",
-        cicatrices: toBool(dvCic?.value as string),
-        cicatricesObs: dvCic?.observations as string || "",
-        hernias: toBool(dvHer?.value as string),
-        herniasObs: dvHer?.observations as string || "",
-        eventraciones: toBool(dvEvent?.value as string),
-        eventracionesObs: dvEvent?.observations as string || "",
-        hemorroides: toBool(dvHemo?.value as string),
-        hemorroidesObs: dvHemo?.observations as string || "",
+        sinAlteraciones: parseBoolean(dvSin?.value),
+        observaciones: (dvSin?.observations as string) || "",
+        cicatrices: parseBoolean(dvCic?.value),
+        cicatricesObs: (dvCic?.observations as string) || "",
+        hernias: parseBoolean(dvHer?.value),
+        herniasObs: (dvHer?.observations as string) || "",
+        eventraciones: parseBoolean(dvEvent?.value),
+        eventracionesObs: (dvEvent?.observations as string) || "",
+        hemorroides: parseBoolean(dvHemo?.value),
+        hemorroidesObs: (dvHemo?.observations as string) || "",
     };
 }
 
@@ -318,14 +314,14 @@ export function mapGenitourinario(dataValues: DataValue[]): Genitourinario {
     );
 
     return {
-        sinAlteraciones: toBool(dvSin?.value as string),
-        observaciones: dvSin?.observations as string || "",
-        varicocele: toBool(dvVar?.value as string),
-        varicoceleObs: dvVar?.observations as string || "",
-        fum: dvFum?.value as string || "",
-        partos: dvPartos?.value as string || "",
-        cesarea: dvCesarea?.value as string || "",
-        embarazos: dvEmbarazos?.value as string || "",
+        sinAlteraciones: parseBoolean(dvSin?.value),
+        observaciones: (dvSin?.observations as string) || "",
+        varicocele: parseBoolean(dvVar?.value),
+        varicoceleObs: (dvVar?.observations as string) || "",
+        fum: (dvFum?.value as string) || "",
+        partos: (dvPartos?.value as string) || "",
+        cesarea: (dvCesarea?.value as string) || "",
+        embarazos: (dvEmbarazos?.value as string) || "",
     };
 }
 
@@ -337,7 +333,7 @@ export function mapNeurologico(dataValues: DataValue[]): Neurologico {
     );
 
     return {
-        sinAlteraciones: toBool(dvSin?.value as string),
+        sinAlteraciones: parseBoolean(dvSin?.value),
         observaciones: (dvSin?.observations as string) || "",
     };
 }
@@ -364,18 +360,12 @@ export function mapCirculatorio(dataValues: DataValue[]): Circulatorio {
             dv.dataType.name === "Várices"
     );
 
-    const toBool = (val?: boolean | string): boolean => {
-        if (typeof val === "boolean") return val;
-        const s = (val ?? "").toString().toLowerCase();
-        return s === "true" || s === "si";
-    };
-
     return {
-        frecuenciaCardiaca: dvFrecuencia?.value as string || "",
-        presion: dvTA?.value as string || "",
-        sinAlteraciones: toBool(dvSin?.value),
+        frecuenciaCardiaca: (dvFrecuencia?.value as string) || "",
+        presion: (dvTA?.value as string) || "",
+        sinAlteraciones: parseBoolean(dvSin?.value),
         observaciones: dvSin?.observations || "",
-        varices: toBool(dvVar?.value),
+        varices: parseBoolean(dvVar?.value),
         varicesObs: dvVar?.observations || "",
     };
 }
@@ -437,7 +427,7 @@ export function mapRespiratorio(dataValues: DataValue[]): Respiratorio {
     return {
         frecuenciaRespiratoria: (dvFrecuencia?.value as string) || "",
         oximetria: (dvOximetria?.value as string) || "",
-        sinAlteraciones: toBool(dvSin?.value),
+        sinAlteraciones: parseBoolean(dvSin?.value),
         observaciones: dvSin?.observations || "",
     };
 }
@@ -513,10 +503,10 @@ export function mapBucodental(dataValues: DataValue[]): Bucodental {
     );
 
     return {
-        sinAlteraciones: toBool(dvSin?.value as string),
-        caries: toBool(dvCaries?.value as string),
-        faltanPiezas: toBool(dvFaltan?.value as string),
-        observaciones: dvObs?.value as string || "",
+        sinAlteraciones: parseBoolean(dvSin?.value),
+        caries: parseBoolean(dvCaries?.value),
+        faltanPiezas: parseBoolean(dvFaltan?.value),
+        observaciones: (dvObs?.value as string) || "",
     };
 }
 
@@ -532,16 +522,10 @@ export function mapTorax(dataValues: DataValue[]): Torax {
             dv.dataType.name === "Torax Cicatrices"
     );
 
-    const toBool = (val?: boolean | string): boolean => {
-        if (typeof val === "boolean") return val;
-        const s = (val ?? "").toString().toLowerCase();
-        return s === "true" || s === "si";
-    };
-
     return {
-        deformaciones: toBool(dvDef?.value) ? "si" : "no",
+        deformaciones: parseBoolean(dvDef?.value) ? "si" : "no",
         deformacionesObs: dvDef?.observations ?? "",
-        cicatrices: toBool(dvCic?.value) ? "si" : "no",
+        cicatrices: parseBoolean(dvCic?.value) ? "si" : "no",
         cicatricesObs: dvCic?.observations ?? "",
     };
 }
@@ -553,13 +537,13 @@ export function mapOsteoarticular(dataValues: DataValue[]): Osteoarticular {
     const dvAmp = dataValues.find(dv => dv.dataType.name === "Amputaciones");
 
     return {
-        mmssSin: toBool(dvMmss?.value as string),
-        mmssObs: dvMmss?.observations as string || "",
-        mmiiSin: toBool(dvMmii?.value as string),
-        mmiiObs: dvMmii?.observations as string || "",
-        columnaSin: toBool(dvCol?.value as string),
-        columnaObs: dvCol?.observations as string || "",
-        amputaciones: toBool(dvAmp?.value as string),
-        amputacionesObs: dvAmp?.observations as string || "",
+        mmssSin: parseBoolean(dvMmss?.value),
+        mmssObs: (dvMmss?.observations as string) || "",
+        mmiiSin: parseBoolean(dvMmii?.value),
+        mmiiObs: (dvMmii?.observations as string) || "",
+        columnaSin: parseBoolean(dvCol?.value),
+        columnaObs: (dvCol?.observations as string) || "",
+        amputaciones: parseBoolean(dvAmp?.value),
+        amputacionesObs: (dvAmp?.observations as string) || "",
     };
 }

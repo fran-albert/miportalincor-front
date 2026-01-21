@@ -322,3 +322,57 @@ export const formatDateWithWeekdayArgentina = (date: Date): string => {
   });
 };
 
+/**
+ * Convierte cualquier valor a booleano de forma robusta.
+ * Maneja todos los formatos posibles que pueden venir del backend o formularios:
+ * - Booleanos: true, false
+ * - Strings: "true", "false", "1", "0", "si", "no", "yes", "no" (case insensitive)
+ * - Números: 1, 0
+ * - null/undefined: false
+ *
+ * @param value - El valor a convertir
+ * @returns boolean
+ *
+ * @example
+ * parseBoolean(true)      // true
+ * parseBoolean("1")       // true
+ * parseBoolean("si")      // true
+ * parseBoolean(1)         // true
+ * parseBoolean(false)     // false
+ * parseBoolean("0")       // false
+ * parseBoolean("no")      // false
+ * parseBoolean(null)      // false
+ * parseBoolean(undefined) // false
+ */
+export const parseBoolean = (value: unknown): boolean => {
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  // Handle boolean
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  // Handle number
+  if (typeof value === "number") {
+    return value === 1;
+  }
+
+  // Handle string
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase().trim();
+    return (
+      normalized === "true" ||
+      normalized === "1" ||
+      normalized === "si" ||
+      normalized === "sí" ||
+      normalized === "yes"
+    );
+  }
+
+  // Default to false for any other type
+  return false;
+};
+
