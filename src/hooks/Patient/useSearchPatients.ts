@@ -8,6 +8,7 @@ interface UseSearchPatientsOptions {
   initialLimit?: number;
   enabled?: boolean;
   debounceMs?: number;
+  minSearchLength?: number;
 }
 
 export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
@@ -17,6 +18,7 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     initialLimit = 10,
     enabled = true,
     debounceMs = 300,
+    minSearchLength = 1,
   } = options;
 
   const [search, setSearch] = useState(initialSearch);
@@ -43,7 +45,7 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     queryKey: ["patients-search", debouncedSearch, page, limit],
     queryFn: () => searchPatients({ search: debouncedSearch, page, limit }),
     staleTime: 1000 * 60, // 1 minute
-    enabled: enabled && debouncedSearch.length >= 7,
+    enabled: enabled && debouncedSearch.trim().length >= minSearchLength,
   });
 
   const nextPage = () => {
