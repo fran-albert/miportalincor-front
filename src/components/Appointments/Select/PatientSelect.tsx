@@ -45,7 +45,8 @@ export const PatientSelect = ({
 
   const { patients, isLoading, isFetching, search, setSearch } = useSearchPatients({
     enabled: true,
-    debounceMs: 300
+    debounceMs: 300,
+    minSearchLength: 7,
   });
 
   // Memoize selected patient
