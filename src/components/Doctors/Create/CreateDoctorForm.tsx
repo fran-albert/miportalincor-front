@@ -15,6 +15,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import moment from "moment-timezone";
 import { HealthInsurance } from "@/types/Health-Insurance/Health-Insurance";
 import { Speciality } from "@/types/Speciality/Speciality";
@@ -41,8 +51,8 @@ type FormValues = z.infer<typeof DoctorSchema>;
 
 function CreateDoctorComponent() {
   const { session } = useUserRole();
-  const { addDoctorMutation } = useDoctorMutations();
-  const { promiseToast } = useToastContext();
+  const { addDoctorMutation, convertPatientToDoctorMutation } = useDoctorMutations();
+  const { showSuccess, showError, showLoading, removeToast } = useToastContext();
   const form = useForm<FormValues>({
     resolver: zodResolver(DoctorSchema),
   });
@@ -59,6 +69,10 @@ function CreateDoctorComponent() {
   const [selectedCity, setSelectedCity] = useState<City | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
 
+  // State for patient-to-doctor conversion dialog
+  const [showConversionDialog, setShowConversionDialog] = useState(false);
+  const [pendingConversionUserName, setPendingConversionUserName] = useState<string | null>(null);
+
   const handleCityChange = (city: City) => {
     if (selectedState) {
       const cityWithState = { ...city, state: selectedState };
@@ -71,6 +85,45 @@ function CreateDoctorComponent() {
     setSelectedState(state);
     setSelectedCity(undefined);
     setValue("address.city.state", String(state.id));
+  };
+
+  const handleConvertPatientToDoctor = async () => {
+    if (!pendingConversionUserName) return;
+
+    const values = form.getValues();
+    try {
+      await convertPatientToDoctorMutation.mutateAsync({
+        userName: pendingConversionUserName,
+        data: {
+          matricula: values.matricula,
+          specialities: selectedSpecialities
+            .filter((speciality) => speciality.id !== undefined)
+            .map((speciality) => ({
+              id: speciality.id!,
+              name: speciality.name,
+            })),
+          healthInsurances: selectedHealthInsurances
+            .filter((insurance) => insurance.id !== undefined)
+            .map((insurance) => ({
+              id: insurance.id!,
+              name: insurance.name,
+            })),
+        },
+      });
+      showSuccess(
+        "¡Paciente convertido a médico!",
+        "El paciente ha sido convertido exitosamente a médico"
+      );
+      setShowConversionDialog(false);
+      setPendingConversionUserName(null);
+      goBack();
+    } catch (error) {
+      console.error("Error converting patient to doctor:", error);
+      showError(
+        "Error al convertir",
+        "Ocurrió un error al convertir el paciente a médico"
+      );
+    }
   };
 
   async function onSubmit(values: z.infer<typeof DoctorSchema>) {
@@ -123,36 +176,38 @@ function CreateDoctorComponent() {
       registeredById: String(session?.id),
     };
 
+    const loadingId = showLoading("Creando médico...", "Por favor espera mientras procesamos tu solicitud");
+
     try {
-      const promise = addDoctorMutation.mutateAsync(payload);
-
-      await promiseToast(promise, {
-        loading: {
-          title: "Creando médico...",
-          description: "Por favor espera mientras procesamos tu solicitud",
-        },
-        success: {
-          title: "¡Médico creado!",
-          description: "El médico se ha creado exitosamente",
-        },
-        error: (error: ApiError) => {
-          if (error.response && error.response.status === 409) {
-            return {
-              title: "Médico ya existe",
-              description: "El médico ya se encuentra registrado en el sistema",
-            };
-          }
-          return {
-            title: "Error al crear médico",
-            description:
-              error.response?.data?.message ||
-              "Ha ocurrido un error inesperado",
-          };
-        },
-      });
-
+      await addDoctorMutation.mutateAsync(payload);
+      removeToast(loadingId);
+      showSuccess("¡Médico creado!", "El médico se ha creado exitosamente");
       goBack();
     } catch (error) {
+      removeToast(loadingId);
+      const apiError = error as ApiError;
+
+      // Check if user is already a patient - show conversion dialog
+      if (
+        apiError.response?.status === 409 &&
+        apiError.response?.data?.code === "USER_IS_PATIENT"
+      ) {
+        setPendingConversionUserName(apiError.response.data.userName ?? null);
+        setShowConversionDialog(true);
+        return;
+      }
+
+      // Handle other 409 errors (user already exists as doctor)
+      if (apiError.response?.status === 409) {
+        showError("Médico ya existe", "El médico ya se encuentra registrado en el sistema");
+        return;
+      }
+
+      // Handle generic errors
+      showError(
+        "Error al crear médico",
+        apiError.response?.data?.message || "Ha ocurrido un error inesperado"
+      );
       console.error("Error en onSubmit:", error);
     }
   }
@@ -629,6 +684,39 @@ function CreateDoctorComponent() {
           </motion.div>
         </form>
       </Form>
+
+      {/* Dialog for converting patient to doctor */}
+      <AlertDialog open={showConversionDialog} onOpenChange={setShowConversionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Paciente ya registrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              El DNI <strong>{pendingConversionUserName}</strong> ya está registrado como paciente en el sistema.
+              ¿Desea convertirlo a médico? Esto eliminará su rol de paciente y le asignará el rol de médico
+              con la matrícula, especialidades y obras sociales que configuró en el formulario.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowConversionDialog(false);
+                setPendingConversionUserName(null);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConvertPatientToDoctor}
+              disabled={convertPatientToDoctorMutation.isPending}
+              className="bg-greenPrimary hover:bg-greenPrimary/90"
+            >
+              {convertPatientToDoctorMutation.isPending
+                ? "Convirtiendo..."
+                : "Convertir a Médico"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

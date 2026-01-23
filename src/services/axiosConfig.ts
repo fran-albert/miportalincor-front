@@ -46,6 +46,12 @@ let failedQueue: Array<{
   reject: (error: unknown) => void;
 }> = [];
 
+// Flag para evitar mostrar toast de "sesión cerrada" al cargar la app
+let isInitialLoad = true;
+setTimeout(() => {
+  isInitialLoad = false;
+}, 3000); // Después de 3 segundos, consideramos que ya no es carga inicial
+
 const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -95,17 +101,22 @@ const handleAuthError = async (error: AxiosError) => {
     // Clear local state
     store.dispatch(logout());
 
-    // Show toast notification
-    showGlobalToast(
-      "error",
-      "Sesion cerrada",
-      "Se inicio sesion desde otro dispositivo"
-    );
+    // Solo mostrar toast si NO es carga inicial (evita el flash al reabrir el navegador)
+    if (!isInitialLoad) {
+      showGlobalToast(
+        "error",
+        "Sesion cerrada",
+        "Se inicio sesion desde otro dispositivo"
+      );
 
-    // Small delay to show the toast before redirect
-    setTimeout(() => {
+      // Small delay to show the toast before redirect
+      setTimeout(() => {
+        window.location.href = "/iniciar-sesion";
+      }, 1500);
+    } else {
+      // En carga inicial, redirigir inmediatamente sin toast
       window.location.href = "/iniciar-sesion";
-    }, 1500);
+    }
 
     return Promise.reject(error);
   }

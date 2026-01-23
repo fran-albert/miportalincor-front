@@ -3,6 +3,10 @@ import { createDoctor } from "@/api/Doctor/create-doctor.action";
 import { updateDoctor } from "@/api/Doctor/update-doctor.action";
 import { deleteDoctor } from "@/api/Doctor/delete-doctor.action";
 import {
+  convertPatientToDoctor,
+  ConvertPatientToDoctorDto,
+} from "@/api/Doctor/convert-patient-to-doctor.action";
+import {
   uploadSignature,
   UploadSignatureProps,
 } from "@/api/Doctor/upload-signature.action";
@@ -76,11 +80,30 @@ export const useDoctorMutations = () => {
     },
   });
 
+  const convertPatientToDoctorMutation = useMutation({
+    mutationFn: ({
+      userName,
+      data,
+    }: {
+      userName: string;
+      data: ConvertPatientToDoctorDto;
+    }) => convertPatientToDoctor(userName, data),
+    onSuccess: (doctor, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      console.log("Patient converted to doctor", doctor, variables, context);
+    },
+    onError: (error, variables, context) => {
+      console.log("Error converting patient to doctor", error, variables, context);
+    },
+  });
+
   return {
     addDoctorMutation,
     updateDoctorMutation,
     deleteDoctorMutation,
     uploadSelloMutation,
     uploadSignatureMutation,
+    convertPatientToDoctorMutation,
   };
 };

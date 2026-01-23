@@ -547,3 +547,16 @@ export function mapOsteoarticular(dataValues: DataValue[]): Osteoarticular {
         amputacionesObs: (dvAmp?.observations as string) || "",
     };
 }
+
+export function mapOccupationalHistory(dataValues: DataValue[]): { id: string; description: string }[] {
+    const antecedentes = dataValues.filter(
+        (item) =>
+            item.dataType.name === "Antecedentes ocupacionales" &&
+            item.dataType.category === "ANTECEDENTES"
+    );
+
+    return antecedentes.map((item) => ({
+        id: item.id.toString(),
+        description: String(item.value ?? ""),
+    }));
+}
