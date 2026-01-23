@@ -30,7 +30,7 @@ import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { mapMedicalEvaluation } from "@/common/helpers/maps";
 
 interface Props {
@@ -46,7 +46,10 @@ export default function MedicalEvaluationAccordion({
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-  console.log(dataValues, "medicalEvaluation");
+
+  // Ref para evitar que el useEffect se ejecute múltiples veces con los mismos datos
+  const dataValuesLoadedRef = useRef<string | null>(null);
+
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
     const { talla, peso } = medicalEvaluation.examenClinico;
@@ -61,12 +64,19 @@ export default function MedicalEvaluationAccordion({
 
   useEffect(() => {
     if (dataValues && dataValues.length > 0) {
-      const me = mapMedicalEvaluation(dataValues);
-      dispatch(
-        setFormData({
-          medicalEvaluation: me,
-        })
-      );
+      // Crear un hash simple de los dataValues para comparar si realmente cambiaron
+      const dataHash = dataValues.map(dv => `${dv.id}-${dv.value}`).join("|");
+
+      // Solo cargar si los datos son diferentes a los ya cargados
+      if (dataValuesLoadedRef.current !== dataHash) {
+        dataValuesLoadedRef.current = dataHash;
+        const me = mapMedicalEvaluation(dataValues);
+        dispatch(
+          setFormData({
+            medicalEvaluation: me,
+          })
+        );
+      }
     }
   }, [dataValues, dispatch]);
 
@@ -229,12 +239,12 @@ export default function MedicalEvaluationAccordion({
     );
   };
   const withoutCorr = {
-    right: medicalEvaluation.agudezaSc?.right ?? "10/10",
-    left: medicalEvaluation.agudezaSc?.left ?? "10/10",
+    right: medicalEvaluation.agudezaSc?.right ?? "",
+    left: medicalEvaluation.agudezaSc?.left ?? "",
   };
   const withCorr = {
-    right: medicalEvaluation.agudezaCc?.right ?? "10/10",
-    left: medicalEvaluation.agudezaCc?.left ?? "10/10",
+    right: medicalEvaluation.agudezaCc?.right ?? "",
+    left: medicalEvaluation.agudezaCc?.left ?? "",
   };
   const chromatic = medicalEvaluation.visionCromatica ?? "normal";
   const notes = medicalEvaluation.notasVision ?? "";

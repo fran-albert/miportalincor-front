@@ -169,8 +169,8 @@ export function mapVisual(
     const notasVision = dvCrom?.observations ?? "";
 
     return {
-        agudezaSc: { right: scR || "-", left: scL || "-" },
-        agudezaCc: { right: ccR || "-", left: ccL || "-" },
+        agudezaSc: { right: scR || "", left: scL || "" },
+        agudezaCc: { right: ccR || "", left: ccL || "" },
         visionCromatica,
         notasVision,
     };
