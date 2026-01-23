@@ -343,12 +343,25 @@ const preOccupationalSlice = createSlice({
   initialState,
   reducers: {
     setCollaborator(state, action: PayloadAction<Collaborator | null>) {
+      // Si el colaborador cambia (diferente ID o se pone null), resetear el formData
+      // para evitar mezcla de datos entre colaboradores
+      const newCollaboratorId = action.payload?.id;
+      const currentCollaboratorId = state.collaborator?.id;
+
+      if (newCollaboratorId !== currentCollaboratorId) {
+        state.formData = initialState.formData;
+      }
+
       state.collaborator = action.payload;
     },
     setFormData(state, action: PayloadAction<Partial<FormData>>) {
       state.formData = { ...state.formData, ...action.payload };
     },
     resetForm(state) {
+      state.formData = initialState.formData;
+    },
+    resetAll(state) {
+      state.collaborator = null;
       state.formData = initialState.formData;
     },
     addOccupationalHistory(
@@ -364,6 +377,7 @@ export const {
   setCollaborator,
   setFormData,
   resetForm,
+  resetAll,
   addOccupationalHistory,
 } = preOccupationalSlice.actions;
 
