@@ -57,7 +57,8 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
     }
   };
 
-  const detallesDisabled = !isEditing || data.sinAlteraciones;
+  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  const obsDisabled = !isEditing || data.sinAlteraciones;
 
   return (
     <div className="space-y-4">
@@ -81,37 +82,37 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
         id="gen-obs"
         className="w-full text-black"
         value={data.observaciones}
-        disabled={detallesDisabled}
+        disabled={obsDisabled}
         onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
         placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
       />
 
-      {/* Varicocele */}
+      {/* Varicocele - checkboxes siempre habilitados */}
       <div className="flex items-center space-x-2 text-black">
-        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Varicocele:</Label>
+        <Label>Varicocele:</Label>
         <Checkbox
           id="gen-varicocele-si"
           checked={data.varicocele === true}
-          disabled={detallesDisabled}
+          disabled={!isEditing}
           onCheckedChange={(chk) => handleVaricoceleChange(chk ? true : undefined)}
         />
-        <Label htmlFor="gen-varicocele-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Label htmlFor="gen-varicocele-si">Sí</Label>
         <Checkbox
           id="gen-varicocele-no"
           checked={data.varicocele === false}
-          disabled={detallesDisabled}
+          disabled={!isEditing}
           onCheckedChange={(chk) => onChange("varicocele", chk ? false : undefined)}
         />
-        <Label htmlFor="gen-varicocele-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Label htmlFor="gen-varicocele-no">No</Label>
 
         {/* Observaciones varicocele */}
         <Input
           id="gen-varicocele-obs"
           className="flex-1 ml-4"
           value={data.varicoceleObs}
-          disabled={detallesDisabled}
+          disabled={obsDisabled}
           onChange={(e) => handleVaricoceleObsChange(e.currentTarget.value)}
-          placeholder="Observaciones…"
+          placeholder={data.sinAlteraciones ? "Sin observaciones" : "Observaciones…"}
         />
       </div>
 

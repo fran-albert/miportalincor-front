@@ -61,14 +61,14 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
     }
   };
 
-  // Determinar si los campos de alteraciones están deshabilitados
-  const alteracionesDisabled = !isEditing || data.sinAlteraciones;
+  // Solo las observaciones se deshabilitan, los checkboxes siempre habilitados
+  const obsDisabled = !isEditing || data.sinAlteraciones;
 
   return (
     <div className="space-y-4">
       <h4 className="font-bold text-base text-greenPrimary">Examen Bucodental</h4>
 
-      {/* Checkboxes alineados */}
+      {/* Checkboxes alineados - siempre habilitados para permitir desmarcar sin alteraciones */}
       <div className="flex flex-wrap gap-6 text-black">
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -84,30 +84,30 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
           <Checkbox
             id="buc-caries"
             checked={data.caries}
-            disabled={alteracionesDisabled}
+            disabled={!isEditing}
             onCheckedChange={(chk) => handleAlteracionChange('caries', chk === true)}
           />
-          <Label htmlFor="buc-caries" className={alteracionesDisabled ? 'text-gray-400' : ''}>Caries</Label>
+          <Label htmlFor="buc-caries">Caries</Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Checkbox
             id="buc-faltan"
             checked={data.faltanPiezas}
-            disabled={alteracionesDisabled}
+            disabled={!isEditing}
             onCheckedChange={(chk) => handleAlteracionChange('faltanPiezas', chk === true)}
           />
-          <Label htmlFor="buc-faltan" className={alteracionesDisabled ? 'text-gray-400' : ''}>Faltan piezas</Label>
+          <Label htmlFor="buc-faltan">Faltan piezas</Label>
         </div>
       </div>
 
-      {/* Observaciones abajo */}
+      {/* Observaciones abajo - se deshabilita solo cuando sin alteraciones está marcado */}
       <div className="space-y-1 text-black">
         <Input
           id="buc-obs"
           className="w-full"
           value={data.observaciones}
-          disabled={alteracionesDisabled}
+          disabled={obsDisabled}
           onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
           placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
         />

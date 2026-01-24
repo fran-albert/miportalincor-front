@@ -57,7 +57,8 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
     }
   };
 
-  const detallesDisabled = !isEditing || data.sinAlteraciones;
+  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  const obsDisabled = !isEditing || data.sinAlteraciones;
 
   return (
     <div className="space-y-4">
@@ -115,36 +116,36 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
           id="circ-observaciones"
           className="w-full"
           value={data.observaciones}
-          disabled={detallesDisabled}
+          disabled={obsDisabled}
           onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
           placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Escribe aquí…"}
         />
       </div>
 
-      {/* Várices */}
+      {/* Várices - checkboxes siempre habilitados, solo obs se deshabilita */}
       <div className="flex items-center space-x-2 text-black">
-        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Várices:</Label>
+        <Label>Várices:</Label>
         <Checkbox
           id="circ-varices-si"
           checked={data.varices === true}
-          disabled={detallesDisabled}
+          disabled={!isEditing}
           onCheckedChange={(chk) => handleVaricesChange(chk ? true : undefined)}
         />
-        <Label htmlFor="circ-varices-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Label htmlFor="circ-varices-si">Sí</Label>
         <Checkbox
           id="circ-varices-no"
           checked={data.varices === false}
-          disabled={detallesDisabled}
+          disabled={!isEditing}
           onCheckedChange={(chk) => onChange("varices", chk ? false : undefined)}
         />
-        <Label htmlFor="circ-varices-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Label htmlFor="circ-varices-no">No</Label>
         <Input
           id="circ-varices-obs"
           className="flex-1 ml-4"
           value={data.varicesObs || ""}
-          disabled={detallesDisabled}
+          disabled={obsDisabled}
           onChange={(e) => handleVaricesObsChange(e.currentTarget.value)}
-          placeholder="Observaciones…"
+          placeholder={data.sinAlteraciones ? "Sin observaciones" : "Observaciones…"}
         />
       </div>
     </div>
