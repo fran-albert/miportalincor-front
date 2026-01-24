@@ -14,59 +14,104 @@ interface BucodentalSectionProps {
   isEditing: boolean;
   data: Bucodental;
   onChange: (field: keyof Bucodental, value: boolean | string) => void;
+  onBatchChange?: (updates: Partial<Bucodental>) => void;
 }
 
 export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
   isEditing,
   data,
   onChange,
-}) => (
-  <div className="space-y-4">
-    <h4 className="font-bold text-base text-greenPrimary">Examen Bucodental</h4>
+  onBatchChange,
+}) => {
+  // Si marca "Sin alteraciones", limpiar los otros campos
+  const handleSinAlteracionesChange = (checked: boolean) => {
+    if (checked && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: true,
+        caries: false,
+        faltanPiezas: false,
+        observaciones: '',
+      });
+    } else {
+      onChange('sinAlteraciones', checked);
+    }
+  };
 
-    {/* Checkboxes alineados */}
-    <div className="flex flex-wrap gap-6 text-black">
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="buc-sin"
-          checked={data.sinAlteraciones}
-          disabled={!isEditing}
-          onCheckedChange={(chk) => onChange('sinAlteraciones', chk)}
-        />
-        <Label htmlFor="buc-sin">Sin alteraciones</Label>
+  // Si marca caries/faltanPiezas, desmarcar "Sin alteraciones"
+  const handleAlteracionChange = (field: 'caries' | 'faltanPiezas', checked: boolean) => {
+    if (checked && data.sinAlteraciones && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: false,
+        [field]: true,
+      });
+    } else {
+      onChange(field, checked);
+    }
+  };
+
+  // Si escribe observaciones, desmarcar "Sin alteraciones"
+  const handleObservacionesChange = (value: string) => {
+    if (value.trim() && data.sinAlteraciones && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: false,
+        observaciones: value,
+      });
+    } else {
+      onChange('observaciones', value);
+    }
+  };
+
+  // Determinar si los campos de alteraciones están deshabilitados
+  const alteracionesDisabled = !isEditing || data.sinAlteraciones;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="font-bold text-base text-greenPrimary">Examen Bucodental</h4>
+
+      {/* Checkboxes alineados */}
+      <div className="flex flex-wrap gap-6 text-black">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="buc-sin"
+            checked={data.sinAlteraciones}
+            disabled={!isEditing}
+            onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
+          />
+          <Label htmlFor="buc-sin">Sin alteraciones</Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="buc-caries"
+            checked={data.caries}
+            disabled={alteracionesDisabled}
+            onCheckedChange={(chk) => handleAlteracionChange('caries', chk === true)}
+          />
+          <Label htmlFor="buc-caries" className={alteracionesDisabled ? 'text-gray-400' : ''}>Caries</Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="buc-faltan"
+            checked={data.faltanPiezas}
+            disabled={alteracionesDisabled}
+            onCheckedChange={(chk) => handleAlteracionChange('faltanPiezas', chk === true)}
+          />
+          <Label htmlFor="buc-faltan" className={alteracionesDisabled ? 'text-gray-400' : ''}>Faltan piezas</Label>
+        </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="buc-caries"
-          checked={data.caries}
-          disabled={!isEditing}
-          onCheckedChange={(chk) => onChange('caries', chk)}
+      {/* Observaciones abajo */}
+      <div className="space-y-1 text-black">
+        <Input
+          id="buc-obs"
+          className="w-full"
+          value={data.observaciones}
+          disabled={alteracionesDisabled}
+          onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
+          placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
         />
-        <Label htmlFor="buc-caries">Caries</Label>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="buc-faltan"
-          checked={data.faltanPiezas}
-          disabled={!isEditing}
-          onCheckedChange={(chk) => onChange('faltanPiezas', chk)}
-        />
-        <Label htmlFor="buc-faltan">Faltan piezas</Label>
       </div>
     </div>
-
-    {/* Observaciones abajo */}
-    <div className="space-y-1 text-black">
-      <Input
-        id="buc-obs"
-        className="w-full"
-        value={data.observaciones}
-        disabled={!isEditing}
-        onChange={(e) => onChange('observaciones', e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
-    </div>
-  </div>
-);
+  );
+};
