@@ -11,155 +11,205 @@ interface GastrointestinalSectionProps {
     field: keyof Gastrointestinal,
     value: boolean | string | undefined
   ) => void;
+  onBatchChange?: (updates: Partial<Gastrointestinal>) => void;
 }
 
 export const GastrointestinalSection: React.FC<
   GastrointestinalSectionProps
-> = ({ isEditing, data, onChange }) => (
-  <div className="space-y-4">
-    <h4 className="font-bold text-base text-greenPrimary">
-      Aparato Gastrointestinal
-    </h4>
+> = ({ isEditing, data, onChange, onBatchChange }) => {
+  // Si marca "Sin alteraciones", limpiar todo y poner NO en los campos
+  const handleSinAlteracionesChange = (checked: boolean) => {
+    if (checked && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: true,
+        observaciones: '',
+        cicatrices: false,
+        cicatricesObs: '',
+        hernias: false,
+        herniasObs: '',
+        eventraciones: false,
+        eventracionesObs: '',
+        hemorroides: false,
+        hemorroidesObs: '',
+      });
+    } else {
+      onChange("sinAlteraciones", checked);
+    }
+  };
 
-    {/* Sin alteraciones */}
-    <div className="flex items-center space-x-2 text-black">
-      <Checkbox
-        id="gi-sin"
-        checked={data.sinAlteraciones}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("sinAlteraciones", chk)}
-      />
-      <Label htmlFor="gi-sin">Sin alteraciones</Label>
-    </div>
+  // Si marca "Sí" en algún campo, desmarcar "Sin alteraciones"
+  const handleFieldChange = (field: keyof Gastrointestinal, value: boolean | undefined) => {
+    if (value === true && data.sinAlteraciones && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: false,
+        [field]: true,
+      });
+    } else {
+      onChange(field, value);
+    }
+  };
 
-    {/* Observaciones generales */}
-    <Input
-      id="gi-obs"
-      className="w-full text-black"
-      value={data.observaciones}
-      disabled={!isEditing}
-      onChange={(e) => onChange("observaciones", e.currentTarget.value)}
-      placeholder="Observaciones…"
-    />
+  // Si escribe observaciones, desmarcar "Sin alteraciones"
+  const handleObsChange = (field: keyof Gastrointestinal, value: string) => {
+    if (value.trim() && data.sinAlteraciones && onBatchChange) {
+      onBatchChange({
+        sinAlteraciones: false,
+        [field]: value,
+      });
+    } else {
+      onChange(field, value);
+    }
+  };
 
-    {/* Cicatrices */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Cicatrices:</Label>
-      <Checkbox
-        id="gi-cic-si"
-        checked={data.cicatrices === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("cicatrices", chk ? true : undefined)
-        }
-      />
-      <Label htmlFor="gi-cic-si">Sí</Label>
-      <Checkbox
-        id="gi-cic-no"
-        checked={data.cicatrices === false}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("cicatrices", chk ? false : undefined)
-        }
-      />
-      <Label htmlFor="gi-cic-no">No</Label>
+  // Determinar si los campos de detalle están deshabilitados
+  const detallesDisabled = !isEditing || data.sinAlteraciones;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="font-bold text-base text-greenPrimary">
+        Aparato Gastrointestinal
+      </h4>
+
+      {/* Sin alteraciones */}
+      <div className="flex items-center space-x-2 text-black">
+        <Checkbox
+          id="gi-sin"
+          checked={data.sinAlteraciones}
+          disabled={!isEditing}
+          onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
+        />
+        <Label htmlFor="gi-sin">Sin alteraciones</Label>
+      </div>
+
+      {/* Observaciones generales */}
       <Input
-        id="gi-cic-obs"
-        className="flex-1 ml-4"
-        value={data.cicatricesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("cicatricesObs", e.currentTarget.value)}
-        placeholder="Observaciones…"
+        id="gi-obs"
+        className="w-full text-black"
+        value={data.observaciones}
+        disabled={detallesDisabled}
+        onChange={(e) => handleObsChange("observaciones", e.currentTarget.value)}
+        placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
       />
-    </div>
 
-    {/* Hernias */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Hernias:</Label>
-      <Checkbox
-        id="gi-her-si"
-        disabled={!isEditing}
-        checked={data.hernias === true}
-        onCheckedChange={(chk) => onChange("hernias", chk ? true : undefined)}
-      />
-      <Label htmlFor="gi-her-si">Sí</Label>
-      <Checkbox
-        id="gi-her-no"
-        disabled={!isEditing}
-        checked={data.hernias === false}
-        onCheckedChange={(chk) => onChange("hernias", chk ? false : undefined)}
-      />
-      <Label htmlFor="gi-her-no">No</Label>
-      <Input
-        id="gi-her-obs"
-        className="flex-1 ml-4"
-        value={data.herniasObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("herniasObs", e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
-    </div>
+      {/* Cicatrices */}
+      <div className="flex items-center space-x-2 text-black">
+        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Cicatrices:</Label>
+        <Checkbox
+          id="gi-cic-si"
+          checked={data.cicatrices === true}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            handleFieldChange("cicatrices", chk ? true : undefined)
+          }
+        />
+        <Label htmlFor="gi-cic-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Checkbox
+          id="gi-cic-no"
+          checked={data.cicatrices === false}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            onChange("cicatrices", chk ? false : undefined)
+          }
+        />
+        <Label htmlFor="gi-cic-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Input
+          id="gi-cic-obs"
+          className="flex-1 ml-4"
+          value={data.cicatricesObs}
+          disabled={detallesDisabled}
+          onChange={(e) => handleObsChange("cicatricesObs", e.currentTarget.value)}
+          placeholder="Observaciones…"
+        />
+      </div>
 
-    {/* Eventraciones */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Eventraciones:</Label>
-      <Checkbox
-        id="gi-event-si"
-        checked={data.eventraciones === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("eventraciones", chk ? true : undefined)
-        }
-      />
-      <Label htmlFor="gi-event-si">Sí</Label>
-      <Checkbox
-        id="gi-event-no"
-        checked={data.eventraciones === false}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("eventraciones", chk ? false : undefined)
-        }
-      />
-      <Label htmlFor="gi-event-no">No</Label>
-      <Input
-        id="gi-event-obs"
-        className="flex-1 ml-4"
-        value={data.eventracionesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("eventracionesObs", e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
-    </div>
+      {/* Hernias */}
+      <div className="flex items-center space-x-2 text-black">
+        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Hernias:</Label>
+        <Checkbox
+          id="gi-her-si"
+          disabled={detallesDisabled}
+          checked={data.hernias === true}
+          onCheckedChange={(chk) => handleFieldChange("hernias", chk ? true : undefined)}
+        />
+        <Label htmlFor="gi-her-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Checkbox
+          id="gi-her-no"
+          disabled={detallesDisabled}
+          checked={data.hernias === false}
+          onCheckedChange={(chk) => onChange("hernias", chk ? false : undefined)}
+        />
+        <Label htmlFor="gi-her-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Input
+          id="gi-her-obs"
+          className="flex-1 ml-4"
+          value={data.herniasObs}
+          disabled={detallesDisabled}
+          onChange={(e) => handleObsChange("herniasObs", e.currentTarget.value)}
+          placeholder="Observaciones…"
+        />
+      </div>
 
-    {/* Hemorroides */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Hemorroides:</Label>
-      <Checkbox
-        id="gi-hemo-si"
-        checked={data.hemorroides === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("hemorroides", chk ? true : undefined)
-        }
-      />
-      <Label htmlFor="gi-hemo-si">Sí</Label>
-      <Checkbox
-        id="gi-hemo-no"
-        checked={data.hemorroides === false}
-        disabled={!isEditing}
-        onCheckedChange={(chk) =>
-          onChange("hemorroides", chk ? false : undefined)
-        }
-      />
-      <Label htmlFor="gi-hemo-no">No</Label>
-      <Input
-        id="gi-hemo-obs"
-        className="flex-1 ml-4"
-        value={data.hemorroidesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("hemorroidesObs", e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
+      {/* Eventraciones */}
+      <div className="flex items-center space-x-2 text-black">
+        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Eventraciones:</Label>
+        <Checkbox
+          id="gi-event-si"
+          checked={data.eventraciones === true}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            handleFieldChange("eventraciones", chk ? true : undefined)
+          }
+        />
+        <Label htmlFor="gi-event-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Checkbox
+          id="gi-event-no"
+          checked={data.eventraciones === false}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            onChange("eventraciones", chk ? false : undefined)
+          }
+        />
+        <Label htmlFor="gi-event-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Input
+          id="gi-event-obs"
+          className="flex-1 ml-4"
+          value={data.eventracionesObs}
+          disabled={detallesDisabled}
+          onChange={(e) => handleObsChange("eventracionesObs", e.currentTarget.value)}
+          placeholder="Observaciones…"
+        />
+      </div>
+
+      {/* Hemorroides */}
+      <div className="flex items-center space-x-2 text-black">
+        <Label className={detallesDisabled ? 'text-gray-400' : ''}>Hemorroides:</Label>
+        <Checkbox
+          id="gi-hemo-si"
+          checked={data.hemorroides === true}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            handleFieldChange("hemorroides", chk ? true : undefined)
+          }
+        />
+        <Label htmlFor="gi-hemo-si" className={detallesDisabled ? 'text-gray-400' : ''}>Sí</Label>
+        <Checkbox
+          id="gi-hemo-no"
+          checked={data.hemorroides === false}
+          disabled={detallesDisabled}
+          onCheckedChange={(chk) =>
+            onChange("hemorroides", chk ? false : undefined)
+          }
+        />
+        <Label htmlFor="gi-hemo-no" className={detallesDisabled ? 'text-gray-400' : ''}>No</Label>
+        <Input
+          id="gi-hemo-obs"
+          className="flex-1 ml-4"
+          value={data.hemorroidesObs}
+          disabled={detallesDisabled}
+          onChange={(e) => handleObsChange("hemorroidesObs", e.currentTarget.value)}
+          placeholder="Observaciones…"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};

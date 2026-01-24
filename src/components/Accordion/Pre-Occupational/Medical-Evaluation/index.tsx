@@ -114,6 +114,16 @@ export default function MedicalEvaluationAccordion({
       })
     );
   };
+  const handleCirculatorioBatchChange = (updates: Partial<Circulatorio>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          circulatorio: { ...circulatorio, ...updates },
+        },
+      })
+    );
+  };
 
   const toraxData: Torax = medicalEvaluation.torax ?? {
     deformacionesObs: "",
@@ -142,6 +152,16 @@ export default function MedicalEvaluationAccordion({
         medicalEvaluation: {
           ...medicalEvaluation,
           respiratorio: { ...resp, [field]: value },
+        },
+      })
+    );
+  };
+  const handleRespBatchChange = (updates: Partial<Respiratorio>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          respiratorio: { ...resp, ...updates },
         },
       })
     );
@@ -189,6 +209,16 @@ export default function MedicalEvaluationAccordion({
       })
     );
   };
+  const handleGenitoBatchChange = (updates: Partial<Genitourinario>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          genitourinario: { ...genito, ...updates },
+        },
+      })
+    );
+  };
 
   const gi: Gastrointestinal = medicalEvaluation.gastrointestinal ?? {
     observaciones: "",
@@ -206,6 +236,17 @@ export default function MedicalEvaluationAccordion({
             ...gi,
             [field]: value,
           },
+        },
+      })
+    );
+  };
+
+  const handleGIBatchChange = (updates: Partial<Gastrointestinal>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          gastrointestinal: { ...gi, ...updates },
         },
       })
     );
@@ -288,7 +329,16 @@ export default function MedicalEvaluationAccordion({
       })
     );
   };
-  console.log(cabezaData, "cabezaData");
+  const handleCabezaBatchChange = (updates: Partial<CabezaCuello>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          cabezaCuello: { ...cabezaData, ...updates },
+        },
+      })
+    );
+  };
 
   const neu: Neurologico = medicalEvaluation.neurologico ?? {
     observaciones: "",
@@ -310,6 +360,16 @@ const handleNeuChange = (
       })
     );
   };
+  const handleNeuBatchChange = (updates: Partial<Neurologico>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          neurologico: { ...neu, ...updates },
+        },
+      })
+    );
+  };
 
   const bucodental: Bucodental = medicalEvaluation.bucodental ?? {
     sinAlteraciones: false,
@@ -326,6 +386,16 @@ const handleNeuChange = (
         medicalEvaluation: {
           ...medicalEvaluation,
           bucodental: { ...bucodental, [field]: value },
+        },
+      })
+    );
+  };
+  const handleBucodentalBatchChange = (updates: Partial<Bucodental>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          bucodental: { ...bucodental, ...updates },
         },
       })
     );
@@ -466,11 +536,13 @@ const handleNeuChange = (
               isEditing={isEditing}
               data={cabezaData}
               onChange={handleCabezaChange}
+              onBatchChange={handleCabezaBatchChange}
             />
             <BucodentalSection
               isEditing={isEditing}
               data={bucodental}
               onChange={handleBucodentalChange}
+              onBatchChange={handleBucodentalBatchChange}
             />
             <ToraxSection
               isEditing={isEditing}
@@ -482,26 +554,31 @@ const handleNeuChange = (
             isEditing={isEditing}
             data={resp}
             onChange={handleRespChange}
+            onBatchChange={handleRespBatchChange}
           />
           <CirculatorioSection
             isEditing={isEditing}
             data={circulatorio}
             onChange={handleCirculatorioChange}
+            onBatchChange={handleCirculatorioBatchChange}
           />
           <NeurologicoSection
             isEditing={isEditing}
             data={neu}
             onChange={handleNeuChange}
+            onBatchChange={handleNeuBatchChange}
           />
           <GastrointestinalSection
             isEditing={isEditing}
             data={gi}
             onChange={handleGIChange}
+            onBatchChange={handleGIBatchChange}
           />
           <GenitourinarioSection
             isEditing={isEditing}
             data={genito}
             onChange={handleGenitoChange}
+            onBatchChange={handleGenitoBatchChange}
           />
           <OsteoarticularSection
             isEditing={isEditing}
