@@ -32,6 +32,7 @@ import {
   UserCog,
   Clock,
   FileText,
+  Pill,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,7 +46,6 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import { Briefcase } from "lucide-react";
 
 const navigationItems = [
@@ -90,7 +90,6 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
     title: "Mi Sala de Espera",
@@ -98,7 +97,6 @@ const navigationItems = [
     icon: Clock,
     allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
     strictRoles: true,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
     title: "Mi Configuración",
@@ -120,12 +118,11 @@ const navigationItems = [
     icon: CalendarCheck,
     allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
     strictRoles: true,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
-    title: "Recetas",
+    title: "Medicación y Recetas",
     url: "/mis-solicitudes-recetas",
-    icon: FileText,
+    icon: Pill,
     allowedRoles: PERMISSIONS.MY_PRESCRIPTION_REQUESTS,
     strictRoles: true,
   },
@@ -215,10 +212,8 @@ export function AppSidebar() {
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
 
-  // Filtrar items del menú según roles del usuario y feature flags
-  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles).filter(
-    (item) => !item.featureFlag || FEATURE_FLAGS[item.featureFlag]
-  );
+  // Filtrar items del menú según roles del usuario
+  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
   const filteredReportsItems = filterMenuItems(reportsItems, userRoles);
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 

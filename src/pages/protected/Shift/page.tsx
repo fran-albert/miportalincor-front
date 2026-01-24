@@ -12,7 +12,6 @@ import { QueuePanel } from "@/components/Queue";
 import { PageHeader } from "@/components/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserRole from "@/hooks/useRoles";
-import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
@@ -73,7 +72,7 @@ const ShiftsPage = () => {
       {/* Content: diferentes vistas según rol */}
       {isDoctor ? (
         <BigCalendar autoFilterForDoctor={true} readOnly={true} />
-      ) : FEATURE_FLAGS.QUEUE_ENABLED ? (
+      ) : (
         <Tabs defaultValue="calendar" className="flex-1">
           <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">
             <TabsTrigger
@@ -100,8 +99,6 @@ const ShiftsPage = () => {
             <QueuePanel />
           </TabsContent>
         </Tabs>
-      ) : (
-        <DoctorTabsContainer />
       )}
     </div>
   );
