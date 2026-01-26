@@ -94,7 +94,7 @@ export default function MedicalEvaluationAccordion({
   const circulatorio: Circulatorio = medicalEvaluation.circulatorio ?? {
     frecuenciaCardiaca: "",
     presion: "",
-    sinAlteraciones: false,
+    sinAlteraciones: undefined,
     observaciones: "",
   };
 
@@ -129,7 +129,7 @@ export default function MedicalEvaluationAccordion({
     deformacionesObs: "",
     cicatricesObs: "",
   };
-  const handleToraxChange = (field: keyof Torax, value: boolean | string) => {
+  const handleToraxChange = (field: keyof Torax, value: "si" | "no" | string | undefined) => {
     dispatch(
       setFormData({
         medicalEvaluation: {
@@ -141,11 +141,11 @@ export default function MedicalEvaluationAccordion({
   };
 
   const resp: Respiratorio = medicalEvaluation.respiratorio ?? {
-    sinAlteraciones: false,
+    sinAlteraciones: undefined,
   };
   const handleRespChange = (
     field: keyof Respiratorio,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -176,7 +176,7 @@ export default function MedicalEvaluationAccordion({
 
   const handleOsteoChange = (
     field: keyof Osteoarticular,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -313,12 +313,12 @@ export default function MedicalEvaluationAccordion({
   };
 
   const cabezaData: CabezaCuello = medicalEvaluation.cabezaCuello ?? {
-    sinAlteraciones: false,
+    sinAlteraciones: undefined,
     observaciones: "",
   };
   const handleCabezaChange = (
     field: keyof CabezaCuello,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -346,7 +346,7 @@ export default function MedicalEvaluationAccordion({
 
 const handleNeuChange = (
     field: keyof Neurologico,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -372,14 +372,14 @@ const handleNeuChange = (
   };
 
   const bucodental: Bucodental = medicalEvaluation.bucodental ?? {
-    sinAlteraciones: false,
-    caries: false,
-    faltanPiezas: false,
+    sinAlteraciones: undefined,
+    caries: undefined,
+    faltanPiezas: undefined,
     observaciones: "",
   };
   const handleBucodentalChange = (
     field: keyof Bucodental,
-    value: boolean | string
+    value: boolean | string | undefined
   ) => {
     dispatch(
       setFormData({
@@ -404,7 +404,7 @@ const handleNeuChange = (
   const pielData: Piel = medicalEvaluation.piel ?? {
     observaciones: "",
   };
-  const handlePielChange = (field: keyof Piel, value: "si" | "no" | string) => {
+  const handlePielChange = (field: keyof Piel, value: "si" | "no" | string | undefined) => {
     dispatch(
       setFormData({
         medicalEvaluation: {

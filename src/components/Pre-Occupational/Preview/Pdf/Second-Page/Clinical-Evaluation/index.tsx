@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface ClinicalEvaluationPdfProps {
-  aspectoGeneral: "Bueno" | "Regular" | "Malo";
+  aspectoGeneral?: "Bueno" | "Regular" | "Malo" | string;
   peso: string;
   talla: string;
   imc: string;
@@ -77,22 +77,16 @@ const styles = StyleSheet.create({
   },
 });
 
-const OPTIONS = ["Bueno", "Regular", "Malo"] as const;
-
-const PDFCheckboxes = ({
-  selected,
-}: {
-  selected: (typeof OPTIONS)[number];
-}) => (
-  <View style={styles.rowInline}>
-    {OPTIONS.map((opt) => (
-      <View key={opt} style={styles.checkboxWrapper}>
-        <CheckboxPdf checked={selected === opt} />
-        <Text style={styles.checkboxLabel}>{opt}</Text>
-      </View>
-    ))}
-  </View>
-);
+// Solo muestra el valor seleccionado, no todas las opciones
+const AspectoGeneralValue = ({ value }: { value?: string }) => {
+  if (!value?.trim()) return null;
+  return (
+    <View style={styles.rowInline}>
+      <CheckboxPdf checked={true} />
+      <Text style={styles.checkboxLabel}>{value}</Text>
+    </View>
+  );
+};
 
 const InfoField = ({ label, value }: { label: string; value: string }) => (
   <View style={styles.infoField}>
@@ -110,11 +104,13 @@ const ClinicalEvaluationPdf: React.FC<ClinicalEvaluationPdfProps> = ({
   <View style={styles.container}>
     <Text style={styles.header}>Resultados del Examen</Text>
 
-    {/* Aspecto General */}
-    <View style={styles.sectionRow}>
-      <Text style={styles.sectionLabel}>Aspecto General:</Text>
-      <PDFCheckboxes selected={aspectoGeneral} />
-    </View>
+    {/* Aspecto General - solo mostrar si hay valor seleccionado */}
+    {aspectoGeneral?.trim() && (
+      <View style={styles.sectionRow}>
+        <Text style={styles.sectionLabel}>Aspecto General:</Text>
+        <AspectoGeneralValue value={aspectoGeneral} />
+      </View>
+    )}
 
     {/* Peso / Talla / IMC */}
     <View style={styles.sectionRow}>

@@ -6,6 +6,7 @@ import GenitourinarioPdf from "./Genitourinario";
 import GastrointestinalPdf from "./Gastrointestinal";
 import FooterPdfConditional from "../Footer";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { hasSectionData } from "@/common/helpers/maps";
 
 interface Props {
   data: IMedicalEvaluation;
@@ -35,65 +36,77 @@ const styles = StyleSheet.create({
   },
 });
 
-const FifthPagePdfDocument = ({ data, doctorData }: Props) => (
-  <Page size="A4" style={styles.page}>
-    <HeaderPreviewPdf
-      evaluationType={"Preocupacional"}
-      examType="Examen Clínico"
-    />
-    <View style={styles.content}>
-      <View style={styles.sectionWrapper}>
-        <GastrointestinalPdf
-          sinAlteraciones={data.gastrointestinal?.sinAlteraciones ?? false}
-          observaciones={data.gastrointestinal?.observaciones ?? ""}
-          cicatrices={data.gastrointestinal?.cicatrices ?? false}
-          cicatricesObs={data.gastrointestinal?.cicatricesObs ?? ""}
-          hernias={data.gastrointestinal?.hernias ?? false}
-          herniasObs={data.gastrointestinal?.herniasObs ?? ""}
-          eventraciones={data.gastrointestinal?.eventraciones ?? false}
-          eventracionesObs={data.gastrointestinal?.eventracionesObs ?? ""}
-          hemorroides={data.gastrointestinal?.hemorroides ?? false}
-          hemorroidesObs={data.gastrointestinal?.hemorroidesObs ?? ""}
-        />
-      </View>
-      <View style={styles.sectionWrapper}>
-        <GenitourinarioPdf
-          sinAlteraciones={data.genitourinario?.sinAlteraciones ?? false}
-          observaciones={data.genitourinario?.observaciones ?? ""}
-          varicocele={data.genitourinario?.varicocele ?? false}
-          varicoceleObs={data.genitourinario?.varicoceleObs ?? ""}
-          fum={data.genitourinario?.fum ?? ""}
-          partos={data.genitourinario?.partos ?? ""}
-          cesarea={data.genitourinario?.cesarea ?? ""}
-          embarazos={data.genitourinario?.embarazos ?? ""}
-        />
-      </View>
-      <View style={styles.sectionWrapper}>
-        <OsteoarticularPdf
-          mmssSin={data.osteoarticular?.mmssSin ?? false}
-          mmssObs={data.osteoarticular?.mmssObs ?? ""}
-          mmiiSin={data.osteoarticular?.mmiiSin ?? false}
-          mmiiObs={data.osteoarticular?.mmiiObs ?? ""}
-          columnaSin={data.osteoarticular?.columnaSin ?? false}
-          columnaObs={data.osteoarticular?.columnaObs ?? ""}
-          amputaciones={data.osteoarticular?.amputaciones ?? false}
-          amputacionesObs={data.osteoarticular?.amputacionesObs ?? ""}
-        />
-      </View>
-    </View>
+const FifthPagePdfDocument = ({ data, doctorData }: Props) => {
+  // Verificar si hay datos en alguna sección de esta página
+  const hasGastrointestinal = hasSectionData(data.gastrointestinal);
+  const hasGenitourinario = hasSectionData(data.genitourinario);
+  const hasOsteoarticular = hasSectionData(data.osteoarticular);
 
-    <View style={styles.footer}>
-      <FooterPdfConditional
-        pageNumber={5}
-        useCustom={true}
-        doctorLicense={doctorData.matricula}
-        doctorName={doctorData.fullName}
-        doctorSpeciality={doctorData.specialty}
-        signatureUrl={doctorData.signatureDataUrl}
-        sealUrl={doctorData.sealDataUrl}
+  // Si no hay datos en ninguna sección, no mostrar la página
+  if (!hasGastrointestinal && !hasGenitourinario && !hasOsteoarticular) {
+    return null;
+  }
+
+  return (
+    <Page size="A4" style={styles.page}>
+      <HeaderPreviewPdf
+        evaluationType={"Preocupacional"}
+        examType="Examen Clínico"
       />
-    </View>
-  </Page>
-);
+      <View style={styles.content}>
+        <View style={styles.sectionWrapper}>
+          <GastrointestinalPdf
+            sinAlteraciones={data.gastrointestinal?.sinAlteraciones}
+            observaciones={data.gastrointestinal?.observaciones}
+            cicatrices={data.gastrointestinal?.cicatrices}
+            cicatricesObs={data.gastrointestinal?.cicatricesObs}
+            hernias={data.gastrointestinal?.hernias}
+            herniasObs={data.gastrointestinal?.herniasObs}
+            eventraciones={data.gastrointestinal?.eventraciones}
+            eventracionesObs={data.gastrointestinal?.eventracionesObs}
+            hemorroides={data.gastrointestinal?.hemorroides}
+            hemorroidesObs={data.gastrointestinal?.hemorroidesObs}
+          />
+        </View>
+        <View style={styles.sectionWrapper}>
+          <GenitourinarioPdf
+            sinAlteraciones={data.genitourinario?.sinAlteraciones}
+            observaciones={data.genitourinario?.observaciones}
+            varicocele={data.genitourinario?.varicocele}
+            varicoceleObs={data.genitourinario?.varicoceleObs}
+            fum={data.genitourinario?.fum}
+            partos={data.genitourinario?.partos}
+            cesarea={data.genitourinario?.cesarea}
+            embarazos={data.genitourinario?.embarazos}
+          />
+        </View>
+        <View style={styles.sectionWrapper}>
+          <OsteoarticularPdf
+            mmssSin={data.osteoarticular?.mmssSin}
+            mmssObs={data.osteoarticular?.mmssObs}
+            mmiiSin={data.osteoarticular?.mmiiSin}
+            mmiiObs={data.osteoarticular?.mmiiObs}
+            columnaSin={data.osteoarticular?.columnaSin}
+            columnaObs={data.osteoarticular?.columnaObs}
+            amputaciones={data.osteoarticular?.amputaciones}
+            amputacionesObs={data.osteoarticular?.amputacionesObs}
+          />
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <FooterPdfConditional
+          pageNumber={5}
+          useCustom={true}
+          doctorLicense={doctorData.matricula}
+          doctorName={doctorData.fullName}
+          doctorSpeciality={doctorData.specialty}
+          signatureUrl={doctorData.signatureDataUrl}
+          sealUrl={doctorData.sealDataUrl}
+        />
+      </View>
+    </Page>
+  );
+};
 
 export default FifthPagePdfDocument;

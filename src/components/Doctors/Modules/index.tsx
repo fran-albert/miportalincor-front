@@ -10,7 +10,6 @@ import {
   Bell,
 } from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
-import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 
 interface DoctorModulesProps {
   onHistoriaClinicaClick: () => void;
@@ -64,7 +63,7 @@ export default function DoctorModules({
       icon: Clock,
       gradient: "bg-gradient-to-br from-blue-500 to-blue-600",
       onClick: onHorariosClick || (() => {}),
-      visible: (isSecretary || isAdmin) && FEATURE_FLAGS.APPOINTMENTS_ENABLED,
+      visible: isSecretary || isAdmin,
     },
     {
       title: "Notificaciones",
@@ -72,7 +71,7 @@ export default function DoctorModules({
       icon: Bell,
       gradient: "bg-gradient-to-br from-green-500 to-green-600",
       onClick: onNotificacionesClick || (() => {}),
-      visible: (isSecretary || isAdmin) && FEATURE_FLAGS.APPOINTMENTS_ENABLED,
+      visible: isSecretary || isAdmin,
     },
     {
       title: "Agenda Médica",

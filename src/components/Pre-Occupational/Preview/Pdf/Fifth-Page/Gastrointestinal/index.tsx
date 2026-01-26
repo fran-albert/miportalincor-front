@@ -3,16 +3,16 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface GastrointestinalPdfProps {
-  sinAlteraciones: boolean;
-  observaciones: string;
-  cicatrices: boolean;
-  cicatricesObs: string;
-  hernias: boolean;
-  herniasObs: string;
-  eventraciones: boolean;
-  eventracionesObs: string;
-  hemorroides: boolean;
-  hemorroidesObs: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  cicatrices?: boolean;
+  cicatricesObs?: string;
+  hernias?: boolean;
+  herniasObs?: string;
+  eventraciones?: boolean;
+  eventracionesObs?: string;
+  hemorroides?: boolean;
+  hemorroidesObs?: string;
 }
 
 const styles = StyleSheet.create({
@@ -87,84 +87,104 @@ export default function GastrointestinalPdf({
   hemorroides,
   hemorroidesObs,
 }: GastrointestinalPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    cicatrices !== undefined ||
+    hernias !== undefined ||
+    eventraciones !== undefined ||
+    hemorroides !== undefined ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Gastrointestinal</Text>
 
-      {/* Sin alteraciones */}
-      <View style={styles.row}>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={sinAlteraciones} />
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
+          </View>
+          <Text style={styles.optionText}>Sin alteraciones</Text>
         </View>
-        <Text style={styles.optionText}>Sin alteraciones</Text>
-      </View>
+      )}
 
-      {/* Cicatrices */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Cicatrices:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={cicatrices} />
+      {/* Cicatrices - solo mostrar si está definido */}
+      {cicatrices !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Cicatrices:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={cicatrices === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={cicatrices === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {cicatricesObs?.trim() && (
+            <Text style={styles.obsInline}>{cicatricesObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!cicatrices} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-        <Text style={styles.obsInline}>
-          {cicatricesObs.trim() !== "" ? cicatricesObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* Hernias */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Hernias:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={hernias} />
+      {/* Hernias - solo mostrar si está definido */}
+      {hernias !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Hernias:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hernias === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hernias === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {herniasObs?.trim() && (
+            <Text style={styles.obsInline}>{herniasObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!hernias} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-        <Text style={styles.obsInline}>
-          {herniasObs.trim() !== "" ? herniasObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* Eventraciones */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Eventraciones:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={eventraciones} />
+      {/* Eventraciones - solo mostrar si está definido */}
+      {eventraciones !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Eventraciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={eventraciones === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={eventraciones === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {eventracionesObs?.trim() && (
+            <Text style={styles.obsInline}>{eventracionesObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!eventraciones} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-        <Text style={styles.obsInline}>
-          {eventracionesObs.trim() !== "" ? eventracionesObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* Hemorroides */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Hemorroides:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={hemorroides} />
+      {/* Hemorroides - solo mostrar si está definido */}
+      {hemorroides !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Hemorroides:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hemorroides === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hemorroides === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {hemorroidesObs?.trim() && (
+            <Text style={styles.obsInline}>{hemorroidesObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!hemorroides} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-        <Text style={styles.obsInline}>
-          {hemorroidesObs.trim() !== "" ? hemorroidesObs : "—"}
-        </Text>
-      </View>
+      )}
 
       {/* Observaciones generales */}
-      {observaciones.trim() !== "" && (
+      {observaciones?.trim() && (
         <View>
           <Text style={styles.obsLabel}>Observaciones</Text>
           <Text style={styles.obsText}>{observaciones}</Text>

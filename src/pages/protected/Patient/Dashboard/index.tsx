@@ -35,6 +35,10 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
     navigate(`/pacientes/${patient.slug}/chequeos-periodicos`);
   };
 
+  const handleCartonVerdeClick = () => {
+    navigate(`/pacientes/${patient.slug}/carton-verde`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header del Paciente */}
@@ -54,6 +58,7 @@ export default function PatientDashboard({ patient }: { patient: Patient }) {
         onControlNutricionalClick={handleControlNutricionalClick}
         onCitasMedicasClick={handleCitasMedicasClick}
         onChequeosPeriodicosClick={handleChequeosPeriodicosClick}
+        onCartonVerdeClick={handleCartonVerdeClick}
         totalStudies={stats.totalStudies}
       />
     </div>

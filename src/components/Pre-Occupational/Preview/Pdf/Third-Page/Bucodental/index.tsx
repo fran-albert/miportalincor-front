@@ -2,10 +2,10 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface BucodentalPdfProps {
-  sinAlteraciones: boolean;
-  caries: boolean;
-  faltanPiezas: boolean;
-  observaciones: string;
+  sinAlteraciones?: boolean;
+  caries?: boolean;
+  faltanPiezas?: boolean;
+  observaciones?: string;
 }
 
 const styles = StyleSheet.create({
@@ -73,39 +73,59 @@ const styles = StyleSheet.create({
 });
 
 export default function BucodentalPdf({ sinAlteraciones, caries, faltanPiezas, observaciones }: BucodentalPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    caries !== undefined ||
+    faltanPiezas !== undefined ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
+  const hasCheckboxData = sinAlteraciones !== undefined ||
+    caries !== undefined ||
+    faltanPiezas !== undefined;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Examen Bucodental</Text>
 
-      <View style={styles.optionsContainer}>
-        <View style={styles.optionItem}>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={sinAlteraciones} />
-          </View>
-          <Text style={styles.optionLabel}>Sin alteraciones</Text>
-        </View>
+      {hasCheckboxData && (
+        <View style={styles.optionsContainer}>
+          {sinAlteraciones !== undefined && (
+            <View style={styles.optionItem}>
+              <View style={styles.checkboxWrapper}>
+                <CheckboxPdf checked={sinAlteraciones} />
+              </View>
+              <Text style={styles.optionLabel}>Sin alteraciones</Text>
+            </View>
+          )}
 
-        <View style={styles.optionItem}>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={caries} />
-          </View>
-          <Text style={styles.optionLabel}>Caries</Text>
-        </View>
+          {caries !== undefined && (
+            <View style={styles.optionItem}>
+              <View style={styles.checkboxWrapper}>
+                <CheckboxPdf checked={caries} />
+              </View>
+              <Text style={styles.optionLabel}>Caries</Text>
+            </View>
+          )}
 
-        <View style={styles.optionItem}>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={faltanPiezas} />
-          </View>
-          <Text style={styles.optionLabel}>Faltan piezas</Text>
+          {faltanPiezas !== undefined && (
+            <View style={styles.optionItem}>
+              <View style={styles.checkboxWrapper}>
+                <CheckboxPdf checked={faltanPiezas} />
+              </View>
+              <Text style={styles.optionLabel}>Faltan piezas</Text>
+            </View>
+          )}
         </View>
-      </View>
+      )}
 
-      <View style={styles.obsContainer}>
-        <Text style={styles.obsLabel}>Observaciones</Text>
-        <Text style={styles.obsText}>
-          {observaciones.trim() !== "" ? observaciones : "—"}
-        </Text>
-      </View>
+      {observaciones?.trim() && (
+        <View style={styles.obsContainer}>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </View>
+      )}
     </View>
   );
 }

@@ -7,7 +7,7 @@ import { Torax } from '@/store/Pre-Occupational/preOccupationalSlice';
 interface ToraxSectionProps {
   isEditing: boolean;
   data: Torax;
-  onChange: (field: keyof Torax, value: boolean | string) => void;
+  onChange: (field: keyof Torax, value: "si" | "no" | string | undefined) => void;
 }
 
 export const ToraxSection: React.FC<ToraxSectionProps> = ({ isEditing, data, onChange }) => (
@@ -21,14 +21,14 @@ export const ToraxSection: React.FC<ToraxSectionProps> = ({ isEditing, data, onC
         id="torax-def-si"
         checked={data.deformaciones === 'si'}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'si' : 'no')}
+        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'si' : (data.deformaciones === 'si' ? undefined : data.deformaciones))}
       />
       <Label htmlFor="torax-def-si">Sí</Label>
       <Checkbox
         id="torax-def-no"
         checked={data.deformaciones === 'no'}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'no' : 'si')}
+        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'no' : (data.deformaciones === 'no' ? undefined : data.deformaciones))}
       />
       <Label htmlFor="torax-def-no">No</Label>
       <Input
@@ -48,14 +48,14 @@ export const ToraxSection: React.FC<ToraxSectionProps> = ({ isEditing, data, onC
         id="torax-cic-si"
         checked={data.cicatrices === 'si'}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'si' : 'no')}
+        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'si' : (data.cicatrices === 'si' ? undefined : data.cicatrices))}
       />
       <Label htmlFor="torax-cic-si">Sí</Label>
       <Checkbox
         id="torax-cic-no"
         checked={data.cicatrices === 'no'}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'no' : 'si')}
+        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'no' : (data.cicatrices === 'no' ? undefined : data.cicatrices))}
       />
       <Label htmlFor="torax-cic-no">No</Label>
       <Input

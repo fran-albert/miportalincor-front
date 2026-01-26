@@ -3,14 +3,14 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface GenitourinarioPdfProps {
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varicocele: boolean;
-  varicoceleObs: string;
-  fum: string;
-  partos: string;
-  cesarea: string;
-  embarazos: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  varicocele?: boolean;
+  varicoceleObs?: string;
+  fum?: string;
+  partos?: string;
+  cesarea?: string;
+  embarazos?: string;
 }
 
 const styles = StyleSheet.create({
@@ -103,61 +103,94 @@ export default function GenitourinarioPdf({
   cesarea,
   embarazos,
 }: GenitourinarioPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    varicocele !== undefined ||
+    (observaciones?.trim() ?? '') !== '' ||
+    (fum?.trim() ?? '') !== '' ||
+    (partos?.trim() ?? '') !== '' ||
+    (cesarea?.trim() ?? '') !== '' ||
+    (embarazos?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
+  // Verificar si hay datos gineco-obstétricos
+  const hasGinecoData = (fum?.trim() ?? '') !== '' ||
+    (partos?.trim() ?? '') !== '' ||
+    (cesarea?.trim() ?? '') !== '' ||
+    (embarazos?.trim() ?? '') !== '';
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Genitourinario</Text>
 
-      {/* Sin alteraciones */}
-      <View style={styles.row}>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={sinAlteraciones} />
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
+          </View>
+          <Text style={styles.optionText}>Sin alteraciones</Text>
         </View>
-        <Text style={styles.optionText}>Sin alteraciones</Text>
-      </View>
+      )}
 
       {/* Observaciones generales */}
-      {observaciones.trim() !== "" && (
+      {observaciones?.trim() && (
         <View>
           <Text style={styles.obsLabel}>Observaciones:</Text>
           <Text style={styles.obsText}>{observaciones}</Text>
         </View>
       )}
 
-      {/* Varicocele */}
-      <View style={[styles.row, { marginTop: 8, alignItems: "flex-start" }]}>
-        <Text style={styles.label}>Varicocele:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={varicocele} />
-        </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!varicocele} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-      </View>
-      {varicoceleObs.trim() !== "" && (
-        <Text style={styles.obsInlineInline}>{varicoceleObs}</Text>
+      {/* Varicocele - solo mostrar si está definido */}
+      {varicocele !== undefined && (
+        <>
+          <View style={[styles.row, { marginTop: 8, alignItems: "flex-start" }]}>
+            <Text style={styles.label}>Varicocele:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={varicocele === true} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={varicocele === false} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
+          </View>
+          {varicoceleObs?.trim() && (
+            <Text style={styles.obsInlineInline}>{varicoceleObs}</Text>
+          )}
+        </>
       )}
 
-      {/* Datos gineco-obstétricos en filas verticales */}
-      <View style={styles.dataBlock}>
-        <View style={styles.dataRow}>
-          <Text style={styles.dataLabel}>Fecha F.U.M:</Text>
-          <Text style={styles.dataValue}>{fum || "—"}</Text>
+      {/* Datos gineco-obstétricos - solo mostrar si hay alguno completado */}
+      {hasGinecoData && (
+        <View style={styles.dataBlock}>
+          {fum?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Fecha F.U.M:</Text>
+              <Text style={styles.dataValue}>{fum}</Text>
+            </View>
+          )}
+          {embarazos?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Embarazos:</Text>
+              <Text style={styles.dataValue}>{embarazos}</Text>
+            </View>
+          )}
+          {partos?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Partos:</Text>
+              <Text style={styles.dataValue}>{partos}</Text>
+            </View>
+          )}
+          {cesarea?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Cesárea:</Text>
+              <Text style={styles.dataValue}>{cesarea}</Text>
+            </View>
+          )}
         </View>
-        <View style={styles.dataRow}>
-          <Text style={styles.dataLabel}>Embarazos:</Text>
-          <Text style={styles.dataValue}>{embarazos || "—"}</Text>
-        </View>
-        <View style={styles.dataRow}>
-          <Text style={styles.dataLabel}>Partos:</Text>
-          <Text style={styles.dataValue}>{partos || "—"}</Text>
-        </View>
-        <View style={styles.dataRow}>
-          <Text style={styles.dataLabel}>Cesárea:</Text>
-          <Text style={styles.dataValue}>{cesarea || "—"}</Text>
-        </View>
-      </View>
+      )}
     </View>
   );
 }

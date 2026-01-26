@@ -2,10 +2,10 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface ToraxPdfProps {
-  deformaciones: "si" | "no";
-  deformacionesObs: string;
-  cicatrices: "si" | "no";
-  cicatricesObs: string;
+  deformaciones?: "si" | "no";
+  deformacionesObs?: string;
+  cicatrices?: "si" | "no";
+  cicatricesObs?: string;
 }
 
 const styles = StyleSheet.create({
@@ -70,51 +70,61 @@ const styles = StyleSheet.create({
 });
 
 export default function ToraxPdf({ deformaciones, deformacionesObs, cicatrices, cicatricesObs }: ToraxPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = deformaciones !== undefined ||
+    cicatrices !== undefined;
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tórax</Text>
 
-      {/* Deformaciones */}
-      <View style={styles.groupContainer}>
-        <View style={styles.groupRow}>
-          <Text style={styles.label}>Deformaciones:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={deformaciones === "si"} />
+      {/* Deformaciones - solo mostrar si está definido */}
+      {deformaciones !== undefined && (
+        <View style={styles.groupContainer}>
+          <View style={styles.groupRow}>
+            <Text style={styles.label}>Deformaciones:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={deformaciones === "si"} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={deformaciones === "no"} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
           </View>
-          <Text style={styles.optionText}>Sí</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={deformaciones === "no"} />
-          </View>
-          <Text style={styles.optionText}>No</Text>
+          {deformacionesObs?.trim() && (
+            <View style={styles.obsContainer}>
+              <Text style={styles.obsLabel}>Observaciones:</Text>
+              <Text style={styles.obsText}>{deformacionesObs}</Text>
+            </View>
+          )}
         </View>
-        <View style={styles.obsContainer}>
-          <Text style={styles.obsLabel}>Observaciones:</Text>
-          <Text style={styles.obsText}>
-            {deformacionesObs.trim() !== "" ? deformacionesObs : "—"}
-          </Text>
-        </View>
-      </View>
+      )}
 
-      {/* Cicatrices */}
-      <View style={styles.groupContainer}>
-        <View style={styles.groupRow}>
-          <Text style={styles.label}>Cicatrices:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={cicatrices === "si"} />
+      {/* Cicatrices - solo mostrar si está definido */}
+      {cicatrices !== undefined && (
+        <View style={styles.groupContainer}>
+          <View style={styles.groupRow}>
+            <Text style={styles.label}>Cicatrices:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={cicatrices === "si"} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={cicatrices === "no"} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
           </View>
-          <Text style={styles.optionText}>Sí</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={cicatrices === "no"} />
-          </View>
-          <Text style={styles.optionText}>No</Text>
+          {cicatricesObs?.trim() && (
+            <View style={styles.obsContainer}>
+              <Text style={styles.obsLabel}>Observaciones:</Text>
+              <Text style={styles.obsText}>{cicatricesObs}</Text>
+            </View>
+          )}
         </View>
-        <View style={styles.obsContainer}>
-          <Text style={styles.obsLabel}>Observaciones:</Text>
-          <Text style={styles.obsText}>
-            {cicatricesObs.trim() !== "" ? cicatricesObs : "—"}
-          </Text>
-        </View>
-      </View>
+      )}
     </View>
   );
 }

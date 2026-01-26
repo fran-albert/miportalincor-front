@@ -3,12 +3,12 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface CirculatorioPdfProps {
-  frecuenciaCardiaca: string;
-  presion: string;
-  sinAlteraciones: boolean;
-  observaciones: string;
-  varices: boolean;
-  varicesObs: string;
+  frecuenciaCardiaca?: string;
+  presion?: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
+  varices?: boolean;
+  varicesObs?: string;
 }
 
 const styles = StyleSheet.create({
@@ -101,50 +101,81 @@ export default function CirculatorioPdf({
   varices,
   varicesObs,
 }: CirculatorioPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    varices !== undefined ||
+    (frecuenciaCardiaca?.trim() ?? '') !== '' ||
+    (presion?.trim() ?? '') !== '' ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
+  const hasClinicalData = (frecuenciaCardiaca?.trim() ?? '') !== '' ||
+    (presion?.trim() ?? '') !== '' ||
+    sinAlteraciones !== undefined;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Circulatorio</Text>
 
-      {/* Fila única con Frec. Cardíaca, TA y Sin alteraciones */}
-      <View style={styles.rowInline}>
-        {/* Frecuencia Cardíaca */}
-        <Text style={styles.label}>Frec. Cardíaca:</Text>
-        <Text style={styles.valueBox}>{frecuenciaCardiaca || "—"}</Text>
-        <Text style={styles.unitText}>x minuto</Text>
+      {/* Fila única con Frec. Cardíaca, TA y Sin alteraciones - solo si hay datos */}
+      {hasClinicalData && (
+        <View style={styles.rowInline}>
+          {/* Frecuencia Cardíaca */}
+          {frecuenciaCardiaca?.trim() && (
+            <>
+              <Text style={styles.label}>Frec. Cardíaca:</Text>
+              <Text style={styles.valueBox}>{frecuenciaCardiaca}</Text>
+              <Text style={styles.unitText}>x minuto</Text>
+            </>
+          )}
 
-        {/* Tensión Arterial */}
-        <Text style={[styles.label, { marginLeft: 12 }]}>TA:</Text>
-        <Text style={styles.valueBox}>{presion || "—"}</Text>
-        <Text style={styles.unitText}>mmHg</Text>
+          {/* Tensión Arterial */}
+          {presion?.trim() && (
+            <>
+              <Text style={[styles.label, { marginLeft: frecuenciaCardiaca?.trim() ? 12 : 0 }]}>TA:</Text>
+              <Text style={styles.valueBox}>{presion}</Text>
+              <Text style={styles.unitText}>mmHg</Text>
+            </>
+          )}
 
-        {/* Sin alteraciones */}
-        <View style={[styles.checkboxWrapper, { marginLeft: 12 }]}>
-          <CheckboxPdf checked={sinAlteraciones} />
+          {/* Sin alteraciones */}
+          {sinAlteraciones !== undefined && (
+            <>
+              <View style={[styles.checkboxWrapper, { marginLeft: 12 }]}>
+                <CheckboxPdf checked={sinAlteraciones} />
+              </View>
+              <Text style={styles.optionText}>Sin alteraciones</Text>
+            </>
+          )}
         </View>
-        <Text style={styles.optionText}>Sin alteraciones</Text>
-      </View>
+      )}
 
-      {/* Observaciones */}
-      <Text style={styles.obsLabel}>Observaciones</Text>
-      <Text style={styles.obsText}>
-        {observaciones.trim() !== "" ? observaciones : "—"}
-      </Text>
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
 
-      {/* Várices */}
-      <View style={styles.varicesContainer}>
-        <Text style={styles.label}>Várices:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={varices} />
+      {/* Várices - solo si está definido */}
+      {varices !== undefined && (
+        <View style={styles.varicesContainer}>
+          <Text style={styles.label}>Várices:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={varices === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={varices === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {varicesObs?.trim() && (
+            <Text style={styles.varicesObs}>{varicesObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={!varices} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-        {varicesObs.trim() !== "" && (
-          <Text style={styles.varicesObs}>{varicesObs}</Text>
-        )}
-      </View>
+      )}
     </View>
   );
 }

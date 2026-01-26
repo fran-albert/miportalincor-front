@@ -10,6 +10,7 @@ import PielPdf from "./Piel";
 import CabezaCuelloPdf from "./CabezaCuello";
 import FooterPdfConditional from "../Footer";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { hasSectionData } from "@/common/helpers/maps";
 
 interface Props {
   data: IMedicalEvaluation;
@@ -40,56 +41,69 @@ const styles = StyleSheet.create({
   },
 });
 
-const ThirdPagePdfDocument = ({ data, pielData, doctorData }: Props) => (
-  <Page size="A4" style={styles.page}>
-    <HeaderPreviewPdf
-      evaluationType={"Preocupacional"}
-      examType="Examen Clínico"
-    />
+const ThirdPagePdfDocument = ({ data, pielData, doctorData }: Props) => {
+  // Verificar si hay datos en alguna sección de esta página
+  const hasPiel = hasSectionData(pielData);
+  const hasCabezaCuello = hasSectionData(data.cabezaCuello);
+  const hasBucodental = hasSectionData(data.bucodental);
+  const hasTorax = hasSectionData(data.torax);
 
-    <View style={styles.content}>
-      <View style={styles.sectionWrapper}>
-        <PielPdf
-          normocoloreada={pielData.normocoloreada!}
-          tatuajes={pielData.tatuajes!}
-          observaciones={pielData.observaciones}
-        />
-      </View>
-      <View style={styles.sectionWrapper}>
-        <CabezaCuelloPdf
-          sinAlteraciones={data.cabezaCuello?.sinAlteraciones ?? false}
-          observaciones={data.cabezaCuello?.observaciones ?? ""}
-        />
-      </View>
-      <View style={styles.sectionWrapper}>
-        <BucodentalPdf
-          sinAlteraciones={data.bucodental?.sinAlteraciones ?? false}
-          caries={data.bucodental?.caries ?? false}
-          faltanPiezas={data.bucodental?.faltanPiezas ?? false}
-          observaciones={data.bucodental?.observaciones ?? ""}
-        />
-      </View>
-      <View style={styles.sectionWrapper}>
-        <ToraxPdf
-          deformaciones={data.torax?.deformaciones ?? "no"}
-          deformacionesObs={data.torax?.deformacionesObs ?? ""}
-          cicatrices={data.torax?.cicatrices ?? "no"}
-          cicatricesObs={data.torax?.cicatricesObs ?? ""}
-        />
-      </View>
-    </View>
-    <View style={styles.footer}>
-      <FooterPdfConditional
-        pageNumber={3}
-        useCustom={true}
-        doctorLicense={doctorData.matricula}
-        doctorName={doctorData.fullName}
-        doctorSpeciality={doctorData.specialty}
-        signatureUrl={doctorData.signatureDataUrl}
-        sealUrl={doctorData.sealDataUrl}
+  // Si no hay datos en ninguna sección, no mostrar la página
+  if (!hasPiel && !hasCabezaCuello && !hasBucodental && !hasTorax) {
+    return null;
+  }
+
+  return (
+    <Page size="A4" style={styles.page}>
+      <HeaderPreviewPdf
+        evaluationType={"Preocupacional"}
+        examType="Examen Clínico"
       />
-    </View>
-  </Page>
-);
+
+      <View style={styles.content}>
+        <View style={styles.sectionWrapper}>
+          <PielPdf
+            normocoloreada={pielData?.normocoloreada}
+            tatuajes={pielData?.tatuajes}
+            observaciones={pielData?.observaciones}
+          />
+        </View>
+        <View style={styles.sectionWrapper}>
+          <CabezaCuelloPdf
+            sinAlteraciones={data.cabezaCuello?.sinAlteraciones}
+            observaciones={data.cabezaCuello?.observaciones}
+          />
+        </View>
+        <View style={styles.sectionWrapper}>
+          <BucodentalPdf
+            sinAlteraciones={data.bucodental?.sinAlteraciones}
+            caries={data.bucodental?.caries}
+            faltanPiezas={data.bucodental?.faltanPiezas}
+            observaciones={data.bucodental?.observaciones}
+          />
+        </View>
+        <View style={styles.sectionWrapper}>
+          <ToraxPdf
+            deformaciones={data.torax?.deformaciones}
+            deformacionesObs={data.torax?.deformacionesObs}
+            cicatrices={data.torax?.cicatrices}
+            cicatricesObs={data.torax?.cicatricesObs}
+          />
+        </View>
+      </View>
+      <View style={styles.footer}>
+        <FooterPdfConditional
+          pageNumber={3}
+          useCustom={true}
+          doctorLicense={doctorData.matricula}
+          doctorName={doctorData.fullName}
+          doctorSpeciality={doctorData.specialty}
+          signatureUrl={doctorData.signatureDataUrl}
+          sealUrl={doctorData.sealDataUrl}
+        />
+      </View>
+    </Page>
+  );
+};
 
 export default ThirdPagePdfDocument;

@@ -4,14 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export interface CabezaCuello {
-  sinAlteraciones: boolean;
+  sinAlteraciones?: boolean;
   observaciones: string;
 }
 
 interface CabezaCuelloSectionProps {
   isEditing: boolean;
   data: CabezaCuello;
-  onChange: (field: keyof CabezaCuello, value: boolean | string) => void;
+  onChange: (field: keyof CabezaCuello, value: boolean | string | undefined) => void;
   onBatchChange?: (updates: Partial<CabezaCuello>) => void;
 }
 
@@ -25,13 +25,13 @@ export const CabezaCuelloSection: React.FC<CabezaCuelloSectionProps> = ({
     if (checked && onBatchChange) {
       onBatchChange({ sinAlteraciones: true, observaciones: '' });
     } else {
-      onChange("sinAlteraciones", checked);
+      onChange("sinAlteraciones", checked ? true : undefined);
     }
   };
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, observaciones: value });
+      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
     } else {
       onChange("observaciones", value);
     }

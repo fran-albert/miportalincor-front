@@ -46,6 +46,9 @@ export const PERMISSIONS = {
   // Solicitudes de Recetas
   MY_PRESCRIPTION_REQUESTS: [Role.PACIENTE],
   DOCTOR_PRESCRIPTION_REQUESTS: [Role.MEDICO],
+
+  // Cartón Verde (Medicación)
+  MY_GREEN_CARDS: [Role.PACIENTE],
 } as const;
 
 /**
@@ -59,6 +62,7 @@ export const STRICT_PERMISSIONS = [
   'MY_APPOINTMENTS',
   'MY_PRESCRIPTION_REQUESTS',
   'DOCTOR_PRESCRIPTION_REQUESTS',
+  'MY_GREEN_CARDS',
 ] as const;
 
 /**

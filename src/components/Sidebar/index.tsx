@@ -32,6 +32,7 @@ import {
   UserCog,
   Clock,
   FileText,
+  Pill,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,8 +46,8 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import { Briefcase } from "lucide-react";
+import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 
 const navigationItems = [
   {
@@ -90,7 +91,6 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
     title: "Mi Sala de Espera",
@@ -98,7 +98,6 @@ const navigationItems = [
     icon: Clock,
     allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
     strictRoles: true,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
     title: "Mi Configuración",
@@ -120,12 +119,11 @@ const navigationItems = [
     icon: CalendarCheck,
     allowedRoles: PERMISSIONS.MY_APPOINTMENTS,
     strictRoles: true,
-    featureFlag: 'APPOINTMENTS_ENABLED' as const,
   },
   {
-    title: "Recetas",
+    title: "Medicación y Recetas",
     url: "/mis-solicitudes-recetas",
-    icon: FileText,
+    icon: Pill,
     allowedRoles: PERMISSIONS.MY_PRESCRIPTION_REQUESTS,
     strictRoles: true,
   },
@@ -214,11 +212,16 @@ export function AppSidebar() {
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
+  const isDoctor = userRoles.includes("Medico");
 
-  // Filtrar items del menú según roles del usuario y feature flags
-  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles).filter(
-    (item) => !item.featureFlag || FEATURE_FLAGS[item.featureFlag]
-  );
+  // Get pending prescription count for doctors
+  const { pendingCount } = usePrescriptionNotifications({
+    enabled: isDoctor,
+    showToasts: false, // Toasts are handled in DashboardLayout
+  });
+
+  // Filtrar items del menú según roles del usuario
+  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
   const filteredReportsItems = filterMenuItems(reportsItems, userRoles);
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
@@ -269,6 +272,11 @@ export function AppSidebar() {
                     );
                   }
 
+                  // Check if this is the prescription requests item for doctors
+                  const isPrescriptionRequestsItem =
+                    item.url === "/solicitudes-recetas" && isDoctor;
+                  const showBadge = isPrescriptionRequestsItem && pendingCount > 0;
+
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={active}>
@@ -281,7 +289,15 @@ export function AppSidebar() {
                           }`}
                         >
                           <item.icon className="text-greenPrimary" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {showBadge && (
+                            <Badge
+                              variant="destructive"
+                              className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
+                            >
+                              {pendingCount > 9 ? "9+" : pendingCount}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

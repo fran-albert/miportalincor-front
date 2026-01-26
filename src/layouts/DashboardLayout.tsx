@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearchCommand } from "@/components/Search/GlobalSearchCommand";
 import { AttendingPatientFAB } from "@/components/AttendingPatientFAB";
+import { PrescriptionNotificationDropdown } from "@/components/Notifications";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
 import { useAuthSync } from "@/hooks/useAuthSync";
@@ -21,7 +22,7 @@ import useUserRole from "@/hooks/useRoles";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
-  const { session, isPatient } = useUserRole();
+  const { session, isPatient, isDoctor } = useUserRole();
   const [searchOpen, setSearchOpen] = useState(false);
 
   // Sync auth state across browser tabs
@@ -67,6 +68,9 @@ export function DashboardLayout() {
 
               {/* Menú de usuario */}
               <div className="flex items-center gap-2">
+                {/* Notificaciones de recetas - Solo para médicos */}
+                {isDoctor && <PrescriptionNotificationDropdown />}
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">

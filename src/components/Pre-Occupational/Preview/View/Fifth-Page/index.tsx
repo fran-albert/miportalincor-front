@@ -9,6 +9,7 @@ import GenitourinarioHtml from "../Fourth-Page/Genitourinario";
 import OsteoarticularHtml from "../Fourth-Page/Osteoarticular";
 import FooterHtmlConditional from "../Footer";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { hasSectionData } from "@/common/helpers/maps";
 
 interface Props {
   gastrointestinal: Gastrointestinal;
@@ -21,21 +22,33 @@ const FifthPageHTML = ({
   genitourinario,
   osteoarticular,
   doctorData,
-}: Props) => (
-  <>
-    <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
-    <GastrointestinalHtml data={gastrointestinal} />
-    <GenitourinarioHtml data={genitourinario} />
-    <OsteoarticularHtml data={osteoarticular} />
-   <FooterHtmlConditional
-      pageNumber={5}
-      useCustom
-      doctorLicense={doctorData.matricula}
-      doctorName={doctorData.fullName}
-      doctorSpeciality={doctorData.specialty}
-      signatureUrl={doctorData.signatureDataUrl}
-    />
-  </>
-);
+}: Props) => {
+  // Verificar si hay datos en alguna sección de esta página
+  const hasGastrointestinal = hasSectionData(gastrointestinal);
+  const hasGenitourinario = hasSectionData(genitourinario);
+  const hasOsteoarticular = hasSectionData(osteoarticular);
+
+  // Si no hay datos en ninguna sección, no mostrar la página
+  if (!hasGastrointestinal && !hasGenitourinario && !hasOsteoarticular) {
+    return null;
+  }
+
+  return (
+    <>
+      <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
+      <GastrointestinalHtml data={gastrointestinal} />
+      <GenitourinarioHtml data={genitourinario} />
+      <OsteoarticularHtml data={osteoarticular} />
+      <FooterHtmlConditional
+        pageNumber={5}
+        useCustom
+        doctorLicense={doctorData.matricula}
+        doctorName={doctorData.fullName}
+        doctorSpeciality={doctorData.specialty}
+        signatureUrl={doctorData.signatureDataUrl}
+      />
+    </>
+  );
+};
 
 export default FifthPageHTML;

@@ -3,8 +3,8 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface CabezaCuelloPdfProps {
-  sinAlteraciones: boolean;
-  observaciones: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
 }
 
 const styles = StyleSheet.create({
@@ -65,25 +65,35 @@ export default function CabezaCuelloPdf({
   sinAlteraciones,
   observaciones,
 }: CabezaCuelloPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cabeza y Cuello</Text>
 
-      {/* Sin alteraciones */}
-      <View style={styles.row}>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={sinAlteraciones} />
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
+          </View>
+          <Text style={styles.optionText}>
+            Sin alteraciones: {sinAlteraciones ? "Sí" : "No"}
+          </Text>
         </View>
-        <Text style={styles.optionText}>
-          Sin alteraciones: {sinAlteraciones ? "Sí" : "No"}
-        </Text>
-      </View>
+      )}
 
-      {/* Observaciones */}
-      <Text style={styles.obsLabel}>Observaciones</Text>
-      <Text style={styles.obsText}>
-        {observaciones.trim() !== "" ? observaciones : "—"}
-      </Text>
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

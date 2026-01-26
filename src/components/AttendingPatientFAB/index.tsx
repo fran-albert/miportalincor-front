@@ -18,7 +18,6 @@ import { useOverturnMutations } from "@/hooks/Overturns/useOverturnMutations";
 import { AppointmentStatus } from "@/types/Appointment/Appointment";
 import { OverturnStatus } from "@/types/Overturn/Overturn";
 import useUserRole from "@/hooks/useRoles";
-import { FEATURE_FLAGS } from "@/common/constants/featureFlags";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
 export const AttendingPatientFAB = () => {
@@ -40,12 +39,10 @@ export const AttendingPatientFAB = () => {
   // - No es médico
   // - No hay paciente en atención
   // - Ya está en la sala de espera
-  // - Feature flag desactivado
   if (
     !isDoctor ||
     !attendingItem ||
-    location.pathname === "/mi-sala-de-espera" ||
-    !FEATURE_FLAGS.APPOINTMENTS_ENABLED
+    location.pathname === "/mi-sala-de-espera"
   ) {
     return null;
   }

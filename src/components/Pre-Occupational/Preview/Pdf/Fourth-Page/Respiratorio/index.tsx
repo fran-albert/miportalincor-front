@@ -2,10 +2,10 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface RespiratorioPdfProps {
-  frecuenciaRespiratoria: string;
-  oximetria: string;
-  sinAlteraciones: boolean;
-  observaciones: string;
+  frecuenciaRespiratoria?: string;
+  oximetria?: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
 }
 
 const styles = StyleSheet.create({
@@ -85,31 +85,59 @@ export default function RespiratorioPdf({
   sinAlteraciones,
   observaciones,
 }: RespiratorioPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    (frecuenciaRespiratoria?.trim() ?? '') !== '' ||
+    (oximetria?.trim() ?? '') !== '' ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
+  const hasClinicalData = (frecuenciaRespiratoria?.trim() ?? '') !== '' ||
+    (oximetria?.trim() ?? '') !== '' ||
+    sinAlteraciones !== undefined;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Respiratorio</Text>
 
-      {/* Frecuencia, Oximetría y Sin Alteraciones en una misma fila */}
-      <View style={styles.rowAll}>
-        <Text style={styles.label}>Frecuencia Resp.:</Text>
-        <Text style={styles.inputBox}>{frecuenciaRespiratoria || "—"}</Text>
-        <Text style={styles.unitText}>x minuto</Text>
+      {/* Frecuencia, Oximetría y Sin Alteraciones en una misma fila - solo si hay datos */}
+      {hasClinicalData && (
+        <View style={styles.rowAll}>
+          {frecuenciaRespiratoria?.trim() && (
+            <>
+              <Text style={styles.label}>Frecuencia Resp.:</Text>
+              <Text style={styles.inputBox}>{frecuenciaRespiratoria}</Text>
+              <Text style={styles.unitText}>x minuto</Text>
+            </>
+          )}
 
-        <Text style={[styles.label, { marginLeft: 12 }]}>Oximetría:</Text>
-        <Text style={styles.inputBox}>{oximetria || "—"}</Text>
-        <Text style={styles.unitText}>%</Text>
+          {oximetria?.trim() && (
+            <>
+              <Text style={[styles.label, { marginLeft: frecuenciaRespiratoria?.trim() ? 12 : 0 }]}>Oximetría:</Text>
+              <Text style={styles.inputBox}>{oximetria}</Text>
+              <Text style={styles.unitText}>%</Text>
+            </>
+          )}
 
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={sinAlteraciones} />
+          {sinAlteraciones !== undefined && (
+            <>
+              <View style={styles.checkboxWrapper}>
+                <CheckboxPdf checked={sinAlteraciones} />
+              </View>
+              <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
+            </>
+          )}
         </View>
-        <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
-      </View>
+      )}
 
-      {/* Observaciones */}
-      <Text style={styles.obsLabel}>Observaciones</Text>
-      <Text style={styles.obsText}>
-        {observaciones.trim() !== "" ? observaciones : "—"}
-      </Text>
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

@@ -187,7 +187,8 @@ const buildMedicalEvaluationPayload = (
   const normoField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Normocoloreada"
   );
-  if (normoField && medicalEvaluation.piel) {
+  // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
+  if (normoField && medicalEvaluation.piel?.normocoloreada !== undefined) {
     payloadItems.push({
       dataTypeId: normoField.id,
       value: medicalEvaluation.piel.normocoloreada === "si" ? "true" : "false",
@@ -199,7 +200,8 @@ const buildMedicalEvaluationPayload = (
   const tatField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Tatuajes"
   );
-  if (tatField && medicalEvaluation.piel) {
+  // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
+  if (tatField && medicalEvaluation.piel?.tatuajes !== undefined) {
     payloadItems.push({
       dataTypeId: tatField.id,
       value: medicalEvaluation.piel.tatuajes === "si" ? "true" : "false",
@@ -209,7 +211,8 @@ const buildMedicalEvaluationPayload = (
   const cabezaBool = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Cabeza y Cuello"
   );
-  if (cabezaBool && medicalEvaluation.cabezaCuello) {
+  // Solo enviar si el valor fue explícitamente seleccionado
+  if (cabezaBool && medicalEvaluation.cabezaCuello?.sinAlteraciones !== undefined) {
     payloadItems.push({
       dataTypeId: cabezaBool.id,
       value: medicalEvaluation.cabezaCuello.sinAlteraciones ? "true" : "false",
@@ -239,10 +242,13 @@ const buildMedicalEvaluationPayload = (
     );
     if (dt && medicalEvaluation.bucodental) {
       const value = medicalEvaluation.bucodental[key as keyof typeof medicalEvaluation.bucodental];
-      payloadItems.push({
-        dataTypeId: dt.id,
-        value: value ? "true" : "false",
-      });
+      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
+      if (value !== undefined) {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: value ? "true" : "false",
+        });
+      }
     }
   });
   // Observaciones Bucodental - enviar siempre para permitir borrar
@@ -270,21 +276,24 @@ const buildMedicalEvaluationPayload = (
       const torax: Torax = medicalEvaluation.torax;
       const value = torax[key as keyof Torax];
       const obsKey = `${key}Obs` as keyof Torax;
-      payloadItems.push({
-        dataTypeId: dt.id,
-        value: value === "si" ? "true" : "false",
-        observations: (torax[obsKey] as string)?.trim() || null,
-      });
+      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
+      if (value !== undefined) {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: value === "si" ? "true" : "false",
+          observations: (torax[obsKey] as string)?.trim() || null,
+        });
+      }
     }
   });
 
   // === Respiratorio ===
   if (medicalEvaluation.respiratorio) {
-    // Booleano Aparato Respiratorio
+    // Booleano Aparato Respiratorio - solo enviar si fue seleccionado
     const respBool = fields.find(
       (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Respiratorio"
     );
-    if (respBool) {
+    if (respBool && medicalEvaluation.respiratorio.sinAlteraciones !== undefined) {
       payloadItems.push({
         dataTypeId: respBool.id,
         value: medicalEvaluation.respiratorio.sinAlteraciones
@@ -320,11 +329,11 @@ const buildMedicalEvaluationPayload = (
   // === Circulatorio ===
   const circ = medicalEvaluation.circulatorio;
   if (circ) {
-    // 1) Booleano Aparato Circulatorio
+    // 1) Booleano Aparato Circulatorio - solo enviar si fue seleccionado
     const circBool = fields.find(
       (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Circulatorio"
     );
-    if (circBool) {
+    if (circBool && circ.sinAlteraciones !== undefined) {
       payloadItems.push({
         dataTypeId: circBool.id,
         value: circ.sinAlteraciones ? "true" : "false",
@@ -351,11 +360,11 @@ const buildMedicalEvaluationPayload = (
       }
     });
 
-    // 3) Várices (boolean + obs)
+    // 3) Várices (boolean + obs) - solo enviar si fue seleccionado
     const varicesField = fields.find(
       (f) => f.category === "EXAMEN_FISICO" && f.name === "Várices"
     );
-    if (varicesField && typeof circ.varices === "boolean") {
+    if (varicesField && circ.varices !== undefined) {
       payloadItems.push({
         dataTypeId: varicesField.id,
         value: circ.varices ? "true" : "false",
@@ -369,7 +378,8 @@ const buildMedicalEvaluationPayload = (
     (f) =>
       f.category === "EXAMEN_FISICO" && f.name === "Aparato Gastrointestinal"
   );
-  if (giBool && medicalEvaluation.gastrointestinal) {
+  // Solo enviar si el valor fue explícitamente seleccionado
+  if (giBool && medicalEvaluation.gastrointestinal?.sinAlteraciones !== undefined) {
     payloadItems.push({
       dataTypeId: giBool.id,
       value: medicalEvaluation.gastrointestinal.sinAlteraciones
@@ -381,7 +391,7 @@ const buildMedicalEvaluationPayload = (
   }
   if (medicalEvaluation.gastrointestinal) {
     // === Cirugías, hernias, eventraciones, hemorroides ===
-    // Enviar SIEMPRE todos los campos para permitir borrar valores
+    // Solo enviar campos que fueron explícitamente seleccionados (no undefined)
     const giDetails = [
       "cicatrices",
       "hernias",
@@ -398,13 +408,14 @@ const buildMedicalEvaluationPayload = (
       const gi: Gastrointestinal = medicalEvaluation.gastrointestinal;
       const val = gi[key as keyof Gastrointestinal] as boolean | undefined;
       const obsKey = `${key}Obs` as keyof Gastrointestinal;
-      // Enviar siempre el campo, con valor false si es undefined
-      payloadItems.push({
-        dataTypeId: dt.id,
-        value: val === true ? "true" : "false",
-        // Enviar null explícito si no hay observaciones para que el backend las borre
-        observations: (gi[obsKey] as string)?.trim() || null,
-      });
+      // Solo enviar si el valor fue explícitamente seleccionado (true o false, no undefined)
+      if (val !== undefined) {
+        payloadItems.push({
+          dataTypeId: dt.id,
+          value: val === true ? "true" : "false",
+          observations: (gi[obsKey] as string)?.trim() || null,
+        });
+      }
     });
   }
 
@@ -412,7 +423,8 @@ const buildMedicalEvaluationPayload = (
   const neuroBool = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Neurológico"
   );
-  if (neuroBool && medicalEvaluation.neurologico) {
+  // Solo enviar si el valor fue explícitamente seleccionado
+  if (neuroBool && medicalEvaluation.neurologico?.sinAlteraciones !== undefined) {
     payloadItems.push({
       dataTypeId: neuroBool.id,
       value: medicalEvaluation.neurologico.sinAlteraciones ? "true" : "false",
@@ -424,7 +436,8 @@ const buildMedicalEvaluationPayload = (
   const genBool = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Genitourinario"
   );
-  if (genBool && medicalEvaluation.genitourinario) {
+  // Solo enviar si el valor fue explícitamente seleccionado
+  if (genBool && medicalEvaluation.genitourinario?.sinAlteraciones !== undefined) {
     payloadItems.push({
       dataTypeId: genBool.id,
       value: medicalEvaluation.genitourinario.sinAlteraciones
@@ -437,7 +450,8 @@ const buildMedicalEvaluationPayload = (
   const varicoField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Varicocele"
   );
-  if (varicoField && medicalEvaluation.genitourinario?.varicocele) {
+  // Solo enviar si el valor fue explícitamente seleccionado
+  if (varicoField && medicalEvaluation.genitourinario?.varicocele !== undefined) {
     payloadItems.push({
       dataTypeId: varicoField.id,
       value: medicalEvaluation.genitourinario.varicocele ? "true" : "false",
@@ -501,9 +515,10 @@ const buildMedicalEvaluationPayload = (
       );
       if (!dt) return;
 
-      // true/false
-      const val = osteo[key as keyof Osteoarticular] === true;
-      // lee la propiedad correcta
+      const val = osteo[key as keyof Osteoarticular];
+      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
+      if (val === undefined) return;
+
       const obs = (osteo[obsKey as keyof Osteoarticular] as string)?.trim() || undefined;
 
       payloadItems.push({
