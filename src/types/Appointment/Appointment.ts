@@ -78,7 +78,14 @@ export interface PatientBasicDto {
   userId: number;
   firstName: string;
   lastName: string;
+  /** DNI del paciente */
   userName?: string;
+  /** Teléfono del paciente */
+  phoneNumber?: string;
+  /** Número de afiliado */
+  affiliationNumber?: string;
+  /** Nombre de la obra social */
+  healthInsuranceName?: string;
 }
 
 export interface DoctorBasicDto {

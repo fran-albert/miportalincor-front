@@ -184,7 +184,7 @@ export function GreenCardItemFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[650px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-green-700">
             {isEditing ? "Editar Medicamento" : "Agregar Medicamento"}
