@@ -103,6 +103,8 @@ interface BigCalendarProps {
   autoFilterForDoctor?: boolean;
   /** Si es true, solo permite ver turnos sin poder crearlos (modo solo lectura) */
   readOnly?: boolean;
+  /** Si es true, solo permite bloquear/desbloquear slots, no crear turnos (para médicos) */
+  blockOnly?: boolean;
 }
 
 export const BigCalendar = ({
@@ -110,7 +112,8 @@ export const BigCalendar = ({
   doctorId: propDoctorId,
   doctorName,
   autoFilterForDoctor = false,
-  readOnly = false
+  readOnly = false,
+  blockOnly = false
 }: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -351,17 +354,20 @@ export const BigCalendar = ({
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
+    // In blockOnly mode, slots should be interactive (like normal mode)
+    const isInteractive = !readOnly || blockOnly;
+
     // Special style for available slots - distinctive solid border
     if (event.resource.type === "available") {
       return {
         className: "available-slot-event",
         style: {
-          backgroundColor: readOnly ? "#f3f4f6" : "#ffffff",
-          color: readOnly ? "#9ca3af" : "#000000",
+          backgroundColor: isInteractive ? "#ffffff" : "#f3f4f6",
+          color: isInteractive ? "#000000" : "#9ca3af",
           fontSize: "11px",
-          cursor: readOnly ? "default" : "pointer",
+          cursor: isInteractive ? "pointer" : "default",
           fontWeight: "600",
-          opacity: readOnly ? 0.6 : 1,
+          opacity: isInteractive ? 1 : 0.6,
         },
       };
     }
@@ -374,7 +380,7 @@ export const BigCalendar = ({
           backgroundColor: "#fef2f2",
           color: "#dc2626",
           fontSize: "11px",
-          cursor: readOnly ? "default" : "pointer",
+          cursor: isInteractive ? "pointer" : "default",
           fontWeight: "600",
           border: "2px dashed #dc2626",
           borderRadius: "4px",
@@ -442,18 +448,24 @@ export const BigCalendar = ({
         fontSize: "12px",
       },
     };
-  }, [readOnly]);
+  }, [readOnly, blockOnly]);
 
   // Handle event click
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
     // If it's an available slot, show action dialog (unless readOnly)
     if (event.resource.type === "available") {
-      if (readOnly) return; // Don't allow creating in readOnly mode
+      if (readOnly) return; // Don't allow any action in readOnly mode
       setSelectedSlot({
         date: event.resource.slotDate!,
         hour: event.resource.slotHour,
       });
-      setIsSlotActionDialogOpen(true);
+      // In blockOnly mode, directly open block dialog (skip action dialog)
+      if (blockOnly) {
+        setBlockDialogMode("block");
+        setIsBlockDialogOpen(true);
+      } else {
+        setIsSlotActionDialogOpen(true);
+      }
       return;
     }
 
@@ -473,12 +485,12 @@ export const BigCalendar = ({
     // For appointments/overturns, show details dialog
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
-  }, [readOnly]);
+  }, [readOnly, blockOnly]);
 
   // Handle slot selection (click on empty space)
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    // Don't allow creating in readOnly mode
-    if (readOnly) return;
+    // Don't allow creating in readOnly or blockOnly mode
+    if (readOnly || blockOnly) return;
 
     // In month view, do nothing (slots are shown in day/week views)
     if (currentView === "month") {
@@ -490,7 +502,7 @@ export const BigCalendar = ({
     const hour = format(slotInfo.start, "HH:mm");
     setSelectedSlot({ date, hour });
     setIsCreateDialogOpen(true);
-  }, [currentView, readOnly]);
+  }, [currentView, readOnly, blockOnly]);
 
   // Update current date when navigating calendar
   const handleNavigate = useCallback((newDate: Date) => {
@@ -641,7 +653,7 @@ export const BigCalendar = ({
               eventPropGetter={getEventStyle}
               onSelectEvent={handleSelectEvent}
               onSelectSlot={handleSelectSlot}
-              selectable={!readOnly}
+              selectable={!readOnly && !blockOnly}
               popup
               step={slotDuration}
               timeslots={1}

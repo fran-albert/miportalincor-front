@@ -71,7 +71,7 @@ const ShiftsPage = () => {
 
       {/* Content: diferentes vistas según rol */}
       {isDoctor ? (
-        <BigCalendar autoFilterForDoctor={true} readOnly={true} />
+        <BigCalendar autoFilterForDoctor={true} blockOnly={true} />
       ) : (
         <Tabs defaultValue="calendar" className="flex-1">
           <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">

@@ -393,7 +393,7 @@ export function CreatePatientComponent() {
                   name="affiliationNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número de Obra Social</FormLabel>
+                      <FormLabel>Número de Obra Social <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           {...field}
