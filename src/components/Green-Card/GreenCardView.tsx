@@ -23,7 +23,7 @@ import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { GreenCardItemFormModal } from "./GreenCardItemFormModal";
 import { RequestPrescriptionModal } from "./RequestPrescriptionModal";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
-import { toast } from "sonner";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,6 +75,7 @@ export function GreenCardView({
     toggleItemMutation,
     deleteItemMutation,
   } = useGreenCardMutations();
+  const { showSuccess, showError } = useToastContext();
 
   // Doctor can add items if canAddItems is true
   const canAddItems = greenCard.canAddItems && isDoctor;
@@ -95,11 +96,11 @@ export function GreenCardView({
         cardId: greenCard.id,
         itemId: item.id,
       });
-      toast.success(
+      showSuccess(
         `Medicación ${item.isActive ? "suspendida" : "reactivada"} correctamente`
       );
     } catch {
-      toast.error("Error al cambiar el estado de la medicación");
+      showError("Error al cambiar el estado de la medicación");
     }
   };
 
@@ -116,11 +117,11 @@ export function GreenCardView({
         cardId: greenCard.id,
         itemId: itemToDelete.id,
       });
-      toast.success("Medicación eliminada correctamente");
+      showSuccess("Medicación eliminada correctamente");
       setIsDeleteDialogOpen(false);
       setItemToDelete(null);
     } catch {
-      toast.error("Error al eliminar la medicación");
+      showError("Error al eliminar la medicación");
     }
   };
 

@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Clock, Utensils } from "lucide-react";
-import { toast } from "sonner";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   GreenCardItemSchema,
   GreenCardItemFormValues,
@@ -85,6 +85,7 @@ export function GreenCardItemFormModal({
   item,
 }: GreenCardItemFormModalProps) {
   const { addItemMutation, updateItemMutation } = useGreenCardMutations();
+  const { showSuccess, showError } = useToastContext();
   const isEditing = !!item;
 
   // Determine initial tab based on existing schedule
@@ -161,17 +162,17 @@ export function GreenCardItemFormModal({
           itemId: item.id,
           dto: data,
         });
-        toast.success("Medicamento actualizado correctamente");
+        showSuccess("Medicamento actualizado correctamente");
       } else {
         await addItemMutation.mutateAsync({
           cardId: greenCardId,
           dto: data,
         });
-        toast.success("Medicamento agregado correctamente");
+        showSuccess("Medicamento agregado correctamente");
       }
       onClose();
     } catch (error) {
-      toast.error(
+      showError(
         isEditing
           ? "Error al actualizar el medicamento"
           : "Error al agregar el medicamento"
