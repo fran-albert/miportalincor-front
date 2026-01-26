@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { UserSchema } from './user.schema';
 
 export const PatientSchema = UserSchema.extend({
-    affiliationNumber: z.string().optional(),
+    affiliationNumber: z.string({ required_error: "El número de obra social es obligatorio" }).min(1, { message: "El número de obra social es obligatorio" }),
     healthPlans: z.array(z.object({
         id: z.number(),
         name: z.string(),
