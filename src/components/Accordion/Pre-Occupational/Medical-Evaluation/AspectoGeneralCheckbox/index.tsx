@@ -14,12 +14,26 @@ export default function AspectoGeneralCheckboxes({
   medicalEvaluation,
   handleAspectoGeneralChange,
 }: Props) {
+  const selectedValue = medicalEvaluation.aspectoGeneral;
+
+  // En modo view, solo mostrar si hay un valor seleccionado
+  if (!isEditing) {
+    if (!selectedValue?.trim()) return null;
+    return (
+      <div className="flex items-center">
+        <Label className="whitespace-nowrap mr-4">Aspecto General:</Label>
+        <span className="text-base font-medium">{selectedValue}</span>
+      </div>
+    );
+  }
+
+  // En modo editing, mostrar todas las opciones
   return (
     <div className="flex items-center">
       <Label className="whitespace-nowrap mr-4">Aspecto General:</Label>
       <div className="flex items-center gap-8">
         {aspectoOptions.map((opt) => {
-          const isChecked = medicalEvaluation.aspectoGeneral === opt;
+          const isChecked = selectedValue === opt;
           const id = `aspecto-${opt}`;
           return (
             <div key={opt} className="inline-flex items-center space-x-2">
@@ -35,9 +49,7 @@ export default function AspectoGeneralCheckboxes({
               />
               <label
                 htmlFor={id}
-                className={`text-base font-medium ${
-                  !isEditing ? "text-gray-500" : ""
-                }`}
+                className="text-base font-medium"
               >
                 {opt}
               </label>

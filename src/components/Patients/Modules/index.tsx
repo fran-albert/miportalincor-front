@@ -1,5 +1,5 @@
 import useUserRole from "@/hooks/useRoles";
-import { Stethoscope, Calendar, FileImage, ClipboardPlus, CalendarCheck } from "lucide-react";
+import { Stethoscope, Calendar, FileImage, ClipboardPlus, CalendarCheck, Pill } from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
 
 interface PatientModulesProps {
@@ -8,6 +8,7 @@ interface PatientModulesProps {
   onControlNutricionalClick?: () => void;
   onCitasMedicasClick?: () => void;
   onChequeosPeriodicosClick?: () => void;
+  onCartonVerdeClick?: () => void;
   totalStudies?: number;
 }
 
@@ -17,6 +18,7 @@ export default function PatientModules({
   onControlNutricionalClick,
   onCitasMedicasClick,
   onChequeosPeriodicosClick,
+  onCartonVerdeClick,
   totalStudies,
 }: PatientModulesProps) {
   const { isDoctor } = useUserRole();
@@ -36,6 +38,14 @@ export default function PatientModules({
       icon: ClipboardPlus,
       gradient: "bg-gradient-to-br from-orange-500 to-orange-600",
       onClick: onControlNutricionalClick || (() => {}),
+      visible: isDoctor,
+    },
+    {
+      title: "Cartón Verde",
+      description: "Gestiona la medicación habitual del paciente",
+      icon: Pill,
+      gradient: "bg-gradient-to-br from-green-500 to-green-600",
+      onClick: onCartonVerdeClick || (() => {}),
       visible: isDoctor,
     },
     {

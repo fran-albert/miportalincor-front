@@ -3,9 +3,9 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface PielPdfProps {
-  normocoloreada: "si" | "no";
-  tatuajes: "si" | "no";
-  observaciones: string;
+  normocoloreada?: "si" | "no";
+  tatuajes?: "si" | "no";
+  observaciones?: string;
 }
 
 const styles = StyleSheet.create({
@@ -68,41 +68,54 @@ export default function PielPdf({
   tatuajes,
   observaciones,
 }: PielPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = normocoloreada !== undefined ||
+    tatuajes !== undefined ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Piel</Text>
 
-      {/* Normocoloreada */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Normocoloreada:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={normocoloreada === "si"} />
+      {/* Normocoloreada - solo mostrar si está definido */}
+      {normocoloreada !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Normocoloreada:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={normocoloreada === "si"} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={normocoloreada === "no"} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={normocoloreada === "no"} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-      </View>
+      )}
 
-      {/* Tatuajes */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Tatuajes:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={tatuajes === "si"} />
+      {/* Tatuajes - solo mostrar si está definido */}
+      {tatuajes !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Tatuajes:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={tatuajes === "si"} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={tatuajes === "no"} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
         </View>
-        <Text style={styles.optionText}>Sí</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={tatuajes === "no"} />
-        </View>
-        <Text style={styles.optionText}>No</Text>
-      </View>
+      )}
 
-      {/* Observaciones */}
-      <Text style={styles.obsLabel}>Observaciones</Text>
-      <Text style={styles.obsText}>
-        {observaciones.trim() !== "" ? observaciones : "—"}
-      </Text>
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

@@ -376,3 +376,50 @@ export const parseBoolean = (value: unknown): boolean => {
   return false;
 };
 
+/**
+ * Parses a value to boolean, but returns undefined if value is null/undefined.
+ * This preserves the "not set" state for tri-state checkboxes.
+ *
+ * @example
+ * parseBooleanOrUndefined(true)      // true
+ * parseBooleanOrUndefined("true")    // true
+ * parseBooleanOrUndefined(false)     // false
+ * parseBooleanOrUndefined("false")   // false
+ * parseBooleanOrUndefined(null)      // undefined
+ * parseBooleanOrUndefined(undefined) // undefined
+ */
+export const parseBooleanOrUndefined = (value: unknown): boolean | undefined => {
+  // Handle null/undefined - preserve as undefined
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  // Handle boolean
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  // Handle number
+  if (typeof value === "number") {
+    return value === 1;
+  }
+
+  // Handle string
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase().trim();
+    if (normalized === "") {
+      return undefined;
+    }
+    return (
+      normalized === "true" ||
+      normalized === "1" ||
+      normalized === "si" ||
+      normalized === "sí" ||
+      normalized === "yes"
+    );
+  }
+
+  // Default to undefined for any other type
+  return undefined;
+};
+

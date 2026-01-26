@@ -8,7 +8,7 @@ import { Respiratorio } from "@/store/Pre-Occupational/preOccupationalSlice";
 interface RespiratorioSectionProps {
   isEditing: boolean;
   data: Respiratorio;
-  onChange: (field: keyof Respiratorio, value: boolean | string) => void;
+  onChange: (field: keyof Respiratorio, value: boolean | string | undefined) => void;
   onBatchChange?: (updates: Partial<Respiratorio>) => void;
 }
 
@@ -26,15 +26,15 @@ export const RespiratorioSection: React.FC<RespiratorioSectionProps> = ({
         observaciones: '',
       });
     } else {
-      onChange("sinAlteraciones", checked);
+      onChange("sinAlteraciones", checked ? true : undefined);
     }
   };
 
-  // Si escribe observaciones, desmarcar "Sin alteraciones"
+  // Si escribe observaciones, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: value,
       });
     } else {

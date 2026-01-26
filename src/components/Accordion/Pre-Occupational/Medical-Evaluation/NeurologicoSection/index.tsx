@@ -7,7 +7,7 @@ import { Neurologico } from '@/store/Pre-Occupational/preOccupationalSlice';
 interface NeurologicoSectionProps {
   isEditing: boolean;
   data: Neurologico;
-  onChange: (field: keyof Neurologico, value: boolean | string) => void;
+  onChange: (field: keyof Neurologico, value: boolean | string | undefined) => void;
   onBatchChange?: (updates: Partial<Neurologico>) => void;
 }
 
@@ -21,13 +21,13 @@ export const NeurologicoSection: React.FC<NeurologicoSectionProps> = ({
     if (checked && onBatchChange) {
       onBatchChange({ sinAlteraciones: true, observaciones: '' });
     } else {
-      onChange('sinAlteraciones', checked);
+      onChange('sinAlteraciones', checked ? true : undefined);
     }
   };
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, observaciones: value });
+      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
     } else {
       onChange('observaciones', value);
     }

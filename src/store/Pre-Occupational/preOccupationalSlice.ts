@@ -60,7 +60,7 @@ export interface Torax {
 export interface Respiratorio {
   frecuenciaRespiratoria?: string;
   oximetria?: string;
-  sinAlteraciones: boolean;
+  sinAlteraciones?: boolean;
   observaciones?: string;
 }
 
@@ -124,13 +124,13 @@ export interface IMedicalEvaluation {
   notasVision?: string;
   piel?: Piel;
   cabezaCuello?: {
-    sinAlteraciones: boolean;
+    sinAlteraciones?: boolean;
     observaciones: string;
   };
   bucodental?: {
-    sinAlteraciones: boolean;
-    caries: boolean;
-    faltanPiezas: boolean;
+    sinAlteraciones?: boolean;
+    caries?: boolean;
+    faltanPiezas?: boolean;
     observaciones: string;
   };
   torax?: Torax;
@@ -260,13 +260,13 @@ const initialState: PreOccupationalState = {
       },
       examenFisico: {},
       osteoarticular: {
-        mmssSin: false,
+        mmssSin: undefined,
         mmssObs: "",
-        mmiiSin: false,
+        mmiiSin: undefined,
         mmiiObs: "",
-        columnaSin: false,
+        columnaSin: undefined,
         columnaObs: "",
-        amputaciones: false,
+        amputaciones: undefined,
         amputacionesObs: "",
       },
       agudezaSc: { right: "", left: "" },
@@ -276,37 +276,37 @@ const initialState: PreOccupationalState = {
       circulatorio: {
         frecuenciaCardiaca: "",
         presion: "",
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
-        varices: false,
+        varices: undefined,
         varicesObs: "",
       },
       respiratorio: {
         frecuenciaRespiratoria: "",
         oximetria: "",
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
       },
       neurologico: {
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
       },
       gastrointestinal: {
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
-        cicatrices: false,
+        cicatrices: undefined,
         cicatricesObs: "",
-        hernias: false,
+        hernias: undefined,
         herniasObs: "",
-        eventraciones: false,
+        eventraciones: undefined,
         eventracionesObs: "",
-        hemorroides: false,
+        hemorroides: undefined,
         hemorroidesObs: "",
       },
       genitourinario: {
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
-        varicocele: false,
+        varicocele: undefined,
         varicoceleObs: "",
         fum: "",
         embarazos: "",
@@ -314,24 +314,24 @@ const initialState: PreOccupationalState = {
         cesarea: "",
       },
       piel: {
-        normocoloreada: "no",
-        tatuajes: "no",
+        normocoloreada: undefined,
+        tatuajes: undefined,
         observaciones: "",
       },
       cabezaCuello: {
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: "",
       },
       bucodental: {
-        sinAlteraciones: false,
-        caries: false,
-        faltanPiezas: false,
+        sinAlteraciones: undefined,
+        caries: undefined,
+        faltanPiezas: undefined,
         observaciones: "",
       },
       torax: {
-        deformaciones: "no",
+        deformaciones: undefined,
         deformacionesObs: "",
-        cicatrices: "no",
+        cicatrices: undefined,
         cicatricesObs: "",
       },
     },

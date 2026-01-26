@@ -6,7 +6,22 @@ import { useEffect } from "react";
 import { ExamResults } from "./examsResults.maps";
 import { Piel } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
 import { Bucodental } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/BucodentalSection";
-import { parseBoolean } from "./helpers";
+import { parseBoolean, parseBooleanOrUndefined } from "./helpers";
+
+/**
+ * Verifica si una sección tiene datos que fueron explícitamente completados.
+ * Retorna true si al menos un campo boolean está definido (true o false),
+ * o si hay campos string no vacíos.
+ */
+export function hasSectionData(section: object | undefined | null): boolean {
+    if (!section) return false;
+    return Object.entries(section).some(([, value]) => {
+        if (typeof value === 'boolean') return true; // boolean definido = dato
+        if (typeof value === 'string') return value?.trim() !== '';
+        if (typeof value === 'number') return true;
+        return value !== undefined && value !== null;
+    });
+}
 
 
 export interface ExamenFisicoItem {
@@ -72,9 +87,13 @@ export function mapPiel(dataValues: DataValue[]): Piel {
             dv.dataType.category === "EXAMEN_FISICO" && dv.dataType.name === "Tatuajes"
     );
 
+    // Convertir a "si"/"no" solo si existe el valor, sino undefined
+    const normoVal = parseBooleanOrUndefined(dvNormo?.value);
+    const tatuajesVal = parseBooleanOrUndefined(dvTatuajes?.value);
+
     return {
-        normocoloreada: parseBoolean(dvNormo?.value) ? "si" : "no",
-        tatuajes: parseBoolean(dvTatuajes?.value) ? "si" : "no",
+        normocoloreada: normoVal !== undefined ? (normoVal ? "si" : "no") : undefined,
+        tatuajes: tatuajesVal !== undefined ? (tatuajesVal ? "si" : "no") : undefined,
         observaciones: dvNormo?.observations ?? "",
     };
 }
@@ -204,7 +223,7 @@ export function mapMedicalEvaluation(dataValues: DataValue[]): IMedicalEvaluatio
     );
 
     const cabezaCuello = {
-        sinAlteraciones: parseBoolean(dvCabeza?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvCabeza?.value),
         observaciones: (dvCabezaObs?.value as string) || "",
     };
     const torax = mapTorax(dataValues);
@@ -264,15 +283,15 @@ export function mapGastrointestinal(dataValues: DataValue[]): Gastrointestinal {
             dv.dataType.name === "Hemorroides"
     );
     return {
-        sinAlteraciones: parseBoolean(dvSin?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
         observaciones: (dvSin?.observations as string) || "",
-        cicatrices: parseBoolean(dvCic?.value),
+        cicatrices: parseBooleanOrUndefined(dvCic?.value),
         cicatricesObs: (dvCic?.observations as string) || "",
-        hernias: parseBoolean(dvHer?.value),
+        hernias: parseBooleanOrUndefined(dvHer?.value),
         herniasObs: (dvHer?.observations as string) || "",
-        eventraciones: parseBoolean(dvEvent?.value),
+        eventraciones: parseBooleanOrUndefined(dvEvent?.value),
         eventracionesObs: (dvEvent?.observations as string) || "",
-        hemorroides: parseBoolean(dvHemo?.value),
+        hemorroides: parseBooleanOrUndefined(dvHemo?.value),
         hemorroidesObs: (dvHemo?.observations as string) || "",
     };
 }
@@ -314,9 +333,9 @@ export function mapGenitourinario(dataValues: DataValue[]): Genitourinario {
     );
 
     return {
-        sinAlteraciones: parseBoolean(dvSin?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
         observaciones: (dvSin?.observations as string) || "",
-        varicocele: parseBoolean(dvVar?.value),
+        varicocele: parseBooleanOrUndefined(dvVar?.value),
         varicoceleObs: (dvVar?.observations as string) || "",
         fum: (dvFum?.value as string) || "",
         partos: (dvPartos?.value as string) || "",
@@ -333,7 +352,7 @@ export function mapNeurologico(dataValues: DataValue[]): Neurologico {
     );
 
     return {
-        sinAlteraciones: parseBoolean(dvSin?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
         observaciones: (dvSin?.observations as string) || "",
     };
 }
@@ -363,9 +382,9 @@ export function mapCirculatorio(dataValues: DataValue[]): Circulatorio {
     return {
         frecuenciaCardiaca: (dvFrecuencia?.value as string) || "",
         presion: (dvTA?.value as string) || "",
-        sinAlteraciones: parseBoolean(dvSin?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
         observaciones: dvSin?.observations || "",
-        varices: parseBoolean(dvVar?.value),
+        varices: parseBooleanOrUndefined(dvVar?.value),
         varicesObs: dvVar?.observations || "",
     };
 }
@@ -427,7 +446,7 @@ export function mapRespiratorio(dataValues: DataValue[]): Respiratorio {
     return {
         frecuenciaRespiratoria: (dvFrecuencia?.value as string) || "",
         oximetria: (dvOximetria?.value as string) || "",
-        sinAlteraciones: parseBoolean(dvSin?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
         observaciones: dvSin?.observations || "",
     };
 }
@@ -503,9 +522,9 @@ export function mapBucodental(dataValues: DataValue[]): Bucodental {
     );
 
     return {
-        sinAlteraciones: parseBoolean(dvSin?.value),
-        caries: parseBoolean(dvCaries?.value),
-        faltanPiezas: parseBoolean(dvFaltan?.value),
+        sinAlteraciones: parseBooleanOrUndefined(dvSin?.value),
+        caries: parseBooleanOrUndefined(dvCaries?.value),
+        faltanPiezas: parseBooleanOrUndefined(dvFaltan?.value),
         observaciones: (dvObs?.value as string) || "",
     };
 }
@@ -522,10 +541,14 @@ export function mapTorax(dataValues: DataValue[]): Torax {
             dv.dataType.name === "Torax Cicatrices"
     );
 
+    // Convertir a "si"/"no" solo si existe el valor, sino undefined
+    const defVal = parseBooleanOrUndefined(dvDef?.value);
+    const cicVal = parseBooleanOrUndefined(dvCic?.value);
+
     return {
-        deformaciones: parseBoolean(dvDef?.value) ? "si" : "no",
+        deformaciones: defVal !== undefined ? (defVal ? "si" : "no") : undefined,
         deformacionesObs: dvDef?.observations ?? "",
-        cicatrices: parseBoolean(dvCic?.value) ? "si" : "no",
+        cicatrices: cicVal !== undefined ? (cicVal ? "si" : "no") : undefined,
         cicatricesObs: dvCic?.observations ?? "",
     };
 }
@@ -537,13 +560,13 @@ export function mapOsteoarticular(dataValues: DataValue[]): Osteoarticular {
     const dvAmp = dataValues.find(dv => dv.dataType.name === "Amputaciones");
 
     return {
-        mmssSin: parseBoolean(dvMmss?.value),
+        mmssSin: parseBooleanOrUndefined(dvMmss?.value),
         mmssObs: (dvMmss?.observations as string) || "",
-        mmiiSin: parseBoolean(dvMmii?.value),
+        mmiiSin: parseBooleanOrUndefined(dvMmii?.value),
         mmiiObs: (dvMmii?.observations as string) || "",
-        columnaSin: parseBoolean(dvCol?.value),
+        columnaSin: parseBooleanOrUndefined(dvCol?.value),
         columnaObs: (dvCol?.observations as string) || "",
-        amputaciones: parseBoolean(dvAmp?.value),
+        amputaciones: parseBooleanOrUndefined(dvAmp?.value),
         amputacionesObs: (dvAmp?.observations as string) || "",
     };
 }

@@ -17,31 +17,31 @@ interface GastrointestinalSectionProps {
 export const GastrointestinalSection: React.FC<
   GastrointestinalSectionProps
 > = ({ isEditing, data, onChange, onBatchChange }) => {
-  // Si marca "Sin alteraciones", limpiar todo y poner NO en los campos
+  // Si marca "Sin alteraciones", limpiar todo (poner undefined, no false)
   const handleSinAlteracionesChange = (checked: boolean) => {
     if (checked && onBatchChange) {
       onBatchChange({
         sinAlteraciones: true,
         observaciones: '',
-        cicatrices: false,
+        cicatrices: undefined,
         cicatricesObs: '',
-        hernias: false,
+        hernias: undefined,
         herniasObs: '',
-        eventraciones: false,
+        eventraciones: undefined,
         eventracionesObs: '',
-        hemorroides: false,
+        hemorroides: undefined,
         hemorroidesObs: '',
       });
     } else {
-      onChange("sinAlteraciones", checked);
+      onChange("sinAlteraciones", checked ? true : undefined);
     }
   };
 
-  // Si marca "Sí" en algún campo, desmarcar "Sin alteraciones"
+  // Si marca "Sí" en algún campo, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleFieldChange = (field: keyof Gastrointestinal, value: boolean | undefined) => {
     if (value === true && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         [field]: true,
       });
     } else {
@@ -49,11 +49,11 @@ export const GastrointestinalSection: React.FC<
     }
   };
 
-  // Si escribe observaciones, desmarcar "Sin alteraciones"
+  // Si escribe observaciones, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleObsChange = (field: keyof Gastrointestinal, value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         [field]: value,
       });
     } else {

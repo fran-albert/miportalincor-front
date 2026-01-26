@@ -6,18 +6,19 @@ import { PielSection } from "@/components/Accordion/Pre-Occupational/Medical-Eva
 import CabezaCuelloHtml from "../Second-Page/CabezaCuello";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 import FooterHtmlConditional from "../Footer";
+import { hasSectionData } from "@/common/helpers/maps";
 
 interface Props {
   bucodental: {
-    sinAlteraciones: boolean;
-    caries: boolean;
-    faltanPiezas: boolean;
-    observaciones: string;
+    sinAlteraciones?: boolean;
+    caries?: boolean;
+    faltanPiezas?: boolean;
+    observaciones?: string;
   };
   torax: Torax;
   doctorData: DoctorSignatures;
   pielData: Piel;
-  cabezaCuello: { sinAlteraciones: boolean; observaciones: string };
+  cabezaCuello: { sinAlteraciones?: boolean; observaciones?: string };
 }
 const ThirdPageHTML = ({
   bucodental,
@@ -25,24 +26,37 @@ const ThirdPageHTML = ({
   doctorData,
   pielData,
   cabezaCuello,
-}: Props) => (
-  <>
-    <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
-    <PielSection isEditing={false} data={pielData} />
-    <CabezaCuelloHtml data={cabezaCuello} />
-    <BucodentalHtml data={bucodental} />
-    <ToraxHtml data={torax} />
+}: Props) => {
+  // Verificar si hay datos en alguna sección de esta página
+  const hasPiel = hasSectionData(pielData);
+  const hasCabezaCuello = hasSectionData(cabezaCuello);
+  const hasBucodental = hasSectionData(bucodental);
+  const hasTorax = hasSectionData(torax);
 
-    {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={2} /> */}
-    <FooterHtmlConditional
-      pageNumber={3}
-      useCustom
-      doctorLicense={doctorData.matricula}
-      doctorName={doctorData.fullName}
-      doctorSpeciality={doctorData.specialty}
-      signatureUrl={doctorData.signatureDataUrl}
-    />
-  </>
-);
+  // Si no hay datos en ninguna sección, no mostrar la página
+  if (!hasPiel && !hasCabezaCuello && !hasBucodental && !hasTorax) {
+    return null;
+  }
+
+  return (
+    <>
+      <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
+      <PielSection isEditing={false} data={pielData} />
+      <CabezaCuelloHtml data={cabezaCuello} />
+      <BucodentalHtml data={bucodental} />
+      <ToraxHtml data={torax} />
+
+      {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={2} /> */}
+      <FooterHtmlConditional
+        pageNumber={3}
+        useCustom
+        doctorLicense={doctorData.matricula}
+        doctorName={doctorData.fullName}
+        doctorSpeciality={doctorData.specialty}
+        signatureUrl={doctorData.signatureDataUrl}
+      />
+    </>
+  );
+};
 
 export default ThirdPageHTML;

@@ -4,16 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export interface Bucodental {
-  sinAlteraciones: boolean;
-  caries: boolean;
-  faltanPiezas: boolean;
+  sinAlteraciones?: boolean;
+  caries?: boolean;
+  faltanPiezas?: boolean;
   observaciones: string;
 }
 
 interface BucodentalSectionProps {
   isEditing: boolean;
   data: Bucodental;
-  onChange: (field: keyof Bucodental, value: boolean | string) => void;
+  onChange: (field: keyof Bucodental, value: boolean | string | undefined) => void;
   onBatchChange?: (updates: Partial<Bucodental>) => void;
 }
 
@@ -23,25 +23,25 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
   onChange,
   onBatchChange,
 }) => {
-  // Si marca "Sin alteraciones", limpiar los otros campos
+  // Si marca "Sin alteraciones", limpiar los otros campos (poner undefined, no false)
   const handleSinAlteracionesChange = (checked: boolean) => {
     if (checked && onBatchChange) {
       onBatchChange({
         sinAlteraciones: true,
-        caries: false,
-        faltanPiezas: false,
+        caries: undefined,
+        faltanPiezas: undefined,
         observaciones: '',
       });
     } else {
-      onChange('sinAlteraciones', checked);
+      onChange('sinAlteraciones', checked ? true : undefined);
     }
   };
 
-  // Si marca caries/faltanPiezas, desmarcar "Sin alteraciones"
+  // Si marca caries/faltanPiezas, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleAlteracionChange = (field: 'caries' | 'faltanPiezas', checked: boolean) => {
     if (checked && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         [field]: true,
       });
     } else {
@@ -49,11 +49,11 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
     }
   };
 
-  // Si escribe observaciones, desmarcar "Sin alteraciones"
+  // Si escribe observaciones, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: false,
+        sinAlteraciones: undefined,
         observaciones: value,
       });
     } else {

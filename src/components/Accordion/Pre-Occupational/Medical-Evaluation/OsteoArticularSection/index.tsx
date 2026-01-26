@@ -8,7 +8,7 @@ import { Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
 interface OsteoarticularSectionProps {
   isEditing: boolean;
   data: Osteoarticular;
-  onChange: (field: keyof Osteoarticular, value: boolean | string) => void;
+  onChange: (field: keyof Osteoarticular, value: boolean | string | undefined) => void;
 }
 
 export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
@@ -27,9 +27,9 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
       <Label htmlFor="osteo-mmss-sin">Sin Alteraciones:</Label>
       <Checkbox
         id="osteo-mmss-sin"
-        checked={data.mmssSin}
+        checked={data.mmssSin === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("mmssSin", chk)}
+        onCheckedChange={(chk) => onChange("mmssSin", chk ? true : undefined)}
       />
       <Input
         id="osteo-mmss-obs"
@@ -47,9 +47,9 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
       <Label htmlFor="osteo-mmii-sin">Sin Alteraciones:</Label>
       <Checkbox
         id="osteo-mmii-sin"
-        checked={data.mmiiSin}
+        checked={data.mmiiSin === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("mmiiSin", chk)}
+        onCheckedChange={(chk) => onChange("mmiiSin", chk ? true : undefined)}
       />
       <Input
         id="osteo-mmii-obs"
@@ -67,9 +67,9 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
       <Label htmlFor="osteo-columna-sin">Sin Alteraciones:</Label>
       <Checkbox
         id="osteo-columna-sin"
-        checked={data.columnaSin}
+        checked={data.columnaSin === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("columnaSin", chk)}
+        onCheckedChange={(chk) => onChange("columnaSin", chk ? true : undefined)}
       />
       <Input
         id="osteo-columna-obs"
@@ -87,9 +87,9 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
       <Label htmlFor="osteo-amputaciones">SI:</Label>
       <Checkbox
         id="osteo-amputaciones"
-        checked={data.amputaciones}
+        checked={data.amputaciones === true}
         disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("amputaciones", chk)}
+        onCheckedChange={(chk) => onChange("amputaciones", chk ? true : undefined)}
       />
       <Input
         id="osteo-amputaciones-obs"

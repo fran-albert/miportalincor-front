@@ -3,14 +3,14 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface OsteoarticularPdfProps {
-  mmssSin: boolean;
-  mmssObs: string;
-  mmiiSin: boolean;
-  mmiiObs: string;
-  columnaSin: boolean;
-  columnaObs: string;
-  amputaciones: boolean;
-  amputacionesObs: string;
+  mmssSin?: boolean;
+  mmssObs?: string;
+  mmiiSin?: boolean;
+  mmiiObs?: string;
+  columnaSin?: boolean;
+  columnaObs?: string;
+  amputaciones?: boolean;
+  amputacionesObs?: string;
 }
 
 const styles = StyleSheet.create({
@@ -68,57 +68,73 @@ export default function OsteoarticularPdf({
   amputaciones,
   amputacionesObs,
 }: OsteoarticularPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = mmssSin !== undefined ||
+    mmiiSin !== undefined ||
+    columnaSin !== undefined ||
+    amputaciones !== undefined;
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Osteoarticular</Text>
 
-      {/* MMSS */}
-      <View style={styles.row}>
-        <Text style={styles.label}>MMSS Sin alteraciones:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={mmssSin} />
+      {/* MMSS - solo mostrar si está definido */}
+      {mmssSin !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>MMSS Sin alteraciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={mmssSin} />
+          </View>
+          <Text style={styles.optionText}>{mmssSin ? "Sí" : "No"}</Text>
+          {mmssObs?.trim() && (
+            <Text style={styles.obsInline}>{mmssObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>{mmssSin ? "Sí" : "No"}</Text>
-        <Text style={styles.obsInline}>
-          {mmssObs.trim() !== "" ? mmssObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* MMII */}
-      <View style={styles.row}>
-        <Text style={styles.label}>MMII Sin alteraciones:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={mmiiSin} />
+      {/* MMII - solo mostrar si está definido */}
+      {mmiiSin !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>MMII Sin alteraciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={mmiiSin} />
+          </View>
+          <Text style={styles.optionText}>{mmiiSin ? "Sí" : "No"}</Text>
+          {mmiiObs?.trim() && (
+            <Text style={styles.obsInline}>{mmiiObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>{mmiiSin ? "Sí" : "No"}</Text>
-        <Text style={styles.obsInline}>
-          {mmiiObs.trim() !== "" ? mmiiObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* Columna */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Columna Sin alteraciones:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={columnaSin} />
+      {/* Columna - solo mostrar si está definido */}
+      {columnaSin !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Columna Sin alteraciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={columnaSin} />
+          </View>
+          <Text style={styles.optionText}>{columnaSin ? "Sí" : "No"}</Text>
+          {columnaObs?.trim() && (
+            <Text style={styles.obsInline}>{columnaObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>{columnaSin ? "Sí" : "No"}</Text>
-        <Text style={styles.obsInline}>
-          {columnaObs.trim() !== "" ? columnaObs : "—"}
-        </Text>
-      </View>
+      )}
 
-      {/* Amputaciones */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Amputaciones:</Text>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={amputaciones} />
+      {/* Amputaciones - solo mostrar si está definido */}
+      {amputaciones !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Amputaciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={amputaciones} />
+          </View>
+          <Text style={styles.optionText}>{amputaciones ? "Sí" : "No"}</Text>
+          {amputacionesObs?.trim() && (
+            <Text style={styles.obsInline}>{amputacionesObs}</Text>
+          )}
         </View>
-        <Text style={styles.optionText}>{amputaciones ? "Sí" : "No"}</Text>
-        <Text style={styles.obsInline}>
-          {amputacionesObs.trim() !== "" ? amputacionesObs : "—"}
-        </Text>
-      </View>
+      )}
     </View>
   );
 }

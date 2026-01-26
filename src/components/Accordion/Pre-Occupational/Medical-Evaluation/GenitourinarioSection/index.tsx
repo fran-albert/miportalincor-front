@@ -25,17 +25,17 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
       onBatchChange({
         sinAlteraciones: true,
         observaciones: '',
-        varicocele: false,
+        varicocele: undefined,
         varicoceleObs: '',
       });
     } else {
-      onChange("sinAlteraciones", checked);
+      onChange("sinAlteraciones", checked ? true : undefined);
     }
   };
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, observaciones: value });
+      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
     } else {
       onChange("observaciones", value);
     }
@@ -43,7 +43,7 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
 
   const handleVaricoceleChange = (value: boolean | undefined) => {
     if (value === true && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicocele: true });
+      onBatchChange({ sinAlteraciones: undefined, varicocele: true });
     } else {
       onChange("varicocele", value);
     }
@@ -51,7 +51,7 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
 
   const handleVaricoceleObsChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicoceleObs: value });
+      onBatchChange({ sinAlteraciones: undefined, varicoceleObs: value });
     } else {
       onChange("varicoceleObs", value);
     }

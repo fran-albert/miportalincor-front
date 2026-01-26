@@ -3,8 +3,8 @@ import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 interface NeurologicoPdfProps {
-  sinAlteraciones: boolean;
-  observaciones: string;
+  sinAlteraciones?: boolean;
+  observaciones?: string;
 }
 
 const styles = StyleSheet.create({
@@ -59,20 +59,28 @@ export default function NeurologicoPdf({
   sinAlteraciones,
   observaciones,
 }: NeurologicoPdfProps) {
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
+    (observaciones?.trim() ?? '') !== '';
+
+  if (!hasAnyData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Aparato Neurológico</Text>
 
-      {/* Sin alteraciones */}
-      <View style={styles.row}>
-        <View style={styles.checkboxWrapper}>
-          <CheckboxPdf checked={sinAlteraciones} />
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
+          </View>
+          <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
         </View>
-        <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
-      </View>
+      )}
 
-      {/* Observaciones */}
-      {observaciones.trim() !== "" && (
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
         <View>
           <Text style={styles.obsLabel}>Observaciones</Text>
           <Text style={styles.obsText}>{observaciones}</Text>

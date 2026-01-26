@@ -355,7 +355,7 @@ function App() {
             }
           />
           <Route
-            path="/pacientes/:slug/cartoncito-verde"
+            path="/pacientes/:slug/carton-verde"
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <PatientGreenCardPage />
