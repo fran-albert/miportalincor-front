@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, User, CalendarDays, Clock } from "lucide-react";
-import { toast } from "sonner";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface RequestPrescriptionModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ export function RequestPrescriptionModal({
   item,
 }: RequestPrescriptionModalProps) {
   const { requestPrescriptionMutation } = useGreenCardMutations();
+  const { showSuccess, showError } = useToastContext();
 
   // Get doctor display name
   const getDoctorName = () => {
@@ -41,22 +42,25 @@ export function RequestPrescriptionModal({
         cardId: greenCardId,
         itemId: item.id,
       });
-      toast.success("Solicitud enviada correctamente", {
-        description: `Tu solicitud fue enviada a ${getDoctorName()}. Estará lista el próximo viernes a las 14hs.`,
-      });
+      showSuccess(
+        "Solicitud enviada correctamente",
+        `Tu solicitud fue enviada a ${getDoctorName()}. Estará lista el próximo viernes a las 14hs.`
+      );
       onClose();
     } catch (error: unknown) {
       // Handle specific error messages from backend
       const errorMessage = error instanceof Error ? error.message : "";
 
       if (errorMessage.includes("pending") || errorMessage.includes("in_progress")) {
-        toast.error("Ya tenés una solicitud pendiente", {
-          description: "Esperá a que se procese tu solicitud anterior para este medicamento.",
-        });
+        showError(
+          "Ya tenés una solicitud pendiente",
+          "Esperá a que se procese tu solicitud anterior para este medicamento."
+        );
       } else {
-        toast.error("Error al solicitar la receta", {
-          description: "Por favor, intentá nuevamente más tarde.",
-        });
+        showError(
+          "Error al solicitar la receta",
+          "Por favor, intentá nuevamente más tarde."
+        );
       }
     }
   };

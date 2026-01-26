@@ -1,65 +1,66 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useSearchParams } from "react-router-dom";
+import { formatDistanceToNow, format } from "date-fns";
+import { es } from "date-fns/locale";
 import {
-  FileText,
   Pill,
-  ClipboardList,
   Download,
   Clock,
   CalendarDays,
   RefreshCw,
+  History,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { PhysicalGreenCard } from "@/components/Green-Card/PhysicalGreenCard";
 import { RequestPrescriptionModal } from "@/components/Green-Card/RequestPrescriptionModal";
-import PatientPrescriptionRequests from "@/components/Prescription-Request/Patient";
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
-import { useAvailableDoctorsForPrescriptions } from "@/hooks/Doctor-Settings/useDoctorSettings";
+import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
+import {
+  PrescriptionRequest,
+  PrescriptionRequestStatus,
+} from "@/types/Prescription-Request/Prescription-Request";
 
 const MyPrescriptionRequestsPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "medicacion";
-  const [activeTab, setActiveTab] = useState(initialTab);
-
   // State for prescription request modal
-  const [selectedItemForPrescription, setSelectedItemForPrescription] = useState<GreenCardItem | null>(null);
+  const [selectedItemForPrescription, setSelectedItemForPrescription] =
+    useState<GreenCardItem | null>(null);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   // Green Card data (single card per patient)
-  const { greenCard, isLoading: isLoadingCard, refetch, isFetching } = useMyGreenCard();
+  const {
+    greenCard,
+    isLoading: isLoadingCard,
+    refetch,
+    isFetching,
+  } = useMyGreenCard();
   const { generatePDF, isGenerating } = useGreenCardPDF();
 
-  // Prescription Requests data
-  const {
-    data: availableDoctors = [],
-    isLoading: isLoadingDoctors,
-  } = useAvailableDoctorsForPrescriptions();
-
-  const doctorOptions = availableDoctors.map((doctor) => ({
-    id: doctor.id,
-    firstName: doctor.firstName,
-    lastName: doctor.lastName,
-    gender: doctor.gender,
-    specialities: doctor.specialities?.map((s) => s.name) || [],
-    notes: doctor.notes,
-  }));
+  // Prescription Requests history
+  const { data: prescriptionRequests = [], isLoading: isLoadingRequests } =
+    useMyPrescriptionRequests();
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Medicación y Recetas" },
   ];
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchParams({ tab: value });
-  };
 
   const handleDownloadPDF = async () => {
     if (greenCard) {
@@ -81,6 +82,94 @@ const MyPrescriptionRequestsPage = () => {
     setSelectedItemForPrescription(null);
   };
 
+  const getStatusBadge = (status: PrescriptionRequestStatus) => {
+    switch (status) {
+      case PrescriptionRequestStatus.PENDING:
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
+            <Clock className="h-3 w-3 mr-1" />
+            Pendiente
+          </Badge>
+        );
+      case PrescriptionRequestStatus.IN_PROGRESS:
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            En proceso
+          </Badge>
+        );
+      case PrescriptionRequestStatus.COMPLETED:
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Completada
+          </Badge>
+        );
+      case PrescriptionRequestStatus.REJECTED:
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
+            <XCircle className="h-3 w-3 mr-1" />
+            Rechazada
+          </Badge>
+        );
+      case PrescriptionRequestStatus.CANCELLED:
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">
+            <XCircle className="h-3 w-3 mr-1" />
+            Cancelada
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy HH:mm", { locale: es });
+    } catch {
+      return "";
+    }
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: es,
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const getDoctorName = (request: PrescriptionRequest) => {
+    if (!request.doctor) return "Médico";
+    const prefix = request.doctor.gender === "Femenino" ? "Dra." : "Dr.";
+    return `${prefix} ${request.doctor.firstName} ${request.doctor.lastName}`;
+  };
+
+  // Sort requests: pending first, then by date
+  const sortedRequests = [...prescriptionRequests].sort((a, b) => {
+    const statusOrder = {
+      [PrescriptionRequestStatus.PENDING]: 0,
+      [PrescriptionRequestStatus.IN_PROGRESS]: 1,
+      [PrescriptionRequestStatus.COMPLETED]: 2,
+      [PrescriptionRequestStatus.REJECTED]: 3,
+      [PrescriptionRequestStatus.CANCELLED]: 4,
+    };
+    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+    if (statusDiff !== 0) return statusDiff;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+
+  const pendingCount = prescriptionRequests.filter(
+    (r) =>
+      r.status === PrescriptionRequestStatus.PENDING ||
+      r.status === PrescriptionRequestStatus.IN_PROGRESS
+  ).length;
+
   return (
     <div className="space-y-6 p-6">
       <Helmet>
@@ -94,7 +183,7 @@ const MyPrescriptionRequestsPage = () => {
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         title="Medicación y Recetas"
-        description="Consulta tu medicación habitual y gestiona tus solicitudes de recetas"
+        description="Consultá tu medicación habitual y solicitá recetas a tus médicos"
         icon={<Pill className="h-6 w-6" />}
       />
 
@@ -109,151 +198,184 @@ const MyPrescriptionRequestsPage = () => {
             <Clock className="h-4 w-4" />
             <span>
               Las recetas solicitadas estarán disponibles{" "}
-              <strong>todos los viernes a partir de las 14:00 hs</strong>.
-              Una vez procesada, podrá descargar su receta digital directamente desde este portal.
+              <strong>todos los viernes a partir de las 14:00 hs</strong>. Una
+              vez procesada, podrá descargar su receta digital directamente
+              desde este portal.
             </span>
           </div>
         </AlertDescription>
       </Alert>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-auto p-1 bg-gray-100">
-          <TabsTrigger
-            value="medicacion"
-            className="flex items-center gap-2 py-3 data-[state=active]:bg-green-600 data-[state=active]:text-white"
-          >
-            <Pill className="h-4 w-4" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold">Mi Medicación</span>
-              <span className="text-xs opacity-80 hidden sm:block">Cartón Verde</span>
-            </div>
-          </TabsTrigger>
-          <TabsTrigger
-            value="solicitudes"
-            className="flex items-center gap-2 py-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-          >
-            <ClipboardList className="h-4 w-4" />
-            <div className="flex flex-col items-start">
-              <span className="font-semibold">Solicitudes</span>
-              <span className="text-xs opacity-80 hidden sm:block">Pedir Recetas</span>
-            </div>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab: Mi Medicación (Cartón Verde) */}
-        <TabsContent value="medicacion" className="mt-6">
-          <div className="space-y-4">
-            {/* Actions Bar */}
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isFetching}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
-                Actualizar
-              </Button>
-              {greenCard && greenCard.items.length > 0 && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleDownloadPDF}
-                  disabled={isGenerating}
-                  className="bg-green-700 hover:bg-green-800"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {isGenerating ? "Generando..." : "Descargar PDF"}
-                </Button>
-              )}
-            </div>
-
-            {/* Content */}
-            {isLoadingCard ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
-                  <p className="text-gray-500">Cargando tu cartón verde...</p>
-                </CardContent>
-              </Card>
-            ) : greenCard && greenCard.items.length > 0 ? (
-              <PhysicalGreenCard
-                greenCard={greenCard}
-                onRequestPrescription={handleRequestPrescription}
+      {/* Green Card Section */}
+      <div className="space-y-4">
+        {/* Actions Bar */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Pill className="h-5 w-5 text-green-600" />
+            Mi Cartón Verde
+          </h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isFetching}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
               />
-            ) : (
-              <Card className="border-dashed border-2 border-green-300">
-                <CardContent className="py-12 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Pill className="h-8 w-8 text-green-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    Tu cartón está vacío
-                  </h3>
-                  <p className="text-gray-500 text-sm max-w-md mx-auto">
-                    Aún no tenés medicación habitual registrada. Cuando un médico te indique
-                    medicación regular, aparecerá aquí automáticamente.
-                  </p>
-                </CardContent>
-              </Card>
+              Actualizar
+            </Button>
+            {greenCard && greenCard.items.length > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleDownloadPDF}
+                disabled={isGenerating}
+                className="bg-green-700 hover:bg-green-800"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {isGenerating ? "Generando..." : "Descargar PDF"}
+              </Button>
             )}
           </div>
-        </TabsContent>
+        </div>
 
-        {/* Tab: Solicitudes de Recetas */}
-        <TabsContent value="solicitudes" className="mt-6">
-          {/* Explanation Card */}
-          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="rounded-full bg-blue-600 p-3 flex-shrink-0">
-                  <ClipboardList className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                    ¿Cómo solicitar una receta?
-                  </h3>
-                  <p className="text-sm text-blue-800 mb-3">
-                    Podés solicitar recetas de dos formas:
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white/60 rounded-lg p-3 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Pill className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-blue-900">
-                          Desde tu Cartón Verde
-                        </span>
-                      </div>
-                      <p className="text-blue-700 text-xs">
-                        Andá a la pestaña "Mi Medicación" y hacé clic en
-                        "Solicitar Receta" junto al medicamento.
-                      </p>
-                    </div>
-                    <div className="bg-white/60 rounded-lg p-3 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-blue-900">
-                          Nueva solicitud manual
-                        </span>
-                      </div>
-                      <p className="text-blue-700 text-xs">
-                        Usá el botón "Nueva Solicitud" para pedir cualquier receta
-                        escribiendo los detalles del medicamento.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Content */}
+        {isLoadingCard ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-gray-500">Cargando tu cartón verde...</p>
             </CardContent>
           </Card>
-
-          {/* Prescription Requests Component */}
-          <PatientPrescriptionRequests
-            doctors={doctorOptions}
-            isLoadingDoctors={isLoadingDoctors}
+        ) : greenCard && greenCard.items.length > 0 ? (
+          <PhysicalGreenCard
+            greenCard={greenCard}
+            onRequestPrescription={handleRequestPrescription}
           />
-        </TabsContent>
-      </Tabs>
+        ) : (
+          <Card className="border-dashed border-2 border-green-300">
+            <CardContent className="py-12 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Pill className="h-8 w-8 text-green-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Tu cartón está vacío
+              </h3>
+              <p className="text-gray-500 text-sm max-w-md mx-auto">
+                Aún no tenés medicación habitual registrada. Cuando un médico te
+                indique medicación regular, aparecerá aquí automáticamente.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Prescription Requests History */}
+      <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <History className="h-5 w-5 text-blue-600" />
+                  Historial de Solicitudes
+                  {pendingCount > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                      {pendingCount} pendiente{pendingCount !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </CardTitle>
+                {isHistoryOpen ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {isLoadingRequests ? (
+                <div className="py-8 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
+                  <p className="text-gray-500 text-sm">Cargando historial...</p>
+                </div>
+              ) : sortedRequests.length === 0 ? (
+                <div className="py-8 text-center">
+                  <FileText className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">
+                    Aún no tenés solicitudes de recetas.
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Cuando solicites una receta desde tu cartón verde, aparecerá
+                    aquí.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sortedRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-gray-900">
+                            {request.description}
+                          </span>
+                          {getStatusBadge(request.status)}
+                        </div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          <span>{getDoctorName(request)}</span>
+                          {request.doctor?.specialities?.[0] && (
+                            <span className="text-gray-400">
+                              {" "}
+                              · {request.doctor.specialities[0]}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-400">
+                          Solicitado {formatRelativeTime(request.createdAt || "")}
+                          {request.completedAt && (
+                            <span>
+                              {" "}
+                              · Completado el {formatDate(request.completedAt)}
+                            </span>
+                          )}
+                        </div>
+                        {request.rejectedReason && (
+                          <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                            <strong>Motivo del rechazo:</strong>{" "}
+                            {request.rejectedReason}
+                          </div>
+                        )}
+                      </div>
+                      {request.status === PrescriptionRequestStatus.COMPLETED &&
+                        (request.prescriptionUrls?.length ?? 0) > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-4 text-green-700 border-green-300 hover:bg-green-50"
+                            onClick={() => {
+                              if (request.prescriptionUrls?.[0]) {
+                                window.open(request.prescriptionUrls[0], "_blank");
+                              }
+                            }}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Descargar
+                          </Button>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Request Prescription Modal */}
       {greenCard && selectedItemForPrescription && (

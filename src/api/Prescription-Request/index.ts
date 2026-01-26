@@ -3,6 +3,7 @@ export * from "./get-my-requests.action";
 export * from "./get-doctor-pending.action";
 export * from "./get-doctor-history.action";
 export * from "./get-by-id.action";
+export * from "./get-pending-count.action";
 export * from "./take-request.action";
 export * from "./complete-request.action";
 export * from "./reject-request.action";

@@ -47,6 +47,7 @@ import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
+import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 
 const navigationItems = [
   {
@@ -211,6 +212,13 @@ export function AppSidebar() {
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
+  const isDoctor = userRoles.includes("Medico");
+
+  // Get pending prescription count for doctors
+  const { pendingCount } = usePrescriptionNotifications({
+    enabled: isDoctor,
+    showToasts: false, // Toasts are handled in DashboardLayout
+  });
 
   // Filtrar items del menú según roles del usuario
   const filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
@@ -264,6 +272,11 @@ export function AppSidebar() {
                     );
                   }
 
+                  // Check if this is the prescription requests item for doctors
+                  const isPrescriptionRequestsItem =
+                    item.url === "/solicitudes-recetas" && isDoctor;
+                  const showBadge = isPrescriptionRequestsItem && pendingCount > 0;
+
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={active}>
@@ -276,7 +289,15 @@ export function AppSidebar() {
                           }`}
                         >
                           <item.icon className="text-greenPrimary" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {showBadge && (
+                            <Badge
+                              variant="destructive"
+                              className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
+                            >
+                              {pendingCount > 9 ? "9+" : pendingCount}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

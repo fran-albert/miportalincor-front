@@ -99,7 +99,8 @@ export const useGreenCardMutations = () => {
     mutationFn: ({ cardId, itemId }: { cardId: string; itemId: string }) =>
       requestPrescription(cardId, itemId),
     onSuccess: () => {
-      // No need to invalidate green card queries, just show success message
+      // Invalidate prescription requests to update the history
+      queryClient.invalidateQueries({ queryKey: ["prescriptionRequests"] });
     },
   });
 
