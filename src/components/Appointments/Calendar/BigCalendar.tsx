@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { DoctorSelect } from "../Select/DoctorSelect";
-import { useAppointments, useAppointmentMutations, useAvailableSlotsRange } from "@/hooks/Appointments";
+import { useAppointments, useAppointmentMutations, useAvailableSlotsRange, useFirstAvailableDate } from "@/hooks/Appointments";
 import { useOverturns, useOverturnMutations } from "@/hooks/Overturns";
 import { useBlockedSlots } from "@/hooks/BlockedSlots";
 import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
@@ -145,6 +145,20 @@ export const BigCalendar = ({
       setInternalDoctorId(doctorProfile.userId);
     }
   }, [autoFilterForDoctor, doctorProfile?.userId, propDoctorId]);
+
+  // Buscar el primer mes con disponibilidad para auto-navegar el calendario
+  const { firstAvailableDate, isSearching: isSearchingFirstDate } = useFirstAvailableDate({
+    doctorId: selectedDoctorId,
+    maxMonthsAhead: 6,
+    enabled: !!selectedDoctorId,
+  });
+
+  // Auto-navegar al primer mes con disponibilidad cuando se encuentra
+  useEffect(() => {
+    if (firstAvailableDate && selectedDoctorId) {
+      setCurrentDate(firstAvailableDate);
+    }
+  }, [firstAvailableDate, selectedDoctorId]);
 
   // Calculate date range for queries
   const dateRange = useMemo(() => {
@@ -563,7 +577,7 @@ export const BigCalendar = ({
     }
   };
 
-  const isLoading = isLoadingAppointments || isLoadingOverturns;
+  const isLoading = isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
 
   return (
     <div className={className}>

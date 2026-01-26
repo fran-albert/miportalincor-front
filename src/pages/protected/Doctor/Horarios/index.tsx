@@ -25,13 +25,12 @@ import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailabil
 import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import { CreateDoctorAvailabilityDto } from "@/types/DoctorAvailability";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const DoctorHorariosPage = () => {
-  const { toast } = useToast();
   const params = useParams();
   const slug = params.slug as string;
   const slugParts = slug.split("-");
@@ -53,17 +52,11 @@ const DoctorHorariosPage = () => {
   const handleCreate = async (data: CreateDoctorAvailabilityDto) => {
     try {
       await createAvailability.mutateAsync(data);
-      toast({
-        title: "Disponibilidad creada",
-        description: "La disponibilidad se guardó correctamente",
-      });
+      toast.success("Disponibilidad creada correctamente");
       setIsFormOpen(false);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo guardar la disponibilidad";
-      toast({
-        title: "Error",
-        description: errorMessage,
-      });
+      toast.error(`No se pudo crear la disponibilidad: ${errorMessage}`);
     }
   };
 
@@ -72,17 +65,11 @@ const DoctorHorariosPage = () => {
 
     try {
       await deleteAvailability.mutateAsync({ id: deleteId, doctorId });
-      toast({
-        title: "Disponibilidad eliminada",
-        description: "La disponibilidad se eliminó correctamente",
-      });
+      toast.success("Disponibilidad eliminada correctamente");
       setDeleteId(null);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo eliminar la disponibilidad";
-      toast({
-        title: "Error",
-        description: errorMessage,
-      });
+      toast.error(`No se pudo eliminar la disponibilidad: ${errorMessage}`);
     }
   };
 

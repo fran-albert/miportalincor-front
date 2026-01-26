@@ -1,13 +1,34 @@
+import { useMemo } from "react";
 import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarX } from "lucide-react";
+import { RecurrenceType, WeekDays } from "@/types/DoctorAvailability";
 
 interface AvailabilityListProps {
   doctorId: number;
   onDelete: (id: number) => void;
   isDeleting?: boolean;
 }
+
+// Orden de días de la semana (Lunes = 1, Domingo = 7)
+const DAY_ORDER: Record<WeekDays, number> = {
+  [WeekDays.MONDAY]: 1,
+  [WeekDays.TUESDAY]: 2,
+  [WeekDays.WEDNESDAY]: 3,
+  [WeekDays.THURSDAY]: 4,
+  [WeekDays.FRIDAY]: 5,
+  [WeekDays.SATURDAY]: 6,
+  [WeekDays.SUNDAY]: 7,
+};
+
+// Orden de tipo de recurrencia (WEEKLY primero, luego otros)
+const RECURRENCE_ORDER: Record<RecurrenceType, number> = {
+  [RecurrenceType.WEEKLY]: 1,
+  [RecurrenceType.DAILY]: 2,
+  [RecurrenceType.MONTHLY]: 3,
+  [RecurrenceType.NONE]: 4,
+};
 
 export const AvailabilityList = ({
   doctorId,
@@ -18,6 +39,28 @@ export const AvailabilityList = ({
     doctorId,
     enabled: doctorId > 0
   });
+
+  // Ordenar disponibilidades: por tipo de recurrencia, luego por día de semana, luego por hora
+  const sortedAvailabilities = useMemo(() => {
+    return [...availabilities].sort((a, b) => {
+      // 1. Primero por tipo de recurrencia (WEEKLY primero)
+      const aRecurrenceOrder = RECURRENCE_ORDER[a.recurrenceType] ?? 99;
+      const bRecurrenceOrder = RECURRENCE_ORDER[b.recurrenceType] ?? 99;
+      if (aRecurrenceOrder !== bRecurrenceOrder) {
+        return aRecurrenceOrder - bRecurrenceOrder;
+      }
+
+      // 2. Luego por día de semana (para WEEKLY)
+      const aDay = a.daysOfWeek?.[0] ? DAY_ORDER[a.daysOfWeek[0]] : 99;
+      const bDay = b.daysOfWeek?.[0] ? DAY_ORDER[b.daysOfWeek[0]] : 99;
+      if (aDay !== bDay) {
+        return aDay - bDay;
+      }
+
+      // 3. Finalmente por hora de inicio
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }, [availabilities]);
 
   if (isLoading) {
     return (
@@ -45,7 +88,7 @@ export const AvailabilityList = ({
 
   return (
     <div className="space-y-3">
-      {availabilities.map((availability) => (
+      {sortedAvailabilities.map((availability) => (
         <AvailabilityCard
           key={availability.id}
           availability={availability}
