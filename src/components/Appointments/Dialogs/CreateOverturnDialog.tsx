@@ -20,6 +20,10 @@ interface CreateOverturnDialogProps {
   defaultPatientId?: number;
   defaultDate?: string;
   onSuccess?: () => void;
+  /** Controlled open state (optional) */
+  open?: boolean;
+  /** Callback when open state changes (optional) */
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const CreateOverturnDialog = ({
@@ -27,9 +31,13 @@ export const CreateOverturnDialog = ({
   defaultDoctorId,
   defaultPatientId,
   defaultDate,
-  onSuccess
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange,
 }: CreateOverturnDialogProps) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const { showSuccess, showError } = useToastContext();
   const { createOverturn, isCreating } = useOverturnMutations();
 
@@ -51,8 +59,34 @@ export const CreateOverturnDialog = ({
     }
   };
 
+  // If controlled externally (no trigger), render dialog without trigger
+  if (controlledOpen !== undefined) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              Crear Sobreturno
+            </DialogTitle>
+            <DialogDescription>
+              Los sobreturnos se agregan fuera de la agenda regular del médico
+            </DialogDescription>
+          </DialogHeader>
+          <CreateOverturnForm
+            onSubmit={handleSubmit}
+            isLoading={isCreating}
+            defaultDoctorId={defaultDoctorId}
+            defaultPatientId={defaultPatientId}
+            defaultDate={defaultDate}
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-50">

@@ -21,3 +21,4 @@ export { useCountFromMonthYear } from './useCountFromMonthYear';
 export { useAppointmentMutations } from './useAppointmentMutations';
 export { useRequestAppointment } from './useRequestAppointment';
 export { useConvertGuest } from './useConvertGuest';
+export { useCreateGuestAppointment } from './useCreateGuestAppointment';

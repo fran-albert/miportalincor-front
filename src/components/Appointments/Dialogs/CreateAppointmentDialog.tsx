@@ -8,8 +8,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CreateAppointmentForm } from "../Forms/CreateAppointmentForm";
-import { useAppointmentMutations } from "@/hooks/Appointments";
+import { CreateAppointmentForm, GuestAppointmentData } from "../Forms/CreateAppointmentForm";
+import { useAppointmentMutations, useCreateGuestAppointment } from "@/hooks/Appointments";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
 import { CalendarPlus } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -30,6 +30,8 @@ interface CreateAppointmentDialogProps {
   /** Control externo del estado del dialog */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** If true, allow creating guest appointments */
+  allowGuestCreation?: boolean;
 }
 
 export const CreateAppointmentDialog = ({
@@ -42,6 +44,7 @@ export const CreateAppointmentDialog = ({
   onSuccess,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  allowGuestCreation = true,
 }: CreateAppointmentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -51,6 +54,7 @@ export const CreateAppointmentDialog = ({
   const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen;
   const { showSuccess, showError } = useToastContext();
   const { createAppointment, isCreating } = useAppointmentMutations();
+  const { createGuestAppointment, isCreating: isCreatingGuest } = useCreateGuestAppointment();
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
     try {
@@ -65,6 +69,27 @@ export const CreateAppointmentDialog = ({
       onSuccess?.();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo crear el turno";
+      showError("Error", errorMessage);
+    }
+  };
+
+  const handleGuestSubmit = async (data: GuestAppointmentData) => {
+    try {
+      await createGuestAppointment.mutateAsync({
+        doctorId: data.doctorId,
+        date: data.date,
+        hour: data.hour,
+        guestDocumentNumber: data.guestDocumentNumber,
+        guestFirstName: data.guestFirstName,
+        guestLastName: data.guestLastName,
+        guestPhone: data.guestPhone,
+        guestEmail: data.guestEmail,
+      });
+      showSuccess("Turno de invitado creado", "El turno se creó correctamente para el paciente invitado");
+      setOpen(false);
+      onSuccess?.();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "No se pudo crear el turno de invitado";
       showError("Error", errorMessage);
     }
   };
@@ -91,12 +116,14 @@ export const CreateAppointmentDialog = ({
         </DialogHeader>
         <CreateAppointmentForm
           onSubmit={handleSubmit}
-          isLoading={isCreating}
+          onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
+          isLoading={isCreating || isCreatingGuest}
           defaultDoctorId={defaultDoctorId}
           defaultPatientId={defaultPatientId}
           defaultPatient={defaultPatient}
           defaultDate={defaultDate}
           defaultHour={defaultHour}
+          allowGuestCreation={allowGuestCreation}
         />
       </DialogContent>
     </Dialog>

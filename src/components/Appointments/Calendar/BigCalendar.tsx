@@ -49,6 +49,7 @@ import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
 import { SlotActionDialog } from "../Dialogs/SlotActionDialog";
 import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
+import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -129,6 +130,7 @@ export const BigCalendar = ({
   const [blockDialogMode, setBlockDialogMode] = useState<"block" | "unblock">("block");
   const [selectedBlockedSlot, setSelectedBlockedSlot] = useState<BlockedSlotResponseDto | undefined>();
   const [isSlotActionDialogOpen, setIsSlotActionDialogOpen] = useState(false);
+  const [isOverturnDialogOpen, setIsOverturnDialogOpen] = useState(false);
 
   // Si autoFilterForDoctor, obtener el perfil del médico logueado
   const { data: doctorProfile } = useMyDoctorProfile();
@@ -294,11 +296,18 @@ export const BigCalendar = ({
     });
 
     // Create set of occupied slots to filter out from available slots
+    // Exclude cancelled appointments so their slots become available again
+    const CANCELLED_STATUSES = [
+      AppointmentStatus.CANCELLED_BY_PATIENT,
+      AppointmentStatus.CANCELLED_BY_SECRETARY,
+    ];
     const occupiedSlots = new Set<string>();
-    appointments.forEach((apt) => {
-      const key = `${apt.date}-${apt.hour.slice(0, 5)}`;
-      occupiedSlots.add(key);
-    });
+    appointments
+      .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
+      .forEach((apt) => {
+        const key = `${apt.date}-${apt.hour.slice(0, 5)}`;
+        occupiedSlots.add(key);
+      });
     overturns.forEach((ot) => {
       const key = `${ot.date}-${ot.hour.slice(0, 5)}`;
       occupiedSlots.add(key);
@@ -496,6 +505,27 @@ export const BigCalendar = ({
       return;
     }
 
+    // If it's a cancelled appointment, treat it as an available slot (allow creating new appointment)
+    const CANCELLED_STATUSES = [
+      AppointmentStatus.CANCELLED_BY_PATIENT,
+      AppointmentStatus.CANCELLED_BY_SECRETARY,
+    ];
+    if (event.resource.type === "appointment" && CANCELLED_STATUSES.includes(event.resource.status as AppointmentStatus)) {
+      if (readOnly) return;
+      const appointmentData = event.resource.data as AppointmentFullResponseDto;
+      setSelectedSlot({
+        date: appointmentData.date,
+        hour: appointmentData.hour.slice(0, 5),
+      });
+      if (blockOnly) {
+        setBlockDialogMode("block");
+        setIsBlockDialogOpen(true);
+      } else {
+        setIsSlotActionDialogOpen(true);
+      }
+      return;
+    }
+
     // For appointments/overturns, show details dialog
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
@@ -687,6 +717,19 @@ export const BigCalendar = ({
               </div>
             )}
           </div>
+
+          {/* Botón Sobreturno - Solo en vista DÍA */}
+          {currentView === 'day' && !readOnly && selectedDoctorId && (
+            <div className="pt-4 border-t mt-4">
+              <Button
+                className="w-full h-14 text-lg bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => setIsOverturnDialogOpen(true)}
+              >
+                <AlertCircle className="mr-2 h-6 w-6" />
+                SOBRETURNO
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -718,19 +761,37 @@ export const BigCalendar = ({
               {/* Patient Info */}
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <User className="h-10 w-10 p-2 bg-primary/10 rounded-full text-primary" />
-                <div>
+                <div className="flex-1">
                   <p className="font-medium">
                     {selectedEvent.resource.isGuest
                       ? `${(selectedEvent.resource.data as AppointmentFullResponseDto).guestFirstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto).guestLastName}`
                       : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
                     }
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    DNI: {selectedEvent.resource.isGuest
-                      ? (selectedEvent.resource.data as AppointmentFullResponseDto).guestDocumentNumber
-                      : (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.userName
-                    }
-                  </p>
+                  <div className="text-sm text-muted-foreground space-y-0.5">
+                    <p>
+                      DNI: {selectedEvent.resource.isGuest
+                        ? (selectedEvent.resource.data as AppointmentFullResponseDto).guestDocumentNumber
+                        : (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.userName
+                      }
+                    </p>
+                    {/* Phone */}
+                    {!selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.phoneNumber && (
+                      <p>Tel: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.phoneNumber}</p>
+                    )}
+                    {selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto).guestPhone && (
+                      <p>Tel: {(selectedEvent.resource.data as AppointmentFullResponseDto).guestPhone}</p>
+                    )}
+                    {/* Health Insurance */}
+                    {!selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.healthInsuranceName && (
+                      <p>
+                        OS: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.healthInsuranceName}
+                        {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.affiliationNumber && (
+                          <span> - Nro: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.affiliationNumber}</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1003,6 +1064,19 @@ export const BigCalendar = ({
             setIsBlockDialogOpen(false);
             setSelectedSlot(null);
             setSelectedBlockedSlot(undefined);
+          }}
+        />
+      )}
+
+      {/* Create Overturn Dialog - Only in day view */}
+      {selectedDoctorId && (
+        <CreateOverturnDialog
+          open={isOverturnDialogOpen}
+          onOpenChange={setIsOverturnDialogOpen}
+          defaultDoctorId={selectedDoctorId}
+          defaultDate={formatDateForCalendar(currentDate)}
+          onSuccess={() => {
+            setIsOverturnDialogOpen(false);
           }}
         />
       )}
