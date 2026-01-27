@@ -19,6 +19,7 @@ import LoadingAnimation from "../Loading/loading";
 import { Smartphone, ArrowLeft, RefreshCw } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
 import { useNavigate } from "react-router-dom";
+import { authStorage } from "@/utils/authStorage";
 
 interface TwoFactorFormProps {
   onBack: () => void;
@@ -68,7 +69,7 @@ const TwoFactorForm = ({ onBack }: TwoFactorFormProps) => {
 
       const { token } = response.data;
       if (token) {
-        localStorage.setItem("authToken", token);
+        authStorage.setToken(token);
         dispatch(loginSuccess({ token }));
         dispatch(clearTwoFactor());
         navigate("/inicio");

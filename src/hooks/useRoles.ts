@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { RootState } from '@/store/store';
 import axios from 'axios';
 import { environment } from '@/config/environment';
+import { authStorage } from '@/utils/authStorage';
 
 interface DecodedToken {
   id: string;
@@ -36,7 +37,7 @@ const useUserRole = () => {
 
     const attemptRefresh = async () => {
       try {
-        const currentToken = localStorage.getItem("authToken");
+        const currentToken = authStorage.getToken();
         if (!currentToken) {
           dispatch(logout());
           return;
@@ -53,8 +54,7 @@ const useUserRole = () => {
         const decodedToken = jwtDecode<{ exp: number }>(newToken);
         const newExpirationTime = decodedToken.exp * 1000;
 
-        localStorage.setItem("authToken", newToken);
-        localStorage.setItem("tokenExpiration", newExpirationTime.toString());
+        authStorage.setSession(newToken, newExpirationTime.toString());
         dispatch(updateTokens({ token: newToken }));
       } catch (error) {
         console.error("Error refreshing token:", error);

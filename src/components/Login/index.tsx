@@ -23,6 +23,7 @@ import LoadingAnimation from "../Loading/loading";
 import { Mail, Lock, Stethoscope } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
 import TwoFactorForm from "./TwoFactorForm";
+import { authStorage } from "@/utils/authStorage";
 
 const LoginComponent = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -60,7 +61,7 @@ const LoginComponent = () => {
       // Normal login flow
       const { token } = data;
       if (token) {
-        localStorage.setItem("authToken", token);
+        authStorage.setToken(token);
         dispatch(loginSuccess({ token }));
         navigate("/inicio");
       }

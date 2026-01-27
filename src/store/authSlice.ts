@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { jwtDecode } from 'jwt-decode';
+import { authStorage } from '@/utils/authStorage';
 
 interface DecodedToken {
     exp?: number;
@@ -22,9 +23,9 @@ interface AuthState {
 
 const initialState: AuthState = {
     user: null,
-    token: localStorage.getItem("authToken") || null,
-    tokenExpiration: localStorage.getItem("tokenExpiration") || null,
-    isAuthenticated: !!localStorage.getItem("authToken"),
+    token: authStorage.getToken(),
+    tokenExpiration: authStorage.getTokenExpiration(),
+    isAuthenticated: !!authStorage.getToken(),
     twoFactor: {
         requires2FA: false,
         twoFactorToken: null,
@@ -46,8 +47,7 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.tokenExpiration = expirationTime.toString();
 
-                localStorage.setItem("authToken", action.payload.token);
-                localStorage.setItem("tokenExpiration", expirationTime.toString());
+                authStorage.setSession(action.payload.token, expirationTime.toString());
             } else {
                 console.error('Token does not have an expiration date.');
             }
@@ -59,8 +59,7 @@ const authSlice = createSlice({
             state.token = null;
             state.isAuthenticated = false;
             state.tokenExpiration = null;
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("tokenExpiration");
+            authStorage.clearAll();
         },
         updateTokens: (state, action) => {
             const decodedToken = jwtDecode<DecodedToken>(action.payload.token);
@@ -70,8 +69,7 @@ const authSlice = createSlice({
                 state.token = action.payload.token;
                 state.tokenExpiration = expirationTime.toString();
 
-                localStorage.setItem("authToken", action.payload.token);
-                localStorage.setItem("tokenExpiration", expirationTime.toString());
+                authStorage.setSession(action.payload.token, expirationTime.toString());
             }
         },
         setTwoFactorRequired: (state, action: PayloadAction<{

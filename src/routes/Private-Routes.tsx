@@ -5,6 +5,7 @@ import LoadingAnimation from "@/components/Loading/loading";
 import { hasPermission } from "@/common/constants/permissions";
 import axios from "axios";
 import { environment } from "@/config/environment";
+import { authStorage } from "@/utils/authStorage";
 
 interface DecodedToken {
   id: string;
@@ -26,7 +27,7 @@ export const Private_Routes = ({
 
   useEffect(() => {
     const checkAuth = async () => {
-      const stateUser = localStorage.getItem("authToken");
+      const stateUser = authStorage.getToken();
 
       if (!stateUser) {
         setRedirectPath("/iniciar-sesion");
@@ -54,8 +55,7 @@ export const Private_Routes = ({
             const newDecodedToken = jwtDecode<{ exp: number }>(newToken);
             const newExpirationTime = newDecodedToken.exp * 1000;
 
-            localStorage.setItem("authToken", newToken);
-            localStorage.setItem("tokenExpiration", newExpirationTime.toString());
+            authStorage.setSession(newToken, newExpirationTime.toString());
 
             // Token renovado exitosamente - continuar con la verificación de roles
             const refreshedDecodedToken: DecodedToken = jwtDecode(newToken);
@@ -76,8 +76,7 @@ export const Private_Routes = ({
             return;
           } catch (refreshError) {
             console.error("Error al renovar token:", refreshError);
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("tokenExpiration");
+            authStorage.clearAll();
             setRedirectPath("/iniciar-sesion");
             setAuthChecked(true);
             return;
@@ -100,8 +99,7 @@ export const Private_Routes = ({
         setAuthChecked(true);
       } catch (error) {
         console.error("Error al decodificar el token:", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("tokenExpiration");
+        authStorage.clearAll();
         setRedirectPath("/iniciar-sesion");
         setAuthChecked(true);
       }
