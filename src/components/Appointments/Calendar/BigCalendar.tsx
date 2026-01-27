@@ -244,7 +244,16 @@ export const BigCalendar = ({
 
   // Convert appointments and overturns to calendar events
   const events = useMemo<CalendarEvent[]>(() => {
-    const appointmentEvents: CalendarEvent[] = appointments.map((apt) => {
+    // Filter out cancelled appointments - they won't appear in the calendar
+    const CANCELLED_STATUSES = [
+      AppointmentStatus.CANCELLED_BY_PATIENT,
+      AppointmentStatus.CANCELLED_BY_SECRETARY,
+    ];
+    const activeAppointments = appointments.filter(
+      (apt) => !CANCELLED_STATUSES.includes(apt.status)
+    );
+
+    const appointmentEvents: CalendarEvent[] = activeAppointments.map((apt) => {
       const [hours, minutes] = apt.hour.split(":").map(Number);
       const start = new Date(apt.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
@@ -297,10 +306,6 @@ export const BigCalendar = ({
 
     // Create set of occupied slots to filter out from available slots
     // Exclude cancelled appointments so their slots become available again
-    const CANCELLED_STATUSES = [
-      AppointmentStatus.CANCELLED_BY_PATIENT,
-      AppointmentStatus.CANCELLED_BY_SECRETARY,
-    ];
     const occupiedSlots = new Set<string>();
     appointments
       .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
@@ -437,26 +442,31 @@ export const BigCalendar = ({
       borderStyle = `4px solid ${borderColor}`;
     }
 
-    // Color based on status
-    switch (status) {
-      case AppointmentStatus.PENDING:
-      case AppointmentStatus.REQUESTED_BY_PATIENT:
-      case AppointmentStatus.ASSIGNED_BY_SECRETARY:
-        backgroundColor = "#eab308"; // yellow
-        break;
-      case AppointmentStatus.WAITING:
-        backgroundColor = "#22c55e"; // green
-        break;
-      case AppointmentStatus.ATTENDING:
-        backgroundColor = "#3b82f6"; // blue
-        break;
-      case AppointmentStatus.COMPLETED:
-        backgroundColor = "#6b7280"; // gray
-        break;
-      case AppointmentStatus.CANCELLED_BY_PATIENT:
-      case AppointmentStatus.CANCELLED_BY_SECRETARY:
-        backgroundColor = "#ef4444"; // red
-        break;
+    // Overturns always have orange background (same as SOBRETURNO button)
+    if (isOverturn) {
+      backgroundColor = "#f97316"; // orange-500
+    } else {
+      // Color based on status for regular appointments
+      switch (status) {
+        case AppointmentStatus.PENDING:
+        case AppointmentStatus.REQUESTED_BY_PATIENT:
+        case AppointmentStatus.ASSIGNED_BY_SECRETARY:
+          backgroundColor = "#eab308"; // yellow
+          break;
+        case AppointmentStatus.WAITING:
+          backgroundColor = "#22c55e"; // green
+          break;
+        case AppointmentStatus.ATTENDING:
+          backgroundColor = "#3b82f6"; // blue
+          break;
+        case AppointmentStatus.COMPLETED:
+          backgroundColor = "#6b7280"; // gray
+          break;
+        case AppointmentStatus.CANCELLED_BY_PATIENT:
+        case AppointmentStatus.CANCELLED_BY_SECRETARY:
+          backgroundColor = "#ef4444"; // red
+          break;
+      }
     }
 
     return {

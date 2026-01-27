@@ -55,10 +55,16 @@ export const ALLOWED_OVERTURN_TRANSITIONS: Record<OverturnStatus, OverturnStatus
 export interface OverturnResponseDto {
   id: number;
   doctorId: number;
-  patientId: number;
+  patientId?: number;
   date: string;
   hour: string;
   status: OverturnStatus;
+  isGuest: boolean;
+  guestDocumentNumber?: string;
+  guestFirstName?: string;
+  guestLastName?: string;
+  guestPhone?: string;
+  guestEmail?: string;
   reason?: string;
   createdBy: number;
   createdAt: string;
