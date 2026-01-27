@@ -1,0 +1,257 @@
+# miportalincor-front
+
+Frontend del portal médico INCOR. Interfaz para pacientes, médicos, secretarias y administradores.
+
+## Stack Técnico
+- **Framework**: React 18 + TypeScript
+- **Build**: Vite 5
+- **Estilos**: Tailwind CSS + shadcn/ui
+- **Estado**: Redux Toolkit + React Query (TanStack)
+- **Forms**: React Hook Form + Zod
+- **HTTP**: Axios
+- **Routing**: React Router 6
+- **Testing**: Vitest + Testing Library
+- **Linting**: ESLint 9
+
+## Reglas de Desarrollo
+
+### TypeScript
+- **SIEMPRE definir interfaces/types** para props, estados, respuestas de API
+- **NUNCA usar `any`** - usar `unknown` o tipos específicos
+- **NUNCA usar `@ts-ignore`** - resolver el error correctamente
+- Tipar todos los parámetros y retornos de funciones
+
+```typescript
+// MAL
+const PatientCard = ({ patient }: any) => { ... }
+
+// BIEN
+interface PatientCardProps {
+  patient: Patient;
+  onSelect?: (id: number) => void;
+}
+
+const PatientCard = ({ patient, onSelect }: PatientCardProps) => { ... }
+```
+
+### Componentes React
+```typescript
+// Siempre tipar props con interface
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+}
+
+export const Button = ({ label, onClick, variant = 'primary', disabled }: ButtonProps) => {
+  return (
+    <button
+      className={cn('btn', variant === 'primary' ? 'btn-primary' : 'btn-secondary')}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {label}
+    </button>
+  );
+};
+```
+
+### Estructura de Carpetas
+```
+src/
+├── api/              # Servicios de API (axios)
+├── assets/           # Imágenes, iconos
+├── common/           # Constantes, enums, helpers
+├── components/       # Componentes reutilizables
+├── config/           # Configuración (env, etc)
+├── contexts/         # React contexts
+├── hooks/            # Custom hooks
+├── layouts/          # Layouts de página
+├── lib/              # Utilidades (shadcn utils)
+├── pages/            # Páginas de la app
+├── routes/           # Configuración de rutas
+├── services/         # Lógica de negocio
+├── store/            # Redux slices
+├── styles/           # CSS global
+├── types/            # TypeScript types/interfaces
+├── utils/            # Funciones utilitarias
+└── validators/       # Esquemas Zod
+```
+
+### Convenciones de Archivos
+| Tipo | Ubicación | Nomenclatura |
+|------|-----------|--------------|
+| Componente | `components/[name]/` | `PatientCard.tsx` |
+| Página | `pages/[area]/` | `PatientList.tsx` |
+| Hook | `hooks/` | `usePatient.ts` |
+| Type | `types/` | `patient.types.ts` |
+| Validator | `validators/` | `patient.validator.ts` |
+| API service | `api/` | `patient.api.ts` |
+| Redux slice | `store/` | `patientSlice.ts` |
+
+### Path Alias
+```typescript
+import { Button } from '@/components/ui/Button';
+import { Patient } from '@/types/patient.types';
+import { usePatient } from '@/hooks/usePatient';
+```
+
+Único alias: `@/*` → `./src/*`
+
+### Forms con React Hook Form + Zod
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const patientSchema = z.object({
+  firstName: z.string().min(1, 'Nombre requerido'),
+  lastName: z.string().min(1, 'Apellido requerido'),
+  dni: z.string().regex(/^\d{7,8}$/, 'DNI inválido'),
+  email: z.string().email('Email inválido').optional(),
+});
+
+type PatientFormData = z.infer<typeof patientSchema>;
+
+const PatientForm = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm<PatientFormData>({
+    resolver: zodResolver(patientSchema),
+  });
+
+  const onSubmit = (data: PatientFormData) => {
+    // ...
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('firstName')} />
+      {errors.firstName && <span>{errors.firstName.message}</span>}
+      {/* ... */}
+    </form>
+  );
+};
+```
+
+### API Calls con React Query
+```typescript
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { patientApi } from '@/api/patient.api';
+
+// Query
+const { data, isLoading, error } = useQuery({
+  queryKey: ['patients', filters],
+  queryFn: () => patientApi.getAll(filters),
+});
+
+// Mutation
+const mutation = useMutation({
+  mutationFn: patientApi.create,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['patients'] });
+  },
+});
+```
+
+## Comandos
+
+### Desarrollo
+```bash
+npm run dev              # Vite dev server
+npm run dev:staging      # Con env de staging
+```
+
+### Build
+```bash
+npm run build            # Build producción (tsc + vite)
+npm run build:staging    # Build staging
+npm run build:development # Build development
+npm run preview          # Preview del build
+```
+
+### Tests
+```bash
+npm run test             # Vitest watch mode
+npm run test:run         # Ejecutar una vez
+npm run test:coverage    # Con coverage
+```
+
+### Linting
+```bash
+npm run lint             # ESLint
+npm run type-check       # TypeScript check (sin emitir)
+```
+
+## Verificaciones Antes de Commit
+```bash
+npm run type-check       # Verificar tipos
+npm run build            # Verificar build
+npm run lint             # Verificar linting
+npm run test:run         # Ejecutar tests
+```
+
+## Rutas Principales
+
+### Autenticación
+- `/login` - Login
+- `/forgot-password` - Recuperar contraseña
+- `/reset-password` - Resetear contraseña
+
+### Dashboard
+- `/dashboard` - Panel principal
+
+### Pacientes
+- `/patients` - Lista de pacientes
+- `/patients/:id` - Detalle paciente
+- `/patients/:id/history` - Historia clínica
+- `/patients/:id/evolutions` - Evoluciones
+- `/patients/:id/studies` - Estudios
+
+### Turnos
+- `/appointments` - Gestión de turnos
+- `/appointments/calendar` - Calendario
+- `/queue` - Cola de espera
+
+### Estudios
+- `/studies` - Lista de estudios
+- `/studies/:id` - Detalle estudio
+
+### Laboral
+- `/laboral/companies` - Empresas
+- `/laboral/collaborators` - Colaboradores
+- `/laboral/evaluations` - Evaluaciones
+
+### Admin
+- `/admin/users` - Usuarios
+- `/admin/roles` - Roles
+- `/admin/audit` - Logs auditoría
+- `/admin/statistics` - Estadísticas
+
+## Componentes UI (shadcn/ui)
+Componentes en `src/components/ui/`:
+- Button, Input, Select, Checkbox
+- Dialog, AlertDialog, Popover
+- Table, Tabs, Accordion
+- Toast (sonner), Tooltip
+- Form components
+
+## APIs Consumidas
+| API | Base URL | Uso |
+|-----|----------|-----|
+| historia-clinica | `VITE_API_URL` | Pacientes, médicos, estudios |
+| appointments | `VITE_APPOINTMENTS_API_URL` | Turnos, cola |
+| laboral | `VITE_LABORAL_API_URL` | Medicina laboral |
+
+## Archivos Clave
+- `src/main.tsx` - Entry point
+- `src/routes.tsx` - Definición de rutas
+- `src/config/` - Configuración
+- `vite.config.ts` - Config de Vite
+- `tailwind.config.js` - Config de Tailwind
+
+## Repos Relacionados
+| Repo | Función |
+|------|---------|
+| **incor-historia-clinica.api** | API principal |
+| **appointments.api.miportal-incor** | API turnos |
+| **miportal-incor-laboral** | API laboral |
