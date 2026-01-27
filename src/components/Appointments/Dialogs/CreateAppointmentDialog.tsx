@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { CreateAppointmentForm, GuestAppointmentData } from "../Forms/CreateAppointmentForm";
 import { useAppointmentMutations, useCreateGuestAppointment } from "@/hooks/Appointments";
@@ -107,24 +108,26 @@ export const CreateAppointmentDialog = ({
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Crear Nuevo Turno</DialogTitle>
           <DialogDescription>
             Complete los datos para agendar un nuevo turno
           </DialogDescription>
         </DialogHeader>
-        <CreateAppointmentForm
-          onSubmit={handleSubmit}
-          onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
-          isLoading={isCreating || isCreatingGuest}
-          defaultDoctorId={defaultDoctorId}
-          defaultPatientId={defaultPatientId}
-          defaultPatient={defaultPatient}
-          defaultDate={defaultDate}
-          defaultHour={defaultHour}
-          allowGuestCreation={allowGuestCreation}
-        />
+        <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+          <CreateAppointmentForm
+            onSubmit={handleSubmit}
+            onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
+            isLoading={isCreating || isCreatingGuest}
+            defaultDoctorId={defaultDoctorId}
+            defaultPatientId={defaultPatientId}
+            defaultPatient={defaultPatient}
+            defaultDate={defaultDate}
+            defaultHour={defaultHour}
+            allowGuestCreation={allowGuestCreation}
+          />
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

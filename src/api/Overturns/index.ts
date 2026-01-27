@@ -6,5 +6,6 @@ export { getMyTodayOverturns } from './get-my-today-overturns.action';
 
 // MUTATIONS
 export { createOverturn } from './create.action';
+export { createGuestOverturn, type CreateGuestOverturnDto } from './create-guest.action';
 export { changeOverturnStatus } from './change-status.action';
 export { deleteOverturn } from './delete.action';
