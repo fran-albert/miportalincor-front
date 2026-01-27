@@ -17,16 +17,12 @@ import { AttendingPatientFAB } from "@/components/AttendingPatientFAB";
 import { PrescriptionNotificationDropdown } from "@/components/Notifications";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
-import { useAuthSync } from "@/hooks/useAuthSync";
 import useUserRole from "@/hooks/useRoles";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
   const { session, isPatient, isDoctor } = useUserRole();
   const [searchOpen, setSearchOpen] = useState(false);
-
-  // Sync auth state across browser tabs
-  useAuthSync();
 
   const userName = session?.firstName || "Usuario";
   const userInitials = userName.substring(0, 2).toUpperCase();

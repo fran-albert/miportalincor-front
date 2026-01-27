@@ -5,6 +5,7 @@ import { store } from "@/store/store";
 import { updateTokens, logout } from "@/store/authSlice";
 import { jwtDecode } from "jwt-decode";
 import { TOAST_EVENT, ToastEventDetail } from "@/hooks/Toast/toast-context";
+import { authStorage } from "@/utils/authStorage";
 
 // Helper para disparar toasts desde fuera de React
 const showGlobalToast = (type: "success" | "error", title: string, description?: string) => {
@@ -72,7 +73,7 @@ const getAxiosInstance = (config: InternalAxiosRequestConfig) => {
 };
 
 const addAuthToken = (config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("authToken");
+  const token = authStorage.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -137,7 +138,7 @@ const handleAuthError = async (error: AxiosError) => {
   isRefreshing = true;
 
   try {
-    const currentToken = localStorage.getItem("authToken");
+    const currentToken = authStorage.getToken();
     if (!currentToken) {
       throw new Error("No token available");
     }
@@ -160,9 +161,8 @@ const handleAuthError = async (error: AxiosError) => {
     const decodedToken = jwtDecode<{ exp: number }>(newToken);
     const expirationTime = decodedToken.exp * 1000;
 
-    // Save new token in localStorage AND Redux
-    localStorage.setItem("authToken", newToken);
-    localStorage.setItem("tokenExpiration", expirationTime.toString());
+    // Save new token in sessionStorage AND Redux
+    authStorage.setSession(newToken, expirationTime.toString());
     store.dispatch(updateTokens({ token: newToken }));
 
     // Update authorization header

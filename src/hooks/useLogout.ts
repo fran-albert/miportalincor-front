@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useState } from "react";
 import { logout } from "@/store/authSlice";
 import { apiIncorHC } from "@/services/axiosConfig";
+import { authStorage } from "@/utils/authStorage";
 
 export const useLogout = () => {
   const dispatch = useDispatch();
@@ -20,8 +21,7 @@ export const useLogout = () => {
       console.error("Error during logout:", error);
     } finally {
       // Always clear local state
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("tokenExpiration");
+      authStorage.clearAll();
       dispatch(logout());
       setIsLoggingOut(false);
       navigate("/iniciar-sesion");
