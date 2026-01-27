@@ -306,10 +306,6 @@ export const BigCalendar = ({
 
     // Create set of occupied slots to filter out from available slots
     // Exclude cancelled appointments so their slots become available again
-    const CANCELLED_STATUSES = [
-      AppointmentStatus.CANCELLED_BY_PATIENT,
-      AppointmentStatus.CANCELLED_BY_SECRETARY,
-    ];
     const occupiedSlots = new Set<string>();
     appointments
       .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
