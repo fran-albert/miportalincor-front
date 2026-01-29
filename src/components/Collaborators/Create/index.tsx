@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { goBack } from "@/common/helpers/helpers";
+import { useNavigate } from "react-router-dom";
 import { GenderSelect } from "@/components/Select/Gender/select";
 import { z } from "zod";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -63,6 +64,7 @@ export function CreateCollaboratorComponent({
 }: CreateCollaboratorComponentProps) {
   const { addCollaboratorMutation } = useCollaboratorMutations();
   const { promiseToast } = useToastContext();
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof collaboratorSchema>>({
     resolver: zodResolver(collaboratorSchema),
     defaultValues: preselectedCompanyId
@@ -146,7 +148,7 @@ export function CreateCollaboratorComponent({
 
       const promise = addCollaboratorMutation.mutateAsync(formData);
 
-      await promiseToast(promise, {
+      const collaborator = await promiseToast(promise, {
         loading: {
           title: "Creando colaborador...",
           description: "Por favor espera mientras procesamos tu solicitud",
@@ -162,7 +164,10 @@ export function CreateCollaboratorComponent({
         }),
       });
 
-      goBack();
+      // Navegar al colaborador recién creado en lugar de goBack()
+      // Esto evita el bug donde goBack() llevaba a un colaborador diferente
+      const slug = `${collaborator.firstName.toLowerCase()}-${collaborator.lastName.toLowerCase()}-${collaborator.id}`;
+      navigate(`/incor-laboral/colaboradores/${slug}`);
     } catch (error) {
       console.error("Error al crear el Colaborador", error);
     }
