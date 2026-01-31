@@ -8,6 +8,7 @@ export {
 
 // Patient Schedules
 export { usePatientSchedules } from './usePatientSchedules';
+export { useMyCheckupSchedules } from './useMyCheckupSchedules';
 export {
   useAssignCheckupToPatient,
   useUpdatePatientSchedule,

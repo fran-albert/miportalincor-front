@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { PhysicalGreenCard } from "@/components/Green-Card/PhysicalGreenCard";
 import { RequestPrescriptionModal } from "@/components/Green-Card/RequestPrescriptionModal";
+import { UpcomingCheckupsCard } from "@/components/PeriodicCheckup";
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
@@ -271,6 +272,9 @@ const MyPrescriptionRequestsPage = () => {
           </Card>
         )}
       </div>
+
+      {/* Upcoming Checkups Section */}
+      <UpcomingCheckupsCard />
 
       {/* Prescription Requests History */}
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
