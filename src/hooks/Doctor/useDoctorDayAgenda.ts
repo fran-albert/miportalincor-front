@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyTodayAppointments } from '@/api/Appointments';
 import { getMyTodayOverturns } from '@/api/Overturns';
+import useUserRole from '@/hooks/useRoles';
 import {
   AppointmentFullResponseDto,
   AppointmentStatus,
@@ -77,17 +78,21 @@ const isCancelled = (status: AgendaItemStatus): boolean =>
 
 interface UseDoctorDayAgendaOptions {
   refetchInterval?: number;
+  enabled?: boolean;
 }
 
 export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
   const queryClient = useQueryClient();
+  const { isDoctor } = useUserRole();
   const refetchInterval = options?.refetchInterval ?? 30000;
+  const enabled = (options?.enabled ?? true) && isDoctor;
 
   // Query para appointments
   const appointmentsQuery = useQuery({
     queryKey: doctorAgendaKeys.appointments(),
     queryFn: getMyTodayAppointments,
     refetchInterval,
+    enabled,
   });
 
   // Query para overturns
@@ -95,6 +100,7 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
     queryKey: doctorAgendaKeys.overturns(),
     queryFn: getMyTodayOverturns,
     refetchInterval,
+    enabled,
   });
 
   // Combinar y ordenar por hora
