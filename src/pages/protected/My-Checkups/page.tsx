@@ -186,9 +186,9 @@ const MyCheckupsPage = () => {
                       <span className="font-medium">Próximo chequeo:</span>{" "}
                       {formatMonthYear(schedule.nextDueDate)}
                     </div>
-                    {schedule.lastCompletedDate && (
+                    {schedule.lastCheckupDate && (
                       <div className="mt-1 text-sm text-gray-500">
-                        Último realizado: {formatMonthYear(schedule.lastCompletedDate)}
+                        Último realizado: {formatMonthYear(schedule.lastCheckupDate)}
                       </div>
                     )}
                   </div>
