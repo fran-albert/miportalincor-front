@@ -11,6 +11,8 @@ interface PhysicalGreenCardProps {
   greenCard: GreenCard;
   onRequestPrescription?: (item: GreenCardItem) => void;
   checkupSchedules?: PatientCheckupSchedule[];
+  /** List of doctor IDs that have GREEN_CARD service enabled. If not provided, all doctors can receive requests. */
+  doctorsWithGreenCardServiceIds?: string[];
 }
 
 // Group items by schedule for display
@@ -49,6 +51,7 @@ export function PhysicalGreenCard({
   greenCard,
   onRequestPrescription,
   checkupSchedules = [],
+  doctorsWithGreenCardServiceIds,
 }: PhysicalGreenCardProps) {
   const activeItems = greenCard.items
     .filter((item) => item.isActive)
@@ -170,28 +173,39 @@ export function PhysicalGreenCard({
                             </td>
                             {/* Solicitud */}
                             <td className="px-2 py-2 text-center">
-                              {onRequestPrescription && !item.hasPendingPrescription && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => onRequestPrescription(item)}
-                                  className="h-7 px-2 text-xs bg-white/70 hover:bg-white text-gray-800 border border-gray-500 font-medium"
-                                >
-                                  <FileText className="h-3 w-3 mr-1" />
-                                  Pedir
-                                </Button>
-                              )}
-                              {item.hasPendingPrescription && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] bg-amber-100 text-amber-800 border border-amber-400"
-                                >
-                                  Pendiente
-                                </Badge>
-                              )}
-                              {!onRequestPrescription && !item.hasPendingPrescription && (
-                                <span className="text-gray-400">-</span>
-                              )}
+                              {(() => {
+                                // Check if doctor has GREEN_CARD service enabled
+                                const doctorHasService = !doctorsWithGreenCardServiceIds ||
+                                  doctorsWithGreenCardServiceIds.includes(item.doctorUserId);
+                                const canRequest = onRequestPrescription &&
+                                  !item.hasPendingPrescription &&
+                                  doctorHasService;
+
+                                if (canRequest) {
+                                  return (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => onRequestPrescription(item)}
+                                      className="h-7 px-2 text-xs bg-white/70 hover:bg-white text-gray-800 border border-gray-500 font-medium"
+                                    >
+                                      <FileText className="h-3 w-3 mr-1" />
+                                      Pedir
+                                    </Button>
+                                  );
+                                }
+                                if (item.hasPendingPrescription) {
+                                  return (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] bg-amber-100 text-amber-800 border border-amber-400"
+                                    >
+                                      Pendiente
+                                    </Badge>
+                                  );
+                                }
+                                return <span className="text-gray-400">-</span>;
+                              })()}
                             </td>
                           </tr>
                         ))}

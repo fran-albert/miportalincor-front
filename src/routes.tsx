@@ -64,6 +64,7 @@ import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Reques
 import MyCheckupsPage from "./pages/protected/My-Checkups/page";
 import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
+import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 
 function App() {
   return (
@@ -188,6 +189,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <SettingsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Servicios Médicos */}
+          <Route
+            path="/admin/servicios-medicos"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <DoctorServicesPage />
               </Private_Routes>
             }
           />

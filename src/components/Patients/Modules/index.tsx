@@ -1,6 +1,7 @@
 import useUserRole from "@/hooks/useRoles";
 import { Stethoscope, Calendar, FileImage, ClipboardPlus, CalendarCheck, Pill } from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
+import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 interface PatientModulesProps {
   onHistoriaClinicaClick: () => void;
@@ -22,6 +23,7 @@ export default function PatientModules({
   totalStudies,
 }: PatientModulesProps) {
   const { isDoctor } = useUserRole();
+  const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
 
   const modules = [
     {
@@ -46,7 +48,7 @@ export default function PatientModules({
       icon: Pill,
       gradient: "bg-gradient-to-br from-green-500 to-green-600",
       onClick: onCartonVerdeClick || (() => {}),
-      visible: isDoctor,
+      visible: isDoctor && hasGreenCardService,
     },
     {
       title: "Estudios e Imágenes",

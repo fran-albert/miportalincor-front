@@ -10,21 +10,30 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircle, Save, AlertCircle } from "lucide-react";
+import { MessageCircle, Save, AlertCircle, Lock } from "lucide-react";
 import {
   useDoctorNotificationSettings,
   useCreateDoctorNotificationSettings,
   useUpdateDoctorNotificationSettings,
 } from "@/hooks/Doctor-Notification-Settings/useDoctorNotificationSettings";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { useCheckDoctorService } from "@/hooks/Doctor-Services/useDoctorServices";
+import { ServiceType } from "@/types/Doctor-Services/DoctorServices";
 
 interface DoctorNotificationSettingsCardProps {
   doctorId: number;
+  doctorUserId: string;
 }
 
 export function DoctorNotificationSettingsCard({
   doctorId,
+  doctorUserId,
 }: DoctorNotificationSettingsCardProps) {
+  // Check if doctor has WHATSAPP_APPOINTMENTS service enabled
+  const { isServiceEnabled: hasWhatsAppService, isLoading: isLoadingService } = useCheckDoctorService({
+    doctorUserId,
+    serviceType: ServiceType.WHATSAPP_APPOINTMENTS,
+  });
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
   const [confirmationEnabled, setConfirmationEnabled] = useState(true);
   const [reminder24hEnabled, setReminder24hEnabled] = useState(true);
@@ -123,7 +132,7 @@ export function DoctorNotificationSettingsCard({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingService) {
     return (
       <Card>
         <CardHeader>
@@ -154,6 +163,7 @@ export function DoctorNotificationSettingsCard({
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const isDisabled = !hasWhatsAppService;
 
   return (
     <Card>
@@ -171,8 +181,26 @@ export function DoctorNotificationSettingsCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Service Not Enabled Warning */}
+        {!hasWhatsAppService && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Lock className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  Servicio no habilitado
+                </p>
+                <p className="text-sm text-amber-700 mt-1">
+                  El servicio de WhatsApp para turnos no está habilitado para este médico.
+                  Contacte al administrador para activar este servicio desde el panel de Servicios Médicos.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Master Toggle - WhatsApp Enabled */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className={`flex items-center justify-between p-4 rounded-lg ${hasWhatsAppService ? 'bg-gray-50' : 'bg-gray-100 opacity-60'}`}>
           <div className="space-y-1">
             <Label htmlFor="whatsappEnabled" className="text-base font-medium">
               Habilitar notificaciones WhatsApp
@@ -185,11 +213,12 @@ export function DoctorNotificationSettingsCard({
             id="whatsappEnabled"
             checked={whatsappEnabled}
             onCheckedChange={setWhatsappEnabled}
+            disabled={isDisabled}
           />
         </div>
 
         {/* Confirmation Notification */}
-        <div className="flex items-center justify-between p-3 border rounded-lg">
+        <div className={`flex items-center justify-between p-3 border rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
           <div className="space-y-1">
             <Label htmlFor="confirmationEnabled" className="text-sm font-medium">
               Confirmacion de turno
@@ -202,12 +231,12 @@ export function DoctorNotificationSettingsCard({
             id="confirmationEnabled"
             checked={confirmationEnabled}
             onCheckedChange={setConfirmationEnabled}
-            disabled={!whatsappEnabled}
+            disabled={isDisabled || !whatsappEnabled}
           />
         </div>
 
         {/* 24h Reminder Notification */}
-        <div className="flex items-center justify-between p-3 border rounded-lg">
+        <div className={`flex items-center justify-between p-3 border rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
           <div className="space-y-1">
             <Label htmlFor="reminder24hEnabled" className="text-sm font-medium">
               Recordatorio 24 horas antes
@@ -220,12 +249,12 @@ export function DoctorNotificationSettingsCard({
             id="reminder24hEnabled"
             checked={reminder24hEnabled}
             onCheckedChange={setReminder24hEnabled}
-            disabled={!whatsappEnabled}
+            disabled={isDisabled || !whatsappEnabled}
           />
         </div>
 
         {/* Cancellation Notification */}
-        <div className="flex items-center justify-between p-3 border rounded-lg">
+        <div className={`flex items-center justify-between p-3 border rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
           <div className="space-y-1">
             <Label htmlFor="cancellationEnabled" className="text-sm font-medium">
               Aviso de cancelacion
@@ -238,12 +267,12 @@ export function DoctorNotificationSettingsCard({
             id="cancellationEnabled"
             checked={cancellationEnabled}
             onCheckedChange={setCancellationEnabled}
-            disabled={!whatsappEnabled}
+            disabled={isDisabled || !whatsappEnabled}
           />
         </div>
 
         {/* Info Box */}
-        {!settings && (
+        {!settings && hasWhatsAppService && (
           <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4">
             <p className="text-sm text-blue-800">
               <strong>Nota:</strong> Este medico aun no tiene configuracion de
@@ -256,7 +285,7 @@ export function DoctorNotificationSettingsCard({
         <div className="flex justify-end pt-4 border-t">
           <Button
             onClick={handleSave}
-            disabled={!hasChanges || isPending}
+            disabled={isDisabled || !hasChanges || isPending}
             className="bg-green-600 hover:bg-green-700"
           >
             {isPending ? (
