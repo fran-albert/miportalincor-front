@@ -7,7 +7,6 @@ import {
   Download,
   Clock,
   CalendarDays,
-  RefreshCw,
   History,
   CheckCircle2,
   XCircle,
@@ -46,12 +45,7 @@ const MyPrescriptionRequestsPage = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   // Green Card data (single card per patient)
-  const {
-    greenCard,
-    isLoading: isLoadingCard,
-    refetch,
-    isFetching,
-  } = useMyGreenCard();
+  const { greenCard, isLoading: isLoadingCard } = useMyGreenCard();
   const { generatePDF, isGenerating } = useGreenCardPDF();
 
   // Prescription Requests history
@@ -67,10 +61,6 @@ const MyPrescriptionRequestsPage = () => {
     if (greenCard) {
       await generatePDF({ greenCard });
     }
-  };
-
-  const handleRefresh = () => {
-    refetch();
   };
 
   const handleRequestPrescription = (item: GreenCardItem) => {
@@ -215,31 +205,18 @@ const MyPrescriptionRequestsPage = () => {
             <Pill className="h-5 w-5 text-green-600" />
             Mi Cartón Verde
           </h2>
-          <div className="flex items-center gap-2">
+          {greenCard && greenCard.items.length > 0 && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              onClick={handleRefresh}
-              disabled={isFetching}
+              onClick={handleDownloadPDF}
+              disabled={isGenerating}
+              className="bg-green-700 hover:bg-green-800"
             >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
-              />
-              Actualizar
+              <Download className="h-4 w-4 mr-2" />
+              {isGenerating ? "Generando..." : "Descargar PDF"}
             </Button>
-            {greenCard && greenCard.items.length > 0 && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleDownloadPDF}
-                disabled={isGenerating}
-                className="bg-green-700 hover:bg-green-800"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generando..." : "Descargar PDF"}
-              </Button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Content */}

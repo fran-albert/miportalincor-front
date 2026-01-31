@@ -57,7 +57,7 @@ const getStatusBadge = (status: CheckupStatus) => {
   }
 };
 
-const formatDueDate = (nextDueDate: string, daysUntilDue: number) => {
+const formatDueDate = (nextDueDate: string) => {
   const dueDate = new Date(nextDueDate);
   const formattedDate = format(dueDate, "dd/MM/yyyy", { locale: es });
   const relativeTime = formatDistanceToNow(dueDate, { addSuffix: true, locale: es });
@@ -161,7 +161,7 @@ export function UpcomingCheckupsCard() {
                     )}
                   </div>
                   <div className="mt-1 text-xs text-gray-400">
-                    Próximo: {formatDueDate(schedule.nextDueDate, schedule.daysUntilDue)}
+                    Próximo: {formatDueDate(schedule.nextDueDate)}
                   </div>
                 </div>
               </div>
