@@ -2,11 +2,15 @@ import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { FileText } from "lucide-react";
+import { FileText, CalendarClock } from "lucide-react";
+import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface PhysicalGreenCardProps {
   greenCard: GreenCard;
   onRequestPrescription?: (item: GreenCardItem) => void;
+  checkupSchedules?: PatientCheckupSchedule[];
 }
 
 // Group items by schedule for display
@@ -32,15 +36,28 @@ const getScheduleOrder = (schedule: string) => {
   return 200; // Other schedules at the end
 };
 
+const formatMonthYear = (dateStr: string) => {
+  try {
+    const date = new Date(dateStr);
+    return format(date, "MMMM yyyy", { locale: es });
+  } catch {
+    return dateStr;
+  }
+};
+
 export function PhysicalGreenCard({
   greenCard,
   onRequestPrescription,
+  checkupSchedules = [],
 }: PhysicalGreenCardProps) {
   const activeItems = greenCard.items
     .filter((item) => item.isActive)
     .sort((a, b) => getScheduleOrder(a.schedule) - getScheduleOrder(b.schedule));
 
   const suspendedItems = greenCard.items.filter((item) => !item.isActive);
+
+  // Filter active checkup schedules
+  const activeCheckups = checkupSchedules.filter((s) => s.isActive);
 
   // Calculate empty rows to fill the table
   const minRows = 6;
@@ -213,6 +230,31 @@ export function PhysicalGreenCard({
                         className="text-sm text-gray-600 line-through opacity-70"
                       >
                         {item.medicationName} - {item.dosage}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Checkup Schedules Section */}
+              {activeCheckups.length > 0 && (
+                <div className="mt-4 pt-3 border-t-2 border-gray-600">
+                  <div className="text-sm text-gray-700 mb-3 font-bold uppercase tracking-wide flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4" />
+                    Próximos Chequeos
+                  </div>
+                  <div className="space-y-2">
+                    {activeCheckups.map((schedule) => (
+                      <div
+                        key={schedule.id}
+                        className="flex items-center justify-between bg-white/30 rounded px-3 py-2"
+                      >
+                        <span className="text-sm font-medium text-gray-800">
+                          {schedule.checkupType?.name || "Chequeo"}
+                        </span>
+                        <span className="text-sm text-gray-700 capitalize">
+                          {formatMonthYear(schedule.nextDueDate)}
+                        </span>
                       </div>
                     ))}
                   </div>

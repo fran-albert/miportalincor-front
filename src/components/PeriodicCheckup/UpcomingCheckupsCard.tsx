@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format, formatDistanceToNow, isPast, differenceInDays } from "date-fns";
+import { format, isPast, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarClock, AlertCircle, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,12 +57,11 @@ const getStatusBadge = (status: CheckupStatus) => {
   }
 };
 
-const formatDueDate = (nextDueDate: string) => {
+const formatMonthYear = (nextDueDate: string) => {
   const dueDate = new Date(nextDueDate);
-  const formattedDate = format(dueDate, "dd/MM/yyyy", { locale: es });
-  const relativeTime = formatDistanceToNow(dueDate, { addSuffix: true, locale: es });
-
-  return `${formattedDate} (${relativeTime})`;
+  // Capitalize first letter of month
+  const formatted = format(dueDate, "MMMM yyyy", { locale: es });
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
 export function UpcomingCheckupsCard() {
@@ -148,8 +147,8 @@ export function UpcomingCheckupsCard() {
                       {schedule.checkupType.specialityName}
                     </div>
                   )}
-                  <div className="mt-1 text-xs text-gray-400">
-                    Próximo: {formatDueDate(schedule.nextDueDate)}
+                  <div className="mt-1 text-sm text-gray-600">
+                    Próximo chequeo: {formatMonthYear(schedule.nextDueDate)}
                   </div>
                 </div>
               </div>

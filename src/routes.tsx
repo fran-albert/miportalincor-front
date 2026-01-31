@@ -61,6 +61,7 @@ import CreateSecretaryPage from "./pages/protected/Secretary/Create";
 import AuditPage from "./pages/protected/Audit";
 import SettingsPage from "./pages/protected/Settings";
 import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Requests/page";
+import MyCheckupsPage from "./pages/protected/My-Checkups/page";
 import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 
@@ -237,6 +238,14 @@ function App() {
           <Route
             path="/mi-medicacion"
             element={<Navigate to="/mis-solicitudes-recetas?tab=medicacion" replace />}
+          />
+          <Route
+            path="/mis-chequeos"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyCheckupsPage />
+              </Private_Routes>
+            }
           />
 
           {/* Solicitudes de Recetas - Médico */}

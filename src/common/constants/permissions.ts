@@ -49,6 +49,9 @@ export const PERMISSIONS = {
 
   // Cartón Verde (Medicación)
   MY_GREEN_CARDS: [Role.PACIENTE],
+
+  // Chequeos Periódicos
+  MY_CHECKUPS: [Role.PACIENTE],
 } as const;
 
 /**
@@ -63,6 +66,7 @@ export const STRICT_PERMISSIONS = [
   'MY_PRESCRIPTION_REQUESTS',
   'DOCTOR_PRESCRIPTION_REQUESTS',
   'MY_GREEN_CARDS',
+  'MY_CHECKUPS',
 ] as const;
 
 /**

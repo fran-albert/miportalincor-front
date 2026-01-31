@@ -17,6 +17,7 @@ import {
   TestTube,
   Calendar,
   CalendarCheck,
+  CalendarClock,
   Shield,
   UserCircle,
   Stethoscope,
@@ -125,6 +126,13 @@ const navigationItems = [
     url: "/mis-solicitudes-recetas",
     icon: Pill,
     allowedRoles: PERMISSIONS.MY_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
+  },
+  {
+    title: "Mis Chequeos",
+    url: "/mis-chequeos",
+    icon: CalendarClock,
+    allowedRoles: PERMISSIONS.MY_CHECKUPS,
     strictRoles: true,
   },
   {

@@ -31,6 +31,7 @@ import { UpcomingCheckupsCard } from "@/components/PeriodicCheckup";
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
+import { useMyCheckupSchedules } from "@/hooks/Periodic-Checkup";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import {
   PrescriptionRequest,
@@ -47,6 +48,16 @@ const MyPrescriptionRequestsPage = () => {
   // Green Card data (single card per patient)
   const { greenCard, isLoading: isLoadingCard } = useMyGreenCard();
   const { generatePDF, isGenerating } = useGreenCardPDF();
+
+  // Checkup schedules for the patient
+  const { schedules: checkupSchedules } = useMyCheckupSchedules();
+
+  // Filter cardiovascular checkups for the green card
+  const cardiovascularCheckups = checkupSchedules.filter(
+    (s) => s.checkupType?.specialityName?.toLowerCase().includes("cardio") ||
+           s.checkupType?.name?.toLowerCase().includes("cardio") ||
+           s.checkupType?.name?.toLowerCase().includes("cardiovascular")
+  );
 
   // Prescription Requests history
   const { data: prescriptionRequests = [], isLoading: isLoadingRequests } =
@@ -231,6 +242,7 @@ const MyPrescriptionRequestsPage = () => {
           <PhysicalGreenCard
             greenCard={greenCard}
             onRequestPrescription={handleRequestPrescription}
+            checkupSchedules={cardiovascularCheckups}
           />
         ) : (
           <Card className="border-dashed border-2 border-green-300">
@@ -250,7 +262,7 @@ const MyPrescriptionRequestsPage = () => {
         )}
       </div>
 
-      {/* Upcoming Checkups Section */}
+      {/* Upcoming Checkups Section (all checkups) */}
       <UpcomingCheckupsCard />
 
       {/* Prescription Requests History */}
