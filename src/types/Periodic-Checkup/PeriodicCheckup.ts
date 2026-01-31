@@ -47,6 +47,7 @@ export interface CreatePatientScheduleDto {
   checkupTypeId: number;
   doctorId?: number;
   lastCheckupDate?: string;
+  nextDueDate?: string;
   notes?: string;
 }
 
