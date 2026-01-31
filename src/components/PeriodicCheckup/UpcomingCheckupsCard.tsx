@@ -65,12 +65,6 @@ const formatDueDate = (nextDueDate: string) => {
   return `${formattedDate} (${relativeTime})`;
 };
 
-const formatFrequency = (months: number) => {
-  if (months === 1) return "Cada mes";
-  if (months === 12) return "Cada año";
-  return `Cada ${months} meses`;
-};
-
 export function UpcomingCheckupsCard() {
   const { schedules, isLoading, isError } = useMyCheckupSchedules();
 
@@ -149,17 +143,11 @@ export function UpcomingCheckupsCard() {
                     </span>
                     {getStatusBadge(schedule.status)}
                   </div>
-                  <div className="mt-1 text-sm text-gray-500">
-                    {schedule.checkupType?.specialityName && (
-                      <span>{schedule.checkupType.specialityName}</span>
-                    )}
-                    {schedule.checkupType?.frequencyMonths && (
-                      <span className="text-gray-400">
-                        {schedule.checkupType?.specialityName ? " · " : ""}
-                        {formatFrequency(schedule.checkupType.frequencyMonths)}
-                      </span>
-                    )}
-                  </div>
+                  {schedule.checkupType?.specialityName && (
+                    <div className="mt-1 text-sm text-gray-500">
+                      {schedule.checkupType.specialityName}
+                    </div>
+                  )}
                   <div className="mt-1 text-xs text-gray-400">
                     Próximo: {formatDueDate(schedule.nextDueDate)}
                   </div>
