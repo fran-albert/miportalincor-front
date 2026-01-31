@@ -1,13 +1,14 @@
 import { usePatient } from "@/hooks/Patient/usePatient";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { PatientCardSkeleton } from "@/components/Skeleton/Patient";
 import { GreenCardView } from "@/components/Green-Card/GreenCardView";
 import { useMyCardForPatient } from "@/hooks/Green-Card/useGreenCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pill } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
+import { PageHeader } from "@/components/PageHeader";
 
 const PatientGreenCardPage = () => {
   const params = useParams();
@@ -17,7 +18,6 @@ const PatientGreenCardPage = () => {
   const id = slugParts[slugParts.length - 1];
 
   const { isDoctor } = useUserRole();
-  const navigate = useNavigate();
 
   const {
     patient,
@@ -38,6 +38,16 @@ const PatientGreenCardPage = () => {
   });
 
   const isFirstLoadingPatient = isLoadingPatient && !patient;
+
+  const breadcrumbItems = [
+    { label: "Inicio", href: "/inicio" },
+    { label: "Pacientes", href: "/pacientes" },
+    {
+      label: patient ? `${patient.firstName} ${patient.lastName}` : "Paciente",
+      href: `/pacientes/${slug}`,
+    },
+    { label: "Cartón Verde" },
+  ];
 
   if (isFirstLoadingPatient) {
     return (
@@ -68,24 +78,20 @@ const PatientGreenCardPage = () => {
       </Helmet>
 
       <div className="space-y-6 p-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Volver
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Cartón Verde - {patient?.firstName} {patient?.lastName}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Gestiona la medicación habitual del paciente
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          breadcrumbItems={breadcrumbItems}
+          title={`Cartón Verde - ${patient?.firstName} ${patient?.lastName}`}
+          description="Gestiona la medicación habitual del paciente"
+          icon={<Pill className="h-6 w-6" />}
+          actions={
+            <Link to={`/pacientes/${slug}`}>
+              <Button variant="outline" className="shadow-sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Button>
+            </Link>
+          }
+        />
 
         {patientError && (
           <Card className="border-red-200 bg-red-50">

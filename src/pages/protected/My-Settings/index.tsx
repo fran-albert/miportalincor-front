@@ -4,10 +4,12 @@ import { PageHeader } from "@/components/PageHeader";
 import { MyAvailabilities, MyAbsences, MyPrescriptionSettings } from "@/components/MySettings";
 import { Settings, Calendar, CalendarOff, FileText } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
+import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 export default function MySettingsPage() {
   const { session } = useUserRole();
   const doctorId = typeof session?.id === 'string' ? parseInt(session.id, 10) : (session?.id ?? 0);
+  const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -37,10 +39,12 @@ export default function MySettingsPage() {
             <CalendarOff className="h-4 w-4" />
             Mis Ausencias
           </TabsTrigger>
-          <TabsTrigger value="prescriptions" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Recetas
-          </TabsTrigger>
+          {hasGreenCardService && (
+            <TabsTrigger value="prescriptions" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Recetas
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="availabilities" className="mt-6">
@@ -51,9 +55,11 @@ export default function MySettingsPage() {
           <MyAbsences doctorId={doctorId} />
         </TabsContent>
 
-        <TabsContent value="prescriptions" className="mt-6">
-          <MyPrescriptionSettings />
-        </TabsContent>
+        {hasGreenCardService && (
+          <TabsContent value="prescriptions" className="mt-6">
+            <MyPrescriptionSettings />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

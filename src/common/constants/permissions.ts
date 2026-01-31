@@ -31,6 +31,7 @@ export const PERMISSIONS = {
   ROLE_MANAGEMENT: [Role.ADMINISTRADOR],
   ASSIGN_ROLES: [Role.ADMINISTRADOR],
   AUDIT: [Role.ADMINISTRADOR],
+  DOCTOR_SERVICES: [Role.ADMINISTRADOR],
 
   // Perfil y Estudios Personales
   MY_PROFILE: [Role.PACIENTE, Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
@@ -49,6 +50,9 @@ export const PERMISSIONS = {
 
   // Cartón Verde (Medicación)
   MY_GREEN_CARDS: [Role.PACIENTE],
+
+  // Chequeos Periódicos
+  MY_CHECKUPS: [Role.PACIENTE],
 } as const;
 
 /**
@@ -63,6 +67,7 @@ export const STRICT_PERMISSIONS = [
   'MY_PRESCRIPTION_REQUESTS',
   'DOCTOR_PRESCRIPTION_REQUESTS',
   'MY_GREEN_CARDS',
+  'MY_CHECKUPS',
 ] as const;
 
 /**

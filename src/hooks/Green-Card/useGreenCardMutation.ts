@@ -87,6 +87,10 @@ export const useGreenCardMutations = () => {
     onSuccess: () => {
       // Invalidate prescription requests to update the history
       queryClient.invalidateQueries({ queryKey: ["prescriptionRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-prescription-requests"] });
+      // Invalidate green card to update pending status on items
+      queryClient.invalidateQueries({ queryKey: ["my-green-card"] });
+      queryClient.invalidateQueries({ queryKey: ["my-card-summary"] });
     },
   });
 

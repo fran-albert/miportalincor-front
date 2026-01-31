@@ -4,6 +4,7 @@ export { createCheckupType, updateCheckupType, deleteCheckupType } from './check
 
 // Patient Schedules
 export { getPatientSchedules, getScheduleById } from './get-patient-schedules.action';
+export { getMyCheckupSchedules } from './get-my-checkup-schedules.action';
 export {
   assignCheckupToPatient,
   updatePatientSchedule,

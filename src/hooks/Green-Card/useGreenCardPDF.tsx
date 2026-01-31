@@ -3,9 +3,9 @@ import { pdf } from "@react-pdf/renderer";
 import { GreenCardPdfDocument } from "@/components/Green-Card/Pdf";
 import { GreenCard } from "@/types/Green-Card/GreenCard";
 
-// Logo URL de INCOR
+// Logo URL de INCOR (logo redondo usado en el cartón verde)
 const INCOR_LOGO_URL =
-  "https://res.cloudinary.com/dfoqki8kt/image/upload/v1740059697/uboivjuv41dkkdeaqhfa.png";
+  "https://res.cloudinary.com/dfoqki8kt/image/upload/v1748058948/bligwub9dzzcxzm4ovgv.png";
 
 interface UseGreenCardPDFProps {
   greenCard: GreenCard;

@@ -7,7 +7,6 @@ import {
   Download,
   Clock,
   CalendarDays,
-  RefreshCw,
   History,
   CheckCircle2,
   XCircle,
@@ -31,6 +30,8 @@ import { RequestPrescriptionModal } from "@/components/Green-Card/RequestPrescri
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
+import { useMyCheckupSchedules } from "@/hooks/Periodic-Checkup";
+import { useDoctorsWithGreenCard } from "@/hooks/Doctor-Services/useDoctorServices";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import {
   PrescriptionRequest,
@@ -45,17 +46,26 @@ const MyPrescriptionRequestsPage = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   // Green Card data (single card per patient)
-  const {
-    greenCard,
-    isLoading: isLoadingCard,
-    refetch,
-    isFetching,
-  } = useMyGreenCard();
+  const { greenCard, isLoading: isLoadingCard } = useMyGreenCard();
   const { generatePDF, isGenerating } = useGreenCardPDF();
+
+  // Checkup schedules for the patient
+  const { schedules: checkupSchedules } = useMyCheckupSchedules();
+
+  // Filter cardiovascular checkups for the green card
+  const cardiovascularCheckups = checkupSchedules.filter(
+    (s) => s.checkupType?.specialityName?.toLowerCase().includes("cardio") ||
+           s.checkupType?.name?.toLowerCase().includes("cardio") ||
+           s.checkupType?.name?.toLowerCase().includes("cardiovascular")
+  );
 
   // Prescription Requests history
   const { data: prescriptionRequests = [], isLoading: isLoadingRequests } =
     useMyPrescriptionRequests();
+
+  // Fetch doctors with GREEN_CARD service enabled
+  const { doctorsWithService } = useDoctorsWithGreenCard();
+  const doctorsWithGreenCardServiceIds = doctorsWithService.map((d) => d.doctorUserId);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -66,10 +76,6 @@ const MyPrescriptionRequestsPage = () => {
     if (greenCard) {
       await generatePDF({ greenCard });
     }
-  };
-
-  const handleRefresh = () => {
-    refetch();
   };
 
   const handleRequestPrescription = (item: GreenCardItem) => {
@@ -214,31 +220,18 @@ const MyPrescriptionRequestsPage = () => {
             <Pill className="h-5 w-5 text-green-600" />
             Mi Cartón Verde
           </h2>
-          <div className="flex items-center gap-2">
+          {greenCard && greenCard.items.length > 0 && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              onClick={handleRefresh}
-              disabled={isFetching}
+              onClick={handleDownloadPDF}
+              disabled={isGenerating}
+              className="bg-green-700 hover:bg-green-800"
             >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
-              />
-              Actualizar
+              <Download className="h-4 w-4 mr-2" />
+              {isGenerating ? "Generando..." : "Descargar PDF"}
             </Button>
-            {greenCard && greenCard.items.length > 0 && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleDownloadPDF}
-                disabled={isGenerating}
-                className="bg-green-700 hover:bg-green-800"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generando..." : "Descargar PDF"}
-              </Button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Content */}
@@ -253,6 +246,8 @@ const MyPrescriptionRequestsPage = () => {
           <PhysicalGreenCard
             greenCard={greenCard}
             onRequestPrescription={handleRequestPrescription}
+            checkupSchedules={cardiovascularCheckups}
+            doctorsWithGreenCardServiceIds={doctorsWithGreenCardServiceIds}
           />
         ) : (
           <Card className="border-dashed border-2 border-green-300">

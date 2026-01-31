@@ -332,7 +332,7 @@ export function GreenCardItemFormModal({
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cantidad (envases)</FormLabel>
+                    <FormLabel>Cantidad</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej: 2, 3 cajas" {...field} />
                     </FormControl>

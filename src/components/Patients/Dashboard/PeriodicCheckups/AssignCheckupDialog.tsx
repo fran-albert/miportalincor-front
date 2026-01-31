@@ -29,6 +29,25 @@ interface AssignCheckupDialogProps {
   existingSchedules: PatientCheckupSchedule[];
 }
 
+const MONTHS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+];
+
+// Generate years: current year + next 5 years
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 6 }, (_, i) => String(currentYear + i));
+
 export function AssignCheckupDialog({
   open,
   onOpenChange,
@@ -40,6 +59,8 @@ export function AssignCheckupDialog({
   const { showSuccess, showError } = useToastContext();
 
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
   const [notes, setNotes] = useState("");
 
   // Filter out already assigned checkup types
@@ -50,33 +71,56 @@ export function AssignCheckupDialog({
 
   const handleSubmit = async () => {
     if (!selectedTypeId) {
-      showError("Selecciona un tipo de chequeo");
+      showError("Seleccioná un tipo de chequeo");
       return;
     }
+
+    if (!selectedMonth || !selectedYear) {
+      showError("Seleccioná el mes y año del próximo chequeo");
+      return;
+    }
+
+    // Create nextDueDate as the first day of the selected month
+    const nextDueDate = `${selectedYear}-${selectedMonth}-01`;
 
     try {
       await assignCheckup({
         patientId: Number(patientId),
         checkupTypeId: Number(selectedTypeId),
+        nextDueDate,
         notes: notes || undefined,
       });
       showSuccess("Chequeo asignado correctamente");
       onOpenChange(false);
-      setSelectedTypeId("");
-      setNotes("");
-    } catch (error) {
+      resetForm();
+    } catch {
       showError("Error al asignar el chequeo");
     }
   };
 
+  const resetForm = () => {
+    setSelectedTypeId("");
+    setSelectedMonth("");
+    setSelectedYear("");
+    setNotes("");
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      resetForm();
+    }
+    onOpenChange(isOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Asignar Chequeo Periódico</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Checkup Type */}
           <div className="space-y-2">
             <Label>Tipo de Chequeo</Label>
             {isLoadingTypes ? (
@@ -98,9 +142,11 @@ export function AssignCheckupDialog({
                     <SelectItem key={type.id} value={String(type.id)}>
                       <div className="flex flex-col">
                         <span>{type.name}</span>
-                        <span className="text-xs text-gray-500">
-                          {type.specialityName} • Cada {type.frequencyMonths} meses
-                        </span>
+                        {type.specialityName && (
+                          <span className="text-xs text-gray-500">
+                            {type.specialityName}
+                          </span>
+                        )}
                       </div>
                     </SelectItem>
                   ))}
@@ -109,6 +155,42 @@ export function AssignCheckupDialog({
             )}
           </div>
 
+          {/* Month/Year Selection */}
+          <div className="space-y-2">
+            <Label>Próximo chequeo</Label>
+            <div className="flex gap-2">
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Mes" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="Año" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-gray-500">
+              Seleccioná el mes y año en que el paciente debería realizarse el chequeo
+            </p>
+          </div>
+
+          {/* Notes */}
           <div className="space-y-2">
             <Label>Notas (opcional)</Label>
             <Textarea
@@ -121,12 +203,12 @@ export function AssignCheckupDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !selectedTypeId || availableTypes.length === 0}
+            disabled={isPending || !selectedTypeId || !selectedMonth || !selectedYear || availableTypes.length === 0}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Asignar

@@ -17,6 +17,7 @@ import {
   TestTube,
   Calendar,
   CalendarCheck,
+  CalendarClock,
   Shield,
   UserCircle,
   Stethoscope,
@@ -33,6 +34,7 @@ import {
   Clock,
   FileText,
   Pill,
+  CreditCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -48,6 +50,7 @@ import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
+import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 const navigationItems = [
   {
@@ -128,6 +131,13 @@ const navigationItems = [
     strictRoles: true,
   },
   {
+    title: "Mis Chequeos",
+    url: "/mis-chequeos",
+    icon: CalendarClock,
+    allowedRoles: PERMISSIONS.MY_CHECKUPS,
+    strictRoles: true,
+  },
+  {
     title: "Solicitudes de Recetas",
     url: "/solicitudes-recetas",
     icon: FileText,
@@ -203,6 +213,12 @@ const systemItems = [
     icon: ClipboardList,
     allowedRoles: PERMISSIONS.AUDIT,
   },
+  {
+    title: "Servicios Médicos",
+    url: "/admin/servicios-medicos",
+    icon: CreditCard,
+    allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
+  },
 ];
 
 export function AppSidebar() {
@@ -214,14 +230,24 @@ export function AppSidebar() {
   const userRoles = session?.role || [];
   const isDoctor = userRoles.includes("Medico");
 
-  // Get pending prescription count for doctors
+  // Check if doctor has GREEN_CARD service enabled
+  const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
+
+  // Get pending prescription count for doctors (only if they have GREEN_CARD service)
   const { pendingCount } = usePrescriptionNotifications({
-    enabled: isDoctor,
+    enabled: isDoctor && hasGreenCardService,
     showToasts: false, // Toasts are handled in DashboardLayout
   });
 
   // Filtrar items del menú según roles del usuario
-  const filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
+  let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
+
+  // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
+  if (isDoctor && !hasGreenCardService) {
+    filteredNavigationItems = filteredNavigationItems.filter(
+      (item) => item.url !== "/solicitudes-recetas"
+    );
+  }
   const filteredReportsItems = filterMenuItems(reportsItems, userRoles);
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
