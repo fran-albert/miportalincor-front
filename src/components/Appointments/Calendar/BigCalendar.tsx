@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Calendar, dateFnsLocalizer, View, SlotInfo } from "react-big-calendar";
+import { Calendar, dateFnsLocalizer, View, SlotInfo, EventProps } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth, endOfWeek, startOfDay, endOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -78,6 +78,30 @@ const messages = {
   showMore: (total: number) => `+ ${total} más`,
 };
 
+// Custom Event component for day/week views - shows extra patient info
+const CustomEvent = ({ event }: EventProps<CalendarEvent>) => {
+  const { type, patientDni, healthInsurance, affiliationNumber } = event.resource;
+
+  // For available or blocked slots, just show the title
+  if (type === "available" || type === "blocked") {
+    return <span>{event.title}</span>;
+  }
+
+  // Build info parts
+  const parts = [event.title];
+  if (patientDni) parts.push(`DNI: ${patientDni}`);
+  if (healthInsurance) {
+    parts.push(affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance);
+  }
+
+  // For appointments and overturns, show all info in one line
+  return (
+    <div className="font-medium truncate">
+      {parts.join(' - ')}
+    </div>
+  );
+};
+
 // Event type for the calendar
 interface CalendarEvent {
   id: number | string;
@@ -91,6 +115,10 @@ interface CalendarEvent {
     isGuest?: boolean;
     slotDate?: string;
     slotHour?: string;
+    // Extra info for day view
+    patientDni?: string;
+    healthInsurance?: string;
+    affiliationNumber?: string;
   };
 }
 
@@ -267,6 +295,13 @@ export const BigCalendar = ({
         ? `${apt.guestFirstName || ''} ${apt.guestLastName || ''}`
         : `${apt.patient?.firstName || ''} ${apt.patient?.lastName || ''}`;
 
+      // Get extra patient info
+      const patientDni = isGuestAppointment
+        ? apt.guestDocumentNumber
+        : apt.patient?.userName;
+      const healthInsurance = apt.patient?.healthInsuranceName;
+      const affiliationNumber = apt.patient?.affiliationNumber;
+
       // Add 🆕 emoji for guests
       const title = isGuestAppointment ? `🆕 ${patientName}` : patientName;
 
@@ -280,6 +315,9 @@ export const BigCalendar = ({
           data: apt,
           status: apt.status,
           isGuest: isGuestAppointment,
+          patientDni,
+          healthInsurance,
+          affiliationNumber,
         },
       };
     });
@@ -300,6 +338,9 @@ export const BigCalendar = ({
           type: "overturn" as const,
           data: ot,
           status: ot.status,
+          patientDni: ot.patient?.userName,
+          healthInsurance: ot.patient?.healthInsuranceName,
+          affiliationNumber: ot.patient?.affiliationNumber,
         },
       };
     });
@@ -719,6 +760,9 @@ export const BigCalendar = ({
                 dayHeaderFormat: (date: Date) => format(date, "EEEE d 'de' MMMM", { locale: es }),
                 dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
                   `${format(start, "d MMM", { locale: es })} - ${format(end, "d MMM", { locale: es })}`,
+              }}
+              components={{
+                event: CustomEvent,
               }}
             />
             {isLoading && (

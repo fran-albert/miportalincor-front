@@ -42,17 +42,26 @@ export const useAppointmentMutations = () => {
     mutationFn: ({ id, status }: { id: number; status: AppointmentStatus }) =>
       changeAppointmentStatus(id, status),
     onSuccess: (_, variables) => {
+      // Invalidar queries de appointments
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['appointment', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
-      // Sincronizar con la cola: cuando el estado cambia, la cola tambien se actualiza
+
+      // Sincronizar con la cola
       queryClient.invalidateQueries({ queryKey: ['queue'] });
       queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+
       // Sincronizar con la agenda del día del médico
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+
+      // Cuando se cancela un turno, el slot vuelve a estar disponible
+      queryClient.invalidateQueries({ queryKey: ['availableSlots'] });
+
+      // Invalidar slots bloqueados por si acaso
+      queryClient.invalidateQueries({ queryKey: ['blockedSlots'] });
     },
   });
 
@@ -65,6 +74,10 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
+      // Sincronizar con la cola y agenda
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 

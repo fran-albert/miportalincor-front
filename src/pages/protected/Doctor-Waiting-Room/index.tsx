@@ -386,11 +386,12 @@ const DoctorWaitingRoomPage = () => {
                     {item.patient && (
                       <Button
                         variant="outline"
-                        size="icon"
-                        className="border-green-300 hover:bg-green-100"
+                        size="lg"
+                        className="border-green-300 hover:bg-green-100 text-green-700 font-medium"
                         onClick={() => handleOpenHistoriaClinica(item)}
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-5 w-5 mr-2" />
+                        Historia Clínica
                       </Button>
                     )}
                   </div>
@@ -461,12 +462,12 @@ const DoctorWaitingRoomPage = () => {
                           <TableCell className="text-right">
                             {item.patient && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleOpenHistoriaClinica(item)}
                               >
                                 <FileText className="h-4 w-4 mr-1" />
-                                HC
+                                Historia Clínica
                               </Button>
                             )}
                           </TableCell>
