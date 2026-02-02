@@ -52,7 +52,7 @@ const DoctorServicesComponent = () => {
 
     return doctors.map((doctor) => ({
       ...doctor,
-      services: summaryMap.get(String(doctor.userId)) || {},
+      services: summaryMap.get(doctor.id) || {},
     }));
   }, [doctors, servicesSummary]);
 
@@ -178,7 +178,7 @@ const DoctorServicesComponent = () => {
                             }
                             onCheckedChange={() =>
                               handleToggle(
-                                String(doctor.userId),
+                                doctor.id,
                                 ServiceType.GREEN_CARD,
                                 doctor.services[ServiceType.GREEN_CARD]
                                   ?.enabled ?? false
@@ -197,7 +197,7 @@ const DoctorServicesComponent = () => {
                             }
                             onCheckedChange={() =>
                               handleToggle(
-                                String(doctor.userId),
+                                doctor.id,
                                 ServiceType.WHATSAPP_APPOINTMENTS,
                                 doctor.services[
                                   ServiceType.WHATSAPP_APPOINTMENTS
