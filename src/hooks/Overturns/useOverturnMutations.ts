@@ -15,6 +15,10 @@ export const useOverturnMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['overturns'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+      // Sincronizar con la cola y agenda
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 
@@ -22,10 +26,16 @@ export const useOverturnMutations = () => {
     mutationFn: ({ id, status }: { id: number; status: OverturnStatus }) =>
       changeOverturnStatus(id, status),
     onSuccess: (_, variables) => {
+      // Invalidar queries de overturns
       queryClient.invalidateQueries({ queryKey: ['overturns'] });
       queryClient.invalidateQueries({ queryKey: ['overturn', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+
+      // Sincronizar con la cola
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+
       // Sincronizar con la agenda del día del médico
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
@@ -37,6 +47,10 @@ export const useOverturnMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['overturns'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+      // Sincronizar con la cola y agenda
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 
