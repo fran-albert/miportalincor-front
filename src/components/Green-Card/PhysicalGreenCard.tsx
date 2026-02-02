@@ -15,27 +15,32 @@ interface PhysicalGreenCardProps {
   doctorsWithGreenCardServiceIds?: string[];
 }
 
-// Group items by schedule for display
-const SCHEDULE_ORDER = [
-  "Ayuno",
-  "Desayuno",
-  "Media mañana",
-  "Almuerzo",
-  "Merienda",
-  "Cena",
-  "Antes de dormir",
-];
+// Map text schedules to approximate hour for chronological ordering
+const SCHEDULE_HOURS: Record<string, number> = {
+  "ayuno": 6,
+  "desayuno": 8,
+  "media mañana": 10,
+  "almuerzo": 13,
+  "merienda": 17,
+  "cena": 21,
+  "antes de dormir": 23,
+};
 
 const getScheduleOrder = (schedule: string) => {
-  const index = SCHEDULE_ORDER.findIndex(
-    (s) => s.toLowerCase() === schedule.toLowerCase()
-  );
-  if (index !== -1) return index;
-  // For time-based schedules, sort by time
-  if (/^\d{2}:\d{2}$/.test(schedule)) {
-    return 100 + parseInt(schedule.split(":")[0]);
+  const lowerSchedule = schedule.toLowerCase();
+
+  // Check if it's a text-based schedule
+  if (SCHEDULE_HOURS[lowerSchedule] !== undefined) {
+    return SCHEDULE_HOURS[lowerSchedule] * 60; // Convert to minutes for finer sorting
   }
-  return 200; // Other schedules at the end
+
+  // For time-based schedules (HH:MM), convert to minutes
+  if (/^\d{2}:\d{2}$/.test(schedule)) {
+    const [hours, minutes] = schedule.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
+  return 9999; // Other schedules at the end
 };
 
 const formatMonthYear = (dateStr: string) => {

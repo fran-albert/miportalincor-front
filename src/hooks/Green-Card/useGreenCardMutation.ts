@@ -38,8 +38,15 @@ export const useGreenCardMutations = () => {
   const addItemMutation = useMutation({
     mutationFn: ({ cardId, dto }: { cardId: string; dto: CreateGreenCardItemDto }) =>
       addGreenCardItem(cardId, dto),
-    onSuccess: (greenCard) => {
-      invalidateGreenCardQueries(greenCard.id, greenCard.patientUserId);
+    onSuccess: (_, variables) => {
+      // Invalidate all green card queries since we only get the item back, not the full card
+      queryClient.invalidateQueries({ queryKey: ["green-card", variables.cardId] });
+      queryClient.invalidateQueries({ predicate: (query) =>
+        query.queryKey[0] === "patient-green-card-edit" ||
+        query.queryKey[0] === "patient-green-card"
+      });
+      queryClient.invalidateQueries({ queryKey: ["my-green-card"] });
+      queryClient.invalidateQueries({ queryKey: ["my-card-summary"] });
     },
   });
 
@@ -53,16 +60,30 @@ export const useGreenCardMutations = () => {
       itemId: string;
       dto: UpdateGreenCardItemDto;
     }) => updateGreenCardItem(cardId, itemId, dto),
-    onSuccess: (greenCard) => {
-      invalidateGreenCardQueries(greenCard.id, greenCard.patientUserId);
+    onSuccess: (_, variables) => {
+      // Invalidate all green card queries since we only get the item back, not the full card
+      queryClient.invalidateQueries({ queryKey: ["green-card", variables.cardId] });
+      queryClient.invalidateQueries({ predicate: (query) =>
+        query.queryKey[0] === "patient-green-card-edit" ||
+        query.queryKey[0] === "patient-green-card"
+      });
+      queryClient.invalidateQueries({ queryKey: ["my-green-card"] });
+      queryClient.invalidateQueries({ queryKey: ["my-card-summary"] });
     },
   });
 
   const toggleItemMutation = useMutation({
     mutationFn: ({ cardId, itemId }: { cardId: string; itemId: string }) =>
       toggleGreenCardItem(cardId, itemId),
-    onSuccess: (greenCard) => {
-      invalidateGreenCardQueries(greenCard.id, greenCard.patientUserId);
+    onSuccess: (_, variables) => {
+      // Invalidate all green card queries since we only get the item back, not the full card
+      queryClient.invalidateQueries({ queryKey: ["green-card", variables.cardId] });
+      queryClient.invalidateQueries({ predicate: (query) =>
+        query.queryKey[0] === "patient-green-card-edit" ||
+        query.queryKey[0] === "patient-green-card"
+      });
+      queryClient.invalidateQueries({ queryKey: ["my-green-card"] });
+      queryClient.invalidateQueries({ queryKey: ["my-card-summary"] });
     },
   });
 
