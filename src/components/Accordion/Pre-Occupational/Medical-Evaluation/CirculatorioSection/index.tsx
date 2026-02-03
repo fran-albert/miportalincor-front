@@ -29,7 +29,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
         varicesObs: '',
       });
     } else {
-      onChange("sinAlteraciones", checked ? true : undefined);
+      onChange("sinAlteraciones", checked);
     }
   };
 

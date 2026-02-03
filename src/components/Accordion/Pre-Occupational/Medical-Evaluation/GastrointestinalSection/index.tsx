@@ -33,7 +33,7 @@ export const GastrointestinalSection: React.FC<
         hemorroidesObs: '',
       });
     } else {
-      onChange("sinAlteraciones", checked ? true : undefined);
+      onChange("sinAlteraciones", checked);
     }
   };
 

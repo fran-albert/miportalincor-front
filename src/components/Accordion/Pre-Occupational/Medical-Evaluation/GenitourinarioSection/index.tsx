@@ -29,7 +29,7 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
         varicoceleObs: '',
       });
     } else {
-      onChange("sinAlteraciones", checked ? true : undefined);
+      onChange("sinAlteraciones", checked);
     }
   };
 

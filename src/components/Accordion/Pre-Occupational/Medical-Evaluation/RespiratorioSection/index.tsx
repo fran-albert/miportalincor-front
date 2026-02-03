@@ -26,7 +26,7 @@ export const RespiratorioSection: React.FC<RespiratorioSectionProps> = ({
         observaciones: '',
       });
     } else {
-      onChange("sinAlteraciones", checked ? true : undefined);
+      onChange("sinAlteraciones", checked);
     }
   };
 
