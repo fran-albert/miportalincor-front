@@ -88,7 +88,7 @@ export const getColumns = (
                   text="Ver Exámen"
                   path="incor-laboral/colaboradores"
                 />
-                <DeleteMedicalEvaluation id={medicalEvaluation.id} />
+                <DeleteMedicalEvaluation id={row.original.id} />
               </>
           </div>
         );
