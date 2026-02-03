@@ -18,6 +18,7 @@ import {
   Calendar,
   CalendarCheck,
   CalendarClock,
+  CalendarDays,
   Shield,
   UserCircle,
   Stethoscope,
@@ -218,6 +219,12 @@ const systemItems = [
     url: "/admin/servicios-medicos",
     icon: CreditCard,
     allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
+  },
+  {
+    title: "Feriados",
+    url: "/admin/feriados",
+    icon: CalendarDays,
+    allowedRoles: PERMISSIONS.HOLIDAYS,
   },
 ];
 

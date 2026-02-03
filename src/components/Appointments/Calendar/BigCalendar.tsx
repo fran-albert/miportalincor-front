@@ -29,6 +29,7 @@ import { DoctorSelect } from "../Select/DoctorSelect";
 import { useAppointments, useAppointmentMutations, useAvailableSlotsRange, useFirstAvailableDate } from "@/hooks/Appointments";
 import { useOverturns, useOverturnMutations } from "@/hooks/Overturns";
 import { useBlockedSlots } from "@/hooks/BlockedSlots";
+import { useHolidays } from "@/hooks/Holiday";
 import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
 import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
 import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability/useDoctorAvailabilities";
@@ -267,6 +268,15 @@ export const BigCalendar = ({
     enabled: !!selectedDoctorId,
   });
 
+  // Fetch holidays
+  const { data: holidays } = useHolidays();
+
+  // Create a Set of holiday dates for quick lookup
+  const holidayDatesSet = useMemo(() => {
+    if (!holidays) return new Set<string>();
+    return new Set(holidays.map((h) => h.date));
+  }, [holidays]);
+
   const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
 
@@ -364,10 +374,11 @@ export const BigCalendar = ({
       occupiedSlots.add(key);
     });
 
-    // Filter available slots that are not occupied
+    // Filter available slots that are not occupied and not on holidays
     const filteredAvailableSlots = availableSlots.filter((slot) => {
       const key = `${slot.date}-${slot.hour}`;
-      return !occupiedSlots.has(key);
+      // Exclude occupied slots and holiday dates
+      return !occupiedSlots.has(key) && !holidayDatesSet.has(slot.date);
     });
 
     // Create events for blocked slots
@@ -419,7 +430,7 @@ export const BigCalendar = ({
       return [...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
     }
     return [...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
-  }, [appointments, overturns, availableSlots, blockedSlots, slotDuration, showAvailableSlots]);
+  }, [appointments, overturns, availableSlots, blockedSlots, slotDuration, showAvailableSlots, holidayDatesSet]);
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
@@ -658,6 +669,37 @@ export const BigCalendar = ({
     }
   };
 
+  // Day prop getter - highlight holidays and weekends
+  const getDayPropGetter = useCallback(
+    (date: Date) => {
+      const dateStr = formatDateForCalendar(date);
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isHoliday = holidayDatesSet.has(dateStr);
+
+      if (isHoliday) {
+        return {
+          className: "holiday-day",
+          style: {
+            backgroundColor: "#fef2f2", // light red
+          },
+        };
+      }
+
+      if (isWeekend) {
+        return {
+          className: "weekend-day",
+          style: {
+            backgroundColor: "#f3f4f6", // light gray
+          },
+        };
+      }
+
+      return {};
+    },
+    [holidayDatesSet]
+  );
+
   const isLoading = isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
 
   return (
@@ -728,6 +770,17 @@ export const BigCalendar = ({
               Bloqueado
             </Badge>
           </div>
+          {/* Legend - Días especiales */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="text-sm text-muted-foreground mr-1">Dias:</span>
+            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
+              <CalendarDays className="h-3 w-3 mr-1" />
+              Feriado
+            </Badge>
+            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+              Fin de semana
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="relative" style={{ height: "700px" }}>
@@ -746,6 +799,7 @@ export const BigCalendar = ({
               messages={messages}
               culture="es"
               eventPropGetter={getEventStyle}
+              dayPropGetter={getDayPropGetter}
               onSelectEvent={handleSelectEvent}
               onSelectSlot={handleSelectSlot}
               selectable={!readOnly && !blockOnly}

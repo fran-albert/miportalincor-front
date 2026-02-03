@@ -15,6 +15,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { PatientSelectWithGuestOption, GuestData } from "../Select/PatientSelectWithGuestOption";
 import { TimeSlotSelect } from "../Select/TimeSlotSelect";
+import { ConsultationTypeSelect } from "../Select/ConsultationTypeSelect";
 import {
   CreateAppointmentSchema,
   CreateAppointmentFormData
@@ -31,6 +32,7 @@ export interface GuestAppointmentData {
   guestLastName: string;
   guestPhone: string;
   guestEmail?: string;
+  consultationTypeId?: number;
 }
 
 interface CreateAppointmentFormProps {
@@ -78,6 +80,7 @@ export const CreateAppointmentForm = ({
       patientId: initialPatientId,
       date: defaultDate || getTodayDateAR(),
       hour: defaultHour || "",
+      consultationTypeId: undefined,
     },
   });
 
@@ -121,6 +124,7 @@ export const CreateAppointmentForm = ({
     const doctorId = form.getValues("doctorId");
     const date = form.getValues("date");
     const hour = form.getValues("hour");
+    const consultationTypeId = form.getValues("consultationTypeId");
 
     if (!doctorId || !date || !hour) {
       return;
@@ -135,6 +139,7 @@ export const CreateAppointmentForm = ({
       guestLastName: guestData.lastName,
       guestPhone: guestData.phone,
       guestEmail: guestData.email,
+      consultationTypeId,
     });
   };
 
@@ -251,6 +256,24 @@ export const CreateAppointmentForm = ({
                   onValueChange={field.onChange}
                   placeholder="Seleccionar horario"
                   disabled={!watchDoctorId || !watchDate}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="consultationTypeId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tipo de Consulta</FormLabel>
+              <FormControl>
+                <ConsultationTypeSelect
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Seleccionar tipo (opcional)"
                 />
               </FormControl>
               <FormMessage />

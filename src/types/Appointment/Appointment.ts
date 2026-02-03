@@ -117,6 +117,9 @@ export interface AppointmentResponseDto {
   guestDocumentNumber?: string;
   guestPhone?: string;
   guestEmail?: string;
+  // Consultation type
+  consultationTypeId?: number | null;
+  consultationType?: ConsultationTypeBasicDto | null;
 }
 
 export interface AppointmentWithPatientDto extends AppointmentResponseDto {
@@ -143,11 +146,18 @@ export interface AppointmentFullResponseDto extends AppointmentResponseDto {
 // CREATE/UPDATE DTOs
 // ============================================
 
+export interface ConsultationTypeBasicDto {
+  id: number;
+  name: string;
+  color?: string;
+}
+
 export interface CreateAppointmentDto {
   doctorId: number;
   patientId: number;
   date: string;
   hour: string;
+  consultationTypeId?: number;
 }
 
 export interface UpdateAppointmentDto {
