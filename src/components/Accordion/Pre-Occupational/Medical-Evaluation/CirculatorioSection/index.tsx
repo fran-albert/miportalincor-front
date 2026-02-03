@@ -25,7 +25,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
       onBatchChange({
         sinAlteraciones: true,
         observaciones: '',
-        varices: undefined,
+        varices: false,
         varicesObs: '',
       });
     } else {
@@ -35,7 +35,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
+      onBatchChange({ sinAlteraciones: false, observaciones: value });
     } else {
       onChange("observaciones", value);
     }
@@ -43,7 +43,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
 
   const handleVaricesChange = (value: boolean | undefined) => {
     if (value === true && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: undefined, varices: true });
+      onBatchChange({ sinAlteraciones: false, varices: true });
     } else {
       onChange("varices", value);
     }
@@ -51,7 +51,7 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
 
   const handleVaricesObsChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: undefined, varicesObs: value });
+      onBatchChange({ sinAlteraciones: false, varicesObs: value });
     } else {
       onChange("varicesObs", value);
     }

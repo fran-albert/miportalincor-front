@@ -27,7 +27,7 @@ export const NeurologicoSection: React.FC<NeurologicoSectionProps> = ({
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
+      onBatchChange({ sinAlteraciones: false, observaciones: value });
     } else {
       onChange('observaciones', value);
     }

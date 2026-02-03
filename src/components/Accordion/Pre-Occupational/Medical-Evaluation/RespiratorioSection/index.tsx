@@ -30,11 +30,10 @@ export const RespiratorioSection: React.FC<RespiratorioSectionProps> = ({
     }
   };
 
-  // Si escribe observaciones, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: undefined,
+        sinAlteraciones: false,
         observaciones: value,
       });
     } else {

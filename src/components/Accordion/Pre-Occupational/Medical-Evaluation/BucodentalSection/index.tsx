@@ -23,13 +23,12 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
   onChange,
   onBatchChange,
 }) => {
-  // Si marca "Sin alteraciones", limpiar los otros campos (poner undefined, no false)
   const handleSinAlteracionesChange = (checked: boolean) => {
     if (checked && onBatchChange) {
       onBatchChange({
         sinAlteraciones: true,
-        caries: undefined,
-        faltanPiezas: undefined,
+        caries: false,
+        faltanPiezas: false,
         observaciones: '',
       });
     } else {
@@ -37,11 +36,10 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
     }
   };
 
-  // Si marca caries/faltanPiezas, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleAlteracionChange = (field: 'caries' | 'faltanPiezas', checked: boolean) => {
     if (checked && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: undefined,
+        sinAlteraciones: false,
         [field]: true,
       });
     } else {
@@ -49,11 +47,10 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
     }
   };
 
-  // Si escribe observaciones, desmarcar "Sin alteraciones" (poner undefined, no false)
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
       onBatchChange({
-        sinAlteraciones: undefined,
+        sinAlteraciones: false,
         observaciones: value,
       });
     } else {
