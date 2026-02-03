@@ -3,25 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Clock, ArrowRight, UserCheck } from 'lucide-react';
-import { useDoctorDayAgenda, isWaiting } from '@/hooks/Doctor/useDoctorDayAgenda';
+import { Users, Clock, ArrowRight, UserCheck, AlertTriangle } from 'lucide-react';
+import { useDoctorWaitingQueue } from '@/hooks/Doctor/useDoctorWaitingQueue';
+import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 
 /**
  * Widget compacto para mostrar en el Dashboard del médico.
  * Muestra un resumen de la sala de espera y acceso rápido.
- * Usa la misma fuente de datos que la página de sala de espera.
+ * Usa el endpoint /queue/waiting que devuelve waitingTimeMinutes del backend.
  */
 export const DoctorQueueWidget = () => {
   const navigate = useNavigate();
-  const { agenda, stats, isLoading } = useDoctorDayAgenda({ refetchInterval: 15000 });
+  const { waitingQueue, isLoading } = useDoctorWaitingQueue({ refetchInterval: 15000 });
 
-  const waitingPatients = agenda.filter((item) => isWaiting(item.status));
-  const nextPatient = waitingPatients[0];
-
-  const getPatientName = (patient: { firstName: string; lastName: string } | null) => {
-    if (!patient) return 'Sin paciente';
-    return `${patient.lastName}, ${patient.firstName}`;
-  };
+  const nextPatient = waitingQueue[0];
 
   return (
     <Card className="border-l-4 border-l-teal-500">
@@ -31,9 +26,9 @@ export const DoctorQueueWidget = () => {
             <Users className="h-5 w-5 text-teal-600" />
             Mi Sala de Espera
           </CardTitle>
-          {!isLoading && stats.waiting > 0 && (
+          {!isLoading && waitingQueue.length > 0 && (
             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              {stats.waiting} en espera
+              {waitingQueue.length} en espera
             </Badge>
           )}
         </div>
@@ -44,7 +39,7 @@ export const DoctorQueueWidget = () => {
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-10 w-full" />
           </div>
-        ) : waitingPatients.length === 0 ? (
+        ) : waitingQueue.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
             <UserCheck className="h-10 w-10 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No hay pacientes en espera</p>
@@ -52,25 +47,47 @@ export const DoctorQueueWidget = () => {
         ) : (
           <>
             {/* Próximo paciente */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <p className="text-xs text-muted-foreground mb-1">Próximo paciente</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{getPatientName(nextPatient.patient)}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span className="font-mono">{nextPatient.hour}</span>
-                    <span>·</span>
-                    <span>{nextPatient.type === 'appointment' ? 'Turno' : 'Sobreturno'}</span>
+            {(() => {
+              const waitingMinutes = nextPatient.waitingTimeMinutes;
+              const waitTimeColors = getWaitingTimeColor(waitingMinutes);
+              const type = nextPatient.overturnId ? 'Sobreturno' : 'Turno';
+
+              return (
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Próximo paciente</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold">{nextPatient.patientName}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                        <Clock className="h-3 w-3" />
+                        <span className="font-mono">{nextPatient.scheduledTime}</span>
+                        <span>·</span>
+                        <span>{type}</span>
+                      </div>
+                      {waitingMinutes !== undefined && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs font-mono ${waitTimeColors.text} ${waitTimeColors.bg} ${waitTimeColors.border}`}
+                          >
+                            <Clock className="h-3 w-3 mr-1" />
+                            Esperando {formatWaitingTime(waitingMinutes)}
+                          </Badge>
+                          {waitingMinutes > 60 && (
+                            <AlertTriangle className="h-3 w-3 text-red-500" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Resumen de otros pacientes */}
-            {waitingPatients.length > 1 && (
+            {waitingQueue.length > 1 && (
               <p className="text-sm text-muted-foreground text-center">
-                +{waitingPatients.length - 1} paciente{waitingPatients.length > 2 ? 's' : ''} más en espera
+                +{waitingQueue.length - 1} paciente{waitingQueue.length > 2 ? 's' : ''} más en espera
               </p>
             )}
           </>

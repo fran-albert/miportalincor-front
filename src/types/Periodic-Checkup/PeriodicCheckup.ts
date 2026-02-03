@@ -16,6 +16,7 @@ export interface PatientCheckupSchedule {
   doctorId?: number;
   lastCheckupDate?: string;
   nextDueDate: string;
+  frequencyMonths: number;
   remindersSent: number[];
   notes?: string;
   isActive: boolean;
@@ -61,5 +62,7 @@ export interface UpdatePatientScheduleDto {
 
 export interface CompleteCheckupDto {
   completedDate: string;
+  /** Fecha del próximo chequeo (elegida manualmente por el médico) */
+  nextDueDate: string;
   notes?: string;
 }

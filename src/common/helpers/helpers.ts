@@ -423,3 +423,82 @@ export const parseBooleanOrUndefined = (value: unknown): boolean | undefined => 
   return undefined;
 };
 
+/**
+ * Formatea el tiempo de espera en formato legible
+ * @param minutes - Minutos de espera
+ * @returns Texto formateado (ej: "5 min", "1h 20min")
+ *
+ * @example
+ * formatWaitingTime(5)    // "5 min"
+ * formatWaitingTime(45)   // "45 min"
+ * formatWaitingTime(60)   // "1h 0min"
+ * formatWaitingTime(95)   // "1h 35min"
+ */
+export const formatWaitingTime = (minutes: number | undefined): string => {
+  if (minutes === undefined || minutes === null) {
+    return "-";
+  }
+
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}min`;
+};
+
+/**
+ * Retorna el color apropiado para el tiempo de espera según umbrales
+ * @param minutes - Minutos de espera
+ * @returns Objeto con clases CSS para texto, fondo y borde
+ *
+ * @example
+ * getWaitingTimeColor(15)  // { text: "text-green-700", bg: "bg-green-50", border: "border-green-300" }
+ * getWaitingTimeColor(45)  // { text: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-300" }
+ * getWaitingTimeColor(75)  // { text: "text-red-700", bg: "bg-red-50", border: "border-red-300" }
+ */
+export const getWaitingTimeColor = (minutes: number | undefined): {
+  text: string;
+  bg: string;
+  border: string;
+  badgeVariant: "default" | "secondary" | "destructive" | "outline";
+} => {
+  if (minutes === undefined || minutes === null) {
+    return {
+      text: "text-gray-700",
+      bg: "bg-gray-50",
+      border: "border-gray-300",
+      badgeVariant: "secondary"
+    };
+  }
+
+  // Más de 60 minutos: rojo (crítico)
+  if (minutes > 60) {
+    return {
+      text: "text-red-700",
+      bg: "bg-red-50",
+      border: "border-red-300",
+      badgeVariant: "destructive"
+    };
+  }
+
+  // Entre 30 y 60 minutos: amarillo (advertencia)
+  if (minutes > 30) {
+    return {
+      text: "text-yellow-700",
+      bg: "bg-yellow-50",
+      border: "border-yellow-300",
+      badgeVariant: "outline"
+    };
+  }
+
+  // Menos de 30 minutos: verde (normal)
+  return {
+    text: "text-green-700",
+    bg: "bg-green-50",
+    border: "border-green-300",
+    badgeVariant: "secondary"
+  };
+};
+

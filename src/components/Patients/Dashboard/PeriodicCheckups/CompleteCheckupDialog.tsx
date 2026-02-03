@@ -16,7 +16,6 @@ import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { Loader2, CalendarCheck } from "lucide-react";
 import { format, addMonths } from "date-fns";
-import { es } from "date-fns/locale";
 
 interface CompleteCheckupDialogProps {
   open: boolean;
@@ -40,14 +39,19 @@ export function CompleteCheckupDialog({
   const [completedDate, setCompletedDate] = useState(today);
   const [notes, setNotes] = useState(schedule.notes || "");
 
-  const frequencyMonths = schedule.checkupType?.frequencyMonths || 12;
-  const nextDueDate = completedDate
-    ? format(addMonths(new Date(completedDate), frequencyMonths), "dd/MM/yyyy", { locale: es })
-    : "";
+  // Default next due date: use the patient's frequency as suggestion
+  const frequencyMonths = schedule.frequencyMonths || 12;
+  const defaultNextDueDate = format(addMonths(new Date(), frequencyMonths), "yyyy-MM-dd");
+  const [nextDueDate, setNextDueDate] = useState(defaultNextDueDate);
 
   const handleSubmit = async () => {
     if (!completedDate) {
-      showError("Selecciona la fecha de realización");
+      showError("Seleccioná la fecha de realización");
+      return;
+    }
+
+    if (!nextDueDate) {
+      showError("Seleccioná la fecha del próximo chequeo");
       return;
     }
 
@@ -56,12 +60,13 @@ export function CompleteCheckupDialog({
         id: schedule.id,
         dto: {
           completedDate,
+          nextDueDate,
           notes: notes || undefined,
         },
       });
       showSuccess("Chequeo marcado como completado");
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       showError("Error al completar el chequeo");
     }
   };
@@ -92,10 +97,16 @@ export function CompleteCheckupDialog({
             />
           </div>
 
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Próximo chequeo:</strong> Se programará automáticamente para el{" "}
-              <strong>{nextDueDate}</strong> (en {frequencyMonths} meses)
+          <div className="space-y-2">
+            <Label>Próximo Chequeo *</Label>
+            <Input
+              type="date"
+              value={nextDueDate}
+              onChange={(e) => setNextDueDate(e.target.value)}
+              min={today}
+            />
+            <p className="text-xs text-gray-500">
+              Elegí manualmente cuándo debe realizarse el próximo chequeo
             </p>
           </div>
 
@@ -116,7 +127,7 @@ export function CompleteCheckupDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isPending || !completedDate}
+            disabled={isPending || !completedDate || !nextDueDate}
             className="bg-green-600 hover:bg-green-700"
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

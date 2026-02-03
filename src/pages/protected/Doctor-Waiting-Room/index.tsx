@@ -36,6 +36,7 @@ import {
   ChevronUp,
   Armchair,
   Stethoscope,
+  AlertTriangle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -48,6 +49,8 @@ import {
   isCompleted,
   isCancelled,
 } from '@/hooks/Doctor/useDoctorDayAgenda';
+import { useDoctorWaitingQueue, doctorWaitingQueueKeys } from '@/hooks/Doctor/useDoctorWaitingQueue';
+import { useDoctorMarkAsAttending, doctorQueueKeys } from '@/hooks/Queue/useDoctorQueue';
 import { useAppointmentMutations } from '@/hooks/Appointments/useAppointmentMutations';
 import { useOverturnMutations } from '@/hooks/Overturns/useOverturnMutations';
 import {
@@ -61,7 +64,7 @@ import {
   OverturnStatusColors,
 } from '@/types/Overturn/Overturn';
 import { useQueryClient } from '@tanstack/react-query';
-import { slugify } from '@/common/helpers/helpers';
+import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
 
 // ============================================
@@ -91,6 +94,7 @@ const getTypeColor = (type: AgendaItem['type']): string => {
     ? 'bg-blue-100 text-blue-800 border-blue-300'
     : 'bg-purple-100 text-purple-800 border-purple-300';
 };
+
 
 // ============================================
 // STATS CARD COMPONENT (Local)
@@ -158,25 +162,37 @@ const DoctorWaitingRoomPage = () => {
   const queryClient = useQueryClient();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // Agenda del día (appointments + overturns)
+  // Agenda del día (appointments + overturns) - para attending, completed, cancelled
   const {
     agenda,
     stats,
-    isLoading,
-    isFetching,
+    isLoading: isAgendaLoading,
+    isFetching: isAgendaFetching,
   } = useDoctorDayAgenda({ refetchInterval: 15000 });
 
-  // Filtrar por estados específicos
-  const waitingItems = agenda.filter((i) => isWaiting(i.status));
+  // Cola de espera con waitingTimeMinutes del backend
+  const {
+    waitingQueue,
+    isLoading: isQueueLoading,
+    isFetching: isQueueFetching,
+  } = useDoctorWaitingQueue({ refetchInterval: 15000 });
+
+  const isLoading = isAgendaLoading || isQueueLoading;
+  const isFetching = isAgendaFetching || isQueueFetching;
+
+  // Filtrar por estados específicos (usando agenda para attending/history)
   const attendingItems = agenda.filter((i) => isAttending(i.status));
   const historyItems = agenda.filter((i) => isCompleted(i.status) || isCancelled(i.status));
 
   // Mutations
   const appointmentMutations = useAppointmentMutations();
   const overturnMutations = useOverturnMutations();
+  const markAsAttendingMutation = useDoctorMarkAsAttending();
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: doctorAgendaKeys.all });
+    queryClient.invalidateQueries({ queryKey: doctorWaitingQueueKeys.all });
+    queryClient.invalidateQueries({ queryKey: doctorQueueKeys.all });
   };
 
   const handleOpenHistoriaClinica = (item: AgendaItem) => {
@@ -216,7 +232,7 @@ const DoctorWaitingRoomPage = () => {
   const statsCards = [
     {
       title: 'En Espera',
-      value: waitingItems.length,
+      value: waitingQueue.length,
       icon: <Users className="h-6 w-6 text-white" />,
       gradient: 'bg-gradient-to-br from-orange-500 to-orange-600',
     },
@@ -240,6 +256,30 @@ const DoctorWaitingRoomPage = () => {
     },
   ];
 
+  // Helpers para QueueEntry
+  const getQueueEntryType = (entry: typeof waitingQueue[0]): 'appointment' | 'overturn' => {
+    return entry.overturnId ? 'overturn' : 'appointment';
+  };
+
+  const handleQueueEntryAttend = (entry: typeof waitingQueue[0]) => {
+    // Usar el endpoint de queue para marcar como attending
+    // Esto actualiza tanto la queue entry como el appointment/overturn
+    markAsAttendingMutation.mutate(entry.id, {
+      onSuccess: () => {
+        // Refrescar la cola de espera para que desaparezca de "En Espera"
+        queryClient.invalidateQueries({ queryKey: doctorWaitingQueueKeys.all });
+        // Refrescar la agenda para que aparezca en "Atendiendo"
+        queryClient.invalidateQueries({ queryKey: doctorAgendaKeys.all });
+      },
+    });
+  };
+
+  const handleQueueEntryOpenHC = (entry: typeof waitingQueue[0]) => {
+    if (!entry.patientId) return;
+    const slug = slugify(entry.patientName, entry.patientId);
+    navigate(`/pacientes/${slug}/historia-clinica`);
+  };
+
   // Tabla para pacientes en espera (vista principal)
   const renderWaitingTable = () => {
     if (isLoading) {
@@ -252,7 +292,7 @@ const DoctorWaitingRoomPage = () => {
       );
     }
 
-    if (waitingItems.length === 0) {
+    if (waitingQueue.length === 0) {
       return (
         <div className="text-center py-12 text-muted-foreground">
           <Armchair className="h-16 w-16 mx-auto mb-4 opacity-30" />
@@ -264,14 +304,16 @@ const DoctorWaitingRoomPage = () => {
 
     return (
       <div className="space-y-3">
-        {waitingItems.map((item, index) => {
-          const isChangingStatus =
-            (item.type === 'appointment' && appointmentMutations.isChangingStatus) ||
-            (item.type === 'overturn' && overturnMutations.isChangingStatus);
+        {waitingQueue.map((entry, index) => {
+          const type = getQueueEntryType(entry);
+          const isChangingStatus = markAsAttendingMutation.isPending;
+
+          const waitingMinutes = entry.waitingTimeMinutes;
+          const waitTimeColors = getWaitingTimeColor(waitingMinutes);
 
           return (
             <motion.div
-              key={`${item.type}-${item.id}`}
+              key={`queue-${entry.id}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -279,17 +321,29 @@ const DoctorWaitingRoomPage = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="text-2xl font-bold text-orange-600 font-mono min-w-[4.5rem] shrink-0">
-                  {item.hour}
+                  {entry.scheduledTime}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-lg truncate">{renderPatientName(item)}</p>
+                  <p className="font-semibold text-lg truncate">{entry.patientName}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant="outline" className={getTypeColor(item.type)}>
-                      {getTypeLabel(item.type)}
+                    <Badge variant="outline" className={getTypeColor(type)}>
+                      {getTypeLabel(type)}
                     </Badge>
-                    <Badge className={getStatusColor(item)}>
-                      {getStatusLabel(item)}
+                    <Badge className="bg-orange-100 text-orange-800">
+                      En espera
                     </Badge>
+                    {waitingMinutes !== undefined && (
+                      <Badge
+                        variant="outline"
+                        className={`font-mono ${waitTimeColors.text} ${waitTimeColors.bg} ${waitTimeColors.border}`}
+                      >
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatWaitingTime(waitingMinutes)}
+                      </Badge>
+                    )}
+                    {waitingMinutes !== undefined && waitingMinutes > 60 && (
+                      <span title="Tiempo de espera prolongado"><AlertTriangle className="h-4 w-4 text-red-500" /></span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -297,10 +351,7 @@ const DoctorWaitingRoomPage = () => {
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-greenPrimary to-teal-600 hover:from-greenPrimary/90 hover:to-teal-600/90 shadow-md"
-                  onClick={() => handleChangeStatus(
-                    item,
-                    item.type === 'appointment' ? AppointmentStatus.ATTENDING : OverturnStatus.ATTENDING
-                  )}
+                  onClick={() => handleQueueEntryAttend(entry)}
                   disabled={isChangingStatus}
                 >
                   <Play className="h-5 w-5 mr-2" />
@@ -313,8 +364,8 @@ const DoctorWaitingRoomPage = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {item.patient && (
-                      <DropdownMenuItem onClick={() => handleOpenHistoriaClinica(item)}>
+                    {entry.patientId && (
+                      <DropdownMenuItem onClick={() => handleQueueEntryOpenHC(entry)}>
                         <FileText className="h-4 w-4 mr-2" />
                         Ver Historia Clínica
                       </DropdownMenuItem>
@@ -538,7 +589,7 @@ const DoctorWaitingRoomPage = () => {
               <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
                 <Armchair className="h-5 w-5 text-white" />
               </div>
-              Pacientes en Espera ({waitingItems.length})
+              Pacientes en Espera ({waitingQueue.length})
             </CardTitle>
           </CardHeader>
           <CardContent>

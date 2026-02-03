@@ -120,9 +120,8 @@ export function PeriodicCheckupsCard({ patientId, patientName }: PeriodicCheckup
                       </div>
                       <p className="text-sm text-gray-500">
                         {schedule.checkupType?.specialityName && (
-                          <span className="mr-2">{schedule.checkupType.specialityName}</span>
+                          <span>{schedule.checkupType.specialityName}</span>
                         )}
-                        • Cada {schedule.checkupType?.frequencyMonths || 12} meses
                       </p>
                       <div className="mt-2 text-sm grid grid-cols-2 gap-2">
                         <div>

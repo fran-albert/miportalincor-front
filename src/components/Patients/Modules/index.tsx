@@ -73,7 +73,7 @@ export default function PatientModules({
       icon: CalendarCheck,
       gradient: "bg-gradient-to-br from-rose-500 to-rose-600",
       onClick: onChequeosPeriodicosClick || (() => {}),
-      visible: true,
+      visible: isDoctor,
     },
   ];
 

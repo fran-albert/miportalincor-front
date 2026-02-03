@@ -46,3 +46,43 @@
   font-weight: 500;
   font-size: 12px;
 }
+
+/* Holiday day styling - more prominent */
+.holiday-day {
+  background-color: #fef2f2 !important;
+  position: relative;
+}
+
+/* Add a diagonal stripe pattern to holiday days in month view */
+.rbc-month-view .holiday-day::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 10px,
+    rgba(220, 38, 38, 0.08) 10px,
+    rgba(220, 38, 38, 0.08) 20px
+  );
+  pointer-events: none;
+}
+
+/* Holiday day header text color */
+.holiday-day .rbc-button-link {
+  color: #dc2626 !important;
+  font-weight: 600 !important;
+}
+
+/* Weekend day styling */
+.weekend-day {
+  background-color: #f3f4f6 !important;
+}
+
+/* Weekend header text - slightly muted */
+.weekend-day .rbc-button-link {
+  color: #6b7280 !important;
+}

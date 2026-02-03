@@ -38,6 +38,7 @@ import {
   CheckCircle,
   Volume2,
   UserPlus,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   useWaitingQueue,
@@ -53,6 +54,7 @@ import {
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
 import { useQueryClient } from '@tanstack/react-query';
 import { queueKeys } from '@/hooks/Queue';
+import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 
 const statusColors: Record<QueueStatus, string> = {
   WAITING: 'bg-yellow-500',
@@ -112,14 +114,6 @@ export const QueuePanel = () => {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: queueKeys.all });
-  };
-
-  const getWaitTime = (checkedInAt: string) => {
-    const diff = Date.now() - new Date(checkedInAt).getTime();
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ${minutes % 60}m`;
   };
 
   return (
@@ -360,77 +354,94 @@ export const QueuePanel = () => {
                   <TableHead>Paciente</TableHead>
                   <TableHead>Doctor</TableHead>
                   <TableHead>Hora</TableHead>
-                  <TableHead>Esperando</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Tiempo Espera
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {waitingQueue.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>
-                      <span className="text-xl font-bold text-yellow-600">
-                        {entry.displayNumber}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={appointmentTypeColors[entry.appointmentType]}
-                      >
-                        {appointmentTypeLabels[entry.appointmentType]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{entry.patientName}</p>
+                {waitingQueue.map((entry) => {
+                  const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
+                  return (
+                    <TableRow key={entry.id}>
+                      <TableCell>
+                        <span className="text-xl font-bold text-yellow-600">
+                          {entry.displayNumber}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={appointmentTypeColors[entry.appointmentType]}
+                        >
+                          {appointmentTypeLabels[entry.appointmentType]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{entry.patientName}</p>
+                            {entry.isGuest && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
+                              >
+                                <UserPlus className="w-3 h-3 mr-1" />
+                                INVITADO
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            DNI: {entry.patientDocument}
+                          </p>
                           {entry.isGuest && (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
-                            >
-                              <UserPlus className="w-3 h-3 mr-1" />
-                              INVITADO
-                            </Badge>
+                            <p className="text-xs text-amber-600 mt-1">
+                              Requiere registro en secretaria
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          DNI: {entry.patientDocument}
-                        </p>
-                        {entry.isGuest && (
-                          <p className="text-xs text-amber-600 mt-1">
-                            Requiere registro en secretaria
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{entry.doctorName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {entry.speciality}
                           </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{entry.doctorName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {entry.speciality}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{entry.scheduledTime}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono">
-                        {getWaitTime(entry.checkedInAt)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleCallSpecific(entry)}
-                        disabled={callSpecificMutation.isPending}
-                      >
-                        <PhoneCall className="mr-1 h-3 w-3" />
-                        Llamar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>{entry.scheduledTime}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={`font-mono ${waitTimeColors.text} ${waitTimeColors.bg} ${waitTimeColors.border}`}
+                          >
+                            <Clock className="h-3 w-3 mr-1" />
+                            {formatWaitingTime(entry.waitingTimeMinutes)}
+                          </Badge>
+                          {entry.waitingTimeMinutes !== undefined && entry.waitingTimeMinutes > 60 && (
+                            <span title="Tiempo de espera prolongado"><AlertTriangle className="h-4 w-4 text-red-500" /></span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCallSpecific(entry)}
+                          disabled={callSpecificMutation.isPending}
+                        >
+                          <PhoneCall className="mr-1 h-3 w-3" />
+                          Llamar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (

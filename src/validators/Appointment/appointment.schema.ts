@@ -24,6 +24,8 @@ export const CreateAppointmentSchema = z.object({
     required_error: 'Debe seleccionar un horario',
   }).min(1, 'Debe seleccionar un horario')
     .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato de hora inválido (HH:mm)'),
+
+  consultationTypeId: z.number().optional(),
 });
 
 export type CreateAppointmentFormData = z.infer<typeof CreateAppointmentSchema>;

@@ -48,6 +48,7 @@ const MONTHS = [
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 6 }, (_, i) => String(currentYear + i));
 
+
 export function AssignCheckupDialog({
   open,
   onOpenChange,
@@ -157,7 +158,7 @@ export function AssignCheckupDialog({
 
           {/* Month/Year Selection */}
           <div className="space-y-2">
-            <Label>Próximo chequeo</Label>
+            <Label>Próximo chequeo *</Label>
             <div className="flex gap-2">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger className="flex-1">

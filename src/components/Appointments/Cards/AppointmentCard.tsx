@@ -97,11 +97,23 @@ export const AppointmentCard = ({
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isGuestAppointment && (
             <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs">
               <UserPlus className="w-3 h-3 mr-1" />
               INVITADO
+            </Badge>
+          )}
+          {appointment.consultationType && (
+            <Badge
+              className="border text-xs"
+              style={{
+                backgroundColor: appointment.consultationType.color ? `${appointment.consultationType.color}20` : undefined,
+                color: appointment.consultationType.color || undefined,
+                borderColor: appointment.consultationType.color || undefined,
+              }}
+            >
+              {appointment.consultationType.name}
             </Badge>
           )}
           <StatusBadge status={appointment.status} size="sm" />
@@ -151,12 +163,24 @@ export const AppointmentCard = ({
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <StatusBadge status={appointment.status} />
               {isGuestAppointment && (
                 <Badge className="bg-purple-100 text-purple-800 border-purple-300">
                   <UserPlus className="w-3 h-3 mr-1" />
                   INVITADO
+                </Badge>
+              )}
+              {appointment.consultationType && (
+                <Badge
+                  className="border"
+                  style={{
+                    backgroundColor: appointment.consultationType.color ? `${appointment.consultationType.color}20` : undefined,
+                    color: appointment.consultationType.color || undefined,
+                    borderColor: appointment.consultationType.color || undefined,
+                  }}
+                >
+                  {appointment.consultationType.name}
                 </Badge>
               )}
             </div>

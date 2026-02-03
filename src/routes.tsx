@@ -65,6 +65,7 @@ import MyCheckupsPage from "./pages/protected/My-Checkups/page";
 import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
+import HolidaysPage from "./pages/protected/Admin/Holidays";
 
 function App() {
   return (
@@ -199,6 +200,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <DoctorServicesPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Feriados */}
+          <Route
+            path="/admin/feriados"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <HolidaysPage />
               </Private_Routes>
             }
           />

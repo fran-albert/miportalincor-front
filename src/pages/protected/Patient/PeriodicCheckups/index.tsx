@@ -198,9 +198,8 @@ const PatientPeriodicCheckupsPage = () => {
                         </div>
                         <p className="text-sm text-gray-500 mb-3">
                           {schedule.checkupType?.specialityName && (
-                            <span className="mr-2">{schedule.checkupType.specialityName}</span>
+                            <span>{schedule.checkupType.specialityName}</span>
                           )}
-                          • Frecuencia: cada {schedule.checkupType?.frequencyMonths || 12} meses
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div className="bg-gray-50 p-3 rounded">
