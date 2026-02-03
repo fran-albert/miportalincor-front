@@ -277,16 +277,6 @@ export const BigCalendar = ({
     return new Set(holidays.map((h) => h.date));
   }, [holidays]);
 
-  // Create a Map of holiday dates to their descriptions
-  const holidayDescriptions = useMemo(() => {
-    if (!holidays) return new Map<string, string>();
-    const map = new Map<string, string>();
-    holidays.forEach((h) => {
-      map.set(h.date, h.description || "Feriado");
-    });
-    return map;
-  }, [holidays]);
-
   const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
 

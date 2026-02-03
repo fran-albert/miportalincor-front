@@ -44,7 +44,6 @@ import {
   useDoctorDayAgenda,
   doctorAgendaKeys,
   type AgendaItem,
-  isWaiting,
   isAttending,
   isCompleted,
   isCancelled,
