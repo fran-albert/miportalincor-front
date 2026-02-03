@@ -21,7 +21,7 @@ export const NeurologicoSection: React.FC<NeurologicoSectionProps> = ({
     if (checked && onBatchChange) {
       onBatchChange({ sinAlteraciones: true, observaciones: '' });
     } else {
-      onChange('sinAlteraciones', checked ? true : undefined);
+      onChange('sinAlteraciones', checked);
     }
   };
 

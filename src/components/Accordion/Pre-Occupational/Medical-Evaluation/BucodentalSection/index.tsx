@@ -33,7 +33,7 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
         observaciones: '',
       });
     } else {
-      onChange('sinAlteraciones', checked ? true : undefined);
+      onChange('sinAlteraciones', checked);
     }
   };
 
