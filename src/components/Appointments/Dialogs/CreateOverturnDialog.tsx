@@ -27,6 +27,8 @@ interface CreateOverturnDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** If true, allow creating guest overturns */
   allowGuestCreation?: boolean;
+  /** If provided, fixes the doctor and disables doctor select */
+  fixedDoctorId?: number;
 }
 
 export const CreateOverturnDialog = ({
@@ -38,6 +40,7 @@ export const CreateOverturnDialog = ({
   open: controlledOpen,
   onOpenChange,
   allowGuestCreation = true,
+  fixedDoctorId,
 }: CreateOverturnDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen ?? internalOpen;
@@ -105,10 +108,11 @@ export const CreateOverturnDialog = ({
               onSubmit={handleSubmit}
               onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
               isLoading={isCreating || isCreatingGuest}
-              defaultDoctorId={defaultDoctorId}
+              defaultDoctorId={fixedDoctorId ?? defaultDoctorId}
               defaultPatientId={defaultPatientId}
               defaultDate={defaultDate}
               allowGuestCreation={allowGuestCreation}
+              fixedDoctorId={fixedDoctorId}
             />
           </ScrollArea>
         </DialogContent>
@@ -141,10 +145,11 @@ export const CreateOverturnDialog = ({
             onSubmit={handleSubmit}
             onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
             isLoading={isCreating || isCreatingGuest}
-            defaultDoctorId={defaultDoctorId}
+            defaultDoctorId={fixedDoctorId ?? defaultDoctorId}
             defaultPatientId={defaultPatientId}
             defaultDate={defaultDate}
             allowGuestCreation={allowGuestCreation}
+            fixedDoctorId={fixedDoctorId}
           />
         </ScrollArea>
       </DialogContent>

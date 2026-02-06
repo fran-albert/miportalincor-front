@@ -44,13 +44,17 @@ import {
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock } from "lucide-react";
+import { CalendarDays, CalendarOff, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock, ChevronDown, ChevronRight } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
 import { SlotActionDialog } from "../Dialogs/SlotActionDialog";
 import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
 import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
+import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useDoctorAbsences } from "@/hooks/DoctorAbsence";
+import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -70,6 +74,7 @@ const messages = {
   today: "Hoy",
   month: "Mes",
   week: "Semana",
+  work_week: "Sem. Laboral",
   day: "Día",
   agenda: "Agenda",
   date: "Fecha",
@@ -79,39 +84,16 @@ const messages = {
   showMore: (total: number) => `+ ${total} más`,
 };
 
-// Custom Event component for day/week views - shows extra patient info
-const CustomEvent = ({ event }: EventProps<CalendarEvent>) => {
-  const { type, patientDni, healthInsurance, affiliationNumber } = event.resource;
-
-  // For available or blocked slots, just show the title
-  if (type === "available" || type === "blocked") {
-    return <span>{event.title}</span>;
-  }
-
-  // Build info parts
-  const parts = [event.title];
-  if (patientDni) parts.push(`DNI: ${patientDni}`);
-  if (healthInsurance) {
-    parts.push(affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance);
-  }
-
-  // For appointments and overturns, show all info in one line
-  return (
-    <div className="font-medium truncate">
-      {parts.join(' - ')}
-    </div>
-  );
-};
-
 // Event type for the calendar
 interface CalendarEvent {
   id: number | string;
   title: string;
   start: Date;
   end: Date;
+  allDay?: boolean;
   resource: {
-    type: "appointment" | "overturn" | "available" | "blocked";
-    data?: AppointmentFullResponseDto | OverturnDetailedDto | BlockedSlotResponseDto;
+    type: "appointment" | "overturn" | "available" | "blocked" | "absence";
+    data?: AppointmentFullResponseDto | OverturnDetailedDto | BlockedSlotResponseDto | DoctorAbsenceResponseDto;
     status?: AppointmentStatus | OverturnStatus;
     isGuest?: boolean;
     slotDate?: string;
@@ -135,6 +117,8 @@ interface BigCalendarProps {
   readOnly?: boolean;
   /** Si es true, solo permite bloquear/desbloquear slots, no crear turnos (para médicos) */
   blockOnly?: boolean;
+  /** If provided, fixes the doctor in create dialogs (for doctor self-management) */
+  fixedDoctorId?: number;
 }
 
 export const BigCalendar = ({
@@ -143,11 +127,12 @@ export const BigCalendar = ({
   doctorName,
   autoFilterForDoctor = false,
   readOnly = false,
-  blockOnly = false
+  blockOnly = false,
+  fixedDoctorId,
 }: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>("month");
+  const [currentView, setCurrentView] = useState<View>(autoFilterForDoctor ? "day" : "month");
   const [internalDoctorId, setInternalDoctorId] = useState<number | undefined>();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -160,6 +145,63 @@ export const BigCalendar = ({
   const [selectedBlockedSlot, setSelectedBlockedSlot] = useState<BlockedSlotResponseDto | undefined>();
   const [isSlotActionDialogOpen, setIsSlotActionDialogOpen] = useState(false);
   const [isOverturnDialogOpen, setIsOverturnDialogOpen] = useState(false);
+  const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false);
+  const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
+
+  // Dynamic height per view
+  const calendarHeight = useMemo(() => {
+    if (currentView === "day" || currentView === "week" || currentView === "work_week") {
+      return "calc(100vh - 260px)";
+    }
+    if (currentView === "month") {
+      return "850px";
+    }
+    return "700px"; // agenda
+  }, [currentView]);
+
+  // Custom Event component - view-aware for multi-line in day view
+  const CustomEvent = useMemo(() => {
+    const EventComponent = ({ event }: EventProps<CalendarEvent>) => {
+      const { type, patientDni, healthInsurance, affiliationNumber } = event.resource;
+
+      // For available, blocked, or absence events, just show the title
+      if (type === "available" || type === "blocked" || type === "absence") {
+        return <span>{event.title}</span>;
+      }
+
+      // Day and work_week views: multi-line with more info
+      if (currentView === "day" || currentView === "work_week") {
+        const fontSize = currentView === "day" ? "13px" : "12px";
+        const subFontSize = currentView === "day" ? "11px" : "10px";
+        return (
+          <div className="flex flex-col gap-0.5 leading-tight">
+            <span className="font-semibold truncate" style={{ fontSize }}>{event.title}</span>
+            {patientDni && <span className="opacity-90 truncate" style={{ fontSize: subFontSize }}>DNI: {patientDni}</span>}
+            {healthInsurance && (
+              <span className="opacity-90 truncate" style={{ fontSize: subFontSize }}>
+                {affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance}
+              </span>
+            )}
+          </div>
+        );
+      }
+
+      // Month/other views: single-line compact
+      const parts = [event.title];
+      if (patientDni) parts.push(`DNI: ${patientDni}`);
+      if (healthInsurance) {
+        parts.push(affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance);
+      }
+
+      return (
+        <div className="font-medium truncate text-[12px]">
+          {parts.join(' - ')}
+        </div>
+      );
+    };
+    EventComponent.displayName = "CustomEvent";
+    return EventComponent;
+  }, [currentView]);
 
   // Si autoFilterForDoctor, obtener el perfil del médico logueado
   const { data: doctorProfile } = useMyDoctorProfile();
@@ -268,6 +310,12 @@ export const BigCalendar = ({
     enabled: !!selectedDoctorId,
   });
 
+  // Fetch doctor absences
+  const { absences: doctorAbsences } = useDoctorAbsences({
+    doctorId: selectedDoctorId ?? 0,
+    enabled: !!selectedDoctorId,
+  });
+
   // Fetch holidays
   const { data: holidays } = useHolidays();
 
@@ -276,6 +324,21 @@ export const BigCalendar = ({
     if (!holidays) return new Set<string>();
     return new Set(holidays.map((h) => h.date));
   }, [holidays]);
+
+  // Create a Set of FULL-DAY absence dates (no startTime/endTime) for quick lookup
+  // Partial absences (with times) only block specific hours, not the whole day
+  const absenceDatesSet = useMemo(() => {
+    const dates = new Set<string>();
+    doctorAbsences.forEach((absence) => {
+      if (absence.startTime || absence.endTime) return; // Skip partial absences
+      const start = new Date(absence.startDate + "T12:00:00");
+      const end = new Date(absence.endDate + "T12:00:00");
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.add(formatDateForCalendar(d));
+      }
+    });
+    return dates;
+  }, [doctorAbsences]);
 
   const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
@@ -374,11 +437,22 @@ export const BigCalendar = ({
       occupiedSlots.add(key);
     });
 
-    // Filter available slots that are not occupied and not on holidays
+    // Filter available slots that are not occupied, not on holidays, and not during absences
     const filteredAvailableSlots = availableSlots.filter((slot) => {
       const key = `${slot.date}-${slot.hour}`;
-      // Exclude occupied slots and holiday dates
-      return !occupiedSlots.has(key) && !holidayDatesSet.has(slot.date);
+      if (occupiedSlots.has(key) || holidayDatesSet.has(slot.date)) return false;
+      // Full-day absences block all slots
+      if (absenceDatesSet.has(slot.date)) return false;
+      // Partial absences block only slots within the time range
+      const isBlockedByPartialAbsence = doctorAbsences.some((absence) => {
+        if (!absence.startTime || !absence.endTime) return false;
+        if (slot.date < absence.startDate || slot.date > absence.endDate) return false;
+        const slotTime = slot.hour; // "HH:mm"
+        const absStart = absence.startTime.slice(0, 5); // "HH:mm"
+        const absEnd = absence.endTime.slice(0, 5);
+        return slotTime >= absStart && slotTime < absEnd;
+      });
+      return !isBlockedByPartialAbsence;
     });
 
     // Create events for blocked slots
@@ -425,17 +499,91 @@ export const BigCalendar = ({
       };
     });
 
+    // Create events for doctor absences
+    // Full-day absences (no startTime/endTime) → allDay events
+    // Partial absences (with times) → time-ranged events
+    const absenceEvents: CalendarEvent[] = doctorAbsences
+      .filter((absence) => {
+        return absence.startDate <= dateRange.dateTo && absence.endDate >= dateRange.dateFrom;
+      })
+      .flatMap((absence) => {
+        const events: CalendarEvent[] = [];
+        const isPartial = !!absence.startTime && !!absence.endTime;
+        const rangeStart = new Date(absence.startDate + "T12:00:00");
+        const rangeEnd = new Date(absence.endDate + "T12:00:00");
+
+        for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+          const dateStr = formatDateForCalendar(d);
+          const label = AbsenceLabels[absence.type] || absence.type;
+
+          if (isPartial) {
+            // Partial absence: show as time-ranged event
+            const [sh, sm] = absence.startTime!.split(":").map(Number);
+            const [eh, em] = absence.endTime!.split(":").map(Number);
+            const evStart = new Date(d);
+            evStart.setHours(sh, sm, 0, 0);
+            const evEnd = new Date(d);
+            evEnd.setHours(eh, em, 0, 0);
+            const timeLabel = `${absence.startTime!.slice(0, 5)} - ${absence.endTime!.slice(0, 5)}`;
+            events.push({
+              id: `absence-${absence.id}-${dateStr}`,
+              title: `Ausencia: ${label} (${timeLabel})`,
+              start: evStart,
+              end: evEnd,
+              resource: {
+                type: "absence" as const,
+                data: absence,
+              },
+            });
+          } else {
+            // Full-day absence
+            events.push({
+              id: `absence-${absence.id}-${dateStr}`,
+              title: `Ausencia: ${label}`,
+              start: new Date(d),
+              end: new Date(d),
+              allDay: true,
+              resource: {
+                type: "absence" as const,
+                data: absence,
+              },
+            });
+          }
+        }
+        return events;
+      });
+
     // Only include available slots in day/week views
     if (showAvailableSlots) {
-      return [...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
+      return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
     }
-    return [...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
-  }, [appointments, overturns, availableSlots, blockedSlots, slotDuration, showAvailableSlots, holidayDatesSet]);
+    return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
+  }, [appointments, overturns, availableSlots, blockedSlots, doctorAbsences, slotDuration, showAvailableSlots, holidayDatesSet, absenceDatesSet, dateRange]);
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
     // In blockOnly mode, slots should be interactive (like normal mode)
     const isInteractive = !readOnly || blockOnly;
+
+    // View-aware font sizes
+    const isTimeView = currentView === "day" || currentView === "work_week" || currentView === "week";
+    const availableFontSize = currentView === "day" ? "13px" : isTimeView ? "12px" : "11px";
+    const appointmentFontSize = currentView === "day" ? "14px" : isTimeView ? "13px" : "12px";
+
+    // Style for absence events - orange background
+    if (event.resource.type === "absence") {
+      return {
+        className: "absence-event",
+        style: {
+          backgroundColor: "#f97316",
+          color: "white",
+          fontSize: "12px",
+          fontWeight: "600",
+          borderRadius: "4px",
+          opacity: 0.9,
+        },
+      };
+    }
 
     // Special style for available slots - distinctive solid border
     if (event.resource.type === "available") {
@@ -444,7 +592,7 @@ export const BigCalendar = ({
         style: {
           backgroundColor: isInteractive ? "#ffffff" : "#f3f4f6",
           color: isInteractive ? "#000000" : "#9ca3af",
-          fontSize: "11px",
+          fontSize: availableFontSize,
           cursor: isInteractive ? "pointer" : "default",
           fontWeight: "600",
           opacity: isInteractive ? 1 : 0.6,
@@ -459,7 +607,7 @@ export const BigCalendar = ({
         style: {
           backgroundColor: "#fef2f2",
           color: "#dc2626",
-          fontSize: "11px",
+          fontSize: availableFontSize,
           cursor: isInteractive ? "pointer" : "default",
           fontWeight: "600",
           border: "2px dashed #dc2626",
@@ -530,13 +678,18 @@ export const BigCalendar = ({
           status === AppointmentStatus.CANCELLED_BY_PATIENT ||
           status === AppointmentStatus.CANCELLED_BY_SECRETARY ? 0.6 : 1,
         color: "white",
-        fontSize: "12px",
+        fontSize: appointmentFontSize,
       },
     };
-  }, [readOnly, blockOnly]);
+  }, [readOnly, blockOnly, currentView]);
 
   // Handle event click
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
+    // Absence events are informational only, no action on click
+    if (event.resource.type === "absence") {
+      return;
+    }
+
     // If it's an available slot, show action dialog (unless readOnly)
     if (event.resource.type === "available") {
       if (readOnly) return; // Don't allow any action in readOnly mode
@@ -669,19 +822,29 @@ export const BigCalendar = ({
     }
   };
 
-  // Day prop getter - highlight holidays and weekends
+  // Day prop getter - highlight holidays, weekends and absences
   const getDayPropGetter = useCallback(
     (date: Date) => {
       const dateStr = formatDateForCalendar(date);
       const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const isHoliday = holidayDatesSet.has(dateStr);
+      const isAbsence = absenceDatesSet.has(dateStr);
 
       if (isHoliday) {
         return {
           className: "holiday-day",
           style: {
             backgroundColor: "#fef2f2", // light red
+          },
+        };
+      }
+
+      if (isAbsence) {
+        return {
+          className: "absence-day",
+          style: {
+            backgroundColor: "#fff7ed", // light orange
           },
         };
       }
@@ -697,7 +860,7 @@ export const BigCalendar = ({
 
       return {};
     },
-    [holidayDatesSet]
+    [holidayDatesSet, absenceDatesSet]
   );
 
   const isLoading = isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
@@ -727,70 +890,85 @@ export const BigCalendar = ({
               </div>
             )}
           </div>
-          {/* Legend - Estados */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="text-sm text-muted-foreground mr-1">Estados:</span>
-            <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
-              Pendiente
-            </Badge>
-            <Badge variant="outline" className="bg-green-500/20 text-green-700 border-green-500">
-              En Espera
-            </Badge>
-            <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500">
-              Atendiendo
-            </Badge>
-            <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500">
-              Completado
-            </Badge>
-            <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
-              Cancelado
-            </Badge>
-          </div>
-          {/* Legend - Orígenes */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className="text-sm text-muted-foreground mr-1">Origen:</span>
-            <Badge variant="outline" className="border-l-4 border-l-green-500 bg-green-50 text-green-700">
-              <Globe className="h-3 w-3 mr-1" />
-              Web (Paciente)
-            </Badge>
-            <Badge variant="outline" className="border-l-4 border-l-blue-500 bg-blue-50 text-blue-700">
-              <Building className="h-3 w-3 mr-1" />
-              Secretaría
-            </Badge>
-            <Badge variant="outline" className="border-l-4 border-l-purple-500 bg-purple-50 text-purple-700">
-              <UserPlus className="h-3 w-3 mr-1" />
-              Invitado
-            </Badge>
-            <Badge variant="outline" className="border-l-4 border-l-orange-500 bg-orange-50 text-orange-700">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Sobreturno
-            </Badge>
-            <Badge variant="outline" className="border-2 border-dashed border-red-500 bg-red-50 text-red-700">
-              <Lock className="h-3 w-3 mr-1" />
-              Bloqueado
-            </Badge>
-          </div>
-          {/* Legend - Días especiales */}
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className="text-sm text-muted-foreground mr-1">Dias:</span>
-            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
-              <CalendarDays className="h-3 w-3 mr-1" />
-              Feriado
-            </Badge>
-            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
-              Fin de semana
-            </Badge>
-          </div>
+          {/* Collapsible Legend */}
+          <Collapsible open={legendsOpen} onOpenChange={setLegendsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="mt-2 gap-1 text-muted-foreground hover:text-foreground px-2 h-7">
+                {legendsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                {legendsOpen ? "Ocultar leyenda" : "Mostrar leyenda"}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {/* Legend - Estados */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-sm text-muted-foreground mr-1">Estados:</span>
+                <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
+                  Pendiente
+                </Badge>
+                <Badge variant="outline" className="bg-green-500/20 text-green-700 border-green-500">
+                  En Espera
+                </Badge>
+                <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500">
+                  Atendiendo
+                </Badge>
+                <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500">
+                  Completado
+                </Badge>
+                <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
+                  Cancelado
+                </Badge>
+              </div>
+              {/* Legend - Orígenes */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-sm text-muted-foreground mr-1">Origen:</span>
+                <Badge variant="outline" className="border-l-4 border-l-green-500 bg-green-50 text-green-700">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Web (Paciente)
+                </Badge>
+                <Badge variant="outline" className="border-l-4 border-l-blue-500 bg-blue-50 text-blue-700">
+                  <Building className="h-3 w-3 mr-1" />
+                  Secretaría
+                </Badge>
+                <Badge variant="outline" className="border-l-4 border-l-purple-500 bg-purple-50 text-purple-700">
+                  <UserPlus className="h-3 w-3 mr-1" />
+                  Invitado
+                </Badge>
+                <Badge variant="outline" className="border-l-4 border-l-orange-500 bg-orange-50 text-orange-700">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Sobreturno
+                </Badge>
+                <Badge variant="outline" className="border-2 border-dashed border-red-500 bg-red-50 text-red-700">
+                  <Lock className="h-3 w-3 mr-1" />
+                  Bloqueado
+                </Badge>
+              </div>
+              {/* Legend - Días especiales */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-sm text-muted-foreground mr-1">Dias:</span>
+                <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
+                  <CalendarDays className="h-3 w-3 mr-1" />
+                  Feriado
+                </Badge>
+                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+                  Fin de semana
+                </Badge>
+                <Badge variant="outline" className="bg-orange-500/20 text-orange-700 border-orange-500">
+                  <CalendarOff className="h-3 w-3 mr-1" />
+                  Ausencia
+                </Badge>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </CardHeader>
         <CardContent>
-          <div className="relative" style={{ height: "700px" }}>
+          <div className="relative" style={{ height: calendarHeight, minHeight: "500px" }}>
             <Calendar
               localizer={localizer}
               events={events}
               startAccessor="start"
               endAccessor="end"
               style={{ height: "100%" }}
-              views={["month", "week", "day", "agenda"]}
+              views={["month", "work_week", "day", "agenda"]}
               view={currentView}
               onView={setCurrentView}
               date={currentDate}
@@ -920,7 +1098,7 @@ export const BigCalendar = ({
                 <div>
                   <p className="text-sm text-muted-foreground">Fecha y Hora</p>
                   <p className="font-medium">
-                    {format(selectedEvent.start, "EEEE d 'de' MMMM, yyyy", { locale: es })} - {formatTimeAR(selectedEvent.resource.data.hour)}
+                    {format(selectedEvent.start, "EEEE d 'de' MMMM, yyyy", { locale: es })} - {formatTimeAR((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).hour)}
                   </p>
                 </div>
               </div>
@@ -988,17 +1166,24 @@ export const BigCalendar = ({
               {/* Actions */}
               <div className="flex flex-wrap gap-2 pt-4 border-t">
                 {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
-                  selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-600 border-green-600 hover:bg-green-50"
-                      onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
-                    >
-                      <Clock className="h-4 w-4 mr-1" />
-                      Marcar en Espera
-                    </Button>
-                  )}
+                  selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (() => {
+                    const appointmentDate = (selectedEvent.resource.data as AppointmentFullResponseDto).date;
+                    const today = formatDateForCalendar(new Date());
+                    const isToday = appointmentDate === today;
+                    return (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
+                        disabled={!isToday}
+                        title={!isToday ? "Solo se puede poner en espera un turno del dia de hoy" : undefined}
+                      >
+                        <Clock className="h-4 w-4 mr-1" />
+                        Marcar en Espera
+                      </Button>
+                    );
+                  })()}
 
                 {selectedEvent.resource.status === AppointmentStatus.WAITING && (
                   <Button
@@ -1084,6 +1269,10 @@ export const BigCalendar = ({
             setBlockDialogMode("block");
             setIsBlockDialogOpen(true);
           }}
+          onBlockFullDay={selectedDoctorId ? () => {
+            setIsSlotActionDialogOpen(false);
+            setIsAbsenceDialogOpen(true);
+          } : undefined}
         />
       )}
 
@@ -1101,6 +1290,8 @@ export const BigCalendar = ({
           setIsCreateDialogOpen(false);
           setSelectedSlot(null);
         }}
+        fixedDoctorId={fixedDoctorId}
+        allowGuestCreation={!fixedDoctorId}
       />
 
       {/* Register Guest Modal - only render if still a guest */}
@@ -1131,7 +1322,7 @@ export const BigCalendar = ({
                       : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
                     }</p>
                     <p><strong>Fecha:</strong> {format(selectedEvent.start, "EEEE d 'de' MMMM, yyyy", { locale: es })}</p>
-                    <p><strong>Hora:</strong> {formatTimeAR(selectedEvent.resource.data.hour)}</p>
+                    <p><strong>Hora:</strong> {formatTimeAR((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).hour)}</p>
                   </div>
                 )}
                 <p className="text-amber-600 font-medium">
@@ -1176,6 +1367,23 @@ export const BigCalendar = ({
         />
       )}
 
+      {/* Create Absence Dialog - Block full day */}
+      {selectedSlot && selectedDoctorId && (
+        <CreateAbsenceDialog
+          open={isAbsenceDialogOpen}
+          onOpenChange={(open) => {
+            setIsAbsenceDialogOpen(open);
+            if (!open) setSelectedSlot(null);
+          }}
+          doctorId={selectedDoctorId}
+          date={selectedSlot.date}
+          onSuccess={() => {
+            setIsAbsenceDialogOpen(false);
+            setSelectedSlot(null);
+          }}
+        />
+      )}
+
       {/* Create Overturn Dialog - Only in day view */}
       {selectedDoctorId && (
         <CreateOverturnDialog
@@ -1186,6 +1394,8 @@ export const BigCalendar = ({
           onSuccess={() => {
             setIsOverturnDialogOpen(false);
           }}
+          fixedDoctorId={fixedDoctorId}
+          allowGuestCreation={!fixedDoctorId}
         />
       )}
     </div>

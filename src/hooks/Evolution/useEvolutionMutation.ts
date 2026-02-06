@@ -13,6 +13,8 @@ export const useEvolutionMutation = () => {
 
     const createEvolutionMutation = useMutation({
         mutationFn: createEvolutionHC,
+        retry: 3,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
         onSuccess: (data, variables, context) => {
             // Invalidate all historia-clinica queries to refresh evoluciones
             queryClient.invalidateQueries({
@@ -29,6 +31,8 @@ export const useEvolutionMutation = () => {
     const updateEvolutionMutation = useMutation({
         mutationFn: ({ evolutionId, data }: UpdateEvolutionVariables) =>
             updateEvolutionHC(evolutionId, data),
+        retry: 3,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
         onSuccess: (data, variables, context) => {
             // Invalidate all historia-clinica queries to refresh evoluciones
             queryClient.invalidateQueries({

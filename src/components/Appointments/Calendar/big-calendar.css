@@ -52,9 +52,9 @@
 
 /* Events */
 .rbc-event {
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
   border: none !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -68,6 +68,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Allow text wrapping in day/week time views for multi-line events */
+.rbc-time-view .rbc-event-content {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: initial;
 }
 
 .rbc-show-more {
@@ -103,12 +110,12 @@
 }
 
 .rbc-timeslot-group {
-  min-height: 60px;
+  min-height: 70px;
   border-bottom: 1px solid #f3f4f6;
 }
 
 .rbc-time-slot {
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
 }
 

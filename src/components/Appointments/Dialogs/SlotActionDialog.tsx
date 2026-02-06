@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Lock, Calendar, Clock } from "lucide-react";
+import { CalendarPlus, Lock, CalendarOff, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -17,6 +17,7 @@ interface SlotActionDialogProps {
   hour: string;
   onCreateAppointment: () => void;
   onBlockSlot: () => void;
+  onBlockFullDay?: () => void;
 }
 
 export const SlotActionDialog = ({
@@ -26,6 +27,7 @@ export const SlotActionDialog = ({
   hour,
   onCreateAppointment,
   onBlockSlot,
+  onBlockFullDay,
 }: SlotActionDialogProps) => {
   const formattedDate = date
     ? format(new Date(date + "T12:00:00"), "EEEE d 'de' MMMM, yyyy", { locale: es })
@@ -76,10 +78,26 @@ export const SlotActionDialog = ({
             <div className="text-left">
               <div className="font-medium">Bloquear Horario</div>
               <div className="text-xs text-muted-foreground">
-                Impedir que se asignen turnos
+                Impedir que se asignen turnos en este horario
               </div>
             </div>
           </Button>
+
+          {onBlockFullDay && (
+            <Button
+              onClick={onBlockFullDay}
+              className="w-full justify-start h-auto py-4"
+              variant="outline"
+            >
+              <CalendarOff className="h-5 w-5 mr-3 text-orange-600" />
+              <div className="text-left">
+                <div className="font-medium">Bloquear Dia Completo</div>
+                <div className="text-xs text-muted-foreground">
+                  Crear ausencia para todo el dia
+                </div>
+              </div>
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

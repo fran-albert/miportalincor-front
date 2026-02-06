@@ -33,6 +33,8 @@ interface CreateAppointmentDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** If true, allow creating guest appointments */
   allowGuestCreation?: boolean;
+  /** If provided, fixes the doctor and disables doctor select */
+  fixedDoctorId?: number;
 }
 
 export const CreateAppointmentDialog = ({
@@ -46,6 +48,7 @@ export const CreateAppointmentDialog = ({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   allowGuestCreation = true,
+  fixedDoctorId,
 }: CreateAppointmentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -120,12 +123,13 @@ export const CreateAppointmentDialog = ({
             onSubmit={handleSubmit}
             onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
             isLoading={isCreating || isCreatingGuest}
-            defaultDoctorId={defaultDoctorId}
+            defaultDoctorId={fixedDoctorId ?? defaultDoctorId}
             defaultPatientId={defaultPatientId}
             defaultPatient={defaultPatient}
             defaultDate={defaultDate}
             defaultHour={defaultHour}
             allowGuestCreation={allowGuestCreation}
+            fixedDoctorId={fixedDoctorId}
           />
         </ScrollArea>
       </DialogContent>

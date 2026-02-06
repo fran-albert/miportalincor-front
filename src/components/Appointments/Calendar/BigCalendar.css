@@ -11,7 +11,7 @@
 
 /* Better slot visibility in week view */
 .rbc-time-view .rbc-event {
-  min-height: 25px;
+  min-height: 30px;
 }
 
 /* Available slots specific styling - force black border */
@@ -23,7 +23,7 @@
 
 /* Improve readability in week view time slots */
 .rbc-time-slot {
-  min-height: 25px;
+  min-height: 30px;
 }
 
 /* Visible border for each time slot cell (only in week/day time views) */
@@ -43,8 +43,8 @@
 
 /* Make time labels more visible */
 .rbc-label {
-  font-weight: 500;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 /* Holiday day styling - more prominent */
@@ -74,6 +74,36 @@
 /* Holiday day header text color */
 .holiday-day .rbc-button-link {
   color: #dc2626 !important;
+  font-weight: 600 !important;
+}
+
+/* Absence day styling */
+.absence-day {
+  background-color: #fff7ed !important;
+  position: relative;
+}
+
+/* Diagonal stripe pattern for absence days in month view */
+.rbc-month-view .absence-day::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 10px,
+    rgba(249, 115, 22, 0.08) 10px,
+    rgba(249, 115, 22, 0.08) 20px
+  );
+  pointer-events: none;
+}
+
+/* Absence day header text color */
+.absence-day .rbc-button-link {
+  color: #ea580c !important;
   font-weight: 600 !important;
 }
 

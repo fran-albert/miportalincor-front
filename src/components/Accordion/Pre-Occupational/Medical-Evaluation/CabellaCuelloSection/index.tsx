@@ -31,7 +31,7 @@ export const CabezaCuelloSection: React.FC<CabezaCuelloSectionProps> = ({
 
   const handleObservacionesChange = (value: string) => {
     if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: undefined, observaciones: value });
+      onBatchChange({ sinAlteraciones: false, observaciones: value });
     } else {
       onChange("observaciones", value);
     }

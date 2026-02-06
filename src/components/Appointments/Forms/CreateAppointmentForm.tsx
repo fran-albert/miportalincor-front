@@ -21,7 +21,9 @@ import {
   CreateAppointmentFormData
 } from "@/validators/Appointment/appointment.schema";
 import { formatDateForCalendar, getTodayDateAR } from "@/common/helpers/timezone";
-import { Loader2, UserPlus, X } from "lucide-react";
+import { Loader2, UserPlus, X, Stethoscope } from "lucide-react";
+import { useDoctors } from "@/hooks/Doctor/useDoctors";
+import { formatDoctorName } from "@/common/helpers/helpers";
 
 export interface GuestAppointmentData {
   doctorId: number;
@@ -52,6 +54,8 @@ interface CreateAppointmentFormProps {
   defaultHour?: string;
   /** If true, allow creating guest appointments */
   allowGuestCreation?: boolean;
+  /** If provided, fixes the doctor and disables doctor select */
+  fixedDoctorId?: number;
 }
 
 export const CreateAppointmentForm = ({
@@ -64,8 +68,13 @@ export const CreateAppointmentForm = ({
   defaultDate,
   defaultHour,
   allowGuestCreation = true,
+  fixedDoctorId,
 }: CreateAppointmentFormProps) => {
   const [guestData, setGuestData] = useState<GuestData | null>(null);
+  const { doctors } = useDoctors({ auth: true, fetchDoctors: !!fixedDoctorId });
+  const fixedDoctor = fixedDoctorId
+    ? doctors.find(d => Number(d.userId) === fixedDoctorId)
+    : undefined;
 
   // Determinar el patientId inicial: usar defaultPatientId o el userId del defaultPatient
   const initialPatientId = defaultPatientId && defaultPatientId > 0
@@ -149,23 +158,35 @@ export const CreateAppointmentForm = ({
   return (
     <Form {...form}>
       <form onSubmit={isGuestMode ? (e) => { e.preventDefault(); handleGuestSubmit(); } : form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="doctorId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Médico *</FormLabel>
-              <FormControl>
-                <DoctorSelect
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Seleccionar médico"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {fixedDoctorId ? (
+          <div className="space-y-2">
+            <FormLabel>Médico</FormLabel>
+            <div className="flex items-center gap-2 h-10 w-full rounded-md border border-input bg-muted px-3 py-2">
+              <Stethoscope className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                {fixedDoctor ? formatDoctorName(fixedDoctor) : "Cargando..."}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <FormField
+            control={form.control}
+            name="doctorId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Médico *</FormLabel>
+                <FormControl>
+                  <DoctorSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Seleccionar médico"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Patient/Guest Selection */}
         {isGuestMode ? (

@@ -1,6 +1,7 @@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Globe } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Globe, UserCog } from "lucide-react";
 import { useDoctorBookingSettings } from "@/hooks/DoctorBookingSettings/useDoctorBookingSettings";
 import { useDoctorBookingSettingsMutation } from "@/hooks/DoctorBookingSettings/useDoctorBookingSettingsMutation";
 import { useToast } from "@/hooks/use-toast";
@@ -11,10 +12,10 @@ interface BookingSettingsToggleProps {
 
 export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) => {
   const { toast } = useToast();
-  const { allowOnlineBooking, isLoading } = useDoctorBookingSettings({ doctorId });
+  const { settings, allowOnlineBooking, isLoading } = useDoctorBookingSettings({ doctorId });
   const { updateSettings, isUpdating } = useDoctorBookingSettingsMutation();
 
-  const handleToggle = async (checked: boolean) => {
+  const handleToggleOnlineBooking = async (checked: boolean) => {
     try {
       await updateSettings.mutateAsync({
         doctorId,
@@ -34,6 +35,26 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
     }
   };
 
+  const handleToggleSelfManage = async (checked: boolean) => {
+    try {
+      await updateSettings.mutateAsync({
+        doctorId,
+        dto: { canSelfManageSchedule: checked }
+      });
+      toast({
+        title: checked ? "Autogestión habilitada" : "Autogestión deshabilitada",
+        description: checked
+          ? "El médico puede gestionar sus turnos, horarios y ausencias"
+          : "Solo la secretaría/administrador puede gestionar turnos y horarios",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la configuración",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-2">
@@ -44,26 +65,52 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
   }
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <Globe className="h-5 w-5 text-muted-foreground" />
-        <div className="space-y-0.5">
-          <Label htmlFor="allow-online-booking" className="text-base font-medium">
-            Permitir turnos online
-          </Label>
-          <p className="text-sm text-muted-foreground">
-            {allowOnlineBooking
-              ? "Los pacientes pueden reservar turnos desde la web"
-              : "Solo la secretaría puede asignar turnos"}
-          </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Globe className="h-5 w-5 text-muted-foreground" />
+          <div className="space-y-0.5">
+            <Label htmlFor="allow-online-booking" className="text-base font-medium">
+              Permitir turnos online
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {allowOnlineBooking
+                ? "Los pacientes pueden reservar turnos desde la web"
+                : "Solo la secretaría puede asignar turnos"}
+            </p>
+          </div>
         </div>
+        <Switch
+          id="allow-online-booking"
+          checked={allowOnlineBooking}
+          onCheckedChange={handleToggleOnlineBooking}
+          disabled={isUpdating}
+        />
       </div>
-      <Switch
-        id="allow-online-booking"
-        checked={allowOnlineBooking}
-        onCheckedChange={handleToggle}
-        disabled={isUpdating}
-      />
+
+      <Separator />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <UserCog className="h-5 w-5 text-muted-foreground" />
+          <div className="space-y-0.5">
+            <Label htmlFor="can-self-manage" className="text-base font-medium">
+              Autogestión de Agenda
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {settings?.canSelfManageSchedule
+                ? "El médico puede gestionar sus turnos, horarios y ausencias"
+                : "Solo la secretaría/administrador puede gestionar la agenda"}
+            </p>
+          </div>
+        </div>
+        <Switch
+          id="can-self-manage"
+          checked={settings?.canSelfManageSchedule ?? false}
+          onCheckedChange={handleToggleSelfManage}
+          disabled={isUpdating}
+        />
+      </div>
     </div>
   );
 };
