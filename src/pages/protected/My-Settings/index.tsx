@@ -1,15 +1,23 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/PageHeader";
-import { MyAvailabilities, MyAbsences, MyPrescriptionSettings } from "@/components/MySettings";
+import {
+  MyAvailabilities,
+  MyAbsences,
+  MyPrescriptionSettings,
+  MyAvailabilitiesEditable,
+  MyAbsencesEditable
+} from "@/components/MySettings";
 import { Settings, Calendar, CalendarOff, FileText } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
+import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
 
 export default function MySettingsPage() {
   const { session } = useUserRole();
   const doctorId = typeof session?.id === 'string' ? parseInt(session.id, 10) : (session?.id ?? 0);
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
+  const { canSelfManage } = useCanSelfManageSchedule();
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -25,7 +33,7 @@ export default function MySettingsPage() {
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         title="Mi Configuración"
-        description="Visualiza tus horarios y ausencias configuradas"
+        description={canSelfManage ? "Gestioná tus horarios y ausencias" : "Visualiza tus horarios y ausencias configuradas"}
         icon={<Settings className="h-6 w-6" />}
       />
 
@@ -48,11 +56,19 @@ export default function MySettingsPage() {
         </TabsList>
 
         <TabsContent value="availabilities" className="mt-6">
-          <MyAvailabilities doctorId={doctorId} />
+          {canSelfManage ? (
+            <MyAvailabilitiesEditable doctorId={doctorId} />
+          ) : (
+            <MyAvailabilities doctorId={doctorId} />
+          )}
         </TabsContent>
 
         <TabsContent value="absences" className="mt-6">
-          <MyAbsences doctorId={doctorId} />
+          {canSelfManage ? (
+            <MyAbsencesEditable doctorId={doctorId} />
+          ) : (
+            <MyAbsences doctorId={doctorId} />
+          )}
         </TabsContent>
 
         {hasGreenCardService && (

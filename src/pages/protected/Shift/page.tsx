@@ -12,11 +12,13 @@ import { QueuePanel } from "@/components/Queue";
 import { PageHeader } from "@/components/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserRole from "@/hooks/useRoles";
+import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
 import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
   const queryClient = useQueryClient();
   const { isDoctor } = useUserRole();
+  const { canSelfManage, doctorId } = useCanSelfManageSchedule();
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -29,15 +31,15 @@ const ShiftsPage = () => {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: isDoctor ? "Mis Turnos" : "Turnos" },
+    { label: isDoctor && canSelfManage ? "Gestión de Turnos" : isDoctor ? "Mis Turnos" : "Turnos" },
   ];
 
   const headerActions = (
     <div className="flex items-center gap-2 flex-wrap">
-      {!isDoctor && (
+      {(!isDoctor || canSelfManage) && (
         <>
-          <CreateAppointmentDialog />
-          <CreateOverturnDialog />
+          <CreateAppointmentDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor} />
+          <CreateOverturnDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor} />
         </>
       )}
       <Button
@@ -59,9 +61,11 @@ const ShiftsPage = () => {
 
       <PageHeader
         breadcrumbItems={breadcrumbItems}
-        title={isDoctor ? "Mis Turnos" : "Gestión de Turnos"}
+        title={isDoctor && canSelfManage ? "Gestión de Turnos" : isDoctor ? "Mis Turnos" : "Gestión de Turnos"}
         description={
-          isDoctor
+          isDoctor && canSelfManage
+            ? "Gestioná tus turnos, crea citas y sobreturnos"
+            : isDoctor
             ? "Visualización de tus turnos y sobreturnos"
             : "Administración de citas médicas y sobreturnos"
         }
@@ -71,7 +75,7 @@ const ShiftsPage = () => {
 
       {/* Content: diferentes vistas según rol */}
       {isDoctor ? (
-        <BigCalendar autoFilterForDoctor={true} blockOnly={true} />
+        <BigCalendar autoFilterForDoctor={true} blockOnly={!canSelfManage} fixedDoctorId={canSelfManage ? doctorId : undefined} />
       ) : (
         <Tabs defaultValue="calendar" className="flex-1">
           <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">

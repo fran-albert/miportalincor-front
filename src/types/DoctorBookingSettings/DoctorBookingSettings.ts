@@ -3,6 +3,7 @@
  */
 export interface UpdateDoctorBookingSettingsDto {
   allowOnlineBooking?: boolean;
+  canSelfManageSchedule?: boolean;
 }
 
 /**
@@ -12,6 +13,7 @@ export interface DoctorBookingSettingsResponseDto {
   id: number;
   doctorId: number;
   allowOnlineBooking: boolean;
+  canSelfManageSchedule: boolean;
   createdAt: string;
   updatedAt: string;
 }
