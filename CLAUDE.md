@@ -208,8 +208,10 @@ npm run test:run         # Ejecutar tests
 - `/patients/:id/studies` - Estudios
 
 ### Turnos
-- `/appointments` - Gestión de turnos
-- `/appointments/calendar` - Calendario
+- `/turnos` - Calendario de turnos (BigCalendar)
+- `/turnos/disponibilidad` - Configurar disponibilidad horaria
+- `/turnos/ausencias` - Gestionar ausencias de medicos
+- `/turnos/feriados` - Configurar feriados
 - `/queue` - Cola de espera
 
 ### Estudios
@@ -234,6 +236,48 @@ Componentes en `src/components/ui/`:
 - Table, Tabs, Accordion
 - Toast (sonner), Tooltip
 - Form components
+- Collapsible (usado en BigCalendar para leyendas)
+
+## Componentes de Turnos (Appointments)
+
+### BigCalendar (`components/Appointments/Calendar/`)
+Calendario principal de turnos basado en `react-big-calendar`. Archivos:
+- `BigCalendar.tsx` - Componente principal
+- `BigCalendar.css` - Estilos custom del componente
+- `big-calendar.css` - Estilos base de react-big-calendar
+
+Funcionalidades:
+- **Vistas**: Mes, Semana Laboral (work_week, 5 dias), Dia, Agenda
+- **Vista default**: Dia para doctores (`autoFilterForDoctor`), Mes para secretarias
+- **Altura dinamica**: `calc(100vh - 260px)` en day/work_week, `850px` en mes
+- **Leyendas colapsables**: Colapsadas por default para doctores, expandidas para secretarias
+- **Eventos multi-linea**: En vista dia y work_week muestra nombre + DNI + obra social
+- **Ausencias en calendario**: Muestra ausencias del medico como eventos (naranja), dias completos con fondo `#fff7ed`
+- **Bloqueo de slots**: Dialog para crear turno, bloquear horario, o bloquear dia completo
+- **Validacion WAITING**: Boton "Marcar en Espera" deshabilitado si la fecha del turno no es hoy
+
+### Dialogs (`components/Appointments/Dialogs/`)
+| Componente | Descripcion |
+|-----------|-------------|
+| `SlotActionDialog.tsx` | Menu de acciones al clickear slot disponible: crear turno, bloquear horario, bloquear dia completo |
+| `CreateAbsenceDialog.tsx` | Dialog para crear ausencia de dia completo con selector de tipo (Vacaciones, Licencia, Otro) |
+| `CreateAppointmentDialog.tsx` | Dialog para crear turno nuevo |
+| `AppointmentDetailDialog.tsx` | Detalle de un turno existente |
+
+### Hooks usados en Turnos
+| Hook | Uso |
+|------|-----|
+| `useDoctorAbsences(doctorId, startDate, endDate)` | Obtener ausencias de un medico en rango de fechas |
+| `useDoctorAbsenceMutations()` | Crear/eliminar ausencias (`createAbsence`, `deleteAbsence`) |
+| `useAppointments()` | CRUD de turnos |
+| `useDoctorAvailabilities()` | Disponibilidad horaria del medico |
+| `useBlockedSlots()` | Slots bloqueados |
+
+### Tipos clave (Appointments)
+- `CalendarEvent` - Evento del calendario (turno, sobreturno, disponible, bloqueado, ausencia)
+- `AppointmentFullResponseDto` - Turno con paciente y medico
+- `DoctorAbsenceResponseDto` - Ausencia con `startDate`, `endDate`, `startTime?`, `endTime?`, `type`
+- `Absence` enum / `AbsenceLabels` - Tipos de ausencia en `src/types/Doctor-Absence/`
 
 ## APIs Consumidas
 | API | Base URL | Uso |

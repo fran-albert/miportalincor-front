@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Plus, X, Stethoscope } from "lucide-react";
@@ -31,6 +31,7 @@ export const DoctorTabsContainer = () => {
           </Button>
         </div>
       ) : (
+        <>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center gap-2">
             <div className="flex-1 min-w-0">
@@ -74,19 +75,28 @@ export const DoctorTabsContainer = () => {
             </Button>
           </div>
 
-          {tabs.map((tab) => (
-            <TabsContent
+        </Tabs>
+
+        {/* Render all calendars but only show the active one.
+            Using display:none preserves component state (date, view, scroll)
+            and avoids remounting hooks on tab switch. */}
+        {tabs.map((tab) => {
+          const isActive = activeTab === `doctor-${tab.doctorId}`;
+          return (
+            <div
               key={tab.doctorId}
-              value={`doctor-${tab.doctorId}`}
               className="mt-4"
+              style={{ display: isActive ? "block" : "none" }}
             >
               <BigCalendar
                 doctorId={tab.doctorId}
                 doctorName={tab.doctorName}
+                isActive={isActive}
               />
-            </TabsContent>
-          ))}
-        </Tabs>
+            </div>
+          );
+        })}
+        </>
       )}
 
       <AddDoctorTabDialog

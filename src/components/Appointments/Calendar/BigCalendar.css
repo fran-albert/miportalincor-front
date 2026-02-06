@@ -2,33 +2,61 @@
 
 /* Wider time gutter (left column with hours) for week/day views */
 .rbc-time-view .rbc-time-gutter {
-  min-width: 80px;
+  min-width: 60px;
 }
 
 .rbc-time-view .rbc-time-header-gutter {
-  min-width: 80px;
+  min-width: 60px;
 }
 
-/* Better slot visibility in week view */
-.rbc-time-view .rbc-event {
-  min-height: 30px;
-}
+/* ── Compact time views (week & day) ── */
 
-/* Available slots specific styling - force black border */
-.available-slot-event {
-  border: 2px solid #000000 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
-  margin: 1px 2px !important;
-}
-
-/* Improve readability in week view time slots */
+/* Compact time slot rows */
 .rbc-time-slot {
   min-height: 30px;
 }
 
+/* Compact events */
+.rbc-time-view .rbc-event {
+  min-height: 27px;
+  padding: 2px 4px !important;
+  font-size: 12px;
+  line-height: 20px;
+  border-bottom: 1px solid #9ca3af !important;
+}
+
+/* Compact event content */
+.rbc-time-view .rbc-event-content {
+  line-height: 20px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Hide redundant time label inside events */
+.rbc-time-view .rbc-event-label {
+  display: none;
+}
+
+/* Compact timeslot groups */
+.rbc-time-view .rbc-timeslot-group {
+  min-height: 30px;
+  border-bottom: 1px solid #9ca3af !important;
+}
+
+/* Available slots - white background */
+.available-slot-event {
+  border: none !important;
+  border-bottom: 1px solid #9ca3af !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+  margin: 0px 1px !important;
+}
+
 /* Visible border for each time slot cell (only in week/day time views) */
 .rbc-time-view .rbc-day-slot .rbc-time-slot {
-  border-bottom: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #e5e7eb !important;
 }
 
 /* Border between day columns (only in week/day time views) */
@@ -36,24 +64,21 @@
   border-left: 1px solid #d1d5db !important;
 }
 
-/* Stronger border between hours (only in week/day time views) */
-.rbc-time-view .rbc-timeslot-group {
-  border-bottom: 1px solid #9ca3af !important;
-}
-
-/* Make time labels more visible */
+/* Time labels */
 .rbc-label {
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
+  padding: 0 4px !important;
 }
 
-/* Holiday day styling - more prominent */
+/* ── Holiday styling ── */
+
 .holiday-day {
   background-color: #fef2f2 !important;
   position: relative;
 }
 
-/* Add a diagonal stripe pattern to holiday days in month view */
+/* Diagonal stripe pattern on holidays in month view */
 .rbc-month-view .holiday-day::before {
   content: "";
   position: absolute;
@@ -71,19 +96,18 @@
   pointer-events: none;
 }
 
-/* Holiday day header text color */
 .holiday-day .rbc-button-link {
   color: #dc2626 !important;
   font-weight: 600 !important;
 }
 
-/* Absence day styling */
+/* ── Absence styling ── */
+
 .absence-day {
   background-color: #fff7ed !important;
   position: relative;
 }
 
-/* Diagonal stripe pattern for absence days in month view */
 .rbc-month-view .absence-day::before {
   content: "";
   position: absolute;
@@ -101,18 +125,17 @@
   pointer-events: none;
 }
 
-/* Absence day header text color */
 .absence-day .rbc-button-link {
   color: #ea580c !important;
   font-weight: 600 !important;
 }
 
-/* Weekend day styling */
+/* ── Weekend styling ── */
+
 .weekend-day {
   background-color: #f3f4f6 !important;
 }
 
-/* Weekend header text - slightly muted */
 .weekend-day .rbc-button-link {
   color: #6b7280 !important;
 }
