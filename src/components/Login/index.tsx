@@ -33,7 +33,7 @@ const LoginComponent = () => {
   const { twoFactor } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(authStorage.getRememberMe());
   const navigate = useNavigate();
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
@@ -47,6 +47,9 @@ const LoginComponent = () => {
       });
 
       const data = response.data;
+
+      // Guardar preferencia de recordarme antes de cualquier flujo
+      authStorage.setRememberMe(rememberMe);
 
       // Check if 2FA is required
       if (data.requires2FA) {

@@ -2,6 +2,7 @@
 export { getAllAppointments, type GetAllAppointmentsParams, type PaginatedAppointmentsResponse } from './get-all.action';
 export { getAppointmentById } from './get-by-id.action';
 export { getAvailableSlots } from './get-slots.action';
+export { getAvailableSlotsRange } from './get-slots-range.action';
 export { getAppointmentsByDoctorAndDate } from './get-by-doctor-date.action';
 export { getTodayAppointmentsByDoctor } from './get-today-by-doctor.action';
 export { getMyTodayAppointments } from './get-my-today-appointments.action';

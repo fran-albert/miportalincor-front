@@ -11,7 +11,7 @@ export const useAvailableSlots = ({ doctorId, date, enabled = true }: UseAvailab
   const query = useQuery({
     queryKey: ['availableSlots', doctorId, date],
     queryFn: () => getAvailableSlots(doctorId, date),
-    staleTime: 1000 * 30, // 30 seconds - slots can change frequently
+    staleTime: 1000 * 120, // 2 minutes
     enabled: enabled && doctorId > 0 && !!date,
   });
 

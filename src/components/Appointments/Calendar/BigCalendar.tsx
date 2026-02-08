@@ -119,6 +119,8 @@ interface BigCalendarProps {
   blockOnly?: boolean;
   /** If provided, fixes the doctor in create dialogs (for doctor self-management) */
   fixedDoctorId?: number;
+  /** Whether this tab is currently visible. When false, disables data fetching to save resources. */
+  isActive?: boolean;
 }
 
 export const BigCalendar = ({
@@ -129,6 +131,7 @@ export const BigCalendar = ({
   readOnly = false,
   blockOnly = false,
   fixedDoctorId,
+  isActive = true,
 }: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -159,7 +162,7 @@ export const BigCalendar = ({
     return "700px"; // agenda
   }, [currentView]);
 
-  // Custom Event component - view-aware for multi-line in day view
+  // Custom Event component - view-aware
   const CustomEvent = useMemo(() => {
     const EventComponent = ({ event }: EventProps<CalendarEvent>) => {
       const { type, patientDni, healthInsurance, affiliationNumber } = event.resource;
@@ -169,32 +172,33 @@ export const BigCalendar = ({
         return <span>{event.title}</span>;
       }
 
-      // Day and work_week views: multi-line with more info
-      if (currentView === "day" || currentView === "work_week") {
-        const fontSize = currentView === "day" ? "13px" : "12px";
-        const subFontSize = currentView === "day" ? "11px" : "10px";
+      // Day view: single-line with dashes (same format, bigger font)
+      if (currentView === "day") {
+        const hourDay = format(event.start, "HH:mm");
+        const endHourDay = format(event.end, "HH:mm");
+        const partsDay = [`${hourDay}-${endHourDay}`, event.title];
+        if (patientDni) partsDay.push(patientDni);
+        if (healthInsurance) {
+          partsDay.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
+        }
         return (
-          <div className="flex flex-col gap-0.5 leading-tight">
-            <span className="font-semibold truncate" style={{ fontSize }}>{event.title}</span>
-            {patientDni && <span className="opacity-90 truncate" style={{ fontSize: subFontSize }}>DNI: {patientDni}</span>}
-            {healthInsurance && (
-              <span className="opacity-90 truncate" style={{ fontSize: subFontSize }}>
-                {affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance}
-              </span>
-            )}
+          <div className="font-semibold truncate" style={{ fontSize: "13px" }}>
+            {partsDay.join(' - ')}
           </div>
         );
       }
 
-      // Month/other views: single-line compact
-      const parts = [event.title];
-      if (patientDni) parts.push(`DNI: ${patientDni}`);
+      // Week/work_week/month/other views: single-line compact with dashes
+      const hour = format(event.start, "HH:mm");
+      const endHour = format(event.end, "HH:mm");
+      const parts = [`${hour}-${endHour}`, event.title];
+      if (patientDni) parts.push(patientDni);
       if (healthInsurance) {
-        parts.push(affiliationNumber ? `${healthInsurance} (${affiliationNumber})` : healthInsurance);
+        parts.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
       }
 
       return (
-        <div className="font-medium truncate text-[12px]">
+        <div className="font-medium truncate" style={{ fontSize: "12px", lineHeight: "18px" }}>
           {parts.join(' - ')}
         </div>
       );
@@ -223,7 +227,7 @@ export const BigCalendar = ({
   const { firstAvailableDate, isSearching: isSearchingFirstDate } = useFirstAvailableDate({
     doctorId: selectedDoctorId,
     maxMonthsAhead: 6,
-    enabled: !!selectedDoctorId,
+    enabled: !!selectedDoctorId && isActive,
   });
 
   // Auto-navegar al primer mes con disponibilidad cuando se encuentra
@@ -299,7 +303,7 @@ export const BigCalendar = ({
     doctorId: selectedDoctorId ?? 0,
     startDate: slotsDateRange.start,
     endDate: slotsDateRange.end,
-    enabled: !!selectedDoctorId,
+    enabled: !!selectedDoctorId && isActive,
   });
 
   // Fetch blocked slots
@@ -307,13 +311,13 @@ export const BigCalendar = ({
     doctorId: selectedDoctorId ?? 0,
     startDate: formatDateForCalendar(slotsDateRange.start),
     endDate: formatDateForCalendar(slotsDateRange.end),
-    enabled: !!selectedDoctorId,
+    enabled: !!selectedDoctorId && isActive,
   });
 
   // Fetch doctor absences
   const { absences: doctorAbsences } = useDoctorAbsences({
     doctorId: selectedDoctorId ?? 0,
-    enabled: !!selectedDoctorId,
+    enabled: !!selectedDoctorId && isActive,
   });
 
   // Fetch holidays
@@ -343,39 +347,34 @@ export const BigCalendar = ({
   const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
 
-  // Convert appointments and overturns to calendar events
-  const events = useMemo<CalendarEvent[]>(() => {
-    // Filter out cancelled appointments - they won't appear in the calendar
-    const CANCELLED_STATUSES = [
-      AppointmentStatus.CANCELLED_BY_PATIENT,
-      AppointmentStatus.CANCELLED_BY_SECRETARY,
-    ];
+  // Split event computation into independent memos for better performance.
+  // A change in appointments won't recompute absence events, etc.
+
+  const CANCELLED_STATUSES = useMemo(() => [
+    AppointmentStatus.CANCELLED_BY_PATIENT,
+    AppointmentStatus.CANCELLED_BY_SECRETARY,
+  ], []);
+
+  // Appointment events
+  const appointmentEvents = useMemo<CalendarEvent[]>(() => {
     const activeAppointments = appointments.filter(
       (apt) => !CANCELLED_STATUSES.includes(apt.status)
     );
 
-    const appointmentEvents: CalendarEvent[] = activeAppointments.map((apt) => {
+    return activeAppointments.map((apt) => {
       const [hours, minutes] = apt.hour.split(":").map(Number);
       const start = new Date(apt.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
       const end = new Date(start);
-      end.setMinutes(end.getMinutes() + slotDuration); // Use dynamic slot duration
+      end.setMinutes(end.getMinutes() + slotDuration);
 
-      // Build patient name, using guest fields if isGuest
-      // Backend returns 0/1 (numbers) not true/false (booleans)
       const isGuestAppointment = apt.isGuest === 1 || apt.isGuest === true;
       const patientName = isGuestAppointment
         ? `${apt.guestFirstName || ''} ${apt.guestLastName || ''}`
         : `${apt.patient?.firstName || ''} ${apt.patient?.lastName || ''}`;
-
-      // Get extra patient info
       const patientDni = isGuestAppointment
         ? apt.guestDocumentNumber
         : apt.patient?.userName;
-      const healthInsurance = apt.patient?.healthInsuranceName;
-      const affiliationNumber = apt.patient?.affiliationNumber;
-
-      // Add 🆕 emoji for guests
       const title = isGuestAppointment ? `🆕 ${patientName}` : patientName;
 
       return {
@@ -389,13 +388,16 @@ export const BigCalendar = ({
           status: apt.status,
           isGuest: isGuestAppointment,
           patientDni,
-          healthInsurance,
-          affiliationNumber,
+          healthInsurance: apt.patient?.healthInsuranceName,
+          affiliationNumber: apt.patient?.affiliationNumber,
         },
       };
     });
+  }, [appointments, slotDuration, CANCELLED_STATUSES]);
 
-    const overturnEvents: CalendarEvent[] = overturns.map((ot) => {
+  // Overturn events
+  const overturnEvents = useMemo<CalendarEvent[]>(() => {
+    return overturns.map((ot) => {
       const [hours, minutes] = ot.hour.split(":").map(Number);
       const start = new Date(ot.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
@@ -403,7 +405,7 @@ export const BigCalendar = ({
       end.setMinutes(end.getMinutes() + slotDuration);
 
       return {
-        id: ot.id + 100000, // Offset to avoid ID collision
+        id: ot.id + 100000,
         title: `⚡ ${ot.patient?.firstName} ${ot.patient?.lastName}`,
         start,
         end,
@@ -417,46 +419,63 @@ export const BigCalendar = ({
         },
       };
     });
+  }, [overturns, slotDuration]);
 
-    // Create set of occupied slots to filter out from available slots
-    // Exclude cancelled appointments so their slots become available again
-    const occupiedSlots = new Set<string>();
+  // Set of occupied slot keys (for filtering available slots)
+  const occupiedSlotsSet = useMemo(() => {
+    const set = new Set<string>();
     appointments
       .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
       .forEach((apt) => {
-        const key = `${apt.date}-${apt.hour.slice(0, 5)}`;
-        occupiedSlots.add(key);
+        set.add(`${apt.date}-${apt.hour.slice(0, 5)}`);
       });
     overturns.forEach((ot) => {
-      const key = `${ot.date}-${ot.hour.slice(0, 5)}`;
-      occupiedSlots.add(key);
+      set.add(`${ot.date}-${ot.hour.slice(0, 5)}`);
     });
-    // Also mark blocked slots as occupied
     blockedSlots.forEach((blocked) => {
-      const key = `${blocked.date}-${blocked.hour.slice(0, 5)}`;
-      occupiedSlots.add(key);
+      set.add(`${blocked.date}-${blocked.hour.slice(0, 5)}`);
     });
+    return set;
+  }, [appointments, overturns, blockedSlots, CANCELLED_STATUSES]);
 
-    // Filter available slots that are not occupied, not on holidays, and not during absences
-    const filteredAvailableSlots = availableSlots.filter((slot) => {
+  // Available slot events (filtered by occupied, holidays, absences)
+  const availableSlotEvents = useMemo<CalendarEvent[]>(() => {
+    const filtered = availableSlots.filter((slot) => {
       const key = `${slot.date}-${slot.hour}`;
-      if (occupiedSlots.has(key) || holidayDatesSet.has(slot.date)) return false;
-      // Full-day absences block all slots
+      if (occupiedSlotsSet.has(key) || holidayDatesSet.has(slot.date)) return false;
       if (absenceDatesSet.has(slot.date)) return false;
-      // Partial absences block only slots within the time range
       const isBlockedByPartialAbsence = doctorAbsences.some((absence) => {
         if (!absence.startTime || !absence.endTime) return false;
         if (slot.date < absence.startDate || slot.date > absence.endDate) return false;
-        const slotTime = slot.hour; // "HH:mm"
-        const absStart = absence.startTime.slice(0, 5); // "HH:mm"
-        const absEnd = absence.endTime.slice(0, 5);
-        return slotTime >= absStart && slotTime < absEnd;
+        return slot.hour >= absence.startTime!.slice(0, 5) && slot.hour < absence.endTime!.slice(0, 5);
       });
       return !isBlockedByPartialAbsence;
     });
 
-    // Create events for blocked slots
-    const blockedSlotEvents: CalendarEvent[] = blockedSlots.map((blocked) => {
+    return filtered.map((slot, index) => {
+      const [hours, minutes] = slot.hour.split(":").map(Number);
+      const start = new Date(slot.date + "T12:00:00");
+      start.setHours(hours, minutes, 0, 0);
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + slotDuration);
+
+      return {
+        id: `available-${slot.date}-${slot.hour}-${index}`,
+        title: `${slot.hour} - Disponible`,
+        start,
+        end,
+        resource: {
+          type: "available" as const,
+          slotDate: slot.date,
+          slotHour: slot.hour,
+        },
+      };
+    });
+  }, [availableSlots, occupiedSlotsSet, holidayDatesSet, absenceDatesSet, doctorAbsences, slotDuration]);
+
+  // Blocked slot events
+  const blockedSlotEvents = useMemo<CalendarEvent[]>(() => {
+    return blockedSlots.map((blocked) => {
       const [hours, minutes] = blocked.hour.split(":").map(Number);
       const start = new Date(blocked.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
@@ -477,37 +496,16 @@ export const BigCalendar = ({
         },
       };
     });
+  }, [blockedSlots, slotDuration]);
 
-    // Create events for available slots (only in day/week view)
-    const availableSlotEvents: CalendarEvent[] = filteredAvailableSlots.map((slot, index) => {
-      const [hours, minutes] = slot.hour.split(":").map(Number);
-      const start = new Date(slot.date + "T12:00:00");
-      start.setHours(hours, minutes, 0, 0);
-      const end = new Date(start);
-      end.setMinutes(end.getMinutes() + slotDuration);
-
-      return {
-        id: `available-${slot.date}-${slot.hour}-${index}`,
-        title: `${slot.hour} - Disponible`,
-        start,
-        end,
-        resource: {
-          type: "available" as const,
-          slotDate: slot.date,
-          slotHour: slot.hour,
-        },
-      };
-    });
-
-    // Create events for doctor absences
-    // Full-day absences (no startTime/endTime) → allDay events
-    // Partial absences (with times) → time-ranged events
-    const absenceEvents: CalendarEvent[] = doctorAbsences
+  // Absence events
+  const absenceEvents = useMemo<CalendarEvent[]>(() => {
+    return doctorAbsences
       .filter((absence) => {
         return absence.startDate <= dateRange.dateTo && absence.endDate >= dateRange.dateFrom;
       })
       .flatMap((absence) => {
-        const events: CalendarEvent[] = [];
+        const evts: CalendarEvent[] = [];
         const isPartial = !!absence.startTime && !!absence.endTime;
         const rangeStart = new Date(absence.startDate + "T12:00:00");
         const rangeEnd = new Date(absence.endDate + "T12:00:00");
@@ -517,7 +515,6 @@ export const BigCalendar = ({
           const label = AbsenceLabels[absence.type] || absence.type;
 
           if (isPartial) {
-            // Partial absence: show as time-ranged event
             const [sh, sm] = absence.startTime!.split(":").map(Number);
             const [eh, em] = absence.endTime!.split(":").map(Number);
             const evStart = new Date(d);
@@ -525,50 +522,44 @@ export const BigCalendar = ({
             const evEnd = new Date(d);
             evEnd.setHours(eh, em, 0, 0);
             const timeLabel = `${absence.startTime!.slice(0, 5)} - ${absence.endTime!.slice(0, 5)}`;
-            events.push({
+            evts.push({
               id: `absence-${absence.id}-${dateStr}`,
               title: `Ausencia: ${label} (${timeLabel})`,
               start: evStart,
               end: evEnd,
-              resource: {
-                type: "absence" as const,
-                data: absence,
-              },
+              resource: { type: "absence" as const, data: absence },
             });
           } else {
-            // Full-day absence
-            events.push({
+            evts.push({
               id: `absence-${absence.id}-${dateStr}`,
               title: `Ausencia: ${label}`,
               start: new Date(d),
               end: new Date(d),
               allDay: true,
-              resource: {
-                type: "absence" as const,
-                data: absence,
-              },
+              resource: { type: "absence" as const, data: absence },
             });
           }
         }
-        return events;
+        return evts;
       });
+  }, [doctorAbsences, dateRange]);
 
-    // Only include available slots in day/week views
+  // Combine all event types
+  const events = useMemo<CalendarEvent[]>(() => {
     if (showAvailableSlots) {
       return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
     }
     return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
-  }, [appointments, overturns, availableSlots, blockedSlots, doctorAbsences, slotDuration, showAvailableSlots, holidayDatesSet, absenceDatesSet, dateRange]);
+  }, [showAvailableSlots, absenceEvents, appointmentEvents, overturnEvents, availableSlotEvents, blockedSlotEvents]);
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
     // In blockOnly mode, slots should be interactive (like normal mode)
     const isInteractive = !readOnly || blockOnly;
 
-    // View-aware font sizes
-    const isTimeView = currentView === "day" || currentView === "work_week" || currentView === "week";
-    const availableFontSize = currentView === "day" ? "13px" : isTimeView ? "12px" : "11px";
-    const appointmentFontSize = currentView === "day" ? "14px" : isTimeView ? "13px" : "12px";
+    // View-aware font sizes — compact in week, normal in day
+    const availableFontSize = currentView === "day" ? "13px" : "12px";
+    const appointmentFontSize = currentView === "day" ? "13px" : "12px";
 
     // Style for absence events - orange background
     if (event.resource.type === "absence") {
@@ -585,7 +576,7 @@ export const BigCalendar = ({
       };
     }
 
-    // Special style for available slots - distinctive solid border
+    // Available slots - white background
     if (event.resource.type === "available") {
       return {
         className: "available-slot-event",
@@ -673,7 +664,7 @@ export const BigCalendar = ({
       style: {
         backgroundColor,
         borderLeft: borderStyle || undefined,
-        borderRadius: "4px",
+        borderRadius: currentView === "day" ? "4px" : "2px",
         opacity: status === AppointmentStatus.COMPLETED ||
           status === AppointmentStatus.CANCELLED_BY_PATIENT ||
           status === AppointmentStatus.CANCELLED_BY_SECRETARY ? 0.6 : 1,
