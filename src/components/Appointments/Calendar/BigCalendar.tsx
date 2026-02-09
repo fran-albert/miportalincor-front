@@ -102,6 +102,7 @@ interface CalendarEvent {
     patientDni?: string;
     healthInsurance?: string;
     affiliationNumber?: string;
+    consultationType?: string;
   };
 }
 
@@ -165,7 +166,7 @@ export const BigCalendar = ({
   // Custom Event component - view-aware
   const CustomEvent = useMemo(() => {
     const EventComponent = ({ event }: EventProps<CalendarEvent>) => {
-      const { type, patientDni, healthInsurance, affiliationNumber } = event.resource;
+      const { type, patientDni, healthInsurance, affiliationNumber, consultationType } = event.resource;
 
       // For available, blocked, or absence events, just show the title
       if (type === "available" || type === "blocked" || type === "absence") {
@@ -181,6 +182,7 @@ export const BigCalendar = ({
         if (healthInsurance) {
           partsDay.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
         }
+        if (consultationType) partsDay.push(consultationType);
         return (
           <div className="font-semibold truncate" style={{ fontSize: "13px" }}>
             {partsDay.join(' - ')}
@@ -196,6 +198,7 @@ export const BigCalendar = ({
       if (healthInsurance) {
         parts.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
       }
+      if (consultationType) parts.push(consultationType);
 
       return (
         <div className="font-medium truncate" style={{ fontSize: "12px", lineHeight: "18px" }}>
@@ -296,7 +299,7 @@ export const BigCalendar = ({
   }, [currentView, currentDate]);
 
   // Show slots in all views except agenda
-  const showAvailableSlots = currentView !== "agenda";
+  const showAvailableSlots = true;
 
   // Fetch available slots (always fetch to pre-load)
   const { slots: availableSlots } = useAvailableSlotsRange({
@@ -390,6 +393,7 @@ export const BigCalendar = ({
           patientDni,
           healthInsurance: apt.patient?.healthInsuranceName,
           affiliationNumber: apt.patient?.affiliationNumber,
+          consultationType: apt.consultationType?.name,
         },
       };
     });
