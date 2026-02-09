@@ -67,6 +67,7 @@ export const CreateAppointmentDialog = ({
         patientId: data.patientId,
         date: data.date,
         hour: data.hour,
+        consultationTypeId: data.consultationTypeId,
       });
       showSuccess("Turno creado", "El turno se creó correctamente");
       setOpen(false);
