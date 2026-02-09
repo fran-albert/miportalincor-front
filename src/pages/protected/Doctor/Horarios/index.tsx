@@ -56,9 +56,9 @@ const DoctorHorariosPage = () => {
     isDeleting
   } = useDoctorAvailabilityMutations();
 
-  const handleCreate = async (data: CreateDoctorAvailabilityDto) => {
+  const handleCreate = async (data: CreateDoctorAvailabilityDto | UpdateDoctorAvailabilityDto) => {
     try {
-      await createAvailability.mutateAsync(data);
+      await createAvailability.mutateAsync(data as CreateDoctorAvailabilityDto);
       toast.success("Disponibilidad creada correctamente");
       setIsFormOpen(false);
     } catch (error: unknown) {
