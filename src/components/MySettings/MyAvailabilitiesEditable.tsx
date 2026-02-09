@@ -17,12 +17,21 @@ import {
   RecurrenceTypeLabels,
   WeekDaysShort,
   WeekDays,
-  RecurrenceType
+  RecurrenceType,
+  UpdateDoctorAvailabilityDto,
 } from "@/types/DoctorAvailability";
 import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability/useDoctorAvailabilities";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability/useDoctorAvailabilityMutations";
-import { Clock, Calendar, Repeat, CalendarX, Trash2, AlertCircle } from "lucide-react";
+import { Clock, Calendar, Repeat, CalendarX, Trash2, Pencil, AlertCircle } from "lucide-react";
 import { formatDateAR } from "@/common/helpers/timezone";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AvailabilityForm } from "@/components/DoctorAvailability/AvailabilityForm";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -34,10 +43,12 @@ interface MyAvailabilitiesEditableProps {
 const AvailabilityEditableCard = ({
   availability,
   onDelete,
+  onEdit,
   isDeleting,
 }: {
   availability: DoctorAvailabilityResponseDto;
   onDelete: (id: number) => void;
+  onEdit?: (availability: DoctorAvailabilityResponseDto) => void;
   isDeleting: boolean;
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -74,15 +85,27 @@ const AvailabilityEditableCard = ({
                 <Repeat className="h-3 w-3 mr-1" />
                 {RecurrenceTypeLabels[availability.recurrenceType]}
               </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowDeleteDialog(true)}
-                disabled={isDeleting}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1">
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(availability)}
+                    className="text-primary hover:text-primary hover:bg-primary/10"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -145,8 +168,25 @@ export const MyAvailabilitiesEditable = ({ doctorId }: MyAvailabilitiesEditableP
     doctorId,
     enabled: doctorId > 0
   });
-  const { deleteAvailability, isDeleting } = useDoctorAvailabilityMutations();
+  const { deleteAvailability, updateAvailability, isDeleting, isUpdating } = useDoctorAvailabilityMutations();
   const { showSuccess, showError } = useToastContext();
+  const [editingAvailability, setEditingAvailability] = useState<DoctorAvailabilityResponseDto | null>(null);
+
+  const handleUpdate = async (data: UpdateDoctorAvailabilityDto) => {
+    if (!editingAvailability) return;
+    try {
+      await updateAvailability.mutateAsync({
+        id: editingAvailability.id,
+        dto: data,
+        doctorId,
+      });
+      showSuccess("Horario actualizado", "El horario se actualizó correctamente");
+      setEditingAvailability(null);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "No se pudo actualizar el horario";
+      showError("Error", errorMessage);
+    }
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -190,7 +230,7 @@ export const MyAvailabilitiesEditable = ({ doctorId }: MyAvailabilitiesEditableP
               Gestión de Horarios
             </p>
             <p className="text-xs text-blue-700">
-              Podés eliminar horarios existentes. Para agregar nuevos horarios, contactá a la secretaría o administrador.
+              Podés editar o eliminar horarios existentes. Para agregar nuevos horarios, contactá a la secretaría o administrador.
             </p>
           </div>
         </div>
@@ -206,10 +246,35 @@ export const MyAvailabilitiesEditable = ({ doctorId }: MyAvailabilitiesEditableP
           <AvailabilityEditableCard
             availability={availability}
             onDelete={handleDelete}
+            onEdit={(a) => setEditingAvailability(a)}
             isDeleting={isDeleting}
           />
         </motion.div>
       ))}
+
+      <Dialog
+        open={editingAvailability !== null}
+        onOpenChange={(open) => { if (!open) setEditingAvailability(null); }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Horario</DialogTitle>
+            <DialogDescription>
+              Modificá los datos del horario de atención
+            </DialogDescription>
+          </DialogHeader>
+          {editingAvailability && (
+            <AvailabilityForm
+              key={`edit-${editingAvailability.id}`}
+              doctorId={doctorId}
+              initialData={editingAvailability}
+              onSubmit={handleUpdate}
+              onCancel={() => setEditingAvailability(null)}
+              isLoading={isUpdating}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

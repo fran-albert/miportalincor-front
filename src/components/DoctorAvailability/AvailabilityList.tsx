@@ -3,11 +3,12 @@ import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability";
 import { AvailabilityCard } from "./AvailabilityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarX } from "lucide-react";
-import { RecurrenceType, WeekDays } from "@/types/DoctorAvailability";
+import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability";
 
 interface AvailabilityListProps {
   doctorId: number;
   onDelete: (id: number) => void;
+  onEdit?: (availability: DoctorAvailabilityResponseDto) => void;
   isDeleting?: boolean;
 }
 
@@ -33,6 +34,7 @@ const RECURRENCE_ORDER: Record<RecurrenceType, number> = {
 export const AvailabilityList = ({
   doctorId,
   onDelete,
+  onEdit,
   isDeleting = false
 }: AvailabilityListProps) => {
   const { availabilities, isLoading } = useDoctorAvailabilities({
@@ -93,6 +95,7 @@ export const AvailabilityList = ({
           key={availability.id}
           availability={availability}
           onDelete={onDelete}
+          onEdit={onEdit}
           isDeleting={isDeleting}
         />
       ))}

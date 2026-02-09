@@ -24,7 +24,11 @@ import { ArrowLeft, Plus, Clock, Settings } from "lucide-react";
 import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailability";
 import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
-import { CreateDoctorAvailabilityDto } from "@/types/DoctorAvailability";
+import {
+  CreateDoctorAvailabilityDto,
+  UpdateDoctorAvailabilityDto,
+  DoctorAvailabilityResponseDto,
+} from "@/types/DoctorAvailability";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
@@ -41,11 +45,14 @@ const DoctorHorariosPage = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editingAvailability, setEditingAvailability] = useState<DoctorAvailabilityResponseDto | null>(null);
 
   const {
     createAvailability,
+    updateAvailability,
     deleteAvailability,
     isCreating,
+    isUpdating,
     isDeleting
   } = useDoctorAvailabilityMutations();
 
@@ -57,6 +64,22 @@ const DoctorHorariosPage = () => {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "No se pudo guardar la disponibilidad";
       toast.error(`No se pudo crear la disponibilidad: ${errorMessage}`);
+    }
+  };
+
+  const handleUpdate = async (data: UpdateDoctorAvailabilityDto) => {
+    if (!editingAvailability || !doctorId) return;
+    try {
+      await updateAvailability.mutateAsync({
+        id: editingAvailability.id,
+        dto: data,
+        doctorId,
+      });
+      toast.success("Disponibilidad actualizada correctamente");
+      setEditingAvailability(null);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "No se pudo actualizar la disponibilidad";
+      toast.error(`Error: ${errorMessage}`);
     }
   };
 
@@ -149,6 +172,7 @@ const DoctorHorariosPage = () => {
               <AvailabilityList
                 doctorId={doctorId}
                 onDelete={(id) => setDeleteId(id)}
+                onEdit={(availability) => setEditingAvailability(availability)}
                 isDeleting={isDeleting}
               />
             </CardContent>
@@ -170,6 +194,31 @@ const DoctorHorariosPage = () => {
                 onCancel={() => setIsFormOpen(false)}
                 isLoading={isCreating}
               />
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Dialog */}
+          <Dialog
+            open={editingAvailability !== null}
+            onOpenChange={(open) => { if (!open) setEditingAvailability(null); }}
+          >
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Editar Disponibilidad</DialogTitle>
+                <DialogDescription>
+                  Modifique el horario de atención del médico
+                </DialogDescription>
+              </DialogHeader>
+              {editingAvailability && (
+                <AvailabilityForm
+                  key={`edit-${editingAvailability.id}`}
+                  doctorId={doctorId!}
+                  initialData={editingAvailability}
+                  onSubmit={handleUpdate}
+                  onCancel={() => setEditingAvailability(null)}
+                  isLoading={isUpdating}
+                />
+              )}
             </DialogContent>
           </Dialog>
 
