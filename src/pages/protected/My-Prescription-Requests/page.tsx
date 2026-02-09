@@ -14,6 +14,7 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ListChecks,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { PhysicalGreenCard } from "@/components/Green-Card/PhysicalGreenCard";
 import { RequestPrescriptionModal } from "@/components/Green-Card/RequestPrescriptionModal";
+import { BatchRequestPrescriptionModal } from "@/components/Green-Card/BatchRequestPrescriptionModal";
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
@@ -44,6 +46,11 @@ const MyPrescriptionRequestsPage = () => {
     useState<GreenCardItem | null>(null);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+
+  // State for batch selection
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
   // Green Card data (single card per patient)
   const { greenCard, isLoading: isLoadingCard } = useMyGreenCard();
@@ -86,6 +93,37 @@ const MyPrescriptionRequestsPage = () => {
   const handleClosePrescriptionModal = () => {
     setIsPrescriptionModalOpen(false);
     setSelectedItemForPrescription(null);
+  };
+
+  const handleToggleSelectionMode = () => {
+    if (selectionMode) {
+      setSelectedItemIds([]);
+    }
+    setSelectionMode(!selectionMode);
+  };
+
+  const handleToggleItemSelection = (itemId: string) => {
+    setSelectedItemIds((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (!greenCard) return;
+    const eligibleIds = greenCard.items
+      .filter((item) => item.isActive && !item.hasPendingPrescription)
+      .map((item) => item.id);
+
+    // If all eligible are already selected, deselect all
+    const allSelected = eligibleIds.every((id) => selectedItemIds.includes(id));
+    setSelectedItemIds(allSelected ? [] : eligibleIds);
+  };
+
+  const handleBatchSuccess = () => {
+    setSelectionMode(false);
+    setSelectedItemIds([]);
   };
 
   const getStatusBadge = (status: PrescriptionRequestStatus) => {
@@ -215,23 +253,45 @@ const MyPrescriptionRequestsPage = () => {
       {/* Green Card Section */}
       <div className="space-y-4">
         {/* Actions Bar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Pill className="h-5 w-5 text-green-600" />
             Mi Cartón Verde
           </h2>
-          {greenCard && greenCard.items.length > 0 && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleDownloadPDF}
-              disabled={isGenerating}
-              className="bg-green-700 hover:bg-green-800"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {isGenerating ? "Generando..." : "Descargar PDF"}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {greenCard && greenCard.items.length > 0 && (
+              <>
+                <Button
+                  variant={selectionMode ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={handleToggleSelectionMode}
+                >
+                  <ListChecks className="h-4 w-4 mr-2" />
+                  {selectionMode ? "Cancelar seleccion" : "Seleccionar medicamentos"}
+                </Button>
+                {selectionMode && selectedItemIds.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => setIsBatchModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Solicitar Recetas ({selectedItemIds.length})
+                  </Button>
+                )}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={isGenerating}
+                  className="bg-green-700 hover:bg-green-800"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isGenerating ? "Generando..." : "Descargar PDF"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -248,6 +308,10 @@ const MyPrescriptionRequestsPage = () => {
             onRequestPrescription={handleRequestPrescription}
             checkupSchedules={cardiovascularCheckups}
             doctorsWithGreenCardServiceIds={doctorsWithGreenCardServiceIds}
+            selectionMode={selectionMode}
+            selectedItemIds={selectedItemIds}
+            onToggleItemSelection={handleToggleItemSelection}
+            onSelectAll={handleSelectAll}
           />
         ) : (
           <Card className="border-dashed border-2 border-green-300">
@@ -379,6 +443,17 @@ const MyPrescriptionRequestsPage = () => {
           onClose={handleClosePrescriptionModal}
           greenCardId={greenCard.id}
           item={selectedItemForPrescription}
+        />
+      )}
+
+      {/* Batch Request Prescription Modal */}
+      {greenCard && (
+        <BatchRequestPrescriptionModal
+          isOpen={isBatchModalOpen}
+          onClose={() => setIsBatchModalOpen(false)}
+          greenCard={greenCard}
+          selectedItemIds={selectedItemIds}
+          onSuccess={handleBatchSuccess}
         />
       )}
     </div>

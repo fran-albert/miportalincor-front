@@ -10,6 +10,7 @@ import {
   rejectPrescriptionRequest,
   cancelPrescriptionRequest,
   uploadDoctorPrescription,
+  completeBatchPrescriptionRequest,
 } from "@/api/Prescription-Request";
 import {
   PrescriptionRequest,
@@ -103,6 +104,8 @@ export const useTakePrescriptionRequest = () => {
       queryClient.invalidateQueries({
         queryKey: prescriptionRequestKeys.doctorHistory(),
       });
+      queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
     },
     onError: (error) => {
       console.error("Error taking prescription request:", error);
@@ -134,6 +137,8 @@ export const useCompletePrescriptionRequest = () => {
       queryClient.invalidateQueries({
         queryKey: prescriptionRequestKeys.myRequests(),
       });
+      queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
     },
     onError: (error) => {
       console.error("Error completing prescription request:", error);
@@ -165,6 +170,8 @@ export const useRejectPrescriptionRequest = () => {
       queryClient.invalidateQueries({
         queryKey: prescriptionRequestKeys.myRequests(),
       });
+      queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
     },
     onError: (error) => {
       console.error("Error rejecting prescription request:", error);
@@ -199,6 +206,36 @@ export const useUploadDoctorPrescription = () => {
     mutationFn: ({ requestId, file }) => uploadDoctorPrescription(requestId, file),
     onError: (error) => {
       console.error("Error uploading prescription:", error);
+    },
+  });
+};
+
+// Complete Batch Prescription Request (Doctor)
+export const useCompleteBatchPrescriptionRequest = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    PrescriptionRequest[],
+    Error,
+    { batchId: string; data: CompletePrescriptionRequestDto }
+  >({
+    mutationFn: ({ batchId, data }) =>
+      completeBatchPrescriptionRequest(batchId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: prescriptionRequestKeys.doctorPending(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: prescriptionRequestKeys.doctorHistory(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: prescriptionRequestKeys.myRequests(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
+    },
+    onError: (error) => {
+      console.error("Error completing batch prescription request:", error);
     },
   });
 };

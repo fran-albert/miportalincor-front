@@ -13,6 +13,7 @@ import {
   Clock,
   X,
   Stethoscope,
+  Layers,
 } from "lucide-react";
 import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
 
@@ -20,15 +21,48 @@ interface ViewPrescriptionRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: PrescriptionRequest | null;
+  /** If this is a batch, pass all requests in the batch */
+  batchRequests?: PrescriptionRequest[];
   userRole: "patient" | "doctor";
   onCancel?: (request: PrescriptionRequest) => void;
   isLoading?: boolean;
+}
+
+/** Parse green card description into structured parts */
+function parseGreenCardDescription(description: string) {
+  const cleaned = description
+    .replace("Solicitud de receta desde Carton Verde: ", "")
+    .replace("Solicitud de receta desde Cartón Verde: ", "");
+
+  const cantMatch = cleaned.match(/\s*-\s*Cant:\s*(.+)$/);
+  const withoutCant = cantMatch ? cleaned.replace(cantMatch[0], "") : cleaned;
+
+  const scheduleMatch = withoutCant.match(/\s*\(([^)]+)\)\s*$/);
+  const withoutSchedule = scheduleMatch
+    ? withoutCant.replace(scheduleMatch[0], "")
+    : withoutCant;
+
+  const lastDash = withoutSchedule.lastIndexOf(" - ");
+  const name =
+    lastDash > 0
+      ? withoutSchedule.substring(0, lastDash).trim()
+      : withoutSchedule.trim();
+  const dosage =
+    lastDash > 0 ? withoutSchedule.substring(lastDash + 3).trim() : "";
+
+  return {
+    name,
+    dosage,
+    schedule: scheduleMatch?.[1] || "",
+    quantity: cantMatch?.[1]?.trim() || "",
+  };
 }
 
 export default function ViewPrescriptionRequestModal({
   isOpen,
   onClose,
   request,
+  batchRequests,
   userRole,
   onCancel,
   isLoading = false,
@@ -112,15 +146,67 @@ export default function ViewPrescriptionRequestModal({
 
           {/* Description */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-greenPrimary" />
-              Descripcion de la Solicitud
-            </h3>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {request.description}
-              </p>
-            </div>
+            {batchRequests ? (
+              <>
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-purple-600" />
+                  Medicamentos del Lote ({batchRequests.length})
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  {batchRequests.map((req) => {
+                    const isGreenCard = req.description.includes("Cartón Verde") || req.description.includes("Carton Verde");
+                    if (isGreenCard) {
+                      const parsed = parseGreenCardDescription(req.description);
+                      return (
+                        <div
+                          key={req.id}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                          <span className="font-medium text-gray-900">
+                            {parsed.name}
+                          </span>
+                          {parsed.dosage && (
+                            <span className="text-gray-500">- {parsed.dosage}</span>
+                          )}
+                          {parsed.schedule && (
+                            <span className="text-gray-400 text-xs">
+                              ({parsed.schedule})
+                            </span>
+                          )}
+                          {parsed.quantity && (
+                            <span className="text-gray-400 text-xs">
+                              Cant: {parsed.quantity}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        key={req.id}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+                        <span className="text-gray-700">{req.description}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-greenPrimary" />
+                  Descripcion de la Solicitud
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {request.description}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Attachments */}

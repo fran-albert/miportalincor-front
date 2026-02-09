@@ -5,10 +5,12 @@ import { updateGreenCardItem } from "@/api/Green-Card/update-green-card-item.act
 import { toggleGreenCardItem } from "@/api/Green-Card/toggle-green-card-item.action";
 import { deleteGreenCardItem } from "@/api/Green-Card/delete-green-card-item.action";
 import { requestPrescription } from "@/api/Green-Card/request-prescription.action";
+import { batchRequestPrescription } from "@/api/Green-Card/batch-request-prescription.action";
 import type {
   CreateGreenCardDto,
   CreateGreenCardItemDto,
   UpdateGreenCardItemDto,
+  BatchRequestResult,
 } from "@/types/Green-Card/GreenCard";
 
 export const useGreenCardMutations = () => {
@@ -115,6 +117,18 @@ export const useGreenCardMutations = () => {
     },
   });
 
+  const batchRequestPrescriptionMutation = useMutation({
+    mutationFn: ({ cardId, itemIds }: { cardId: string; itemIds: string[] }) =>
+      batchRequestPrescription(cardId, itemIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prescriptionRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-prescription-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-green-card"] });
+      queryClient.invalidateQueries({ queryKey: ["my-card-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
+    },
+  });
+
   return {
     createGreenCardMutation,
     addItemMutation,
@@ -122,5 +136,6 @@ export const useGreenCardMutations = () => {
     toggleItemMutation,
     deleteItemMutation,
     requestPrescriptionMutation,
+    batchRequestPrescriptionMutation,
   };
 };
