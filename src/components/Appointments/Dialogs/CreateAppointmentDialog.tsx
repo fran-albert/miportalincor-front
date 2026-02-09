@@ -72,7 +72,8 @@ export const CreateAppointmentDialog = ({
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "No se pudo crear el turno";
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosError.response?.data?.message || "No se pudo crear el turno";
       showError("Error", errorMessage);
     }
   };
@@ -93,7 +94,8 @@ export const CreateAppointmentDialog = ({
       setOpen(false);
       onSuccess?.();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "No se pudo crear el turno de invitado";
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosError.response?.data?.message || "No se pudo crear el turno de invitado";
       showError("Error", errorMessage);
     }
   };
