@@ -7,18 +7,20 @@ import {
   WeekDaysShort,
   WeekDays
 } from "@/types/DoctorAvailability";
-import { Trash2, Clock, Calendar, Repeat } from "lucide-react";
+import { Trash2, Clock, Calendar, Repeat, Pencil } from "lucide-react";
 import { formatDateAR } from "@/common/helpers/timezone";
 
 interface AvailabilityCardProps {
   availability: DoctorAvailabilityResponseDto;
   onDelete: (id: number) => void;
+  onEdit?: (availability: DoctorAvailabilityResponseDto) => void;
   isDeleting?: boolean;
 }
 
 export const AvailabilityCard = ({
   availability,
   onDelete,
+  onEdit,
   isDeleting = false
 }: AvailabilityCardProps) => {
   const getScheduleDescription = () => {
@@ -79,15 +81,27 @@ export const AvailabilityCard = ({
             )}
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            onClick={() => onDelete(availability.id)}
-            disabled={isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => onEdit(availability)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => onDelete(availability.id)}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

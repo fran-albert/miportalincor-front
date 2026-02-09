@@ -28,16 +28,20 @@ import {
   RecurrenceTypeLabels,
   WeekDays,
   WeekDaysLabels,
-  CreateDoctorAvailabilityDto
+  CreateDoctorAvailabilityDto,
+  UpdateDoctorAvailabilityDto,
+  DoctorAvailabilityResponseDto,
 } from "@/types/DoctorAvailability";
 import { formatDateForCalendar } from "@/common/helpers/timezone";
 import { Loader2 } from "lucide-react";
 
 interface AvailabilityFormProps {
   doctorId: number;
-  onSubmit: (data: CreateDoctorAvailabilityDto) => Promise<void>;
+  onSubmit: (data: CreateDoctorAvailabilityDto | UpdateDoctorAvailabilityDto) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  initialData?: DoctorAvailabilityResponseDto;
+  submitLabel?: string;
 }
 
 const SLOT_DURATIONS = [
@@ -52,34 +56,41 @@ export const AvailabilityForm = ({
   doctorId,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  initialData,
+  submitLabel,
 }: AvailabilityFormProps) => {
-  // Debug: log the doctorId received
-  console.log("AvailabilityForm received doctorId:", doctorId, "type:", typeof doctorId);
+  const isEditing = !!initialData;
 
   const form = useForm<CreateDoctorAvailabilityFormData>({
     resolver: zodResolver(CreateDoctorAvailabilitySchema),
     mode: "onSubmit",
-    defaultValues: {
-      doctorId: doctorId,
-      recurrenceType: RecurrenceType.WEEKLY,
-      daysOfWeek: [],
-      startTime: "08:00",
-      endTime: "12:00",
-      slotDuration: 30,
-    },
+    defaultValues: initialData
+      ? {
+          doctorId,
+          recurrenceType: initialData.recurrenceType,
+          daysOfWeek: initialData.daysOfWeek || [],
+          specificDate: initialData.specificDate,
+          dayOfMonth: initialData.dayOfMonth,
+          startTime: initialData.startTime,
+          endTime: initialData.endTime,
+          slotDuration: initialData.slotDuration,
+          validFrom: initialData.validFrom,
+          validUntil: initialData.validUntil,
+        }
+      : {
+          doctorId,
+          recurrenceType: RecurrenceType.WEEKLY,
+          daysOfWeek: [],
+          startTime: "08:00",
+          endTime: "12:00",
+          slotDuration: 30,
+        },
   });
 
   const recurrenceType = form.watch("recurrenceType");
-  const formErrors = form.formState.errors;
-
-  // Log errors for debugging
-  if (Object.keys(formErrors).length > 0) {
-    console.log("Form validation errors:", formErrors);
-  }
 
   const handleSubmit = async (data: CreateDoctorAvailabilityFormData) => {
-    console.log("Form submitted with data:", data);
     const dto: CreateDoctorAvailabilityDto = {
       doctorId: data.doctorId,
       recurrenceType: data.recurrenceType,
@@ -349,7 +360,7 @@ export const AvailabilityForm = ({
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Guardar Disponibilidad
+            {submitLabel ?? (isEditing ? "Guardar Cambios" : "Guardar Disponibilidad")}
           </Button>
         </div>
       </form>
