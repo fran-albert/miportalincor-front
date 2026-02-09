@@ -12,8 +12,6 @@ interface PhysicalGreenCardProps {
   greenCard: GreenCard;
   onRequestPrescription?: (item: GreenCardItem) => void;
   checkupSchedules?: PatientCheckupSchedule[];
-  /** List of doctor IDs that have GREEN_CARD service enabled. If not provided, all doctors can receive requests. */
-  doctorsWithGreenCardServiceIds?: string[];
   /** Enable checkbox selection mode for batch requests */
   selectionMode?: boolean;
   /** Currently selected item IDs (for batch mode) */
@@ -65,7 +63,6 @@ export function PhysicalGreenCard({
   greenCard,
   onRequestPrescription,
   checkupSchedules = [],
-  doctorsWithGreenCardServiceIds,
   selectionMode = false,
   selectedItemIds = [],
   onToggleItemSelection,

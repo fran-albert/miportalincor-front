@@ -33,7 +33,6 @@ import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
 import { useMyCheckupSchedules } from "@/hooks/Periodic-Checkup";
-import { useDoctorsWithGreenCard } from "@/hooks/Doctor-Services/useDoctorServices";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import {
   PrescriptionRequest,
@@ -69,10 +68,6 @@ const MyPrescriptionRequestsPage = () => {
   // Prescription Requests history
   const { data: prescriptionRequests = [], isLoading: isLoadingRequests } =
     useMyPrescriptionRequests();
-
-  // Fetch doctors with GREEN_CARD service enabled
-  const { doctorsWithService } = useDoctorsWithGreenCard();
-  const doctorsWithGreenCardServiceIds = doctorsWithService.map((d) => d.doctorUserId);
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -307,7 +302,6 @@ const MyPrescriptionRequestsPage = () => {
             greenCard={greenCard}
             onRequestPrescription={handleRequestPrescription}
             checkupSchedules={cardiovascularCheckups}
-            doctorsWithGreenCardServiceIds={doctorsWithGreenCardServiceIds}
             selectionMode={selectionMode}
             selectedItemIds={selectedItemIds}
             onToggleItemSelection={handleToggleItemSelection}

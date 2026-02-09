@@ -10,7 +10,6 @@ import type {
   CreateGreenCardDto,
   CreateGreenCardItemDto,
   UpdateGreenCardItemDto,
-  BatchRequestResult,
 } from "@/types/Green-Card/GreenCard";
 
 export const useGreenCardMutations = () => {
