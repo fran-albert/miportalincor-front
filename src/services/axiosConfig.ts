@@ -53,6 +53,17 @@ setTimeout(() => {
   isInitialLoad = false;
 }, 3000); // Después de 3 segundos, consideramos que ya no es carga inicial
 
+// Sincronizacion cross-tab: cuando otra pestana refresca el token,
+// actualizar Redux para que esta pestana use el nuevo token
+authStorage.onTokenChange((newToken, newExpiration) => {
+  if (newToken && newExpiration) {
+    store.dispatch(updateTokens({ token: newToken }));
+  } else {
+    // Otra tab hizo logout
+    store.dispatch(logout());
+  }
+});
+
 const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -141,6 +152,16 @@ const handleAuthError = async (error: AxiosError) => {
     const currentToken = authStorage.getToken();
     if (!currentToken) {
       throw new Error("No token available");
+    }
+
+    // Verificar si otra pestana ya refresco el token
+    // comparando el token del request fallido con el token actual en storage
+    const failedToken = originalRequest.headers.Authorization?.toString().replace('Bearer ', '');
+    if (failedToken && currentToken !== failedToken) {
+      // Otra pestana ya refresco: usar el token nuevo sin hacer otro refresh
+      originalRequest.headers.Authorization = `Bearer ${currentToken}`;
+      processQueue(null, currentToken);
+      return getAxiosInstance(originalRequest)(originalRequest);
     }
 
     // Call refresh endpoint (remove trailing slash if present)
