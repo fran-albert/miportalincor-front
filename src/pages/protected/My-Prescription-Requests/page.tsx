@@ -289,6 +289,13 @@ const MyPrescriptionRequestsPage = () => {
           </div>
         </div>
 
+        {/* Info legend */}
+        {greenCard && greenCard.items.length > 0 && !selectionMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
+            Para pedir una receta, toque <strong>Pedir</strong> en el medicamento que necesite. Si necesita pedir varios, use <strong>Seleccionar medicamentos</strong>.
+          </div>
+        )}
+
         {/* Content */}
         {isLoadingCard ? (
           <Card>
