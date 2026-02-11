@@ -23,7 +23,7 @@ import { State } from "@/types/State/State";
 import { useEffect, useState } from "react";
 import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 import { z } from "zod";
-import { PatientSchema } from "@/validators/patient.schema";
+import { UpdatePatientSchema } from "@/validators/patient.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Patient } from "@/types/Patient/Patient";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
@@ -46,7 +46,7 @@ import { Badge } from "@/components/ui/badge";
 import useUserRole from "@/hooks/useRoles";
 import ResetDefaultPasswordButton from "@/components/Button/Reset-Default-Password";
 
-type FormValues = z.infer<typeof PatientSchema>;
+type FormValues = z.infer<typeof UpdatePatientSchema>;
 
 interface PatientProfileComponentProps {
   patient: Patient;
@@ -62,7 +62,7 @@ function PatientProfileComponent({
   const { isSecretary, isAdmin } = useUserRole();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(PatientSchema),
+    resolver: zodResolver(UpdatePatientSchema),
     defaultValues: {
       firstName: patient?.firstName || "",
       lastName: patient?.lastName || "",
