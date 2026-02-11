@@ -150,20 +150,20 @@ function PatientProfileComponent({
 
   useEffect(() => {
     if (patient) {
-      setValue("firstName", patient.firstName);
-      setValue("lastName", patient.lastName);
-      setValue("email", patient.email);
-      setValue("userName", formatDni(String(patient.dni)));
+      setValue("firstName", patient.firstName || "");
+      setValue("lastName", patient.lastName || "");
+      setValue("email", patient.email || "");
+      setValue("userName", patient.dni ? formatDni(String(patient.dni)) : "");
       if (patient?.birthDate) {
         setStartDate(new Date(patient.birthDate.toString()));
         setValue("birthDate", patient.birthDate.toString());
       }
-      setValue("phoneNumber", patient.phoneNumber);
+      setValue("phoneNumber", patient.phoneNumber || "");
       setValue("phoneNumber2", patient.phoneNumber2 || "");
-      setValue("bloodType", String(patient.bloodType) || "");
-      setValue("rhFactor", String(patient.rhFactor) || "");
-      setValue("gender", String(patient.gender) || "");
-      setValue("maritalStatus", String(patient.maritalStatus) || "");
+      setValue("bloodType", patient.bloodType ? String(patient.bloodType) : "");
+      setValue("rhFactor", patient.rhFactor ? String(patient.rhFactor) : "");
+      setValue("gender", patient.gender ? String(patient.gender) : "");
+      setValue("maritalStatus", patient.maritalStatus ? String(patient.maritalStatus) : "");
       setValue("observations", patient.observations || "");
       setValue("affiliationNumber", patient.affiliationNumber || "");
       setValue("address.street", patient?.address?.street || "");
