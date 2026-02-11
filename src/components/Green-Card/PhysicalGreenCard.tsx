@@ -1,6 +1,7 @@
 import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { FileText, CalendarClock } from "lucide-react";
 import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
@@ -11,8 +12,14 @@ interface PhysicalGreenCardProps {
   greenCard: GreenCard;
   onRequestPrescription?: (item: GreenCardItem) => void;
   checkupSchedules?: PatientCheckupSchedule[];
-  /** List of doctor IDs that have GREEN_CARD service enabled. If not provided, all doctors can receive requests. */
-  doctorsWithGreenCardServiceIds?: string[];
+  /** Enable checkbox selection mode for batch requests */
+  selectionMode?: boolean;
+  /** Currently selected item IDs (for batch mode) */
+  selectedItemIds?: string[];
+  /** Toggle selection of an item (for batch mode) */
+  onToggleItemSelection?: (itemId: string) => void;
+  /** Select all eligible items at once */
+  onSelectAll?: () => void;
 }
 
 // Map text schedules to approximate hour for chronological ordering
@@ -56,7 +63,10 @@ export function PhysicalGreenCard({
   greenCard,
   onRequestPrescription,
   checkupSchedules = [],
-  doctorsWithGreenCardServiceIds,
+  selectionMode = false,
+  selectedItemIds = [],
+  onToggleItemSelection,
+  onSelectAll,
 }: PhysicalGreenCardProps) {
   const activeItems = greenCard.items
     .filter((item) => item.isActive)
@@ -66,6 +76,11 @@ export function PhysicalGreenCard({
 
   // Filter active checkup schedules
   const activeCheckups = checkupSchedules.filter((s) => s.isActive);
+
+  // Items eligible for batch selection (active + no pending prescription)
+  const eligibleItems = activeItems.filter((item) => !item.hasPendingPrescription);
+  const allEligibleSelected = eligibleItems.length > 0 &&
+    eligibleItems.every((item) => selectedItemIds.includes(item.id));
 
   // Calculate empty rows to fill the table
   const minRows = 6;
@@ -118,6 +133,16 @@ export function PhysicalGreenCard({
                   {/* Table Header */}
                   <thead>
                     <tr className="bg-white/30 border-b-2 border-gray-700">
+                      {selectionMode && (
+                        <th className="px-2 py-2.5 text-center border-r border-gray-600 w-[40px]">
+                          <Checkbox
+                            checked={allEligibleSelected}
+                            onCheckedChange={() => onSelectAll?.()}
+                            disabled={eligibleItems.length === 0}
+                            className="border-gray-600"
+                          />
+                        </th>
+                      )}
                       <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[100px]">
                         <span className="font-bold text-sm text-gray-800 uppercase">Hora</span>
                       </th>
@@ -140,18 +165,35 @@ export function PhysicalGreenCard({
                   <tbody>
                     {activeItems.length === 0 && emptyRowsCount === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-center py-8 text-gray-600 italic">
+                        <td colSpan={selectionMode ? 6 : 5} className="text-center py-8 text-gray-600 italic">
                           No hay medicamentos registrados
                         </td>
                       </tr>
                     ) : (
                       <>
                         {/* Active medications */}
-                        {activeItems.map((item) => (
+                        {activeItems.map((item) => {
+                          const isSelectable = item.isActive && !item.hasPendingPrescription;
+                          const isSelected = selectedItemIds.includes(item.id);
+
+                          return (
                           <tr
                             key={item.id}
-                            className="border-b border-gray-500 hover:bg-white/20 transition-colors"
+                            className={`border-b border-gray-500 hover:bg-white/20 transition-colors ${
+                              selectionMode && isSelected ? "bg-white/30" : ""
+                            }`}
                           >
+                            {/* Checkbox */}
+                            {selectionMode && (
+                              <td className="px-2 py-3 text-center border-r border-gray-500">
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => onToggleItemSelection?.(item.id)}
+                                  disabled={!isSelectable}
+                                  className="border-gray-600"
+                                />
+                              </td>
+                            )}
                             {/* Hora */}
                             <td className="px-3 py-3 text-center border-r border-gray-500">
                               <span className="text-sm font-medium text-gray-800">
@@ -179,14 +221,10 @@ export function PhysicalGreenCard({
                             {/* Solicitud */}
                             <td className="px-2 py-2 text-center">
                               {(() => {
-                                // Check if doctor has GREEN_CARD service enabled
-                                const doctorHasService = !doctorsWithGreenCardServiceIds ||
-                                  doctorsWithGreenCardServiceIds.includes(item.doctorUserId);
                                 const canRequest = onRequestPrescription &&
-                                  !item.hasPendingPrescription &&
-                                  doctorHasService;
+                                  !item.hasPendingPrescription;
 
-                                if (canRequest) {
+                                if (canRequest && !selectionMode) {
                                   return (
                                     <Button
                                       variant="ghost"
@@ -213,7 +251,8 @@ export function PhysicalGreenCard({
                               })()}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
 
                         {/* Empty rows to fill the table */}
                         {Array.from({ length: emptyRowsCount }).map((_, i) => (
@@ -221,6 +260,9 @@ export function PhysicalGreenCard({
                             key={`empty-${i}`}
                             className="border-b border-gray-500 opacity-40"
                           >
+                            {selectionMode && (
+                              <td className="px-2 py-3 border-r border-gray-500">&nbsp;</td>
+                            )}
                             <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
                             <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
                             <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>

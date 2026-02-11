@@ -58,4 +58,25 @@ export const authStorage = {
   getRememberMe: (): boolean => {
     return localStorage.getItem(REMEMBER_ME_KEY) === 'true';
   },
+
+  /**
+   * Inicia la sincronizacion cross-tab via evento 'storage' de localStorage.
+   * Cuando otra pestana refresca el token, esta pestana lo detecta y
+   * llama al callback con el nuevo token y expiracion.
+   * Solo funciona con localStorage (usuarios que marcaron "Recordarme").
+   */
+  onTokenChange: (callback: (token: string | null, expiration: string | null) => void): (() => void) => {
+    const handler = (event: StorageEvent) => {
+      if (event.key === AUTH_TOKEN_KEY) {
+        const newToken = event.newValue;
+        const newExpiration = localStorage.getItem(TOKEN_EXPIRATION_KEY);
+        callback(newToken, newExpiration);
+      } else if (event.key === REMEMBER_ME_KEY && !event.newValue) {
+        // Otra tab hizo logout (limpio rememberMe)
+        callback(null, null);
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  },
 };

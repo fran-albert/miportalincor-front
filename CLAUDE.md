@@ -279,6 +279,39 @@ Funcionalidades:
 - `DoctorAbsenceResponseDto` - Ausencia con `startDate`, `endDate`, `startTime?`, `endTime?`, `type`
 - `Absence` enum / `AbsenceLabels` - Tipos de ausencia en `src/types/Doctor-Absence/`
 
+## Autenticación y Sesiones
+
+### Almacenamiento de tokens
+- **Con "Recordarme"**: Token en `localStorage` (persiste entre sesiones de navegador)
+- **Sin "Recordarme"**: Token en `sessionStorage` (se pierde al cerrar la tab)
+- Utilidad: `src/utils/authStorage.ts`
+
+### Refresh automático de tokens
+1. **Proactivo** (`useRoles.ts`): Timer que refresca el token 5 minutos antes de expirar
+2. **Reactivo** (`axiosConfig.ts`): Interceptor que detecta 401 y hace refresh automático
+3. **Cola de requests**: Si varios requests fallan con 401 mientras se refresca, se encolan y reintentan con el nuevo token
+
+### Sincronización cross-tab (multi-pestaña)
+Las secretarias suelen tener muchas pestañas abiertas. Para evitar que un refresh en una tab invalide las demás:
+
+1. **`authStorage.onTokenChange(callback)`**: Escucha el evento `storage` de localStorage que se dispara automáticamente en todas las otras pestañas cuando una tab escribe un nuevo token
+2. **En `axiosConfig.ts`**: Al cargar el módulo, se registra un listener que detecta cambios de token desde otra tab y actualiza Redux
+3. **Dedup de refresh**: Antes de hacer `POST /auth/refresh`, el interceptor compara el token del request fallido con el token actual en storage. Si son distintos, otra tab ya refrescó → usa el nuevo token directamente sin hacer otro refresh
+
+### Flujo con múltiples pestañas
+```
+Tab 1: JWT expira → 401 → refresh → nuevo token → escribe en localStorage
+Tab 2: Recibe evento 'storage' → actualiza Redux con nuevo token → sigue operando
+Tab 3: Si tenía un request en vuelo que falló con 401 → detecta token nuevo en storage → lo usa directamente sin refresh propio
+```
+
+### Archivos clave de auth
+- `src/utils/authStorage.ts` - Storage abstraction + cross-tab sync (`onTokenChange`)
+- `src/services/axiosConfig.ts` - Interceptores, refresh automático, sync cross-tab
+- `src/store/authSlice.ts` - Redux state de auth
+- `src/hooks/useRoles.ts` - Hook de roles + timer de refresh proactivo
+- `src/routes/Private-Routes.tsx` - Guard de rutas protegidas
+
 ## APIs Consumidas
 | API | Base URL | Uso |
 |-----|----------|-----|

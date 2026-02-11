@@ -10,3 +10,6 @@ export * from "./reject-request.action";
 export * from "./cancel-request.action";
 export * from "./upload-attachment.action";
 export * from "./upload-doctor-prescription.action";
+export * from "./get-doctor-pending-paginated.action";
+export * from "./get-doctor-history-paginated.action";
+export * from "./complete-batch.action";

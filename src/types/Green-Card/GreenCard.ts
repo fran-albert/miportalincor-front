@@ -83,3 +83,22 @@ export interface RequestPrescriptionDto {
   itemId: string;
   doctorUserId?: string;  // Optional: request to a different doctor
 }
+
+export interface BatchRequestPrescriptionDto {
+  itemIds: string[];
+}
+
+export interface BatchRequestResult {
+  message: string;
+  batches: {
+    batchId: string;
+    doctorName: string;
+    itemCount: number;
+    requestIds: string[];
+  }[];
+  skippedItems: {
+    itemId: string;
+    medicationName: string;
+    reason: string;
+  }[];
+}
