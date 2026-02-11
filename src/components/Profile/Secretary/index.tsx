@@ -24,7 +24,7 @@ import { BloodSelect } from "@/components/Select/Blood/select";
 import { z } from "zod";
 import { City } from "@/types/City/City";
 import { useUserMutations } from "@/hooks/User/useUserMutations";
-import { UserSchema } from "@/validators/user.schema";
+import { UpdateSecretarySchema } from "@/validators/secretary.schema";
 import CustomDatePicker from "@/components/Date-Picker";
 import {
   Edit2,
@@ -41,12 +41,12 @@ import ChangePasswordDialog from "../Change-Password";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-type FormValues = z.infer<typeof UserSchema>;
+type FormValues = z.infer<typeof UpdateSecretarySchema>;
 export default function SecretaryProfileComponent({ user }: { user: User }) {
   const { updateUserMutation } = useUserMutations();
   const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
-    resolver: zodResolver(UserSchema),
+    resolver: zodResolver(UpdateSecretarySchema),
     defaultValues: {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
@@ -165,15 +165,15 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
       }
 
       console.log("✅ Validation passed, proceeding with save");
-      const formattedUserName = removeDotsFromDni(form.getValues("userName"));
+      const formattedUserName = removeDotsFromDni(form.getValues("userName") ?? "");
       const { address, ...rest } = form.getValues();
       const addressToSend = {
         ...address,
         id: user?.address?.id,
-        street: address.street,
-        number: address.number,
-        description: address.description,
-        phoneNumber: address.phoneNumber,
+        street: address?.street,
+        number: address?.number,
+        description: address?.description,
+        phoneNumber: address?.phoneNumber,
         city: {
           ...selectedCity,
           state: selectedState,

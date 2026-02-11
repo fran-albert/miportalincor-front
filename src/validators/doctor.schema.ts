@@ -48,3 +48,10 @@ export const UpdateDoctorSchema = z.object({
     })
   ).optional(),
 }).partial(); // Make all fields optional
+
+/**
+ * Schema for the Doctor profile edit form.
+ * Uses .partial() on the full DoctorSchema so ALL fields (User + Doctor)
+ * become optional, matching how the edit form only sends changed fields.
+ */
+export const UpdateDoctorProfileSchema = DoctorSchema.partial();

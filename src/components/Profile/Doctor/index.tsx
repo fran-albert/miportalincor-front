@@ -21,7 +21,7 @@ import { formatDni } from "@/common/helpers/helpers";
 import { State } from "@/types/State/State";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { useForm } from "react-hook-form";
-import { DoctorSchema } from "@/validators/doctor.schema";
+import { UpdateDoctorProfileSchema } from "@/validators/doctor.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { City } from "@/types/City/City";
@@ -47,7 +47,7 @@ import { ImageUploadBox } from "@/components/Doctors/Signature-Boxs";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-type FormValues = z.infer<typeof DoctorSchema>;
+type FormValues = z.infer<typeof UpdateDoctorProfileSchema>;
 export default function ProfileDoctorCardComponent({
   data,
 }: {
@@ -56,7 +56,7 @@ export default function ProfileDoctorCardComponent({
   const { updateDoctorMutation } = useDoctorMutations();
   const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
-    resolver: zodResolver(DoctorSchema),
+    resolver: zodResolver(UpdateDoctorProfileSchema),
   });
   const { setValue, control } = form;
   const [selectedState, setSelectedState] = useState<State | undefined>(
