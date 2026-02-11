@@ -165,15 +165,15 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
       }
 
       console.log("✅ Validation passed, proceeding with save");
-      const formattedUserName = removeDotsFromDni(form.getValues("userName"));
+      const formattedUserName = removeDotsFromDni(form.getValues("userName") ?? "");
       const { address, ...rest } = form.getValues();
       const addressToSend = {
         ...address,
         id: user?.address?.id,
-        street: address.street,
-        number: address.number,
-        description: address.description,
-        phoneNumber: address.phoneNumber,
+        street: address?.street,
+        number: address?.number,
+        description: address?.description,
+        phoneNumber: address?.phoneNumber,
         city: {
           ...selectedCity,
           state: selectedState,

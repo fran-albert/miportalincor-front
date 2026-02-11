@@ -42,38 +42,12 @@ export const SecretarySchema = z.object({
   gender: z.string({ required_error: "Este campo es obligatorio." }),
 });
 
-export const UpdateSecretarySchema = z.object({
-  firstName: z.string().max(255).optional(),
-  lastName: z.string().max(255).optional(),
-  email: z.string().email().optional().or(z.literal('')),
-  phoneNumber: z.string().optional(),
-  phoneNumber2: z.string().optional(),
-  photo: z.string().optional(),
-  birthDate: z.union([z.string(), z.date()]).optional(),
-  address: z.object({
-    id: z.number().optional(),
-    street: z.string().optional(),
-    number: z.string().optional(),
-    description: z.string().optional(),
-    phoneNumber: z.string().optional(),
-    city: z.object({
-      id: z.number(),
-      name: z.string(),
-      state: z.union([
-        z.string(),
-        z.object({
-          id: z.number(),
-          name: z.string(),
-          country: z.object({
-            id: z.number(),
-            name: z.string(),
-          }),
-        }),
-      ]),
-    }),
-  }).optional(),
-  rhFactor: z.string().optional(),
-  maritalStatus: z.string().optional(),
-  bloodType: z.string().optional(),
-  gender: z.string().optional(),
+/**
+ * Schema for updating a Secretary.
+ * Derives from SecretarySchema so all form fields (userName, address.description,
+ * state union, etc.) are present. Adds observations which the form uses.
+ * .partial() makes all fields optional for partial updates.
+ */
+export const UpdateSecretarySchema = SecretarySchema.extend({
+  observations: z.string().optional(),
 }).partial();

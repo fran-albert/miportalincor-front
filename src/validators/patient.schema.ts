@@ -11,35 +11,13 @@ export const PatientSchema = UserSchema.extend({
 });
 
 /**
- * Schema for updating a Patient
- * All fields are optional - only validate fields that are provided
+ * Schema for updating a Patient.
+ * Derives from PatientSchema (which includes UserSchema) so all form fields
+ * like address.description, state union, observations, etc. are present.
+ * healthPlans is overridden to include healthInsurance (needed by the edit form).
+ * .partial() makes all fields optional for partial updates.
  */
-export const UpdatePatientSchema = z.object({
-    userName: z.string().optional(), // DNI
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    email: z.string().email("Email inválido").optional().or(z.literal('')),
-    phoneNumber: z.string().optional(),
-    birthDate: z.string().optional(), // ISO date string
-    photo: z.string().optional(),
-    address: z.object({
-        id: z.number().optional(),
-        street: z.string().optional(),
-        number: z.string().optional(),
-        phoneNumber: z.string().optional(),
-        city: z.object({
-            id: z.number(),
-            name: z.string(),
-            state: z.object({
-                id: z.number(),
-                name: z.string(),
-                country: z.object({
-                    id: z.number(),
-                    name: z.string(),
-                }).optional(),
-            }).optional(),
-        }),
-    }).optional(),
+export const UpdatePatientSchema = PatientSchema.extend({
     healthPlans: z.array(z.object({
         id: z.number(),
         name: z.string(),
@@ -51,12 +29,5 @@ export const UpdatePatientSchema = z.object({
     registeredById: z.string().optional(),
     cuil: z.string().optional(),
     cuit: z.string().optional(),
-    phoneNumber2: z.string().optional(),
-    bloodType: z.string().optional(),
-    rhFactor: z.string().optional(),
-    maritalStatus: z.string().optional(),
-    affiliationNumber: z.string().optional(),
-    gender: z.string().optional(),
-    observations: z.string().optional(),
     died: z.string().optional(),
-}).partial(); // Make all fields optional
+}).partial();
