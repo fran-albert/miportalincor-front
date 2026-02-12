@@ -10,11 +10,11 @@ export const CreateDoctorAvailabilitySchema = z.object({
     required_error: 'Debe seleccionar un tipo de recurrencia',
   }),
 
-  specificDate: z.string().optional(),
+  specificDate: z.string().nullable().optional(),
 
-  daysOfWeek: z.array(z.nativeEnum(WeekDays)).optional(),
+  daysOfWeek: z.array(z.nativeEnum(WeekDays)).nullable().optional(),
 
-  dayOfMonth: z.number().min(1).max(31).optional(),
+  dayOfMonth: z.number().min(1).max(31).nullable().optional(),
 
   startTime: z.string({
     required_error: 'Debe ingresar hora de inicio',
@@ -24,10 +24,10 @@ export const CreateDoctorAvailabilitySchema = z.object({
     required_error: 'Debe ingresar hora de fin',
   }).regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Formato inválido (HH:mm)'),
 
-  slotDuration: z.number().min(5).max(120).default(30),
+  slotDuration: z.number().min(5).max(120).nullable().optional().default(30),
 
-  validFrom: z.string().optional(),
-  validUntil: z.string().optional(),
+  validFrom: z.string().nullable().optional(),
+  validUntil: z.string().nullable().optional(),
 }).refine((data) => {
   // Validar que si es NONE, tenga specificDate
   if (data.recurrenceType === RecurrenceType.NONE && !data.specificDate) {

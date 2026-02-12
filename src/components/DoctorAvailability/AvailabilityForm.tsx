@@ -70,13 +70,13 @@ export const AvailabilityForm = ({
           doctorId,
           recurrenceType: initialData.recurrenceType,
           daysOfWeek: initialData.daysOfWeek || [],
-          specificDate: initialData.specificDate,
-          dayOfMonth: initialData.dayOfMonth,
+          specificDate: initialData.specificDate ?? undefined,
+          dayOfMonth: initialData.dayOfMonth ?? undefined,
           startTime: initialData.startTime,
           endTime: initialData.endTime,
-          slotDuration: initialData.slotDuration,
-          validFrom: initialData.validFrom,
-          validUntil: initialData.validUntil,
+          slotDuration: initialData.slotDuration ?? 30,
+          validFrom: initialData.validFrom ?? undefined,
+          validUntil: initialData.validUntil ?? undefined,
         }
       : {
           doctorId,
@@ -96,13 +96,13 @@ export const AvailabilityForm = ({
       recurrenceType: data.recurrenceType,
       startTime: data.startTime,
       endTime: data.endTime,
-      slotDuration: data.slotDuration,
+      slotDuration: data.slotDuration ?? 30,
     };
 
     if (data.recurrenceType === RecurrenceType.NONE && data.specificDate) {
       dto.specificDate = data.specificDate;
     }
-    if (data.recurrenceType === RecurrenceType.WEEKLY && data.daysOfWeek) {
+    if (data.recurrenceType === RecurrenceType.WEEKLY && data.daysOfWeek?.length) {
       dto.daysOfWeek = data.daysOfWeek;
     }
     if (data.recurrenceType === RecurrenceType.MONTHLY && data.dayOfMonth) {
