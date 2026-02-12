@@ -44,7 +44,7 @@ import {
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, CalendarOff, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock, ChevronDown, ChevronRight } from "lucide-react";
+import { CalendarDays, CalendarOff, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock, ChevronDown, ChevronRight, Printer } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -52,6 +52,7 @@ import { SlotActionDialog } from "../Dialogs/SlotActionDialog";
 import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
 import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
+import { PrintAgendaView } from "./PrintAgendaView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useDoctorAbsences } from "@/hooks/DoctorAbsence";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
@@ -150,6 +151,7 @@ export const BigCalendar = ({
   const [isSlotActionDialogOpen, setIsSlotActionDialogOpen] = useState(false);
   const [isOverturnDialogOpen, setIsOverturnDialogOpen] = useState(false);
   const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
 
   // Dynamic height per view
@@ -873,8 +875,8 @@ export const BigCalendar = ({
                 ? "Mi Calendario de Turnos"
                 : "Calendario de Turnos"}
             </CardTitle>
-            {showDoctorSelector && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {showDoctorSelector && (
                 <div className="w-64">
                   <DoctorSelect
                     value={internalDoctorId}
@@ -882,8 +884,19 @@ export const BigCalendar = ({
                     placeholder="Todos los médicos"
                   />
                 </div>
-              </div>
-            )}
+              )}
+              {selectedDoctorId && (currentView === "day" || currentView === "week" || currentView === "work_week") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPrintDialogOpen(true)}
+                  title="Imprimir agenda"
+                >
+                  <Printer className="h-4 w-4 mr-1.5" />
+                  Imprimir
+                </Button>
+              )}
+            </div>
           </div>
           {/* Collapsible Legend */}
           <Collapsible open={legendsOpen} onOpenChange={setLegendsOpen}>
@@ -1393,6 +1406,17 @@ export const BigCalendar = ({
           allowGuestCreation={!fixedDoctorId}
         />
       )}
+
+      {/* Print Agenda Dialog */}
+      <PrintAgendaView
+        open={isPrintDialogOpen}
+        onOpenChange={setIsPrintDialogOpen}
+        appointments={appointments}
+        overturns={overturns}
+        currentDate={currentDate}
+        currentView={currentView}
+        doctorName={doctorName ?? (autoFilterForDoctor && doctorProfile ? `Dr/a. ${doctorProfile.firstName} ${doctorProfile.lastName}` : undefined)}
+      />
     </div>
   );
 };
