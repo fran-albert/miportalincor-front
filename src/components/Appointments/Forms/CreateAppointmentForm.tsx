@@ -56,6 +56,12 @@ interface CreateAppointmentFormProps {
   allowGuestCreation?: boolean;
   /** If provided, fixes the doctor and disables doctor select */
   fixedDoctorId?: number;
+  /** Ref to the form element for external submit */
+  formRef?: React.Ref<HTMLFormElement>;
+  /** If true, hides the internal submit button (rendered externally) */
+  hideSubmitButton?: boolean;
+  /** Callback when guest mode changes */
+  onGuestModeChange?: (isGuest: boolean) => void;
 }
 
 export const CreateAppointmentForm = ({
@@ -69,6 +75,9 @@ export const CreateAppointmentForm = ({
   defaultHour,
   allowGuestCreation = true,
   fixedDoctorId,
+  formRef,
+  hideSubmitButton = false,
+  onGuestModeChange,
 }: CreateAppointmentFormProps) => {
   const [guestData, setGuestData] = useState<GuestData | null>(null);
   const { doctors } = useDoctors({ auth: true, fetchDoctors: !!fixedDoctorId });
@@ -119,12 +128,14 @@ export const CreateAppointmentForm = ({
 
   const handleGuestSelect = (data: GuestData) => {
     setGuestData(data);
+    onGuestModeChange?.(true);
     // Clear patient selection when switching to guest mode
     form.setValue("patientId", undefined as unknown as number);
   };
 
   const handleClearGuest = () => {
     setGuestData(null);
+    onGuestModeChange?.(false);
   };
 
   const handleGuestSubmit = async () => {
@@ -157,7 +168,7 @@ export const CreateAppointmentForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={isGuestMode ? (e) => { e.preventDefault(); handleGuestSubmit(); } : form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form ref={formRef} onSubmit={isGuestMode ? (e) => { e.preventDefault(); handleGuestSubmit(); } : form.handleSubmit(handleSubmit)} className="space-y-4">
         {fixedDoctorId ? (
           <div className="space-y-2">
             <FormLabel>Médico</FormLabel>
@@ -302,17 +313,19 @@ export const CreateAppointmentForm = ({
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button
-            type="submit"
-            disabled={isLoading || (isGuestMode && !canSubmitGuest)}
-            className={isGuestMode ? "bg-purple-600 hover:bg-purple-700" : ""}
-          >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isGuestMode && <UserPlus className="mr-2 h-4 w-4" />}
-            {isGuestMode ? "Crear Turno Invitado" : "Crear Turno"}
-          </Button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading || (isGuestMode && !canSubmitGuest)}
+              className={isGuestMode ? "bg-purple-600 hover:bg-purple-700" : ""}
+            >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isGuestMode && <UserPlus className="mr-2 h-4 w-4" />}
+              {isGuestMode ? "Crear Turno Invitado" : "Crear Turno"}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );
