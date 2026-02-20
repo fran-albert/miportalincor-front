@@ -1,6 +1,7 @@
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
@@ -14,8 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { getEvolutionColumns, EvolutionTableRow } from "./columns";
+
+const PAGE_SIZE = 20;
 
 interface EvolutionTableProps {
   data: EvolutionTableRow[];
@@ -39,7 +43,7 @@ export default function EvolutionTable({
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "fechaConsulta",
-      desc: true, // Más recientes primero
+      desc: true,
     },
   ]);
 
@@ -57,6 +61,12 @@ export default function EvolutionTable({
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: PAGE_SIZE,
+      },
+    },
     state: {
       sorting,
     },
@@ -87,6 +97,9 @@ export default function EvolutionTable({
     );
   }
 
+  const pageCount = table.getPageCount();
+  const currentPage = table.getState().pagination.pageIndex;
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>
@@ -116,7 +129,6 @@ export default function EvolutionTable({
               key={row.id}
               className="hover:bg-gray-50 cursor-pointer"
               onClick={(e) => {
-                // Solo abrir modal si se hace click en el área de motivo o fecha
                 const target = e.target as HTMLElement;
                 const isActionArea = target.closest('[data-action-area]') ||
                                    target.closest('button') ||
@@ -141,14 +153,34 @@ export default function EvolutionTable({
         </TableBody>
       </Table>
 
-      {/* Información de resultados */}
       <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
         <div className="text-sm text-gray-600">
-          Mostrando {data.length} evolución{data.length !== 1 ? 'es' : ''}
+          Mostrando {table.getRowModel().rows.length} de {data.length} evolución{data.length !== 1 ? 'es' : ''}
         </div>
-        <div className="text-xs text-gray-500">
-          Ordenado por fecha de consulta (más recientes primero)
-        </div>
+
+        {pageCount > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600">
+              Página {currentPage + 1} de {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
