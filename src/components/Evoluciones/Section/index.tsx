@@ -13,8 +13,9 @@ import {
   Stethoscope,
   Activity,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
 import { Badge } from "@/components/ui/badge";
@@ -69,13 +70,20 @@ const EvolutionSection: React.FC<Props> = ({
     enfermedadActual: string | null;
     examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
+    textoImportado: string | null;
     evolucionPrincipal: EvolucionType | null;
     mediciones: EvolucionData[];
     evoluciones: EvolucionType[];
   } | null>(null);
   const [isViewEvolucionModalOpen, setIsViewEvolucionModalOpen] =
     useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
   const navigate = useNavigate();
+
+  // Reset visible count when evoluciones data changes (e.g. navigating between patients)
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [evoluciones]);
 
   // Usar userData si está disponible, si no usar patient para compatibilidad
   const currentUser = userData || patient;
@@ -95,6 +103,7 @@ const EvolutionSection: React.FC<Props> = ({
       enfermedadActual: evolucion.enfermedadActual,
       examenFisico: evolucion.examenFisico,
       diagnosticosPresuntivos: evolucion.diagnosticosPresuntivos,
+      textoImportado: evolucion.textoImportado,
       evolucionPrincipal: evolucion.evolucionCompleta,
       mediciones: evolucion.mediciones,
       evoluciones: [evolucion.evolucionCompleta],
@@ -126,6 +135,7 @@ const EvolutionSection: React.FC<Props> = ({
       let enfermedadActual: string | null = null;
       let examenFisico: string | null = null;
       let diagnosticosPresuntivos: string | null = null;
+      let textoImportado: string | null = null;
       const mediciones: EvolucionData[] = [];
 
       evolucion.data.forEach((dataItem) => {
@@ -152,6 +162,10 @@ const EvolutionSection: React.FC<Props> = ({
             dataTypeName.includes("diagnostico presuntivo")
           ) {
             diagnosticosPresuntivos = dataItem.value;
+          } else if (dataItem.dataType.category === "EVOLUCION" && dataItem.value) {
+            textoImportado = textoImportado
+              ? `${textoImportado}\n\n---\n\n${dataItem.value}`
+              : dataItem.value;
           }
         }
       });
@@ -166,6 +180,7 @@ const EvolutionSection: React.FC<Props> = ({
         enfermedadActual,
         examenFisico,
         diagnosticosPresuntivos,
+        textoImportado,
         mediciones,
         evolucionCompleta: evolucion,
       };
@@ -180,6 +195,7 @@ const EvolutionSection: React.FC<Props> = ({
           consulta.examenFisico ||
           consulta.diagnosticosPresuntivos ||
           consulta.especialidad ||
+          consulta.textoImportado ||
           consulta.mediciones.length > 0
       )
       .sort(
@@ -259,8 +275,7 @@ const EvolutionSection: React.FC<Props> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                {evolucionesLista.map((evolucion, index) => {
-                  // Formatear fecha con hora
+                {evolucionesLista.slice(0, visibleCount).map((evolucion, index) => {
                   const fechaConsulta = new Date(evolucion.fechaConsulta);
                   const formattedDate = fechaConsulta.toLocaleDateString(
                     "es-AR",
@@ -326,6 +341,14 @@ const EvolutionSection: React.FC<Props> = ({
                                   {formatDoctorName(evolucion.doctor)}
                                 </span>
                               </div>
+                              {evolucion.textoImportado && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-amber-100 text-amber-700 border-amber-300 flex-shrink-0"
+                                >
+                                  SFS
+                                </Badge>
+                              )}
                               {primarySpeciality && (
                                 <Badge
                                   variant="outline"
@@ -337,10 +360,10 @@ const EvolutionSection: React.FC<Props> = ({
                               )}
                             </div>
 
-                            {/* Motivo de Consulta */}
-                            {evolucion.motivoConsulta && (
+                            {/* Motivo de Consulta o Texto Importado */}
+                            {(evolucion.motivoConsulta || evolucion.textoImportado) && (
                               <p className="text-xs text-gray-600 leading-relaxed mt-1.5 line-clamp-2">
-                                {evolucion.motivoConsulta}
+                                {evolucion.motivoConsulta || evolucion.textoImportado}
                               </p>
                             )}
                           </div>
@@ -349,6 +372,17 @@ const EvolutionSection: React.FC<Props> = ({
                     </motion.div>
                   );
                 })}
+
+                {evolucionesLista.length > visibleCount && (
+                  <Button
+                    variant="ghost"
+                    className="w-full text-greenPrimary hover:text-teal-700 hover:bg-greenPrimary/5"
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                  >
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    Mostrar más ({evolucionesLista.length - visibleCount} restantes)
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -488,6 +522,21 @@ const EvolutionSection: React.FC<Props> = ({
                     </div>
                     <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
                       {selectedConsultaToView.diagnosticosPresuntivos}
+                    </p>
+                  </div>
+                )}
+
+                {/* Texto Importado (evoluciones migradas de SFS) */}
+                {selectedConsultaToView.textoImportado && (
+                  <div className="border-l-4 border-l-amber-500 bg-amber-50/50 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-5 w-5 text-amber-600" />
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                        Evolución Importada
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                      {selectedConsultaToView.textoImportado}
                     </p>
                   </div>
                 )}

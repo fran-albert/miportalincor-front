@@ -93,6 +93,7 @@ export default function EvolucionesComponent({
     enfermedadActual: string | null;
     examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
+    textoImportado: string | null;
     evolucionPrincipal: Evolucion | null;
     mediciones: EvolucionData[];
     evoluciones: Evolucion[];
@@ -123,6 +124,7 @@ export default function EvolucionesComponent({
       enfermedadActual: row.enfermedadActual,
       examenFisico: row.examenFisico,
       diagnosticosPresuntivos: row.diagnosticosPresuntivos,
+      textoImportado: row.textoImportado,
       evolucionPrincipal: row.evolucionCompleta.evolucionPrincipal,
       mediciones: row.evolucionCompleta.mediciones,
       evoluciones: row.evolucionCompleta.evoluciones
@@ -222,6 +224,7 @@ export default function EvolucionesComponent({
         enfermedadActual: string | null;
         examenFisico: string | null;
         diagnosticosPresuntivos: string | null;
+        textoImportado: string | null;
         evolucionPrincipal: Evolucion | null;
         mediciones: EvolucionData[];
         evoluciones: Evolucion[];
@@ -243,6 +246,7 @@ export default function EvolucionesComponent({
           enfermedadActual: null,
           examenFisico: null,
           diagnosticosPresuntivos: null,
+          textoImportado: null,
           evolucionPrincipal: evolucion,
           mediciones: [],
           evoluciones: [],
@@ -278,6 +282,11 @@ export default function EvolucionesComponent({
             dataTypeName.includes("diagnostico presuntivo")
           ) {
             grouped[key].diagnosticosPresuntivos = dataItem.value;
+          } else if (dataItem.dataType.category === "EVOLUCION" && dataItem.value) {
+            // Texto importado (ej: evoluciones migradas de SFS)
+            grouped[key].textoImportado = grouped[key].textoImportado
+              ? `${grouped[key].textoImportado}\n\n---\n\n${dataItem.value}`
+              : dataItem.value;
           }
         }
       });
@@ -293,6 +302,7 @@ export default function EvolucionesComponent({
         consulta.examenFisico ||
         consulta.diagnosticosPresuntivos ||
         consulta.especialidad ||
+        consulta.textoImportado ||
         consulta.mediciones.length > 0;
       return hasContent;
     });
@@ -312,6 +322,7 @@ export default function EvolucionesComponent({
       enfermedadActual: consulta.enfermedadActual,
       examenFisico: consulta.examenFisico,
       diagnosticosPresuntivos: consulta.diagnosticosPresuntivos,
+      textoImportado: consulta.textoImportado,
       evolucionCompleta: {
         ...consulta,
         mediciones: consulta.mediciones,
@@ -336,6 +347,9 @@ export default function EvolucionesComponent({
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       row.diagnosticosPresuntivos
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      row.textoImportado
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       `${row.doctor.firstName} ${row.doctor.lastName}`
@@ -639,6 +653,20 @@ export default function EvolucionesComponent({
                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                       <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {selectedConsultaToView.diagnosticosPresuntivos}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedConsultaToView.textoImportado && (
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <FileText className="h-4 w-4 text-greenPrimary" />
+                      Evolución Importada
+                    </Label>
+                    <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 shadow-sm">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                        {selectedConsultaToView.textoImportado}
                       </p>
                     </div>
                   </div>

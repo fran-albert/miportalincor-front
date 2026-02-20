@@ -14,6 +14,7 @@ import {
   Clock,
   Pencil
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { formatDoctorInfo } from "@/common/helpers/helpers";
 import {
   canDeleteEvolution,
@@ -41,6 +42,7 @@ export interface EvolutionTableRow {
   enfermedadActual: string | null;
   examenFisico: string | null;
   diagnosticosPresuntivos: string | null;
+  textoImportado: string | null;
   evolucionCompleta: {
     fechaConsulta: string;
     fechaCreacion: string;
@@ -50,6 +52,7 @@ export interface EvolutionTableRow {
     enfermedadActual: string | null;
     examenFisico: string | null;
     diagnosticosPresuntivos: string | null;
+    textoImportado: string | null;
     evolucionPrincipal: Evolucion | null;
     mediciones: EvolucionData[];
     evoluciones: Evolucion[];
@@ -158,10 +161,16 @@ export const getEvolutionColumns = ({
     header: "Fecha",
     cell: ({ row }) => {
       const dateTime = formatEvolutionDateTime(row.original.fechaConsulta);
+      const isImported = !!row.original.textoImportado;
       return (
         <div className="min-w-[120px]">
           <div className="font-medium">{dateTime.date}</div>
           <div className="text-sm text-gray-500">{dateTime.time}</div>
+          {isImported && (
+            <Badge className="mt-1 text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-100">
+              SFS
+            </Badge>
+          )}
         </div>
       );
     },
@@ -184,14 +193,15 @@ export const getEvolutionColumns = ({
   },
   {
     accessorKey: "motivoConsulta",
-    header: "Motivo de Consulta",
+    header: "Motivo / Resumen",
     cell: ({ row }) => {
-      const motivo = truncateEvolutionText(row.original.motivoConsulta, 80);
+      const texto = row.original.motivoConsulta || row.original.textoImportado;
+      const motivo = truncateEvolutionText(texto, 80);
       return (
         <div
           className="max-w-[300px] cursor-pointer hover:bg-gray-50 p-2 rounded"
           onClick={() => onView(row.original)}
-          title={row.original.motivoConsulta || 'Sin motivo especificado'}
+          title={texto || 'Sin motivo especificado'}
         >
           <span className="text-sm">{motivo}</span>
         </div>
