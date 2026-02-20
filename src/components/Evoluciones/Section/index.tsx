@@ -162,7 +162,11 @@ const EvolutionSection: React.FC<Props> = ({
             dataTypeName.includes("diagnostico presuntivo")
           ) {
             diagnosticosPresuntivos = dataItem.value;
-          } else if (dataItem.dataType.category === "EVOLUCION" && dataItem.value) {
+          } else if (
+            dataTypeName.includes("evolución importada") ||
+            dataTypeName.includes("evolucion importada")
+          ) {
+            // Solo evoluciones migradas desde SFS
             textoImportado = textoImportado
               ? `${textoImportado}\n\n---\n\n${dataItem.value}`
               : dataItem.value;
