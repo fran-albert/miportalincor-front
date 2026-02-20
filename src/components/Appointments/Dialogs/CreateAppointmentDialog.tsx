@@ -114,7 +114,7 @@ export const CreateAppointmentDialog = ({
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Crear Nuevo Turno</DialogTitle>
           <DialogDescription>

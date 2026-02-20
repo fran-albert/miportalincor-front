@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,93 +116,95 @@ export function AssignCheckupDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Asignar Chequeo Periódico</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Checkup Type */}
-          <div className="space-y-2">
-            <Label>Tipo de Chequeo</Label>
-            {isLoadingTypes ? (
-              <div className="flex items-center gap-2 text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Cargando tipos...
-              </div>
-            ) : availableTypes.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                El paciente ya tiene todos los tipos de chequeo asignados
-              </p>
-            ) : (
-              <Select value={selectedTypeId} onValueChange={setSelectedTypeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar tipo de chequeo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTypes.map((type) => (
-                    <SelectItem key={type.id} value={String(type.id)}>
-                      <div className="flex flex-col">
-                        <span>{type.name}</span>
-                        {type.specialityName && (
-                          <span className="text-xs text-gray-500">
-                            {type.specialityName}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Month/Year Selection */}
-          <div className="space-y-2">
-            <Label>Próximo chequeo *</Label>
-            <div className="flex gap-2">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Mes" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue placeholder="Año" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEARS.map((year) => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
+          <div className="space-y-4 py-4">
+            {/* Checkup Type */}
+            <div className="space-y-2">
+              <Label>Tipo de Chequeo</Label>
+              {isLoadingTypes ? (
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Cargando tipos...
+                </div>
+              ) : availableTypes.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  El paciente ya tiene todos los tipos de chequeo asignados
+                </p>
+              ) : (
+                <Select value={selectedTypeId} onValueChange={setSelectedTypeId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo de chequeo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTypes.map((type) => (
+                      <SelectItem key={type.id} value={String(type.id)}>
+                        <div className="flex flex-col">
+                          <span>{type.name}</span>
+                          {type.specialityName && (
+                            <span className="text-xs text-gray-500">
+                              {type.specialityName}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-            <p className="text-xs text-gray-500">
-              Seleccioná el mes y año en que el paciente debería realizarse el chequeo
-            </p>
-          </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label>Notas (opcional)</Label>
-            <Textarea
-              placeholder="Agregar notas o indicaciones..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
+            {/* Month/Year Selection */}
+            <div className="space-y-2">
+              <Label>Próximo chequeo *</Label>
+              <div className="flex gap-2">
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Mes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Año" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-gray-500">
+                Seleccioná el mes y año en que el paciente debería realizarse el chequeo
+              </p>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label>Notas (opcional)</Label>
+              <Textarea
+                placeholder="Agregar notas o indicaciones..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
           </div>
-        </div>
+        </ScrollArea>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
