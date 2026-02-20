@@ -45,6 +45,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import useUserRole from "@/hooks/useRoles";
 import ResetDefaultPasswordButton from "@/components/Button/Reset-Default-Password";
+import SfsSyncButton from "@/components/Patients/Profile/SfsSyncButton";
 
 type FormValues = z.infer<typeof UpdatePatientSchema>;
 
@@ -59,7 +60,7 @@ function PatientProfileComponent({
 }: PatientProfileComponentProps) {
   const { updatePatientMutation } = usePatientMutations();
   const { promiseToast } = useToastContext();
-  const { isSecretary, isAdmin } = useUserRole();
+  const { isSecretary, isAdmin, isDoctor } = useUserRole();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(UpdatePatientSchema),
@@ -319,48 +320,53 @@ function PatientProfileComponent({
         description={`Información completa de ${patient?.firstName} ${patient?.lastName}`}
         icon={<UserCircle className="h-6 w-6" />}
         actions={
-          (isSecretary || isAdmin) &&
-          (!isEditing ? (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
-                type="button"
-              >
-                <Edit2 className="h-4 w-4 mr-2" />
-                Editar Perfil
-              </Button>
-              <ResetDefaultPasswordButton userName={patient.userName || patient.dni} />
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                type="button"
-                className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
-                disabled={updatePatientMutation.isPending}
-              >
-                {updatePatientMutation.isPending ? (
-                  <>
-                    <div
-                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full
+          <div className="flex gap-2">
+            {(isSecretary || isAdmin) &&
+              (!isEditing ? (
+                <>
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
+                    type="button"
+                  >
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Editar Perfil
+                  </Button>
+                  <ResetDefaultPasswordButton userName={patient.userName || patient.dni} />
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleSave}
+                    type="button"
+                    className="bg-greenPrimary hover:bg-greenPrimary/90 text-white shadow-md"
+                    disabled={updatePatientMutation.isPending}
+                  >
+                    {updatePatientMutation.isPending ? (
+                      <>
+                        <div
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full
     animate-spin mr-2"
-                    />
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar Cambios
-                  </>
-                )}
-              </Button>
-              <Button onClick={() => setIsEditing(false)} variant="outline">
-                <X className="h-4 w-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          ))
+                        />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Guardar Cambios
+                      </>
+                    )}
+                  </Button>
+                  <Button onClick={() => setIsEditing(false)} variant="outline">
+                    <X className="h-4 w-4 mr-2" />
+                    Cancelar
+                  </Button>
+                </>
+              ))}
+            {(isSecretary || isAdmin || isDoctor) && (
+              <SfsSyncButton patientId={patient.id} />
+            )}
+          </div>
         }
       />
 
