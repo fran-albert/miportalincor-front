@@ -282,8 +282,11 @@ export default function EvolucionesComponent({
             dataTypeName.includes("diagnostico presuntivo")
           ) {
             grouped[key].diagnosticosPresuntivos = dataItem.value;
-          } else if (dataItem.dataType.category === "EVOLUCION" && dataItem.value) {
-            // Texto importado (ej: evoluciones migradas de SFS)
+          } else if (
+            dataTypeName.includes("evolución importada") ||
+            dataTypeName.includes("evolucion importada")
+          ) {
+            // Solo evoluciones migradas desde SFS
             grouped[key].textoImportado = grouped[key].textoImportado
               ? `${grouped[key].textoImportado}\n\n---\n\n${dataItem.value}`
               : dataItem.value;
