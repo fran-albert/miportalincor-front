@@ -45,6 +45,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import useUserRole from "@/hooks/useRoles";
 import ResetDefaultPasswordButton from "@/components/Button/Reset-Default-Password";
+import SfsSyncButton from "@/components/Patients/Profile/SfsSyncButton";
 
 type FormValues = z.infer<typeof UpdatePatientSchema>;
 
@@ -331,6 +332,7 @@ function PatientProfileComponent({
                 Editar Perfil
               </Button>
               <ResetDefaultPasswordButton userName={patient.userName || patient.dni} />
+              <SfsSyncButton patientId={patient.id} />
             </div>
           ) : (
             <div className="flex gap-2">
