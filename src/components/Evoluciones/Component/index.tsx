@@ -234,7 +234,7 @@ export default function EvolucionesComponent({
     // Procesar cada evolución
     evoluciones.forEach((evolucion: Evolucion) => {
       const fechaConsulta = getFechaConsulta(evolucion);
-      const key = `${fechaConsulta}_${evolucion.doctor.userId}`; // Agrupar por fecha y doctor
+      const key = evolucion.id; // Cada evolución es su propia fila
 
       if (!grouped[key]) {
         grouped[key] = {
@@ -308,8 +308,8 @@ export default function EvolucionesComponent({
     });
 
     // Transformar a formato de tabla
-    return consultasAgrupadas.map((consulta) => ({
-      id: `${consulta.fechaConsulta}_${consulta.doctor.userId}`,
+    return consultasAgrupadas.map((consulta, index) => ({
+      id: String(consulta.evolucionPrincipal?.id ?? `evolution_${index}`),
       fechaConsulta: consulta.fechaConsulta,
       fechaCreacion: consulta.fechaCreacion,
       doctor: {
