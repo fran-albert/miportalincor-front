@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CreateAppointmentForm, GuestAppointmentData } from "../Forms/CreateAppointmentForm";
 import { useAppointmentMutations, useCreateGuestAppointment } from "@/hooks/Appointments";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Loader2, UserPlus } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface CreateAppointmentDialogProps {
@@ -51,6 +52,8 @@ export const CreateAppointmentDialog = ({
   fixedDoctorId,
 }: CreateAppointmentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Usar estado controlado si se provee, sino usar interno
   const isControlled = controlledOpen !== undefined;
@@ -102,7 +105,10 @@ export const CreateAppointmentDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(value) => {
+      if (!value) setIsGuestMode(false);
+      setOpen(value);
+    }}>
       {/* Solo mostrar trigger si no está en modo controlado */}
       {!isControlled && (
         <DialogTrigger asChild>
@@ -121,8 +127,9 @@ export const CreateAppointmentDialog = ({
             Complete los datos para agendar un nuevo turno
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
+        <ScrollArea className="flex-1 max-h-[calc(90vh-200px)] pr-4">
           <CreateAppointmentForm
+            formRef={formRef}
             onSubmit={handleSubmit}
             onGuestSubmit={allowGuestCreation ? handleGuestSubmit : undefined}
             isLoading={isCreating || isCreatingGuest}
@@ -133,8 +140,22 @@ export const CreateAppointmentDialog = ({
             defaultHour={defaultHour}
             allowGuestCreation={allowGuestCreation}
             fixedDoctorId={fixedDoctorId}
+            hideSubmitButton
+            onGuestModeChange={setIsGuestMode}
           />
         </ScrollArea>
+        <DialogFooter>
+          <Button
+            type="button"
+            onClick={() => formRef.current?.requestSubmit()}
+            disabled={isCreating || isCreatingGuest}
+            className={isGuestMode ? "bg-purple-600 hover:bg-purple-700" : ""}
+          >
+            {(isCreating || isCreatingGuest) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isGuestMode && <UserPlus className="mr-2 h-4 w-4" />}
+            {isGuestMode ? "Crear Turno Invitado" : "Crear Turno"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
