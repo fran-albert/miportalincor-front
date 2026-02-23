@@ -52,6 +52,8 @@ interface DataTableProps<TData, TValue> {
   onNextPage?: () => void;
   onPrevPage?: () => void;
   clientPageSize?: number;
+  /** If true, shows data even when search query is empty (default: false) */
+  showDataOnEmptySearch?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -76,6 +78,7 @@ export function DataTable<TData, TValue>({
   onNextPage,
   onPrevPage,
   clientPageSize = 16,
+  showDataOnEmptySearch = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -248,7 +251,7 @@ export function DataTable<TData, TValue>({
                   ))}
                 </thead>
                 <tbody className="text-gray-700 divide-y divide-gray-100">
-                  {searchQuery === "" ? (
+                  {searchQuery === "" && !showDataOnEmptySearch ? (
                     <tr key="empty-search">
                       <td
                         colSpan={columns.length}
@@ -339,7 +342,7 @@ export function DataTable<TData, TValue>({
               </table>
             </div>
           </div>
-          {searchQuery !== "" && !useServerSideSearch && (
+          {(searchQuery !== "" || showDataOnEmptySearch) && !useServerSideSearch && (
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 bg-gray-50 p-4 rounded-lg">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="text-gray-600 text-sm font-medium">

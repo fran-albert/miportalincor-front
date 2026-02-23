@@ -67,6 +67,7 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
           onNextPage={onNextPage}
           onPrevPage={onPrevPage}
           clientPageSize={100}
+          showDataOnEmptySearch={true}
         />
       </div>
     </div>
