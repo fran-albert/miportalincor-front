@@ -88,6 +88,10 @@ export function DataTable<TData, TValue>({
   const [searchInput, setSearchInput] = React.useState(searchQuery);
 
   React.useEffect(() => {
+    setPagination(prev => ({ ...prev, pageSize: clientPageSize }));
+  }, [clientPageSize]);
+
+  React.useEffect(() => {
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
