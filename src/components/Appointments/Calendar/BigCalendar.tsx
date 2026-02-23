@@ -648,7 +648,8 @@ export const BigCalendar = ({
         case AppointmentStatus.PENDING:
         case AppointmentStatus.REQUESTED_BY_PATIENT:
         case AppointmentStatus.ASSIGNED_BY_SECRETARY:
-          backgroundColor = "#eab308"; // yellow
+          // Cyan for web patient origin, yellow for others
+          backgroundColor = origin === AppointmentOrigin.WEB_PATIENT ? "#0891b2" : "#eab308";
           break;
         case AppointmentStatus.WAITING:
           backgroundColor = "#22c55e"; // green
@@ -912,6 +913,9 @@ export const BigCalendar = ({
                 <span className="text-sm text-muted-foreground mr-1">Estados:</span>
                 <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
                   Pendiente
+                </Badge>
+                <Badge variant="outline" className="bg-cyan-600/20 text-cyan-700 border-cyan-600">
+                  Pendiente (Web)
                 </Badge>
                 <Badge variant="outline" className="bg-green-500/20 text-green-700 border-green-500">
                   En Espera

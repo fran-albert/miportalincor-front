@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DoctorSelect } from "../Select/DoctorSelect";
-import { PatientSelectWithGuestOption, GuestData } from "../Select/PatientSelectWithGuestOption";
+import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
 import { TimeSlotSelect } from "../Select/TimeSlotSelect";
 import { ConsultationTypeSelect } from "../Select/ConsultationTypeSelect";
 import {
@@ -62,6 +64,8 @@ interface CreateAppointmentFormProps {
   hideSubmitButton?: boolean;
   /** Callback when guest mode changes */
   onGuestModeChange?: (isGuest: boolean) => void;
+  /** Callback when guest submit availability changes */
+  onCanSubmitGuestChange?: (canSubmit: boolean) => void;
 }
 
 export const CreateAppointmentForm = ({
@@ -78,8 +82,13 @@ export const CreateAppointmentForm = ({
   formRef,
   hideSubmitButton = false,
   onGuestModeChange,
+  onCanSubmitGuestChange,
 }: CreateAppointmentFormProps) => {
-  const [guestData, setGuestData] = useState<GuestData | null>(null);
+  const [guestDni, setGuestDni] = useState<string | null>(null);
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const { doctors } = useDoctors({ auth: true, fetchDoctors: !!fixedDoctorId });
   const fixedDoctor = fixedDoctorId
     ? doctors.find(d => Number(d.userId) === fixedDoctorId)
@@ -126,45 +135,55 @@ export const CreateAppointmentForm = ({
     await onSubmit(data);
   };
 
-  const handleGuestSelect = (data: GuestData) => {
-    setGuestData(data);
+  const handleCreateGuestClick = (documentNumber: string) => {
+    setGuestDni(documentNumber);
+    setGuestFirstName("");
+    setGuestLastName("");
+    setGuestPhone("");
+    setGuestEmail("");
     onGuestModeChange?.(true);
-    // Clear patient selection when switching to guest mode
     form.setValue("patientId", undefined as unknown as number);
   };
 
   const handleClearGuest = () => {
-    setGuestData(null);
+    setGuestDni(null);
+    setGuestFirstName("");
+    setGuestLastName("");
+    setGuestPhone("");
+    setGuestEmail("");
     onGuestModeChange?.(false);
   };
 
   const handleGuestSubmit = async () => {
-    if (!guestData || !onGuestSubmit) return;
+    if (!guestDni || !onGuestSubmit) return;
+    if (!guestFirstName || !guestLastName || !guestPhone) return;
 
     const doctorId = form.getValues("doctorId");
     const date = form.getValues("date");
     const hour = form.getValues("hour");
     const consultationTypeId = form.getValues("consultationTypeId");
 
-    if (!doctorId || !date || !hour) {
-      return;
-    }
+    if (!doctorId || !date || !hour) return;
 
     await onGuestSubmit({
       doctorId,
       date,
       hour,
-      guestDocumentNumber: guestData.documentNumber,
-      guestFirstName: guestData.firstName,
-      guestLastName: guestData.lastName,
-      guestPhone: guestData.phone,
-      guestEmail: guestData.email,
+      guestDocumentNumber: guestDni,
+      guestFirstName,
+      guestLastName,
+      guestPhone,
+      guestEmail: guestEmail || undefined,
       consultationTypeId,
     });
   };
 
-  const isGuestMode = guestData !== null;
-  const canSubmitGuest = isGuestMode && watchDoctorId && watchDate && watchHour;
+  const isGuestMode = guestDni !== null;
+  const canSubmitGuest = isGuestMode && !!guestFirstName && !!guestLastName && !!guestPhone && !!watchDoctorId && !!watchDate && !!watchHour;
+
+  useEffect(() => {
+    onCanSubmitGuestChange?.(canSubmitGuest);
+  }, [canSubmitGuest, onCanSubmitGuestChange]);
 
   return (
     <Form {...form}>
@@ -201,30 +220,67 @@ export const CreateAppointmentForm = ({
 
         {/* Patient/Guest Selection */}
         {isGuestMode ? (
-          <div className="space-y-2">
-            <FormLabel>Paciente (Invitado)</FormLabel>
-            <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-md">
-              <UserPlus className="h-5 w-5 text-purple-600" />
-              <div className="flex-1">
-                <p className="font-medium text-purple-900">
-                  {guestData.firstName} {guestData.lastName}
-                </p>
-                <p className="text-sm text-purple-700">
-                  DNI: {guestData.documentNumber} | Tel: {guestData.phone}
-                </p>
-              </div>
-              <Badge className="bg-purple-100 text-purple-800 border-purple-300">
-                INVITADO
-              </Badge>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <FormLabel>Paciente (Invitado)</FormLabel>
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={handleClearGuest}
-                className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
+                className="text-purple-600 hover:text-purple-800 hover:bg-purple-100 h-7 px-2"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 mr-1" />
+                Cancelar
               </Button>
+            </div>
+            <div className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-md">
+              <UserPlus className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-900">DNI: {guestDni}</span>
+              <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs">
+                INVITADO
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="guestFirstName" className="text-sm">Nombre *</Label>
+                <Input
+                  id="guestFirstName"
+                  placeholder="Nombre"
+                  value={guestFirstName}
+                  onChange={(e) => setGuestFirstName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="guestLastName" className="text-sm">Apellido *</Label>
+                <Input
+                  id="guestLastName"
+                  placeholder="Apellido"
+                  value={guestLastName}
+                  onChange={(e) => setGuestLastName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="guestPhone" className="text-sm">Teléfono *</Label>
+                <Input
+                  id="guestPhone"
+                  placeholder="Teléfono"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="guestEmail" className="text-sm">Email (opcional)</Label>
+                <Input
+                  id="guestEmail"
+                  type="email"
+                  placeholder="Email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         ) : (
@@ -238,7 +294,7 @@ export const CreateAppointmentForm = ({
                   <PatientSelectWithGuestOption
                     value={field.value}
                     onValueChange={field.onChange}
-                    onGuestSelect={handleGuestSelect}
+                    onCreateGuestClick={handleCreateGuestClick}
                     placeholder="Buscar paciente por DNI..."
                     defaultPatient={defaultPatient}
                     disabled={!!defaultPatient}
