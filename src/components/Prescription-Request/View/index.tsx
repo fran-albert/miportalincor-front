@@ -58,6 +58,39 @@ function parseGreenCardDescription(description: string) {
   };
 }
 
+type CheckupUrgency = "overdue" | "upcoming" | "ontrack";
+
+function getCheckupUrgency(nextDueDate: string): CheckupUrgency {
+  const dueDate = new Date(nextDueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays < 0) return "overdue";
+  if (diffDays <= 30) return "upcoming";
+  return "ontrack";
+}
+
+function getCheckupBadgeClasses(urgency: CheckupUrgency): string {
+  if (urgency === "overdue") {
+    return "bg-red-100 text-red-700";
+  }
+  if (urgency === "upcoming") {
+    return "bg-yellow-100 text-yellow-800";
+  }
+  return "bg-green-100 text-green-700";
+}
+
+function getCheckupBadgeLabel(urgency: CheckupUrgency): string {
+  if (urgency === "overdue") return "Vencido";
+  if (urgency === "upcoming") return "Próximo";
+  return "Al día";
+}
+
 export default function ViewPrescriptionRequestModal({
   isOpen,
   onClose,
@@ -143,6 +176,78 @@ export default function ViewPrescriptionRequestModal({
               </div>
             )}
           </div>
+
+          {/* Periodic Checkup Summary (doctor only) */}
+          {userRole === "doctor" && request.periodicCheckup && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-indigo-900">
+                Chequeo médico periódico
+              </h3>
+
+              {request.periodicCheckup.total === 0 ? (
+                <p className="text-sm text-indigo-700">
+                  El paciente no tiene chequeos periódicos asignados.
+                </p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-indigo-800">
+                      {request.periodicCheckup.total} activo
+                      {request.periodicCheckup.total !== 1 ? "s" : ""}
+                    </span>
+                    {request.periodicCheckup.overdueCount > 0 && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">
+                        {request.periodicCheckup.overdueCount} vencido
+                        {request.periodicCheckup.overdueCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    {request.periodicCheckup.upcomingCount > 0 && (
+                      <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-800">
+                        {request.periodicCheckup.upcomingCount} próximo
+                        {request.periodicCheckup.upcomingCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {request.periodicCheckup.items.map((item) => {
+                      const urgency = getCheckupUrgency(item.nextDueDate);
+                      return (
+                        <div
+                          key={item.id}
+                          className="rounded-md border border-indigo-100 bg-white/70 p-3"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-indigo-900">
+                              {item.checkupTypeName || "Chequeo"}
+                            </p>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${getCheckupBadgeClasses(urgency)}`}
+                            >
+                              {getCheckupBadgeLabel(urgency)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-indigo-700">
+                            Próximo: {formatDateArgentina(item.nextDueDate)}
+                          </p>
+                          {item.lastCheckupDate && (
+                            <p className="text-xs text-indigo-600">
+                              Último: {formatDateArgentina(item.lastCheckupDate)}
+                            </p>
+                          )}
+                          {item.specialityName && (
+                            <p className="text-xs text-indigo-600">
+                              Especialidad: {item.specialityName}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">
