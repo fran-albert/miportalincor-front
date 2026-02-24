@@ -101,7 +101,7 @@ export default function EvolutionTable({
   const currentPage = table.getState().pagination.pageIndex;
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden overflow-x-auto">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

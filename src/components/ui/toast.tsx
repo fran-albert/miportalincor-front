@@ -16,7 +16,7 @@ const ToastViewport = React.forwardRef<
       "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] flex flex-col p-4",
       className
     )}
-    style={{ width: "681px", height: "532px" }} // Ajuste del tamaño
+    style={{ width: "min(681px, 100vw)", height: "532px" }}
     {...props}
   />
 ));
@@ -32,7 +32,7 @@ const Toast = React.forwardRef<
       ref={ref}
       duration={3000}
       className={cn(
-        "bg-white flex items-center justify-center w-[500px] h-[250px] mx-auto p-6 space-x-4 rounded-md border shadow-lg", // Aumenté el tamaño del toast
+        "bg-white flex items-center justify-center w-full max-w-[500px] h-[250px] mx-auto p-6 space-x-4 rounded-md border shadow-lg",
         className
       )}
       {...props}
