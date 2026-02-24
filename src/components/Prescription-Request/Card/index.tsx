@@ -42,6 +42,7 @@ export default function PrescriptionRequestCard({
   const isPending = request.status === PrescriptionRequestStatus.PENDING;
   const isInProgress = request.status === PrescriptionRequestStatus.IN_PROGRESS;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
+  const periodicCheckup = request.periodicCheckup;
 
   const getBorderColor = () => {
     switch (request.status) {
@@ -106,6 +107,39 @@ export default function PrescriptionRequestCard({
               {request.description}
             </p>
           </div>
+
+          {userRole === "doctor" && periodicCheckup && (
+            <div className="rounded-md border border-blue-100 bg-blue-50/80 p-2">
+              <p className="text-xs font-semibold text-blue-900">
+                Chequeo médico periódico
+              </p>
+              {periodicCheckup.total > 0 ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-blue-700">
+                  <span>
+                    {periodicCheckup.total} chequeo
+                    {periodicCheckup.total !== 1 ? "s" : ""} activo
+                    {periodicCheckup.total !== 1 ? "s" : ""}
+                  </span>
+                  {periodicCheckup.overdueCount > 0 && (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">
+                      {periodicCheckup.overdueCount} vencido
+                      {periodicCheckup.overdueCount !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {periodicCheckup.upcomingCount > 0 && (
+                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-yellow-800">
+                      {periodicCheckup.upcomingCount} próximo
+                      {periodicCheckup.upcomingCount !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-blue-700">
+                  Sin chequeos periódicos asignados
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Prescription Links (if completed) */}
           {isCompleted && ((request.prescriptionUrls && request.prescriptionUrls.length > 0) || request.prescriptionLink) && (
