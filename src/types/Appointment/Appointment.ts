@@ -120,6 +120,8 @@ export interface AppointmentResponseDto {
   // Consultation type
   consultationTypeId?: number | null;
   consultationType?: ConsultationTypeBasicDto | null;
+  // Duration
+  durationMinutes?: number | null;
 }
 
 export interface AppointmentWithPatientDto extends AppointmentResponseDto {

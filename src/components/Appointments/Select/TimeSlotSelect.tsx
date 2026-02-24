@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import { formatTimeAR } from "@/common/helpers/timezone";
 interface TimeSlotSelectProps {
   doctorId?: number;
   date?: string;
+  consultationTypeId?: number;
   value?: string;
   onValueChange: (hour: string) => void;
   placeholder?: string;
@@ -24,6 +26,7 @@ interface TimeSlotSelectProps {
 export const TimeSlotSelect = ({
   doctorId,
   date,
+  consultationTypeId,
   value,
   onValueChange,
   placeholder = "Seleccionar horario",
@@ -36,8 +39,20 @@ export const TimeSlotSelect = ({
   const { slots, availableSlots, isLoading } = useAvailableSlots({
     doctorId: doctorId || 0,
     date: date || "",
+    consultationTypeId,
     enabled: isEnabled
   });
+
+  // Auto-clear selected value if it's no longer in the available slots
+  const onValueChangeRef = useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
+  useEffect(() => {
+    if (!isLoading && value) {
+      if (availableSlots.length === 0 || !availableSlots.some(s => s.hour === value)) {
+        onValueChangeRef.current("");
+      }
+    }
+  }, [availableSlots, value, isLoading]);
 
   if (isLoading && isEnabled) {
     return <Skeleton className="h-10 w-full" />;

@@ -390,8 +390,9 @@ export const BigCalendar = ({
       const [hours, minutes] = apt.hour.split(":").map(Number);
       const start = new Date(apt.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
+      const duration = apt.durationMinutes ?? slotDuration;
       const end = new Date(start);
-      end.setMinutes(end.getMinutes() + slotDuration);
+      end.setMinutes(end.getMinutes() + duration);
 
       const isGuestAppointment = apt.isGuest === 1 || apt.isGuest === true;
       const patientName = isGuestAppointment
@@ -453,7 +454,19 @@ export const BigCalendar = ({
     appointments
       .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
       .forEach((apt) => {
-        set.add(`${apt.date}-${apt.hour.slice(0, 5)}`);
+        const baseHour = apt.hour.slice(0, 5);
+        set.add(`${apt.date}-${baseHour}`);
+        if (apt.durationMinutes && apt.durationMinutes > slotDuration) {
+          const extraSlots = Math.ceil(apt.durationMinutes / slotDuration) - 1;
+          const [h, m] = baseHour.split(":").map(Number);
+          const baseMinutes = h * 60 + m;
+          for (let i = 1; i <= extraSlots; i++) {
+            const next = baseMinutes + i * slotDuration;
+            const hh = String(Math.floor(next / 60)).padStart(2, "0");
+            const mm = String(next % 60).padStart(2, "0");
+            set.add(`${apt.date}-${hh}:${mm}`);
+          }
+        }
       });
     overturns.forEach((ot) => {
       set.add(`${ot.date}-${ot.hour.slice(0, 5)}`);
@@ -462,7 +475,7 @@ export const BigCalendar = ({
       set.add(`${blocked.date}-${blocked.hour.slice(0, 5)}`);
     });
     return set;
-  }, [appointments, overturns, blockedSlots, CANCELLED_STATUSES]);
+  }, [appointments, overturns, blockedSlots, CANCELLED_STATUSES, slotDuration]);
 
   // Available slot events (filtered by occupied, holidays, absences)
   const availableSlotEvents = useMemo<CalendarEvent[]>(() => {

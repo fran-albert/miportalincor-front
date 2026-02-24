@@ -4,13 +4,14 @@ import { getAvailableSlots } from "@/api/Appointments";
 interface UseAvailableSlotsProps {
   doctorId: number;
   date: string;
+  consultationTypeId?: number;
   enabled?: boolean;
 }
 
-export const useAvailableSlots = ({ doctorId, date, enabled = true }: UseAvailableSlotsProps) => {
+export const useAvailableSlots = ({ doctorId, date, consultationTypeId, enabled = true }: UseAvailableSlotsProps) => {
   const query = useQuery({
-    queryKey: ['availableSlots', doctorId, date],
-    queryFn: () => getAvailableSlots(doctorId, date),
+    queryKey: ['availableSlots', doctorId, date, consultationTypeId ?? null],
+    queryFn: () => getAvailableSlots(doctorId, date, consultationTypeId),
     staleTime: 1000 * 120, // 2 minutes
     enabled: enabled && doctorId > 0 && !!date,
   });
