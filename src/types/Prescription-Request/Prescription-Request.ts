@@ -24,6 +24,23 @@ export interface DoctorSummary {
   specialities?: string[];
 }
 
+export interface PrescriptionRequestPeriodicCheckupItem {
+  id: number;
+  checkupTypeId: number;
+  checkupTypeName?: string;
+  specialityName?: string;
+  lastCheckupDate?: string;
+  nextDueDate: string;
+  isActive: boolean;
+}
+
+export interface PrescriptionRequestPeriodicCheckupSummary {
+  total: number;
+  overdueCount: number;
+  upcomingCount: number;
+  items: PrescriptionRequestPeriodicCheckupItem[];
+}
+
 export interface PrescriptionRequest extends Base {
   patientUserId: string;
   doctorUserId: string;
@@ -39,6 +56,7 @@ export interface PrescriptionRequest extends Base {
   doctor?: DoctorSummary;
   greenCardItemId?: string;
   batchId?: string;
+  periodicCheckup?: PrescriptionRequestPeriodicCheckupSummary;
 }
 
 export interface CreatePrescriptionRequestDto {
