@@ -518,7 +518,7 @@ const DoctorWaitingRoomPage = () => {
                   No hay turnos completados o cancelados
                 </p>
               ) : (
-                <div className="rounded-lg border overflow-hidden">
+                <div className="rounded-lg border overflow-hidden overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
