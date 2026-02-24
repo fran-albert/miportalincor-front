@@ -12,10 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DoctorSelect } from "../Select/DoctorSelect";
-import { PatientSelectWithGuestOption, GuestData } from "../Select/PatientSelectWithGuestOption";
+import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
 import {
   CreateOverturnSchema,
   CreateOverturnFormData
@@ -61,7 +62,11 @@ export const CreateOverturnForm = ({
   allowGuestCreation = true,
   fixedDoctorId,
 }: CreateOverturnFormProps) => {
-  const [guestData, setGuestData] = useState<GuestData | null>(null);
+  const [guestDni, setGuestDni] = useState<string | null>(null);
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const { doctors } = useDoctors({ auth: true, fetchDoctors: !!fixedDoctorId });
   const fixedDoctor = fixedDoctorId
     ? doctors.find(d => Number(d.userId) === fixedDoctorId)
@@ -87,43 +92,49 @@ export const CreateOverturnForm = ({
     await onSubmit(data);
   };
 
-  const handleGuestSelect = (data: GuestData) => {
-    setGuestData(data);
-    // Clear patient selection when switching to guest mode
+  const handleCreateGuestClick = (documentNumber: string) => {
+    setGuestDni(documentNumber);
+    setGuestFirstName("");
+    setGuestLastName("");
+    setGuestPhone("");
+    setGuestEmail("");
     form.setValue("patientId", undefined as unknown as number);
   };
 
   const handleClearGuest = () => {
-    setGuestData(null);
+    setGuestDni(null);
+    setGuestFirstName("");
+    setGuestLastName("");
+    setGuestPhone("");
+    setGuestEmail("");
   };
 
   const handleGuestSubmit = async () => {
-    if (!guestData || !onGuestSubmit) return;
+    if (!guestDni || !onGuestSubmit) return;
+    if (!guestFirstName || !guestLastName || !guestPhone) return;
 
     const doctorId = form.getValues("doctorId");
     const date = form.getValues("date");
     const hour = form.getValues("hour");
     const reason = form.getValues("reason");
 
-    if (!doctorId || !date || !hour) {
-      return;
-    }
+    if (!doctorId || !date || !hour) return;
 
     await onGuestSubmit({
       doctorId,
       date,
       hour,
       reason,
-      guestDocumentNumber: guestData.documentNumber,
-      guestFirstName: guestData.firstName,
-      guestLastName: guestData.lastName,
-      guestPhone: guestData.phone,
-      guestEmail: guestData.email,
+      guestDocumentNumber: guestDni,
+      guestFirstName,
+      guestLastName,
+      guestPhone,
+      guestEmail: guestEmail || undefined,
     });
   };
 
-  const isGuestMode = guestData !== null;
-  const canSubmitGuest = isGuestMode && watchDoctorId && watchDate && watchHour;
+  const isGuestMode = guestDni !== null;
+  const canSubmitGuest = isGuestMode && guestFirstName && guestLastName && guestPhone && watchDoctorId && watchDate && watchHour;
 
   return (
     <Form {...form}>
@@ -160,30 +171,67 @@ export const CreateOverturnForm = ({
 
         {/* Patient/Guest Selection */}
         {isGuestMode ? (
-          <div className="space-y-2">
-            <FormLabel>Paciente (Invitado)</FormLabel>
-            <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
-              <UserPlus className="h-5 w-5 text-orange-600" />
-              <div className="flex-1">
-                <p className="font-medium text-orange-900">
-                  {guestData.firstName} {guestData.lastName}
-                </p>
-                <p className="text-sm text-orange-700">
-                  DNI: {guestData.documentNumber} | Tel: {guestData.phone}
-                </p>
-              </div>
-              <Badge className="bg-orange-100 text-orange-800 border-orange-300">
-                INVITADO
-              </Badge>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <FormLabel>Paciente (Invitado)</FormLabel>
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={handleClearGuest}
-                className="text-orange-600 hover:text-orange-800 hover:bg-orange-100"
+                className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 h-7 px-2"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 mr-1" />
+                Cancelar
               </Button>
+            </div>
+            <div className="flex items-center gap-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
+              <UserPlus className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-900">DNI: {guestDni}</span>
+              <Badge className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
+                INVITADO
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="guestFirstNameOT" className="text-sm">Nombre *</Label>
+                <Input
+                  id="guestFirstNameOT"
+                  placeholder="Nombre"
+                  value={guestFirstName}
+                  onChange={(e) => setGuestFirstName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="guestLastNameOT" className="text-sm">Apellido *</Label>
+                <Input
+                  id="guestLastNameOT"
+                  placeholder="Apellido"
+                  value={guestLastName}
+                  onChange={(e) => setGuestLastName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="guestPhoneOT" className="text-sm">Teléfono *</Label>
+                <Input
+                  id="guestPhoneOT"
+                  placeholder="Teléfono"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="guestEmailOT" className="text-sm">Email (opcional)</Label>
+                <Input
+                  id="guestEmailOT"
+                  type="email"
+                  placeholder="Email"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         ) : (
@@ -197,7 +245,7 @@ export const CreateOverturnForm = ({
                   <PatientSelectWithGuestOption
                     value={field.value}
                     onValueChange={field.onChange}
-                    onGuestSelect={handleGuestSelect}
+                    onCreateGuestClick={handleCreateGuestClick}
                     placeholder="Buscar paciente por DNI..."
                     allowGuestCreation={allowGuestCreation && !!onGuestSubmit}
                   />

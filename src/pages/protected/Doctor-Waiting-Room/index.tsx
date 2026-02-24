@@ -56,6 +56,7 @@ import {
   AppointmentStatus,
   AppointmentStatusLabels,
   AppointmentStatusColors,
+  AppointmentFullResponseDto,
 } from '@/types/Appointment/Appointment';
 import {
   OverturnStatus,
@@ -92,6 +93,12 @@ const getTypeColor = (type: AgendaItem['type']): string => {
   return type === 'appointment'
     ? 'bg-blue-100 text-blue-800 border-blue-300'
     : 'bg-purple-100 text-purple-800 border-purple-300';
+};
+
+const getConsultationTypeName = (item: AgendaItem): string | null => {
+  if (item.type !== 'appointment') return null;
+  const apt = item.rawData as AppointmentFullResponseDto;
+  return apt.consultationType?.name ?? null;
 };
 
 
@@ -260,6 +267,16 @@ const DoctorWaitingRoomPage = () => {
     return entry.overturnId ? 'overturn' : 'appointment';
   };
 
+  const getQueueEntryConsultationType = (entry: typeof waitingQueue[0]): string | null => {
+    if (entry.overturnId) return null;
+    if (!entry.appointmentId) return null;
+    const agendaItem = agenda.find(
+      (item) => item.type === 'appointment' && item.id === entry.appointmentId
+    );
+    if (!agendaItem) return null;
+    return getConsultationTypeName(agendaItem);
+  };
+
   const handleQueueEntryAttend = (entry: typeof waitingQueue[0]) => {
     // Usar el endpoint de queue para marcar como attending
     // Esto actualiza tanto la queue entry como el appointment/overturn
@@ -328,6 +345,14 @@ const DoctorWaitingRoomPage = () => {
                     <Badge variant="outline" className={getTypeColor(type)}>
                       {getTypeLabel(type)}
                     </Badge>
+                    {(() => {
+                      const ctName = getQueueEntryConsultationType(entry);
+                      return ctName ? (
+                        <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
+                          {ctName}
+                        </Badge>
+                      ) : null;
+                    })()}
                     <Badge className="bg-orange-100 text-orange-800">
                       En espera
                     </Badge>
@@ -415,9 +440,19 @@ const DoctorWaitingRoomPage = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-lg">{renderPatientName(item)}</p>
-                      <Badge variant="outline" className={getTypeColor(item.type)}>
-                        {getTypeLabel(item.type)}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className={getTypeColor(item.type)}>
+                          {getTypeLabel(item.type)}
+                        </Badge>
+                        {(() => {
+                          const ctName = getConsultationTypeName(item);
+                          return ctName ? (
+                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
+                              {ctName}
+                            </Badge>
+                          ) : null;
+                        })()}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -490,6 +525,7 @@ const DoctorWaitingRoomPage = () => {
                         <TableHead>Hora</TableHead>
                         <TableHead>Paciente</TableHead>
                         <TableHead>Tipo</TableHead>
+                        <TableHead>Consulta</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
@@ -503,6 +539,18 @@ const DoctorWaitingRoomPage = () => {
                             <Badge variant="outline" className={getTypeColor(item.type)}>
                               {getTypeLabel(item.type)}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {(() => {
+                              const ctName = getConsultationTypeName(item);
+                              return ctName ? (
+                                <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
+                                  {ctName}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              );
+                            })()}
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(item)}>

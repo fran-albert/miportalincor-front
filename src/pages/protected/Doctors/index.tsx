@@ -16,7 +16,7 @@ const DoctorsComponent = () => {
     nextPage,
     prevPage,
   } = useSearchDoctors({
-    initialLimit: 10,
+    initialLimit: 100,
   });
 
   const prefetchDoctors = usePrefetchDoctor();
