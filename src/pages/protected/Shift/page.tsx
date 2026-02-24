@@ -27,6 +27,7 @@ const ShiftsPage = () => {
     queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
     queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
     queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+    queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
   };
 
   const breadcrumbItems = [

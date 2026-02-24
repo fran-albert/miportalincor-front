@@ -19,6 +19,7 @@ export const useOverturnMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['queue'] });
       queryClient.invalidateQueries({ queryKey: ['queueStats'] });
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -38,6 +39,7 @@ export const useOverturnMutations = () => {
 
       // Sincronizar con la agenda del día del médico
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -51,6 +53,7 @@ export const useOverturnMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['queue'] });
       queryClient.invalidateQueries({ queryKey: ['queueStats'] });
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
