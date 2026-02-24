@@ -23,6 +23,7 @@ import {
 import { ArrowLeft, Plus, Clock, Settings } from "lucide-react";
 import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailability";
 import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
+import { DurationSettingsCard } from "@/components/DoctorConsultationTypeSettings";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import {
   CreateDoctorAvailabilityDto,
@@ -158,6 +159,9 @@ const DoctorHorariosPage = () => {
               <BookingSettingsToggle doctorId={doctorId} />
             </CardContent>
           </Card>
+
+          {/* Duration per Consultation Type */}
+          <DurationSettingsCard doctorId={doctorId} />
 
           {/* Availability Management */}
           <Card>

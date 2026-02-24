@@ -390,8 +390,9 @@ export const BigCalendar = ({
       const [hours, minutes] = apt.hour.split(":").map(Number);
       const start = new Date(apt.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
+      const duration = apt.durationMinutes ?? slotDuration;
       const end = new Date(start);
-      end.setMinutes(end.getMinutes() + slotDuration);
+      end.setMinutes(end.getMinutes() + duration);
 
       const isGuestAppointment = apt.isGuest === 1 || apt.isGuest === true;
       const patientName = isGuestAppointment
