@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -132,16 +132,7 @@ export const CreateAppointmentForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultPatient?.userId, defaultPatientId]);
 
-  // Reset hour when consultation type changes (slots may differ)
-  const isFirstCtRender = useRef(true);
-  useEffect(() => {
-    if (isFirstCtRender.current) {
-      isFirstCtRender.current = false;
-      return;
-    }
-    form.setValue("hour", "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchConsultationTypeId]);
+  // Hour auto-clear is handled by TimeSlotSelect when slots change
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
     await onSubmit(data);

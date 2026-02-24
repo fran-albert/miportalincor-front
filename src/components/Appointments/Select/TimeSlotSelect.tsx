@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,17 @@ export const TimeSlotSelect = ({
     consultationTypeId,
     enabled: isEnabled
   });
+
+  // Auto-clear selected value if it's no longer in the available slots
+  const onValueChangeRef = useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
+  useEffect(() => {
+    if (!isLoading && value) {
+      if (availableSlots.length === 0 || !availableSlots.some(s => s.hour === value)) {
+        onValueChangeRef.current("");
+      }
+    }
+  }, [availableSlots, value, isLoading]);
 
   if (isLoading && isEnabled) {
     return <Skeleton className="h-10 w-full" />;
