@@ -10,6 +10,7 @@ export const useDoctorAbsenceMutations = () => {
     mutationFn: (dto: CreateDoctorAbsenceDto) => createDoctorAbsence(dto),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['doctorAbsences', variables.doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -17,6 +18,7 @@ export const useDoctorAbsenceMutations = () => {
     mutationFn: ({ id }: { id: number; doctorId: number }) => deleteDoctorAbsence(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['doctorAbsences', variables.doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
