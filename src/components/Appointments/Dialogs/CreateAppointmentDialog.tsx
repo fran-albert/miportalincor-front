@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { CreateAppointmentForm, GuestAppointmentData } from "../Forms/CreateAppointmentForm";
 import { useAppointmentMutations, useCreateGuestAppointment } from "@/hooks/Appointments";
@@ -53,7 +52,11 @@ export const CreateAppointmentDialog = ({
 }: CreateAppointmentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
+  const [canSubmitGuest, setCanSubmitGuest] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const handleCanSubmitGuestChange = useCallback((canSubmit: boolean) => {
+    setCanSubmitGuest(canSubmit);
+  }, []);
 
   // Usar estado controlado si se provee, sino usar interno
   const isControlled = controlledOpen !== undefined;
@@ -127,7 +130,7 @@ export const CreateAppointmentDialog = ({
             Complete los datos para agendar un nuevo turno
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 max-h-[calc(90vh-200px)] pr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-4">
           <CreateAppointmentForm
             formRef={formRef}
             onSubmit={handleSubmit}
@@ -142,13 +145,14 @@ export const CreateAppointmentDialog = ({
             fixedDoctorId={fixedDoctorId}
             hideSubmitButton
             onGuestModeChange={setIsGuestMode}
+            onCanSubmitGuestChange={handleCanSubmitGuestChange}
           />
-        </ScrollArea>
+        </div>
         <DialogFooter>
           <Button
             type="button"
             onClick={() => formRef.current?.requestSubmit()}
-            disabled={isCreating || isCreatingGuest}
+            disabled={isCreating || isCreatingGuest || (isGuestMode && !canSubmitGuest)}
             className={isGuestMode ? "bg-purple-600 hover:bg-purple-700" : ""}
           >
             {(isCreating || isCreatingGuest) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
