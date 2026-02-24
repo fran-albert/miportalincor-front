@@ -23,6 +23,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -35,6 +36,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['availableSlots'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -62,6 +64,7 @@ export const useAppointmentMutations = () => {
 
       // Invalidar slots bloqueados por si acaso
       queryClient.invalidateQueries({ queryKey: ['blockedSlots'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 
@@ -78,6 +81,7 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['queue'] });
       queryClient.invalidateQueries({ queryKey: ['queueStats'] });
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
     },
   });
 

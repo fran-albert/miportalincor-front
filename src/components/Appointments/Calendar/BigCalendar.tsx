@@ -32,6 +32,7 @@ import { useBlockedSlots } from "@/hooks/BlockedSlots";
 import { useHolidays } from "@/hooks/Holiday";
 import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
 import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
+import { useDoctorDashboard } from "@/hooks/Doctor/useDoctorDashboard";
 import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability/useDoctorAvailabilities";
 import {
   AppointmentFullResponseDto,
@@ -213,20 +214,21 @@ export const BigCalendar = ({
   }, [currentView]);
 
   // Si autoFilterForDoctor, obtener el perfil del médico logueado
-  const { data: doctorProfile } = useMyDoctorProfile();
+  // (solo se usa cuando NO se usa dashboard, pero se llama siempre para mantener hooks estables)
+  const { data: doctorProfileIndividual } = useMyDoctorProfile();
 
   // Determinar el doctorId a usar: prop > auto-filter > internal
-  const selectedDoctorId = propDoctorId ?? (autoFilterForDoctor ? doctorProfile?.userId : internalDoctorId);
+  const selectedDoctorId = propDoctorId ?? (autoFilterForDoctor ? doctorProfileIndividual?.userId : internalDoctorId);
 
   // Determinar si mostrar el selector de médico (solo si no hay doctorId en prop y no es auto-filter)
   const showDoctorSelector = !propDoctorId && !autoFilterForDoctor;
 
   // Auto-seleccionar el médico si autoFilterForDoctor está activo (para compatibilidad)
   useEffect(() => {
-    if (autoFilterForDoctor && doctorProfile?.userId && !propDoctorId) {
-      setInternalDoctorId(doctorProfile.userId);
+    if (autoFilterForDoctor && doctorProfileIndividual?.userId && !propDoctorId) {
+      setInternalDoctorId(doctorProfileIndividual.userId);
     }
-  }, [autoFilterForDoctor, doctorProfile?.userId, propDoctorId]);
+  }, [autoFilterForDoctor, doctorProfileIndividual?.userId, propDoctorId]);
 
   // Buscar el primer mes con disponibilidad para auto-navegar el calendario
   const { firstAvailableDate, isSearching: isSearchingFirstDate } = useFirstAvailableDate({
@@ -242,7 +244,7 @@ export const BigCalendar = ({
     }
   }, [firstAvailableDate, selectedDoctorId]);
 
-  // Calculate date range for queries
+  // Calculate date range for queries (calendar range with buffer)
   const dateRange = useMemo(() => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
@@ -254,36 +256,6 @@ export const BigCalendar = ({
       dateTo: formatDateForCalendar(end),
     };
   }, [currentDate]);
-
-  // Fetch doctor availabilities to get slotDuration
-  const { availabilities: doctorAvailabilities } = useDoctorAvailabilities({
-    doctorId: selectedDoctorId ?? 0,
-    enabled: !!selectedDoctorId,
-  });
-
-  // Calculate slotDuration from doctor's availabilities (use minimum if multiple)
-  const slotDuration = useMemo(() => {
-    if (doctorAvailabilities.length === 0) {
-      return 30; // Default to 30 minutes if no availabilities
-    }
-    const durations = doctorAvailabilities.map((a) => a.slotDuration).filter((d) => d > 0);
-    return durations.length > 0 ? Math.min(...durations) : 30;
-  }, [doctorAvailabilities]);
-
-  // Fetch appointments
-  const { appointments, isLoading: isLoadingAppointments } = useAppointments({
-    doctorId: selectedDoctorId,
-    dateFrom: dateRange.dateFrom,
-    dateTo: dateRange.dateTo,
-    limit: 500,
-  });
-
-  // Fetch overturns
-  const { overturns, isLoading: isLoadingOverturns } = useOverturns({
-    doctorId: selectedDoctorId,
-    dateFrom: dateRange.dateFrom,
-    dateTo: dateRange.dateTo,
-  });
 
   // Calculate date range for available slots
   const slotsDateRange = useMemo(() => {
@@ -300,33 +272,81 @@ export const BigCalendar = ({
     };
   }, [currentView, currentDate]);
 
-  // Show slots in all views except agenda
-  const showAvailableSlots = true;
+  // Whether to use the aggregated dashboard endpoint (doctor view only)
+  const useDashboard = autoFilterForDoctor;
 
-  // Fetch available slots (always fetch to pre-load)
-  const { slots: availableSlots } = useAvailableSlotsRange({
+  // ─── DASHBOARD MODE (1 request): for doctors viewing their own calendar ───
+  const {
+    appointments: dashAppointments,
+    overturns: dashOverturns,
+    availableSlots: dashAvailableSlots,
+    blockedSlots: dashBlockedSlots,
+    doctorAbsences: dashAbsences,
+    holidays: dashHolidays,
+    slotDuration: dashSlotDuration,
+    isLoading: isDashboardLoading,
+  } = useDoctorDashboard({
+    dateFrom: dateRange.dateFrom,
+    dateTo: dateRange.dateTo,
+    selectedWeekStart: formatDateForCalendar(slotsDateRange.start),
+    selectedWeekEnd: formatDateForCalendar(slotsDateRange.end),
+    enabled: useDashboard && !!selectedDoctorId && isActive,
+  });
+
+  // ─── INDIVIDUAL HOOKS MODE (N requests): for secretary/tabs view ───
+  const { availabilities: indivAvailabilities } = useDoctorAvailabilities({
+    doctorId: selectedDoctorId ?? 0,
+    enabled: !useDashboard && !!selectedDoctorId,
+  });
+
+  const indivSlotDuration = useMemo(() => {
+    if (indivAvailabilities.length === 0) return 30;
+    const durations = indivAvailabilities.map((a) => a.slotDuration).filter((d) => d > 0);
+    return durations.length > 0 ? Math.min(...durations) : 30;
+  }, [indivAvailabilities]);
+
+  const { appointments: indivAppointments, isLoading: isLoadingAppointments } = useAppointments({
+    params: { doctorId: selectedDoctorId, dateFrom: dateRange.dateFrom, dateTo: dateRange.dateTo, limit: 500 },
+    enabled: !useDashboard,
+  });
+
+  const { overturns: indivOverturns, isLoading: isLoadingOverturns } = useOverturns({
+    params: { doctorId: selectedDoctorId, dateFrom: dateRange.dateFrom, dateTo: dateRange.dateTo },
+    enabled: !useDashboard,
+  });
+
+  const { slots: indivAvailableSlots } = useAvailableSlotsRange({
     doctorId: selectedDoctorId ?? 0,
     startDate: slotsDateRange.start,
     endDate: slotsDateRange.end,
-    enabled: !!selectedDoctorId && isActive,
+    enabled: !useDashboard && !!selectedDoctorId && isActive,
   });
 
-  // Fetch blocked slots
-  const { blockedSlots } = useBlockedSlots({
+  const { blockedSlots: indivBlockedSlots } = useBlockedSlots({
     doctorId: selectedDoctorId ?? 0,
     startDate: formatDateForCalendar(slotsDateRange.start),
     endDate: formatDateForCalendar(slotsDateRange.end),
-    enabled: !!selectedDoctorId && isActive,
+    enabled: !useDashboard && !!selectedDoctorId && isActive,
   });
 
-  // Fetch doctor absences
-  const { absences: doctorAbsences } = useDoctorAbsences({
+  const { absences: indivAbsences } = useDoctorAbsences({
     doctorId: selectedDoctorId ?? 0,
-    enabled: !!selectedDoctorId && isActive,
+    enabled: !useDashboard && !!selectedDoctorId && isActive,
   });
 
-  // Fetch holidays
-  const { data: holidays } = useHolidays();
+  const { data: indivHolidays } = useHolidays();
+
+  // ─── UNIFIED DATA: pick from dashboard or individual hooks ───
+  const appointments = useDashboard ? dashAppointments : indivAppointments;
+  const overturns = useDashboard ? dashOverturns : indivOverturns;
+  const availableSlots = useDashboard ? dashAvailableSlots : indivAvailableSlots;
+  const blockedSlots = useDashboard ? dashBlockedSlots : indivBlockedSlots;
+  const doctorAbsences = useDashboard ? dashAbsences : indivAbsences;
+  const holidays = useDashboard ? dashHolidays : indivHolidays;
+  const slotDuration = useDashboard ? dashSlotDuration : indivSlotDuration;
+
+  // Show slots in all views except agenda
+  const showAvailableSlots = true;
 
   // Create a Set of holiday dates for quick lookup
   const holidayDatesSet = useMemo(() => {
@@ -861,7 +881,9 @@ export const BigCalendar = ({
     [holidayDatesSet, absenceDatesSet]
   );
 
-  const isLoading = isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
+  const isLoading = useDashboard
+    ? isDashboardLoading || isSearchingFirstDate
+    : isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
 
   return (
     <div className={className}>
@@ -1419,7 +1441,7 @@ export const BigCalendar = ({
         overturns={overturns}
         currentDate={currentDate}
         currentView={currentView}
-        doctorName={doctorName ?? (autoFilterForDoctor && doctorProfile ? `Dr/a. ${doctorProfile.firstName} ${doctorProfile.lastName}` : undefined)}
+        doctorName={doctorName ?? (autoFilterForDoctor && doctorProfileIndividual ? `Dr/a. ${doctorProfileIndividual.firstName} ${doctorProfileIndividual.lastName}` : undefined)}
       />
     </div>
   );

@@ -12,6 +12,7 @@ export const useBlockedSlotMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blockedSlots"] });
       queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
       showSuccess("Horario bloqueado", "El horario ha sido bloqueado exitosamente");
     },
     onError: (error: Error) => {
@@ -24,6 +25,7 @@ export const useBlockedSlotMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blockedSlots"] });
       queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
       showSuccess("Horario desbloqueado", "El horario ha sido desbloqueado");
     },
     onError: (error: Error) => {
@@ -37,6 +39,7 @@ export const useBlockedSlotMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blockedSlots"] });
       queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
       showSuccess("Horario desbloqueado", "El horario ha sido desbloqueado");
     },
     onError: (error: Error) => {
