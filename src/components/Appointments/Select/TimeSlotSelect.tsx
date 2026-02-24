@@ -13,6 +13,7 @@ import { formatTimeAR } from "@/common/helpers/timezone";
 interface TimeSlotSelectProps {
   doctorId?: number;
   date?: string;
+  consultationTypeId?: number;
   value?: string;
   onValueChange: (hour: string) => void;
   placeholder?: string;
@@ -24,6 +25,7 @@ interface TimeSlotSelectProps {
 export const TimeSlotSelect = ({
   doctorId,
   date,
+  consultationTypeId,
   value,
   onValueChange,
   placeholder = "Seleccionar horario",
@@ -36,6 +38,7 @@ export const TimeSlotSelect = ({
   const { slots, availableSlots, isLoading } = useAvailableSlots({
     doctorId: doctorId || 0,
     date: date || "",
+    consultationTypeId,
     enabled: isEnabled
   });
 

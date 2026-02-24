@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -114,6 +114,7 @@ export const CreateAppointmentForm = ({
   const watchDoctorId = form.watch("doctorId");
   const watchDate = form.watch("date");
   const watchHour = form.watch("hour");
+  const watchConsultationTypeId = form.watch("consultationTypeId");
 
   // Setear el patientId cuando hay un defaultPatient (fix para react-hook-form)
   useEffect(() => {
@@ -130,6 +131,17 @@ export const CreateAppointmentForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultPatient?.userId, defaultPatientId]);
+
+  // Reset hour when consultation type changes (slots may differ)
+  const isFirstCtRender = useRef(true);
+  useEffect(() => {
+    if (isFirstCtRender.current) {
+      isFirstCtRender.current = false;
+      return;
+    }
+    form.setValue("hour", "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchConsultationTypeId]);
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
     await onSubmit(data);
@@ -190,7 +202,7 @@ export const CreateAppointmentForm = ({
       <form ref={formRef} onSubmit={isGuestMode ? (e) => { e.preventDefault(); handleGuestSubmit(); } : form.handleSubmit(handleSubmit)} className="space-y-4">
         {fixedDoctorId ? (
           <div className="space-y-2">
-            <FormLabel>Médico</FormLabel>
+            <FormLabel>Medico</FormLabel>
             <div className="flex items-center gap-2 h-10 w-full rounded-md border border-input bg-muted px-3 py-2">
               <Stethoscope className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
@@ -204,12 +216,12 @@ export const CreateAppointmentForm = ({
             name="doctorId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Médico *</FormLabel>
+                <FormLabel>Medico *</FormLabel>
                 <FormControl>
                   <DoctorSelect
                     value={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Seleccionar médico"
+                    placeholder="Seleccionar medico"
                   />
                 </FormControl>
                 <FormMessage />
@@ -263,10 +275,10 @@ export const CreateAppointmentForm = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="guestPhone" className="text-sm">Teléfono *</Label>
+                <Label htmlFor="guestPhone" className="text-sm">Telefono *</Label>
                 <Input
                   id="guestPhone"
-                  placeholder="Teléfono"
+                  placeholder="Telefono"
                   value={guestPhone}
                   onChange={(e) => setGuestPhone(e.target.value)}
                 />
@@ -332,27 +344,6 @@ export const CreateAppointmentForm = ({
 
         <FormField
           control={form.control}
-          name="hour"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Horario *</FormLabel>
-              <FormControl>
-                <TimeSlotSelect
-                  doctorId={watchDoctorId}
-                  date={watchDate}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Seleccionar horario"
-                  disabled={!watchDoctorId || !watchDate}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="consultationTypeId"
           render={({ field }) => (
             <FormItem>
@@ -362,6 +353,28 @@ export const CreateAppointmentForm = ({
                   value={field.value}
                   onValueChange={field.onChange}
                   placeholder="Seleccionar tipo (opcional)"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="hour"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horario *</FormLabel>
+              <FormControl>
+                <TimeSlotSelect
+                  doctorId={watchDoctorId}
+                  date={watchDate}
+                  consultationTypeId={watchConsultationTypeId}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Seleccionar horario"
+                  disabled={!watchDoctorId || !watchDate}
                 />
               </FormControl>
               <FormMessage />
