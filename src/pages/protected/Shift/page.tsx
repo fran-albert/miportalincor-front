@@ -39,8 +39,8 @@ const ShiftsPage = () => {
     <div className="flex items-center gap-2 flex-wrap">
       {(!isDoctor || canSelfManage) && (
         <>
-          <CreateAppointmentDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor} />
-          <CreateOverturnDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor} />
+          <CreateAppointmentDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
+          <CreateOverturnDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
         </>
       )}
       <Button
@@ -76,7 +76,7 @@ const ShiftsPage = () => {
 
       {/* Content: diferentes vistas según rol */}
       {isDoctor ? (
-        <BigCalendar autoFilterForDoctor={true} blockOnly={!canSelfManage} fixedDoctorId={canSelfManage ? doctorId : undefined} />
+        <BigCalendar autoFilterForDoctor={true} blockOnly={!canSelfManage} fixedDoctorId={canSelfManage ? doctorId : undefined} allowGuestCreation={canSelfManage} />
       ) : (
         <Tabs defaultValue="calendar" className="flex-1">
           <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">

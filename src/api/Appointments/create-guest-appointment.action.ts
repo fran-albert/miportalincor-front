@@ -43,6 +43,6 @@ export const createGuestAppointment = async (
     // Include consultationTypeId if provided
     ...(dto.consultationTypeId && { consultationTypeId: dto.consultationTypeId }),
   };
-  const { data } = await apiTurnos.post<AppointmentResponseDto>('appointments/guest', backendDto);
+  const { data } = await apiTurnos.post<AppointmentResponseDto>('appointments/internal-guest', backendDto);
   return data;
 };
