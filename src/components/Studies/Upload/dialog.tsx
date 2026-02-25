@@ -103,6 +103,8 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
       reset();
       setSelectedFiles([]);
       setSelectedStudy(null);
+      setNoteValue("");
+      setStartDate(new Date());
       setIsOpen(false);
     } catch (error) {
       console.error("Error al agregar el estudio", error);
@@ -121,6 +123,9 @@ export default function StudyDialog({ idUser }: AddStudyProps) {
       setValue("StudyTypeId", "");
       setValue("StudyTypeName", "");
       setSelectedStudy(null);
+      setSelectedFiles([]);
+      setNoteValue("");
+      setStartDate(new Date());
       reset();
     }
   }, [isOpen, setValue, reset]);
