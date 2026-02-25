@@ -124,6 +124,8 @@ interface BigCalendarProps {
   fixedDoctorId?: number;
   /** Whether this tab is currently visible. When false, disables data fetching to save resources. */
   isActive?: boolean;
+  /** Whether to allow creating guest appointments (for doctors with self-manage) */
+  allowGuestCreation?: boolean;
 }
 
 export const BigCalendar = ({
@@ -135,6 +137,7 @@ export const BigCalendar = ({
   blockOnly = false,
   fixedDoctorId,
   isActive = true,
+  allowGuestCreation: allowGuestCreationProp,
 }: BigCalendarProps) => {
   const { showSuccess, showError } = useToastContext();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -1338,7 +1341,7 @@ export const BigCalendar = ({
           setSelectedSlot(null);
         }}
         fixedDoctorId={fixedDoctorId}
-        allowGuestCreation={!fixedDoctorId}
+        allowGuestCreation={allowGuestCreationProp ?? !fixedDoctorId}
       />
 
       {/* Register Guest Modal - only render if still a guest */}
@@ -1442,7 +1445,7 @@ export const BigCalendar = ({
             setIsOverturnDialogOpen(false);
           }}
           fixedDoctorId={fixedDoctorId}
-          allowGuestCreation={!fixedDoctorId}
+          allowGuestCreation={allowGuestCreationProp ?? !fixedDoctorId}
         />
       )}
 
