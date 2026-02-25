@@ -209,7 +209,7 @@ export const CreateAntecedenteDialog = ({
                 <Textarea
                   {...field}
                   id="observaciones"
-                  placeholder={"DISLIPEMIA\nHIPERTENSION ARTERIAL\nDIABETES TIPO 2"}
+                  placeholder="Ingrese uno por línea..."
                   className="focus:ring-2 focus:ring-greenPrimary focus:border-greenPrimary uppercase resize-none"
                   style={{ textTransform: "uppercase" }}
                   rows={4}
