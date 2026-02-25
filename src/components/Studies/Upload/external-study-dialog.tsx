@@ -99,6 +99,9 @@ export default function ExternalStudyDialog({ idUser }: ExternalStudyDialogProps
       reset();
       setSelectedFile(null);
       setSelectedStudy(null);
+      setNoteValue("");
+      setInstitutionValue("");
+      setStartDate(new Date());
       setIsOpen(false);
     } catch (error) {
       console.error("Error al agregar el estudio externo", error);
@@ -118,6 +121,9 @@ export default function ExternalStudyDialog({ idUser }: ExternalStudyDialogProps
       setValue("ExternalInstitution", "");
       setSelectedStudy(null);
       setSelectedFile(null);
+      setNoteValue("");
+      setInstitutionValue("");
+      setStartDate(new Date());
       reset();
     }
   }, [isOpen, setValue, reset]);
