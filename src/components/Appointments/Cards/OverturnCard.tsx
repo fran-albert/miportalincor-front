@@ -53,6 +53,11 @@ export const OverturnCard = ({
     }
   };
 
+  const isGuest = overturn.isGuest === 1 || overturn.isGuest === true;
+  const patientName = isGuest
+    ? `${overturn.guestFirstName || ''} ${overturn.guestLastName || ''}`
+    : `${overturn.patient?.firstName || ''} ${overturn.patient?.lastName || ''}`;
+
   if (compact) {
     return (
       <div
@@ -67,7 +72,7 @@ export const OverturnCard = ({
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium flex items-center gap-1">
-              {overturn.patient?.firstName} {overturn.patient?.lastName}
+              {patientName}
               <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 ml-1">
                 Sobreturno
               </Badge>
@@ -143,7 +148,7 @@ export const OverturnCard = ({
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">
-                {overturn.patient?.firstName} {overturn.patient?.lastName}
+                {patientName}
               </span>
             </div>
 

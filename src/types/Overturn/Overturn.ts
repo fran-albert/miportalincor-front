@@ -59,7 +59,7 @@ export interface OverturnResponseDto {
   date: string;
   hour: string;
   status: OverturnStatus;
-  isGuest: boolean;
+  isGuest: boolean | number;
   guestDocumentNumber?: string;
   guestFirstName?: string;
   guestLastName?: string;
