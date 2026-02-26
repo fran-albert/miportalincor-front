@@ -26,6 +26,10 @@ export const WaitingItem = ({
 }: WaitingItemProps) => {
   const data = item.data;
   const isOverturn = item.type === 'overturn';
+  const isGuestOverturn = isOverturn && (data.isGuest === 1 || data.isGuest === true);
+  const patientName = isGuestOverturn
+    ? `${(data as OverturnDetailedDto).guestFirstName || ''} ${(data as OverturnDetailedDto).guestLastName || ''}`
+    : `${data.patient?.firstName || ''} ${data.patient?.lastName || ''}`;
 
   return (
     <div
@@ -42,7 +46,7 @@ export const WaitingItem = ({
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <span className="font-medium">
-              {data.patient?.firstName} {data.patient?.lastName}
+              {patientName}
             </span>
             {isOverturn && (
               <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800">
