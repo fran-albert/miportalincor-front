@@ -434,16 +434,25 @@ export const BigCalendar = ({
       const end = new Date(start);
       end.setMinutes(end.getMinutes() + slotDuration);
 
+      const isGuestOverturn = ot.isGuest === 1 || ot.isGuest === true;
+      const patientName = isGuestOverturn
+        ? `${ot.guestFirstName || ''} ${ot.guestLastName || ''}`
+        : `${ot.patient?.firstName || ''} ${ot.patient?.lastName || ''}`;
+      const patientDni = isGuestOverturn
+        ? ot.guestDocumentNumber
+        : ot.patient?.userName;
+
       return {
         id: ot.id + 100000,
-        title: `⚡ ${ot.patient?.firstName} ${ot.patient?.lastName}`,
+        title: `⚡ ${patientName}`,
         start,
         end,
         resource: {
           type: "overturn" as const,
           data: ot,
           status: ot.status,
-          patientDni: ot.patient?.userName,
+          isGuest: isGuestOverturn,
+          patientDni,
           healthInsurance: ot.patient?.healthInsuranceName,
           affiliationNumber: ot.patient?.affiliationNumber,
         },
