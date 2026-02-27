@@ -31,7 +31,9 @@ const WeightEvolutionCard = forwardRef<HTMLDivElement, Props>(
   ) => {
     const filteredData = useMemo(() => {
       return initialData.filter((d) => {
-        const date = typeof d.date === "string" ? new Date(d.date) : d.date;
+        const date = typeof d.date === "string"
+          ? new Date(d.date.split("T")[0] + "T00:00:00")
+          : d.date;
         if (startDate && date < startDate) return false;
         if (endDate && date > endDate) return false;
         return true;

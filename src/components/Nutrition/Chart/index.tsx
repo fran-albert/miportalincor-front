@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { NutritionData } from "@/types/Nutrition-Data/NutritionData";
-import { formatDate } from "@/common/helpers/helpers";
+import { formatDateOnly } from "@/common/helpers/helpers";
+import { format } from "date-fns";
 
 interface Props {
   data: NutritionData[];
@@ -21,10 +22,11 @@ interface Props {
 
 export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height = 300 }) => {
   const chartData = data.map((d) => ({
-    date:
+    date: formatDateOnly(
       typeof d.date === "string"
-        ? formatDate(d.date)
-        : new Date(d.date).toISOString().slice(0, 10),
+        ? d.date.split("T")[0]
+        : format(d.date, "yyyy-MM-dd")
+    ),
     weight: d.weight,
     targetWeight: d.targetWeight,
   }));

@@ -3,7 +3,7 @@
 import { TableHeader } from "@/components/ui/table";
 import type React from "react";
 import { useState, useEffect } from "react";
-import { formatDate } from "@/common/helpers/helpers";
+import { formatDateOnly } from "@/common/helpers/helpers";
 import {
   Table,
   TableBody,
@@ -342,18 +342,18 @@ export const NutritionTable: React.FC<Props> = ({
                       initialDate={
                         editDates[entry.id] ||
                         (typeof entry.date === "string"
-                          ? new Date(entry.date)
-                          : new Date(entry.date))
+                          ? new Date(entry.date.split("T")[0] + "T00:00:00")
+                          : entry.date)
                       }
                       compact={true}
                     />
                   </div>
                 ) : (
                   <span className="block truncate">
-                    {formatDate(
+                    {formatDateOnly(
                       typeof entry.date === "string"
-                        ? entry.date
-                        : entry.date.toISOString()
+                        ? entry.date.split("T")[0]
+                        : format(entry.date, "yyyy-MM-dd")
                     )}
                   </span>
                 )}

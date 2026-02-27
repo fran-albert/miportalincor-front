@@ -94,7 +94,7 @@ const NutritionCard: React.FC<Props> = ({
     const { id, userId: entryUserId, createdAt, updatedAt, date, ...rest } = updatedEntry;
     const data = {
       ...rest,
-      date: date instanceof Date ? date.toISOString() : date,
+      date: typeof date === "string" ? date.split("T")[0] : format(date, "yyyy-MM-dd"),
     };
     try {
       await promiseToast(
