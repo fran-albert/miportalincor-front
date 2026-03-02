@@ -1379,6 +1379,7 @@ export const BigCalendar = ({
       {/* Register Guest Modal - only render if still a guest */}
       {selectedEvent?.resource.isGuest && selectedEvent?.resource.type === "appointment" && (
         <RegisterGuestModal
+          key={(selectedEvent.resource.data as AppointmentFullResponseDto).id}
           open={isRegisterGuestModalOpen}
           onOpenChange={setIsRegisterGuestModalOpen}
           appointment={selectedEvent.resource.data as AppointmentFullResponseDto}
