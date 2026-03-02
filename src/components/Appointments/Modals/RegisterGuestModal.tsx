@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -111,6 +111,25 @@ export const RegisterGuestModal = ({
   });
 
   const { setValue, control, watch } = form;
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        firstName: appointment.guestFirstName || "",
+        lastName: appointment.guestLastName || "",
+        userName: appointment.guestDocumentNumber || "",
+        email: appointment.guestEmail || "",
+        phoneNumber: appointment.guestPhone || "",
+        address: {
+          street: "",
+          number: "",
+        },
+      });
+      setSelectedHealthInsurance(undefined);
+      setSelectedPlan(null);
+      setStartDate(undefined);
+    }
+  }, [open, appointment.id]);
 
   // Watch the selected state from the form to pass to CitySelect
   const watchedState = watch("address.city.state") as State | undefined;

@@ -133,17 +133,23 @@ export const AppointmentCard = ({
                 {allowedTransitions.length > 0 && onChangeStatus && (
                   <>
                     <DropdownMenuSeparator />
-                    {allowedTransitions.map((status) => {
-                      const action = getStatusAction(status);
-                      return (
-                        <DropdownMenuItem
-                          key={status}
-                          onClick={() => onChangeStatus(appointment.id, status)}
-                        >
-                          {action.icon} {action.label}
-                        </DropdownMenuItem>
-                      );
-                    })}
+                    {isGuestAppointment ? (
+                      <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
+                        Registrar paciente para cambiar estado
+                      </DropdownMenuItem>
+                    ) : (
+                      allowedTransitions.map((status) => {
+                        const action = getStatusAction(status);
+                        return (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => onChangeStatus(appointment.id, status)}
+                          >
+                            {action.icon} {action.label}
+                          </DropdownMenuItem>
+                        );
+                      })
+                    )}
                   </>
                 )}
               </DropdownMenuContent>
@@ -238,17 +244,23 @@ export const AppointmentCard = ({
                 {allowedTransitions.length > 0 && onChangeStatus && (
                   <>
                     <DropdownMenuSeparator />
-                    {allowedTransitions.map((status) => {
-                      const action = getStatusAction(status);
-                      return (
-                        <DropdownMenuItem
-                          key={status}
-                          onClick={() => onChangeStatus(appointment.id, status)}
-                        >
-                          {action.icon} {action.label}
-                        </DropdownMenuItem>
-                      );
-                    })}
+                    {isGuestAppointment ? (
+                      <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
+                        Registrar paciente para cambiar estado
+                      </DropdownMenuItem>
+                    ) : (
+                      allowedTransitions.map((status) => {
+                        const action = getStatusAction(status);
+                        return (
+                          <DropdownMenuItem
+                            key={status}
+                            onClick={() => onChangeStatus(appointment.id, status)}
+                          >
+                            {action.icon} {action.label}
+                          </DropdownMenuItem>
+                        );
+                      })
+                    )}
                   </>
                 )}
                 {onDelete && (

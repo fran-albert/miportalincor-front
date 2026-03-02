@@ -1229,14 +1229,21 @@ export const BigCalendar = ({
                     const appointmentDate = (selectedEvent.resource.data as AppointmentFullResponseDto).date;
                     const today = formatDateForCalendar(new Date());
                     const isToday = appointmentDate === today;
+                    const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
+                    const disabledWaiting = !isToday || isGuestAppointment;
+                    const waitingTitle = isGuestAppointment
+                      ? "Debe registrar al invitado como paciente antes de cambiar el estado"
+                      : !isToday
+                        ? "Solo se puede poner en espera un turno del dia de hoy"
+                        : undefined;
                     return (
                       <Button
                         size="sm"
                         variant="outline"
                         className="text-green-600 border-green-600 hover:bg-green-50"
                         onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
-                        disabled={!isToday}
-                        title={!isToday ? "Solo se puede poner en espera un turno del dia de hoy" : undefined}
+                        disabled={disabledWaiting}
+                        title={waitingTitle}
                       >
                         <Clock className="h-4 w-4 mr-1" />
                         Marcar en Espera
@@ -1249,6 +1256,8 @@ export const BigCalendar = ({
                     size="sm"
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={() => handleStatusChange(AppointmentStatus.ATTENDING)}
+                    disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                    title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
                   >
                     <PlayCircle className="h-4 w-4 mr-1" />
                     Atender
@@ -1260,6 +1269,8 @@ export const BigCalendar = ({
                     size="sm"
                     variant="outline"
                     onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
+                    disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                    title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
                   >
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Completar
@@ -1273,6 +1284,8 @@ export const BigCalendar = ({
                       variant="outline"
                       className="text-red-600 border-red-600 hover:bg-red-50"
                       onClick={() => setCancelConfirmOpen(true)}
+                      disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                      title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Cancelar
