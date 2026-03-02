@@ -26,7 +26,8 @@ export const WaitingItem = ({
 }: WaitingItemProps) => {
   const data = item.data;
   const isOverturn = item.type === 'overturn';
-  const isGuestOverturn = isOverturn && (data.isGuest === 1 || data.isGuest === true);
+  const isGuestItem = data.isGuest === 1 || data.isGuest === true;
+  const isGuestOverturn = isOverturn && isGuestItem;
   const patientName = isGuestOverturn
     ? `${(data as OverturnDetailedDto).guestFirstName || ''} ${(data as OverturnDetailedDto).guestLastName || ''}`
     : `${data.patient?.firstName || ''} ${data.patient?.lastName || ''}`;
@@ -67,11 +68,17 @@ export const WaitingItem = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {isGuestItem && (
+          <span className="text-xs text-muted-foreground italic">
+            Registrar paciente para atender
+          </span>
+        )}
         {onAttend && (
           <Button
             size="sm"
             onClick={() => onAttend(data.id, item.type)}
-            disabled={isLoading}
+            disabled={isLoading || isGuestItem}
+            title={isGuestItem ? "Debe registrar al invitado como paciente antes de atender" : undefined}
             className="bg-green-600 hover:bg-green-700"
           >
             <PlayCircle className="h-4 w-4 mr-1" />
@@ -83,7 +90,8 @@ export const WaitingItem = ({
             size="sm"
             variant="outline"
             onClick={() => onCancel(data.id, item.type)}
-            disabled={isLoading}
+            disabled={isLoading || isGuestItem}
+            title={isGuestItem ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
             className="text-red-600 hover:bg-red-50"
           >
             <XCircle className="h-4 w-4 mr-1" />
