@@ -1222,6 +1222,16 @@ export const BigCalendar = ({
                 </div>
               </div>
 
+              {/* Guest warning banner */}
+              {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Este turno pertenece a un <strong>invitado sin registrar</strong>. Para cambiar el estado del turno, primero registralo como paciente usando el botón <strong>"Registrar Paciente"</strong>.
+                  </span>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex flex-wrap gap-2 pt-4 border-t">
                 {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
