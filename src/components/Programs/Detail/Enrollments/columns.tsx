@@ -22,20 +22,17 @@ export const getEnrollmentColumns = (
     cell: ({ row }) => <div>{row.index + 1}</div>,
   },
   {
-    accessorKey: "patient",
+    accessorKey: "patientFirstName",
     header: "Paciente",
     cell: ({ row }) => {
-      const patient = row.original.patient;
+      const { patientFirstName, patientLastName, patientUserId } = row.original;
       return (
         <div>
           <div className="font-medium">
-            {patient
-              ? `${patient.firstName} ${patient.lastName}`
-              : row.original.patientUserId}
+            {patientFirstName
+              ? `${patientFirstName} ${patientLastName}`
+              : patientUserId}
           </div>
-          {patient?.email && (
-            <div className="text-sm text-gray-500">{patient.email}</div>
-          )}
         </div>
       );
     },

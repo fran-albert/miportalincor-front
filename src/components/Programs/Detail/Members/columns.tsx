@@ -14,17 +14,17 @@ export const getMemberColumns = (
     cell: ({ row }) => <div>{row.index + 1}</div>,
   },
   {
-    accessorKey: "user",
+    accessorKey: "firstName",
     header: "Miembro",
     cell: ({ row }) => {
-      const user = row.original.user;
+      const { firstName, lastName, email, userId } = row.original;
       return (
         <div>
           <div className="font-medium">
-            {user ? `${user.firstName} ${user.lastName}` : row.original.userId}
+            {firstName ? `${firstName} ${lastName}` : userId}
           </div>
-          {user?.email && (
-            <div className="text-sm text-gray-500">{user.email}</div>
+          {email && (
+            <div className="text-sm text-gray-500">{email}</div>
           )}
         </div>
       );

@@ -53,18 +53,18 @@ const MyEnrollmentDetailPage = () => {
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Mis Programas", href: "/mis-programas" },
-    { label: enrollment.program?.name ?? "Programa" },
+    { label: enrollment.programName ?? "Programa" },
   ];
 
   return (
     <>
       <Helmet>
-        <title>{enrollment.program?.name ?? "Mi Programa"}</title>
+        <title>{enrollment.programName ?? "Mi Programa"}</title>
       </Helmet>
       <div className="space-y-6 p-6">
         <PageHeader
           breadcrumbItems={breadcrumbItems}
-          title={enrollment.program?.name ?? "Programa"}
+          title={enrollment.programName ?? "Programa"}
           icon={<ClipboardCheck className="h-6 w-6" />}
           actions={
             <Badge className={EnrollmentStatusColors[enrollment.status]}>

@@ -21,7 +21,7 @@ export default function MyProgramCard({ enrollment }: MyProgramCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">
-            {enrollment.program?.name ?? "Programa"}
+            {enrollment.programName ?? "Programa"}
           </CardTitle>
           <Badge className={EnrollmentStatusColors[enrollment.status]}>
             {EnrollmentStatusLabels[enrollment.status]}

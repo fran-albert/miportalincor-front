@@ -45,8 +45,8 @@ const EnrollmentDetailPage = () => {
     );
   }
 
-  const patientName = enrollment.patient
-    ? `${enrollment.patient.firstName} ${enrollment.patient.lastName}`
+  const patientName = enrollment.patientFirstName
+    ? `${enrollment.patientFirstName} ${enrollment.patientLastName}`
     : enrollment.patientUserId;
 
   const breadcrumbItems = [
