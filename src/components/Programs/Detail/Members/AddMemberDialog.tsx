@@ -1,5 +1,4 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -18,12 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DoctorSelect } from "@/components/Appointments/Select/DoctorSelect";
 import { useMemberMutations } from "@/hooks/Program/useMemberMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
-import {
-  AddMemberSchema,
-  AddMemberFormValues,
-} from "@/validators/Program/member.schema";
 import { MemberRole, MemberRoleLabels } from "@/types/Program/ProgramMember";
 
 interface AddMemberDialogProps {
@@ -39,23 +34,17 @@ export default function AddMemberDialog({
 }: AddMemberDialogProps) {
   const { addMemberMutation } = useMemberMutations(programId);
   const { promiseToast } = useToastContext();
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
+  const [role, setRole] = useState<MemberRole>(MemberRole.PROFESSIONAL);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<AddMemberFormValues>({
-    resolver: zodResolver(AddMemberSchema),
-    defaultValues: { userId: "", role: "PROFESSIONAL" },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId) return;
 
-  const onSubmit = async (data: AddMemberFormValues) => {
     try {
       const promise = addMemberMutation.mutateAsync({
-        userId: data.userId,
-        role: data.role as MemberRole,
+        userId: selectedUserId.toString(),
+        role,
       });
       await promiseToast(promise, {
         loading: {
@@ -71,7 +60,8 @@ export default function AddMemberDialog({
           description: "No se pudo agregar el miembro.",
         }),
       });
-      reset();
+      setSelectedUserId(undefined);
+      setRole(MemberRole.PROFESSIONAL);
       setIsOpen(false);
     } catch (error) {
       console.error("Error adding member:", error);
@@ -84,28 +74,23 @@ export default function AddMemberDialog({
         <DialogHeader>
           <DialogTitle>Agregar Miembro</DialogTitle>
           <DialogDescription>
-            Ingresá el ID del usuario y seleccioná su rol en el programa.
+            Buscá al profesional y seleccioná su rol en el programa.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="userId">ID de Usuario</Label>
-            <Input
-              id="userId"
-              placeholder="ID del usuario (UUID)"
-              {...register("userId")}
+            <Label>Profesional</Label>
+            <DoctorSelect
+              value={selectedUserId}
+              onValueChange={setSelectedUserId}
+              placeholder="Buscar profesional..."
             />
-            {errors.userId && (
-              <p className="text-sm text-red-500">{errors.userId.message}</p>
-            )}
           </div>
           <div className="space-y-2">
             <Label>Rol</Label>
             <Select
-              defaultValue="PROFESSIONAL"
-              onValueChange={(value) =>
-                setValue("role", value as "PROFESSIONAL" | "COORDINATOR" | "OTHER")
-              }
+              value={role}
+              onValueChange={(value) => setRole(value as MemberRole)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar rol" />
@@ -118,9 +103,6 @@ export default function AddMemberDialog({
                 ))}
               </SelectContent>
             </Select>
-            {errors.role && (
-              <p className="text-sm text-red-500">{errors.role.message}</p>
-            )}
           </div>
           <DialogFooter>
             <Button
@@ -130,7 +112,10 @@ export default function AddMemberDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={addMemberMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={addMemberMutation.isPending || !selectedUserId}
+            >
               Agregar
             </Button>
           </DialogFooter>

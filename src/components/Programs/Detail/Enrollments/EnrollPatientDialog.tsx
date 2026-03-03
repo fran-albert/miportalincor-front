@@ -8,8 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PatientSelect } from "@/components/Appointments/Select/PatientSelect";
 import { useEnrollmentMutations } from "@/hooks/Program/useEnrollmentMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
@@ -26,15 +26,15 @@ export default function EnrollPatientDialog({
 }: EnrollPatientDialogProps) {
   const { enrollPatientMutation } = useEnrollmentMutations(programId);
   const { promiseToast } = useToastContext();
-  const [patientUserId, setPatientUserId] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState<number | undefined>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!patientUserId.trim()) return;
+    if (!selectedPatientId) return;
 
     try {
       const promise = enrollPatientMutation.mutateAsync({
-        patientUserId: patientUserId.trim(),
+        patientUserId: selectedPatientId.toString(),
       });
       await promiseToast(promise, {
         loading: {
@@ -50,7 +50,7 @@ export default function EnrollPatientDialog({
           description: "No se pudo inscribir al paciente.",
         }),
       });
-      setPatientUserId("");
+      setSelectedPatientId(undefined);
       setIsOpen(false);
     } catch (error) {
       console.error("Error enrolling patient:", error);
@@ -63,17 +63,16 @@ export default function EnrollPatientDialog({
         <DialogHeader>
           <DialogTitle>Inscribir Paciente</DialogTitle>
           <DialogDescription>
-            Ingresá el ID del paciente para inscribirlo en el programa.
+            Buscá al paciente por DNI para inscribirlo en el programa.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="patientUserId">ID del Paciente</Label>
-            <Input
-              id="patientUserId"
-              placeholder="ID del paciente (UUID)"
-              value={patientUserId}
-              onChange={(e) => setPatientUserId(e.target.value)}
+            <Label>Paciente</Label>
+            <PatientSelect
+              value={selectedPatientId}
+              onValueChange={setSelectedPatientId}
+              placeholder="Buscar por DNI..."
             />
           </div>
           <DialogFooter>
@@ -87,7 +86,7 @@ export default function EnrollPatientDialog({
             <Button
               type="submit"
               disabled={
-                enrollPatientMutation.isPending || !patientUserId.trim()
+                enrollPatientMutation.isPending || !selectedPatientId
               }
             >
               Inscribir
