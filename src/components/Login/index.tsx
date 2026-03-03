@@ -166,10 +166,10 @@ const LoginComponent = () => {
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                               <Input
                                 {...field}
-                                className="pl-10 h-11 border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
+                                className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="ejemplo@correo.com o DNI"
                               />
                             </div>
@@ -189,10 +189,10 @@ const LoginComponent = () => {
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                               <PasswordInput
                                 {...field}
-                                className="pl-10 h-11 border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
+                                className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="Ingresa tu contraseña"
                               />
                             </div>
