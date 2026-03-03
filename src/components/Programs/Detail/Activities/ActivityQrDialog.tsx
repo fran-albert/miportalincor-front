@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { environment } from "@/config/environment";
 import {
   Dialog,
   DialogContent,
@@ -68,7 +67,7 @@ export default function ActivityQrDialog({
           ) : qrData ? (
             <>
               <div ref={qrRef} className="rounded-lg border p-4 bg-white">
-                <QRCodeCanvas value={`${environment.BASE_URL}${qrData.qrUrl}`} size={250} level="H" />
+                <QRCodeCanvas value={`${window.location.origin}${qrData.qrUrl}`} size={250} level="H" />
               </div>
               <p className="text-sm text-gray-600 text-center">
                 Los pacientes pueden escanear este código para registrar su
