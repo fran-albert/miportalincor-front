@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { PasswordInput } from "../ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,6 +35,8 @@ const LoginComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(authStorage.getRememberMe());
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string })?.from || "/inicio";
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setError(null);
@@ -66,7 +68,7 @@ const LoginComponent = () => {
       if (token) {
         authStorage.setToken(token);
         dispatch(loginSuccess({ token }));
-        navigate("/inicio");
+        navigate(redirectTo);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
