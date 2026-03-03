@@ -31,7 +31,7 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
       <DataTable
         columns={columns}
         data={enrollments}
-        showSearch={false}
+        showSearch
         canAddUser={isAdmin}
         onAddClick={() => setIsEnrollOpen(true)}
         addLinkPath=""

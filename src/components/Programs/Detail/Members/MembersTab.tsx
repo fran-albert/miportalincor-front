@@ -44,7 +44,7 @@ export default function MembersTab({ programId }: MembersTabProps) {
       <DataTable
         columns={columns}
         data={members}
-        showSearch={false}
+        showSearch
         canAddUser={isAdmin}
         onAddClick={() => setIsAddOpen(true)}
         addLinkPath=""

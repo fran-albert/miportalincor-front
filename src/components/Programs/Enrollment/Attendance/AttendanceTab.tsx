@@ -29,7 +29,7 @@ export default function AttendanceTab({
       <DataTable
         columns={columns}
         data={records}
-        showSearch={false}
+        showSearch
         canAddUser={canRegister}
         onAddClick={() => setIsManualOpen(true)}
         addLinkPath=""

@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { apiIncorHC } from "@/services/axiosConfig";
 import { PlanVersionResponse } from "@/types/Program/ProgramPlan";
 
@@ -9,7 +10,10 @@ export const getCurrentPlan = async (
       `/enrollments/${enrollmentId}/plans/current`
     );
     return data;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
   }
 };

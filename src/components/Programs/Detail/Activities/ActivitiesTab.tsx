@@ -44,7 +44,7 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
       <DataTable
         columns={columns}
         data={activities}
-        showSearch={false}
+        showSearch
         canAddUser={isAdmin}
         onAddClick={() => setIsCreateOpen(true)}
         addLinkPath=""

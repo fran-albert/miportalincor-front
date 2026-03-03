@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,27 @@ export default function ActivityQrDialog({
     activityId,
     isOpen
   );
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = () => {
+    const canvas = qrRef.current?.querySelector("canvas");
+    if (!canvas || !qrData) return;
+    const dataUrl = canvas.toDataURL("image/png");
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(`
+        <html><head><title>QR - ${activityName}</title></head>
+        <body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+          <h2>${qrData.programName}</h2>
+          <h3>${activityName}</h3>
+          <img src="${dataUrl}" width="400" height="400" />
+          <p>Escaneá este QR para registrar tu asistencia</p>
+        </body></html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -44,36 +66,14 @@ export default function ActivityQrDialog({
             <div className="text-gray-500">Cargando QR...</div>
           ) : qrData ? (
             <>
-              <div className="rounded-lg border p-4 bg-white">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData.qrUrl)}`}
-                  alt={`QR para ${activityName}`}
-                  className="h-64 w-64"
-                />
+              <div ref={qrRef} className="rounded-lg border p-4 bg-white">
+                <QRCodeCanvas value={qrData.qrUrl} size={250} level="H" />
               </div>
               <p className="text-sm text-gray-600 text-center">
                 Los pacientes pueden escanear este código para registrar su
                 asistencia a <strong>{activityName}</strong>.
               </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const printWindow = window.open("", "_blank");
-                  if (printWindow) {
-                    printWindow.document.write(`
-                      <html><head><title>QR - ${activityName}</title></head>
-                      <body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-                        <h2>${qrData.programName}</h2>
-                        <h3>${activityName}</h3>
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData.qrUrl)}" />
-                        <p>Escaneá este QR para registrar tu asistencia</p>
-                      </body></html>
-                    `);
-                    printWindow.document.close();
-                    printWindow.print();
-                  }
-                }}
-              >
+              <Button variant="outline" onClick={handlePrint}>
                 Imprimir QR
               </Button>
             </>
