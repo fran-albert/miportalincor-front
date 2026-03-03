@@ -18,7 +18,7 @@ import { RootState } from "@/store/store";
 import LoadingAnimation from "../Loading/loading";
 import { Smartphone, ArrowLeft, RefreshCw } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { authStorage } from "@/utils/authStorage";
 
 interface TwoFactorFormProps {
@@ -34,8 +34,8 @@ const TwoFactorForm = ({ onBack }: TwoFactorFormProps) => {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectTo = (location.state as { from?: string })?.from || "/inicio";
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/inicio";
   const { twoFactor } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
