@@ -114,12 +114,11 @@ export const Private_Routes = ({
   }
 
   if (redirectPath) {
-    return (
-      <Navigate
-        to={redirectPath}
-        state={redirectPath === "/iniciar-sesion" ? { from: location.pathname } : undefined}
-      />
-    );
+    const to =
+      redirectPath === "/iniciar-sesion" && location.pathname !== "/"
+        ? `/iniciar-sesion?redirect=${encodeURIComponent(location.pathname)}`
+        : redirectPath;
+    return <Navigate to={to} replace />;
   }
 
   return <>{children}</>;
