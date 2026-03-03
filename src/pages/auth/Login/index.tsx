@@ -1,17 +1,18 @@
 import LoginComponent from "@/components/Login";
 import useUserRole from "@/hooks/useRoles";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { session } = useUserRole();
 
   useEffect(() => {
     if (session) {
-      navigate("/inicio");
+      navigate(searchParams.get("redirect") || "/inicio");
     }
-  }, [session, navigate]);
+  }, [session, navigate, searchParams]);
 
   return (
     <>
