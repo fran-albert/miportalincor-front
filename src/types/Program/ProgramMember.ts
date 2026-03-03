@@ -15,11 +15,9 @@ export interface ProgramMember {
   programId: string;
   userId: string;
   role: MemberRole;
-  user?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   createdAt?: string;
 }
 

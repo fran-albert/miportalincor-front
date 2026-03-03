@@ -23,17 +23,11 @@ export interface ProgramEnrollment {
   id: string;
   programId: string;
   patientUserId: string;
-  patient?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
+  patientFirstName?: string;
+  patientLastName?: string;
+  programName?: string;
   enrolledAt: string;
   status: EnrollmentStatus;
-  program?: {
-    id: string;
-    name: string;
-  };
   createdAt?: string;
 }
 
