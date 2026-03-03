@@ -21,7 +21,8 @@ const ROLES = {
   PATIENT: "Paciente",
   DOCTOR: "Medico",
   SECRETARY: "Secretaria",
-  ADMIN: "Administrador"
+  ADMIN: "Administrador",
+  PROFESSOR: "Profesor",
 };
 
 const useUserRole = () => {
@@ -92,6 +93,7 @@ const useUserRole = () => {
       isDoctor: false,
       isSecretary: false,
       isAdmin: false,
+      isProfesor: false,
       session: null,
     };
   }
@@ -107,6 +109,7 @@ const useUserRole = () => {
       isDoctor: false,
       isSecretary: false,
       isAdmin: false,
+      isProfesor: false,
       session: null,
     };
   }
@@ -131,6 +134,7 @@ const useUserRole = () => {
     isDoctor: rolesArray.includes(ROLES.DOCTOR),
     isSecretary: rolesArray.includes(ROLES.SECRETARY),
     isAdmin: rolesArray.includes(ROLES.ADMIN),
+    isProfesor: rolesArray.includes(ROLES.PROFESSOR),
     session,
   };
 };

@@ -36,6 +36,8 @@ import {
   FileText,
   Pill,
   CreditCard,
+  GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -143,6 +145,19 @@ const navigationItems = [
     url: "/solicitudes-recetas",
     icon: FileText,
     allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
+  },
+  {
+    title: "Programas",
+    url: "/programas",
+    icon: GraduationCap,
+    allowedRoles: PERMISSIONS.PROGRAMS,
+  },
+  {
+    title: "Mis Programas",
+    url: "/mis-programas",
+    icon: ClipboardCheck,
+    allowedRoles: PERMISSIONS.MY_PROGRAMS,
     strictRoles: true,
   },
   {

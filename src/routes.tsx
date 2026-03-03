@@ -66,6 +66,12 @@ import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescriptio
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
+import ProgramsPage from "./pages/protected/Programs";
+import ProgramDetailPage from "./pages/protected/Programs/Detail";
+import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
+import MyProgramsPage from "./pages/protected/My-Programs";
+import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
+import QrAttendancePage from "./pages/protected/Attendance/Qr";
 
 function App() {
   return (
@@ -602,6 +608,60 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <PreOccupationalPreviewPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Programas */}
+          <Route
+            path="/programas"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
+                <ProgramsPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/programas/:programId"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
+                <ProgramDetailPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/programas/:programId/inscripciones/:enrollmentId"
+            element={
+              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
+                <EnrollmentDetailPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Mis Programas (Paciente) */}
+          <Route
+            path="/mis-programas"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyProgramsPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/mis-programas/:enrollmentId"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyEnrollmentDetailPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* QR Attendance */}
+          <Route
+            path="/asistencia/qr/:qrToken"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <QrAttendancePage />
               </Private_Routes>
             }
           />
