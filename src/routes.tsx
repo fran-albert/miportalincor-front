@@ -72,6 +72,8 @@ import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
 import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
+import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
+import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
 
 function App() {
   return (
@@ -210,6 +212,16 @@ function App() {
             }
           />
 
+          {/* Reportes de Recetas */}
+          <Route
+            path="/admin/reportes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <PrescriptionReportsPage />
+              </Private_Routes>
+            }
+          />
+
           {/* Feriados */}
           <Route
             path="/admin/feriados"
@@ -282,6 +294,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <DoctorPrescriptionRequestsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Bandeja de Recetas - Operador */}
+          <Route
+            path="/bandeja-recetas"
+            element={
+              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <OperatorPrescriptionRequestsPage />
               </Private_Routes>
             }
           />

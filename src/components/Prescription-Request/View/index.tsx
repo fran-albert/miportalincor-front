@@ -23,7 +23,7 @@ interface ViewPrescriptionRequestModalProps {
   request: PrescriptionRequest | null;
   /** If this is a batch, pass all requests in the batch */
   batchRequests?: PrescriptionRequest[];
-  userRole: "patient" | "doctor";
+  userRole: "patient" | "doctor" | "operator";
   onCancel?: (request: PrescriptionRequest) => void;
   isLoading?: boolean;
 }
