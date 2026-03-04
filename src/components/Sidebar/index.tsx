@@ -177,11 +177,10 @@ const navigationItems = [
 
 const reportsItems = [
   {
-    title: "Reportes",
-    url: "#",
+    title: "Reportes de Recetas",
+    url: "/admin/reportes-recetas",
     icon: FileBarChart,
-    allowedRoles: PERMISSIONS.REPORTS,
-    comingSoon: true,
+    allowedRoles: PERMISSIONS.PRESCRIPTION_REPORTS,
   },
   {
     title: "Estadísticas",
@@ -379,12 +378,7 @@ export function AppSidebar() {
 
         {filteredReportsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-              Reportes y Análisis
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
-                Próximamente
-              </Badge>
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>Reportes y Análisis</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredReportsItems.map((item) => {
@@ -401,10 +395,18 @@ export function AppSidebar() {
                     );
                   }
 
+                  const active = pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <Link to={item.url}>
+                      <SidebarMenuButton asChild isActive={active}>
+                        <Link
+                          to={item.url}
+                          className={`flex items-center gap-2 px-2 py-1 rounded ${
+                            active
+                              ? "font-bold bg-gray-100 text-greenPrimary"
+                              : "font-normal text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
                           <item.icon className="text-greenPrimary" />
                           <span>{item.title}</span>
                         </Link>

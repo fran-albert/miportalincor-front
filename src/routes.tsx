@@ -73,6 +73,7 @@ import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
 import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
+import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
 
 function App() {
   return (
@@ -207,6 +208,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <DoctorServicesPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Reportes de Recetas */}
+          <Route
+            path="/admin/reportes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <PrescriptionReportsPage />
               </Private_Routes>
             }
           />
