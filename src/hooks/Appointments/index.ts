@@ -22,3 +22,4 @@ export { useAppointmentMutations } from './useAppointmentMutations';
 export { useRequestAppointment } from './useRequestAppointment';
 export { useConvertGuest } from './useConvertGuest';
 export { useCreateGuestAppointment } from './useCreateGuestAppointment';
+export { useReschedulePatientAppointment } from './useReschedulePatientAppointment';

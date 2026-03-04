@@ -167,6 +167,11 @@ export interface UpdateAppointmentDto {
   hour?: string;
 }
 
+export interface RescheduleAppointmentDto {
+  date: string;
+  hour: string;
+}
+
 export interface UpdateAppointmentStatusDto {
   status: AppointmentStatus;
 }
