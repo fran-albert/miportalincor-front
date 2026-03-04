@@ -1295,8 +1295,7 @@ export const BigCalendar = ({
                   </Button>
                 )}
 
-                {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
-                  selectedEvent.resource.status === AppointmentStatus.WAITING) &&
+                {selectedEvent.resource.status === AppointmentStatus.PENDING &&
                   selectedEvent.resource.type === "appointment" &&
                   !readOnly && (
                     <Button

@@ -73,9 +73,8 @@ export function RescheduleAppointmentDialog({
     (dateStr !== appointment.date ||
       selectedHour.slice(0, 5) !== currentHourNormalized);
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const handleReschedule = async () => {
     if (!dateStr || !selectedHour) return;
@@ -161,7 +160,7 @@ export function RescheduleAppointmentDialog({
                     setSelectedHour("");
                     setCalendarOpen(false);
                   }}
-                  disabled={(date) => date < tomorrow}
+                  disabled={(date) => date < today}
                   locale={es}
                   initialFocus
                 />
