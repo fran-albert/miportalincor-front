@@ -20,7 +20,7 @@ import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers"
 
 interface PrescriptionRequestCardProps {
   request: PrescriptionRequest;
-  userRole: "patient" | "doctor";
+  userRole: "patient" | "doctor" | "operator";
   onView?: (request: PrescriptionRequest) => void;
   onCancel?: (request: PrescriptionRequest) => void;
   onTake?: (request: PrescriptionRequest) => void;

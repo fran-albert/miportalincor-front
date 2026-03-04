@@ -72,6 +72,7 @@ import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
 import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
+import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
 
 function App() {
   return (
@@ -282,6 +283,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <DoctorPrescriptionRequestsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Bandeja de Recetas - Operador */}
+          <Route
+            path="/bandeja-recetas"
+            element={
+              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <OperatorPrescriptionRequestsPage />
               </Private_Routes>
             }
           />

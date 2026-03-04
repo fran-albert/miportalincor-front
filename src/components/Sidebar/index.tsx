@@ -53,6 +53,7 @@ import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
+import { useOperatorPrescriptionNotifications } from "@/hooks/Prescription-Request/useOperatorPrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 const navigationItems = [
@@ -146,6 +147,12 @@ const navigationItems = [
     icon: FileText,
     allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
     strictRoles: true,
+  },
+  {
+    title: "Bandeja de Recetas",
+    url: "/bandeja-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.OPERATOR_PRESCRIPTION_REQUESTS,
   },
   {
     title: "Programas",
@@ -251,6 +258,7 @@ export function AppSidebar() {
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
   const isDoctor = userRoles.includes("Medico");
+  const isOperator = userRoles.includes("Secretaria") || userRoles.includes("Administrador");
 
   // Check if doctor has GREEN_CARD service enabled
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
@@ -259,6 +267,12 @@ export function AppSidebar() {
   const { pendingCount } = usePrescriptionNotifications({
     enabled: isDoctor && hasGreenCardService,
     showToasts: false, // Toasts are handled in DashboardLayout
+  });
+
+  // Get pending prescription count for operators
+  const { pendingCount: operatorPendingCount } = useOperatorPrescriptionNotifications({
+    enabled: isOperator,
+    showToasts: false,
   });
 
   // Filtrar items del menú según roles del usuario
@@ -323,7 +337,14 @@ export function AppSidebar() {
                   // Check if this is the prescription requests item for doctors
                   const isPrescriptionRequestsItem =
                     item.url === "/solicitudes-recetas" && isDoctor;
-                  const showBadge = isPrescriptionRequestsItem && pendingCount > 0;
+                  const isOperatorPrescriptionItem =
+                    item.url === "/bandeja-recetas" && isOperator;
+                  const badgeCount = isPrescriptionRequestsItem
+                    ? pendingCount
+                    : isOperatorPrescriptionItem
+                      ? operatorPendingCount
+                      : 0;
+                  const showBadge = badgeCount > 0;
 
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -343,7 +364,7 @@ export function AppSidebar() {
                               variant="destructive"
                               className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
                             >
-                              {pendingCount > 9 ? "9+" : pendingCount}
+                              {badgeCount > 9 ? "9+" : badgeCount}
                             </Badge>
                           )}
                         </Link>
