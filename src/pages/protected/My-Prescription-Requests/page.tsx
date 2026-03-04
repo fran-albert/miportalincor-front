@@ -413,7 +413,7 @@ const MyPrescriptionRequestsPage = () => {
                         )}
                       </div>
                       {request.status === PrescriptionRequestStatus.COMPLETED &&
-                        (request.prescriptionUrls?.length ?? 0) > 0 && (
+                        ((request.prescriptionUrls?.length ?? 0) > 0 || request.prescriptionLink) && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -421,11 +421,13 @@ const MyPrescriptionRequestsPage = () => {
                             onClick={() => {
                               if (request.prescriptionUrls?.[0]) {
                                 window.open(request.prescriptionUrls[0], "_blank");
+                              } else if (request.prescriptionLink) {
+                                window.open(request.prescriptionLink, "_blank");
                               }
                             }}
                           >
                             <Download className="h-4 w-4 mr-1" />
-                            Descargar
+                            {request.prescriptionLink && !(request.prescriptionUrls?.length) ? "Ver receta" : "Descargar"}
                           </Button>
                         )}
                     </div>
