@@ -242,6 +242,12 @@ const systemItems = [
     allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
   },
   {
+    title: "Operadores Recetas",
+    url: "/admin/centro-recetas",
+    icon: ClipboardCheck,
+    allowedRoles: PERMISSIONS.PRESCRIPTION_CENTER,
+  },
+  {
     title: "Feriados",
     url: "/admin/feriados",
     icon: CalendarDays,

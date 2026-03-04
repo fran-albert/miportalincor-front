@@ -74,6 +74,7 @@ import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
 import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
 import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
+import PrescriptionCenterPage from "./pages/protected/Admin/Prescription-Center";
 
 function App() {
   return (
@@ -218,6 +219,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <PrescriptionReportsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Operadores de Recetas */}
+          <Route
+            path="/admin/centro-recetas"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <PrescriptionCenterPage />
               </Private_Routes>
             }
           />

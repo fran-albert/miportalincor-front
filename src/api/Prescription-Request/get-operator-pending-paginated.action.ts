@@ -10,7 +10,7 @@ export const getOperatorPendingPaginated = async (
 ): Promise<PaginatedPrescriptionRequests> => {
   await sleep(1);
   const { data } = await apiIncorHC.get<PaginatedPrescriptionRequests>(
-    `prescription-requests/operator/pending/search`,
+    `prescription-requests/pending/search`,
     { params }
   );
   return data;

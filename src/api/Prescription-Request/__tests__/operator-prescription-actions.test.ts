@@ -58,7 +58,7 @@ describe("getOperatorPendingPaginated", () => {
     await getOperatorPendingPaginated({ page: 1, limit: 10 });
 
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/pending/search",
+      "prescription-requests/pending/search",
       expect.objectContaining({ params: expect.any(Object) })
     );
   });
@@ -67,7 +67,7 @@ describe("getOperatorPendingPaginated", () => {
     await getOperatorPendingPaginated({ search: "Juan", page: 2, limit: 20 });
 
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/pending/search",
+      "prescription-requests/pending/search",
       { params: { search: "Juan", page: 2, limit: 20 } }
     );
   });
@@ -80,7 +80,7 @@ describe("getOperatorPendingPaginated", () => {
   it("debe funcionar sin parámetros de búsqueda", async () => {
     await getOperatorPendingPaginated({});
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/pending/search",
+      "prescription-requests/pending/search",
       { params: {} }
     );
   });
@@ -105,7 +105,7 @@ describe("getOperatorHistoryPaginated", () => {
     await getOperatorHistoryPaginated({ page: 1, limit: 10 });
 
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/history/search",
+      "prescription-requests/doctor/history/search",
       expect.objectContaining({ params: expect.any(Object) })
     );
   });
@@ -114,7 +114,7 @@ describe("getOperatorHistoryPaginated", () => {
     await getOperatorHistoryPaginated({ search: "García", page: 3, limit: 5 });
 
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/history/search",
+      "prescription-requests/doctor/history/search",
       { params: { search: "García", page: 3, limit: 5 } }
     );
   });
@@ -151,7 +151,7 @@ describe("getOperatorPendingCount", () => {
     await getOperatorPendingCount();
 
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/pending/count"
+      "prescription-requests/pending/count"
     );
   });
 
@@ -170,7 +170,7 @@ describe("getOperatorPendingCount", () => {
     await getOperatorPendingCount();
     // Verifica que se llama solo con la URL, sin segundo argumento de params
     expect(mockGet).toHaveBeenCalledWith(
-      "prescription-requests/operator/pending/count"
+      "prescription-requests/pending/count"
     );
     expect(mockGet.mock.calls[0].length).toBe(1);
   });
@@ -180,9 +180,9 @@ describe("getOperatorPendingCount", () => {
     await expect(getOperatorPendingCount()).rejects.toThrow("Unauthorized");
   });
 
-  it("el endpoint incluye 'operator' para distinguirlo del endpoint de médico", async () => {
+  it("el endpoint usa el mismo path que el de médico (el backend distingue por rol)", async () => {
     await getOperatorPendingCount();
     const [url] = mockGet.mock.calls[0];
-    expect(url).toContain("operator");
+    expect(url).toContain("pending/count");
   });
 });

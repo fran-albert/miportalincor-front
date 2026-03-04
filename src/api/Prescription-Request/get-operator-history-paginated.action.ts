@@ -10,7 +10,7 @@ export const getOperatorHistoryPaginated = async (
 ): Promise<PaginatedPrescriptionRequests> => {
   await sleep(1);
   const { data } = await apiIncorHC.get<PaginatedPrescriptionRequests>(
-    `prescription-requests/operator/history/search`,
+    `prescription-requests/doctor/history/search`,
     { params }
   );
   return data;
