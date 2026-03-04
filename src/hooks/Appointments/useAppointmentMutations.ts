@@ -3,12 +3,14 @@ import {
   createAppointment,
   updateAppointment,
   changeAppointmentStatus,
-  deleteAppointment
+  deleteAppointment,
+  rescheduleAppointment,
 } from "@/api/Appointments";
 import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
-  AppointmentStatus
+  RescheduleAppointmentDto,
+  AppointmentStatus,
 } from "@/types/Appointment/Appointment";
 
 export const useAppointmentMutations = () => {
@@ -68,6 +70,23 @@ export const useAppointmentMutations = () => {
     },
   });
 
+  const rescheduleMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: RescheduleAppointmentDto }) =>
+      rescheduleAppointment(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointment', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['availableSlots'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['patientAppointmentsByUserId'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteAppointment(id),
     onSuccess: () => {
@@ -89,10 +108,12 @@ export const useAppointmentMutations = () => {
     createAppointment: createMutation,
     updateAppointment: updateMutation,
     changeStatus: changeStatusMutation,
+    rescheduleAppointment: rescheduleMutation,
     deleteAppointment: deleteMutation,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isChangingStatus: changeStatusMutation.isPending,
+    isRescheduling: rescheduleMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 };

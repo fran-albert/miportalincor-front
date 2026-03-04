@@ -18,7 +18,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/Appointments/Select/StatusBadge";
 import { RequestAppointmentDialog } from "@/components/Appointments/RequestAppointmentDialog";
-import { usePatientAppointments, useAppointmentMutations } from "@/hooks/Appointments";
+import { RescheduleAppointmentDialog } from "@/components/Appointments/Dialogs/RescheduleAppointmentDialog";
+import { usePatientAppointments, useReschedulePatientAppointment } from "@/hooks/Appointments";
+import { useAppointmentMutations } from "@/hooks/Appointments";
 import useUserRole from "@/hooks/useRoles";
 import {
   AppointmentFullResponseDto,
@@ -34,6 +36,7 @@ import {
   XCircle,
   CalendarCheck,
   CalendarX,
+  CalendarDays,
   Loader2,
   Plus
 } from "lucide-react";
@@ -46,7 +49,9 @@ const MyAppointmentsPage = () => {
   const { session } = useUserRole();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentFullResponseDto | null>(null);
+  const [rescheduleAppointment, setRescheduleAppointment] = useState<AppointmentFullResponseDto | null>(null);
 
   const patientId = session?.id ? Number(session.id) : 0;
 
@@ -56,6 +61,7 @@ const MyAppointmentsPage = () => {
   });
 
   const { changeStatus, isChangingStatus } = useAppointmentMutations();
+  const reschedulePatient = useReschedulePatientAppointment();
 
   // Separate upcoming and past appointments
   const upcomingAppointments = appointments.filter(
@@ -77,6 +83,10 @@ const MyAppointmentsPage = () => {
       apt.status === AppointmentStatus.PENDING ||
       apt.status === AppointmentStatus.WAITING
     );
+  };
+
+  const canReschedule = (apt: AppointmentFullResponseDto) => {
+    return apt.status === AppointmentStatus.PENDING;
   };
 
   const handleCancelClick = (apt: AppointmentFullResponseDto) => {
@@ -139,17 +149,33 @@ const MyAppointmentsPage = () => {
             </div>
           </div>
 
-          {canCancel(appointment) && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleCancelClick(appointment)}
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
-            >
-              <XCircle className="h-4 w-4 mr-1" />
-              Cancelar
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {canReschedule(appointment) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setRescheduleAppointment(appointment);
+                  setRescheduleDialogOpen(true);
+                }}
+                className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <CalendarDays className="h-4 w-4 mr-1" />
+                Reprogramar
+              </Button>
+            )}
+            {canCancel(appointment) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleCancelClick(appointment)}
+                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Cancelar
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -323,7 +349,7 @@ const MyAppointmentsPage = () => {
                 </div>
               )}
               <p className="mt-4 text-amber-600">
-                Esta acción no se puede deshacer. Si necesitás reagendar, contactá a la secretaría.
+                Esta acción no se puede deshacer. Si querés cambiar la fecha u hora, usá el botón "Reprogramar".
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -347,6 +373,22 @@ const MyAppointmentsPage = () => {
       <RequestAppointmentDialog
         open={requestDialogOpen}
         onOpenChange={setRequestDialogOpen}
+      />
+
+      {/* Reschedule Appointment Dialog */}
+      <RescheduleAppointmentDialog
+        open={rescheduleDialogOpen}
+        onOpenChange={setRescheduleDialogOpen}
+        appointment={rescheduleAppointment}
+        onReschedule={async (id, dto) => {
+          await reschedulePatient.mutateAsync({ id, dto });
+          toast({
+            title: "Turno reprogramado",
+            description: "Tu turno ha sido reprogramado exitosamente",
+          });
+          setRescheduleAppointment(null);
+        }}
+        isRescheduling={reschedulePatient.isPending}
       />
     </div>
   );

@@ -53,6 +53,7 @@ import { SlotActionDialog } from "../Dialogs/SlotActionDialog";
 import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
 import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
+import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
 import { PrintAgendaView } from "./PrintAgendaView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useDoctorAbsences } from "@/hooks/DoctorAbsence";
@@ -156,6 +157,8 @@ export const BigCalendar = ({
   const [isOverturnDialogOpen, setIsOverturnDialogOpen] = useState(false);
   const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [rescheduleTargetAppointment, setRescheduleTargetAppointment] = useState<AppointmentFullResponseDto | null>(null);
   const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
 
   // Dynamic height per view
@@ -372,7 +375,7 @@ export const BigCalendar = ({
     return dates;
   }, [doctorAbsences]);
 
-  const { changeStatus: changeAppointmentStatus } = useAppointmentMutations();
+  const { changeStatus: changeAppointmentStatus, rescheduleAppointment: rescheduleAppointmentMutation, isRescheduling } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus } = useOverturnMutations();
 
   // Split event computation into independent memos for better performance.
@@ -427,7 +430,10 @@ export const BigCalendar = ({
 
   // Overturn events
   const overturnEvents = useMemo<CalendarEvent[]>(() => {
-    return overturns.map((ot) => {
+    const activeOverturns = overturns.filter(
+      (ot) => ot.status !== OverturnStatus.CANCELLED_BY_PATIENT && ot.status !== OverturnStatus.CANCELLED_BY_SECRETARY
+    );
+    return activeOverturns.map((ot) => {
       const [hours, minutes] = ot.hour.split(":").map(Number);
       const start = new Date(ot.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
@@ -480,9 +486,11 @@ export const BigCalendar = ({
           }
         }
       });
-    overturns.forEach((ot) => {
-      set.add(`${ot.date}-${ot.hour.slice(0, 5)}`);
-    });
+    overturns
+      .filter((ot) => ot.status !== OverturnStatus.CANCELLED_BY_PATIENT && ot.status !== OverturnStatus.CANCELLED_BY_SECRETARY)
+      .forEach((ot) => {
+        set.add(`${ot.date}-${ot.hour.slice(0, 5)}`);
+      });
     blockedSlots.forEach((blocked) => {
       set.add(`${blocked.date}-${blocked.hour.slice(0, 5)}`);
     });
@@ -1287,6 +1295,25 @@ export const BigCalendar = ({
                   </Button>
                 )}
 
+                {selectedEvent.resource.status === AppointmentStatus.PENDING &&
+                  selectedEvent.resource.type === "appointment" &&
+                  !readOnly && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        const appt = selectedEvent.resource.data as AppointmentFullResponseDto;
+                        setRescheduleTargetAppointment(appt);
+                        setIsEventDialogOpen(false);
+                        setIsRescheduleDialogOpen(true);
+                      }}
+                    >
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      Reprogramar
+                    </Button>
+                  )}
+
                 {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
                   selectedEvent.resource.status === AppointmentStatus.WAITING) && (
                     <Button
@@ -1481,6 +1508,19 @@ export const BigCalendar = ({
           allowGuestCreation={allowGuestCreationProp ?? !fixedDoctorId}
         />
       )}
+
+      {/* Reschedule Appointment Dialog */}
+      <RescheduleAppointmentDialog
+        open={isRescheduleDialogOpen}
+        onOpenChange={setIsRescheduleDialogOpen}
+        appointment={rescheduleTargetAppointment}
+        onReschedule={async (id, dto) => {
+          await rescheduleAppointmentMutation.mutateAsync({ id, dto });
+          showSuccess("Turno reprogramado exitosamente");
+          setRescheduleTargetAppointment(null);
+        }}
+        isRescheduling={isRescheduling}
+      />
 
       {/* Print Agenda Dialog */}
       <PrintAgendaView
