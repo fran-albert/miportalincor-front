@@ -137,7 +137,7 @@ export default function ViewPrescriptionRequestModal({
 
           {/* Patient/Doctor Info Card */}
           <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4 space-y-3">
-            {userRole === "doctor" && request.patient && (
+            {(userRole === "doctor" || userRole === "operator") && request.patient && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                   <User className="h-4 w-4 text-blue-600" />
