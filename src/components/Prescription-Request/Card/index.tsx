@@ -250,8 +250,8 @@ export default function PrescriptionRequestCard({
               </Button>
             )}
 
-            {/* Doctor Actions */}
-            {userRole === "doctor" && isPending && onTake && (
+            {/* Doctor/Operator Actions */}
+            {(userRole === "doctor" || userRole === "operator") && isPending && onTake && (
               <Button
                 variant="outline"
                 size="sm"
@@ -264,7 +264,7 @@ export default function PrescriptionRequestCard({
               </Button>
             )}
 
-            {userRole === "doctor" && isInProgress && (
+            {(userRole === "doctor" || userRole === "operator") && isInProgress && (
               <>
                 {onComplete && (
                   <Button
