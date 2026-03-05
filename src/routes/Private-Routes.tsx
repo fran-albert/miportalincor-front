@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
 import { hasPermission } from "@/common/constants/permissions";
 import axios from "axios";
@@ -22,6 +22,7 @@ export const Private_Routes = ({
   children: React.ReactNode;
   allowedRoles?: string[];
 }) => {
+  const location = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
 
@@ -113,7 +114,11 @@ export const Private_Routes = ({
   }
 
   if (redirectPath) {
-    return <Navigate to={redirectPath} />;
+    const to =
+      redirectPath === "/iniciar-sesion" && location.pathname !== "/"
+        ? `/iniciar-sesion?redirect=${encodeURIComponent(location.pathname)}`
+        : redirectPath;
+    return <Navigate to={to} replace />;
   }
 
   return <>{children}</>;

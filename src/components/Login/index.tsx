@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PasswordInput } from "../ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,6 +35,8 @@ const LoginComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(authStorage.getRememberMe());
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/inicio";
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setError(null);
@@ -66,7 +68,7 @@ const LoginComponent = () => {
       if (token) {
         authStorage.setToken(token);
         dispatch(loginSuccess({ token }));
-        navigate("/inicio");
+        navigate(redirectTo);
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -166,10 +168,10 @@ const LoginComponent = () => {
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                               <Input
                                 {...field}
-                                className="pl-10 h-11 border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
+                                className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="ejemplo@correo.com o DNI"
                               />
                             </div>
@@ -189,10 +191,10 @@ const LoginComponent = () => {
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                               <PasswordInput
                                 {...field}
-                                className="pl-10 h-11 border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
+                                className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="Ingresa tu contraseña"
                               />
                             </div>

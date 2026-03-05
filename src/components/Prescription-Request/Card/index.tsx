@@ -20,7 +20,7 @@ import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers"
 
 interface PrescriptionRequestCardProps {
   request: PrescriptionRequest;
-  userRole: "patient" | "doctor";
+  userRole: "patient" | "doctor" | "operator";
   onView?: (request: PrescriptionRequest) => void;
   onCancel?: (request: PrescriptionRequest) => void;
   onTake?: (request: PrescriptionRequest) => void;
@@ -43,6 +43,7 @@ export default function PrescriptionRequestCard({
   const isInProgress = request.status === PrescriptionRequestStatus.IN_PROGRESS;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
   const periodicCheckup = request.periodicCheckup;
+  const displayDoctor = request.signingDoctor || request.doctor;
 
   const getBorderColor = () => {
     switch (request.status) {
@@ -78,27 +79,55 @@ export default function PrescriptionRequestCard({
           </div>
 
           {/* Patient/Doctor Info */}
-          <div className="flex items-center gap-2 text-sm">
-            <User className="h-4 w-4 text-gray-400" />
-            {userRole === "doctor" && request.patient ? (
-              <span className="font-medium">
-                {request.patient.firstName} {request.patient.lastName}
-              </span>
-            ) : request.doctor ? (
-              <span className="font-medium">
-                {formatDoctorName(request.doctor)}
-                {request.doctor.specialities &&
-                  request.doctor.specialities.length > 0 && (
-                    <span className="text-gray-500 font-normal">
-                      {" "}
-                      - {request.doctor.specialities[0]}
-                    </span>
-                  )}
-              </span>
-            ) : (
-              <span className="text-gray-500">Doctor no especificado</span>
-            )}
-          </div>
+          {userRole === "operator" ? (
+            <div className="flex flex-col gap-1 text-sm">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-400" />
+                {request.patient ? (
+                  <span className="font-medium">
+                    {request.patient.firstName} {request.patient.lastName}
+                  </span>
+                ) : (
+                  <span className="text-gray-500">Paciente no especificado</span>
+                )}
+              </div>
+              {displayDoctor && (
+                <div className="flex items-center gap-2 ml-6">
+                  <span className="text-gray-500">
+                    {formatDoctorName(displayDoctor)}
+                    {displayDoctor.specialities &&
+                      displayDoctor.specialities.length > 0 && (
+                        <span className="text-gray-400">
+                          {" "}- {displayDoctor.specialities[0]}
+                        </span>
+                      )}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-gray-400" />
+              {userRole === "doctor" && request.patient ? (
+                <span className="font-medium">
+                  {request.patient.firstName} {request.patient.lastName}
+                </span>
+              ) : displayDoctor ? (
+                <span className="font-medium">
+                  {formatDoctorName(displayDoctor)}
+                  {displayDoctor.specialities &&
+                    displayDoctor.specialities.length > 0 && (
+                      <span className="text-gray-500 font-normal">
+                        {" "}
+                        - {displayDoctor.specialities[0]}
+                      </span>
+                    )}
+                </span>
+              ) : (
+                <span className="text-gray-500">Doctor no especificado</span>
+              )}
+            </div>
+          )}
 
           {/* Description */}
           <div className="flex items-start gap-2">
@@ -221,8 +250,8 @@ export default function PrescriptionRequestCard({
               </Button>
             )}
 
-            {/* Doctor Actions */}
-            {userRole === "doctor" && isPending && onTake && (
+            {/* Doctor/Operator Actions */}
+            {(userRole === "doctor" || userRole === "operator") && isPending && onTake && (
               <Button
                 variant="outline"
                 size="sm"
@@ -235,7 +264,7 @@ export default function PrescriptionRequestCard({
               </Button>
             )}
 
-            {userRole === "doctor" && isInProgress && (
+            {(userRole === "doctor" || userRole === "operator") && isInProgress && (
               <>
                 {onComplete && (
                   <Button
