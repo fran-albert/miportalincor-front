@@ -46,7 +46,7 @@ export const PatientSelect = ({
   const { patients, isLoading, isFetching, search, setSearch } = useSearchPatients({
     enabled: true,
     debounceMs: 300,
-    minSearchLength: 6,
+    minSearchLength: 7,
   });
 
   // Memoize selected patient
@@ -102,9 +102,9 @@ export const PatientSelect = ({
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
               </div>
-            ) : search.length < 6 ? (
+            ) : search.length < 7 ? (
               <CommandEmpty>
-                Ingrese al menos 6 dígitos del DNI
+                Ingrese al menos 7 dígitos del DNI
               </CommandEmpty>
             ) : patients?.length === 0 ? (
               <CommandEmpty>No se encontraron pacientes</CommandEmpty>

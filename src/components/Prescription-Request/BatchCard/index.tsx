@@ -20,7 +20,7 @@ import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers"
 interface BatchPrescriptionRequestCardProps {
   batchId: string;
   requests: PrescriptionRequest[];
-  userRole: "patient" | "doctor" | "operator";
+  userRole: "patient" | "doctor";
   onView?: (request: PrescriptionRequest, batchRequests?: PrescriptionRequest[]) => void;
   onTakeBatch?: (batchId: string, requests: PrescriptionRequest[]) => void;
   onCompleteBatch?: (batchId: string, requests: PrescriptionRequest[]) => void;

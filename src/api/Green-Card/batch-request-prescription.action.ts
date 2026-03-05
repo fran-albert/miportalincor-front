@@ -9,12 +9,11 @@ import { BatchRequestResult } from "@/types/Green-Card/GreenCard";
  */
 export const batchRequestPrescription = async (
   cardId: string,
-  itemIds: string[],
-  doctorUserId?: string
+  itemIds: string[]
 ): Promise<BatchRequestResult> => {
   const { data } = await apiIncorHC.post<BatchRequestResult>(
     `/green-cards/${cardId}/batch-request-prescription`,
-    { itemIds, ...(doctorUserId && { doctorUserId }) }
+    { itemIds }
   );
   return data;
 };

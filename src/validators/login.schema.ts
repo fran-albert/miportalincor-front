@@ -5,7 +5,7 @@ export const loginSchema = z.object({
         z.string({
             required_error: 'Email o DNI es requerido.',
         }),
-        z.string().regex(/^\d{6,8}$/, "DNI no válido")
+        z.string().regex(/^\d{7,8}$/, "DNI no válido")
     ]).refine(value => value.trim() !== '', {
         message: "Email o DNI es requerido",
     }),

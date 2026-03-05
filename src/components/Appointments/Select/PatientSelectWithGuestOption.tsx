@@ -52,7 +52,7 @@ export const PatientSelectWithGuestOption = ({
   const { patients, isLoading, isFetching, search, setSearch } = useSearchPatients({
     enabled: true,
     debounceMs: 300,
-    minSearchLength: 6,
+    minSearchLength: 7,
   });
 
   // Memoize selected patient
@@ -78,7 +78,7 @@ export const PatientSelectWithGuestOption = ({
 
   const noResultsAndCanCreateGuest =
     allowGuestCreation &&
-    search.length >= 6 &&
+    search.length >= 7 &&
     patients?.length === 0 &&
     !isLoading &&
     !isFetching;
@@ -118,9 +118,9 @@ export const PatientSelectWithGuestOption = ({
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
               </div>
-            ) : search.length < 6 ? (
+            ) : search.length < 7 ? (
               <CommandEmpty>
-                Ingrese al menos 6 dígitos del DNI
+                Ingrese al menos 7 dígitos del DNI
               </CommandEmpty>
             ) : noResultsAndCanCreateGuest ? (
               <div className="p-4 space-y-4">

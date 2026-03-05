@@ -36,8 +36,6 @@ import {
   FileText,
   Pill,
   CreditCard,
-  GraduationCap,
-  ClipboardCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,7 +51,6 @@ import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
-import { useOperatorPrescriptionNotifications } from "@/hooks/Prescription-Request/useOperatorPrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 const navigationItems = [
@@ -149,25 +146,6 @@ const navigationItems = [
     strictRoles: true,
   },
   {
-    title: "Bandeja de Recetas",
-    url: "/bandeja-recetas",
-    icon: FileText,
-    allowedRoles: PERMISSIONS.OPERATOR_PRESCRIPTION_REQUESTS,
-  },
-  {
-    title: "Programas",
-    url: "/programas",
-    icon: GraduationCap,
-    allowedRoles: PERMISSIONS.PROGRAMS,
-  },
-  {
-    title: "Mis Programas",
-    url: "/mis-programas",
-    icon: ClipboardCheck,
-    allowedRoles: PERMISSIONS.MY_PROGRAMS,
-    strictRoles: true,
-  },
-  {
     title: "Incor Laboral",
     url: "/incor-laboral",
     icon: Briefcase,
@@ -177,10 +155,11 @@ const navigationItems = [
 
 const reportsItems = [
   {
-    title: "Reportes de Recetas",
-    url: "/admin/reportes-recetas",
+    title: "Reportes",
+    url: "#",
     icon: FileBarChart,
-    allowedRoles: PERMISSIONS.PRESCRIPTION_REPORTS,
+    allowedRoles: PERMISSIONS.REPORTS,
+    comingSoon: true,
   },
   {
     title: "Estadísticas",
@@ -242,12 +221,6 @@ const systemItems = [
     allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
   },
   {
-    title: "Operadores Recetas",
-    url: "/admin/centro-recetas",
-    icon: ClipboardCheck,
-    allowedRoles: PERMISSIONS.PRESCRIPTION_CENTER,
-  },
-  {
     title: "Feriados",
     url: "/admin/feriados",
     icon: CalendarDays,
@@ -263,7 +236,6 @@ export function AppSidebar() {
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
   const isDoctor = userRoles.includes("Medico");
-  const isOperator = userRoles.includes("Secretaria") || userRoles.includes("Administrador");
 
   // Check if doctor has GREEN_CARD service enabled
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
@@ -272,12 +244,6 @@ export function AppSidebar() {
   const { pendingCount } = usePrescriptionNotifications({
     enabled: isDoctor && hasGreenCardService,
     showToasts: false, // Toasts are handled in DashboardLayout
-  });
-
-  // Get pending prescription count for operators
-  const { pendingCount: operatorPendingCount } = useOperatorPrescriptionNotifications({
-    enabled: isOperator,
-    showToasts: false,
   });
 
   // Filtrar items del menú según roles del usuario
@@ -342,14 +308,7 @@ export function AppSidebar() {
                   // Check if this is the prescription requests item for doctors
                   const isPrescriptionRequestsItem =
                     item.url === "/solicitudes-recetas" && isDoctor;
-                  const isOperatorPrescriptionItem =
-                    item.url === "/bandeja-recetas" && isOperator;
-                  const badgeCount = isPrescriptionRequestsItem
-                    ? pendingCount
-                    : isOperatorPrescriptionItem
-                      ? operatorPendingCount
-                      : 0;
-                  const showBadge = badgeCount > 0;
+                  const showBadge = isPrescriptionRequestsItem && pendingCount > 0;
 
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -369,7 +328,7 @@ export function AppSidebar() {
                               variant="destructive"
                               className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
                             >
-                              {badgeCount > 9 ? "9+" : badgeCount}
+                              {pendingCount > 9 ? "9+" : pendingCount}
                             </Badge>
                           )}
                         </Link>
@@ -384,7 +343,12 @@ export function AppSidebar() {
 
         {filteredReportsItems.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Reportes y Análisis</SidebarGroupLabel>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              Reportes y Análisis
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
+                Próximamente
+              </Badge>
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredReportsItems.map((item) => {
@@ -401,18 +365,10 @@ export function AppSidebar() {
                     );
                   }
 
-                  const active = pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={active}>
-                        <Link
-                          to={item.url}
-                          className={`flex items-center gap-2 px-2 py-1 rounded ${
-                            active
-                              ? "font-bold bg-gray-100 text-greenPrimary"
-                              : "font-normal text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
+                      <SidebarMenuButton asChild>
+                        <Link to={item.url}>
                           <item.icon className="text-greenPrimary" />
                           <span>{item.title}</span>
                         </Link>

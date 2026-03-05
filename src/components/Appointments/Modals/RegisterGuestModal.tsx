@@ -41,7 +41,7 @@ import { ApiError } from "@/types/Error/ApiError";
 const GuestRegistrationSchema = z.object({
   firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
-  userName: z.string().min(6, "El DNI debe tener al menos 6 caracteres"),
+  userName: z.string().min(7, "El DNI debe tener al menos 7 caracteres"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phoneNumber: z.string().min(8, "El teléfono debe tener al menos 8 caracteres"),
   // CustomDatePicker stores ISO string, so we coerce it to Date

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { User, FileText, Calendar, ArrowRight, Sparkles, X, ClipboardList, CalendarCheck, Activity } from "lucide-react";
+import { User, FileText, Calendar, ArrowRight, Sparkles, X, ClipboardList, CalendarCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -70,14 +70,6 @@ export default function PatientHomePage({ name }: { name: string }) {
       icon: CalendarCheck,
       href: "/mis-chequeos",
       gradient: "from-orange-500 to-orange-600",
-      comingSoon: false,
-    },
-    {
-      title: "Mis Programas",
-      description: "Consultá los programas de salud en los que estás inscripto",
-      icon: Activity,
-      href: "/mis-programas",
-      gradient: "from-rose-500 to-rose-600",
       comingSoon: false,
     },
   ];

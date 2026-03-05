@@ -54,7 +54,6 @@ export interface PrescriptionRequest extends Base {
   completedAt?: string;
   patient?: PatientSummary;
   doctor?: DoctorSummary;
-  signingDoctor?: DoctorSummary;
   greenCardItemId?: string;
   batchId?: string;
   periodicCheckup?: PrescriptionRequestPeriodicCheckupSummary;
@@ -86,7 +85,6 @@ export interface SearchPrescriptionRequestParams {
   search?: string;
   page?: number;
   limit?: number;
-  status?: PrescriptionRequestStatus;
 }
 
 export interface PaginatedPrescriptionRequests {

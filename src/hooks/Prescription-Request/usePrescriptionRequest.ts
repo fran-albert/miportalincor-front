@@ -106,8 +106,6 @@ export const useTakePrescriptionRequest = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-pending-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-history-search"] });
     },
     onError: (error) => {
       console.error("Error taking prescription request:", error);
@@ -141,8 +139,6 @@ export const useCompletePrescriptionRequest = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-pending-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-history-search"] });
     },
     onError: (error) => {
       console.error("Error completing prescription request:", error);
@@ -176,8 +172,6 @@ export const useRejectPrescriptionRequest = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-pending-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-history-search"] });
     },
     onError: (error) => {
       console.error("Error rejecting prescription request:", error);
@@ -239,8 +233,6 @@ export const useCompleteBatchPrescriptionRequest = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["doctor-pending-search"] });
       queryClient.invalidateQueries({ queryKey: ["doctor-history-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-pending-search"] });
-      queryClient.invalidateQueries({ queryKey: ["operator-history-search"] });
     },
     onError: (error) => {
       console.error("Error completing batch prescription request:", error);
