@@ -156,25 +156,28 @@ export default function ViewPrescriptionRequestModal({
               </div>
             )}
 
-            {request.doctor && (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <Stethoscope className="h-4 w-4 text-blue-600" />
+            {(request.signingDoctor || request.doctor) && (() => {
+              const displayDoctor = request.signingDoctor || request.doctor;
+              return (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <Stethoscope className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-blue-900">Médico</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      {formatDoctorName(displayDoctor!)}
+                    </p>
+                    {displayDoctor!.specialities &&
+                      displayDoctor!.specialities.length > 0 && (
+                        <p className="text-xs text-blue-600 mt-0.5">
+                          {displayDoctor!.specialities.join(", ")}
+                        </p>
+                      )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-900">Medico</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {formatDoctorName(request.doctor)}
-                  </p>
-                  {request.doctor.specialities &&
-                    request.doctor.specialities.length > 0 && (
-                      <p className="text-xs text-blue-600 mt-0.5">
-                        {request.doctor.specialities.join(", ")}
-                      </p>
-                    )}
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Periodic Checkup Summary (doctor only) */}

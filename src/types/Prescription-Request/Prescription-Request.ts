@@ -54,6 +54,7 @@ export interface PrescriptionRequest extends Base {
   completedAt?: string;
   patient?: PatientSummary;
   doctor?: DoctorSummary;
+  signingDoctor?: DoctorSummary;
   greenCardItemId?: string;
   batchId?: string;
   periodicCheckup?: PrescriptionRequestPeriodicCheckupSummary;

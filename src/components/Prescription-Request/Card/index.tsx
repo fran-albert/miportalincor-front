@@ -43,6 +43,7 @@ export default function PrescriptionRequestCard({
   const isInProgress = request.status === PrescriptionRequestStatus.IN_PROGRESS;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
   const periodicCheckup = request.periodicCheckup;
+  const displayDoctor = request.signingDoctor || request.doctor;
 
   const getBorderColor = () => {
     switch (request.status) {
@@ -84,14 +85,14 @@ export default function PrescriptionRequestCard({
               <span className="font-medium">
                 {request.patient.firstName} {request.patient.lastName}
               </span>
-            ) : request.doctor ? (
+            ) : displayDoctor ? (
               <span className="font-medium">
-                {formatDoctorName(request.doctor)}
-                {request.doctor.specialities &&
-                  request.doctor.specialities.length > 0 && (
+                {formatDoctorName(displayDoctor)}
+                {displayDoctor.specialities &&
+                  displayDoctor.specialities.length > 0 && (
                     <span className="text-gray-500 font-normal">
                       {" "}
-                      - {request.doctor.specialities[0]}
+                      - {displayDoctor.specialities[0]}
                     </span>
                   )}
               </span>
