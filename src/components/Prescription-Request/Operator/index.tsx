@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FileText,
   RefreshCw,
   Clock,
@@ -13,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Filter,
 } from "lucide-react";
 import {
   useTakePrescriptionRequest,
@@ -21,7 +29,10 @@ import {
   useSearchOperatorPendingRequests,
   useSearchOperatorHistoryRequests,
 } from "@/hooks/Prescription-Request/useSearchOperatorPrescriptionRequests";
-import { PrescriptionRequest } from "@/types/Prescription-Request/Prescription-Request";
+import {
+  PrescriptionRequest,
+  PrescriptionRequestStatus,
+} from "@/types/Prescription-Request/Prescription-Request";
 import PrescriptionRequestCard from "../Card";
 import BatchPrescriptionRequestCard from "../BatchCard";
 import ViewPrescriptionRequestModal from "../View";
@@ -101,6 +112,8 @@ export default function OperatorPrescriptionRequests() {
     hasPreviousPage: historyHasPrev,
     search: historySearch,
     setSearch: setHistorySearch,
+    statusFilter: historyStatusFilter,
+    setStatusFilter: setHistoryStatusFilter,
     nextPage: historyNextPage,
     prevPage: historyPrevPage,
     isLoading: isLoadingHistory,
@@ -434,18 +447,53 @@ export default function OperatorPrescriptionRequests() {
               </TabsContent>
 
               <TabsContent value="history" className="mt-0 space-y-4">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por nombre del paciente..."
-                    value={historySearch}
-                    onChange={(e) => setHistorySearch(e.target.value)}
-                    className="pl-10"
-                  />
-                  {isFetchingHistory && !isLoadingHistory && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
-                  )}
+                {/* Search Bar + Status Filter */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar por nombre del paciente..."
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
+                      className="pl-10"
+                    />
+                    {isFetchingHistory && !isLoadingHistory && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
+                    )}
+                  </div>
+                  <Select
+                    value={historyStatusFilter || "all"}
+                    onValueChange={(value) =>
+                      setHistoryStatusFilter(
+                        value === "all"
+                          ? undefined
+                          : (value as PrescriptionRequestStatus)
+                      )
+                    }
+                  >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <Filter className="h-4 w-4 mr-2 text-gray-400" />
+                      <SelectValue placeholder="Estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value={PrescriptionRequestStatus.PENDING}>
+                        Pendiente
+                      </SelectItem>
+                      <SelectItem value={PrescriptionRequestStatus.IN_PROGRESS}>
+                        En progreso
+                      </SelectItem>
+                      <SelectItem value={PrescriptionRequestStatus.COMPLETED}>
+                        Completada
+                      </SelectItem>
+                      <SelectItem value={PrescriptionRequestStatus.REJECTED}>
+                        Rechazada
+                      </SelectItem>
+                      <SelectItem value={PrescriptionRequestStatus.CANCELLED}>
+                        Cancelada
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {isLoadingHistory ? (

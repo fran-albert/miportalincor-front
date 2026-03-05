@@ -86,6 +86,7 @@ export interface SearchPrescriptionRequestParams {
   search?: string;
   page?: number;
   limit?: number;
+  status?: PrescriptionRequestStatus;
 }
 
 export interface PaginatedPrescriptionRequests {

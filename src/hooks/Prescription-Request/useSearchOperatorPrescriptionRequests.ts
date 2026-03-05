@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { getOperatorPendingPaginated } from "@/api/Prescription-Request/get-operator-pending-paginated.action";
 import { getOperatorHistoryPaginated } from "@/api/Prescription-Request/get-operator-history-paginated.action";
-import { PaginatedPrescriptionRequests } from "@/types/Prescription-Request/Prescription-Request";
+import {
+  PaginatedPrescriptionRequests,
+  PrescriptionRequestStatus,
+} from "@/types/Prescription-Request/Prescription-Request";
 
 interface UseSearchOperatorRequestsOptions {
   initialSearch?: string;
@@ -18,6 +21,7 @@ const useSearchOperatorRequests = (
     search?: string;
     page?: number;
     limit?: number;
+    status?: PrescriptionRequestStatus;
   }) => Promise<PaginatedPrescriptionRequests>,
   options: UseSearchOperatorRequestsOptions = {}
 ) => {
@@ -33,6 +37,9 @@ const useSearchOperatorRequests = (
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
+  const [statusFilter, setStatusFilter] = useState<
+    PrescriptionRequestStatus | undefined
+  >(undefined);
 
   // Debounce search
   useEffect(() => {
@@ -44,13 +51,19 @@ const useSearchOperatorRequests = (
     return () => clearTimeout(timer);
   }, [search, debounceMs]);
 
+  // Reset to page 1 when status filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
+
   const { isLoading, isError, error, data, isFetching, refetch } = useQuery({
-    queryKey: [queryKeyPrefix, debouncedSearch, page, limit],
+    queryKey: [queryKeyPrefix, debouncedSearch, page, limit, statusFilter],
     queryFn: () =>
       fetchFn({
         search: debouncedSearch || undefined,
         page,
         limit,
+        status: statusFilter,
       }),
     staleTime: 1000 * 60, // 1 minute
     enabled,
@@ -89,6 +102,8 @@ const useSearchOperatorRequests = (
     search,
     setSearch,
     setLimit,
+    statusFilter,
+    setStatusFilter,
     nextPage,
     prevPage,
     goToPage,
