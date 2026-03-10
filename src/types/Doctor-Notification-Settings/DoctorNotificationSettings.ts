@@ -5,6 +5,8 @@ export interface DoctorNotificationSettings {
   confirmationEnabled: boolean;
   reminder24hEnabled: boolean;
   cancellationEnabled: boolean;
+  dailyAgendaEnabled: boolean;
+  dailyAgendaTime: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,6 +16,8 @@ export interface UpdateDoctorNotificationSettingsDto {
   confirmationEnabled?: boolean;
   reminder24hEnabled?: boolean;
   cancellationEnabled?: boolean;
+  dailyAgendaEnabled?: boolean;
+  dailyAgendaTime?: string;
 }
 
 export interface CreateDoctorNotificationSettingsDto {
@@ -22,4 +26,6 @@ export interface CreateDoctorNotificationSettingsDto {
   confirmationEnabled?: boolean;
   reminder24hEnabled?: boolean;
   cancellationEnabled?: boolean;
+  dailyAgendaEnabled?: boolean;
+  dailyAgendaTime?: string;
 }
