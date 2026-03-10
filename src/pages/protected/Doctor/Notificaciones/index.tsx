@@ -64,7 +64,12 @@ const DoctorNotificacionesPage = () => {
           <Skeleton className="h-64 w-full" />
         </div>
       ) : doctorId && doctor?.id ? (
-        <DoctorNotificationSettingsCard doctorId={doctorId} doctorUserId={doctor.id} />
+        <DoctorNotificationSettingsCard
+          doctorId={doctorId}
+          doctorUserId={doctor.id}
+          doctorPhoneNumber={doctor.phoneNumber}
+          doctorPhoneNumber2={doctor.phoneNumber2}
+        />
       ) : null}
     </div>
   );
