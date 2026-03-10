@@ -6,6 +6,7 @@ import { DataValue } from "@/types/Data-Value/Data-Value";
 import VisualAcuityHtml from "./Visual";
 import FooterHtmlConditional from "../Footer";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { PhysicalEvaluation } from "@/common/helpers/maps";
 interface Props {
   collaborator: Collaborator;
   talla: string;
@@ -18,7 +19,7 @@ interface Props {
   frecuenciaRespiratoria: string;
   presionSistolica: string;
   presionDiastolica: string;
-  examenFisico: any;
+  examenFisico: PhysicalEvaluation;
   antecedentes: DataValue[];
   visualWithout: { right: string; left: string };
   visualWith?: { right?: string; left?: string };

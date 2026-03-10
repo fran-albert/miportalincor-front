@@ -90,8 +90,7 @@ export const WaitingItem = ({
             size="sm"
             variant="outline"
             onClick={() => onCancel(data.id, item.type)}
-            disabled={isLoading || isGuestItem}
-            title={isGuestItem ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
+            disabled={isLoading}
             className="text-red-600 hover:bg-red-50"
           >
             <XCircle className="h-4 w-4 mr-1" />

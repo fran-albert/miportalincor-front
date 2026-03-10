@@ -87,6 +87,31 @@ interface PatientStudiesProps {
   currentDoctorId?: string;
 }
 
+const STUDY_CATEGORIES = [
+  { key: "Todos", label: "Estudios Médicos", icon: Folder, color: "teal" },
+  {
+    key: "Imagenología",
+    label: "Imagenología",
+    icon: FileImageIcon,
+    color: "blue",
+  },
+  {
+    key: "Laboratorio",
+    label: "Laboratorios",
+    icon: TestTubeIcon,
+    color: "green",
+  },
+  { key: "Cardiología", label: "Cardiología", icon: Activity, color: "red" },
+  { key: "Neurología", label: "Neurología", icon: Zap, color: "purple" },
+  {
+    key: "Endocrinología",
+    label: "Endocrinología",
+    icon: StethoscopeIcon,
+    color: "orange",
+  },
+  { key: "Otros", label: "Otros", icon: FileText, color: "gray" },
+] as const;
+
 export default function PatientStudies({
   patientData,
   initialStudies = [],
@@ -145,38 +170,13 @@ export default function PatientStudies({
   }, [initialStudies, initialLaboratories, isDoctor]);
 
   // Definir categorías con metadata
-  const categoriesConfig = [
-    { key: "Todos", label: "Estudios Médicos", icon: Folder, color: "teal" },
-    {
-      key: "Imagenología",
-      label: "Imagenología",
-      icon: FileImageIcon,
-      color: "blue",
-    },
-    {
-      key: "Laboratorio",
-      label: "Laboratorios",
-      icon: TestTubeIcon,
-      color: "green",
-    },
-    { key: "Cardiología", label: "Cardiología", icon: Activity, color: "red" },
-    { key: "Neurología", label: "Neurología", icon: Zap, color: "purple" },
-    {
-      key: "Endocrinología",
-      label: "Endocrinología",
-      icon: StethoscopeIcon,
-      color: "orange",
-    },
-    { key: "Otros", label: "Otros", icon: FileText, color: "gray" },
-  ];
-
   // Agrupar estudios por categoría
   const studiesByCategory = React.useMemo(() => {
     const grouped: Record<string, Study[]> = {
       Todos: studies, // Todos muestra todos los estudios
     };
 
-    categoriesConfig.forEach((cat) => {
+    STUDY_CATEGORIES.forEach((cat) => {
       if (cat.key !== "Todos") {
         grouped[cat.key] = studies.filter(
           (study) => study.categoria === cat.key
@@ -260,7 +260,7 @@ export default function PatientStudies({
                     WebkitOverflowScrolling: "touch",
                   }}
                 >
-                  {categoriesConfig.map((category) => {
+                  {STUDY_CATEGORIES.map((category) => {
                     const count = studiesByCategory[category.key]?.length || 0;
                     const Icon = category.icon;
 
@@ -361,7 +361,7 @@ export default function PatientStudies({
               {activeTab === "tabla-laboratorios"
                 ? `Tabla de Laboratorios Completa`
                 : `${
-                    categoriesConfig.find((c) => c.key === activeTab)?.label ||
+                    STUDY_CATEGORIES.find((c) => c.key === activeTab)?.label ||
                     "Estudios"
                   } (${filteredStudies.length})`}
             </CardTitle>

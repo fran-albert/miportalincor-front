@@ -60,7 +60,7 @@ export function CheckupTypesManager() {
       showSuccess("Tipo de chequeo eliminado");
       setDeleteDialogOpen(false);
       setTypeToDelete(null);
-    } catch (error) {
+    } catch {
       showError("Error al eliminar el tipo de chequeo");
     }
   };

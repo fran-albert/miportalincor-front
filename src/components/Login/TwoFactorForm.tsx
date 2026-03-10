@@ -20,6 +20,7 @@ import { Smartphone, ArrowLeft, RefreshCw } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { authStorage } from "@/utils/authStorage";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface TwoFactorFormProps {
   onBack: () => void;
@@ -74,10 +75,11 @@ const TwoFactorForm = ({ onBack }: TwoFactorFormProps) => {
         dispatch(clearTwoFactor());
         navigate("/inicio");
       }
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        setError(error.response?.data?.message || "Codigo invalido o expirado");
-      } else if (error.response?.status === 401) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 400) {
+        setError(apiError.response?.data?.message || "Codigo invalido o expirado");
+      } else if (apiError.response?.status === 401) {
         setError("Codigo incorrecto. Intentelo nuevamente.");
       } else {
         setError("Error al verificar el codigo");
@@ -99,9 +101,10 @@ const TwoFactorForm = ({ onBack }: TwoFactorFormProps) => {
         twoFactorToken: twoFactor.twoFactorToken,
       });
       setResendCooldown(60);
-    } catch (error: any) {
-      if (error.response?.status === 400) {
-        setError(error.response?.data?.message || "Debe esperar antes de reenviar");
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 400) {
+        setError(apiError.response?.data?.message || "Debe esperar antes de reenviar");
       } else {
         setError("Error al reenviar el codigo");
       }

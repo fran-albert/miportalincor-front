@@ -184,7 +184,7 @@ export function mapVisual(
     );
     const cromRaw = (dvCrom?.value as string)?.toLowerCase();
     const visionCromatica =
-        cromRaw === "normal" || cromRaw === "anormal" ? (cromRaw as any) : "normal";
+        cromRaw === "normal" || cromRaw === "anormal" ? cromRaw : "normal";
     const notasVision = dvCrom?.observations ?? "";
 
     return {

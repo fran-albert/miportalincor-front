@@ -24,6 +24,7 @@ import { Mail, Lock, Stethoscope } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
 import TwoFactorForm from "./TwoFactorForm";
 import { authStorage } from "@/utils/authStorage";
+import { ApiError } from "@/types/Error/ApiError";
 
 const LoginComponent = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -68,9 +69,10 @@ const LoginComponent = () => {
         dispatch(loginSuccess({ token }));
         navigate("/inicio");
       }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        setError(error.response?.data?.message || "Credenciales Incorrectas");
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 401) {
+        setError(apiError.response?.data?.message || "Credenciales Incorrectas");
       } else {
         setError("Error al conectar con el servidor");
       }

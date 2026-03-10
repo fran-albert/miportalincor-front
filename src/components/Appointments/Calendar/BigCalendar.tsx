@@ -160,6 +160,9 @@ export const BigCalendar = ({
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [rescheduleTargetAppointment, setRescheduleTargetAppointment] = useState<AppointmentFullResponseDto | null>(null);
   const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
+  const [optimisticAppointments, setOptimisticAppointments] = useState<
+    AppointmentFullResponseDto[]
+  >([]);
 
   // Dynamic height per view
   const calendarHeight = useMemo(() => {
@@ -350,6 +353,36 @@ export const BigCalendar = ({
   const doctorAbsences = useDashboard ? dashAbsences : indivAbsences;
   const holidays = useDashboard ? dashHolidays : indivHolidays;
   const slotDuration = useDashboard ? dashSlotDuration : indivSlotDuration;
+  const isHydratingDoctorAgenda =
+    !useDashboard &&
+    !!selectedDoctorId &&
+    (isLoadingAppointments || isLoadingOverturns);
+
+  const calendarAppointments = useMemo(() => {
+    const persistedIds = new Set(appointments.map((appointment) => appointment.id));
+
+    return [
+      ...appointments,
+      ...optimisticAppointments.filter((appointment) => {
+        if (persistedIds.has(appointment.id)) return false;
+        if (selectedDoctorId && appointment.doctorId !== selectedDoctorId) {
+          return false;
+        }
+        return (
+          appointment.date >= dateRange.dateFrom &&
+          appointment.date <= dateRange.dateTo
+        );
+      }),
+    ];
+  }, [appointments, dateRange.dateFrom, dateRange.dateTo, optimisticAppointments, selectedDoctorId]);
+
+  useEffect(() => {
+    if (appointments.length === 0) return;
+    const persistedIds = new Set(appointments.map((appointment) => appointment.id));
+    setOptimisticAppointments((current) =>
+      current.filter((appointment) => !persistedIds.has(appointment.id))
+    );
+  }, [appointments]);
 
   // Show slots in all views except agenda
   const showAvailableSlots = true;
@@ -388,7 +421,7 @@ export const BigCalendar = ({
 
   // Appointment events
   const appointmentEvents = useMemo<CalendarEvent[]>(() => {
-    const activeAppointments = appointments.filter(
+    const activeAppointments = calendarAppointments.filter(
       (apt) => !CANCELLED_STATUSES.includes(apt.status)
     );
 
@@ -426,7 +459,7 @@ export const BigCalendar = ({
         },
       };
     });
-  }, [appointments, slotDuration, CANCELLED_STATUSES]);
+  }, [calendarAppointments, slotDuration, CANCELLED_STATUSES]);
 
   // Overturn events
   const overturnEvents = useMemo<CalendarEvent[]>(() => {
@@ -469,7 +502,7 @@ export const BigCalendar = ({
   // Set of occupied slot keys (for filtering available slots)
   const occupiedSlotsSet = useMemo(() => {
     const set = new Set<string>();
-    appointments
+    calendarAppointments
       .filter((apt) => !CANCELLED_STATUSES.includes(apt.status))
       .forEach((apt) => {
         const baseHour = apt.hour.slice(0, 5);
@@ -495,7 +528,7 @@ export const BigCalendar = ({
       set.add(`${blocked.date}-${blocked.hour.slice(0, 5)}`);
     });
     return set;
-  }, [appointments, overturns, blockedSlots, CANCELLED_STATUSES, slotDuration]);
+  }, [calendarAppointments, overturns, blockedSlots, CANCELLED_STATUSES, slotDuration]);
 
   // Available slot events (filtered by occupied, holidays, absences)
   const availableSlotEvents = useMemo<CalendarEvent[]>(() => {
@@ -605,11 +638,14 @@ export const BigCalendar = ({
 
   // Combine all event types
   const events = useMemo<CalendarEvent[]>(() => {
+    if (isHydratingDoctorAgenda) {
+      return [];
+    }
     if (showAvailableSlots) {
       return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...availableSlotEvents, ...blockedSlotEvents];
     }
     return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
-  }, [showAvailableSlots, absenceEvents, appointmentEvents, overturnEvents, availableSlotEvents, blockedSlotEvents]);
+  }, [showAvailableSlots, absenceEvents, appointmentEvents, overturnEvents, availableSlotEvents, blockedSlotEvents, isHydratingDoctorAgenda]);
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
@@ -1321,8 +1357,6 @@ export const BigCalendar = ({
                       variant="outline"
                       className="text-red-600 border-red-600 hover:bg-red-50"
                       onClick={() => setCancelConfirmOpen(true)}
-                      disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
-                      title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
                     >
                       <XCircle className="h-4 w-4 mr-1" />
                       Cancelar
@@ -1398,6 +1432,13 @@ export const BigCalendar = ({
         onSuccess={() => {
           setIsCreateDialogOpen(false);
           setSelectedSlot(null);
+        }}
+        onAppointmentCreated={(appointment) => {
+          setOptimisticAppointments((current) => {
+            const alreadyExists = current.some((item) => item.id === appointment.id);
+            if (alreadyExists) return current;
+            return [...current, appointment];
+          });
         }}
         fixedDoctorId={fixedDoctorId}
         allowGuestCreation={allowGuestCreationProp ?? !fixedDoctorId}

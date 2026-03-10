@@ -13,4 +13,4 @@ export interface ConsultationType {
   updatedAt: string;
 }
 
-export interface ConsultationTypeResponseDto extends ConsultationType {}
+export type ConsultationTypeResponseDto = ConsultationType;

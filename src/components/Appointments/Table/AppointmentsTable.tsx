@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -71,7 +71,7 @@ export const AppointmentsTable = ({
 
   const { changeStatus, deleteAppointment } = useAppointmentMutations();
 
-  const handleChangeStatus = async (id: number, status: AppointmentStatus) => {
+  const handleChangeStatus = useCallback(async (id: number, status: AppointmentStatus) => {
     try {
       await changeStatus.mutateAsync({ id, status });
       toast({
@@ -84,9 +84,9 @@ export const AppointmentsTable = ({
         description: "No se pudo actualizar el estado",
       });
     }
-  };
+  }, [changeStatus, toast]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (!confirm("¿Está seguro que desea eliminar este turno?")) return;
     try {
       await deleteAppointment.mutateAsync(id);
@@ -100,7 +100,7 @@ export const AppointmentsTable = ({
         description: "No se pudo eliminar el turno",
       });
     }
-  };
+  }, [deleteAppointment, toast]);
 
   const columns = useMemo(
     () =>
@@ -110,7 +110,7 @@ export const AppointmentsTable = ({
         onChangeStatus: handleChangeStatus,
         onDelete: handleDelete,
       }),
-    [onView, onEdit]
+    [onView, onEdit, handleChangeStatus, handleDelete]
   );
 
   // Filter by search term (patient name)

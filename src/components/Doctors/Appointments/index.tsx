@@ -13,6 +13,7 @@ interface Props {
 }
 
 const DoctorAppointments = ({ doctorId: _doctorId }: Props) => {
+  void _doctorId;
   // Funcionalidad temporalmente deshabilitada - Coming Soon
   return (
     <div>

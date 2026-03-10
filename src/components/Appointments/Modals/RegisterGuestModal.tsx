@@ -129,7 +129,15 @@ export const RegisterGuestModal = ({
       setSelectedPlan(null);
       setStartDate(undefined);
     }
-  }, [open, appointment.id]);
+  }, [
+    appointment.guestDocumentNumber,
+    appointment.guestEmail,
+    appointment.guestFirstName,
+    appointment.guestLastName,
+    appointment.guestPhone,
+    form,
+    open,
+  ]);
 
   // Watch the selected state from the form to pass to CitySelect
   const watchedState = watch("address.city.state") as State | undefined;

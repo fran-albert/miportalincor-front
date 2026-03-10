@@ -113,7 +113,7 @@ export function CheckupTypeDialog({
         showSuccess("Tipo de chequeo creado");
       }
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       showError(isEditing ? "Error al actualizar" : "Error al crear");
     }
   };

@@ -18,10 +18,12 @@ import { cn } from "@/lib/utils";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import { Doctor } from "@/types/Doctor/Doctor";
 
 interface DoctorSelectProps {
   value?: number;
   onValueChange: (doctorId: number) => void;
+  onDoctorSelect?: (doctor: Doctor) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -30,6 +32,7 @@ interface DoctorSelectProps {
 export const DoctorSelect = ({
   value,
   onValueChange,
+  onDoctorSelect,
   placeholder = "Seleccionar médico",
   disabled = false,
   className
@@ -58,8 +61,9 @@ export const DoctorSelect = ({
   const handleSelect = useCallback((doctor: typeof doctors[0]) => {
     const numericId = Number(doctor.userId);
     onValueChange(numericId);
+    onDoctorSelect?.(doctor);
     setOpen(false);
-  }, [onValueChange]);
+  }, [onDoctorSelect, onValueChange]);
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />;

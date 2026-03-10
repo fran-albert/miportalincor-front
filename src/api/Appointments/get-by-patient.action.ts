@@ -6,8 +6,9 @@ import { AppointmentFullResponseDto } from "@/types/Appointment/Appointment";
  * El backend extrae el patientId del JWT token
  */
 export const getAppointmentsByPatient = async (
-  _patientId?: number
+  patientId?: number
 ): Promise<AppointmentFullResponseDto[]> => {
+  void patientId;
   const { data } = await apiTurnos.get<AppointmentFullResponseDto[]>(
     'appointments/patient/my-appointments'
   );

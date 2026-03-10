@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { formatDate } from "@/common/helpers/helpers";
 import { Input } from "@/components/ui/input";
 import { ColumnDef } from "@tanstack/react-table";
