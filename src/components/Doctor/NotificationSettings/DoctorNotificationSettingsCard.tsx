@@ -24,11 +24,15 @@ import { ServiceType } from "@/types/Doctor-Services/DoctorServices";
 interface DoctorNotificationSettingsCardProps {
   doctorId: number;
   doctorUserId: string;
+  doctorPhoneNumber?: string;
+  doctorPhoneNumber2?: string;
 }
 
 export function DoctorNotificationSettingsCard({
   doctorId,
   doctorUserId,
+  doctorPhoneNumber,
+  doctorPhoneNumber2,
 }: DoctorNotificationSettingsCardProps) {
   // Check if doctor has WHATSAPP_APPOINTMENTS service enabled
   const { isServiceEnabled: hasWhatsAppService, isLoading: isLoadingService } = useCheckDoctorService({
@@ -47,6 +51,15 @@ export function DoctorNotificationSettingsCard({
   const createMutation = useCreateDoctorNotificationSettings();
   const updateMutation = useUpdateDoctorNotificationSettings();
   const { promiseToast } = useToastContext();
+  const rawWhatsappNumber = doctorPhoneNumber || doctorPhoneNumber2 || "";
+  const normalizedWhatsappNumber = rawWhatsappNumber
+    ? (() => {
+        let cleaned = rawWhatsappNumber.replace(/[\s\-+]/g, "");
+        if (cleaned.startsWith("0")) cleaned = cleaned.slice(1);
+        if (!cleaned.startsWith("54")) cleaned = `54${cleaned}`;
+        return `+${cleaned}`;
+      })()
+    : null;
 
   // Initialize form with settings data or defaults
   useEffect(() => {
@@ -324,6 +337,26 @@ export function DoctorNotificationSettingsCard({
               Hora local de Argentina. Si no hay agenda ese dia, no se enviara mensaje.
             </p>
           </div>
+        </div>
+
+        <div className="rounded-lg border bg-gray-50 p-3">
+          <p className="text-sm font-medium text-gray-900">
+            Numero al que se enviara
+          </p>
+          {rawWhatsappNumber ? (
+            <div className="mt-2 space-y-1 text-sm text-gray-600">
+              <p>
+                Configurado: <span className="font-medium text-gray-900">{rawWhatsappNumber}</span>
+              </p>
+              <p>
+                Formato usado por WhatsApp: <span className="font-medium text-gray-900">{normalizedWhatsappNumber}</span>
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-amber-700">
+              Este medico no tiene telefono configurado. No se podran enviar mensajes hasta completar el numero.
+            </p>
+          )}
         </div>
 
         {/* Info Box */}
