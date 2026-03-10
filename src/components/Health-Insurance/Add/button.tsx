@@ -22,6 +22,7 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import { healthInsuranceSchema } from "@/validators/health.insurance.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface AddHealthInsuranceDialogProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export default function AddHealthInsuranceDialog({
           title: "¡Obra social creada!",
           description: "La obra social se ha creado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al crear obra social",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

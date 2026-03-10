@@ -18,7 +18,7 @@ export class SearchServiceFactory {
    * Método para resetear la instancia (útil para testing)
    */
   static reset(): void {
-    SearchServiceFactory.instance = null as any;
+    SearchServiceFactory.instance = undefined as unknown as ISearchService;
   }
 }
 

@@ -14,6 +14,7 @@ import ActionIcon from "@/components/Icons/action";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { useHealthInsuranceMutations } from "@/hooks/Health-Insurance/useHealthInsuranceMutation";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { ApiError } from "@/types/Error/ApiError";
 
 interface DeleteHealthInsuranceDialogProps {
   healthInsurance: HealthInsurance;
@@ -39,7 +40,7 @@ export default function DeleteHealthInsuranceDialog({
           title: "¡Obra social eliminada!",
           description: "La obra social se ha eliminado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al eliminar obra social",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

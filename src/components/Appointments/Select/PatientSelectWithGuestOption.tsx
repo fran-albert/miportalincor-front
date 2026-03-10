@@ -22,6 +22,7 @@ import { Patient } from "@/types/Patient/Patient";
 interface PatientSelectWithGuestOptionProps {
   value?: number;
   onValueChange: (patientId: number) => void;
+  onPatientSelect?: (patient: Patient) => void;
   /** Called when user wants to create a guest appointment - passes the searched DNI */
   onCreateGuestClick: (documentNumber: string) => void;
   placeholder?: string;
@@ -40,6 +41,7 @@ interface PatientSelectWithGuestOptionProps {
 export const PatientSelectWithGuestOption = ({
   value,
   onValueChange,
+  onPatientSelect,
   onCreateGuestClick,
   placeholder = "Seleccionar paciente",
   disabled = false,
@@ -68,8 +70,9 @@ export const PatientSelectWithGuestOption = ({
   const handleSelect = useCallback((patient: Patient) => {
     const numericId = Number(patient.userId);
     onValueChange(numericId);
+    onPatientSelect?.(patient);
     setOpen(false);
-  }, [onValueChange]);
+  }, [onPatientSelect, onValueChange]);
 
   const handleCreateGuestClickInternal = useCallback(() => {
     onCreateGuestClick(search);

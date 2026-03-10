@@ -76,7 +76,8 @@ export const useFirstAvailableDate = ({
 };
 
 // Helper to clear cache (useful when availability changes)
-export const clearFirstAvailableDateCache = (_doctorId?: number) => {
+export const clearFirstAvailableDateCache = (doctorId?: number) => {
+  void doctorId;
   // React Query cache invalidation should be used instead
   // This is kept for backwards compatibility but is now a no-op
   // Use queryClient.invalidateQueries({ queryKey: ['firstAvailableDate'] }) instead

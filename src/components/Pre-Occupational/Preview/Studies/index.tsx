@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import { PDFDocumentProxy } from "pdfjs-dist";
 
 // Configuración del worker de PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -31,7 +32,7 @@ const PDFPageAsImage = ({ fileUrl, pageNumber }: PDFPageAsImageProps) => {
     height: number;
   } | null>(null);
 
-  const loadPageDimensions = async () => {
+  const loadPageDimensions = useCallback(async () => {
     const pdf = await pdfjs.getDocument(fileUrl).promise;
     const page = await pdf.getPage(pageNumber);
     const viewport = page.getViewport({ scale: 1.0 }); // Escala 1 para tamaño original
@@ -39,7 +40,7 @@ const PDFPageAsImage = ({ fileUrl, pageNumber }: PDFPageAsImageProps) => {
       width: viewport.width,
       height: viewport.height,
     });
-  };
+  }, [fileUrl, pageNumber]);
 
   const onRenderSuccess = () => {
     if (canvasRef.current) {
@@ -50,7 +51,7 @@ const PDFPageAsImage = ({ fileUrl, pageNumber }: PDFPageAsImageProps) => {
 
   useEffect(() => {
     loadPageDimensions();
-  }, [fileUrl, pageNumber]);
+  }, [loadPageDimensions]);
 
   return (
     <div className="mb-4">
@@ -83,7 +84,7 @@ const PDFPageAsImage = ({ fileUrl, pageNumber }: PDFPageAsImageProps) => {
 export default function StudiesPreview({ studies }: StudiesPreviewProps) {
   const [numPagesArray, setNumPagesArray] = useState<number[]>([]);
 
-  const onDocumentLoadSuccess = (pdf: any, index: number) => {
+  const onDocumentLoadSuccess = (pdf: PDFDocumentProxy, index: number) => {
     setNumPagesArray((prev) => {
       const newArr = [...prev];
       newArr[index] = pdf.numPages;

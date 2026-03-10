@@ -9,11 +9,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CreateAppointmentForm, GuestAppointmentData } from "../Forms/CreateAppointmentForm";
+import {
+  AppointmentCreatePreviewMeta,
+  CreateAppointmentForm,
+  GuestAppointmentData,
+} from "../Forms/CreateAppointmentForm";
 import { useAppointmentMutations, useCreateGuestAppointment } from "@/hooks/Appointments";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
 import { CalendarPlus, Loader2, UserPlus } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { AppointmentFullResponseDto } from "@/types/Appointment/Appointment";
 
 interface CreateAppointmentDialogProps {
   trigger?: React.ReactNode;
@@ -28,6 +33,7 @@ interface CreateAppointmentDialogProps {
   defaultDate?: string;
   defaultHour?: string;
   onSuccess?: () => void;
+  onAppointmentCreated?: (appointment: AppointmentFullResponseDto) => void;
   /** Control externo del estado del dialog */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -45,6 +51,7 @@ export const CreateAppointmentDialog = ({
   defaultDate,
   defaultHour,
   onSuccess,
+  onAppointmentCreated,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   allowGuestCreation = true,
@@ -66,14 +73,22 @@ export const CreateAppointmentDialog = ({
   const { createAppointment, isCreating } = useAppointmentMutations();
   const { createGuestAppointment, isCreating: isCreatingGuest } = useCreateGuestAppointment();
 
-  const handleSubmit = async (data: CreateAppointmentFormData) => {
+  const handleSubmit = async (
+    data: CreateAppointmentFormData,
+    previewMeta: AppointmentCreatePreviewMeta
+  ) => {
     try {
-      await createAppointment.mutateAsync({
+      const createdAppointment = await createAppointment.mutateAsync({
         doctorId: data.doctorId,
         patientId: data.patientId,
         date: data.date,
         hour: data.hour,
         consultationTypeId: data.consultationTypeId,
+      });
+      onAppointmentCreated?.({
+        ...createdAppointment,
+        patient: previewMeta.patient,
+        doctor: previewMeta.doctor,
       });
       showSuccess("Turno creado", "El turno se creó correctamente");
       setOpen(false);
@@ -85,9 +100,12 @@ export const CreateAppointmentDialog = ({
     }
   };
 
-  const handleGuestSubmit = async (data: GuestAppointmentData) => {
+  const handleGuestSubmit = async (
+    data: GuestAppointmentData,
+    previewMeta: AppointmentCreatePreviewMeta
+  ) => {
     try {
-      await createGuestAppointment.mutateAsync({
+      const createdAppointment = await createGuestAppointment.mutateAsync({
         doctorId: data.doctorId,
         date: data.date,
         hour: data.hour,
@@ -96,6 +114,16 @@ export const CreateAppointmentDialog = ({
         guestLastName: data.guestLastName,
         guestPhone: data.guestPhone,
         guestEmail: data.guestEmail,
+      });
+      onAppointmentCreated?.({
+        ...createdAppointment,
+        isGuest: true,
+        guestDocumentNumber: previewMeta.guestDocumentNumber,
+        guestFirstName: previewMeta.guestFirstName,
+        guestLastName: previewMeta.guestLastName,
+        guestPhone: previewMeta.guestPhone,
+        guestEmail: previewMeta.guestEmail,
+        doctor: previewMeta.doctor,
       });
       showSuccess("Turno de invitado creado", "El turno se creó correctamente para el paciente invitado");
       setOpen(false);

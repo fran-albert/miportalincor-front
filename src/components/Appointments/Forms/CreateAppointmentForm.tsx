@@ -26,6 +26,9 @@ import { formatDateForCalendar, getTodayDateAR } from "@/common/helpers/timezone
 import { Loader2, UserPlus, X, Stethoscope } from "lucide-react";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import { DoctorBasicDto, PatientBasicDto } from "@/types/Appointment/Appointment";
+import { Patient } from "@/types/Patient/Patient";
+import { Doctor } from "@/types/Doctor/Doctor";
 
 export interface GuestAppointmentData {
   doctorId: number;
@@ -39,10 +42,43 @@ export interface GuestAppointmentData {
   consultationTypeId?: number;
 }
 
+export interface AppointmentCreatePreviewMeta {
+  doctor?: DoctorBasicDto;
+  patient?: PatientBasicDto;
+  isGuest?: boolean;
+  guestDocumentNumber?: string;
+  guestFirstName?: string;
+  guestLastName?: string;
+  guestPhone?: string;
+  guestEmail?: string;
+}
+
+const mapDoctorSpecialities = (
+  specialities?: Doctor["specialities"]
+): DoctorBasicDto["specialities"] =>
+  specialities
+    ?.filter((speciality) => specialtyHasId(speciality))
+    .map((speciality) => ({
+      id: speciality.id,
+      name: speciality.name,
+    }));
+
+function specialtyHasId(
+  speciality: Doctor["specialities"][number]
+): speciality is Doctor["specialities"][number] & { id: number } {
+  return typeof speciality.id === "number";
+}
+
 interface CreateAppointmentFormProps {
-  onSubmit: (data: CreateAppointmentFormData) => Promise<void>;
+  onSubmit: (
+    data: CreateAppointmentFormData,
+    previewMeta: AppointmentCreatePreviewMeta
+  ) => Promise<void>;
   /** Called when creating a guest appointment */
-  onGuestSubmit?: (data: GuestAppointmentData) => Promise<void>;
+  onGuestSubmit?: (
+    data: GuestAppointmentData,
+    previewMeta: AppointmentCreatePreviewMeta
+  ) => Promise<void>;
   isLoading?: boolean;
   defaultDoctorId?: number;
   defaultPatientId?: number;
@@ -89,6 +125,21 @@ export const CreateAppointmentForm = ({
   const [guestLastName, setGuestLastName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [selectedPatientSummary, setSelectedPatientSummary] = useState<
+    PatientBasicDto | undefined
+  >(
+    defaultPatient
+      ? {
+          userId: defaultPatient.userId,
+          firstName: defaultPatient.firstName,
+          lastName: defaultPatient.lastName,
+          userName: defaultPatient.userName,
+        }
+      : undefined
+  );
+  const [selectedDoctorSummary, setSelectedDoctorSummary] = useState<
+    DoctorBasicDto | undefined
+  >(undefined);
   const { doctors } = useDoctors({ auth: true, fetchDoctors: !!fixedDoctorId });
   const fixedDoctor = fixedDoctorId
     ? doctors.find(d => Number(d.userId) === fixedDoctorId)
@@ -132,10 +183,36 @@ export const CreateAppointmentForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultPatient?.userId, defaultPatientId]);
 
+  useEffect(() => {
+    if (defaultPatient) {
+      setSelectedPatientSummary({
+        userId: defaultPatient.userId,
+        firstName: defaultPatient.firstName,
+        lastName: defaultPatient.lastName,
+        userName: defaultPatient.userName,
+      });
+    }
+  }, [defaultPatient]);
+
+  useEffect(() => {
+    if (fixedDoctor) {
+      setSelectedDoctorSummary({
+        userId: Number(fixedDoctor.userId),
+        firstName: fixedDoctor.firstName,
+        lastName: fixedDoctor.lastName,
+        specialities: mapDoctorSpecialities(fixedDoctor.specialities),
+      });
+    }
+  }, [fixedDoctor]);
+
   // Hour auto-clear is handled by TimeSlotSelect when slots change
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
-    await onSubmit(data);
+    await onSubmit(data, {
+      doctor: selectedDoctorSummary,
+      patient: selectedPatientSummary,
+      isGuest: false,
+    });
   };
 
   const handleCreateGuestClick = (documentNumber: string) => {
@@ -178,6 +255,14 @@ export const CreateAppointmentForm = ({
       guestPhone,
       guestEmail: guestEmail || undefined,
       consultationTypeId,
+    }, {
+      doctor: selectedDoctorSummary,
+      isGuest: true,
+      guestDocumentNumber: guestDni,
+      guestFirstName,
+      guestLastName,
+      guestPhone,
+      guestEmail: guestEmail || undefined,
     });
   };
 
@@ -212,6 +297,14 @@ export const CreateAppointmentForm = ({
                   <DoctorSelect
                     value={field.value}
                     onValueChange={field.onChange}
+                    onDoctorSelect={(doctor: Doctor) =>
+                      setSelectedDoctorSummary({
+                        userId: Number(doctor.userId),
+                        firstName: doctor.firstName,
+                        lastName: doctor.lastName,
+                        specialities: mapDoctorSpecialities(doctor.specialities),
+                      })
+                    }
                     placeholder="Seleccionar medico"
                   />
                 </FormControl>
@@ -297,6 +390,17 @@ export const CreateAppointmentForm = ({
                   <PatientSelectWithGuestOption
                     value={field.value}
                     onValueChange={field.onChange}
+                    onPatientSelect={(patient: Patient) =>
+                      setSelectedPatientSummary({
+                        userId: Number(patient.userId),
+                        firstName: patient.firstName,
+                        lastName: patient.lastName,
+                        userName: patient.userName,
+                        phoneNumber: patient.phoneNumber,
+                        affiliationNumber: patient.affiliationNumber,
+                        healthInsuranceName: patient.healthPlans?.[0]?.healthInsurance?.name,
+                      })
+                    }
                     onCreateGuestClick={handleCreateGuestClick}
                     placeholder="Buscar paciente por DNI..."
                     defaultPatient={defaultPatient}

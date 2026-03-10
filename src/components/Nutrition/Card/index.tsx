@@ -91,7 +91,16 @@ const NutritionCard: React.FC<Props> = ({
   };
 
   const handleUpdateEntry = async (updatedEntry: NutritionData) => {
-    const { id, userId: entryUserId, createdAt, updatedAt, date, ...rest } = updatedEntry;
+    const {
+      id,
+      userId: entryUserId,
+      createdAt,
+      updatedAt,
+      date,
+      ...rest
+    } = updatedEntry;
+    void createdAt;
+    void updatedAt;
     const data = {
       ...rest,
       date: typeof date === "string" ? date.split("T")[0] : format(date, "yyyy-MM-dd"),

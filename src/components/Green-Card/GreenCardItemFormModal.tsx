@@ -171,7 +171,7 @@ export function GreenCardItemFormModal({
         showSuccess("Medicamento agregado correctamente");
       }
       onClose();
-    } catch (error) {
+    } catch {
       showError(
         isEditing
           ? "Error al actualizar el medicamento"

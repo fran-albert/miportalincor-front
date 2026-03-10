@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { healthInsuranceSchema } from "@/validators/health.insurance.schema";
+import { ApiError } from "@/types/Error/ApiError";
 interface EditHealthCareDialogProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -46,7 +47,7 @@ export default function EditHealthInsuranceDialog({
     if (isOpen && healthInsurance) {
       form.reset(healthInsurance);
     }
-  }, [isOpen, healthInsurance]);
+  }, [form, isOpen, healthInsurance]);
 
   async function onSubmit(values: z.infer<typeof healthInsuranceSchema>) {
     try {
@@ -64,7 +65,7 @@ export default function EditHealthInsuranceDialog({
           title: "¡Obra social editada!",
           description: "La obra social se ha editado exitosamente",
         },
-        error: (error: any) => ({
+        error: (error: ApiError) => ({
           title: "Error al editar obra social",
           description:
             error.response?.data?.message || "Ha ocurrido un error inesperado",

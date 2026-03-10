@@ -123,7 +123,7 @@ export const useUploadStudyWithProgress = ({
                 onError?.(errorMessage);
             }
         },
-        [collaboratorId, queryClient, showSuccess, showError, onSuccess, onError]
+        [collaboratorId, queryClient, showSuccess, showError, onSuccess, onError, onProgress]
     );
 
     const cancel = useCallback(() => {

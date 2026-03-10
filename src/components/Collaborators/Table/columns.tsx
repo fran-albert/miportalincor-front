@@ -71,7 +71,7 @@ export const getColumns = (roles: {
           {
             accessorKey: "company",
             header: "Empresa",
-            cell: ({ row }: { row: any }) => (
+            cell: ({ row }) => (
               <div className="flex items-center">
                 <p className="text-sm font-medium">
                   {row.original.company?.name || "-"}

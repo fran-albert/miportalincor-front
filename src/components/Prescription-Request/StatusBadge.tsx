@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Badge } from "@/components/ui/badge";
 import { PrescriptionRequestStatus } from "@/types/Prescription-Request/Prescription-Request";
 import { Clock, Loader2, CheckCircle, XCircle, Ban } from "lucide-react";

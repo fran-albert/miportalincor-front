@@ -1,9 +1,7 @@
 import { User } from "@/types/User/User";
 import { Address } from "../Address/Address";
 
-export interface Secretary extends User {
-  // Secretary is a User with Role.Secretaria, no additional fields
-}
+export type Secretary = User;
 
 export interface CreateSecretaryDto {
   firstName: string;

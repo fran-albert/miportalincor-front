@@ -14,7 +14,7 @@ interface TwoFactorState {
 }
 
 interface AuthState {
-    user: any;
+    user: unknown;
     token: string | null;
     tokenExpiration: string | null;
     isAuthenticated: boolean;

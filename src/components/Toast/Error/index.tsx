@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,26 +18,30 @@ const ErrorToast = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => setIsVisible(true), 10);
-
-    // Auto close after 4 seconds
-    if (autoClose && onClose) {
-      const timer = setTimeout(() => {
-        handleClose();
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [autoClose, onClose]);
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (onClose) {
       setIsLeaving(true);
       setTimeout(() => {
         onClose();
       }, 300);
     }
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
+
+    if (autoClose && onClose) {
+      const closeTimer = setTimeout(() => {
+        handleClose();
+      }, 4000);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(closeTimer);
+      };
+    }
+
+    return () => clearTimeout(showTimer);
+  }, [autoClose, handleClose, onClose]);
 
   const getToastStyles = () => {
     const baseStyles =
