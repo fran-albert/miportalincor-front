@@ -105,6 +105,10 @@ export default function ViewPrescriptionRequestModal({
   const isPending = request.status === PrescriptionRequestStatus.PENDING;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
   const isRejected = request.status === PrescriptionRequestStatus.REJECTED;
+  const patientHealthInsurance =
+    request.patient?.healthInsuranceName ||
+    request.patient?.healthPlans?.[0]?.healthInsurance?.name;
+  const patientAffiliationNumber = request.patient?.affiliationNumber;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -150,6 +154,16 @@ export default function ViewPrescriptionRequestModal({
                   {request.patient.phoneNumber && (
                     <p className="text-xs text-blue-600 mt-0.5">
                       Tel: {request.patient.phoneNumber}
+                    </p>
+                  )}
+                  {patientHealthInsurance && (
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Obra social: {patientHealthInsurance}
+                    </p>
+                  )}
+                  {patientAffiliationNumber && (
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Nro. afiliado: {patientAffiliationNumber}
                     </p>
                   )}
                 </div>

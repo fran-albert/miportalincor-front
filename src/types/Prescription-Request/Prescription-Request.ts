@@ -14,6 +14,18 @@ export interface PatientSummary {
   lastName: string;
   userName?: string;
   phoneNumber?: string;
+  affiliationNumber?: string;
+  healthInsuranceName?: string;
+  healthPlans?:
+    | {
+        id?: number;
+        name?: string;
+        healthInsurance?: {
+          id?: number;
+          name: string;
+        };
+      }[]
+    | null;
 }
 
 export interface DoctorSummary {
