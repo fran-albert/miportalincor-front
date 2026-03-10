@@ -7,6 +7,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +39,8 @@ export function DoctorNotificationSettingsCard({
   const [confirmationEnabled, setConfirmationEnabled] = useState(true);
   const [reminder24hEnabled, setReminder24hEnabled] = useState(true);
   const [cancellationEnabled, setCancellationEnabled] = useState(true);
+  const [dailyAgendaEnabled, setDailyAgendaEnabled] = useState(false);
+  const [dailyAgendaTime, setDailyAgendaTime] = useState("07:00");
   const [hasChanges, setHasChanges] = useState(false);
 
   const { data: settings, isLoading, error } = useDoctorNotificationSettings(doctorId);
@@ -52,6 +55,8 @@ export function DoctorNotificationSettingsCard({
       setConfirmationEnabled(settings.confirmationEnabled);
       setReminder24hEnabled(settings.reminder24hEnabled);
       setCancellationEnabled(settings.cancellationEnabled);
+      setDailyAgendaEnabled(settings.dailyAgendaEnabled);
+      setDailyAgendaTime(settings.dailyAgendaTime);
       setHasChanges(false);
     } else if (settings === null) {
       // No settings exist, use defaults (all enabled)
@@ -59,6 +64,8 @@ export function DoctorNotificationSettingsCard({
       setConfirmationEnabled(true);
       setReminder24hEnabled(true);
       setCancellationEnabled(true);
+      setDailyAgendaEnabled(false);
+      setDailyAgendaTime("07:00");
       setHasChanges(true); // Mark as changed so user can save defaults
     }
   }, [settings]);
@@ -70,10 +77,20 @@ export function DoctorNotificationSettingsCard({
         whatsappEnabled !== settings.whatsappEnabled ||
         confirmationEnabled !== settings.confirmationEnabled ||
         reminder24hEnabled !== settings.reminder24hEnabled ||
-        cancellationEnabled !== settings.cancellationEnabled;
+        cancellationEnabled !== settings.cancellationEnabled ||
+        dailyAgendaEnabled !== settings.dailyAgendaEnabled ||
+        dailyAgendaTime !== settings.dailyAgendaTime;
       setHasChanges(changed);
     }
-  }, [whatsappEnabled, confirmationEnabled, reminder24hEnabled, cancellationEnabled, settings]);
+  }, [
+    whatsappEnabled,
+    confirmationEnabled,
+    reminder24hEnabled,
+    cancellationEnabled,
+    dailyAgendaEnabled,
+    dailyAgendaTime,
+    settings,
+  ]);
 
   const handleSave = async () => {
     const payload = {
@@ -81,6 +98,8 @@ export function DoctorNotificationSettingsCard({
       confirmationEnabled,
       reminder24hEnabled,
       cancellationEnabled,
+      dailyAgendaEnabled,
+      dailyAgendaTime,
     };
 
     if (settings) {
@@ -269,6 +288,42 @@ export function DoctorNotificationSettingsCard({
             onCheckedChange={setCancellationEnabled}
             disabled={isDisabled || !whatsappEnabled}
           />
+        </div>
+
+        <div className={`border rounded-lg p-3 space-y-3 ${isDisabled ? 'opacity-60' : ''}`}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="dailyAgendaEnabled" className="text-sm font-medium">
+                Agenda diaria por WhatsApp
+              </Label>
+              <p className="text-xs text-gray-500">
+                Enviar al medico su agenda del dia con hora configurable
+              </p>
+            </div>
+            <Switch
+              id="dailyAgendaEnabled"
+              checked={dailyAgendaEnabled}
+              onCheckedChange={setDailyAgendaEnabled}
+              disabled={isDisabled || !whatsappEnabled}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dailyAgendaTime" className="text-sm font-medium">
+              Hora de envio
+            </Label>
+            <Input
+              id="dailyAgendaTime"
+              type="time"
+              value={dailyAgendaTime}
+              onChange={(event) => setDailyAgendaTime(event.target.value)}
+              disabled={isDisabled || !whatsappEnabled || !dailyAgendaEnabled}
+              className="max-w-44"
+            />
+            <p className="text-xs text-gray-500">
+              Hora local de Argentina. Si no hay agenda ese dia, no se enviara mensaje.
+            </p>
+          </div>
         </div>
 
         {/* Info Box */}
