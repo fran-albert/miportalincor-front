@@ -29,6 +29,17 @@ export interface DoctorDashboardResponse {
   blockedSlots: BlockedSlotResponseDto[];
 }
 
+export const getDoctorDashboardById = async (
+  doctorId: number,
+  params: DoctorDashboardParams
+): Promise<DoctorDashboardResponse> => {
+  const { data } = await apiTurnos.get<DoctorDashboardResponse>(
+    `/doctors/${doctorId}/dashboard`,
+    { params }
+  );
+  return data;
+};
+
 export const getMyDashboard = async (
   params: DoctorDashboardParams
 ): Promise<DoctorDashboardResponse> => {

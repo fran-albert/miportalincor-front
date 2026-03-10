@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
+  getDoctorDashboardById,
   getMyDashboard,
   type DoctorDashboardParams,
   type DoctorDashboardResponse,
@@ -12,18 +13,22 @@ interface SlotWithDate {
 }
 
 interface UseDoctorDashboardProps {
+  doctorId?: number;
   dateFrom: string;
   dateTo: string;
   selectedWeekStart: string;
   selectedWeekEnd: string;
+  isOwnDashboard?: boolean;
   enabled?: boolean;
 }
 
 export const useDoctorDashboard = ({
+  doctorId,
   dateFrom,
   dateTo,
   selectedWeekStart,
   selectedWeekEnd,
+  isOwnDashboard = false,
   enabled = true,
 }: UseDoctorDashboardProps) => {
   const params: DoctorDashboardParams = {
@@ -34,10 +39,21 @@ export const useDoctorDashboard = ({
   };
 
   const query = useQuery<DoctorDashboardResponse>({
-    queryKey: ["doctorDashboard", dateFrom, dateTo, selectedWeekStart, selectedWeekEnd],
-    queryFn: () => getMyDashboard(params),
+    queryKey: [
+      "doctorDashboard",
+      isOwnDashboard ? "me" : "doctor",
+      doctorId ?? "none",
+      dateFrom,
+      dateTo,
+      selectedWeekStart,
+      selectedWeekEnd,
+    ],
+    queryFn: () =>
+      isOwnDashboard
+        ? getMyDashboard(params)
+        : getDoctorDashboardById(doctorId!, params),
     staleTime: 1000 * 60, // 1 minute
-    enabled,
+    enabled: enabled && (isOwnDashboard || !!doctorId),
   });
 
   const dashboard = query.data;

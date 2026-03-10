@@ -11,12 +11,19 @@ export const myDoctorProfileKeys = {
  * Usa el endpoint /doctors/me del backend de turnos.
  * Cacheado para evitar llamadas repetidas.
  */
-export const useMyDoctorProfile = () => {
+interface UseMyDoctorProfileOptions {
+  enabled?: boolean;
+}
+
+export const useMyDoctorProfile = ({
+  enabled = true,
+}: UseMyDoctorProfileOptions = {}) => {
   return useQuery<MyDoctorProfile>({
     queryKey: myDoctorProfileKeys.profile(),
     queryFn: getMyDoctorProfile,
     staleTime: 1000 * 60 * 30, // 30 minutos - el perfil no cambia frecuentemente
     gcTime: 1000 * 60 * 60, // 1 hora de cache
     retry: 1,
+    enabled,
   });
 };

@@ -26,14 +26,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { DoctorSelect } from "../Select/DoctorSelect";
-import { useAppointments, useAppointmentMutations, useAvailableSlotsRange, useFirstAvailableDate } from "@/hooks/Appointments";
-import { useOverturns, useOverturnMutations } from "@/hooks/Overturns";
-import { useBlockedSlots } from "@/hooks/BlockedSlots";
-import { useHolidays } from "@/hooks/Holiday";
+import { useAppointmentMutations, useFirstAvailableDate } from "@/hooks/Appointments";
+import { useOverturnMutations } from "@/hooks/Overturns";
 import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
 import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
 import { useDoctorDashboard } from "@/hooks/Doctor/useDoctorDashboard";
-import { useDoctorAvailabilities } from "@/hooks/DoctorAvailability/useDoctorAvailabilities";
 import {
   AppointmentFullResponseDto,
   AppointmentStatus,
@@ -56,7 +53,6 @@ import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
 import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
 import { PrintAgendaView } from "./PrintAgendaView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useDoctorAbsences } from "@/hooks/DoctorAbsence";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 
 // Configure date-fns localizer for Spanish
@@ -222,9 +218,9 @@ export const BigCalendar = ({
     return EventComponent;
   }, [currentView]);
 
-  // Si autoFilterForDoctor, obtener el perfil del médico logueado
-  // (solo se usa cuando NO se usa dashboard, pero se llama siempre para mantener hooks estables)
-  const { data: doctorProfileIndividual } = useMyDoctorProfile();
+  const { data: doctorProfileIndividual } = useMyDoctorProfile({
+    enabled: autoFilterForDoctor,
+  });
 
   // Determinar el doctorId a usar: prop > auto-filter > internal
   const selectedDoctorId = propDoctorId ?? (autoFilterForDoctor ? doctorProfileIndividual?.userId : internalDoctorId);
@@ -281,82 +277,26 @@ export const BigCalendar = ({
     };
   }, [currentView, currentDate]);
 
-  // Whether to use the aggregated dashboard endpoint (doctor view only)
-  const useDashboard = autoFilterForDoctor;
-
-  // ─── DASHBOARD MODE (1 request): for doctors viewing their own calendar ───
   const {
-    appointments: dashAppointments,
-    overturns: dashOverturns,
-    availableSlots: dashAvailableSlots,
-    blockedSlots: dashBlockedSlots,
-    doctorAbsences: dashAbsences,
-    holidays: dashHolidays,
-    slotDuration: dashSlotDuration,
-    isLoading: isDashboardLoading,
+    appointments,
+    overturns,
+    availableSlots,
+    blockedSlots,
+    doctorAbsences,
+    holidays,
+    slotDuration,
+    isLoading: isDoctorAgendaLoading,
   } = useDoctorDashboard({
+    doctorId: selectedDoctorId,
     dateFrom: dateRange.dateFrom,
     dateTo: dateRange.dateTo,
     selectedWeekStart: formatDateForCalendar(slotsDateRange.start),
     selectedWeekEnd: formatDateForCalendar(slotsDateRange.end),
-    enabled: useDashboard && !!selectedDoctorId && isActive,
+    isOwnDashboard: autoFilterForDoctor,
+    enabled: !!selectedDoctorId && isActive,
   });
-
-  // ─── INDIVIDUAL HOOKS MODE (N requests): for secretary/tabs view ───
-  const { availabilities: indivAvailabilities } = useDoctorAvailabilities({
-    doctorId: selectedDoctorId ?? 0,
-    enabled: !useDashboard && !!selectedDoctorId,
-  });
-
-  const indivSlotDuration = useMemo(() => {
-    if (indivAvailabilities.length === 0) return 30;
-    const durations = indivAvailabilities.map((a) => a.slotDuration).filter((d) => d > 0);
-    return durations.length > 0 ? Math.min(...durations) : 30;
-  }, [indivAvailabilities]);
-
-  const { appointments: indivAppointments, isLoading: isLoadingAppointments } = useAppointments({
-    params: { doctorId: selectedDoctorId, dateFrom: dateRange.dateFrom, dateTo: dateRange.dateTo, limit: 500 },
-    enabled: !useDashboard,
-  });
-
-  const { overturns: indivOverturns, isLoading: isLoadingOverturns } = useOverturns({
-    params: { doctorId: selectedDoctorId, dateFrom: dateRange.dateFrom, dateTo: dateRange.dateTo },
-    enabled: !useDashboard,
-  });
-
-  const { slots: indivAvailableSlots } = useAvailableSlotsRange({
-    doctorId: selectedDoctorId ?? 0,
-    startDate: slotsDateRange.start,
-    endDate: slotsDateRange.end,
-    enabled: !useDashboard && !!selectedDoctorId && isActive,
-  });
-
-  const { blockedSlots: indivBlockedSlots } = useBlockedSlots({
-    doctorId: selectedDoctorId ?? 0,
-    startDate: formatDateForCalendar(slotsDateRange.start),
-    endDate: formatDateForCalendar(slotsDateRange.end),
-    enabled: !useDashboard && !!selectedDoctorId && isActive,
-  });
-
-  const { absences: indivAbsences } = useDoctorAbsences({
-    doctorId: selectedDoctorId ?? 0,
-    enabled: !useDashboard && !!selectedDoctorId && isActive,
-  });
-
-  const { data: indivHolidays } = useHolidays();
-
-  // ─── UNIFIED DATA: pick from dashboard or individual hooks ───
-  const appointments = useDashboard ? dashAppointments : indivAppointments;
-  const overturns = useDashboard ? dashOverturns : indivOverturns;
-  const availableSlots = useDashboard ? dashAvailableSlots : indivAvailableSlots;
-  const blockedSlots = useDashboard ? dashBlockedSlots : indivBlockedSlots;
-  const doctorAbsences = useDashboard ? dashAbsences : indivAbsences;
-  const holidays = useDashboard ? dashHolidays : indivHolidays;
-  const slotDuration = useDashboard ? dashSlotDuration : indivSlotDuration;
   const isHydratingDoctorAgenda =
-    !useDashboard &&
-    !!selectedDoctorId &&
-    (isLoadingAppointments || isLoadingOverturns);
+    !!selectedDoctorId && isDoctorAgendaLoading;
 
   const calendarAppointments = useMemo(() => {
     const persistedIds = new Set(appointments.map((appointment) => appointment.id));
@@ -950,9 +890,7 @@ export const BigCalendar = ({
     [holidayDatesSet, absenceDatesSet]
   );
 
-  const isLoading = useDashboard
-    ? isDashboardLoading || isSearchingFirstDate
-    : isLoadingAppointments || isLoadingOverturns || isSearchingFirstDate;
+  const isLoading = isDoctorAgendaLoading || isSearchingFirstDate;
 
   return (
     <div className={className}>
