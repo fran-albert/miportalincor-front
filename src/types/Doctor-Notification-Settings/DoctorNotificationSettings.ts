@@ -7,6 +7,8 @@ export interface DoctorNotificationSettings {
   cancellationEnabled: boolean;
   dailyAgendaEnabled: boolean;
   dailyAgendaTime: string;
+  previousDayDailyAgendaEnabled: boolean;
+  previousDayDailyAgendaTime: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +20,8 @@ export interface UpdateDoctorNotificationSettingsDto {
   cancellationEnabled?: boolean;
   dailyAgendaEnabled?: boolean;
   dailyAgendaTime?: string;
+  previousDayDailyAgendaEnabled?: boolean;
+  previousDayDailyAgendaTime?: string;
 }
 
 export interface CreateDoctorNotificationSettingsDto {
@@ -28,4 +32,6 @@ export interface CreateDoctorNotificationSettingsDto {
   cancellationEnabled?: boolean;
   dailyAgendaEnabled?: boolean;
   dailyAgendaTime?: string;
+  previousDayDailyAgendaEnabled?: boolean;
+  previousDayDailyAgendaTime?: string;
 }

@@ -45,6 +45,8 @@ export function DoctorNotificationSettingsCard({
   const [cancellationEnabled, setCancellationEnabled] = useState(true);
   const [dailyAgendaEnabled, setDailyAgendaEnabled] = useState(false);
   const [dailyAgendaTime, setDailyAgendaTime] = useState("07:00");
+  const [previousDayDailyAgendaEnabled, setPreviousDayDailyAgendaEnabled] = useState(false);
+  const [previousDayDailyAgendaTime, setPreviousDayDailyAgendaTime] = useState("19:00");
   const [hasChanges, setHasChanges] = useState(false);
 
   const { data: settings, isLoading, error } = useDoctorNotificationSettings(doctorId);
@@ -70,6 +72,8 @@ export function DoctorNotificationSettingsCard({
       setCancellationEnabled(settings.cancellationEnabled);
       setDailyAgendaEnabled(settings.dailyAgendaEnabled);
       setDailyAgendaTime(settings.dailyAgendaTime);
+      setPreviousDayDailyAgendaEnabled(settings.previousDayDailyAgendaEnabled);
+      setPreviousDayDailyAgendaTime(settings.previousDayDailyAgendaTime);
       setHasChanges(false);
     } else if (settings === null) {
       // No settings exist, use defaults (all enabled)
@@ -79,6 +83,8 @@ export function DoctorNotificationSettingsCard({
       setCancellationEnabled(true);
       setDailyAgendaEnabled(false);
       setDailyAgendaTime("07:00");
+      setPreviousDayDailyAgendaEnabled(false);
+      setPreviousDayDailyAgendaTime("19:00");
       setHasChanges(true); // Mark as changed so user can save defaults
     }
   }, [settings]);
@@ -92,7 +98,9 @@ export function DoctorNotificationSettingsCard({
         reminder24hEnabled !== settings.reminder24hEnabled ||
         cancellationEnabled !== settings.cancellationEnabled ||
         dailyAgendaEnabled !== settings.dailyAgendaEnabled ||
-        dailyAgendaTime !== settings.dailyAgendaTime;
+        dailyAgendaTime !== settings.dailyAgendaTime ||
+        previousDayDailyAgendaEnabled !== settings.previousDayDailyAgendaEnabled ||
+        previousDayDailyAgendaTime !== settings.previousDayDailyAgendaTime;
       setHasChanges(changed);
     }
   }, [
@@ -102,6 +110,8 @@ export function DoctorNotificationSettingsCard({
     cancellationEnabled,
     dailyAgendaEnabled,
     dailyAgendaTime,
+    previousDayDailyAgendaEnabled,
+    previousDayDailyAgendaTime,
     settings,
   ]);
 
@@ -113,6 +123,8 @@ export function DoctorNotificationSettingsCard({
       cancellationEnabled,
       dailyAgendaEnabled,
       dailyAgendaTime,
+      previousDayDailyAgendaEnabled,
+      previousDayDailyAgendaTime,
     };
 
     if (settings) {
@@ -207,7 +219,7 @@ export function DoctorNotificationSettingsCard({
           <div>
             <CardTitle>Notificaciones de WhatsApp</CardTitle>
             <CardDescription>
-              Configure las notificaciones de WhatsApp para los turnos de este medico
+              Configure las notificaciones de WhatsApp para los turnos de este médico
             </CardDescription>
           </div>
         </div>
@@ -253,7 +265,7 @@ export function DoctorNotificationSettingsCard({
         <div className={`flex items-center justify-between p-3 border rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
           <div className="space-y-1">
             <Label htmlFor="confirmationEnabled" className="text-sm font-medium">
-              Confirmacion de turno
+              Confirmación de turno
             </Label>
             <p className="text-xs text-gray-500">
               Enviar mensaje cuando se crea un nuevo turno
@@ -274,7 +286,7 @@ export function DoctorNotificationSettingsCard({
               Recordatorio 24 horas antes
             </Label>
             <p className="text-xs text-gray-500">
-              Enviar recordatorio un dia antes del turno
+              Enviar recordatorio un día antes del turno
             </p>
           </div>
           <Switch
@@ -289,7 +301,7 @@ export function DoctorNotificationSettingsCard({
         <div className={`flex items-center justify-between p-3 border rounded-lg ${isDisabled ? 'opacity-60' : ''}`}>
           <div className="space-y-1">
             <Label htmlFor="cancellationEnabled" className="text-sm font-medium">
-              Aviso de cancelacion
+              Aviso de cancelación
             </Label>
             <p className="text-xs text-gray-500">
               Enviar mensaje cuando se cancela un turno
@@ -307,10 +319,10 @@ export function DoctorNotificationSettingsCard({
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label htmlFor="dailyAgendaEnabled" className="text-sm font-medium">
-                Agenda diaria por WhatsApp
+                Agenda del día por WhatsApp
               </Label>
               <p className="text-xs text-gray-500">
-                Enviar al medico su agenda del dia con hora configurable
+                Enviar al médico su agenda del día con hora configurable
               </p>
             </div>
             <Switch
@@ -322,8 +334,8 @@ export function DoctorNotificationSettingsCard({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dailyAgendaTime" className="text-sm font-medium">
-              Hora de envio
+              <Label htmlFor="dailyAgendaTime" className="text-sm font-medium">
+              Hora de envío
             </Label>
             <Input
               id="dailyAgendaTime"
@@ -334,14 +346,50 @@ export function DoctorNotificationSettingsCard({
               className="max-w-44"
             />
             <p className="text-xs text-gray-500">
-              Hora local de Argentina. Si no hay agenda ese dia, no se enviara mensaje.
+              Hora local de Argentina. Si no hay agenda ese día, no se enviará mensaje.
+            </p>
+          </div>
+        </div>
+
+        <div className={`border rounded-lg p-3 space-y-3 ${isDisabled ? 'opacity-60' : ''}`}>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="previousDayDailyAgendaEnabled" className="text-sm font-medium">
+                Agenda de mañana por WhatsApp
+              </Label>
+              <p className="text-xs text-gray-500">
+                Enviar el día anterior la agenda del día siguiente
+              </p>
+            </div>
+            <Switch
+              id="previousDayDailyAgendaEnabled"
+              checked={previousDayDailyAgendaEnabled}
+              onCheckedChange={setPreviousDayDailyAgendaEnabled}
+              disabled={isDisabled || !whatsappEnabled}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="previousDayDailyAgendaTime" className="text-sm font-medium">
+              Hora de envío
+            </Label>
+            <Input
+              id="previousDayDailyAgendaTime"
+              type="time"
+              value={previousDayDailyAgendaTime}
+              onChange={(event) => setPreviousDayDailyAgendaTime(event.target.value)}
+              disabled={isDisabled || !whatsappEnabled || !previousDayDailyAgendaEnabled}
+              className="max-w-44"
+            />
+            <p className="text-xs text-gray-500">
+              Hora local de Argentina. Si no hay agenda para mañana, no se enviará mensaje.
             </p>
           </div>
         </div>
 
         <div className="rounded-lg border bg-gray-50 p-3">
           <p className="text-sm font-medium text-gray-900">
-            Numero al que se enviara
+            Número al que se enviará
           </p>
           {rawWhatsappNumber ? (
             <div className="mt-2 space-y-1 text-sm text-gray-600">
@@ -354,7 +402,7 @@ export function DoctorNotificationSettingsCard({
             </div>
           ) : (
             <p className="mt-2 text-sm text-amber-700">
-              Este medico no tiene telefono configurado. No se podran enviar mensajes hasta completar el numero.
+              Este médico no tiene teléfono configurado. No se podrán enviar mensajes hasta completar el número.
             </p>
           )}
         </div>
@@ -363,8 +411,8 @@ export function DoctorNotificationSettingsCard({
         {!settings && hasWhatsAppService && (
           <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Nota:</strong> Este medico aun no tiene configuracion de
-              notificaciones. Al guardar se creara con los valores seleccionados.
+              <strong>Nota:</strong> Este médico aún no tiene configuración de
+              notificaciones. Al guardar se creará con los valores seleccionados.
             </p>
           </div>
         )}
