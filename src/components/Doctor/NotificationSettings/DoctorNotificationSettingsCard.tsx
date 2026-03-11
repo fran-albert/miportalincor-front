@@ -346,7 +346,8 @@ export function DoctorNotificationSettingsCard({
               className="max-w-44"
             />
             <p className="text-xs text-gray-500">
-              Hora local de Argentina. Si no hay agenda ese día, no se enviará mensaje.
+              Usar formato 24 horas. Ejemplo: 07:00 o 19:00. Hora local de
+              Argentina. Si no hay agenda ese día, no se enviará mensaje.
             </p>
           </div>
         </div>
@@ -382,7 +383,8 @@ export function DoctorNotificationSettingsCard({
               className="max-w-44"
             />
             <p className="text-xs text-gray-500">
-              Hora local de Argentina. Si no hay agenda para mañana, no se enviará mensaje.
+              Usar formato 24 horas. Ejemplo: 07:00 o 19:00. Hora local de
+              Argentina. Si no hay agenda para mañana, no se enviará mensaje.
             </p>
           </div>
         </div>
