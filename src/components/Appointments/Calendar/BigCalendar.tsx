@@ -1,19 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Calendar, dateFnsLocalizer, View, SlotInfo, EventProps } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth, endOfWeek, startOfDay, endOfDay } from "date-fns";
+import { Calendar, dateFnsLocalizer, View, SlotInfo, EventProps, type NavigateAction, type ViewProps, type ViewStatic } from "react-big-calendar";
+import { addDays, addMonths, addWeeks, endOfDay, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isToday, parse, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./BigCalendar.css";
+import TimeGrid from "react-big-calendar/lib/TimeGrid";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,9 +19,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { useAppointmentMutations, useFirstAvailableDate } from "@/hooks/Appointments";
 import { useOverturnMutations } from "@/hooks/Overturns";
+import { useDoctorAbsenceMutations } from "@/hooks/DoctorAbsence/useDoctorAbsenceMutations";
 import { BlockedSlotResponseDto, BlockReasonLabels } from "@/types/BlockedSlot/BlockedSlot";
 import { useMyDoctorProfile } from "@/hooks/Doctor/useMyDoctorProfile";
 import { useDoctorDashboard } from "@/hooks/Doctor/useDoctorDashboard";
@@ -35,14 +37,13 @@ import {
   AppointmentFullResponseDto,
   AppointmentStatus,
   AppointmentStatusLabels,
-  AppointmentStatusColors,
   AppointmentOrigin,
   AppointmentOriginLabels,
 } from "@/types/Appointment/Appointment";
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, CalendarOff, Clock, User, Stethoscope, AlertCircle, X, PlayCircle, CheckCircle, XCircle, UserPlus, Globe, Building, Lock, ChevronDown, ChevronRight, Printer } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap, AlertCircle } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -54,6 +55,8 @@ import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDia
 import { PrintAgendaView } from "./PrintAgendaView";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
+import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
+import { Doctor } from "@/types/Doctor/Doctor";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -105,6 +108,17 @@ interface CalendarEvent {
   };
 }
 
+interface RescheduleCalendarTarget {
+  type: "appointment" | "overturn";
+  id: number;
+  doctorId: number;
+  date: string;
+  hour: string;
+  consultationTypeId?: number | null;
+  doctor?: { firstName: string; lastName: string } | null;
+  patient?: { firstName: string; lastName: string } | null;
+}
+
 interface BigCalendarProps {
   className?: string;
   /** ID del médico a mostrar (usado por DoctorTabs) */
@@ -124,6 +138,122 @@ interface BigCalendarProps {
   /** Whether to allow creating guest appointments (for doctors with self-manage) */
   allowGuestCreation?: boolean;
 }
+
+const isRemoteConsultation = (consultationType?: string) => {
+  if (!consultationType) return false;
+  const normalized = consultationType.toLowerCase();
+  return (
+    normalized.includes("remot") ||
+    normalized.includes("virtual") ||
+    normalized.includes("tele")
+  );
+};
+
+const getConsultationTypeBadgeLabel = (consultationType?: string) => {
+  if (!consultationType) return null;
+  const normalized = consultationType.trim().toLowerCase();
+  if (
+    normalized.includes("presencial") ||
+    normalized.includes("remot") ||
+    normalized.includes("virtual") ||
+    normalized.includes("tele")
+  ) {
+    return null;
+  }
+  return consultationType;
+};
+
+const calendarViewOptions: Array<{ value: View; label: string }> = [
+  { value: "day", label: "Día" },
+  { value: "week", label: "Semana" },
+  { value: "work_week", label: "Sem. laboral" },
+  { value: "month", label: "Mes" },
+];
+
+const capitalizeCalendarLabel = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
+
+const weekDayNumberToEnum: Record<number, WeekDays> = {
+  0: WeekDays.SUNDAY,
+  1: WeekDays.MONDAY,
+  2: WeekDays.TUESDAY,
+  3: WeekDays.WEDNESDAY,
+  4: WeekDays.THURSDAY,
+  5: WeekDays.FRIDAY,
+  6: WeekDays.SATURDAY,
+};
+
+const buildWorkWeekRange = (date: Date, includeSaturday: boolean) => {
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+  const totalDays = includeSaturday ? 6 : 5;
+  return Array.from({ length: totalDays }, (_, index) => addDays(weekStart, index));
+};
+
+const isAvailabilityActiveOnDate = (
+  availability: DoctorAvailabilityResponseDto,
+  date: Date
+) => {
+  const normalizedDate = startOfDay(date);
+  const normalizedDateString = formatDateForCalendar(normalizedDate);
+
+  if (availability.validFrom) {
+    const validFromDate = startOfDay(new Date(`${availability.validFrom}T12:00:00`));
+    if (isBefore(normalizedDate, validFromDate)) {
+      return false;
+    }
+  }
+
+  if (availability.validUntil) {
+    const validUntilDate = startOfDay(new Date(`${availability.validUntil}T12:00:00`));
+    if (isAfter(normalizedDate, validUntilDate)) {
+      return false;
+    }
+  }
+
+  switch (availability.recurrenceType) {
+    case RecurrenceType.NONE:
+      return availability.specificDate === normalizedDateString;
+    case RecurrenceType.DAILY:
+      return true;
+    case RecurrenceType.WEEKLY:
+      return availability.daysOfWeek?.includes(weekDayNumberToEnum[normalizedDate.getDay()]) ?? false;
+    case RecurrenceType.MONTHLY:
+      return availability.dayOfMonth === normalizedDate.getDate();
+    default:
+      return false;
+  }
+};
+
+const formatCalendarTitle = (view: View, currentDate: Date, includeSaturdayInWorkWeek = false) => {
+  if (view === "day") {
+    return capitalizeCalendarLabel(
+      format(currentDate, "EEEE d 'de' MMMM", { locale: es })
+    );
+  }
+
+  if (view === "week" || view === "work_week") {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const end =
+      view === "work_week"
+        ? buildWorkWeekRange(currentDate, includeSaturdayInWorkWeek).at(-1) ?? addDays(start, 4)
+        : endOfWeek(currentDate, { weekStartsOn: 1 });
+    return `${capitalizeCalendarLabel(format(start, "d MMM", { locale: es }))} - ${format(end, "d MMM yyyy", { locale: es })}`;
+  }
+
+  return capitalizeCalendarLabel(format(currentDate, "MMMM yyyy", { locale: es }));
+};
+
+const navigateCalendarDate = (currentDate: Date, currentView: View, direction: "prev" | "next") => {
+  if (currentView === "day") {
+    return direction === "next" ? addDays(currentDate, 1) : subDays(currentDate, 1);
+  }
+
+  if (currentView === "week" || currentView === "work_week") {
+    return direction === "next" ? addWeeks(currentDate, 1) : subWeeks(currentDate, 1);
+  }
+
+  return direction === "next" ? addMonths(currentDate, 1) : subMonths(currentDate, 1);
+};
 
 export const BigCalendar = ({
   className,
@@ -154,69 +284,167 @@ export const BigCalendar = ({
   const [isAbsenceDialogOpen, setIsAbsenceDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
-  const [rescheduleTargetAppointment, setRescheduleTargetAppointment] = useState<AppointmentFullResponseDto | null>(null);
+  const [rescheduleTargetAppointment, setRescheduleTargetAppointment] = useState<RescheduleCalendarTarget | null>(null);
+  const [selectedAbsence, setSelectedAbsence] = useState<DoctorAbsenceResponseDto | null>(null);
+  const [absenceDeleteDialogOpen, setAbsenceDeleteDialogOpen] = useState(false);
+  const [monthOverflowDate, setMonthOverflowDate] = useState<Date | null>(null);
+  const [monthOverflowEvents, setMonthOverflowEvents] = useState<CalendarEvent[]>([]);
+  const [isMonthOverflowSheetOpen, setIsMonthOverflowSheetOpen] = useState(false);
   const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
   const [optimisticAppointments, setOptimisticAppointments] = useState<
     AppointmentFullResponseDto[]
   >([]);
+  const [selectedDoctorDetails, setSelectedDoctorDetails] = useState<Doctor | null>(null);
 
   // Dynamic height per view
   const calendarHeight = useMemo(() => {
     if (currentView === "day" || currentView === "week" || currentView === "work_week") {
-      return "calc(100vh - 260px)";
+      return "calc(100vh - 240px)";
     }
     if (currentView === "month") {
-      return "850px";
+      return "820px";
     }
-    return "700px"; // agenda
+    return "760px";
   }, [currentView]);
 
   // Custom Event component - view-aware
   const CustomEvent = useMemo(() => {
     const EventComponent = ({ event }: EventProps<CalendarEvent>) => {
       const { type, patientDni, healthInsurance, affiliationNumber, consultationType } = event.resource;
+      const appointmentData = event.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
+      const eventOrigin =
+        type === "appointment" ? (appointmentData as AppointmentFullResponseDto | undefined)?.origin : undefined;
+      const showRemoteMarker = isRemoteConsultation(consultationType);
+      const showInPersonMarker = !!consultationType && !showRemoteMarker;
+      const showNewMarker =
+        event.resource.isGuest ||
+        eventOrigin === AppointmentOrigin.WEB_GUEST;
+      const showOverturnMarker = type === "overturn";
 
-      // For available, blocked, or absence events, just show the title
       if (type === "available" || type === "blocked" || type === "absence") {
-        return <span>{event.title}</span>;
+        return <span className="calendar-event-ghost">{event.title}</span>;
       }
 
-      // Day view: single-line with dashes (same format, bigger font)
       if (currentView === "day") {
         const hourDay = format(event.start, "HH:mm");
         const endHourDay = format(event.end, "HH:mm");
-        const partsDay = [`${hourDay}-${endHourDay}`, event.title];
-        if (patientDni) partsDay.push(patientDni);
-        if (healthInsurance) {
-          partsDay.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
-        }
-        if (consultationType) partsDay.push(consultationType);
         return (
-          <div className="font-semibold truncate" style={{ fontSize: "13px" }}>
-            {partsDay.join(' - ')}
+          <div className="calendar-event-content">
+            <p className="calendar-event-title">{event.title}</p>
+            <p className="calendar-event-meta">{`${hourDay} - ${endHourDay}`}</p>
+            {(patientDni || healthInsurance || consultationType) && (
+              <p className="calendar-event-extra">
+                {[patientDni, affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance, consultationType]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            )}
+            <div className="calendar-event-markers">
+              {showNewMarker && <span className="calendar-event-marker-badge is-highlight">NEW</span>}
+              {showOverturnMarker && (
+                <span className="calendar-event-marker-icon is-highlight" title="Sobreturno">
+                  <Zap className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {showRemoteMarker && (
+                <span className="calendar-event-marker-icon" title="Remoto">
+                  <Monitor className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {showInPersonMarker && (
+                <span className="calendar-event-marker-icon" title="Presencial">
+                  <MapPin className="h-3.5 w-3.5" />
+                </span>
+              )}
+            </div>
           </div>
         );
       }
 
-      // Week/work_week/month/other views: single-line compact with dashes
+      if (currentView === "month") {
+        const hourMonth = format(event.start, "HH:mm");
+        return (
+          <div className="calendar-event-content calendar-event-content-month">
+            <p className="calendar-event-title calendar-event-title-month">
+              {`${hourMonth} · ${event.title}`}
+            </p>
+          </div>
+        );
+      }
+
       const hour = format(event.start, "HH:mm");
       const endHour = format(event.end, "HH:mm");
-      const parts = [`${hour}-${endHour}`, event.title];
-      if (patientDni) parts.push(patientDni);
-      if (healthInsurance) {
-        parts.push(affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance);
-      }
-      if (consultationType) parts.push(consultationType);
-
       return (
-        <div className="font-medium truncate" style={{ fontSize: "12px", lineHeight: "18px" }}>
-          {parts.join(' - ')}
+        <div className="calendar-event-content">
+          <p className="calendar-event-title">{event.title}</p>
+          <p className="calendar-event-meta">{`${hour} - ${endHour}`}</p>
+          <div className="calendar-event-markers">
+            {showNewMarker && <span className="calendar-event-marker-badge is-highlight">NEW</span>}
+            {showOverturnMarker && (
+              <span className="calendar-event-marker-icon is-highlight" title="Sobreturno">
+                <Zap className="h-3.5 w-3.5" />
+              </span>
+            )}
+            {showRemoteMarker && (
+              <span className="calendar-event-marker-icon" title="Remoto">
+                <Monitor className="h-3.5 w-3.5" />
+              </span>
+            )}
+            {showInPersonMarker && (
+              <span className="calendar-event-marker-icon" title="Presencial">
+                <MapPin className="h-3.5 w-3.5" />
+              </span>
+            )}
+          </div>
         </div>
       );
     };
     EventComponent.displayName = "CustomEvent";
     return EventComponent;
   }, [currentView]);
+
+  const CalendarColumnHeader = useMemo(() => {
+    const HeaderComponent = ({ date }: { date: Date }) => {
+      const isCurrentDay = isToday(date);
+
+      return (
+        <div className="google-calendar-column-header">
+          <span className="google-calendar-column-weekday">
+            {capitalizeCalendarLabel(format(date, "EEE", { locale: es }))}
+          </span>
+          <span
+            className={`google-calendar-column-date ${isCurrentDay ? "is-today" : ""}`}
+          >
+            {format(date, "d")}
+          </span>
+        </div>
+      );
+    };
+    HeaderComponent.displayName = "CalendarColumnHeader";
+    return HeaderComponent;
+  }, []);
+
+  const CalendarMonthDateHeader = useMemo(() => {
+    const HeaderComponent = ({
+      date,
+      label,
+      onDrillDown,
+    }: {
+      date: Date;
+      label: string;
+      onDrillDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    }) => (
+      <button
+        type="button"
+        className={`google-calendar-month-date ${isToday(date) ? "is-today" : ""}`}
+        onClick={onDrillDown}
+      >
+        {label}
+      </button>
+    );
+    HeaderComponent.displayName = "CalendarMonthDateHeader";
+    return HeaderComponent;
+  }, []);
 
   const { data: doctorProfileIndividual } = useMyDoctorProfile({
     enabled: autoFilterForDoctor,
@@ -270,6 +498,10 @@ export const BigCalendar = ({
     if (currentView === "month") {
       return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
     }
+    if (currentView === "work_week") {
+      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+      return { start: weekStart, end: addDays(weekStart, 5) };
+    }
     // For week/agenda
     return {
       start: startOfWeek(currentDate, { weekStartsOn: 1 }),
@@ -284,6 +516,7 @@ export const BigCalendar = ({
     blockedSlots,
     doctorAbsences,
     holidays,
+    doctorAvailabilities,
     slotDuration,
     isLoading: isDoctorAgendaLoading,
   } = useDoctorDashboard({
@@ -348,8 +581,110 @@ export const BigCalendar = ({
     return dates;
   }, [doctorAbsences]);
 
+  const includeSaturdayInWorkWeek = useMemo(() => {
+    if (!selectedDoctorId) return false;
+
+    const saturday = addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), 5);
+    const saturdayDate = formatDateForCalendar(saturday);
+
+    if (doctorAvailabilities.some((availability) => isAvailabilityActiveOnDate(availability, saturday))) {
+      return true;
+    }
+
+    if (availableSlots.some((slot) => slot.date === saturdayDate)) {
+      return true;
+    }
+
+    if (calendarAppointments.some((appointment) => appointment.date === saturdayDate)) {
+      return true;
+    }
+
+    if (overturns.some((overturn) => overturn.date === saturdayDate)) {
+      return true;
+    }
+
+    if (blockedSlots.some((blockedSlot) => blockedSlot.date === saturdayDate)) {
+      return true;
+    }
+
+    return doctorAbsences.some(
+      (absence) => absence.startDate <= saturdayDate && absence.endDate >= saturdayDate
+    );
+  }, [
+    availableSlots,
+    blockedSlots,
+    calendarAppointments,
+    currentDate,
+    doctorAbsences,
+    doctorAvailabilities,
+    overturns,
+    selectedDoctorId,
+  ]);
+
+  const SmartWorkWeekView = useMemo(() => {
+    const rangeForDate = (date: Date) => buildWorkWeekRange(date, includeSaturdayInWorkWeek);
+
+    const WorkWeekView = ((props: ViewProps<CalendarEvent>) => {
+      const {
+        date,
+        localizer,
+        min = localizer.startOf(new Date(), "day"),
+        max = localizer.endOf(new Date(), "day"),
+        scrollToTime = localizer.startOf(new Date(), "day"),
+        enableAutoScroll = true,
+        ...rest
+      } = props;
+
+      return (
+        <TimeGrid
+          {...rest}
+          range={rangeForDate(new Date(date))}
+          eventOffset={15}
+          localizer={localizer}
+          min={min}
+          max={max}
+          scrollToTime={scrollToTime}
+          enableAutoScroll={enableAutoScroll}
+        />
+      );
+    }) as React.ComponentType<ViewProps<CalendarEvent>> & ViewStatic & {
+      range: (date: Date, options: { localizer: { format: (range: { start: Date; end: Date }, formatKey: string) => string } }) => Date[];
+    };
+
+    WorkWeekView.range = (date: Date) => rangeForDate(date);
+    WorkWeekView.navigate = (date: Date, action: NavigateAction) => {
+      switch (action) {
+        case "PREV":
+          return subWeeks(date, 1);
+        case "NEXT":
+          return addWeeks(date, 1);
+        default:
+          return date;
+      }
+    };
+    WorkWeekView.title = (date: Date, { localizer }) => {
+      const range = rangeForDate(date);
+      return localizer.format(
+        { start: range[0], end: range[range.length - 1] },
+        "dayRangeHeaderFormat"
+      );
+    };
+
+    return WorkWeekView;
+  }, [includeSaturdayInWorkWeek]);
+
   const { changeStatus: changeAppointmentStatus, rescheduleAppointment: rescheduleAppointmentMutation, isRescheduling } = useAppointmentMutations();
-  const { changeStatus: changeOverturnStatus } = useOverturnMutations();
+  const { changeStatus: changeOverturnStatus, updateOverturn: updateOverturnMutation, isUpdating: isUpdatingOverturn } = useOverturnMutations();
+  const { deleteAbsence, isDeleting: isDeletingAbsence } = useDoctorAbsenceMutations();
+
+  const findFullDayAbsenceForDate = useCallback(
+    (dateStr: string) =>
+      doctorAbsences.find((absence) => {
+        if (absence.startTime || absence.endTime) return false;
+        return absence.startDate <= dateStr && absence.endDate >= dateStr;
+      }),
+    [doctorAbsences]
+  );
 
   // Split event computation into independent memos for better performance.
   // A change in appointments won't recompute absence events, etc.
@@ -472,7 +807,16 @@ export const BigCalendar = ({
 
   // Available slot events (filtered by occupied, holidays, absences)
   const availableSlotEvents = useMemo<CalendarEvent[]>(() => {
-    const filtered = availableSlots.filter((slot) => {
+    const uniqueSlots = new Map<string, (typeof availableSlots)[number]>();
+
+    availableSlots.forEach((slot) => {
+      const uniqueKey = `${slot.date}-${slot.hour}`;
+      if (!uniqueSlots.has(uniqueKey)) {
+        uniqueSlots.set(uniqueKey, slot);
+      }
+    });
+
+    const filtered = Array.from(uniqueSlots.values()).filter((slot) => {
       const key = `${slot.date}-${slot.hour}`;
       if (occupiedSlotsSet.has(key) || holidayDatesSet.has(slot.date)) return false;
       if (absenceDatesSet.has(slot.date)) return false;
@@ -484,7 +828,7 @@ export const BigCalendar = ({
       return !isBlockedByPartialAbsence;
     });
 
-    return filtered.map((slot, index) => {
+    return filtered.map((slot) => {
       const [hours, minutes] = slot.hour.split(":").map(Number);
       const start = new Date(slot.date + "T12:00:00");
       start.setHours(hours, minutes, 0, 0);
@@ -492,7 +836,7 @@ export const BigCalendar = ({
       end.setMinutes(end.getMinutes() + slotDuration);
 
       return {
-        id: `available-${slot.date}-${slot.hour}-${index}`,
+        id: `available-${slot.date}-${slot.hour}`,
         title: `${slot.hour} - Disponible`,
         start,
         end,
@@ -589,55 +933,44 @@ export const BigCalendar = ({
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
-    // In blockOnly mode, slots should be interactive (like normal mode)
     const isInteractive = !readOnly || blockOnly;
 
-    // View-aware font sizes — compact in week, normal in day
-    const availableFontSize = currentView === "day" ? "13px" : "12px";
-    const appointmentFontSize = currentView === "day" ? "13px" : "12px";
-
-    // Style for absence events - orange background
     if (event.resource.type === "absence") {
       return {
         className: "absence-event",
         style: {
-          backgroundColor: "#f97316",
-          color: "white",
-          fontSize: "12px",
-          fontWeight: "600",
-          borderRadius: "4px",
-          opacity: 0.9,
+          backgroundColor: "#fde7d8",
+          color: "#9a3412",
+          borderRadius: "12px",
+          border: "1px solid #fdba74",
         },
       };
     }
 
-    // Available slots - white background
     if (event.resource.type === "available") {
       return {
         className: "available-slot-event",
         style: {
-          backgroundColor: isInteractive ? "#ffffff" : "#f3f4f6",
-          color: isInteractive ? "#000000" : "#9ca3af",
-          fontSize: availableFontSize,
+          backgroundColor: isInteractive ? "#ffffff" : "#f8fafc",
+          color: isInteractive ? "#0f172a" : "#9ca3af",
           cursor: isInteractive ? "pointer" : "default",
-          fontWeight: "600",
+          fontWeight: "500",
           opacity: isInteractive ? 1 : 0.6,
+          borderRadius: "12px",
         },
       };
     }
 
-    // Style for blocked slots - red dashed border
     if (event.resource.type === "blocked") {
       return {
         className: "blocked-slot-event",
         style: {
-          backgroundColor: "#fef2f2",
-          color: "#dc2626",
-          fontSize: availableFontSize,
+          backgroundColor: "#fff1f2",
+          color: "#be123c",
           cursor: isInteractive ? "pointer" : "default",
           fontWeight: "600",
-          border: "2px dashed #dc2626",
-          borderRadius: "4px",
+          border: "1px dashed #fb7185",
+          borderRadius: "12px",
         },
       };
     }
@@ -645,75 +978,68 @@ export const BigCalendar = ({
     const status = event.resource.status;
     const isOverturn = event.resource.type === "overturn";
 
-    // Use the origin field from the appointment data
-    const appointmentData = event.resource.data as AppointmentFullResponseDto;
-    const origin = appointmentData.origin;
+    let backgroundColor = "#fef3c7";
+    let textColor = "#92400e";
+    let borderColor = "#facc15";
 
-    let backgroundColor = "#3b82f6"; // default blue
-    let borderColor = "";
-    let borderStyle = "";
-
-    // Priority for borders based on origin field
     if (isOverturn) {
-      borderColor = "#f97316"; // orange border for overturns
-    } else if (origin === AppointmentOrigin.WEB_GUEST) {
-      borderColor = "#8b5cf6"; // purple border for guests
-    } else if (origin === AppointmentOrigin.WEB_PATIENT) {
-      borderColor = "#22c55e"; // green border for web/patient origin
-    } else if (origin === AppointmentOrigin.SECRETARY) {
-      borderColor = "#3b82f6"; // blue border for secretary origin
-    }
-
-    if (borderColor) {
-      borderStyle = `4px solid ${borderColor}`;
-    }
-
-    // Overturns always have orange background (same as SOBRETURNO button)
-    if (isOverturn) {
-      backgroundColor = "#f97316"; // orange-500
+      backgroundColor = "#feefc3";
+      textColor = "#9a3412";
+      borderColor = "#f59e0b";
     } else {
-      // Color based on status for regular appointments
       switch (status) {
         case AppointmentStatus.PENDING:
         case AppointmentStatus.REQUESTED_BY_PATIENT:
         case AppointmentStatus.ASSIGNED_BY_SECRETARY:
-          // Cyan for web patient origin, yellow for others
-          backgroundColor = origin === AppointmentOrigin.WEB_PATIENT ? "#0891b2" : "#eab308";
+          backgroundColor = "#fef3c7";
+          textColor = "#92400e";
+          borderColor = "#facc15";
           break;
         case AppointmentStatus.WAITING:
-          backgroundColor = "#22c55e"; // green
+          backgroundColor = "#d9f2e3";
+          textColor = "#166534";
+          borderColor = "#34a853";
           break;
         case AppointmentStatus.ATTENDING:
-          backgroundColor = "#3b82f6"; // blue
+          backgroundColor = "#dbeafe";
+          textColor = "#1d4ed8";
+          borderColor = "#4285f4";
           break;
         case AppointmentStatus.COMPLETED:
-          backgroundColor = "#6b7280"; // gray
+          backgroundColor = "#eceff1";
+          textColor = "#475569";
+          borderColor = "#94a3b8";
           break;
         case AppointmentStatus.CANCELLED_BY_PATIENT:
         case AppointmentStatus.CANCELLED_BY_SECRETARY:
-          backgroundColor = "#ef4444"; // red
+          backgroundColor = "#fee2e2";
+          textColor = "#b91c1c";
+          borderColor = "#f87171";
           break;
       }
     }
 
     return {
+      className: "google-calendar-event",
       style: {
         backgroundColor,
-        borderLeft: borderStyle || undefined,
-        borderRadius: currentView === "day" ? "4px" : "2px",
+        borderLeft: `5px solid ${borderColor}`,
+        borderRadius: "14px",
         opacity: status === AppointmentStatus.COMPLETED ||
           status === AppointmentStatus.CANCELLED_BY_PATIENT ||
           status === AppointmentStatus.CANCELLED_BY_SECRETARY ? 0.6 : 1,
-        color: "white",
-        fontSize: appointmentFontSize,
+        color: textColor,
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
       },
     };
-  }, [readOnly, blockOnly, currentView]);
+  }, [readOnly, blockOnly]);
 
   // Handle event click
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
-    // Absence events are informational only, no action on click
     if (event.resource.type === "absence") {
+      if (readOnly) return;
+      setSelectedAbsence(event.resource.data as DoctorAbsenceResponseDto);
+      setAbsenceDeleteDialogOpen(true);
       return;
     }
 
@@ -768,7 +1094,7 @@ export const BigCalendar = ({
       return;
     }
 
-    // For appointments/overturns, show details dialog
+    // For appointments/overturns, open right-side details panel
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
   }, [readOnly, blockOnly]);
@@ -786,20 +1112,36 @@ export const BigCalendar = ({
     // In week/day view, open create dialog with selected date and hour
     const date = formatDateForCalendar(slotInfo.start);
     const hour = format(slotInfo.start, "HH:mm");
+    const fullDayAbsence = findFullDayAbsenceForDate(date);
+    if (fullDayAbsence) {
+      setSelectedAbsence(fullDayAbsence);
+      setAbsenceDeleteDialogOpen(true);
+      return;
+    }
     setSelectedSlot({ date, hour });
     setIsCreateDialogOpen(true);
-  }, [currentView, readOnly, blockOnly]);
+  }, [currentView, readOnly, blockOnly, findFullDayAbsenceForDate]);
 
   // Update current date when navigating calendar
   const handleNavigate = useCallback((newDate: Date) => {
     setCurrentDate(newDate);
+    setIsEventDialogOpen(false);
   }, []);
 
   // Handle drill down (click on day number in month view)
   const handleDrillDown = useCallback((date: Date, view: View) => {
-    // Change to the appropriate view and date
     setCurrentView(view);
     setCurrentDate(date);
+    setIsEventDialogOpen(false);
+  }, []);
+
+  const handleShowMore = useCallback((eventsForDay: CalendarEvent[], date: Date) => {
+    const relevantEvents = eventsForDay
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    setMonthOverflowDate(date);
+    setMonthOverflowEvents(relevantEvents);
+    setIsMonthOverflowSheetOpen(true);
   }, []);
 
   // Handle status change
@@ -891,445 +1233,701 @@ export const BigCalendar = ({
   );
 
   const isLoading = isDoctorAgendaLoading || isSearchingFirstDate;
+  const calendarTitle = useMemo(
+    () => formatCalendarTitle(currentView, currentDate, includeSaturdayInWorkWeek),
+    [currentDate, currentView, includeSaturdayInWorkWeek]
+  );
+  const closeEventPanel = () => {
+    setIsEventDialogOpen(false);
+    setSelectedEvent(null);
+  };
+  const closeMonthOverflowSheet = () => {
+    setIsMonthOverflowSheetOpen(false);
+    setMonthOverflowDate(null);
+    setMonthOverflowEvents([]);
+  };
+  const handleDeleteAbsence = async () => {
+    if (!selectedAbsence) return;
+    try {
+      await deleteAbsence.mutateAsync({
+        id: selectedAbsence.id,
+        doctorId: selectedAbsence.doctorId,
+      });
+      showSuccess("Ausencia eliminada", "La ausencia se quitó correctamente");
+      setAbsenceDeleteDialogOpen(false);
+      setSelectedAbsence(null);
+    } catch {
+      showError("Error", "No se pudo quitar la ausencia");
+    }
+  };
+
+  const selectedEventData = selectedEvent?.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
+  const selectedAppointmentData = selectedEventData as AppointmentFullResponseDto | undefined;
+  const selectedIsGuest = !!selectedEvent?.resource.isGuest;
+  const selectedPatientName = selectedEventData
+    ? selectedIsGuest
+      ? `${selectedAppointmentData?.guestFirstName || ""} ${selectedAppointmentData?.guestLastName || ""}`.trim()
+      : `${selectedEventData.patient?.firstName || ""} ${selectedEventData.patient?.lastName || ""}`.trim()
+    : "";
+  const selectedPatientPhone = selectedIsGuest
+    ? selectedAppointmentData?.guestPhone
+    : selectedEventData?.patient?.phoneNumber;
+  const selectedPatientDocument = selectedIsGuest
+    ? selectedAppointmentData?.guestDocumentNumber
+    : selectedEventData?.patient?.userName;
+  const selectedHealthInsurance = selectedEventData?.patient?.healthInsuranceName;
+  const selectedAffiliationNumber = selectedEventData?.patient?.affiliationNumber;
+  const selectedConsultationTypeBadge = getConsultationTypeBadgeLabel(selectedEvent?.resource.consultationType);
+  const selectedOrigin = selectedEvent?.resource.type === "overturn"
+    ? "Sobreturno"
+    : selectedAppointmentData?.origin
+      ? AppointmentOriginLabels[selectedAppointmentData.origin as AppointmentOrigin]
+      : "Secretaría";
+  const selectedStatusLabel = selectedEvent
+    ? selectedEvent.resource.type === "appointment"
+      ? AppointmentStatusLabels[selectedEvent.resource.status as AppointmentStatus]
+      : OverturnStatusLabels[selectedEvent.resource.status as OverturnStatus]
+    : "";
+  const selectedStatusClassName = (() => {
+    if (!selectedEvent) return "";
+    if (selectedEvent.resource.type === "overturn") {
+      return "google-calendar-status-pill google-calendar-status-pill-overturn";
+    }
+
+    switch (selectedEvent.resource.status as AppointmentStatus) {
+      case AppointmentStatus.WAITING:
+        return "google-calendar-status-pill google-calendar-status-pill-waiting";
+      case AppointmentStatus.ATTENDING:
+        return "google-calendar-status-pill google-calendar-status-pill-attending";
+      case AppointmentStatus.COMPLETED:
+        return "google-calendar-status-pill google-calendar-status-pill-completed";
+      case AppointmentStatus.CANCELLED_BY_PATIENT:
+      case AppointmentStatus.CANCELLED_BY_SECRETARY:
+        return "google-calendar-status-pill google-calendar-status-pill-cancelled";
+      default:
+        return "google-calendar-status-pill google-calendar-status-pill-pending";
+    }
+  })();
 
   return (
     <div className={className}>
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5" />
-              {doctorName
-                ? `Calendario - ${doctorName}`
-                : autoFilterForDoctor
-                ? "Mi Calendario de Turnos"
-                : "Calendario de Turnos"}
-            </CardTitle>
-            <div className="flex items-center gap-2">
+      <div className="google-calendar-shell">
+        <div className="google-calendar-main">
+          <div className="google-calendar-toolbar">
+            <div className="google-calendar-toolbar-left">
+              <div className="google-calendar-brand">
+                <div className="google-calendar-brand-icon">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="google-calendar-brand-title">
+                    {doctorName
+                      ? doctorName
+                      : autoFilterForDoctor
+                      ? "Mis turnos"
+                      : "Turnos"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="google-calendar-navigation">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="google-calendar-today"
+                  onClick={() => handleNavigate(new Date())}
+                >
+                  Hoy
+                </Button>
+                <div className="google-calendar-nav-buttons">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="google-calendar-nav-button"
+                    onClick={() =>
+                      handleNavigate(navigateCalendarDate(currentDate, currentView, "prev"))
+                    }
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="google-calendar-nav-button"
+                    onClick={() =>
+                      handleNavigate(navigateCalendarDate(currentDate, currentView, "next"))
+                    }
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <h2 className="google-calendar-title">{calendarTitle}</h2>
+              </div>
+            </div>
+
+            <div className="google-calendar-toolbar-right">
               {showDoctorSelector && (
-                <div className="w-64">
+                <div className="google-calendar-doctor-filter">
+                  <p className="google-calendar-doctor-filter-label">Médico</p>
                   <DoctorSelect
                     value={internalDoctorId}
                     onValueChange={setInternalDoctorId}
+                    onDoctorSelect={setSelectedDoctorDetails}
                     placeholder="Todos los médicos"
+                    className="google-calendar-doctor-select-trigger"
                   />
+                  <p className="google-calendar-doctor-filter-caption">
+                    {selectedDoctorDetails
+                      ? selectedDoctorDetails.specialities?.length
+                        ? selectedDoctorDetails.specialities.map((speciality) => speciality.name).join(", ")
+                        : "Agenda individual seleccionada"
+                      : "Seleccioná un profesional para enfocar la agenda"}
+                  </p>
                 </div>
               )}
+
+              <div className="google-calendar-view-switcher">
+                {calendarViewOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant="ghost"
+                    size="sm"
+                    className={`google-calendar-view-button ${currentView === option.value ? "is-active" : ""}`}
+                    onClick={() => {
+                      setCurrentView(option.value);
+                      setIsEventDialogOpen(false);
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+
               {selectedDoctorId && (currentView === "day" || currentView === "week" || currentView === "work_week") && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsPrintDialogOpen(true)}
-                  title="Imprimir agenda"
                 >
-                  <Printer className="h-4 w-4 mr-1.5" />
+                  <Printer className="mr-1.5 h-4 w-4" />
                   Imprimir
                 </Button>
               )}
             </div>
           </div>
-          {/* Collapsible Legend */}
+
           <Collapsible open={legendsOpen} onOpenChange={setLegendsOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="mt-2 gap-1 text-muted-foreground hover:text-foreground px-2 h-7">
+              <Button variant="ghost" size="sm" className="google-calendar-legend-trigger">
                 {legendsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                {legendsOpen ? "Ocultar leyenda" : "Mostrar leyenda"}
+                {legendsOpen ? "Ocultar referencias" : "Mostrar referencias"}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              {/* Legend - Estados */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm text-muted-foreground mr-1">Estados:</span>
-                <Badge variant="outline" className="bg-yellow-500/20 text-yellow-700 border-yellow-500">
-                  Pendiente
-                </Badge>
-                <Badge variant="outline" className="bg-cyan-600/20 text-cyan-700 border-cyan-600">
-                  Pendiente (Web)
-                </Badge>
-                <Badge variant="outline" className="bg-green-500/20 text-green-700 border-green-500">
-                  En Espera
-                </Badge>
-                <Badge variant="outline" className="bg-blue-500/20 text-blue-700 border-blue-500">
-                  Atendiendo
-                </Badge>
-                <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500">
-                  Completado
-                </Badge>
-                <Badge variant="outline" className="bg-red-500/20 text-red-700 border-red-500">
-                  Cancelado
-                </Badge>
-              </div>
-              {/* Legend - Orígenes */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm text-muted-foreground mr-1">Origen:</span>
-                <Badge variant="outline" className="border-l-4 border-l-green-500 bg-green-50 text-green-700">
-                  <Globe className="h-3 w-3 mr-1" />
-                  Web (Paciente)
-                </Badge>
-                <Badge variant="outline" className="border-l-4 border-l-blue-500 bg-blue-50 text-blue-700">
-                  <Building className="h-3 w-3 mr-1" />
-                  Secretaría
-                </Badge>
-                <Badge variant="outline" className="border-l-4 border-l-purple-500 bg-purple-50 text-purple-700">
-                  <UserPlus className="h-3 w-3 mr-1" />
-                  Invitado
-                </Badge>
-                <Badge variant="outline" className="border-l-4 border-l-orange-500 bg-orange-50 text-orange-700">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Sobreturno
-                </Badge>
-                <Badge variant="outline" className="border-2 border-dashed border-red-500 bg-red-50 text-red-700">
-                  <Lock className="h-3 w-3 mr-1" />
-                  Bloqueado
-                </Badge>
-              </div>
-              {/* Legend - Días especiales */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-sm text-muted-foreground mr-1">Dias:</span>
-                <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300">
-                  <CalendarDays className="h-3 w-3 mr-1" />
-                  Feriado
-                </Badge>
-                <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
-                  Fin de semana
-                </Badge>
-                <Badge variant="outline" className="bg-orange-500/20 text-orange-700 border-orange-500">
-                  <CalendarOff className="h-3 w-3 mr-1" />
-                  Ausencia
-                </Badge>
+              <div className="google-calendar-legend-groups">
+                <div className="google-calendar-legend-group">
+                  <p className="google-calendar-legend-heading">Estados y origen</p>
+                  <div className="google-calendar-legend-grid">
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip pending" />
+                      <span>Pendiente</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip web" />
+                      <span>Paciente web</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip waiting" />
+                      <span>En espera</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip attending" />
+                      <span>Atendiendo</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip completed" />
+                      <span>Completado</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip cancelled" />
+                      <span>Cancelado</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="google-calendar-legend-group">
+                  <p className="google-calendar-legend-heading">Marcas especiales</p>
+                  <div className="google-calendar-legend-grid">
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip overturn" />
+                      <span>Sobreturno</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip blocked" />
+                      <span>Bloqueado</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip holiday" />
+                      <span>Feriado</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-chip absence" />
+                      <span>Ausencia</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="google-calendar-legend-group">
+                  <p className="google-calendar-legend-heading">Marcadores del turno</p>
+                  <div className="google-calendar-legend-grid">
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-marker-badge is-highlight">NEW</span>
+                      <span>Paciente nuevo o invitado</span>
+                    </div>
+                    <div className="google-calendar-legend-item">
+                      <span className="google-calendar-legend-marker-icon is-highlight">
+                        <Zap className="h-3.5 w-3.5" />
+                      </span>
+                      <span>Sobreturno</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
-        </CardHeader>
-        <CardContent>
-          <div className="relative" style={{ height: calendarHeight, minHeight: "500px" }}>
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: "100%" }}
-              views={["month", "work_week", "day", "agenda"]}
-              view={currentView}
-              onView={setCurrentView}
-              date={currentDate}
-              onNavigate={handleNavigate}
-              onDrillDown={handleDrillDown}
-              messages={messages}
-              culture="es"
-              eventPropGetter={getEventStyle}
-              dayPropGetter={getDayPropGetter}
-              onSelectEvent={handleSelectEvent}
-              onSelectSlot={handleSelectSlot}
-              selectable={!readOnly && !blockOnly}
-              popup
-              step={slotDuration}
-              timeslots={1}
-              min={new Date(0, 0, 0, 7, 0, 0)} // Start at 7 AM
-              max={new Date(0, 0, 0, 21, 0, 0)} // End at 9 PM
-              formats={{
-                timeGutterFormat: (date: Date) => format(date, "HH:mm"),
-                eventTimeRangeFormat: ({ start }: { start: Date }) => format(start, "HH:mm"),
-                dayHeaderFormat: (date: Date) => format(date, "EEEE d 'de' MMMM", { locale: es }),
-                dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
-                  `${format(start, "d MMM", { locale: es })} - ${format(end, "d MMM", { locale: es })}`,
-              }}
-              components={{
-                event: CustomEvent,
-              }}
-            />
-            {isLoading && (
-              <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            )}
-          </div>
 
-          {/* Botón Sobreturno - Solo en vista DÍA */}
-          {currentView === 'day' && !readOnly && selectedDoctorId && (
-            <div className="pt-4 border-t mt-4">
-              <Button
-                className="w-full h-14 text-lg bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={() => setIsOverturnDialogOpen(true)}
-              >
-                <AlertCircle className="mr-2 h-6 w-6" />
-                SOBRETURNO
-              </Button>
+          <div className="google-calendar-body">
+            <div className={`google-calendar-scroll-shell is-${currentView}`}>
+              <Card className="google-calendar-surface">
+                <CardContent className="p-0">
+                  <div className="relative google-calendar-board" style={{ height: calendarHeight, minHeight: "500px" }}>
+                  <Calendar
+                    localizer={localizer}
+                    events={events}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: "100%" }}
+                    toolbar={false}
+                    views={{
+                      month: true,
+                      week: true,
+                      work_week: SmartWorkWeekView,
+                      day: true,
+                    }}
+                    view={currentView}
+                    onView={(nextView) => {
+                      setCurrentView(nextView);
+                      setIsEventDialogOpen(false);
+                    }}
+                    date={currentDate}
+                    onNavigate={handleNavigate}
+                    onDrillDown={handleDrillDown}
+                    messages={messages}
+                    culture="es"
+                    eventPropGetter={getEventStyle}
+                    dayPropGetter={getDayPropGetter}
+                    onSelectEvent={handleSelectEvent}
+                    onShowMore={handleShowMore}
+                    onSelectSlot={handleSelectSlot}
+                    selectable={!readOnly && !blockOnly}
+                    popup={false}
+                    doShowMoreDrillDown={false}
+                    dayLayoutAlgorithm="no-overlap"
+                    step={slotDuration}
+                    timeslots={1}
+                    min={new Date(0, 0, 0, 7, 0, 0)}
+                    max={new Date(0, 0, 0, 21, 0, 0)}
+                    formats={{
+                      timeGutterFormat: (date: Date) => format(date, "HH:mm"),
+                      eventTimeRangeFormat: ({ start }: { start: Date }) => format(start, "HH:mm"),
+                      weekdayFormat: (date: Date) => capitalizeCalendarLabel(format(date, "EEE", { locale: es })),
+                    }}
+                    components={{
+                      event: CustomEvent,
+                      week: {
+                        header: CalendarColumnHeader,
+                      },
+                      work_week: {
+                        header: CalendarColumnHeader,
+                      },
+                      day: {
+                        header: CalendarColumnHeader,
+                      },
+                      month: {
+                        dateHeader: CalendarMonthDateHeader,
+                      },
+                    }}
+                  />
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+                    </div>
+                  )}
+                  </div>
+
+                  {currentView === "day" && !readOnly && selectedDoctorId && (
+                    <div className="border-t border-slate-200 p-4">
+                      <Button
+                        className="h-12 w-full rounded-2xl bg-orange-500 text-base text-white hover:bg-orange-600"
+                        onClick={() => setIsOverturnDialogOpen(true)}
+                      >
+                        <AlertCircle className="mr-2 h-5 w-5" />
+                        Crear sobreturno
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </div>
 
-      {/* Event Details Dialog */}
-      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedEvent?.resource.type === "overturn" && (
-                <AlertCircle className="h-5 w-5 text-orange-500" />
-              )}
-              {(selectedEvent?.resource.data as AppointmentFullResponseDto)?.origin === AppointmentOrigin.WEB_GUEST && (
-                <UserPlus className="h-5 w-5 text-purple-500" />
-              )}
-              Detalles del Turno
-            </DialogTitle>
-            <DialogDescription className="flex items-center gap-2">
-              {selectedEvent?.resource.type === "overturn" ? "Sobreturno" : "Turno regular"}
-              {(selectedEvent?.resource.data as AppointmentFullResponseDto)?.origin === AppointmentOrigin.WEB_GUEST && (
-                <Badge className="bg-purple-100 text-purple-800 border-purple-300">
-                  INVITADO
-                </Badge>
-              )}
-            </DialogDescription>
-          </DialogHeader>
+      <Sheet
+        open={!!selectedEvent && isEventDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeEventPanel();
+          }
+        }}
+      >
+        {selectedEvent?.resource.data && (
+          <SheetContent side="right" className="google-calendar-event-sheet w-[min(100vw,420px)] sm:max-w-[420px]">
+            <SheetHeader className="google-calendar-side-panel-header">
+              <div>
+                <p className="google-calendar-side-panel-kicker">
+                  {selectedEvent.resource.type === "overturn" ? "Sobreturno" : "Turno"}
+                </p>
+                <SheetTitle className="google-calendar-side-panel-title">
+                  {selectedPatientName}
+                </SheetTitle>
+                <SheetDescription className="sr-only">
+                  Detalle del turno seleccionado
+                </SheetDescription>
+              </div>
+            </SheetHeader>
 
-          {selectedEvent && selectedEvent.resource.data && (
-            <div className="space-y-4">
-              {/* Patient Info */}
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <User className="h-10 w-10 p-2 bg-primary/10 rounded-full text-primary" />
-                <div className="flex-1">
-                  <p className="font-medium">
-                    {selectedEvent.resource.isGuest
-                      ? `${(selectedEvent.resource.data as AppointmentFullResponseDto).guestFirstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto).guestLastName}`
-                      : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
-                    }
+            <div className="google-calendar-side-panel-section">
+              <p className="google-calendar-section-title">Resumen</p>
+              <div className="google-calendar-summary-card">
+                <div className="google-calendar-summary-main">
+                  <div className="google-calendar-summary-date">
+                    <CalendarDays className="h-4 w-4" />
+                    <span>{format(selectedEvent.start, "EEEE d 'de' MMMM", { locale: es })}</span>
+                  </div>
+                  <p className="google-calendar-summary-time">
+                    {formatTimeAR((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).hour)}
                   </p>
-                  <div className="text-sm text-muted-foreground space-y-0.5">
-                    <p>
-                      DNI: {selectedEvent.resource.isGuest
-                        ? (selectedEvent.resource.data as AppointmentFullResponseDto).guestDocumentNumber
-                        : (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.userName
-                      }
-                    </p>
-                    {/* Phone */}
-                    {!selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.phoneNumber && (
-                      <p>Tel: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.phoneNumber}</p>
-                    )}
-                    {selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto).guestPhone && (
-                      <p>Tel: {(selectedEvent.resource.data as AppointmentFullResponseDto).guestPhone}</p>
-                    )}
-                    {/* Health Insurance */}
-                    {!selectedEvent.resource.isGuest && (selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.healthInsuranceName && (
-                      <p>
-                        OS: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.healthInsuranceName}
-                        {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.affiliationNumber && (
-                          <span> - Nro: {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.affiliationNumber}</span>
-                        )}
-                      </p>
-                    )}
+                </div>
+                <div className="google-calendar-summary-meta">
+                  <Badge variant="outline" className={selectedStatusClassName}>
+                    {selectedStatusLabel}
+                  </Badge>
+                  <Badge variant="outline" className="google-calendar-origin-pill">
+                    {selectedOrigin}
+                  </Badge>
+                  {selectedConsultationTypeBadge && (
+                    <Badge variant="outline" className="google-calendar-origin-pill consultation-type">
+                      {selectedConsultationTypeBadge}
+                    </Badge>
+                  )}
+                  {selectedEvent.resource.isGuest && (
+                    <Badge variant="outline" className="google-calendar-origin-pill guest">Invitado</Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="google-calendar-detail-row">
+                <Stethoscope className="h-4 w-4" />
+                <div>
+                  <p className="google-calendar-detail-primary">
+                    {selectedEventData?.doctor &&
+                      formatDoctorName(selectedEventData.doctor)}
+                  </p>
+                  <p className="google-calendar-detail-secondary">Profesional asignado</p>
+                </div>
+              </div>
+
+              <div className="google-calendar-detail-row">
+                <User className="h-4 w-4" />
+                <div>
+                  <p className="google-calendar-detail-primary">Paciente</p>
+                  <p className="google-calendar-detail-secondary">
+                    {selectedPatientDocument ? `DNI ${selectedPatientDocument}` : "Sin documento visible"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="google-calendar-side-panel-section">
+              <p className="google-calendar-section-title">Paciente</p>
+
+              <div className="google-calendar-info-card">
+                <div className="google-calendar-info-row">
+                  <Phone className="h-4 w-4" />
+                  <div>
+                    <p className="google-calendar-info-label">Teléfono</p>
+                    <p className="google-calendar-info-value">{selectedPatientPhone || "Sin teléfono cargado"}</p>
+                  </div>
+                </div>
+                <div className="google-calendar-info-row">
+                  <Shield className="h-4 w-4" />
+                  <div>
+                    <p className="google-calendar-info-label">Obra social</p>
+                    <p className="google-calendar-info-value">{selectedHealthInsurance || "Particular / sin obra social"}</p>
+                  </div>
+                </div>
+                <div className="google-calendar-info-row">
+                  <CreditCard className="h-4 w-4" />
+                  <div>
+                    <p className="google-calendar-info-label">N.° de afiliado</p>
+                    <p className="google-calendar-info-value">{selectedAffiliationNumber || "Sin número de afiliado"}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Doctor Info */}
-              <div className="flex items-center gap-3">
-                <Stethoscope className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Médico</p>
-                  <p className="font-medium">
-                    {(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).doctor && formatDoctorName((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).doctor!)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Fecha y Hora</p>
-                  <p className="font-medium">
-                    {format(selectedEvent.start, "EEEE d 'de' MMMM, yyyy", { locale: es })} - {formatTimeAR((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).hour)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-3">
-                <div className="h-5 w-5 flex items-center justify-center">
-                  <div
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: AppointmentStatusColors[selectedEvent.resource.status as AppointmentStatus] || "#6b7280" }}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <Badge variant="outline">
-                    {selectedEvent.resource.type === "appointment"
-                      ? AppointmentStatusLabels[selectedEvent.resource.status as AppointmentStatus]
-                      : OverturnStatusLabels[selectedEvent.resource.status as OverturnStatus]}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Origin */}
-              <div className="flex items-center gap-3">
-                <div className="h-5 w-5 flex items-center justify-center">
-                  {selectedEvent.resource.type === "overturn" ? (
-                    <AlertCircle className="h-4 w-4 text-orange-500" />
-                  ) : (selectedEvent.resource.data as AppointmentFullResponseDto).origin === AppointmentOrigin.WEB_GUEST ? (
-                    <UserPlus className="h-4 w-4 text-purple-500" />
-                  ) : (selectedEvent.resource.data as AppointmentFullResponseDto).origin === AppointmentOrigin.WEB_PATIENT ? (
-                    <Globe className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <Building className="h-4 w-4 text-blue-500" />
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Origen</p>
-                  <Badge variant="outline" className={
-                    selectedEvent.resource.type === "overturn"
-                      ? "bg-orange-100 text-orange-800 border-orange-300"
-                      : (selectedEvent.resource.data as AppointmentFullResponseDto).origin === AppointmentOrigin.WEB_GUEST
-                        ? "bg-purple-100 text-purple-800 border-purple-300"
-                        : (selectedEvent.resource.data as AppointmentFullResponseDto).origin === AppointmentOrigin.WEB_PATIENT
-                          ? "bg-green-100 text-green-800 border-green-300"
-                          : "bg-blue-100 text-blue-800 border-blue-300"
-                  }>
-                    {selectedEvent.resource.type === "overturn"
-                      ? "Sobreturno"
-                      : (selectedEvent.resource.data as AppointmentFullResponseDto).origin
-                        ? AppointmentOriginLabels[(selectedEvent.resource.data as AppointmentFullResponseDto).origin as AppointmentOrigin]
-                        : "Secretaría"
-                    }
-                  </Badge>
-                  {/* Tracking: show if guest was converted to patient */}
-                  {selectedEvent.resource.type === "appointment" &&
-                    (selectedEvent.resource.data as AppointmentFullResponseDto).origin === AppointmentOrigin.WEB_GUEST &&
-                    !selectedEvent.resource.isGuest && (
-                      <Badge variant="outline" className="ml-2 bg-emerald-100 text-emerald-800 border-emerald-300">
-                        ✓ Registrado
-                      </Badge>
-                    )}
-                </div>
-              </div>
-
-              {/* Guest warning banner */}
               {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
-                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <div className="google-calendar-warning">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   <span>
-                    Este turno pertenece a un <strong>invitado sin registrar</strong>. Para cambiar el estado del turno, primero registralo como paciente usando el botón <strong>"Registrar Paciente"</strong>.
+                    Este turno pertenece a un invitado sin registrar. Para cambiar el estado, primero registralo como paciente.
                   </span>
                 </div>
               )}
+            </div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-4 border-t">
-                {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
-                  selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (() => {
-                    const appointmentDate = (selectedEvent.resource.data as AppointmentFullResponseDto).date;
-                    const today = formatDateForCalendar(new Date());
-                    const isToday = appointmentDate === today;
-                    const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
-                    const disabledWaiting = !isToday || isGuestAppointment;
-                    const waitingTitle = isGuestAppointment
-                      ? "Debe registrar al invitado como paciente antes de cambiar el estado"
-                      : !isToday
-                        ? "Solo se puede poner en espera un turno del dia de hoy"
-                        : undefined;
-                    return (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 border-green-600 hover:bg-green-50"
-                        onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
-                        disabled={disabledWaiting}
-                        title={waitingTitle}
-                      >
-                        <Clock className="h-4 w-4 mr-1" />
-                        Marcar en Espera
-                      </Button>
-                    );
-                  })()}
-
-                {selectedEvent.resource.status === AppointmentStatus.WAITING && (
-                  <Button
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={() => handleStatusChange(AppointmentStatus.ATTENDING)}
-                    disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
-                    title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
-                  >
-                    <PlayCircle className="h-4 w-4 mr-1" />
-                    Atender
-                  </Button>
-                )}
-
-                {selectedEvent.resource.status === AppointmentStatus.ATTENDING && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
-                    disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
-                    title={selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" ? "Debe registrar al invitado como paciente antes de cambiar el estado" : undefined}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Completar
-                  </Button>
-                )}
-
-                {selectedEvent.resource.status === AppointmentStatus.PENDING &&
-                  selectedEvent.resource.type === "appointment" &&
-                  !readOnly && (
+            <div className="google-calendar-side-panel-actions">
+              <p className="google-calendar-section-title">Acciones</p>
+              {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
+                selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (() => {
+                  const appointmentDate = (selectedEvent.resource.data as AppointmentFullResponseDto).date;
+                  const today = formatDateForCalendar(new Date());
+                  const isToday = appointmentDate === today;
+                  const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
+                  const disabledWaiting = !isToday || isGuestAppointment;
+                  const waitingTitle = isGuestAppointment
+                    ? "Debe registrar al invitado como paciente antes de cambiar el estado"
+                    : !isToday
+                      ? "Solo se puede poner en espera un turno del día de hoy"
+                      : undefined;
+                  return (
                     <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        const appt = selectedEvent.resource.data as AppointmentFullResponseDto;
-                        setRescheduleTargetAppointment(appt);
-                        setIsEventDialogOpen(false);
-                        setIsRescheduleDialogOpen(true);
-                      }}
+                      className="google-calendar-action-button justify-start bg-emerald-600 text-white hover:bg-emerald-700"
+                      onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
+                      disabled={disabledWaiting}
+                      title={waitingTitle}
                     >
-                      <CalendarDays className="h-4 w-4 mr-1" />
-                      Reprogramar
+                      <Clock className="mr-2 h-4 w-4" />
+                      Marcar en espera
                     </Button>
-                  )}
+                  );
+                })()}
 
-                {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
-                  selectedEvent.resource.status === AppointmentStatus.WAITING) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 border-red-600 hover:bg-red-50"
-                      onClick={() => setCancelConfirmOpen(true)}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Cancelar
-                    </Button>
-                  )}
+              {selectedEvent.resource.status === AppointmentStatus.WAITING && (
+                <Button
+                  className="google-calendar-action-button justify-start bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={() => handleStatusChange(AppointmentStatus.ATTENDING)}
+                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Atender
+                </Button>
+              )}
 
-                {/* Register guest as patient button - only show if still a guest */}
-                {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
+              {selectedEvent.resource.status === AppointmentStatus.ATTENDING && (
+                <Button
+                  className="google-calendar-action-button justify-start bg-slate-700 text-white hover:bg-slate-800"
+                  onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
+                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Completar
+                </Button>
+              )}
+
+              {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
+                selectedEvent.resource.status === AppointmentStatus.WAITING) &&
+                !readOnly && (
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                    className="google-calendar-action-button justify-start border-violet-200 text-violet-700 hover:bg-violet-50 hover:text-violet-800"
                     onClick={() => {
-                      setIsEventDialogOpen(false); // Close details dialog first
-                      setIsRegisterGuestModalOpen(true);
+                      if (selectedEvent.resource.type === "appointment") {
+                        const appt = selectedEvent.resource.data as AppointmentFullResponseDto;
+                        setRescheduleTargetAppointment({
+                          type: "appointment",
+                          id: appt.id,
+                          doctorId: appt.doctorId,
+                          date: appt.date,
+                          hour: appt.hour,
+                          consultationTypeId: appt.consultationTypeId,
+                          doctor: appt.doctor ?? null,
+                          patient: appt.patient ?? null,
+                        });
+                      } else {
+                        const overturn = selectedEvent.resource.data as OverturnDetailedDto;
+                        setRescheduleTargetAppointment({
+                          type: "overturn",
+                          id: overturn.id,
+                          doctorId: overturn.doctorId,
+                          date: overturn.date,
+                          hour: overturn.hour,
+                          doctor: overturn.doctor ?? null,
+                          patient: overturn.patient ?? null,
+                        });
+                      }
+                      setIsEventDialogOpen(false);
+                      setIsRescheduleDialogOpen(true);
                     }}
                   >
-                    <UserPlus className="h-4 w-4 mr-1" />
-                    Registrar Paciente
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    Reprogramar
                   </Button>
                 )}
 
+              {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
+                selectedEvent.resource.status === AppointmentStatus.WAITING) && (
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEventDialogOpen(false)}
+                  variant="outline"
+                  className="google-calendar-action-button justify-start border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
+                  onClick={() => setCancelConfirmOpen(true)}
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  Cerrar
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancelar
+                  </Button>
+                )}
+
+              {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
+                <Button
+                  variant="outline"
+                  className="google-calendar-action-button justify-start border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                  onClick={() => {
+                    setIsEventDialogOpen(false);
+                    setIsRegisterGuestModalOpen(true);
+                  }}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Registrar paciente
                 </Button>
-              </div>
+              )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </SheetContent>
+        )}
+      </Sheet>
+
+      <Sheet
+        open={isMonthOverflowSheetOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeMonthOverflowSheet();
+          }
+        }}
+      >
+        <SheetContent side="right" className="google-calendar-event-sheet w-[min(100vw,380px)] sm:max-w-[380px]">
+          <SheetHeader className="google-calendar-side-panel-header">
+            <div>
+              <p className="google-calendar-side-panel-kicker">Agenda del día</p>
+              <SheetTitle className="google-calendar-side-panel-title">
+                {monthOverflowDate
+                  ? format(monthOverflowDate, "EEEE d 'de' MMMM", { locale: es })
+                  : "Eventos"}
+              </SheetTitle>
+              <SheetDescription className="sr-only">
+                Lista de eventos del día seleccionado en la vista mes
+              </SheetDescription>
+            </div>
+          </SheetHeader>
+
+          <div className="google-calendar-side-panel-section">
+            <p className="google-calendar-section-title">Eventos</p>
+            <div className="google-calendar-month-overflow-list">
+              {monthOverflowEvents.length === 0 ? (
+                <div className="google-calendar-month-overflow-empty">
+                  No hay eventos para mostrar en este día.
+                </div>
+              ) : (
+                monthOverflowEvents.map((event) => (
+                  <button
+                    key={String(event.id)}
+                    type="button"
+                    className="google-calendar-month-overflow-item"
+                    onClick={() => {
+                      closeMonthOverflowSheet();
+                      handleSelectEvent(event);
+                    }}
+                  >
+                    <div
+                      className={`google-calendar-month-overflow-accent is-${
+                        event.resource.type === "available"
+                          ? "available"
+                          : event.resource.type === "overturn"
+                          ? "overturn"
+                          : event.resource.status === AppointmentStatus.WAITING
+                            ? "waiting"
+                            : event.resource.status === AppointmentStatus.ATTENDING
+                              ? "attending"
+                              : event.resource.status === AppointmentStatus.COMPLETED
+                                ? "completed"
+                                : event.resource.status === AppointmentStatus.CANCELLED_BY_PATIENT ||
+                                    event.resource.status === AppointmentStatus.CANCELLED_BY_SECRETARY
+                                  ? "cancelled"
+                                  : "pending"
+                      }`}
+                    />
+                    <div className="google-calendar-month-overflow-content">
+                      <p className="google-calendar-month-overflow-time">
+                        {format(event.start, "HH:mm")}
+                      </p>
+                      <p className="google-calendar-month-overflow-title">{event.title}</p>
+                      <div className="google-calendar-month-overflow-meta">
+                        {event.resource.type === "available" ? (
+                          <Badge variant="outline" className="google-calendar-origin-pill available">
+                            Disponible
+                          </Badge>
+                        ) : (
+                          <>
+                            <Badge
+                              variant="outline"
+                              className={
+                                event.resource.type === "overturn"
+                                  ? "google-calendar-status-pill google-calendar-status-pill-overturn"
+                                  : event.resource.status === AppointmentStatus.WAITING
+                                    ? "google-calendar-status-pill google-calendar-status-pill-waiting"
+                                    : event.resource.status === AppointmentStatus.ATTENDING
+                                      ? "google-calendar-status-pill google-calendar-status-pill-attending"
+                                      : event.resource.status === AppointmentStatus.COMPLETED
+                                        ? "google-calendar-status-pill google-calendar-status-pill-completed"
+                                        : event.resource.status === AppointmentStatus.CANCELLED_BY_PATIENT ||
+                                            event.resource.status === AppointmentStatus.CANCELLED_BY_SECRETARY
+                                          ? "google-calendar-status-pill google-calendar-status-pill-cancelled"
+                                          : "google-calendar-status-pill google-calendar-status-pill-pending"
+                              }
+                            >
+                              {event.resource.type === "overturn"
+                                ? OverturnStatusLabels[event.resource.status as OverturnStatus]
+                                : AppointmentStatusLabels[event.resource.status as AppointmentStatus]}
+                            </Badge>
+                            {event.resource.type === "overturn" && (
+                              <Badge variant="outline" className="google-calendar-origin-pill overturn">
+                                Sobreturno
+                              </Badge>
+                            )}
+                            {getConsultationTypeBadgeLabel(event.resource.consultationType) && (
+                              <Badge variant="outline" className="google-calendar-origin-pill consultation-type">
+                                {getConsultationTypeBadgeLabel(event.resource.consultationType)}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Slot Action Dialog - Choose between create appointment or block */}
       {selectedSlot && (
@@ -1356,6 +1954,31 @@ export const BigCalendar = ({
           } : undefined}
         />
       )}
+
+      <AlertDialog open={absenceDeleteDialogOpen} onOpenChange={setAbsenceDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Quitar esta ausencia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedAbsence?.startTime || selectedAbsence?.endTime
+                ? "El médico volverá a quedar disponible en ese tramo horario."
+                : "El día volverá a quedar disponible para agendar turnos."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedAbsence(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAbsence}
+              disabled={isDeletingAbsence}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeletingAbsence ? "Quitando..." : "Quitar ausencia"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create Appointment Dialog */}
       <CreateAppointmentDialog
@@ -1494,11 +2117,16 @@ export const BigCalendar = ({
         onOpenChange={setIsRescheduleDialogOpen}
         appointment={rescheduleTargetAppointment}
         onReschedule={async (id, dto) => {
-          await rescheduleAppointmentMutation.mutateAsync({ id, dto });
-          showSuccess("Turno reprogramado exitosamente");
+          if (rescheduleTargetAppointment?.type === "overturn") {
+            await updateOverturnMutation.mutateAsync({ id, dto });
+            showSuccess("Sobreturno reprogramado exitosamente");
+          } else {
+            await rescheduleAppointmentMutation.mutateAsync({ id, dto });
+            showSuccess("Turno reprogramado exitosamente");
+          }
           setRescheduleTargetAppointment(null);
         }}
-        isRescheduling={isRescheduling}
+        isRescheduling={isRescheduling || isUpdatingOverturn}
       />
 
       {/* Print Agenda Dialog */}

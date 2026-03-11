@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { useState, useEffect, useMemo } from "react";
+import { addDays, format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarDays, Clock, User, Stethoscope } from "lucide-react";
 import {
@@ -23,8 +23,11 @@ import { cn } from "@/lib/utils";
 import { TimeSlotSelect } from "../Select/TimeSlotSelect";
 import { formatTimeAR } from "@/common/helpers/timezone";
 import { RescheduleAppointmentDto } from "@/types/Appointment/Appointment";
+import { Input } from "@/components/ui/input";
+import { useAvailableSlotsRange } from "@/hooks/Appointments";
 
 interface RescheduleAppointmentInfo {
+  type?: "appointment" | "overturn";
   id: number;
   doctorId: number;
   date: string;
@@ -52,6 +55,18 @@ export function RescheduleAppointmentDialog({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedHour, setSelectedHour] = useState<string>("");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const currentAppointment =
+    appointment ??
+    ({
+      type: "appointment",
+      id: 0,
+      doctorId: 0,
+      date: "",
+      hour: "",
+      consultationTypeId: undefined,
+      doctor: null,
+      patient: null,
+    } satisfies RescheduleAppointmentInfo);
 
   useEffect(() => {
     if (!open) {
@@ -60,27 +75,53 @@ export function RescheduleAppointmentDialog({
     }
   }, [open]);
 
-  if (!appointment) return null;
+  const itemType = currentAppointment.type ?? "appointment";
+  const useAvailabilityDrivenDates = itemType === "appointment";
+  const availabilityRangeStart = useMemo(() => {
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    base.setDate(base.getDate() + 1);
+    return base;
+  }, []);
+  const availabilityRangeEnd = useMemo(
+    () => addDays(availabilityRangeStart, 90),
+    [availabilityRangeStart]
+  );
+  const { slots: rangeSlots, isLoading: isLoadingAvailabilityRange } = useAvailableSlotsRange({
+    doctorId: currentAppointment.doctorId,
+    startDate: availabilityRangeStart,
+    endDate: availabilityRangeEnd,
+    enabled: open && !!appointment && useAvailabilityDrivenDates,
+  });
+  const availableDates = useMemo(
+    () => Array.from(new Set(rangeSlots.map((slot) => slot.date))).sort(),
+    [rangeSlots]
+  );
+  const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
+  const suggestedDates = useMemo(() => availableDates.slice(0, 5), [availableDates]);
 
   const dateStr = selectedDate
     ? format(selectedDate, "yyyy-MM-dd")
     : undefined;
 
-  const currentHourNormalized = appointment.hour.slice(0, 5);
+  const currentHourNormalized = currentAppointment.hour.slice(0, 5);
   const hasChanges =
     dateStr !== undefined &&
     selectedHour !== "" &&
-    (dateStr !== appointment.date ||
+    (dateStr !== currentAppointment.date ||
       selectedHour.slice(0, 5) !== currentHourNormalized);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
 
   const handleReschedule = async () => {
-    if (!dateStr || !selectedHour) return;
-    await onReschedule(appointment.id, { date: dateStr, hour: selectedHour });
+    if (!appointment || !dateStr || !selectedHour) return;
+    await onReschedule(currentAppointment.id, { date: dateStr, hour: selectedHour });
     onOpenChange(false);
   };
+
+  if (!appointment) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,10 +129,10 @@ export function RescheduleAppointmentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5" />
-            Reprogramar Turno
+            {itemType === "overturn" ? "Reprogramar Sobreturno" : "Reprogramar Turno"}
           </DialogTitle>
           <DialogDescription>
-            Seleccioná una nueva fecha y horario para este turno
+            Seleccioná una nueva fecha y horario para este {itemType === "overturn" ? "sobreturno" : "turno"}
           </DialogDescription>
         </DialogHeader>
 
@@ -134,6 +175,25 @@ export function RescheduleAppointmentDialog({
           {/* Nueva fecha */}
           <div className="space-y-2">
             <Label>Nueva fecha</Label>
+            {useAvailabilityDrivenDates && suggestedDates.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {suggestedDates.map((date) => (
+                  <Button
+                    key={date}
+                    type="button"
+                    size="sm"
+                    variant={dateStr === date ? "default" : "outline"}
+                    className="h-8 rounded-full"
+                    onClick={() => {
+                      setSelectedDate(parseISO(`${date}T12:00:00`));
+                      setSelectedHour("");
+                    }}
+                  >
+                    {format(parseISO(`${date}T12:00:00`), "EEE d/MM", { locale: es })}
+                  </Button>
+                ))}
+              </div>
+            )}
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -160,28 +220,67 @@ export function RescheduleAppointmentDialog({
                     setSelectedHour("");
                     setCalendarOpen(false);
                   }}
-                  disabled={(date) => date < today}
+                  disabled={(date) => {
+                    const normalized = new Date(date);
+                    normalized.setHours(0, 0, 0, 0);
+                    const dateKey = format(normalized, "yyyy-MM-dd");
+                    if (normalized < tomorrow) return true;
+                    if (!useAvailabilityDrivenDates) return false;
+                    return !availableDateSet.has(dateKey);
+                  }}
+                  modifiers={
+                    useAvailabilityDrivenDates
+                      ? {
+                          available: availableDates.map((date) => parseISO(`${date}T12:00:00`)),
+                        }
+                      : undefined
+                  }
+                  modifiersClassNames={
+                    useAvailabilityDrivenDates
+                      ? {
+                          available: "bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100",
+                        }
+                      : undefined
+                  }
                   locale={es}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
+            {useAvailabilityDrivenDates && (
+              <p className="text-xs text-muted-foreground">
+                {isLoadingAvailabilityRange
+                  ? "Buscando días con disponibilidad real del médico..."
+                  : availableDates.length > 0
+                    ? "Sólo se muestran fechas con horarios disponibles."
+                    : "No encontramos fechas con disponibilidad en los próximos 90 días."}
+              </p>
+            )}
           </div>
 
           {/* Nuevo horario */}
           <div className="space-y-2">
             <Label>Nuevo horario</Label>
-            <TimeSlotSelect
-              doctorId={appointment.doctorId}
-              date={dateStr}
-              consultationTypeId={
-                appointment.consultationTypeId ?? undefined
-              }
-              value={selectedHour}
-              onValueChange={setSelectedHour}
-              placeholder="Seleccionar horario"
-              disabled={!selectedDate}
-            />
+            {itemType === "overturn" ? (
+              <Input
+                type="time"
+                value={selectedHour}
+                onChange={(event) => setSelectedHour(event.target.value)}
+                disabled={!selectedDate}
+              />
+            ) : (
+              <TimeSlotSelect
+                doctorId={appointment.doctorId}
+                date={dateStr}
+                consultationTypeId={
+                  appointment.consultationTypeId ?? undefined
+                }
+                value={selectedHour}
+                onValueChange={setSelectedHour}
+                placeholder="Seleccionar horario"
+                disabled={!selectedDate}
+              />
+            )}
           </div>
         </div>
 
