@@ -87,6 +87,15 @@ export interface CreateOverturnDto {
   reason?: string;
 }
 
+export interface UpdateOverturnDto {
+  doctorId?: number;
+  patientId?: number;
+  date?: string;
+  hour?: string;
+  reason?: string;
+  status?: OverturnStatus;
+}
+
 export interface UpdateOverturnStatusDto {
   status: OverturnStatus;
 }
