@@ -7,8 +7,14 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle, Save, AlertCircle, Lock } from "lucide-react";
@@ -26,6 +32,66 @@ interface DoctorNotificationSettingsCardProps {
   doctorUserId: string;
   doctorPhoneNumber?: string;
   doctorPhoneNumber2?: string;
+}
+
+const HOURS = Array.from({ length: 24 }, (_, hour) => hour.toString().padStart(2, "0"));
+const MINUTES = Array.from({ length: 60 }, (_, minute) => minute.toString().padStart(2, "0"));
+
+function normalizeTimeValue(value: string) {
+  const [hour = "00", minute = "00"] = value.split(":");
+  return {
+    hour: HOURS.includes(hour) ? hour : "00",
+    minute: MINUTES.includes(minute) ? minute : "00",
+  };
+}
+
+interface TimeSelectProps {
+  id: string;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}
+
+function TimeSelect({ id, value, disabled, onChange }: TimeSelectProps) {
+  const { hour, minute } = normalizeTimeValue(value);
+
+  return (
+    <div className="flex items-center gap-2">
+      <Select
+        value={hour}
+        onValueChange={(nextHour) => onChange(`${nextHour}:${minute}`)}
+        disabled={disabled}
+      >
+        <SelectTrigger id={id} className="w-24">
+          <SelectValue placeholder="Hora" />
+        </SelectTrigger>
+        <SelectContent>
+          {HOURS.map((hourOption) => (
+            <SelectItem key={hourOption} value={hourOption}>
+              {hourOption}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <span className="text-sm font-medium text-gray-500">:</span>
+      <Select
+        value={minute}
+        onValueChange={(nextMinute) => onChange(`${hour}:${nextMinute}`)}
+        disabled={disabled}
+      >
+        <SelectTrigger className="w-24" aria-label="Minutos">
+          <SelectValue placeholder="Minutos" />
+        </SelectTrigger>
+        <SelectContent>
+          {MINUTES.map((minuteOption) => (
+            <SelectItem key={minuteOption} value={minuteOption}>
+              {minuteOption}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
 export function DoctorNotificationSettingsCard({
@@ -334,16 +400,14 @@ export function DoctorNotificationSettingsCard({
           </div>
 
           <div className="space-y-2">
-              <Label htmlFor="dailyAgendaTime" className="text-sm font-medium">
+            <Label htmlFor="dailyAgendaTime" className="text-sm font-medium">
               Hora de envío
             </Label>
-            <Input
+            <TimeSelect
               id="dailyAgendaTime"
-              type="time"
               value={dailyAgendaTime}
-              onChange={(event) => setDailyAgendaTime(event.target.value)}
+              onChange={setDailyAgendaTime}
               disabled={isDisabled || !whatsappEnabled || !dailyAgendaEnabled}
-              className="max-w-44"
             />
             <p className="text-xs text-gray-500">
               Usar formato 24 horas. Ejemplo: 07:00 o 19:00. Hora local de
@@ -374,13 +438,11 @@ export function DoctorNotificationSettingsCard({
             <Label htmlFor="previousDayDailyAgendaTime" className="text-sm font-medium">
               Hora de envío
             </Label>
-            <Input
+            <TimeSelect
               id="previousDayDailyAgendaTime"
-              type="time"
               value={previousDayDailyAgendaTime}
-              onChange={(event) => setPreviousDayDailyAgendaTime(event.target.value)}
+              onChange={setPreviousDayDailyAgendaTime}
               disabled={isDisabled || !whatsappEnabled || !previousDayDailyAgendaEnabled}
-              className="max-w-44"
             />
             <p className="text-xs text-gray-500">
               Usar formato 24 horas. Ejemplo: 07:00 o 19:00. Hora local de
