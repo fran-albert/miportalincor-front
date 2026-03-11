@@ -55,7 +55,7 @@ const ShiftsPage = () => {
   );
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-w-0 space-y-6 overflow-x-hidden p-6">
       <Helmet>
         <title>{isDoctor ? "Mis Turnos" : "Gestión de Turnos"}</title>
       </Helmet>
@@ -78,7 +78,7 @@ const ShiftsPage = () => {
       {isDoctor ? (
         <BigCalendar autoFilterForDoctor={true} blockOnly={!canSelfManage} fixedDoctorId={canSelfManage ? doctorId : undefined} allowGuestCreation={canSelfManage} />
       ) : (
-        <Tabs defaultValue="calendar" className="flex-1">
+        <Tabs defaultValue="calendar" className="min-w-0 flex-1 overflow-x-hidden">
           <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-gray-100 p-1.5">
             <TabsTrigger
               value="calendar"
@@ -96,11 +96,11 @@ const ShiftsPage = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="calendar" className="mt-6">
+          <TabsContent value="calendar" className="mt-6 min-w-0 overflow-x-hidden">
             <DoctorTabsContainer />
           </TabsContent>
 
-          <TabsContent value="queue" className="mt-6">
+          <TabsContent value="queue" className="mt-6 min-w-0 overflow-x-hidden">
             <QueuePanel />
           </TabsContent>
         </Tabs>

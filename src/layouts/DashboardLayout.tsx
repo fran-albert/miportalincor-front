@@ -34,15 +34,15 @@ export function DashboardLayout() {
     <>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="min-w-0 overflow-x-hidden">
           {isStaging() && (
             <div className="sticky top-0 z-50 bg-orange-500 text-white text-center py-1 px-4 text-sm font-medium ">
               🚧 ENTORNO DE STAGING - VERSIÓN DE PRUEBA
             </div>
           )}
-          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b px-4 bg-white shadow-sm">
+          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-4 border-b bg-white px-4 shadow-sm">
             <SidebarTrigger className="-ml-1" />
-            <div className="flex flex-1 items-center gap-4 justify-between">
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
               {/* Buscador - Solo visible para médicos, secretarias y administradores */}
               {showSearchBar && (
                 <Button
@@ -92,7 +92,7 @@ export function DashboardLayout() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
             <Outlet />
           </div>
         </SidebarInset>

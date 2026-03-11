@@ -2,9 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createOverturn,
   changeOverturnStatus,
-  deleteOverturn
+  deleteOverturn,
+  updateOverturn,
 } from "@/api/Overturns";
-import { CreateOverturnDto, OverturnStatus } from "@/types/Overturn/Overturn";
+import { CreateOverturnDto, OverturnStatus, UpdateOverturnDto } from "@/types/Overturn/Overturn";
 
 export const useOverturnMutations = () => {
   const queryClient = useQueryClient();
@@ -57,12 +58,29 @@ export const useOverturnMutations = () => {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: number; dto: UpdateOverturnDto }) =>
+      updateOverturn(id, dto),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['overturns'] });
+      queryClient.invalidateQueries({ queryKey: ['overturn', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+      queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      queryClient.invalidateQueries({ queryKey: ['queueStats'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+    },
+  });
+
   return {
     createOverturn: createMutation,
     changeStatus: changeStatusMutation,
     deleteOverturn: deleteMutation,
+    updateOverturn: updateMutation,
     isCreating: createMutation.isPending,
     isChangingStatus: changeStatusMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isUpdating: updateMutation.isPending,
   };
 };
