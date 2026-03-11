@@ -5,6 +5,7 @@ import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./BigCalendar.css";
 import TimeGrid from "react-big-calendar/lib/TimeGrid";
+import BaseMonthView from "react-big-calendar/lib/Month";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -254,6 +255,15 @@ const navigateCalendarDate = (currentDate: Date, currentView: View, direction: "
 
   return direction === "next" ? addMonths(currentDate, 1) : subMonths(currentDate, 1);
 };
+
+class TwoRowMonthView extends BaseMonthView {
+  override measureRowLimit = () => {
+    this.setState({
+      needLimitMeasure: false,
+      rowLimit: 2,
+    });
+  };
+}
 
 export const BigCalendar = ({
   className,
@@ -1509,7 +1519,7 @@ export const BigCalendar = ({
                     style={{ height: "100%" }}
                     toolbar={false}
                     views={{
-                      month: true,
+                      month: TwoRowMonthView,
                       week: true,
                       work_week: SmartWorkWeekView,
                       day: true,
