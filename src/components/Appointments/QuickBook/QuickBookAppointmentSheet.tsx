@@ -29,19 +29,22 @@ import {
 } from "@/components/Appointments/Forms/CreateAppointmentForm";
 import {
   useAppointmentMutations,
-  useAvailableSlotsRange,
   useCreateGuestAppointment,
 } from "@/hooks/Appointments";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
+import { useDoctorDashboard } from "@/hooks/Doctor/useDoctorDashboard";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { formatDoctorName } from "@/common/helpers/helpers";
 import {
   formatDateAR,
+  formatDateForCalendar,
   formatDateWithWeekdayAR,
   formatTimeAR,
   getTodayDateAR,
 } from "@/common/helpers/timezone";
+import { AppointmentStatus } from "@/types/Appointment/Appointment";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
+import { OverturnStatus } from "@/types/Overturn/Overturn";
 
 const INITIAL_RANGE_DAYS = 14;
 const RANGE_STEP_DAYS = 14;
@@ -59,6 +62,15 @@ interface QuickBookAppointmentSheetProps {
 }
 
 const toDateAtNoon = (date: string) => new Date(`${date}T12:00:00`);
+const CANCELLED_APPOINTMENT_STATUSES = [
+  AppointmentStatus.CANCELLED_BY_PATIENT,
+  AppointmentStatus.CANCELLED_BY_SECRETARY,
+];
+const CANCELLED_OVERTURN_STATUSES = [
+  OverturnStatus.CANCELLED_BY_PATIENT,
+  OverturnStatus.CANCELLED_BY_SECRETARY,
+];
+const normalizeHour = (hour: string) => hour.slice(0, 5);
 
 export const QuickBookAppointmentSheet = ({
   open,
@@ -80,10 +92,25 @@ export const QuickBookAppointmentSheet = ({
     [rangeDays, startDate]
   );
 
-  const { slots, isLoading, isFetching } = useAvailableSlotsRange({
-    doctorId: selectedDoctorId ?? 0,
-    startDate,
-    endDate,
+  const dateFrom = useMemo(() => formatDateForCalendar(startDate), [startDate]);
+  const dateTo = useMemo(() => formatDateForCalendar(endDate), [endDate]);
+
+  const {
+    availableSlots,
+    appointments,
+    overturns,
+    blockedSlots,
+    doctorAbsences,
+    holidays,
+    slotDuration,
+    isLoading,
+    isFetching,
+  } = useDoctorDashboard({
+    doctorId: selectedDoctorId,
+    dateFrom,
+    dateTo,
+    selectedWeekStart: dateFrom,
+    selectedWeekEnd: dateTo,
     enabled: open && !!selectedDoctorId,
   });
 
@@ -92,21 +119,107 @@ export const QuickBookAppointmentSheet = ({
     [doctors, selectedDoctorId]
   );
 
+  const holidayDatesSet = useMemo(
+    () => new Set(holidays.map((holiday) => holiday.date)),
+    [holidays]
+  );
+
+  const absenceDatesSet = useMemo(() => {
+    const dates = new Set<string>();
+    doctorAbsences.forEach((absence) => {
+      if (absence.startTime || absence.endTime) return;
+
+      const start = new Date(`${absence.startDate}T12:00:00`);
+      const end = new Date(`${absence.endDate}T12:00:00`);
+
+      for (let current = new Date(start); current <= end; current.setDate(current.getDate() + 1)) {
+        dates.add(formatDateForCalendar(current));
+      }
+    });
+
+    return dates;
+  }, [doctorAbsences]);
+
+  const occupiedSlotsSet = useMemo(() => {
+    const occupied = new Set<string>();
+
+    appointments
+      .filter((appointment) => !CANCELLED_APPOINTMENT_STATUSES.includes(appointment.status))
+      .forEach((appointment) => {
+        const baseHour = normalizeHour(appointment.hour);
+        occupied.add(`${appointment.date}-${baseHour}`);
+
+        if (appointment.durationMinutes && appointment.durationMinutes > slotDuration) {
+          const extraSlots = Math.ceil(appointment.durationMinutes / slotDuration) - 1;
+          const [hours, minutes] = baseHour.split(":").map(Number);
+          const baseMinutes = hours * 60 + minutes;
+
+          for (let index = 1; index <= extraSlots; index++) {
+            const next = baseMinutes + index * slotDuration;
+            const hh = String(Math.floor(next / 60)).padStart(2, "0");
+            const mm = String(next % 60).padStart(2, "0");
+            occupied.add(`${appointment.date}-${hh}:${mm}`);
+          }
+        }
+      });
+
+    overturns
+      .filter((overturn) => !CANCELLED_OVERTURN_STATUSES.includes(overturn.status))
+      .forEach((overturn) => {
+        occupied.add(`${overturn.date}-${normalizeHour(overturn.hour)}`);
+      });
+
+    blockedSlots.forEach((blockedSlot) => {
+      occupied.add(`${blockedSlot.date}-${normalizeHour(blockedSlot.hour)}`);
+    });
+
+    return occupied;
+  }, [appointments, blockedSlots, overturns, slotDuration]);
+
+  const filteredSlots = useMemo(() => {
+    const uniqueSlots = new Map<string, { date: string; hour: string }>();
+
+    availableSlots.forEach((slot) => {
+      const normalizedHour = normalizeHour(slot.hour);
+      const uniqueKey = `${slot.date}-${normalizedHour}`;
+      if (!uniqueSlots.has(uniqueKey)) {
+        uniqueSlots.set(uniqueKey, { date: slot.date, hour: normalizedHour });
+      }
+    });
+
+    return Array.from(uniqueSlots.values()).filter((slot) => {
+      const key = `${slot.date}-${slot.hour}`;
+      if (occupiedSlotsSet.has(key)) return false;
+      if (holidayDatesSet.has(slot.date)) return false;
+      if (absenceDatesSet.has(slot.date)) return false;
+
+      const blockedByPartialAbsence = doctorAbsences.some((absence) => {
+        if (!absence.startTime || !absence.endTime) return false;
+        if (slot.date < absence.startDate || slot.date > absence.endDate) return false;
+
+        const startTime = normalizeHour(absence.startTime);
+        const endTime = normalizeHour(absence.endTime);
+        return slot.hour >= startTime && slot.hour < endTime;
+      });
+
+      return !blockedByPartialAbsence;
+    });
+  }, [absenceDatesSet, availableSlots, doctorAbsences, holidayDatesSet, occupiedSlotsSet]);
+
   const groupedSlots = useMemo(() => {
     const groups = new Map<string, string[]>();
-    const sorted = [...slots].sort((a, b) =>
+    const sorted = [...filteredSlots].sort((a, b) =>
       `${a.date}-${a.hour}`.localeCompare(`${b.date}-${b.hour}`)
     );
 
     sorted.forEach((slot) => {
-      const normalizedHour = slot.hour.length === 5 ? `${slot.hour}:00` : slot.hour;
       const current = groups.get(slot.date) ?? [];
-      current.push(normalizedHour);
+      current.push(slot.hour.length === 5 ? `${slot.hour}:00` : slot.hour);
       groups.set(slot.date, current);
     });
 
     return Array.from(groups.entries()).map(([date, hours]) => ({ date, hours }));
-  }, [slots]);
+  }, [filteredSlots]);
 
   useEffect(() => {
     if (!open) {
