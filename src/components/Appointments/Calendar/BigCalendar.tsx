@@ -120,6 +120,31 @@ interface RescheduleCalendarTarget {
   patient?: { firstName: string; lastName: string } | null;
 }
 
+const splitCalendarGhostLabel = (
+  title: string,
+  fallbackTime?: string,
+): { time: string | null; label: string } => {
+  const normalizedFallback = fallbackTime?.slice(0, 5) ?? null;
+
+  if (normalizedFallback) {
+    const trimmedTitle = title.replace(/^\d{2}:\d{2}\s*-\s*/, "").trim();
+    return {
+      time: normalizedFallback,
+      label: trimmedTitle || title,
+    };
+  }
+
+  const match = title.match(/^(\d{2}:\d{2})\s*-\s*(.+)$/);
+  if (!match) {
+    return { time: null, label: title };
+  }
+
+  return {
+    time: match[1],
+    label: match[2].trim(),
+  };
+};
+
 interface BigCalendarProps {
   className?: string;
   /** ID del médico a mostrar (usado por DoctorTabs) */
@@ -332,7 +357,21 @@ export const BigCalendar = ({
       const showOverturnMarker = type === "overturn";
 
       if (type === "available" || type === "blocked" || type === "absence") {
-        return <span className="calendar-event-ghost">{event.title}</span>;
+        const ghostLabel = splitCalendarGhostLabel(
+          event.title,
+          event.resource.slotHour,
+        );
+
+        return (
+          <span className="calendar-event-ghost">
+            {ghostLabel.time && (
+              <span className="calendar-event-time calendar-event-time-ghost">
+                {ghostLabel.time}
+              </span>
+            )}
+            <span className="calendar-event-ghost-label">{ghostLabel.label}</span>
+          </span>
+        );
       }
 
       if (currentView === "day") {
@@ -341,7 +380,11 @@ export const BigCalendar = ({
         return (
           <div className="calendar-event-content">
             <p className="calendar-event-title">{event.title}</p>
-            <p className="calendar-event-meta">{`${hourDay} - ${endHourDay}`}</p>
+            <p className="calendar-event-meta">
+              <span className="calendar-event-time">{hourDay}</span>
+              <span className="calendar-event-meta-separator">-</span>
+              <span>{endHourDay}</span>
+            </p>
             {(patientDni || healthInsurance || consultationType) && (
               <p className="calendar-event-extra">
                 {[patientDni, affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance, consultationType]
@@ -376,7 +419,9 @@ export const BigCalendar = ({
         return (
           <div className="calendar-event-content calendar-event-content-month">
             <p className="calendar-event-title calendar-event-title-month">
-              {`${hourMonth} · ${event.title}`}
+              <span className="calendar-event-time">{hourMonth}</span>
+              <span className="calendar-event-meta-separator">·</span>
+              <span>{event.title}</span>
             </p>
           </div>
         );
@@ -387,7 +432,11 @@ export const BigCalendar = ({
       return (
         <div className="calendar-event-content">
           <p className="calendar-event-title">{event.title}</p>
-          <p className="calendar-event-meta">{`${hour} - ${endHour}`}</p>
+          <p className="calendar-event-meta">
+            <span className="calendar-event-time">{hour}</span>
+            <span className="calendar-event-meta-separator">-</span>
+            <span>{endHour}</span>
+          </p>
           <div className="calendar-event-markers">
             {showNewMarker && <span className="calendar-event-marker-badge is-highlight">NEW</span>}
             {showOverturnMarker && (
