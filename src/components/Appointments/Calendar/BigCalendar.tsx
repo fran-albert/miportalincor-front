@@ -44,7 +44,7 @@ import {
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap, AlertCircle } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap, AlertCircle } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -54,7 +54,6 @@ import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
 import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
 import { PrintAgendaView } from "./PrintAgendaView";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
 import { Doctor } from "@/types/Doctor/Doctor";
@@ -325,7 +324,6 @@ export const BigCalendar = ({
   const [monthOverflowDate, setMonthOverflowDate] = useState<Date | null>(null);
   const [monthOverflowEvents, setMonthOverflowEvents] = useState<CalendarEvent[]>([]);
   const [isMonthOverflowSheetOpen, setIsMonthOverflowSheetOpen] = useState(false);
-  const [legendsOpen, setLegendsOpen] = useState(!autoFilterForDoctor);
   const [optimisticAppointments, setOptimisticAppointments] = useState<
     AppointmentFullResponseDto[]
   >([]);
@@ -1475,86 +1473,6 @@ export const BigCalendar = ({
             </div>
           </div>
 
-          <Collapsible open={legendsOpen} onOpenChange={setLegendsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="google-calendar-legend-trigger">
-                {legendsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                {legendsOpen ? "Ocultar referencias" : "Mostrar referencias"}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="google-calendar-legend-groups">
-                <div className="google-calendar-legend-group">
-                  <p className="google-calendar-legend-heading">Estados y origen</p>
-                  <div className="google-calendar-legend-grid">
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip pending" />
-                      <span>Pendiente</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip web" />
-                      <span>Paciente web</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip waiting" />
-                      <span>En espera</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip attending" />
-                      <span>Atendiendo</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip completed" />
-                      <span>Completado</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip cancelled" />
-                      <span>Cancelado</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="google-calendar-legend-group">
-                  <p className="google-calendar-legend-heading">Marcas especiales</p>
-                  <div className="google-calendar-legend-grid">
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip overturn" />
-                      <span>Sobreturno</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip blocked" />
-                      <span>Bloqueado</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip holiday" />
-                      <span>Feriado</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-chip absence" />
-                      <span>Ausencia</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="google-calendar-legend-group">
-                  <p className="google-calendar-legend-heading">Marcadores del turno</p>
-                  <div className="google-calendar-legend-grid">
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-marker-badge is-highlight">NEW</span>
-                      <span>Paciente nuevo o invitado</span>
-                    </div>
-                    <div className="google-calendar-legend-item">
-                      <span className="google-calendar-legend-marker-icon is-highlight">
-                        <Zap className="h-3.5 w-3.5" />
-                      </span>
-                      <span>Sobreturno</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
           <div className="google-calendar-body">
             <div className={`google-calendar-scroll-shell is-${currentView}`}>
               <Card className="google-calendar-surface">
@@ -1637,6 +1555,76 @@ export const BigCalendar = ({
                   )}
                 </CardContent>
               </Card>
+            </div>
+          </div>
+
+          <div className="google-calendar-legend-groups">
+            <div className="google-calendar-legend-group">
+              <p className="google-calendar-legend-heading">Estados y origen</p>
+              <div className="google-calendar-legend-grid">
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip pending" />
+                  <span>Pendiente</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip web" />
+                  <span>Paciente web</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip waiting" />
+                  <span>En espera</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip attending" />
+                  <span>Atendiendo</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip completed" />
+                  <span>Completado</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip cancelled" />
+                  <span>Cancelado</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="google-calendar-legend-group">
+              <p className="google-calendar-legend-heading">Marcas especiales</p>
+              <div className="google-calendar-legend-grid">
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip overturn" />
+                  <span>Sobreturno</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip blocked" />
+                  <span>Bloqueado</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip holiday" />
+                  <span>Feriado</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-chip absence" />
+                  <span>Ausencia</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="google-calendar-legend-group">
+              <p className="google-calendar-legend-heading">Marcadores del turno</p>
+              <div className="google-calendar-legend-grid">
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-badge is-highlight">NEW</span>
+                  <span>Paciente nuevo o invitado</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-icon is-highlight">
+                    <Zap className="h-3.5 w-3.5" />
+                  </span>
+                  <span>Sobreturno</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

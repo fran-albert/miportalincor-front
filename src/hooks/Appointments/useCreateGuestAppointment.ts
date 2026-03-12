@@ -14,6 +14,8 @@ export const useCreateGuestAppointment = () => {
       queryClient.invalidateQueries({ queryKey: ['availableSlots'] });
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
     },
   });
 

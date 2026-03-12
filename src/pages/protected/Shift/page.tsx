@@ -7,18 +7,21 @@ import {
   CreateAppointmentDialog,
   CreateOverturnDialog,
 } from "@/components/Appointments";
+import { QuickBookAppointmentSheet } from "@/components/Appointments/QuickBook";
 import { DoctorTabsContainer } from "@/components/Appointments/DoctorTabs";
 import { QueuePanel } from "@/components/Queue";
 import { PageHeader } from "@/components/PageHeader";
 import { useQueryClient } from "@tanstack/react-query";
 import useUserRole from "@/hooks/useRoles";
 import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
+import { useState } from "react";
 import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
   const queryClient = useQueryClient();
   const { isDoctor } = useUserRole();
   const { canSelfManage, doctorId } = useCanSelfManageSchedule();
+  const [isQuickBookOpen, setIsQuickBookOpen] = useState(false);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -39,6 +42,14 @@ const ShiftsPage = () => {
     <div className="flex items-center gap-2 flex-wrap">
       {(!isDoctor || canSelfManage) && (
         <>
+          <Button
+            variant="outline"
+            onClick={() => setIsQuickBookOpen(true)}
+            className="shadow-sm hover:shadow-md transition-shadow"
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            Buscar turno libre
+          </Button>
           <CreateAppointmentDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
           <CreateOverturnDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
         </>
@@ -103,8 +114,15 @@ const ShiftsPage = () => {
           <TabsContent value="queue" className="mt-6 min-w-0 overflow-x-hidden">
             <QueuePanel />
           </TabsContent>
-        </Tabs>
+          </Tabs>
       )}
+
+      <QuickBookAppointmentSheet
+        open={isQuickBookOpen}
+        onOpenChange={setIsQuickBookOpen}
+        fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined}
+        allowGuestCreation={!isDoctor || canSelfManage}
+      />
     </div>
   );
 };
