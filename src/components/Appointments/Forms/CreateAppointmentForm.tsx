@@ -22,7 +22,7 @@ import {
   CreateAppointmentSchema,
   CreateAppointmentFormData
 } from "@/validators/Appointment/appointment.schema";
-import { formatDateForCalendar, getTodayDateAR } from "@/common/helpers/timezone";
+import { formatDateAR, formatDateForCalendar, formatTimeAR, getTodayDateAR } from "@/common/helpers/timezone";
 import { Loader2, UserPlus, X, Stethoscope } from "lucide-react";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { formatDoctorName } from "@/common/helpers/helpers";
@@ -94,6 +94,10 @@ interface CreateAppointmentFormProps {
   allowGuestCreation?: boolean;
   /** If provided, fixes the doctor and disables doctor select */
   fixedDoctorId?: number;
+  /** If provided, fixes the date and hides the date picker */
+  fixedDate?: string;
+  /** If provided, fixes the hour and hides the time slot picker */
+  fixedHour?: string;
   /** Ref to the form element for external submit */
   formRef?: React.Ref<HTMLFormElement>;
   /** If true, hides the internal submit button (rendered externally) */
@@ -115,6 +119,8 @@ export const CreateAppointmentForm = ({
   defaultHour,
   allowGuestCreation = true,
   fixedDoctorId,
+  fixedDate,
+  fixedHour,
   formRef,
   hideSubmitButton = false,
   onGuestModeChange,
@@ -204,6 +210,24 @@ export const CreateAppointmentForm = ({
       });
     }
   }, [fixedDoctor]);
+
+  useEffect(() => {
+    if (fixedDoctorId && form.getValues("doctorId") !== fixedDoctorId) {
+      form.setValue("doctorId", fixedDoctorId, { shouldValidate: true });
+    }
+  }, [fixedDoctorId, form]);
+
+  useEffect(() => {
+    if (fixedDate && form.getValues("date") !== fixedDate) {
+      form.setValue("date", fixedDate, { shouldValidate: true });
+    }
+  }, [fixedDate, form]);
+
+  useEffect(() => {
+    if (fixedHour && form.getValues("hour") !== fixedHour) {
+      form.setValue("hour", fixedHour, { shouldValidate: true });
+    }
+  }, [fixedHour, form]);
 
   // Hour auto-clear is handled by TimeSlotSelect when slots change
 
@@ -414,28 +438,37 @@ export const CreateAppointmentForm = ({
           />
         )}
 
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Fecha *</FormLabel>
-              <FormControl>
-                <DatePicker
-                  value={field.value ? new Date(field.value + 'T12:00:00') : undefined}
-                  onChange={(date: Date | undefined) => {
-                    if (date) {
-                      field.onChange(formatDateForCalendar(date));
-                      // Reset hour when date changes
-                      form.setValue("hour", "");
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {fixedDate ? (
+          <div className="space-y-2">
+            <FormLabel>Fecha</FormLabel>
+            <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+              {formatDateAR(fixedDate)}
+            </div>
+          </div>
+        ) : (
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fecha *</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value ? new Date(field.value + 'T12:00:00') : undefined}
+                    onChange={(date: Date | undefined) => {
+                      if (date) {
+                        field.onChange(formatDateForCalendar(date));
+                        // Reset hour when date changes
+                        form.setValue("hour", "");
+                      }
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
@@ -455,27 +488,36 @@ export const CreateAppointmentForm = ({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="hour"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Horario *</FormLabel>
-              <FormControl>
-                <TimeSlotSelect
-                  doctorId={watchDoctorId}
-                  date={watchDate}
-                  consultationTypeId={watchConsultationTypeId}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Seleccionar horario"
-                  disabled={!watchDoctorId || !watchDate}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {fixedHour ? (
+          <div className="space-y-2">
+            <FormLabel>Horario</FormLabel>
+            <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm">
+              {formatTimeAR(fixedHour)}
+            </div>
+          </div>
+        ) : (
+          <FormField
+            control={form.control}
+            name="hour"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Horario *</FormLabel>
+                <FormControl>
+                  <TimeSlotSelect
+                    doctorId={watchDoctorId}
+                    date={watchDate}
+                    consultationTypeId={watchConsultationTypeId}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Seleccionar horario"
+                    disabled={!watchDoctorId || !watchDate}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {!hideSubmitButton && (
           <div className="flex justify-end gap-2 pt-4">

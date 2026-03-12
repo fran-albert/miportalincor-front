@@ -1,11 +1,41 @@
 import moment from 'moment-timezone';
+import 'moment/locale/es';
 
 const ARGENTINA_TZ = 'America/Argentina/Buenos_Aires';
+const ARGENTINA_LOCALE = 'es-AR';
+const ISO_DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+moment.locale('es');
+
+const normalizeArgentinaDateInput = (value: string | Date): Date => {
+  if (value instanceof Date) return value;
+  if (ISO_DATE_ONLY_REGEX.test(value)) {
+    return new Date(`${value}T12:00:00`);
+  }
+  return new Date(value);
+};
+
+const formatArgentinaDateParts = (
+  date: string | Date,
+  options: Intl.DateTimeFormatOptions
+) =>
+  new Intl.DateTimeFormat(ARGENTINA_LOCALE, {
+    timeZone: ARGENTINA_TZ,
+    ...options,
+  }).formatToParts(normalizeArgentinaDateInput(date));
+
+const getArgentinaDatePart = (
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes
+) => parts.find((part) => part.type === type)?.value ?? '';
 
 /**
  * Convierte una fecha a la zona horaria de Argentina
  */
 export const toArgentinaTime = (date: string | Date): moment.Moment => {
+  if (typeof date === 'string' && ISO_DATE_ONLY_REGEX.test(date)) {
+    return moment.tz(date, 'YYYY-MM-DD', ARGENTINA_TZ);
+  }
   return moment(date).tz(ARGENTINA_TZ);
 };
 
@@ -56,7 +86,19 @@ export const formatDateTimeAR = (date: string | Date, time?: string): string => 
  */
 export const formatDateWithWeekdayAR = (date: string | Date): string => {
   if (!date) return '-';
-  return toArgentinaTime(date).locale('es').format('dddd, D [de] MMMM [de] YYYY');
+  const parts = formatArgentinaDateParts(date, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const weekday = getArgentinaDatePart(parts, 'weekday');
+  const day = getArgentinaDatePart(parts, 'day');
+  const month = getArgentinaDatePart(parts, 'month');
+  const year = getArgentinaDatePart(parts, 'year');
+
+  return `${weekday}, ${day} de ${month} de ${year}`;
 };
 
 /**
@@ -64,7 +106,17 @@ export const formatDateWithWeekdayAR = (date: string | Date): string => {
  */
 export const formatShortDateWithWeekdayAR = (date: string | Date): string => {
   if (!date) return '-';
-  return toArgentinaTime(date).locale('es').format('ddd DD/MM');
+  const parts = formatArgentinaDateParts(date, {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  });
+
+  const weekday = getArgentinaDatePart(parts, 'weekday').replace('.', '');
+  const day = getArgentinaDatePart(parts, 'day');
+  const month = getArgentinaDatePart(parts, 'month');
+
+  return `${weekday} ${day}/${month}`;
 };
 
 /**
@@ -123,6 +175,9 @@ export const getMinutesUntilAppointment = (date: string | Date, time: string): n
  * Formatea la fecha para mostrar en el calendario (YYYY-MM-DD)
  */
 export const formatDateForCalendar = (date: string | Date): string => {
+  if (typeof date === 'string' && ISO_DATE_ONLY_REGEX.test(date)) {
+    return date;
+  }
   return moment(date).format('YYYY-MM-DD');
 };
 
@@ -137,7 +192,15 @@ export const parseDateARToISO = (dateAR: string): string => {
  * Obtiene el mes y año formateado (ej: "Enero 2025")
  */
 export const getMonthYearAR = (date: string | Date): string => {
-  return toArgentinaTime(date).locale('es').format('MMMM YYYY');
+  const parts = formatArgentinaDateParts(date, {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const month = getArgentinaDatePart(parts, 'month');
+  const year = getArgentinaDatePart(parts, 'year');
+
+  return `${month} ${year}`;
 };
 
 /**
