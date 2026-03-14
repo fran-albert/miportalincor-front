@@ -66,6 +66,16 @@ import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescriptio
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
+import ProgramsPage from "./pages/protected/Programs";
+import ProgramDetailPage from "./pages/protected/Programs/Detail";
+import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
+import MyProgramsPage from "./pages/protected/My-Programs";
+import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
+import QrAttendancePage from "./pages/protected/Attendance/Qr";
+import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
+import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
+import PrescriptionCenterPage from "./pages/protected/Admin/Prescription-Center";
+import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 
 function App() {
   return (
@@ -203,7 +213,34 @@ function App() {
               </Private_Routes>
             }
           />
+          {/* Reportes de Recetas */}
+          <Route
+            path="/admin/reportes-recetas"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <PrescriptionReportsPage />
+              </Private_Routes>
+            }
+          />
 
+          <Route
+            path="/admin/reportes-turnos"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <AppointmentsReportsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Operadores de Recetas */}
+          <Route
+            path="/admin/centro-recetas"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <PrescriptionCenterPage />
+              </Private_Routes>
+            }
+          />
           {/* Feriados */}
           <Route
             path="/admin/feriados"
