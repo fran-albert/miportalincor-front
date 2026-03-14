@@ -66,15 +66,6 @@ import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescriptio
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
-import ProgramsPage from "./pages/protected/Programs";
-import ProgramDetailPage from "./pages/protected/Programs/Detail";
-import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
-import MyProgramsPage from "./pages/protected/My-Programs";
-import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
-import QrAttendancePage from "./pages/protected/Attendance/Qr";
-import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
-import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
-import PrescriptionCenterPage from "./pages/protected/Admin/Prescription-Center";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 
 function App() {
@@ -213,15 +204,6 @@ function App() {
               </Private_Routes>
             }
           />
-          {/* Reportes de Recetas */}
-          <Route
-            path="/admin/reportes-recetas"
-            element={
-              <Private_Routes allowedRoles={["Administrador"]}>
-                <PrescriptionReportsPage />
-              </Private_Routes>
-            }
-          />
 
           <Route
             path="/admin/reportes-turnos"
@@ -232,15 +214,9 @@ function App() {
             }
           />
 
-          {/* Operadores de Recetas */}
-          <Route
-            path="/admin/centro-recetas"
-            element={
-              <Private_Routes allowedRoles={["Administrador"]}>
-                <PrescriptionCenterPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/admin/reportes-recetas" element={<Navigate to="/inicio" replace />} />
+          <Route path="/admin/centro-recetas" element={<Navigate to="/inicio" replace />} />
+
           {/* Feriados */}
           <Route
             path="/admin/feriados"
@@ -316,6 +292,8 @@ function App() {
               </Private_Routes>
             }
           />
+
+          <Route path="/bandeja-recetas" element={<Navigate to="/inicio" replace />} />
 
           {/* Pacientes */}
           <Route
@@ -642,6 +620,19 @@ function App() {
               </Private_Routes>
             }
           />
+
+          <Route path="/programas" element={<Navigate to="/inicio" replace />} />
+          <Route path="/programas/:programId" element={<Navigate to="/inicio" replace />} />
+          <Route
+            path="/programas/:programId/inscripciones/:enrollmentId"
+            element={<Navigate to="/inicio" replace />}
+          />
+          <Route path="/mis-programas" element={<Navigate to="/inicio" replace />} />
+          <Route
+            path="/mis-programas/:enrollmentId"
+            element={<Navigate to="/inicio" replace />}
+          />
+          <Route path="/asistencia/qr/:qrToken" element={<Navigate to="/inicio" replace />} />
 
           {/* Obras Sociales */}
           <Route
