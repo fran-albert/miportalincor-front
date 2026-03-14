@@ -22,11 +22,13 @@ import { Doctor } from "@/types/Doctor/Doctor";
 
 interface DoctorSelectProps {
   value?: number;
-  onValueChange: (doctorId: number) => void;
+  onValueChange: (doctorId: number | undefined) => void;
   onDoctorSelect?: (doctor: Doctor) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  allowClear?: boolean;
+  clearLabel?: string;
 }
 
 export const DoctorSelect = ({
@@ -35,7 +37,9 @@ export const DoctorSelect = ({
   onDoctorSelect,
   placeholder = "Seleccionar médico",
   disabled = false,
-  className
+  className,
+  allowClear = false,
+  clearLabel = "Todos los médicos",
 }: DoctorSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -64,6 +68,11 @@ export const DoctorSelect = ({
     onDoctorSelect?.(doctor);
     setOpen(false);
   }, [onDoctorSelect, onValueChange]);
+
+  const handleClear = useCallback(() => {
+    onValueChange(undefined);
+    setOpen(false);
+  }, [onValueChange]);
 
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />;
@@ -98,6 +107,19 @@ export const DoctorSelect = ({
             onValueChange={setSearch}
           />
           <CommandList>
+            {allowClear && (
+              <CommandGroup heading="Selección">
+                <CommandItem value="all-doctors" onSelect={handleClear}>
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === undefined ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span className="text-muted-foreground">{clearLabel}</span>
+                </CommandItem>
+              </CommandGroup>
+            )}
             {filteredDoctors.length === 0 ? (
               <CommandEmpty>No se encontraron médicos</CommandEmpty>
             ) : (

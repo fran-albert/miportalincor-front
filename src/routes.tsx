@@ -75,6 +75,7 @@ import QrAttendancePage from "./pages/protected/Attendance/Qr";
 import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
 import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
 import PrescriptionCenterPage from "./pages/protected/Admin/Prescription-Center";
+import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 
 function App() {
   return (
@@ -219,6 +220,15 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Administrador"]}>
                 <PrescriptionReportsPage />
+              </Private_Routes>
+            }
+          />
+
+          <Route
+            path="/admin/reportes-turnos"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <AppointmentsReportsPage />
               </Private_Routes>
             }
           />

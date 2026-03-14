@@ -1,0 +1,1 @@
+export { AppointmentsManagementDashboardContainer } from "./AppointmentsManagementDashboardContainer";

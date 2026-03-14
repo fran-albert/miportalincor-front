@@ -14,3 +14,14 @@ export interface ConsultationType {
 }
 
 export type ConsultationTypeResponseDto = ConsultationType;
+
+export interface CreateConsultationTypeDto {
+  name: string;
+  description?: string;
+  defaultDurationMinutes: number;
+  color?: string;
+  isActive?: boolean;
+  displayOrder?: number;
+}
+
+export type UpdateConsultationTypeDto = Partial<CreateConsultationTypeDto>;

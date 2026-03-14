@@ -183,11 +183,10 @@ const reportsItems = [
     allowedRoles: PERMISSIONS.PRESCRIPTION_REPORTS,
   },
   {
-    title: "Estadísticas",
-    url: "#",
+    title: "Reportes de Turnos",
+    url: "/admin/reportes-turnos",
     icon: TrendingUp,
     allowedRoles: PERMISSIONS.STATISTICS,
-    comingSoon: true,
   },
   {
     title: "Actividad",

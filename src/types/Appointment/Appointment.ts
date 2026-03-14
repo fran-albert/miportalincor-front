@@ -26,12 +26,14 @@ export enum AppointmentOrigin {
   WEB_GUEST = 'WEB_GUEST',       // Invitado desde turnos.incor.ui (DNI no existe en BD)
   WEB_PATIENT = 'WEB_PATIENT',   // Paciente registrado (desde su cuenta o web pública con DNI existente)
   SECRETARY = 'SECRETARY',       // Secretaría desde miportalincor-front
+  DOCTOR = 'DOCTOR',             // Médico desde miportalincor-front (autogestión)
 }
 
 export const AppointmentOriginLabels: Record<AppointmentOrigin, string> = {
   [AppointmentOrigin.WEB_GUEST]: 'Invitado (web pública)',
   [AppointmentOrigin.WEB_PATIENT]: 'Paciente (web)',
   [AppointmentOrigin.SECRETARY]: 'Secretaría',
+  [AppointmentOrigin.DOCTOR]: 'Médico (autogestión)',
 };
 
 export const AppointmentStatusLabels: Record<AppointmentStatus, string> = {

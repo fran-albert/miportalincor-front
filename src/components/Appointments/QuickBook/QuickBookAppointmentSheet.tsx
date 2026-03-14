@@ -229,7 +229,7 @@ export const QuickBookAppointmentSheet = ({
     }
   }, [fixedDoctorId, open]);
 
-  const handleDoctorChange = (doctorId: number) => {
+  const handleDoctorChange = (doctorId: number | undefined) => {
     setSelectedDoctorId(doctorId);
     setRangeDays(INITIAL_RANGE_DAYS);
     setSelectedSlot(null);
