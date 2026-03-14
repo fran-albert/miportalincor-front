@@ -29,15 +29,12 @@ import {
   Settings,
   Activity,
   TrendingUp,
-  FileBarChart,
   ShieldCheck,
   UserCog,
   Clock,
   FileText,
   Pill,
   CreditCard,
-  GraduationCap,
-  ClipboardCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,7 +50,6 @@ import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
-import { useOperatorPrescriptionNotifications } from "@/hooks/Prescription-Request/useOperatorPrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
 const navigationItems = [
@@ -149,25 +145,6 @@ const navigationItems = [
     strictRoles: true,
   },
   {
-    title: "Bandeja de Recetas",
-    url: "/bandeja-recetas",
-    icon: FileText,
-    allowedRoles: PERMISSIONS.OPERATOR_PRESCRIPTION_REQUESTS,
-  },
-  {
-    title: "Programas",
-    url: "/programas",
-    icon: GraduationCap,
-    allowedRoles: PERMISSIONS.PROGRAMS,
-  },
-  {
-    title: "Mis Programas",
-    url: "/mis-programas",
-    icon: ClipboardCheck,
-    allowedRoles: PERMISSIONS.MY_PROGRAMS,
-    strictRoles: true,
-  },
-  {
     title: "Incor Laboral",
     url: "/incor-laboral",
     icon: Briefcase,
@@ -176,12 +153,6 @@ const navigationItems = [
 ];
 
 const reportsItems = [
-  {
-    title: "Reportes de Recetas",
-    url: "/admin/reportes-recetas",
-    icon: FileBarChart,
-    allowedRoles: PERMISSIONS.PRESCRIPTION_REPORTS,
-  },
   {
     title: "Reportes de Turnos",
     url: "/admin/reportes-turnos",
@@ -241,12 +212,6 @@ const systemItems = [
     allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
   },
   {
-    title: "Operadores Recetas",
-    url: "/admin/centro-recetas",
-    icon: ClipboardCheck,
-    allowedRoles: PERMISSIONS.PRESCRIPTION_CENTER,
-  },
-  {
     title: "Feriados",
     url: "/admin/feriados",
     icon: CalendarDays,
@@ -262,7 +227,6 @@ export function AppSidebar() {
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
   const isDoctor = userRoles.includes("Medico");
-  const isOperator = userRoles.includes("Secretaria") || userRoles.includes("Administrador");
 
   // Check if doctor has GREEN_CARD service enabled
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
@@ -271,12 +235,6 @@ export function AppSidebar() {
   const { pendingCount } = usePrescriptionNotifications({
     enabled: isDoctor && hasGreenCardService,
     showToasts: false, // Toasts are handled in DashboardLayout
-  });
-
-  // Get pending prescription count for operators
-  const { pendingCount: operatorPendingCount } = useOperatorPrescriptionNotifications({
-    enabled: isOperator,
-    showToasts: false,
   });
 
   // Filtrar items del menú según roles del usuario
@@ -341,13 +299,9 @@ export function AppSidebar() {
                   // Check if this is the prescription requests item for doctors
                   const isPrescriptionRequestsItem =
                     item.url === "/solicitudes-recetas" && isDoctor;
-                  const isOperatorPrescriptionItem =
-                    item.url === "/bandeja-recetas" && isOperator;
                   const badgeCount = isPrescriptionRequestsItem
                     ? pendingCount
-                    : isOperatorPrescriptionItem
-                      ? operatorPendingCount
-                      : 0;
+                    : 0;
                   const showBadge = badgeCount > 0;
 
                   return (

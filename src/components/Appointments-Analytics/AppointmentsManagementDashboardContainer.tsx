@@ -2,9 +2,9 @@ import { useState } from "react";
 import { format, subMonths } from "date-fns";
 import { BarChart3, FilterX } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { DateRangeFilter } from "@/components/Prescription-Reports/DateRangeFilter";
 import { DoctorSelect } from "@/components/Appointments/Select/DoctorSelect";
 import { ConsultationTypeSelect } from "@/components/Appointments/Select/ConsultationTypeSelect";
+import { DateRangeFilter } from "./DateRangeFilter";
 import { OriginSelect } from "./OriginSelect";
 import { ManagementSummaryCards } from "./ManagementSummaryCards";
 import { ConsultationTypeVolumeChart } from "./ConsultationTypeVolumeChart";
@@ -80,7 +80,7 @@ export function AppointmentsManagementDashboardContainer() {
           <DateRangeFilter
             from={dateFrom}
             to={dateTo}
-            onRangeChange={(nextFrom, nextTo) => {
+            onRangeChange={(nextFrom: string, nextTo: string) => {
               setDateFrom(nextFrom);
               setDateTo(nextTo);
             }}

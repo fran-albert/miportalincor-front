@@ -66,15 +66,6 @@ import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescriptio
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
-import ProgramsPage from "./pages/protected/Programs";
-import ProgramDetailPage from "./pages/protected/Programs/Detail";
-import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
-import MyProgramsPage from "./pages/protected/My-Programs";
-import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
-import QrAttendancePage from "./pages/protected/Attendance/Qr";
-import OperatorPrescriptionRequestsPage from "./pages/protected/Operator-Prescription-Requests/page";
-import PrescriptionReportsPage from "./pages/protected/Admin/Prescription-Reports";
-import PrescriptionCenterPage from "./pages/protected/Admin/Prescription-Center";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 
 function App() {
@@ -214,16 +205,6 @@ function App() {
             }
           />
 
-          {/* Reportes de Recetas */}
-          <Route
-            path="/admin/reportes-recetas"
-            element={
-              <Private_Routes allowedRoles={["Administrador"]}>
-                <PrescriptionReportsPage />
-              </Private_Routes>
-            }
-          />
-
           <Route
             path="/admin/reportes-turnos"
             element={
@@ -233,15 +214,8 @@ function App() {
             }
           />
 
-          {/* Operadores de Recetas */}
-          <Route
-            path="/admin/centro-recetas"
-            element={
-              <Private_Routes allowedRoles={["Administrador"]}>
-                <PrescriptionCenterPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/admin/reportes-recetas" element={<Navigate to="/inicio" replace />} />
+          <Route path="/admin/centro-recetas" element={<Navigate to="/inicio" replace />} />
 
           {/* Feriados */}
           <Route
@@ -319,15 +293,7 @@ function App() {
             }
           />
 
-          {/* Bandeja de Recetas - Operador */}
-          <Route
-            path="/bandeja-recetas"
-            element={
-              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
-                <OperatorPrescriptionRequestsPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/bandeja-recetas" element={<Navigate to="/inicio" replace />} />
 
           {/* Pacientes */}
           <Route
@@ -655,59 +621,18 @@ function App() {
             }
           />
 
-          {/* Programas */}
-          <Route
-            path="/programas"
-            element={
-              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
-                <ProgramsPage />
-              </Private_Routes>
-            }
-          />
-          <Route
-            path="/programas/:programId"
-            element={
-              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
-                <ProgramDetailPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/programas" element={<Navigate to="/inicio" replace />} />
+          <Route path="/programas/:programId" element={<Navigate to="/inicio" replace />} />
           <Route
             path="/programas/:programId/inscripciones/:enrollmentId"
-            element={
-              <Private_Routes allowedRoles={["Medico", "Administrador", "Profesor"]}>
-                <EnrollmentDetailPage />
-              </Private_Routes>
-            }
+            element={<Navigate to="/inicio" replace />}
           />
-
-          {/* Mis Programas (Paciente) */}
-          <Route
-            path="/mis-programas"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyProgramsPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/mis-programas" element={<Navigate to="/inicio" replace />} />
           <Route
             path="/mis-programas/:enrollmentId"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyEnrollmentDetailPage />
-              </Private_Routes>
-            }
+            element={<Navigate to="/inicio" replace />}
           />
-
-          {/* QR Attendance */}
-          <Route
-            path="/asistencia/qr/:qrToken"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <QrAttendancePage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/asistencia/qr/:qrToken" element={<Navigate to="/inicio" replace />} />
 
           {/* Obras Sociales */}
           <Route
