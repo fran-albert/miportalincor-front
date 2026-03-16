@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import {
+  getAppointmentConsultationTypeSummary,
+  getAppointmentConsultationTypes,
+} from "@/common/helpers/appointment-consultation-types";
 
 interface AppointmentCardProps {
   appointment: AppointmentFullResponseDto;
@@ -74,6 +78,10 @@ export const AppointmentCard = ({
     return appointment.patient?.userName || '';
   };
 
+  const consultationTypes = getAppointmentConsultationTypes(appointment);
+  const consultationTypeSummary = getAppointmentConsultationTypeSummary(appointment);
+  const primaryConsultationType = consultationTypes[0] ?? appointment.consultationType;
+
   if (compact) {
     return (
       <div
@@ -104,16 +112,16 @@ export const AppointmentCard = ({
               INVITADO
             </Badge>
           )}
-          {appointment.consultationType && (
+          {consultationTypeSummary && (
             <Badge
               className="border text-xs"
               style={{
-                backgroundColor: appointment.consultationType.color ? `${appointment.consultationType.color}20` : undefined,
-                color: appointment.consultationType.color || undefined,
-                borderColor: appointment.consultationType.color || undefined,
+                backgroundColor: primaryConsultationType?.color ? `${primaryConsultationType.color}20` : undefined,
+                color: primaryConsultationType?.color || undefined,
+                borderColor: primaryConsultationType?.color || undefined,
               }}
             >
-              {appointment.consultationType.name}
+              {consultationTypeSummary}
             </Badge>
           )}
           <StatusBadge status={appointment.status} size="sm" />
@@ -177,18 +185,19 @@ export const AppointmentCard = ({
                   INVITADO
                 </Badge>
               )}
-              {appointment.consultationType && (
+              {consultationTypes.map((consultationType) => (
                 <Badge
+                  key={consultationType.id}
                   className="border"
                   style={{
-                    backgroundColor: appointment.consultationType.color ? `${appointment.consultationType.color}20` : undefined,
-                    color: appointment.consultationType.color || undefined,
-                    borderColor: appointment.consultationType.color || undefined,
+                    backgroundColor: consultationType.color ? `${consultationType.color}20` : undefined,
+                    color: consultationType.color || undefined,
+                    borderColor: consultationType.color || undefined,
                   }}
                 >
-                  {appointment.consultationType.name}
+                  {consultationType.name}
                 </Badge>
-              )}
+              ))}
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">

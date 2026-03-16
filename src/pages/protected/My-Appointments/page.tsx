@@ -28,6 +28,7 @@ import {
 } from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR, isPastDateAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import { getAppointmentConsultationTypes } from "@/common/helpers/appointment-consultation-types";
 import {
   Calendar,
   Clock,
@@ -123,6 +124,22 @@ const MyAppointmentsPage = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <StatusBadge status={appointment.status} />
+              {getAppointmentConsultationTypes(appointment).map((consultationType) => (
+                <Badge
+                  key={consultationType.id}
+                  variant="outline"
+                  className="text-xs"
+                  style={{
+                    borderColor: consultationType.color || undefined,
+                    color: consultationType.color || undefined,
+                    backgroundColor: consultationType.color
+                      ? `${consultationType.color}12`
+                      : undefined,
+                  }}
+                >
+                  {consultationType.name}
+                </Badge>
+              ))}
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
