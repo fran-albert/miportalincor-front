@@ -17,7 +17,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
 import { TimeSlotSelect } from "../Select/TimeSlotSelect";
-import { ConsultationTypeSelect } from "../Select/ConsultationTypeSelect";
+import { ConsultationTypesMultiSelect } from "../Select/ConsultationTypesMultiSelect";
 import {
   CreateAppointmentSchema,
   CreateAppointmentFormData
@@ -40,6 +40,7 @@ export interface GuestAppointmentData {
   guestPhone: string;
   guestEmail?: string;
   consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export interface AppointmentCreatePreviewMeta {
@@ -164,14 +165,18 @@ export const CreateAppointmentForm = ({
       patientId: initialPatientId,
       date: defaultDate || getTodayDateAR(),
       hour: defaultHour || "",
-      consultationTypeId: undefined,
+      consultationTypeIds: [],
     },
   });
 
   const watchDoctorId = form.watch("doctorId");
   const watchDate = form.watch("date");
   const watchHour = form.watch("hour");
-  const watchConsultationTypeId = form.watch("consultationTypeId");
+  const watchConsultationTypeIds = form.watch("consultationTypeIds") ?? [];
+  const slotConsultationTypeId =
+    watchConsultationTypeIds.length === 1
+      ? watchConsultationTypeIds[0]
+      : undefined;
 
   // Setear el patientId cuando hay un defaultPatient (fix para react-hook-form)
   useEffect(() => {
@@ -265,7 +270,9 @@ export const CreateAppointmentForm = ({
     const doctorId = form.getValues("doctorId");
     const date = form.getValues("date");
     const hour = form.getValues("hour");
-    const consultationTypeId = form.getValues("consultationTypeId");
+    const consultationTypeIds = form.getValues("consultationTypeIds") ?? [];
+    const consultationTypeId =
+      consultationTypeIds.length > 0 ? consultationTypeIds[0] : undefined;
 
     if (!doctorId || !date || !hour) return;
 
@@ -279,6 +286,7 @@ export const CreateAppointmentForm = ({
       guestPhone,
       guestEmail: guestEmail || undefined,
       consultationTypeId,
+      consultationTypeIds,
     }, {
       doctor: selectedDoctorSummary,
       isGuest: true,
@@ -472,15 +480,15 @@ export const CreateAppointmentForm = ({
 
         <FormField
           control={form.control}
-          name="consultationTypeId"
+          name="consultationTypeIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo de Consulta</FormLabel>
+              <FormLabel>Tipos de Consulta</FormLabel>
               <FormControl>
-                <ConsultationTypeSelect
+                <ConsultationTypesMultiSelect
                   value={field.value}
                   onValueChange={field.onChange}
-                  placeholder="Seleccionar tipo (opcional)"
+                  placeholder="Seleccionar tipos (opcional)"
                 />
               </FormControl>
               <FormMessage />
@@ -506,7 +514,7 @@ export const CreateAppointmentForm = ({
                   <TimeSlotSelect
                     doctorId={watchDoctorId}
                     date={watchDate}
-                    consultationTypeId={watchConsultationTypeId}
+                    consultationTypeId={slotConsultationTypeId}
                     value={field.value}
                     onValueChange={field.onChange}
                     placeholder="Seleccionar horario"

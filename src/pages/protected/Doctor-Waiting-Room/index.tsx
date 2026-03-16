@@ -66,6 +66,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
+import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
 
 // ============================================
 // HELPERS
@@ -98,7 +99,7 @@ const getTypeColor = (type: AgendaItem['type']): string => {
 const getConsultationTypeName = (item: AgendaItem): string | null => {
   if (item.type !== 'appointment') return null;
   const apt = item.rawData as AppointmentFullResponseDto;
-  return apt.consultationType?.name ?? null;
+  return getAppointmentConsultationTypeSummary(apt);
 };
 
 

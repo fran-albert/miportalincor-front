@@ -18,6 +18,7 @@ import {
 } from "@/types/Appointment/Appointment";
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { toast } from "sonner";
+import { getAppointmentConsultationTypeSummary } from "@/common/helpers/appointment-consultation-types";
 
 /** Escape HTML entities to prevent XSS in generated print HTML */
 const escapeHtml = (str: string): string =>
@@ -102,7 +103,7 @@ export const PrintAgendaView = ({
         patientDni: isGuest ? apt.guestDocumentNumber : apt.patient?.userName,
         healthInsurance: isGuest ? undefined : apt.patient?.healthInsuranceName,
         affiliationNumber: isGuest ? undefined : apt.patient?.affiliationNumber,
-        consultationType: apt.consultationType?.name,
+        consultationType: getAppointmentConsultationTypeSummary(apt) ?? undefined,
         status: apt.status,
         statusLabel: AppointmentStatusLabels[apt.status],
         type: "appointment",
