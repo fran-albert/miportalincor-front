@@ -121,7 +121,9 @@ export interface AppointmentResponseDto {
   guestEmail?: string;
   // Consultation type
   consultationTypeId?: number | null;
+  consultationTypeIds?: number[];
   consultationType?: ConsultationTypeBasicDto | null;
+  consultationTypes?: ConsultationTypeBasicDto[];
   // Duration
   durationMinutes?: number | null;
 }
@@ -137,6 +139,10 @@ export interface AppointmentDetailedDto {
   status: AppointmentStatus;
   origin?: AppointmentOrigin | null;
   isGuest?: boolean | number;
+  consultationTypeId?: number | null;
+  consultationTypeIds?: number[];
+  consultationType?: ConsultationTypeBasicDto | null;
+  consultationTypes?: ConsultationTypeBasicDto[];
   patient?: PatientBasicDto | null;
   doctor?: DoctorBasicDto | null;
 }
@@ -162,11 +168,14 @@ export interface CreateAppointmentDto {
   date: string;
   hour: string;
   consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export interface UpdateAppointmentDto {
   date?: string;
   hour?: string;
+  consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export interface RescheduleAppointmentDto {

@@ -44,7 +44,11 @@ import {
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap, AlertCircle } from "lucide-react";
+import {
+  getAppointmentConsultationTypeSummary,
+  getAppointmentConsultationTypes,
+} from "@/common/helpers/appointment-consultation-types";
+import { AlertCircle, CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, FileText, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -105,6 +109,7 @@ interface CalendarEvent {
     healthInsurance?: string;
     affiliationNumber?: string;
     consultationType?: string;
+    consultationTypes?: AppointmentFullResponseDto["consultationTypes"];
   };
 }
 
@@ -787,7 +792,8 @@ export const BigCalendar = ({
           patientDni,
           healthInsurance: apt.patient?.healthInsuranceName,
           affiliationNumber: apt.patient?.affiliationNumber,
-          consultationType: apt.consultationType?.name,
+          consultationType: getAppointmentConsultationTypeSummary(apt) ?? undefined,
+          consultationTypes: getAppointmentConsultationTypes(apt),
         },
       };
     });
@@ -1335,6 +1341,9 @@ export const BigCalendar = ({
   const selectedHealthInsurance = selectedEventData?.patient?.healthInsuranceName;
   const selectedAffiliationNumber = selectedEventData?.patient?.affiliationNumber;
   const selectedConsultationTypeBadge = getConsultationTypeBadgeLabel(selectedEvent?.resource.consultationType);
+  const selectedConsultationTypes = getAppointmentConsultationTypes(
+    selectedAppointmentData
+  );
   const selectedOrigin = selectedEvent?.resource.type === "overturn"
     ? "Sobreturno"
     : selectedAppointmentData?.origin
@@ -1695,6 +1704,33 @@ export const BigCalendar = ({
                 </div>
               </div>
 
+              {selectedConsultationTypes.length > 0 && (
+                <div className="google-calendar-detail-row">
+                  <FileText className="h-4 w-4" />
+                  <div>
+                    <p className="google-calendar-detail-primary">Estudios / tipos</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedConsultationTypes.map((consultationType) => (
+                        <Badge
+                          key={consultationType.id}
+                          variant="outline"
+                          className="google-calendar-origin-pill consultation-type"
+                          style={{
+                            borderColor: consultationType.color || undefined,
+                            color: consultationType.color || undefined,
+                            backgroundColor: consultationType.color
+                              ? `${consultationType.color}12`
+                              : undefined,
+                          }}
+                        >
+                          {consultationType.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="google-calendar-detail-row">
                 <User className="h-4 w-4" />
                 <div>
@@ -1807,7 +1843,10 @@ export const BigCalendar = ({
                           doctorId: appt.doctorId,
                           date: appt.date,
                           hour: appt.hour,
-                          consultationTypeId: appt.consultationTypeId,
+                          consultationTypeId:
+                            appt.consultationTypeIds?.length === 1
+                              ? appt.consultationTypeIds[0]
+                              : appt.consultationTypeId,
                           doctor: appt.doctor ?? null,
                           patient: appt.patient ?? null,
                         });
