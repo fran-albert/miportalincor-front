@@ -2219,7 +2219,7 @@ export const BigCalendar = ({
       <PrintAgendaView
         open={isPrintDialogOpen}
         onOpenChange={setIsPrintDialogOpen}
-        appointments={appointments}
+        appointments={calendarAppointments}
         overturns={overturns}
         currentDate={currentDate}
         currentView={currentView}
