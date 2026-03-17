@@ -275,6 +275,13 @@ export const CreateAppointmentForm = ({
       consultationTypeIds.length > 0 ? consultationTypeIds[0] : undefined;
 
     if (!doctorId || !date || !hour) return;
+    if (consultationTypeIds.length === 0) {
+      form.setError("consultationTypeIds", {
+        type: "manual",
+        message: "Debe seleccionar un tipo de turno",
+      });
+      return;
+    }
 
     await onGuestSubmit({
       doctorId,
@@ -483,12 +490,17 @@ export const CreateAppointmentForm = ({
           name="consultationTypeIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipos de Consulta</FormLabel>
+              <FormLabel>Tipos de Consulta *</FormLabel>
               <FormControl>
                 <ConsultationTypesMultiSelect
                   value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Seleccionar tipos (opcional)"
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    if (value.length > 0) {
+                      form.clearErrors("consultationTypeIds");
+                    }
+                  }}
+                  placeholder="Seleccionar tipos"
                 />
               </FormControl>
               <FormMessage />
