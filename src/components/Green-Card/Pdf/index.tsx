@@ -2,6 +2,7 @@ import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { styles } from "./styles";
 import { GreenCard } from "@/types/Green-Card/GreenCard";
 import { formatDni } from "@/common/helpers/helpers";
+import { compareGreenCardItems } from "@/common/helpers/greenCardSchedule";
 
 interface GreenCardPdfDocumentProps {
   greenCard: GreenCard;
@@ -13,29 +14,6 @@ interface GreenCardPdfDocumentProps {
 const capitalize = (text: string) =>
   text.replace(/\b\w/g, (char) => char.toUpperCase());
 
-// Orden de horarios para ordenar la tabla
-const SCHEDULE_ORDER = [
-  "Ayuno",
-  "Desayuno",
-  "Media mañana",
-  "Almuerzo",
-  "Merienda",
-  "Cena",
-  "Antes de dormir",
-];
-
-const getScheduleOrder = (schedule: string) => {
-  const index = SCHEDULE_ORDER.findIndex(
-    (s) => s.toLowerCase() === schedule.toLowerCase()
-  );
-  if (index !== -1) return index;
-  // For time-based schedules, sort by time
-  if (/^\d{2}:\d{2}$/.test(schedule)) {
-    return 100 + parseInt(schedule.split(":")[0]);
-  }
-  return 200;
-};
-
 export function GreenCardPdfDocument({
   greenCard,
   generatedDate,
@@ -43,7 +21,7 @@ export function GreenCardPdfDocument({
 }: GreenCardPdfDocumentProps) {
   const activeItems = greenCard.items
     .filter((item) => item.isActive)
-    .sort((a, b) => getScheduleOrder(a.schedule) - getScheduleOrder(b.schedule));
+    .sort(compareGreenCardItems);
 
   const suspendedItems = greenCard.items.filter((item) => !item.isActive);
   const hasItems = greenCard.items.length > 0;
