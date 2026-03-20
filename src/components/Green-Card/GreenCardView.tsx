@@ -40,6 +40,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  compareGreenCardItems,
+  sortGreenCardSchedules,
+} from "@/common/helpers/greenCardSchedule";
 
 interface GreenCardViewProps {
   greenCard: GreenCard;
@@ -130,25 +134,6 @@ export function GreenCardView({
     setIsPrescriptionModalOpen(true);
   };
 
-  // Group items by schedule
-  const scheduleOrder = [
-    "Ayuno",
-    "Desayuno",
-    "08:00",
-    "10:00",
-    "12:00",
-    "Almuerzo",
-    "14:00",
-    "16:00",
-    "18:00",
-    "Merienda",
-    "20:00",
-    "Cena",
-    "22:00",
-    "Antes de dormir",
-    "Otros",
-  ];
-
   const groupedItems = greenCard.items.reduce((acc, item) => {
     const schedule = item.schedule || "Otros";
     if (!acc[schedule]) {
@@ -159,14 +144,7 @@ export function GreenCardView({
   }, {} as Record<string, GreenCardItem[]>);
 
   // Sort schedules
-  const sortedSchedules = Object.keys(groupedItems).sort((a, b) => {
-    const indexA = scheduleOrder.indexOf(a);
-    const indexB = scheduleOrder.indexOf(b);
-    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
+  const sortedSchedules = sortGreenCardSchedules(Object.keys(groupedItems));
 
   const activeMedications = greenCard.items.filter((item) => item.isActive);
   const suspendedMedications = greenCard.items.filter((item) => !item.isActive);
@@ -214,9 +192,9 @@ export function GreenCardView({
                   </TableHeader>
                   <TableBody>
                     {sortedSchedules.map((schedule) => {
-                      const scheduleItems = groupedItems[schedule]?.filter(
-                        (item) => item.isActive
-                      ) || [];
+                      const scheduleItems = (groupedItems[schedule] || [])
+                        .filter((item) => item.isActive)
+                        .sort(compareGreenCardItems);
                       if (scheduleItems.length === 0) return null;
 
                       return scheduleItems.map((item, idx) => (

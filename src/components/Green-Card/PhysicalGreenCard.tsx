@@ -7,6 +7,7 @@ import { FileText, CalendarClock } from "lucide-react";
 import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { compareGreenCardItems } from "@/common/helpers/greenCardSchedule";
 
 interface PhysicalGreenCardProps {
   greenCard: GreenCard;
@@ -21,34 +22,6 @@ interface PhysicalGreenCardProps {
   /** Select all eligible items at once */
   onSelectAll?: () => void;
 }
-
-// Map text schedules to approximate hour for chronological ordering
-const SCHEDULE_HOURS: Record<string, number> = {
-  "ayuno": 6,
-  "desayuno": 8,
-  "media mañana": 10,
-  "almuerzo": 13,
-  "merienda": 17,
-  "cena": 21,
-  "antes de dormir": 23,
-};
-
-const getScheduleOrder = (schedule: string) => {
-  const lowerSchedule = schedule.toLowerCase();
-
-  // Check if it's a text-based schedule
-  if (SCHEDULE_HOURS[lowerSchedule] !== undefined) {
-    return SCHEDULE_HOURS[lowerSchedule] * 60; // Convert to minutes for finer sorting
-  }
-
-  // For time-based schedules (HH:MM), convert to minutes
-  if (/^\d{2}:\d{2}$/.test(schedule)) {
-    const [hours, minutes] = schedule.split(":").map(Number);
-    return hours * 60 + minutes;
-  }
-
-  return 9999; // Other schedules at the end
-};
 
 const formatMonthYear = (dateStr: string) => {
   try {
@@ -70,7 +43,7 @@ export function PhysicalGreenCard({
 }: PhysicalGreenCardProps) {
   const activeItems = greenCard.items
     .filter((item) => item.isActive)
-    .sort((a, b) => getScheduleOrder(a.schedule) - getScheduleOrder(b.schedule));
+    .sort(compareGreenCardItems);
 
   const suspendedItems = greenCard.items.filter((item) => !item.isActive);
 
