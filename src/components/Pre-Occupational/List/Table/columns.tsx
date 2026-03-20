@@ -11,6 +11,17 @@ import { useGetSignedUrlByCollaboratorIdAndFileName } from "@/hooks/Study/useSig
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import DeleteMedicalEvaluation from "../Delete";
 import { CollaboratorMedicalEvaluation as CollaboratorMedicalEvaluationType } from "@/types/Collaborator-Medical-Evaluation/Collaborator-Medical-Evaluation";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+const formatExamCreatedAt = (createdAt?: string): string => {
+  if (!createdAt) return "-";
+
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return format(date, "dd/MM/yyyy", { locale: es });
+};
 
 interface MedicalEvaluationActionsCellProps {
   collaborator: Collaborator;
@@ -91,6 +102,15 @@ export const getColumns = (
           <p className="text-sm font-medium">
             {row.original.medicalEvaluation.evaluationType.name}
           </p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "medicalEvaluation.createdAt",
+      header: "Fecha de creación del examen",
+      cell: ({ row }) => (
+        <div className="text-sm">
+          {formatExamCreatedAt(row.original.medicalEvaluation.createdAt)}
         </div>
       ),
     },
