@@ -14,6 +14,7 @@ import { DataValue } from "@/types/Data-Value/Data-Value";
 import { GetUrlsResponseDto } from "@/api/Study/Collaborator/get-all-studies-images-urls.collaborators.action";
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action";
 import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { useMedicalEvaluationReportVersions } from "@/hooks/Medical-Evaluation-Report-Version/useMedicalEvaluationReportVersions";
 import { useUploadStudyWithProgress } from "@/hooks/Study/useUploadStudyWithProgress";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
@@ -37,6 +38,10 @@ export default function PreOccupationalPreviewComponent({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showError } = useToastContext();
+  const { data: reportVersions } = useMedicalEvaluationReportVersions({
+    auth: true,
+    medicalEvaluationId: medicalEvaluation.id,
+  });
 
   const { upload, cancel } = useUploadStudyWithProgress({
     collaboratorId: collaborator.id,
@@ -52,6 +57,9 @@ export default function PreOccupationalPreviewComponent({
 
       await queryClient.refetchQueries({
         queryKey: ["collaborator-medical-evaluation", { id: collaborator.id }],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["medical-evaluation-report-versions", medicalEvaluation.id],
       });
 
       // Descargar el PDF
@@ -224,7 +232,11 @@ export default function PreOccupationalPreviewComponent({
           disabled={isGenerating}
         >
           <Save className="mr-2 h-4 w-4" />
-          {isGenerating ? "Generando..." : "Guardar"}
+          {isGenerating
+            ? "Generando..."
+            : reportVersions?.currentVersion
+              ? "Guardar y generar nueva versión"
+              : "Guardar y generar informe"}
         </Button>
       </div>
     </div>

@@ -13,6 +13,8 @@ import { useGetAllUrlsByCollaboratorAndMedicalEvaluation } from "@/hooks/Study/u
 import { useDataValuesByMedicalEvaluationId } from "@/hooks/Data-Values/useDataValues";
 import LoadingAnimation from "@/components/Loading/loading";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
+import { useMedicalEvaluationReportVersions } from "@/hooks/Medical-Evaluation-Report-Version/useMedicalEvaluationReportVersions";
+import ReportVersioningCard from "../Report-Versioning";
 
 interface Props {
   slug: string;
@@ -50,6 +52,15 @@ export default function PreOccupationalCards({
     id: medicalEvaluation.id,
   });
 
+  const {
+    data: reportVersions,
+    isLoading: isLoadingReportVersions,
+    isError: isErrorReportVersions,
+  } = useMedicalEvaluationReportVersions({
+    auth: true,
+    medicalEvaluationId: medicalEvaluation.id,
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -62,7 +73,7 @@ export default function PreOccupationalCards({
   if (isLoadingUrls || isLoadingValues || isLoadingFields) {
     return <LoadingAnimation />;
   }
-  if (isErrorUrls || isErrorValues) {
+  if (isErrorUrls || isErrorValues || isErrorReportVersions) {
     return <div>Error cargando datos</div>;
   }
 
@@ -107,6 +118,13 @@ export default function PreOccupationalCards({
           </CardContent>
         </Card>
         <CollaboratorInformationCard collaborator={collaborator} />
+        <ReportVersioningCard
+          collaborator={collaborator}
+          medicalEvaluationId={medicalEvaluation.id}
+          previewHref={`/incor-laboral/colaboradores/${slug}/examen/${medicalEvaluation.id}/previsualizar-informe`}
+          reportVersions={reportVersions}
+          isLoading={isLoadingReportVersions}
+        />
         <NavigationTabs
           isEditing={isEditing}
           dataValues={dataValues}
