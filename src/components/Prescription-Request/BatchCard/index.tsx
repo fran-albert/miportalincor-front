@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
+import { parseGreenCardDescription } from "../utils/greenCardDescription";
 
 interface BatchPrescriptionRequestCardProps {
   batchId: string;
@@ -90,32 +91,7 @@ export default function BatchPrescriptionRequestCard({
           {/* Medications list */}
           <div className="space-y-1 bg-gray-50 rounded-lg p-3">
             {requests.map((req) => {
-              // Parse description: "Solicitud de receta desde Cartón Verde: nombre - dosis (horario) - Cant: N"
-              const cleaned = req.description
-                .replace("Solicitud de receta desde Carton Verde: ", "")
-                .replace("Solicitud de receta desde Cartón Verde: ", "");
-
-              // Extract parts
-              const cantMatch = cleaned.match(/\s*-\s*Cant:\s*(.+)$/);
-              const withoutCant = cantMatch
-                ? cleaned.replace(cantMatch[0], "")
-                : cleaned;
-
-              const scheduleMatch = withoutCant.match(/\s*\(([^)]+)\)\s*$/);
-              const withoutSchedule = scheduleMatch
-                ? withoutCant.replace(scheduleMatch[0], "")
-                : withoutCant;
-
-              // "nombre - dosis" → split by last " - "
-              const lastDash = withoutSchedule.lastIndexOf(" - ");
-              const name =
-                lastDash > 0
-                  ? withoutSchedule.substring(0, lastDash).trim()
-                  : withoutSchedule.trim();
-              const dosage =
-                lastDash > 0
-                  ? withoutSchedule.substring(lastDash + 3).trim()
-                  : "";
+              const parsed = parseGreenCardDescription(req.description);
 
               return (
                 <div
@@ -123,13 +99,13 @@ export default function BatchPrescriptionRequestCard({
                   className="text-sm text-gray-700 flex items-center gap-2"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
-                  <span className="font-medium text-gray-900">{name}</span>
-                  {dosage && (
-                    <span className="text-gray-500">- {dosage}</span>
+                  <span className="font-medium text-gray-900">{parsed.name}</span>
+                  {parsed.dosage && (
+                    <span className="text-gray-500">- {parsed.dosage}</span>
                   )}
-                  {cantMatch && (
+                  {parsed.quantity && (
                     <span className="text-gray-500 text-xs">
-                      (Cant: {cantMatch[1].trim()})
+                      (Cant: {parsed.quantity})
                     </span>
                   )}
                 </div>

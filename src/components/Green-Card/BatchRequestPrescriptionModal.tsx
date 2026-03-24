@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,10 +8,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Loader2,
   FileText,
+  User,
   CalendarDays,
   Clock,
   AlertTriangle,
@@ -19,6 +30,7 @@ import {
 } from "lucide-react";
 import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
+import { useAvailableDoctorsForPrescriptions } from "@/hooks/Doctor-Settings/useDoctorSettings";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface BatchRequestPrescriptionModalProps {
@@ -27,12 +39,6 @@ interface BatchRequestPrescriptionModalProps {
   greenCard: GreenCard;
   selectedItemIds: string[];
   onSuccess?: () => void;
-}
-
-interface GroupedItems {
-  doctorUserId: string;
-  doctorName: string;
-  items: GreenCardItem[];
 }
 
 interface SkippedItem {
@@ -49,6 +55,11 @@ export function BatchRequestPrescriptionModal({
 }: BatchRequestPrescriptionModalProps) {
   const { batchRequestPrescriptionMutation } = useGreenCardMutations();
   const { showSuccess, showError } = useToastContext();
+  const { data: availableDoctors, isLoading: isLoadingDoctors } =
+    useAvailableDoctorsForPrescriptions(isOpen);
+
+  const [selectedDoctorUserId, setSelectedDoctorUserId] = useState<string>("");
+  const [patientMessage, setPatientMessage] = useState<string>("");
 
   // Separate selected items into sendable and skipped
   const selectedItems = greenCard.items.filter((item) =>
@@ -71,33 +82,22 @@ export function BatchRequestPrescriptionModal({
     }
   }
 
-  // Group sendable items by doctor
-  const groupedByDoctor: GroupedItems[] = [];
-  const doctorMap = new Map<string, GreenCardItem[]>();
-
-  for (const item of sendableItems) {
-    const existing = doctorMap.get(item.doctorUserId) || [];
-    existing.push(item);
-    doctorMap.set(item.doctorUserId, existing);
-  }
-
-  for (const [doctorUserId, items] of doctorMap) {
-    const doctor = items[0].doctor;
-    const prefix = doctor?.gender === "Femenino" ? "Dra." : "Dr.";
-    const doctorName = doctor
-      ? `${prefix} ${doctor.firstName} ${doctor.lastName}`
-      : "Medico";
-
-    groupedByDoctor.push({ doctorUserId, doctorName, items });
-  }
+  // Reset selection when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedDoctorUserId("");
+      setPatientMessage("");
+    }
+  }, [isOpen]);
 
   const handleBatchRequest = async () => {
     try {
-      // Only send the IDs of sendable items
       const sendableIds = sendableItems.map((item) => item.id);
       const result = await batchRequestPrescriptionMutation.mutateAsync({
         cardId: greenCard.id,
         itemIds: sendableIds,
+        doctorUserId: selectedDoctorUserId || undefined,
+        ...(patientMessage.trim() && { patientMessage: patientMessage.trim() }),
       });
 
       const totalCreated = result.batches.reduce(
@@ -132,47 +132,106 @@ export function BatchRequestPrescriptionModal({
           </DialogTitle>
           <DialogDescription>
             {sendableItems.length > 0
-              ? `Se enviaran ${sendableItems.length} solicitud(es) agrupadas por medico`
+              ? `Se enviarán ${sendableItems.length} solicitud(es) al médico seleccionado`
               : "No hay medicamentos disponibles para solicitar"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto">
-          {/* Sendable items grouped by doctor */}
-          {groupedByDoctor.length > 0 && (
-            <>
-              {groupedByDoctor.map((group) => (
-                <div
-                  key={group.doctorUserId}
-                  className="rounded-lg border border-blue-200 bg-blue-50 p-4"
-                >
-                  <div className="font-medium text-blue-800 mb-2">
-                    {group.doctorName}{" "}
-                    <span className="text-sm font-normal text-blue-600">
-                      ({group.items.length} medicamento
-                      {group.items.length !== 1 ? "s" : ""})
+          {/* Doctor Selector */}
+          {sendableItems.length > 0 && (
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-1">
+                <User className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-500 mb-1">
+                  Médico que recibe las solicitudes
+                </div>
+                {isLoadingDoctors ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Cargando médicos...
+                  </div>
+                ) : !availableDoctors || availableDoctors.length === 0 ? (
+                  <div className="text-sm text-red-600">
+                    No hay médicos disponibles para recetas
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedDoctorUserId}
+                    onValueChange={setSelectedDoctorUserId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Seleccioná un médico" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableDoctors.map((doctor) => {
+                        const prefix =
+                          doctor.gender === "Femenino" ? "Dra." : "Dr.";
+                        return (
+                          <SelectItem key={doctor.userId} value={doctor.userId}>
+                            {prefix} {doctor.firstName} {doctor.lastName}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Sendable items list */}
+          {sendableItems.length > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="font-medium text-blue-800 mb-2">
+                Medicamentos a solicitar{" "}
+                <span className="text-sm font-normal text-blue-600">
+                  ({sendableItems.length})
+                </span>
+              </div>
+              <div className="space-y-1">
+                {sendableItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-gray-900 font-medium flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                      {item.medicationName}
+                    </span>
+                    <span className="text-gray-600">
+                      {item.dosage}
+                      {item.quantity ? ` - Cant: ${item.quantity}` : ""}
                     </span>
                   </div>
-                  <div className="space-y-1">
-                    {group.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-gray-900 font-medium flex items-center gap-1.5">
-                          <CheckCircle className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                          {item.medicationName}
-                        </span>
-                        <span className="text-gray-600">
-                          {item.dosage}
-                          {item.quantity ? ` - Cant: ${item.quantity}` : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sendableItems.length > 0 && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+              <Label
+                htmlFor="green-card-batch-prescription-message"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Mensaje para el médico
+                <span className="ml-1 font-normal text-slate-500">(opcional)</span>
+              </Label>
+              <Textarea
+                id="green-card-batch-prescription-message"
+                value={patientMessage}
+                onChange={(event) => setPatientMessage(event.target.value)}
+                placeholder="Podés dejar una nota general para acompañar estas solicitudes."
+                maxLength={500}
+                className="min-h-[96px] resize-none bg-white"
+              />
+              <p className="text-xs text-slate-500">
+                Si completás este mensaje, se agregará a todas las recetas enviadas en este lote.
+              </p>
+            </div>
           )}
 
           {/* Skipped items with reasons */}
@@ -229,7 +288,7 @@ export function BatchRequestPrescriptionModal({
           </Button>
           <Button
             onClick={handleBatchRequest}
-            disabled={isLoading || sendableItems.length === 0}
+            disabled={isLoading || sendableItems.length === 0 || !selectedDoctorUserId || isLoadingDoctors}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

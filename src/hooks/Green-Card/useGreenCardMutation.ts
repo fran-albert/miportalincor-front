@@ -104,8 +104,17 @@ export const useGreenCardMutations = () => {
   });
 
   const requestPrescriptionMutation = useMutation({
-    mutationFn: ({ cardId, itemId }: { cardId: string; itemId: string }) =>
-      requestPrescription(cardId, itemId),
+    mutationFn: ({
+      cardId,
+      itemId,
+      doctorUserId,
+      patientMessage,
+    }: {
+      cardId: string;
+      itemId: string;
+      doctorUserId?: string;
+      patientMessage?: string;
+    }) => requestPrescription(cardId, itemId, doctorUserId, patientMessage),
     onSuccess: () => {
       // Invalidate prescription requests to update the history
       queryClient.invalidateQueries({ queryKey: ["prescriptionRequests"] });
@@ -117,8 +126,18 @@ export const useGreenCardMutations = () => {
   });
 
   const batchRequestPrescriptionMutation = useMutation({
-    mutationFn: ({ cardId, itemIds }: { cardId: string; itemIds: string[] }) =>
-      batchRequestPrescription(cardId, itemIds),
+    mutationFn: ({
+      cardId,
+      itemIds,
+      doctorUserId,
+      patientMessage,
+    }: {
+      cardId: string;
+      itemIds: string[];
+      doctorUserId?: string;
+      patientMessage?: string;
+    }) =>
+      batchRequestPrescription(cardId, itemIds, doctorUserId, patientMessage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prescriptionRequests"] });
       queryClient.invalidateQueries({ queryKey: ["my-prescription-requests"] });

@@ -7,7 +7,15 @@ import { apiIncorHC } from "@/services/axiosConfig";
  */
 export const requestPrescription = async (
   cardId: string,
-  itemId: string
+  itemId: string,
+  doctorUserId?: string,
+  patientMessage?: string
 ): Promise<void> => {
-  await apiIncorHC.post(`/green-cards/${cardId}/items/${itemId}/request-prescription`);
+  await apiIncorHC.post(
+    `/green-cards/${cardId}/items/${itemId}/request-prescription`,
+    {
+      ...(doctorUserId && { doctorUserId }),
+      ...(patientMessage?.trim() && { patientMessage: patientMessage.trim() }),
+    }
+  );
 };
