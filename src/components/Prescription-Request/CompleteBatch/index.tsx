@@ -22,6 +22,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { parseGreenCardDescription } from "../utils/greenCardDescription";
 
 interface UploadedFile {
   file: File;
@@ -255,29 +256,7 @@ export default function CompleteBatchModal({
             </Label>
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
               {requests.map((req) => {
-                const cleaned = req.description
-                  .replace("Solicitud de receta desde Carton Verde: ", "")
-                  .replace("Solicitud de receta desde Cartón Verde: ", "");
-
-                const cantMatch = cleaned.match(/\s*-\s*Cant:\s*(.+)$/);
-                const withoutCant = cantMatch
-                  ? cleaned.replace(cantMatch[0], "")
-                  : cleaned;
-
-                const scheduleMatch = withoutCant.match(/\s*\(([^)]+)\)\s*$/);
-                const withoutSchedule = scheduleMatch
-                  ? withoutCant.replace(scheduleMatch[0], "")
-                  : withoutCant;
-
-                const lastDash = withoutSchedule.lastIndexOf(" - ");
-                const name =
-                  lastDash > 0
-                    ? withoutSchedule.substring(0, lastDash).trim()
-                    : withoutSchedule.trim();
-                const dosage =
-                  lastDash > 0
-                    ? withoutSchedule.substring(lastDash + 3).trim()
-                    : "";
+                const parsed = parseGreenCardDescription(req.description);
 
                 return (
                   <div
@@ -285,13 +264,13 @@ export default function CompleteBatchModal({
                     className="text-sm text-gray-700 flex items-center gap-2"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
-                    <span className="font-medium text-gray-900">{name}</span>
-                    {dosage && (
-                      <span className="text-gray-500">- {dosage}</span>
+                    <span className="font-medium text-gray-900">{parsed.name}</span>
+                    {parsed.dosage && (
+                      <span className="text-gray-500">- {parsed.dosage}</span>
                     )}
-                    {cantMatch && (
+                    {parsed.quantity && (
                       <span className="text-gray-500 text-xs">
-                        (Cant: {cantMatch[1].trim()})
+                        (Cant: {parsed.quantity})
                       </span>
                     )}
                   </div>

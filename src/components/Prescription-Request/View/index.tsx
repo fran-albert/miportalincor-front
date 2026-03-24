@@ -16,6 +16,7 @@ import {
   Layers,
 } from "lucide-react";
 import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
+import { parseGreenCardDescription } from "../utils/greenCardDescription";
 
 interface ViewPrescriptionRequestModalProps {
   isOpen: boolean;
@@ -26,36 +27,6 @@ interface ViewPrescriptionRequestModalProps {
   userRole: "patient" | "doctor" | "operator";
   onCancel?: (request: PrescriptionRequest) => void;
   isLoading?: boolean;
-}
-
-/** Parse green card description into structured parts */
-function parseGreenCardDescription(description: string) {
-  const cleaned = description
-    .replace("Solicitud de receta desde Carton Verde: ", "")
-    .replace("Solicitud de receta desde Cartón Verde: ", "");
-
-  const cantMatch = cleaned.match(/\s*-\s*Cant:\s*(.+)$/);
-  const withoutCant = cantMatch ? cleaned.replace(cantMatch[0], "") : cleaned;
-
-  const scheduleMatch = withoutCant.match(/\s*\(([^)]+)\)\s*$/);
-  const withoutSchedule = scheduleMatch
-    ? withoutCant.replace(scheduleMatch[0], "")
-    : withoutCant;
-
-  const lastDash = withoutSchedule.lastIndexOf(" - ");
-  const name =
-    lastDash > 0
-      ? withoutSchedule.substring(0, lastDash).trim()
-      : withoutSchedule.trim();
-  const dosage =
-    lastDash > 0 ? withoutSchedule.substring(lastDash + 3).trim() : "";
-
-  return {
-    name,
-    dosage,
-    schedule: scheduleMatch?.[1] || "",
-    quantity: cantMatch?.[1]?.trim() || "",
-  };
 }
 
 type CheckupUrgency = "overdue" | "upcoming" | "ontrack";
@@ -109,6 +80,19 @@ export default function ViewPrescriptionRequestModal({
     request.patient?.healthInsuranceName ||
     request.patient?.healthPlans?.[0]?.healthInsurance?.name;
   const patientAffiliationNumber = request.patient?.affiliationNumber;
+  const parsedRequestDescription = parseGreenCardDescription(request.description);
+  const batchPatientMessages = batchRequests
+    ? Array.from(
+        new Set(
+          batchRequests
+            .map(
+              (batchRequest) =>
+                parseGreenCardDescription(batchRequest.description).patientMessage
+            )
+            .filter((message): message is string => Boolean(message))
+        )
+      )
+    : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -276,9 +260,8 @@ export default function ViewPrescriptionRequestModal({
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   {batchRequests.map((req) => {
-                    const isGreenCard = req.description.includes("Cartón Verde") || req.description.includes("Carton Verde");
-                    if (isGreenCard) {
-                      const parsed = parseGreenCardDescription(req.description);
+                    const parsed = parseGreenCardDescription(req.description);
+                    if (parsed.isGreenCard) {
                       return (
                         <div
                           key={req.id}
@@ -315,6 +298,20 @@ export default function ViewPrescriptionRequestModal({
                     );
                   })}
                 </div>
+                {batchPatientMessages.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                      Mensaje del paciente
+                    </p>
+                    <div className="mt-2 space-y-2">
+                      {batchPatientMessages.map((message) => (
+                        <p key={message} className="text-sm text-amber-900 whitespace-pre-wrap">
+                          {message}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -323,9 +320,27 @@ export default function ViewPrescriptionRequestModal({
                   Descripcion de la Solicitud
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {request.description}
-                  </p>
+                  {parsedRequestDescription.isGreenCard ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {parsedRequestDescription.rawBaseDescription}
+                      </p>
+                      {parsedRequestDescription.patientMessage && (
+                        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                            Mensaje del paciente
+                          </p>
+                          <p className="mt-1 text-sm text-amber-900 whitespace-pre-wrap">
+                            {parsedRequestDescription.patientMessage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {request.description}
+                    </p>
+                  )}
                 </div>
               </>
             )}
