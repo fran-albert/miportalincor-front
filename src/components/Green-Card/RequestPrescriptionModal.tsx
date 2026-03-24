@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, FileText, User, CalendarDays, Clock } from "lucide-react";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
@@ -41,11 +43,13 @@ export function RequestPrescriptionModal({
     useAvailableDoctorsForPrescriptions(isOpen);
 
   const [selectedDoctorUserId, setSelectedDoctorUserId] = useState<string>("");
+  const [patientMessage, setPatientMessage] = useState("");
 
   // Pre-select the doctor who added the medication only on first open
   useEffect(() => {
     if (!isOpen) {
       setSelectedDoctorUserId("");
+      setPatientMessage("");
       return;
     }
     if (availableDoctors && item.doctorUserId && !selectedDoctorUserId) {
@@ -76,6 +80,7 @@ export function RequestPrescriptionModal({
         cardId: greenCardId,
         itemId: item.id,
         doctorUserId: selectedDoctorUserId || undefined,
+        ...(patientMessage.trim() && { patientMessage: patientMessage.trim() }),
       });
       showSuccess(
         "Solicitud enviada correctamente",
@@ -211,6 +216,27 @@ export function RequestPrescriptionModal({
                 </>
               )}
             </div>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <Label
+              htmlFor="green-card-prescription-message"
+              className="text-sm font-semibold text-slate-700"
+            >
+              Mensaje para el médico
+              <span className="ml-1 font-normal text-slate-500">(opcional)</span>
+            </Label>
+            <Textarea
+              id="green-card-prescription-message"
+              value={patientMessage}
+              onChange={(event) => setPatientMessage(event.target.value)}
+              placeholder="Podés dejar una nota u observación para acompañar la solicitud."
+              maxLength={500}
+              className="min-h-[96px] resize-none bg-white"
+            />
+            <p className="text-xs text-slate-500">
+              Este mensaje se enviará junto con la solicitud de receta.
+            </p>
           </div>
 
           {/* Friday Notice */}

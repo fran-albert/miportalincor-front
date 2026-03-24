@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Loader2,
   FileText,
@@ -57,6 +59,7 @@ export function BatchRequestPrescriptionModal({
     useAvailableDoctorsForPrescriptions(isOpen);
 
   const [selectedDoctorUserId, setSelectedDoctorUserId] = useState<string>("");
+  const [patientMessage, setPatientMessage] = useState<string>("");
 
   // Separate selected items into sendable and skipped
   const selectedItems = greenCard.items.filter((item) =>
@@ -83,6 +86,7 @@ export function BatchRequestPrescriptionModal({
   useEffect(() => {
     if (!isOpen) {
       setSelectedDoctorUserId("");
+      setPatientMessage("");
     }
   }, [isOpen]);
 
@@ -93,6 +97,7 @@ export function BatchRequestPrescriptionModal({
         cardId: greenCard.id,
         itemIds: sendableIds,
         doctorUserId: selectedDoctorUserId || undefined,
+        ...(patientMessage.trim() && { patientMessage: patientMessage.trim() }),
       });
 
       const totalCreated = result.batches.reduce(
@@ -203,6 +208,29 @@ export function BatchRequestPrescriptionModal({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {sendableItems.length > 0 && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+              <Label
+                htmlFor="green-card-batch-prescription-message"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Mensaje para el médico
+                <span className="ml-1 font-normal text-slate-500">(opcional)</span>
+              </Label>
+              <Textarea
+                id="green-card-batch-prescription-message"
+                value={patientMessage}
+                onChange={(event) => setPatientMessage(event.target.value)}
+                placeholder="Podés dejar una nota general para acompañar estas solicitudes."
+                maxLength={500}
+                className="min-h-[96px] resize-none bg-white"
+              />
+              <p className="text-xs text-slate-500">
+                Si completás este mensaje, se agregará a todas las recetas enviadas en este lote.
+              </p>
             </div>
           )}
 

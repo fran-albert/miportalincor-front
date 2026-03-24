@@ -27,6 +27,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { useAppointmentMutations, useFirstAvailableDate } from "@/hooks/Appointments";
 import { useOverturnMutations } from "@/hooks/Overturns";
@@ -89,6 +94,8 @@ const messages = {
   noEventsInRange: "No hay turnos en este rango.",
   showMore: (total: number) => `+ ${total} más`,
 };
+const MAX_AVAILABILITY_PREVIEW_HOURS = 6;
+const normalizeHour = (hour: string) => hour.slice(0, 5);
 
 // Event type for the calendar
 interface CalendarEvent {
@@ -465,12 +472,12 @@ export const BigCalendar = ({
     return EventComponent;
   }, [currentView]);
 
-  const CalendarColumnHeader = useMemo(() => {
-    const HeaderComponent = ({ date }: { date: Date }) => {
-      const isCurrentDay = isToday(date);
+  const CalendarColumnHeader = ({ date }: { date: Date }) => {
+    const isCurrentDay = isToday(date);
 
-      return (
-        <div className="google-calendar-column-header">
+    return (
+      <div className="google-calendar-column-header">
+        <div className="google-calendar-column-header-main">
           <span className="google-calendar-column-weekday">
             {capitalizeCalendarLabel(format(date, "EEE", { locale: es }))}
           </span>
@@ -480,22 +487,21 @@ export const BigCalendar = ({
             {format(date, "d")}
           </span>
         </div>
-      );
-    };
-    HeaderComponent.displayName = "CalendarColumnHeader";
-    return HeaderComponent;
-  }, []);
+        {renderAvailabilityIndicator(date, "column")}
+      </div>
+    );
+  };
 
-  const CalendarMonthDateHeader = useMemo(() => {
-    const HeaderComponent = ({
-      date,
-      label,
-      onDrillDown,
-    }: {
-      date: Date;
-      label: string;
-      onDrillDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-    }) => (
+  const CalendarMonthDateHeader = ({
+    date,
+    label,
+    onDrillDown,
+  }: {
+    date: Date;
+    label: string;
+    onDrillDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  }) => (
+    <div className="google-calendar-month-date-stack">
       <button
         type="button"
         className={`google-calendar-month-date ${isToday(date) ? "is-today" : ""}`}
@@ -503,10 +509,9 @@ export const BigCalendar = ({
       >
         {label}
       </button>
-    );
-    HeaderComponent.displayName = "CalendarMonthDateHeader";
-    return HeaderComponent;
-  }, []);
+      {renderAvailabilityIndicator(date, "month")}
+    </div>
+  );
 
   const { data: doctorProfileIndividual } = useMyDoctorProfile({
     enabled: autoFilterForDoctor,
@@ -868,49 +873,189 @@ export const BigCalendar = ({
     return set;
   }, [calendarAppointments, overturns, blockedSlots, CANCELLED_STATUSES, slotDuration]);
 
-  // Available slot events (filtered by occupied, holidays, absences)
-  const availableSlotEvents = useMemo<CalendarEvent[]>(() => {
+  const availableHoursByDate = useMemo(() => {
     const uniqueSlots = new Map<string, (typeof availableSlots)[number]>();
 
     availableSlots.forEach((slot) => {
-      const uniqueKey = `${slot.date}-${slot.hour}`;
+      const normalizedSlotHour = normalizeHour(slot.hour);
+      const uniqueKey = `${slot.date}-${normalizedSlotHour}`;
       if (!uniqueSlots.has(uniqueKey)) {
-        uniqueSlots.set(uniqueKey, slot);
+        uniqueSlots.set(uniqueKey, {
+          ...slot,
+          hour: normalizedSlotHour,
+        });
       }
     });
 
-    const filtered = Array.from(uniqueSlots.values()).filter((slot) => {
-      const key = `${slot.date}-${slot.hour}`;
-      if (occupiedSlotsSet.has(key) || holidayDatesSet.has(slot.date)) return false;
-      if (absenceDatesSet.has(slot.date)) return false;
-      const isBlockedByPartialAbsence = doctorAbsences.some((absence) => {
-        if (!absence.startTime || !absence.endTime) return false;
-        if (slot.date < absence.startDate || slot.date > absence.endDate) return false;
-        return slot.hour >= absence.startTime!.slice(0, 5) && slot.hour < absence.endTime!.slice(0, 5);
+    const groupedByDate = new Map<string, string[]>();
+
+    Array.from(uniqueSlots.values())
+      .filter((slot) => {
+        const key = `${slot.date}-${slot.hour}`;
+        if (occupiedSlotsSet.has(key) || holidayDatesSet.has(slot.date)) return false;
+        if (absenceDatesSet.has(slot.date)) return false;
+        const isBlockedByPartialAbsence = doctorAbsences.some((absence) => {
+          if (!absence.startTime || !absence.endTime) return false;
+          if (slot.date < absence.startDate || slot.date > absence.endDate) return false;
+          return (
+            slot.hour >= normalizeHour(absence.startTime) &&
+            slot.hour < normalizeHour(absence.endTime)
+          );
+        });
+        return !isBlockedByPartialAbsence;
+      })
+      .sort((left, right) =>
+        `${left.date}-${left.hour}`.localeCompare(`${right.date}-${right.hour}`)
+      )
+      .forEach((slot) => {
+        const current = groupedByDate.get(slot.date) ?? [];
+        current.push(slot.hour);
+        groupedByDate.set(slot.date, current);
       });
-      return !isBlockedByPartialAbsence;
-    });
 
-    return filtered.map((slot) => {
-      const [hours, minutes] = slot.hour.split(":").map(Number);
-      const start = new Date(slot.date + "T12:00:00");
-      start.setHours(hours, minutes, 0, 0);
-      const end = new Date(start);
-      end.setMinutes(end.getMinutes() + slotDuration);
+    return groupedByDate;
+  }, [availableSlots, occupiedSlotsSet, holidayDatesSet, absenceDatesSet, doctorAbsences]);
 
-      return {
-        id: `available-${slot.date}-${slot.hour}`,
-        title: `${slot.hour} - Disponible`,
-        start,
-        end,
-        resource: {
-          type: "available" as const,
-          slotDate: slot.date,
-          slotHour: slot.hour,
-        },
-      };
-    });
-  }, [availableSlots, occupiedSlotsSet, holidayDatesSet, absenceDatesSet, doctorAbsences, slotDuration]);
+  // Available slot events (filtered by occupied, holidays, absences)
+  const availableSlotEvents = useMemo<CalendarEvent[]>(() => {
+    return Array.from(availableHoursByDate.entries()).flatMap(([date, hours]) =>
+      hours.map((hour) => {
+        const [hoursNumber, minutes] = hour.split(":").map(Number);
+        const start = new Date(date + "T12:00:00");
+        start.setHours(hoursNumber, minutes, 0, 0);
+        const end = new Date(start);
+        end.setMinutes(end.getMinutes() + slotDuration);
+
+        return {
+          id: `available-${date}-${hour}`,
+          title: `${hour} - Disponible`,
+          start,
+          end,
+          resource: {
+            type: "available" as const,
+            slotDate: date,
+            slotHour: hour,
+          },
+        };
+      })
+    );
+  }, [availableHoursByDate, slotDuration]);
+
+  function openAvailabilityDay(date: Date) {
+    setCurrentDate(date);
+    setCurrentView("day");
+    setIsEventDialogOpen(false);
+  }
+
+  function openAvailabilitySlot(date: string, hour: string) {
+    setCurrentDate(new Date(`${date}T12:00:00`));
+    if (readOnly) {
+      setCurrentView("day");
+      setIsEventDialogOpen(false);
+      return;
+    }
+
+    setSelectedSlot({ date, hour });
+    if (blockOnly) {
+      setBlockDialogMode("block");
+      setIsBlockDialogOpen(true);
+      return;
+    }
+
+    setIsSlotActionDialogOpen(true);
+  }
+
+  function renderAvailabilityIndicator(
+    date: Date,
+    variant: "month" | "column",
+  ) {
+    if (!selectedDoctorId || currentView === "day") {
+      return null;
+    }
+
+    const dateStr = formatDateForCalendar(date);
+    const hours = availableHoursByDate.get(dateStr);
+
+    if (!hours || hours.length === 0) {
+      return null;
+    }
+
+    const previewHours = hours.slice(0, MAX_AVAILABILITY_PREVIEW_HOURS);
+    const hiddenHoursCount = Math.max(0, hours.length - previewHours.length);
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={`google-calendar-availability-pill is-${variant}`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+          >
+            {hours.length} libre{hours.length === 1 ? "" : "s"}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align={variant === "month" ? "start" : "center"}
+          className="google-calendar-availability-popover"
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
+          <div className="space-y-3">
+            <div>
+              <p className="google-calendar-availability-kicker">
+                Turnos libres
+              </p>
+              <p className="google-calendar-availability-date">
+                {format(date, "EEEE d 'de' MMMM", { locale: es })}
+              </p>
+            </div>
+
+            <div className="google-calendar-availability-hours">
+              {previewHours.map((hour) => (
+                <button
+                  key={`${dateStr}-${hour}`}
+                  type="button"
+                  className="google-calendar-availability-hour"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openAvailabilitySlot(dateStr, hour);
+                  }}
+                >
+                  {formatTimeAR(hour.length === 5 ? `${hour}:00` : hour)}
+                </button>
+              ))}
+            </div>
+
+            {hiddenHoursCount > 0 && (
+              <p className="google-calendar-availability-more">
+                +{hiddenHoursCount} horario
+                {hiddenHoursCount === 1 ? "" : "s"} disponible
+                {hiddenHoursCount === 1 ? "" : "s"} en el día
+              </p>
+            )}
+
+            <div className="google-calendar-availability-actions">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openAvailabilityDay(date);
+                }}
+              >
+                Ver día completo
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
   // Blocked slot events
   const blockedSlotEvents = useMemo<CalendarEvent[]>(() => {
