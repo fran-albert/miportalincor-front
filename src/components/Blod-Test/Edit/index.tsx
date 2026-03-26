@@ -25,7 +25,6 @@ import {
 import { bloodTestSchema } from "@/validators/Blod-Test/blod-test.schema";
 import { UnitSelect } from "@/components/Select/Unit/select";
 import { ApiError } from "@/types/Error/ApiError";
-import { BloodTestMutationPayload } from "@/types/Blod-Test/Blod-Test";
 
 interface Props {
   isOpen: boolean;
@@ -62,16 +61,15 @@ export default function EditBlodTestDialog({
 
   async function onSubmit(values: z.infer<typeof bloodTestSchema>) {
     try {
-      const payload: BloodTestMutationPayload = {
-        originalName: values.originalName,
-        unitId: values.unit.id,
-        referenceValue: values.referenceValue,
-        parsedName: values.originalName.toLowerCase().replace(/\s+/g, ""),
-      };
-
       const promise = updateBlodTestMutation.mutateAsync({
         id: Number(blodTest.id),
-        blodTest: payload,
+        blodTest: {
+          id: Number(blodTest.id),
+          originalName: values.originalName,
+          idUnit: Number(values?.unit?.id),
+          referenceValue: values.referenceValue,
+          ParsedName: values.originalName.toLowerCase().replace(/\s+/g, ""),
+        },
       });
 
       await promiseToast(promise, {

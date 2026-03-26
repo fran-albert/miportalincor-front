@@ -1,7 +1,7 @@
 import { updateBlodTest } from "@/api/Blod-Test/update-blod-test.action";
 import { createCompany } from "@/api/Company/create-company.action";
 import { deleteCompany } from "@/api/Company/delete-company.action";
-import { BloodTestMutationPayload } from "@/types/Blod-Test/Blod-Test";
+import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 
@@ -21,7 +21,7 @@ export const useCompanyMutations = () => {
     });
 
     const updateCompanyMutations = useMutation({
-        mutationFn: ({ id, blodTest }: { id: number; blodTest: BloodTestMutationPayload }) => updateBlodTest(id, blodTest),
+        mutationFn: ({ id, blodTest }: { id: number; blodTest: BloodTest }) => updateBlodTest(id, blodTest),
         onSuccess: (company, variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['companys'] });
             console.log("company updated", company, variables, context);

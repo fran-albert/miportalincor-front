@@ -9,11 +9,9 @@ export const bloodTestSchema = z.object({
             name: z.string().optional(),
             shortName: z.string().optional(),
         })
-        .nullable()
-        .refine((unit) => unit !== null, {
-            message: "La unidad es obligatoria.",
-        }),
+        .optional(),
     referenceValue: z.string().optional(),
+    idUnit: z.number().optional(),
 });
 
 export const unitSchema = z.object({

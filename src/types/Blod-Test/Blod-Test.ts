@@ -2,17 +2,10 @@ import { Unit } from "../Unit/Unit";
 
 export interface BloodTest {
     id?: number;
-    parsedName?: string;
+    ParsedName?: string;
     originalName: string;
     unit?: Unit;
-    unitId?: number;
-    referenceValue?: string;
-}
-
-export interface BloodTestMutationPayload {
-    originalName: string;
-    parsedName: string;
-    unitId: number;
+    idUnit?: number;
     referenceValue?: string;
 }
 

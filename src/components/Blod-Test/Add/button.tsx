@@ -32,7 +32,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ApiError } from "@/types/Error/ApiError";
-import { BloodTestMutationPayload } from "@/types/Blod-Test/Blod-Test";
 
 interface Props {
   isOpen: boolean;
@@ -57,11 +56,11 @@ export default function AddBlodTestDialog({ isOpen, setIsOpen }: Props) {
 
   async function onSubmit(values: z.infer<typeof bloodTestSchema>) {
     try {
-      const payload: BloodTestMutationPayload = {
+      const payload = {
         originalName: values.originalName,
         parsedName: values.originalName.toLowerCase().replace(/\s+/g, ""),
         referenceValue: values.referenceValue,
-        unitId: values.unit.id,
+        idUnit: values.unit?.id,
       };
 
       const promise = addBlodTestMutation.mutateAsync(payload);
