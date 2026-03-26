@@ -161,12 +161,12 @@ export function AssignCheckupDialog({
             {/* Month/Year Selection */}
             <div className="space-y-2">
               <Label>Próximo chequeo *</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Mes" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 sm:max-h-96">
                     {MONTHS.map((month) => (
                       <SelectItem key={month.value} value={month.value}>
                         {month.label}
@@ -176,7 +176,7 @@ export function AssignCheckupDialog({
                 </Select>
 
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-[100px]">
+                  <SelectTrigger className="w-full sm:w-[100px]">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
