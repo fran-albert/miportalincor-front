@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Navigate,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
 import SpecialityPage from "./pages/protected/Specialities/page";
 import LoginPage from "./pages/auth/Login";
 import HomePage from "./pages/protected/Home";
@@ -25,6 +31,7 @@ import NutritionPage from "./pages/protected/Patient/Nutrition";
 import CreateCollaboratorPage from "./pages/protected/Collaborator/Create";
 import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupattional/Create";
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
+import LaborReportBrandingConfigPage from "./pages/protected/Laboral-Incor/Report-Branding-Config";
 import CompaniesPage from "./pages/protected/Companies";
 import CompanyPage from "./pages/protected/Company";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
@@ -68,10 +75,9 @@ import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 
-function App() {
-  return (
-    <Router>
-      <Routes>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
         {/* Rutas públicas (sin sidebar ni header) */}
         <Route path="/iniciar-sesion" element={<LoginPage />} />
         <Route path="/restablecer-contraseña" element={<RequestEmailPassword />} />
@@ -620,6 +626,14 @@ function App() {
               </Private_Routes>
             }
           />
+          <Route
+            path="/incor-laboral/configuracion/informes"
+            element={
+              <Private_Routes allowedRoles={["Administrador"]}>
+                <LaborReportBrandingConfigPage />
+              </Private_Routes>
+            }
+          />
 
           <Route path="/programas" element={<Navigate to="/inicio" replace />} />
           <Route path="/programas/:programId" element={<Navigate to="/inicio" replace />} />
@@ -664,9 +678,12 @@ function App() {
             }
           />
         </Route>
-      </Routes>
-    </Router>
-  );
+    </>
+  )
+);
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;

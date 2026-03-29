@@ -1,6 +1,5 @@
-// src/components/pdf/OsteoarticularPdf.tsx
-import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import { pdfColors } from "../../shared";
 
 interface OsteoarticularPdfProps {
   mmssSin?: boolean;
@@ -15,46 +14,53 @@ interface OsteoarticularPdfProps {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 12,
-    padding: 12,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: pdfColors.line,
     borderRadius: 8,
-    backgroundColor: "#FFF",
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#187B80",
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 4,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
+    overflow: "hidden",
     marginBottom: 6,
   },
-  checkboxWrapper: {
-    width: 16,
-    alignItems: "center",
-    marginRight: 6,
+  headerWrap: {
+    backgroundColor: pdfColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: pdfColors.line,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  title: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: pdfColors.accentText,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  body: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  statusCard: {
+    width: "48%",
+    borderWidth: 1,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   label: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginRight: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    marginBottom: 3,
   },
-  optionText: {
-    fontSize: 10,
-    fontStyle: "italic",
-    marginRight: 12,
-  },
-  obsInline: {
-    fontSize: 10,
-    marginLeft: 4,
+  value: {
+    fontSize: 9.4,
+    color: pdfColors.ink,
+    fontWeight: "bold",
   },
 });
 
@@ -76,65 +82,46 @@ export default function OsteoarticularPdf({
 
   if (!hasAnyData) return null;
 
+  const items = [
+    mmssSin !== undefined
+      ? {
+          label: "MMSS",
+          value: `${mmssSin ? "Sin alteraciones" : "Con hallazgos"}${mmssObs?.trim() ? ` · ${mmssObs}` : ""}`,
+        }
+      : null,
+    mmiiSin !== undefined
+      ? {
+          label: "MMII",
+          value: `${mmiiSin ? "Sin alteraciones" : "Con hallazgos"}${mmiiObs?.trim() ? ` · ${mmiiObs}` : ""}`,
+        }
+      : null,
+    columnaSin !== undefined
+      ? {
+          label: "Columna",
+          value: `${columnaSin ? "Sin alteraciones" : "Con hallazgos"}${columnaObs?.trim() ? ` · ${columnaObs}` : ""}`,
+        }
+      : null,
+    amputaciones !== undefined
+      ? {
+          label: "Amputaciones",
+          value: `${amputaciones ? "Sí" : "No"}${amputacionesObs?.trim() ? ` · ${amputacionesObs}` : ""}`,
+        }
+      : null,
+  ].filter(Boolean);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Aparato Osteoarticular</Text>
-
-      {/* MMSS - solo mostrar si está definido */}
-      {mmssSin !== undefined && (
-        <View style={styles.row}>
-          <Text style={styles.label}>MMSS Sin alteraciones:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={mmssSin} />
+      <View style={styles.headerWrap}>
+        <Text style={styles.title}>Aparato osteoarticular</Text>
+      </View>
+      <View style={styles.body}>
+        {items.map((item) => (
+          <View key={item!.label} style={styles.statusCard}>
+            <Text style={styles.label}>{item!.label}</Text>
+            <Text style={styles.value}>{item!.value}</Text>
           </View>
-          <Text style={styles.optionText}>{mmssSin ? "Sí" : "No"}</Text>
-          {mmssObs?.trim() && (
-            <Text style={styles.obsInline}>{mmssObs}</Text>
-          )}
-        </View>
-      )}
-
-      {/* MMII - solo mostrar si está definido */}
-      {mmiiSin !== undefined && (
-        <View style={styles.row}>
-          <Text style={styles.label}>MMII Sin alteraciones:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={mmiiSin} />
-          </View>
-          <Text style={styles.optionText}>{mmiiSin ? "Sí" : "No"}</Text>
-          {mmiiObs?.trim() && (
-            <Text style={styles.obsInline}>{mmiiObs}</Text>
-          )}
-        </View>
-      )}
-
-      {/* Columna - solo mostrar si está definido */}
-      {columnaSin !== undefined && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Columna Sin alteraciones:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={columnaSin} />
-          </View>
-          <Text style={styles.optionText}>{columnaSin ? "Sí" : "No"}</Text>
-          {columnaObs?.trim() && (
-            <Text style={styles.obsInline}>{columnaObs}</Text>
-          )}
-        </View>
-      )}
-
-      {/* Amputaciones - solo mostrar si está definido */}
-      {amputaciones !== undefined && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Amputaciones:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={amputaciones} />
-          </View>
-          <Text style={styles.optionText}>{amputaciones ? "Sí" : "No"}</Text>
-          {amputacionesObs?.trim() && (
-            <Text style={styles.obsInline}>{amputacionesObs}</Text>
-          )}
-        </View>
-      )}
+        ))}
+      </View>
     </View>
   );
 }

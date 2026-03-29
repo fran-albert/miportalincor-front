@@ -1,11 +1,17 @@
 import { Collaborator } from "@/types/Collaborator/Collaborator";
-import HeaderPreviewHtml from "../../Header";
 import CollaboratorInformationHtml from "../../Collaborator-Information";
 import ExamResultsHtml from "./Exams-Results";
 import ConclusionHtml from "./Conclusion";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
-import FooterHtmlConditional from "../Footer";
+import PreviewPageShell from "../PageShell";
+import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import {
+  getPresentationModeForSection,
+  getInstitutionalSignerForSection,
+  usesExamDoctorSignature,
+} from "../../signature-policy";
+import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
 
 interface Props {
   collaborator: Collaborator;
@@ -14,6 +20,9 @@ interface Props {
   medicalEvaluationType: string;
   antecedentes: DataValue[];
   recomendaciones: string;
+  doctorData: DoctorSignatures;
+  brandingConfig?: LaborReportBrandingConfig;
+  pageNumber?: number;
 }
 
 const FirstPageHTML = ({
@@ -23,21 +32,47 @@ const FirstPageHTML = ({
   conclusion,
   recomendaciones,
   antecedentes,
-}: Props) => (
-  <>
-    <HeaderPreviewHtml
-      examType="Examen"
-      evaluationType={medicalEvaluationType}
-    />
-    <CollaboratorInformationHtml
-      collaborator={collaborator}
-      companyData={collaborator.company}
-      antecedentes={antecedentes}
-    />
-    <ExamResultsHtml examResults={examResults} />
-    <ConclusionHtml conclusion={conclusion} recomendaciones={recomendaciones} />
-    <FooterHtmlConditional pageNumber={1} />
-  </>
-);
+  doctorData,
+  brandingConfig,
+  pageNumber = 1,
+}: Props) => {
+  const institutionalSigner = getInstitutionalSignerForSection(
+    "cover",
+    brandingConfig,
+    medicalEvaluationType
+  );
+
+  return (
+    <PreviewPageShell
+      pageNumber={pageNumber}
+      examType={medicalEvaluationType}
+      evaluationType="Examen"
+      doctorData={doctorData}
+      brandingConfig={brandingConfig}
+      institutionalSigner={institutionalSigner}
+      presentationMode={getPresentationModeForSection(
+        "cover",
+        brandingConfig,
+        medicalEvaluationType
+      )}
+      useCustomSignature={usesExamDoctorSignature(
+        "cover",
+        brandingConfig,
+        medicalEvaluationType
+      )}
+    >
+      <CollaboratorInformationHtml
+        collaborator={collaborator}
+        companyData={collaborator.company}
+        antecedentes={antecedentes}
+      />
+      <ExamResultsHtml examResults={examResults} />
+      <ConclusionHtml
+        conclusion={conclusion}
+        recomendaciones={recomendaciones}
+      />
+    </PreviewPageShell>
+  );
+};
 
 export default FirstPageHTML;

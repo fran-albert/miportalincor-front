@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
+import {
+  ReportSectionKey,
+  ReportVisibilityMode,
+} from "@/common/helpers/report-visibility";
 
 export interface ExamResults {
   clinico: string;
@@ -187,10 +191,16 @@ interface FormData {
 interface PreOccupationalState {
   collaborator: Collaborator | null;
   formData: FormData;
+  hasUnsavedChanges: boolean;
+  reportVisibilityOverrides: Partial<
+    Record<ReportSectionKey, ReportVisibilityMode>
+  >;
 }
 
 const initialState: PreOccupationalState = {
   collaborator: null,
+  hasUnsavedChanges: false,
+  reportVisibilityOverrides: {},
   formData: {
     puesto: "",
     area: "",
@@ -350,19 +360,44 @@ const preOccupationalSlice = createSlice({
 
       if (newCollaboratorId !== currentCollaboratorId) {
         state.formData = initialState.formData;
+        state.hasUnsavedChanges = false;
+        state.reportVisibilityOverrides = {};
       }
 
       state.collaborator = action.payload;
     },
     setFormData(state, action: PayloadAction<Partial<FormData>>) {
       state.formData = { ...state.formData, ...action.payload };
+      state.hasUnsavedChanges = true;
+    },
+    hydrateFormData(state, action: PayloadAction<Partial<FormData>>) {
+      state.formData = { ...state.formData, ...action.payload };
+      state.hasUnsavedChanges = false;
+    },
+    setReportVisibilityOverride(
+      state,
+      action: PayloadAction<{
+        sectionKey: ReportSectionKey;
+        mode: ReportVisibilityMode;
+      }>
+    ) {
+      state.reportVisibilityOverrides[action.payload.sectionKey] =
+        action.payload.mode;
+      state.hasUnsavedChanges = true;
+    },
+    clearUnsavedChanges(state) {
+      state.hasUnsavedChanges = false;
     },
     resetForm(state) {
       state.formData = initialState.formData;
+      state.hasUnsavedChanges = false;
+      state.reportVisibilityOverrides = {};
     },
     resetAll(state) {
       state.collaborator = null;
       state.formData = initialState.formData;
+      state.hasUnsavedChanges = false;
+      state.reportVisibilityOverrides = {};
     },
     addOccupationalHistory(
       state,
@@ -376,6 +411,9 @@ const preOccupationalSlice = createSlice({
 export const {
   setCollaborator,
   setFormData,
+  hydrateFormData,
+  setReportVisibilityOverride,
+  clearUnsavedChanges,
   resetForm,
   resetAll,
   addOccupationalHistory,

@@ -1,32 +1,69 @@
-// src/components/NeurologicoHtml.tsx
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Neurologico } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { pdfColors } from "../../../Pdf/shared";
 
 interface Props {
   data: Neurologico;
 }
 
 export default function NeurologicoHtml({ data }: Props) {
-  return (
-    <div className="space-y-4 mt-6">
-      <h4 className="font-bold text-base text-greenPrimary">
-        Aparato Neurológico
-      </h4>
+  const hasData = data.sinAlteraciones !== undefined || data.observaciones?.trim();
+  if (!hasData) return null;
 
-      {/* Sin alteraciones */}
-      <div className="flex items-center space-x-2 text-black">
-        <Checkbox id="neu-sin" checked={data.sinAlteraciones} disabled />
-        <Label htmlFor="neu-sin">Sin alteraciones</Label>
+  return (
+    <div
+      className="mb-3 overflow-hidden rounded-[8px] border"
+      style={{ borderColor: pdfColors.line }}
+    >
+      <div
+        className="border-b px-3 py-2"
+        style={{
+          backgroundColor: pdfColors.surface,
+          borderBottomColor: pdfColors.line,
+        }}
+      >
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.08em]"
+          style={{ color: pdfColors.accentText }}
+        >
+          Aparato neurológico
+        </p>
       </div>
 
-      {/* Observaciones */}
-      {data.observaciones && (
-        <div>
-          <Label className="mb-1">Observaciones:</Label>
-          <p className="text-black">{data.observaciones}</p>
-        </div>
-      )}
+      <div className="space-y-3 px-3 py-[10px]">
+        {data.sinAlteraciones !== undefined && (
+          <div
+            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+            style={{ borderColor: pdfColors.line }}
+          >
+            <p
+              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              Sin alteraciones
+            </p>
+            <p className="text-[10px] font-semibold text-slate-900">
+              {data.sinAlteraciones ? "Sí" : "No"}
+            </p>
+          </div>
+        )}
+
+        {data.observaciones?.trim() && (
+          <div className="space-y-1">
+            <p
+              className="text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              Observaciones
+            </p>
+            <div
+              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+              style={{ borderColor: pdfColors.line }}
+            >
+              <p className="text-[10px] text-slate-900">{data.observaciones}</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

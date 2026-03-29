@@ -1,10 +1,8 @@
 import { TabsContent } from "@/components/ui/tabs";
-import { Accordion } from "@/components/ui/accordion";
-import { Pencil } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 // import WorkerInformationAccordion from "@/components/Accordion/Pre-Occupational/Worker-Information";
 import OccupationalHistoryAccordion from "@/components/Accordion/Pre-Occupational/Occupational-History";
 import MedicalEvaluationAccordion from "@/components/Accordion/Pre-Occupational/Medical-Evaluation";
-import { Button } from "@/components/ui/button";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
@@ -12,10 +10,11 @@ import { DataType } from "@/types/Data-Type/Data-Type";
 import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
-import { useInitializeMedicalEvaluation, mapMedicalEvaluation, mapOccupationalHistory } from "@/common/helpers/maps";
+import { mapMedicalEvaluation, mapOccupationalHistory } from "@/common/helpers/maps";
 import type { IMedicalEvaluation, Torax, Circulatorio, Gastrointestinal, Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { setFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { clearUnsavedChanges, hydrateFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { useQueryClient } from "@tanstack/react-query";
+import StageActionBar from "@/components/Pre-Occupational/StageActionBar";
 // const workerMapping: Record<string, string> = {
 //   lugarNacimiento: "Lugar de nacimiento",
 //   nacionalidad: "Nacionalidad",
@@ -71,6 +70,14 @@ const buildOccupationalHistoryPayload = (
       };
     });
 };
+
+const normalizeOccupationalHistory = (
+  items: { id: string; description: string }[] | undefined
+) =>
+  (items ?? [])
+    .map((item) => item.description.trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
 
 const buildMedicalEvaluationPayload = (
   fields: DataType[],
@@ -595,11 +602,27 @@ export default function MedicalHistoryTab({
   setIsEditing,
   medicalEvaluationId,
   dataValues,
+  standalone = false,
+  showEditToggle = true,
+  includeOccupationalHistory = true,
+  includeMedicalEvaluation = true,
+  savedOccupationalHistory,
+  setSavedOccupationalHistory,
+  savedMedicalEvaluation,
+  setSavedMedicalEvaluation,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
   medicalEvaluationId: number;
   dataValues: DataValue[] | undefined;
+  standalone?: boolean;
+  showEditToggle?: boolean;
+  includeOccupationalHistory?: boolean;
+  includeMedicalEvaluation?: boolean;
+  savedOccupationalHistory?: { id: string; description: string }[];
+  setSavedOccupationalHistory?: (value: { id: string; description: string }[]) => void;
+  savedMedicalEvaluation?: IMedicalEvaluation | null;
+  setSavedMedicalEvaluation?: (value: IMedicalEvaluation) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const queryClient = useQueryClient();
@@ -613,9 +636,9 @@ export default function MedicalHistoryTab({
       "EXAMEN_FISICO",
     ],
   });
-  const { createDataValuesMutation } = useDataValuesMutations();
+  const { createDataValuesMutation, deleteDataValuesMutation } =
+    useDataValuesMutations();
   const { promiseToast } = useToastContext();
-  useInitializeMedicalEvaluation(dataValues);
   const formData = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
@@ -632,30 +655,65 @@ export default function MedicalHistoryTab({
     fields,
     medicalEvaluation
   );
+  const hasOccupationalHistoryChanges = includeOccupationalHistory
+    ? JSON.stringify(normalizeOccupationalHistory(occupationalHistory)) !==
+      JSON.stringify(normalizeOccupationalHistory(savedOccupationalHistory))
+    : false;
+  const hasMedicalEvaluationChanges = includeMedicalEvaluation
+    ? JSON.stringify(medicalEvaluation) !==
+      JSON.stringify(savedMedicalEvaluation ?? null)
+    : false;
+  const hasPendingChanges =
+    hasOccupationalHistoryChanges || hasMedicalEvaluationChanges;
+  const deletedOccupationalHistoryIds = includeOccupationalHistory
+    ? (savedOccupationalHistory ?? [])
+        .filter(
+          (savedItem) =>
+            !savedItem.id.startsWith("temp-") &&
+            !occupationalHistory.some((currentItem) => currentItem.id === savedItem.id)
+        )
+        .map((item) => Number(item.id))
+        .filter((id) => Number.isFinite(id))
+    : [];
 
   const combinedDataValues = [
-    // ...workerDataValues,
-    ...antecedentesDataValues,
-    ...medicalEvaluationDataValues,
+    ...(includeOccupationalHistory ? antecedentesDataValues : []),
+    ...(includeMedicalEvaluation ? medicalEvaluationDataValues : []),
   ];
 
   // Cancelar edición: resetear Redux con los datos originales de la BD
   const handleCancel = () => {
     if (dataValues && dataValues.length > 0) {
-      // Recargar los datos originales desde dataValues (BD)
       const me = mapMedicalEvaluation(dataValues);
       const oh = mapOccupationalHistory(dataValues);
-      dispatch(setFormData({ medicalEvaluation: me, occupationalHistory: oh }));
+      dispatch(
+        hydrateFormData({
+          ...(includeMedicalEvaluation ? { medicalEvaluation: me } : {}),
+          ...(includeOccupationalHistory ? { occupationalHistory: oh } : {}),
+        })
+      );
     }
-    setIsEditing(false);
   };
 
   const handleSave = async () => {
-    const payload = {
-      medicalEvaluationId: medicalEvaluationId,
-      dataValues: combinedDataValues,
-    };
-    await promiseToast(createDataValuesMutation.mutateAsync(payload), {
+    const savePromise = (async () => {
+      if (deletedOccupationalHistoryIds.length > 0) {
+        await Promise.all(
+          deletedOccupationalHistoryIds.map((id) =>
+            deleteDataValuesMutation.mutateAsync(id)
+          )
+        );
+      }
+
+      if (combinedDataValues.length > 0) {
+        await createDataValuesMutation.mutateAsync({
+          medicalEvaluationId: medicalEvaluationId,
+          dataValues: combinedDataValues,
+        });
+      }
+    })();
+
+    await promiseToast(savePromise, {
       loading: {
         title: "Guardando datos",
         description: "Por favor espera mientras procesamos tu solicitud",
@@ -673,47 +731,75 @@ export default function MedicalHistoryTab({
     // Invalidar queries para forzar recarga de datos frescos
     queryClient.invalidateQueries({ queryKey: ["collaborator-medical-evaluation"] });
     queryClient.invalidateQueries({ queryKey: ["data-values"] });
-    setIsEditing(false);
+    if (includeOccupationalHistory) {
+      setSavedOccupationalHistory?.(occupationalHistory);
+    }
+    if (includeMedicalEvaluation) {
+      setSavedMedicalEvaluation?.(medicalEvaluation);
+    }
+    dispatch(clearUnsavedChanges());
   };
+
+  const sectionTitle =
+    includeOccupationalHistory && includeMedicalEvaluation
+      ? "Historia médica y examen físico"
+      : includeOccupationalHistory
+        ? "Antecedentes ocupacionales"
+        : "Historia médica y examen físico";
+
+  const content = (
+    <div className="space-y-3">
+      {(!standalone || showEditToggle) && (
+        <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 md:flex-row md:items-center md:justify-between">
+          <div className="inline-flex items-center gap-2 text-sm font-semibold text-greenPrimary">
+            <HeartPulse className="h-4 w-4" />
+            {sectionTitle}
+          </div>
+          {!isEditing && showEditToggle && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full border border-greenPrimary/15 bg-white px-4 py-2 text-sm font-medium text-greenSecondary shadow-sm transition hover:border-greenPrimary/30 hover:bg-greenPrimary/5"
+              onClick={() => setIsEditing(true)}
+            >
+              Habilitar edición
+            </button>
+          )}
+        </div>
+      )}
+      <div className="space-y-4">
+        {includeOccupationalHistory && (
+          <OccupationalHistoryAccordion
+            standalone
+            isEditing={isEditing}
+          />
+        )}
+        {includeMedicalEvaluation && (
+          <MedicalEvaluationAccordion
+            standalone
+            isEditing={isEditing}
+          />
+        )}
+      </div>
+      {isEditing && hasPendingChanges && (
+        <StageActionBar
+          onCancel={handleCancel}
+          onSave={handleSave}
+          isSaving={
+            createDataValuesMutation.isPending ||
+            deleteDataValuesMutation.isPending
+          }
+        />
+      )}
+    </div>
+  );
+
+  if (standalone) {
+    return content;
+  }
 
   return (
     <TabsContent value="medical-history" className="mt-4 space-y-4">
-      {!isEditing && (
-        <p
-          className="font-medium text-greenPrimary cursor-pointer hover:underline flex items-center gap-2"
-          onClick={() => setIsEditing(true)}
-        >
-          <Pencil className="w-4 h-4" /> Habilitar Edición
-        </p>
-      )}
-      <Accordion type="multiple" className="w-full space-y-4">
-        {/* <InstitutionInformation isEditing={isEditing} fields={fields} /> */}
-        {/* <WorkerInformationAccordion isEditing={isEditing} /> */}
-        <OccupationalHistoryAccordion
-          isEditing={isEditing}
-          dataValues={dataValues}
-        />
-        <MedicalEvaluationAccordion
-          isEditing={isEditing}
-          dataValues={dataValues}
-        />
-      </Accordion>
-      {isEditing && (
-        <div className="flex justify-end gap-4 mt-6">
-          <Button
-            variant="destructive"
-            onClick={handleCancel}
-          >
-            Cancelar
-          </Button>
-          <Button
-            className="bg-teal-600 hover:bg-teal-700"
-            onClick={handleSave}
-          >
-            Guardar
-          </Button>
-        </div>
-      )}
+      {content}
     </TabsContent>
   );
 }
