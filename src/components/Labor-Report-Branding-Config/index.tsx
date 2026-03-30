@@ -41,6 +41,7 @@ import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
 import { useLaborReportBrandingConfig } from "@/hooks/Labor-Report-Branding-Config/useLaborReportBrandingConfig";
 import { useLaborReportBrandingConfigMutations } from "@/hooks/Labor-Report-Branding-Config/useLaborReportBrandingConfigMutations";
+import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 import {
   BrandingHeaderPreview,
   PolicyPreviewList,
@@ -150,6 +151,7 @@ const getDoctorPreviewSpecialty = (doctor: Doctor) =>
   doctor.specialities?.[0]?.name?.trim() || "Especialidad no configurada";
 
 export default function LaborReportBrandingConfigManager() {
+  const { canWriteLaboralReportConfig } = useLaboralPermissions();
   const {
     data,
     isLoading,
@@ -549,12 +551,24 @@ export default function LaborReportBrandingConfigManager() {
             </CardHeader>
             <CardContent className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-6">
+                {!canWriteLaboralReportConfig && (
+                  <Alert>
+                    <ShieldCheck className="h-4 w-4" />
+                    <AlertTitle>Modo solo lectura</AlertTitle>
+                    <AlertDescription>
+                      Podés revisar cómo quedaría el documento, pero solo un
+                      usuario con permisos de configuración puede guardar cambios.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="institutionName">Nombre institucional</Label>
                     <Input
                       id="institutionName"
                       value={brandingDraft.institutionName ?? ""}
+                      disabled={!canWriteLaboralReportConfig}
                       onChange={(event) =>
                         handleBrandingField("institutionName", event.target.value)
                       }
@@ -566,6 +580,7 @@ export default function LaborReportBrandingConfigManager() {
                       id="logoUrl"
                       placeholder="https://..."
                       value={(brandingDraft.logoUrl as string | null) ?? ""}
+                      disabled={!canWriteLaboralReportConfig}
                       onChange={(event) =>
                         handleBrandingField("logoUrl", event.target.value)
                       }
@@ -580,6 +595,7 @@ export default function LaborReportBrandingConfigManager() {
                       id="headerAddress"
                       rows={4}
                       value={(brandingDraft.headerAddress as string | null) ?? ""}
+                      disabled={!canWriteLaboralReportConfig}
                       onChange={(event) =>
                         handleBrandingField("headerAddress", event.target.value)
                       }
@@ -591,6 +607,7 @@ export default function LaborReportBrandingConfigManager() {
                       id="footerLegalText"
                       rows={4}
                       value={(brandingDraft.footerLegalText as string | null) ?? ""}
+                      disabled={!canWriteLaboralReportConfig}
                       onChange={(event) =>
                         handleBrandingField("footerLegalText", event.target.value)
                       }
@@ -608,6 +625,7 @@ export default function LaborReportBrandingConfigManager() {
                   </div>
                   <Switch
                     checked={brandingDraft.active ?? true}
+                    disabled={!canWriteLaboralReportConfig}
                     onCheckedChange={(checked) =>
                       handleBrandingField("active", checked)
                     }
@@ -617,7 +635,11 @@ export default function LaborReportBrandingConfigManager() {
                 <div className="flex justify-end">
                   <Button
                     onClick={handleSaveBranding}
-                    disabled={!brandingDirty || updateConfigMutation.isPending}
+                    disabled={
+                      !canWriteLaboralReportConfig ||
+                      !brandingDirty ||
+                      updateConfigMutation.isPending
+                    }
                   >
                     <Save className="mr-2 h-4 w-4" />
                     Guardar branding
@@ -661,7 +683,9 @@ export default function LaborReportBrandingConfigManager() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removeSigner(index)}
-                        disabled={signerDrafts.length === 1}
+                        disabled={
+                          !canWriteLaboralReportConfig || signerDrafts.length === 1
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -672,6 +696,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Clave técnica (uso interno)</Label>
                         <Input
                           value={signer.signerKey}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "signerKey", event.target.value)
                           }
@@ -681,6 +706,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Nombre</Label>
                         <Input
                           value={signer.name}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "name", event.target.value)
                           }
@@ -690,6 +716,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Tipo</Label>
                         <Select
                           value={signer.signerType}
+                          disabled={!canWriteLaboralReportConfig}
                           onValueChange={(value) =>
                             handleSignerField(index, "signerType", value)
                           }
@@ -709,6 +736,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Matrícula</Label>
                         <Input
                           value={signer.license ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "license", event.target.value)
                           }
@@ -718,6 +746,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Especialidad</Label>
                         <Input
                           value={signer.specialty ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "specialty", event.target.value)
                           }
@@ -727,6 +756,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>ID médico HC (uso técnico)</Label>
                         <Input
                           value={signer.hcDoctorUserId ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(
                               index,
@@ -741,6 +771,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Input
                           placeholder="https://..."
                           value={signer.signatureUrl ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(
                               index,
@@ -755,6 +786,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Input
                           placeholder="https://..."
                           value={signer.sealUrl ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "sealUrl", event.target.value)
                           }
@@ -766,6 +798,7 @@ export default function LaborReportBrandingConfigManager() {
                           rows={4}
                           placeholder={"BONIFACIO Ma. CECILIA\nEspecialista en Medicina del Trabajo\nM.P. 96533 - M.L. 7299"}
                           value={signer.stampText ?? ""}
+                          disabled={!canWriteLaboralReportConfig}
                           onChange={(event) =>
                             handleSignerField(index, "stampText", event.target.value)
                           }
@@ -782,6 +815,7 @@ export default function LaborReportBrandingConfigManager() {
                       </div>
                       <Switch
                         checked={signer.active ?? true}
+                        disabled={!canWriteLaboralReportConfig}
                         onCheckedChange={(checked) =>
                           handleSignerField(index, "active", checked)
                         }
@@ -794,13 +828,22 @@ export default function LaborReportBrandingConfigManager() {
               ))}
 
               <div className="flex items-center justify-between">
-                <Button type="button" variant="outline" onClick={addSigner}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addSigner}
+                  disabled={!canWriteLaboralReportConfig}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Agregar firmante
                 </Button>
                 <Button
                   onClick={handleSaveSigners}
-                  disabled={!signersDirty || replaceSignersMutation.isPending}
+                  disabled={
+                    !canWriteLaboralReportConfig ||
+                    !signersDirty ||
+                    replaceSignersMutation.isPending
+                  }
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Guardar firmantes
@@ -851,6 +894,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Modo de firma</Label>
                         <Select
                           value={currentPolicy.mode}
+                          disabled={!canWriteLaboralReportConfig}
                           onValueChange={(value) =>
                             handlePolicyField(entry.section, "mode", value)
                           }
@@ -873,6 +917,7 @@ export default function LaborReportBrandingConfigManager() {
                         <Label>Presentación visual</Label>
                         <Select
                           value={currentPolicy.presentationMode}
+                          disabled={!canWriteLaboralReportConfig}
                           onValueChange={(value) =>
                             handlePolicyField(
                               entry.section,
@@ -911,7 +956,10 @@ export default function LaborReportBrandingConfigManager() {
                               value === "__none__" ? null : Number(value)
                             )
                           }
-                          disabled={currentPolicy.mode !== "institutional_signer"}
+                          disabled={
+                            !canWriteLaboralReportConfig ||
+                            currentPolicy.mode !== "institutional_signer"
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar firmante" />
@@ -999,7 +1047,10 @@ export default function LaborReportBrandingConfigManager() {
                 <Button
                   onClick={handleSavePolicies}
                   disabled={
-                    !policiesDirty || signersDirty || replacePoliciesMutation.isPending
+                    !canWriteLaboralReportConfig ||
+                    !policiesDirty ||
+                    signersDirty ||
+                    replacePoliciesMutation.isPending
                   }
                 >
                   <Save className="mr-2 h-4 w-4" />

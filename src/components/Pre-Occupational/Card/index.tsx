@@ -72,6 +72,7 @@ import { useForm } from "react-hook-form";
 import { getMedicalEvaluationMaintenanceState } from "@/api/Medical-Evaluation/get-maintenance-state.medical.evaluation";
 import { updateMedicalEvaluation } from "@/api/Medical-Evaluation/update.medical.evaluation";
 import { deleteMedicalEvaluation } from "@/api/Medical-Evaluation/delete.medical.evaluation";
+import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 interface Props {
   slug: string;
@@ -143,6 +144,7 @@ export default function PreOccupationalCards({
   collaborator,
   medicalEvaluation,
 }: Props) {
+  const { canManageLaboralExam, canDeleteLaboralExam } = useLaboralPermissions();
   const {
     data: urls,
     isLoading: isLoadingUrls,
@@ -746,23 +748,27 @@ export default function PreOccupationalCards({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsDoctorDialogOpen(true)}
-                >
-                  <UserRoundPen className="mr-2 h-4 w-4" />
-                  Corregir médico
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Eliminar examen
-                </Button>
+                {canManageLaboralExam ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsDoctorDialogOpen(true)}
+                  >
+                    <UserRoundPen className="mr-2 h-4 w-4" />
+                    Corregir médico
+                  </Button>
+                ) : null}
+                {canDeleteLaboralExam ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar examen
+                  </Button>
+                ) : null}
                 {nextStage ? (
                   <Button
                     size="sm"

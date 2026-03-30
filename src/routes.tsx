@@ -74,6 +74,7 @@ import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
+import { LABORAL_CAPABILITIES } from "./common/constants/laboral-permissions";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -525,7 +526,9 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[LABORAL_CAPABILITIES.ACCESS]}
+              >
                 <LaboralIncorPage />
               </Private_Routes>
             }
@@ -533,7 +536,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/empresas"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COMPANIES_READ,
+                ]}
+              >
                 <CompaniesPage />
               </Private_Routes>
             }
@@ -541,7 +548,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/empresas/:id"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COMPANIES_READ,
+                ]}
+              >
                 <CompanyPage />
               </Private_Routes>
             }
@@ -549,7 +560,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <PreOcuppationalPage />
               </Private_Routes>
             }
@@ -557,7 +572,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/agregar"
             element={
-              <Private_Routes allowedRoles={["Secretaria", "Administrador", "Medico"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
+                ]}
+              >
                 <CreateCollaboratorPage />
               </Private_Routes>
             }
@@ -565,7 +584,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorPage />
               </Private_Routes>
             }
@@ -573,7 +596,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/editar"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
+                ]}
+              >
                 <CollaboratorEditPage />
               </Private_Routes>
             }
@@ -581,7 +608,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/perfil"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorProfilePage />
               </Private_Routes>
             }
@@ -589,7 +620,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examenes"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorExamenesPage />
               </Private_Routes>
             }
@@ -597,7 +632,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/evoluciones"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorEvolucionesPage />
               </Private_Routes>
             }
@@ -605,7 +644,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/estudios"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorStudiesPage />
               </Private_Routes>
             }
@@ -613,7 +656,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.EXAMS_READ,
+                ]}
+              >
                 <CreatePreoccupationalPage />
               </Private_Routes>
             }
@@ -621,7 +668,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId/previsualizar-informe"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.EXAMS_READ,
+                ]}
+              >
                 <PreOccupationalPreviewPage />
               </Private_Routes>
             }
@@ -629,7 +680,11 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/configuracion/informes"
             element={
-              <Private_Routes allowedRoles={["Administrador"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.REPORT_CONFIG_READ,
+                ]}
+              >
                 <LaborReportBrandingConfigPage />
               </Private_Routes>
             }

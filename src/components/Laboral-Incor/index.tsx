@@ -3,10 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-import useUserRole from "@/hooks/useRoles";
+import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 export default function LaboralIncorComponent() {
-  const { isAdmin } = useUserRole();
+  const { canReadLaboralReportConfig } = useLaboralPermissions();
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral" },
@@ -26,7 +26,7 @@ export default function LaboralIncorComponent() {
       icon: Users,
       href: "/incor-laboral/colaboradores",
     },
-    ...(isAdmin
+    ...(canReadLaboralReportConfig
       ? [
           {
             title: "Informes laborales",
