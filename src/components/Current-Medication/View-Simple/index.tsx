@@ -19,10 +19,10 @@ import {
   User,
   AlignLeft,
   Activity,
+  Pencil,
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MedicacionActual } from "@/types/Antecedentes/Antecedentes";
-import { formatDateArgentina } from "@/common/helpers/helpers";
 
 interface ViewMedicacionActualModalProps {
   isOpen: boolean;
@@ -55,6 +55,14 @@ export const ViewMedicacionActualModal = ({
   };
 
   const dateTime = formatDateTime(medication.startDate);
+  const updatedDateTime =
+    medication.lastEditedByDoctor && medication.updatedAt
+      ? formatDateTime(medication.updatedAt)
+      : null;
+  const suspendedDateTime =
+    medication.status === "SUSPENDED" && medication.suspensionDate
+      ? formatDateTime(medication.suspensionDate)
+      : null;
 
   return (
     <TooltipProvider>
@@ -178,8 +186,7 @@ export const ViewMedicacionActualModal = ({
                   </div>
                 </div>
 
-                {medication.status === "SUSPENDED" &&
-                  medication.suspensionDate && (
+                {suspendedDateTime && (
                     <div className="relative flex items-start gap-4">
                       <div className="absolute -left-[29px] p-1.5 bg-red-600 rounded-full shadow-sm">
                         <Calendar className="h-3 w-3 text-white" />
@@ -189,7 +196,7 @@ export const ViewMedicacionActualModal = ({
                           Fecha de Suspensión
                         </Label>
                         <p className="text-sm font-semibold text-gray-900 mt-1">
-                          {formatDateArgentina(medication.suspensionDate)}
+                          {suspendedDateTime.date} - {suspendedDateTime.time}
                         </p>
                       </div>
                     </div>
@@ -210,6 +217,42 @@ export const ViewMedicacionActualModal = ({
                     </p>
                   </div>
                 </div>
+
+                {updatedDateTime && medication.lastEditedByDoctor && (
+                  <div className="relative flex items-start gap-4">
+                    <div className="absolute -left-[29px] p-1.5 bg-amber-500 rounded-full shadow-sm">
+                      <Pencil className="h-3 w-3 text-white" />
+                    </div>
+                    <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                      <Label className="text-xs text-gray-500 font-medium">
+                        Última actualización
+                      </Label>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                        {formatDoctorName(medication.lastEditedByDoctor)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {updatedDateTime.date} - {updatedDateTime.time}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {medication.status === "SUSPENDED" &&
+                  medication.suspendedByDoctor && (
+                    <div className="relative flex items-start gap-4">
+                      <div className="absolute -left-[29px] p-1.5 bg-red-600 rounded-full shadow-sm">
+                        <User className="h-3 w-3 text-white" />
+                      </div>
+                      <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <Label className="text-xs text-gray-500 font-medium">
+                          Suspendida por
+                        </Label>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                          {formatDoctorName(medication.suspendedByDoctor)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           </div>

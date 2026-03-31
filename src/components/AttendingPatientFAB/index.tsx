@@ -33,7 +33,8 @@ export const AttendingPatientFAB = () => {
   const overturnMutations = useOverturnMutations();
 
   // Encontrar paciente en atención
-  const attendingItem = agenda.find((item) => isAttending(item.status));
+  const agendaItems = Array.isArray(agenda) ? agenda : [];
+  const attendingItem = agendaItems.find((item) => isAttending(item.status));
 
   // No mostrar si:
   // - No es médico
