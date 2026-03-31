@@ -54,10 +54,10 @@ export default function DeleteDataValueDialog({
       case "antecedente":
         return {
           title: "Eliminar Antecedente",
-          description: "¿Estás seguro de que quieres eliminar este antecedente?",
+          description: "¿Estás seguro de que quieres eliminar este antecedente? Dejará de verse en la historia clínica.",
           loading: "Eliminando antecedente...",
           success: "¡Antecedente eliminado!",
-          successDescription: "El antecedente se ha eliminado exitosamente",
+          successDescription: "El antecedente dejó de verse en la historia clínica",
           error: "Error al eliminar antecedente",
         };
       case "medicación":

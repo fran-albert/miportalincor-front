@@ -81,6 +81,9 @@ interface UseDoctorDayAgendaOptions {
   enabled?: boolean;
 }
 
+const ensureArray = <T>(data: T[] | null | undefined): T[] =>
+  Array.isArray(data) ? data : [];
+
 export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
   const queryClient = useQueryClient();
   const { isDoctor } = useUserRole();
@@ -104,8 +107,10 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
   });
 
   // Combinar y ordenar por hora
+  const appointments = ensureArray(appointmentsQuery.data);
+  const overturns = ensureArray(overturnsQuery.data);
   const agenda: AgendaItem[] = [
-    ...(appointmentsQuery.data?.map((apt): AgendaItem => ({
+    ...appointments.map((apt): AgendaItem => ({
       id: apt.id,
       type: 'appointment',
       hour: apt.hour,
@@ -113,8 +118,8 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
       status: apt.status,
       patient: apt.patient ?? null,
       rawData: apt,
-    })) ?? []),
-    ...(overturnsQuery.data?.map((ot): AgendaItem => ({
+    })),
+    ...overturns.map((ot): AgendaItem => ({
       id: ot.id,
       type: 'overturn',
       hour: ot.hour,
@@ -122,7 +127,7 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
       status: ot.status,
       patient: ot.patient ?? null,
       rawData: ot,
-    })) ?? []),
+    })),
   ].sort((a, b) => a.hour.localeCompare(b.hour));
 
   // Calcular estadisticas
@@ -153,8 +158,8 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
     stats,
 
     // Raw data
-    appointments: appointmentsQuery.data ?? [],
-    overturns: overturnsQuery.data ?? [],
+    appointments,
+    overturns,
 
     // Status
     isLoading: appointmentsQuery.isLoading || overturnsQuery.isLoading,
