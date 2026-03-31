@@ -8,7 +8,6 @@ import { StatusBadge } from "../StatusBadge";
 import {
   FileText,
   Calendar,
-  User,
   ExternalLink,
   Clock,
   X,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
 import { parseGreenCardDescription } from "../utils/greenCardDescription";
+import PatientInfoCard from "../PatientInfoCard";
 
 interface ViewPrescriptionRequestModalProps {
   isOpen: boolean;
@@ -76,10 +76,6 @@ export default function ViewPrescriptionRequestModal({
   const isPending = request.status === PrescriptionRequestStatus.PENDING;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
   const isRejected = request.status === PrescriptionRequestStatus.REJECTED;
-  const patientHealthInsurance =
-    request.patient?.healthInsuranceName ||
-    request.patient?.healthPlans?.[0]?.healthInsurance?.name;
-  const patientAffiliationNumber = request.patient?.affiliationNumber;
   const parsedRequestDescription = parseGreenCardDescription(request.description);
   const batchPatientMessages = batchRequests
     ? Array.from(
@@ -125,33 +121,8 @@ export default function ViewPrescriptionRequestModal({
 
           {/* Patient/Doctor Info Card */}
           <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4 space-y-3">
-            {(userRole === "doctor" || userRole === "operator") && request.patient && (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <User className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-blue-900">Paciente</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {request.patient.firstName} {request.patient.lastName}
-                  </p>
-                  {request.patient.phoneNumber && (
-                    <p className="text-xs text-blue-600 mt-0.5">
-                      Tel: {request.patient.phoneNumber}
-                    </p>
-                  )}
-                  {patientHealthInsurance && (
-                    <p className="text-xs text-blue-600 mt-0.5">
-                      Obra social: {patientHealthInsurance}
-                    </p>
-                  )}
-                  {patientAffiliationNumber && (
-                    <p className="text-xs text-blue-600 mt-0.5">
-                      Nro. afiliado: {patientAffiliationNumber}
-                    </p>
-                  )}
-                </div>
-              </div>
+            {(userRole === "doctor" || userRole === "operator") && (
+              <PatientInfoCard patient={request.patient} variant="embedded" />
             )}
 
             {(request.signingDoctor || request.doctor) && (() => {
