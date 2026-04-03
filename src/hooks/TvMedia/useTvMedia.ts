@@ -53,18 +53,22 @@ export function useUploadMedia() {
       title,
       description,
       mediaType,
+      onProgress,
+      onStatusChange,
     }: {
       file: File;
       title: string;
       description?: string;
       mediaType?: "VIDEO" | "IMAGE";
-    }) => uploadMedia(file, title, description, mediaType),
+      onProgress?: (progress: number) => void;
+      onStatusChange?: (message: string) => void;
+    }) => uploadMedia(file, title, description, mediaType, onProgress, onStatusChange),
     onSuccess: () => {
       queryClient.refetchQueries({ queryKey: tvMediaKeys.all });
-      toast.success("Video subido correctamente");
+      toast.success("Media subida correctamente");
     },
     onError: (error: Error) => {
-      toast.error(`Error al subir video: ${error.message}`);
+      toast.error(`Error al subir media: ${error.message}`);
     },
   });
 }
