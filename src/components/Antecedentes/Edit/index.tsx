@@ -89,18 +89,18 @@ export const EditAntecedenteModal = ({
 
       await promiseToast(promise, {
         loading: {
-          title: "Actualizando antecedente...",
-          description: "Procesando la informacion medica",
+          title: "Guardando cambios...",
+          description: "Actualizando el antecedente",
         },
         success: {
-          title: "Antecedente actualizado!",
-          description: "Los cambios se han guardado correctamente",
+          title: "Antecedente actualizado",
+          description: "Los cambios se guardaron correctamente",
         },
         error: (error: unknown) => ({
-          title: "Error al actualizar",
+          title: "Error al editar",
           description:
             (error instanceof Error ? error.message : undefined) ||
-            "No se pudo actualizar el antecedente. Intenta nuevamente.",
+            "No se pudo editar el antecedente. Intenta nuevamente.",
         }),
       });
 
@@ -134,9 +134,6 @@ export const EditAntecedenteModal = ({
               <DialogTitle className="text-2xl font-bold text-white">
                 Editar Antecedente
               </DialogTitle>
-              <p className="text-sm text-white/80 mt-1">
-                Modifica la informacion del antecedente medico
-              </p>
             </div>
           </div>
         </DialogHeader>
@@ -160,6 +157,13 @@ export const EditAntecedenteModal = ({
                   <Calendar className="h-3 w-3" />
                   <span>Creado: {formatDateTime(antecedente.createdAt)}</span>
                 </div>
+                {antecedente.history?.length > 0 && (
+                  <p className="text-xs text-blue-600">
+                    Este antecedente ya tiene {antecedente.history.length} cambio
+                    {antecedente.history.length !== 1 ? "s" : ""} previo
+                    {antecedente.history.length !== 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -240,7 +244,7 @@ export const EditAntecedenteModal = ({
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Guardar Cambios
+                  Guardar cambios
                 </>
               )}
             </Button>
