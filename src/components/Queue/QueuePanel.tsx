@@ -54,7 +54,8 @@ import {
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
 import { useQueryClient } from '@tanstack/react-query';
 import { queueKeys } from '@/hooks/Queue';
-import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
+import { formatWaitingTime, getWaitingTimeColor, parseBoolean } from '@/common/helpers/helpers';
+import { formatTimeAR, formatTimeFromDateAR } from '@/common/helpers/timezone';
 
 const statusColors: Record<QueueStatus, string> = {
   WAITING: 'bg-yellow-500',
@@ -83,6 +84,57 @@ const appointmentTypeColors: Record<AppointmentType, string> = {
   SCHEDULED_APPOINTMENT: 'bg-green-100 text-green-800 border-green-300',
   WALK_IN: 'bg-orange-100 text-orange-800 border-orange-300',
   ADMINISTRATIVE: 'bg-gray-100 text-gray-800 border-gray-300',
+};
+
+const hasMeaningfulText = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  const normalized = String(value).trim();
+  return normalized !== '' && normalized !== '0';
+};
+
+const formatQueueHour = (entry: QueueEntry): string => {
+  if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
+    if (!entry.scheduledTime) return '-';
+    return /^\d{2}:\d{2}$/.test(entry.scheduledTime)
+      ? entry.scheduledTime
+      : formatTimeAR(entry.scheduledTime);
+  }
+
+  if (entry.checkedInAt) {
+    return formatTimeFromDateAR(entry.checkedInAt);
+  }
+
+  if (!entry.scheduledTime) return '-';
+  return /^\d{2}:\d{2}$/.test(entry.scheduledTime)
+    ? entry.scheduledTime
+    : formatTimeAR(entry.scheduledTime);
+};
+
+const formatSecretaryWaitingTime = (minutes: number | undefined): string => {
+  if (minutes === undefined || minutes === null) return '-';
+  if (minutes <= 0) return 'Recién ingresó';
+  return formatWaitingTime(minutes);
+};
+
+const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
+  if (entry.appointmentType === 'ADMINISTRATIVE') {
+    return {
+      primary: 'Secretaría',
+      secondary: 'Trámite administrativo',
+    };
+  }
+
+  if (entry.appointmentType === 'WALK_IN') {
+    return {
+      primary: 'Secretaría',
+      secondary: 'Consulta sin turno',
+    };
+  }
+
+  const primary = hasMeaningfulText(entry.doctorName) ? entry.doctorName : 'Sin asignar';
+  const secondary = hasMeaningfulText(entry.speciality) ? entry.speciality : undefined;
+
+  return { primary, secondary };
 };
 
 export const QueuePanel = () => {
@@ -265,7 +317,7 @@ export const QueuePanel = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{entry.patientName}</p>
-                          {entry.isGuest && (
+                          {parseBoolean(entry.isGuest) && (
                             <Badge
                               variant="outline"
                               className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
@@ -361,7 +413,7 @@ export const QueuePanel = () => {
                   <TableHead>Turno</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Doctor</TableHead>
+                  <TableHead>Atención</TableHead>
                   <TableHead>Hora</TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
@@ -375,6 +427,8 @@ export const QueuePanel = () => {
               <TableBody>
                 {waitingQueue.map((entry) => {
                   const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
+                  const isGuest = parseBoolean(entry.isGuest);
+                  const attention = getAttentionLabels(entry);
                   return (
                     <TableRow key={entry.id}>
                       <TableCell>
@@ -394,7 +448,7 @@ export const QueuePanel = () => {
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{entry.patientName}</p>
-                            {entry.isGuest && (
+                            {isGuest && (
                               <Badge
                                 variant="outline"
                                 className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
@@ -407,7 +461,7 @@ export const QueuePanel = () => {
                           <p className="text-sm text-muted-foreground">
                             DNI: {entry.patientDocument}
                           </p>
-                          {entry.isGuest && (
+                          {isGuest && (
                             <p className="text-xs text-amber-600 mt-1">
                               Requiere registro en secretaria
                             </p>
@@ -416,13 +470,15 @@ export const QueuePanel = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{entry.doctorName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {entry.speciality}
-                          </p>
+                          <p className="font-medium">{attention.primary}</p>
+                          {attention.secondary && (
+                            <p className="text-sm text-muted-foreground">
+                              {attention.secondary}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell>{entry.scheduledTime}</TableCell>
+                      <TableCell>{formatQueueHour(entry)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Badge
@@ -430,7 +486,7 @@ export const QueuePanel = () => {
                             className={`font-mono ${waitTimeColors.text} ${waitTimeColors.bg} ${waitTimeColors.border}`}
                           >
                             <Clock className="h-3 w-3 mr-1" />
-                            {formatWaitingTime(entry.waitingTimeMinutes)}
+                            {formatSecretaryWaitingTime(entry.waitingTimeMinutes)}
                           </Badge>
                           {entry.waitingTimeMinutes !== undefined && entry.waitingTimeMinutes > 60 && (
                             <span title="Tiempo de espera prolongado"><AlertTriangle className="h-4 w-4 text-red-500" /></span>

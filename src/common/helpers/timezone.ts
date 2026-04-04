@@ -70,6 +70,14 @@ export const formatTimeAR = (time: string): string => {
 };
 
 /**
+ * Formatea la hora de un timestamp/fecha en zona horaria de Argentina (HH:mm)
+ */
+export const formatTimeFromDateAR = (date: string | Date): string => {
+  if (!date) return '-';
+  return toArgentinaTime(date).format('HH:mm');
+};
+
+/**
  * Formatea fecha y hora juntas (DD/MM/YYYY HH:mm)
  */
 export const formatDateTimeAR = (date: string | Date, time?: string): string => {
