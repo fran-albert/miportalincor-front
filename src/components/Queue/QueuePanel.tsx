@@ -238,8 +238,9 @@ export const QueuePanel = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Turno</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Consultorio</TableHead>
+                  <TableHead>Destino</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -251,6 +252,14 @@ export const QueuePanel = () => {
                       <span className="text-2xl font-bold text-green-600">
                         {entry.displayNumber}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={appointmentTypeColors[entry.appointmentType]}
+                      >
+                        {appointmentTypeLabels[entry.appointmentType]}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div>

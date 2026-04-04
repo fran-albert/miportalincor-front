@@ -10,7 +10,7 @@ import {
   markAsCompleted,
   markAsNoShow,
 } from '@/api/Queue';
-import type { CallPatientDto, CallSpecificPatientDto } from '@/types/Queue';
+import type { CallPatientDto, CallSpecificPatientDto, QueueEntry } from '@/types/Queue';
 import { toast } from 'sonner';
 
 // Query keys
@@ -19,6 +19,24 @@ export const queueKeys = {
   waiting: () => [...queueKeys.all, 'waiting'] as const,
   active: () => [...queueKeys.all, 'active'] as const,
   stats: () => [...queueKeys.all, 'stats'] as const,
+};
+
+const sortActiveQueue = (entries: QueueEntry[]) =>
+  [...entries].sort((a, b) => {
+    const aTime = a.calledAt ?? a.checkedInAt;
+    const bTime = b.calledAt ?? b.checkedInAt;
+    return new Date(bTime).getTime() - new Date(aTime).getTime();
+  });
+
+const removeQueueEntry = (entries: QueueEntry[] | undefined, entryId: number) =>
+  (entries ?? []).filter((entry) => entry.id !== entryId);
+
+const upsertActiveQueueEntry = (
+  entries: QueueEntry[] | undefined,
+  nextEntry: QueueEntry,
+) => {
+  const filtered = removeQueueEntry(entries, nextEntry.id);
+  return sortActiveQueue([nextEntry, ...filtered]);
 };
 
 // Hook para obtener cola de espera
@@ -55,6 +73,12 @@ export const useCallNextPatient = () => {
   return useMutation({
     mutationFn: (dto: CallPatientDto) => callNextPatient(dto),
     onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.waiting(), (current: QueueEntry[] | undefined) =>
+        removeQueueEntry(current, data.id),
+      );
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        upsertActiveQueueEntry(current, data),
+      );
       toast.success(`Llamando a ${data.displayNumber} - ${data.patientName}`);
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
@@ -71,6 +95,12 @@ export const useCallSpecificPatient = () => {
   return useMutation({
     mutationFn: (dto: CallSpecificPatientDto) => callSpecificPatient(dto),
     onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.waiting(), (current: QueueEntry[] | undefined) =>
+        removeQueueEntry(current, data.id),
+      );
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        upsertActiveQueueEntry(current, data),
+      );
       toast.success(`Llamando a ${data.displayNumber} - ${data.patientName}`);
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
@@ -87,6 +117,9 @@ export const useRecallPatient = () => {
   return useMutation({
     mutationFn: (id: number) => recallPatient(id),
     onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        upsertActiveQueueEntry(current, data),
+      );
       toast.info(`Re-llamando a ${data.displayNumber}`);
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
@@ -103,6 +136,9 @@ export const useMarkAsAttending = () => {
   return useMutation({
     mutationFn: (id: number) => markAsAttending(id),
     onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        upsertActiveQueueEntry(current, data),
+      );
       toast.success(`Atendiendo a ${data.patientName}`);
       // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
@@ -119,7 +155,10 @@ export const useMarkAsCompleted = () => {
 
   return useMutation({
     mutationFn: (id: number) => markAsCompleted(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        removeQueueEntry(current, data.id),
+      );
       toast.success('Atención completada');
       // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
@@ -136,7 +175,10 @@ export const useMarkAsNoShow = () => {
 
   return useMutation({
     mutationFn: (id: number) => markAsNoShow(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      queryClient.setQueryData(queueKeys.active(), (current: QueueEntry[] | undefined) =>
+        removeQueueEntry(current, data.id),
+      );
       toast.warning('Paciente marcado como ausente');
       // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
