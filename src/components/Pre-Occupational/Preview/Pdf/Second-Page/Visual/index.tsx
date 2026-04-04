@@ -1,5 +1,6 @@
 // src/components/pdf/VisualAcuityPdf.tsx
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
+import { pdfColors } from "../../shared";
 
 interface VisualAcuityPdfProps {
   withoutCorrection: { right: string; left: string };
@@ -10,34 +11,36 @@ interface VisualAcuityPdfProps {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 12,
-    padding: 12,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: pdfColors.line,
     borderRadius: 8,
-    backgroundColor: "#FFF",
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+  headerWrap: {
+    backgroundColor: pdfColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: pdfColors.line,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   title: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 4,
-    color: "#187B80",
-    paddingVertical: 4,
-    backgroundColor: "#F0F0F0",
-    textAlign: "center",
-    borderRadius: 4,
-  },
-  subtitle: {
     fontSize: 10,
-    marginBottom: 8,
-    color: "#555",
-    textAlign: "center",
+    fontWeight: "bold",
+    color: pdfColors.accentText,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  body: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
   },
   table: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 4,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
     overflow: "hidden",
   },
   row: {
@@ -47,18 +50,20 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRightWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#EEE",
-    padding: 4,
+    borderColor: pdfColors.line,
+    padding: 6,
   },
   headerCell: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: "500",
     textAlign: "center",
-    backgroundColor: "#F9F9F9",
+    color: pdfColors.muted,
+    textTransform: "uppercase",
   },
   bodyCell: {
     fontSize: 10,
     textAlign: "center",
+    color: pdfColors.ink,
   },
   firstCol: {
     flex: 2,
@@ -66,31 +71,36 @@ const styles = StyleSheet.create({
   chromaRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
+    gap: 6,
   },
   chromaLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginRight: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   chromaValue: {
     fontSize: 10,
+    fontWeight: "bold",
   },
   notesContainer: {
-    marginTop: 8,
+    gap: 4,
   },
   notesLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginBottom: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   notesText: {
     fontSize: 10,
-    padding: 6,
     borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 4,
-    backgroundColor: "#F9F9F9",
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    backgroundColor: "#ffffff",
+    color: pdfColors.ink,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
 });
 
@@ -105,65 +115,65 @@ export default function VisualAcuityPdf({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Agudeza Visual</Text>
-      <Text style={styles.subtitle}>
-        Valores sin corrección (S/C) y con corrección (C/C)
-      </Text>
-
-      <View style={styles.table}>
-        {/* Header */}
-        <View style={styles.row}>
-          <View style={[styles.cell, styles.firstCol]}>
-            <Text style={styles.headerCell} />
-          </View>
-          <View style={styles.cell}>
-            <Text style={styles.headerCell}>S/C</Text>
-          </View>
-          <View style={[styles.cell, { borderRightWidth: 0 }]}>
-            <Text style={styles.headerCell}>C/C</Text>
-          </View>
-        </View>
-        {/* Ojo Derecho */}
-        <View style={styles.row}>
-          <View style={[styles.cell, styles.firstCol]}>
-            <Text style={styles.bodyCell}>Ojo Derecho</Text>
-          </View>
-          <View style={styles.cell}>
-            <Text style={styles.bodyCell}>{withoutCorrection.right}</Text>
-          </View>
-          <View style={[styles.cell, { borderRightWidth: 0 }]}>
-            <Text style={styles.bodyCell}>{withCorrection.right}</Text>
-          </View>
-        </View>
-        {/* Ojo Izquierdo */}
-        <View style={styles.row}>
-          <View style={[styles.cell, styles.firstCol]}>
-            <Text style={styles.bodyCell}>Ojo Izquierdo</Text>
-          </View>
-          <View style={styles.cell}>
-            <Text style={styles.bodyCell}>{withoutCorrection.left}</Text>
-          </View>
-          <View style={[styles.cell, { borderRightWidth: 0 }]}>
-            <Text style={styles.bodyCell}>{withCorrection.left}</Text>
-          </View>
-        </View>
+      <View style={styles.headerWrap}>
+        <Text style={styles.title}>Agudeza visual</Text>
       </View>
-
-      {/* Visión Cromática */}
-      <View style={styles.chromaRow}>
-        <Text style={styles.chromaLabel}>Visión Cromática:</Text>
-        <Text style={[styles.chromaValue, { color: chromaColor }]}>
-          {chromaText}
-        </Text>
-      </View>
-
-      {/* Observaciones */}
-      {notes.trim() !== "" && (
-        <View style={styles.notesContainer}>
-          <Text style={styles.notesLabel}>Observaciones:</Text>
-          <Text style={styles.notesText}>{notes}</Text>
+      <View style={styles.body}>
+        <View style={styles.table}>
+          <View style={styles.row}>
+            <View style={[styles.cell, styles.firstCol]}>
+              <Text style={styles.headerCell} />
+            </View>
+            <View style={styles.cell}>
+              <Text style={styles.headerCell}>S/C</Text>
+            </View>
+            <View style={[styles.cell, { borderRightWidth: 0 }]}>
+              <Text style={styles.headerCell}>C/C</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={[styles.cell, styles.firstCol]}>
+              <Text style={styles.bodyCell}>Ojo derecho</Text>
+            </View>
+            <View style={styles.cell}>
+              <Text style={styles.bodyCell}>{withoutCorrection.right}</Text>
+            </View>
+            <View style={[styles.cell, { borderRightWidth: 0 }]}>
+              <Text style={styles.bodyCell}>{withCorrection.right}</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={[styles.cell, styles.firstCol, { borderBottomWidth: 0 }]}>
+              <Text style={styles.bodyCell}>Ojo izquierdo</Text>
+            </View>
+            <View style={[styles.cell, { borderBottomWidth: 0 }]}>
+              <Text style={styles.bodyCell}>{withoutCorrection.left}</Text>
+            </View>
+            <View
+              style={[
+                styles.cell,
+                { borderRightWidth: 0, borderBottomWidth: 0 },
+              ]}
+            >
+              <Text style={styles.bodyCell}>{withCorrection.left}</Text>
+            </View>
+          </View>
         </View>
-      )}
+
+        <View style={styles.chromaRow}>
+          <Text style={styles.chromaLabel}>Vision cromatica</Text>
+          <Text style={[styles.chromaValue, { color: chromaColor }]}>
+            {chromaText}
+          </Text>
+        </View>
+
+        {notes.trim() !== "" && (
+          <View style={styles.notesContainer}>
+            <Text style={styles.notesLabel}>Observaciones</Text>
+            <Text style={styles.notesText}>{notes}</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

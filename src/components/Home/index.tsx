@@ -15,9 +15,11 @@ import {
   Building2,
 } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
+import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 export default function HomeComponent({ name }: { name: string }) {
   const { isSecretary, isAdmin, session, isDoctor } = useUserRole();
+  const { canAccessLaboral } = useLaboralPermissions();
   const { stats, isLoading } = useDashboardStats(!!session);
 
   const quickAccessCards: {
@@ -67,22 +69,22 @@ export default function HomeComponent({ name }: { name: string }) {
     },
   ];
 
-  // Solo Admin y Secretaria ven Incor Laboral y Turnos
+  if (canAccessLaboral) {
+    quickAccessCards.push({
+      title: "Incor Laboral",
+      description: "Gestiona colaboradores y exámenes preocupacionales",
+      icon: UserCog,
+      href: "/incor-laboral",
+    });
+  }
+
   if (isSecretary || isAdmin || isDoctor) {
-    quickAccessCards.push(
-      {
-        title: "Incor Laboral",
-        description: "Gestiona colaboradores y exámenes preocupacionales",
-        icon: UserCog,
-        href: "/incor-laboral",
-      },
-      {
-        title: "Turnos",
-        description: "Administra y visualiza las citas médicas del centro",
-        icon: Calendar,
-        href: "/turnos",
-      }
-    );
+    quickAccessCards.push({
+      title: "Turnos",
+      description: "Administra y visualiza las citas médicas del centro",
+      icon: Calendar,
+      href: "/turnos",
+    });
   }
 
   const statsCards = [

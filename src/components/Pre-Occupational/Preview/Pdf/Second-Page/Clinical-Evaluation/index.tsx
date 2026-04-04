@@ -1,7 +1,6 @@
-// src/components/pdf/ClinicalEvaluationPdf.tsx
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import CheckboxPdf from "@/components/Pdf/CheckBox";
+import { pdfColors } from "../../shared";
 
 interface ClinicalEvaluationPdfProps {
   aspectoGeneral?: "Bueno" | "Regular" | "Malo" | string;
@@ -12,78 +11,79 @@ interface ClinicalEvaluationPdfProps {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 12,
-    padding: 12,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: pdfColors.line,
     borderRadius: 8,
-    backgroundColor: "#FFF",
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+  headerWrap: {
+    backgroundColor: pdfColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: pdfColors.line,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   header: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-    color: "#187B80",
-    paddingVertical: 4,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 4,
+    color: pdfColors.accentText,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  body: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
   },
   sectionRow: {
-    marginBottom: 12,
+    gap: 5,
   },
   sectionLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginBottom: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   rowInline: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  checkboxWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  checkboxLabel: {
     fontSize: 10,
-    fontStyle: "italic",
+    color: pdfColors.ink,
+    fontWeight: "bold",
   },
   valueRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    gap: 10,
   },
   infoField: {
-    alignItems: "center",
-    width: "30%",
+    flex: 1,
+    borderWidth: 1,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
   infoLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginBottom: 2,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    marginBottom: 4,
   },
   infoValue: {
     fontSize: 10,
-    borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    width: "100%",
-    textAlign: "center",
-    backgroundColor: "#F9F9F9",
+    color: pdfColors.ink,
+    fontWeight: "bold",
   },
 });
 
-// Solo muestra el valor seleccionado, no todas las opciones
 const AspectoGeneralValue = ({ value }: { value?: string }) => {
   if (!value?.trim()) return null;
   return (
     <View style={styles.rowInline}>
-      <CheckboxPdf checked={true} />
-      <Text style={styles.checkboxLabel}>{value}</Text>
+      <Text>{value}</Text>
     </View>
   );
 };
@@ -102,22 +102,24 @@ const ClinicalEvaluationPdf: React.FC<ClinicalEvaluationPdfProps> = ({
   imc,
 }) => (
   <View style={styles.container}>
-    <Text style={styles.header}>Resultados del Examen</Text>
+    <View style={styles.headerWrap}>
+      <Text style={styles.header}>Examen clinico</Text>
+    </View>
+    <View style={styles.body}>
+      {aspectoGeneral?.trim() && (
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionLabel}>Aspecto general</Text>
+          <AspectoGeneralValue value={aspectoGeneral} />
+        </View>
+      )}
 
-    {/* Aspecto General - solo mostrar si hay valor seleccionado */}
-    {aspectoGeneral?.trim() && (
       <View style={styles.sectionRow}>
-        <Text style={styles.sectionLabel}>Aspecto General:</Text>
-        <AspectoGeneralValue value={aspectoGeneral} />
-      </View>
-    )}
-
-    {/* Peso / Talla / IMC */}
-    <View style={styles.sectionRow}>
-      <View style={styles.valueRow}>
-        <InfoField label="Peso (kg)" value={peso} />
-        <InfoField label="Talla (cm)" value={talla} />
-        <InfoField label="IMC" value={imc} />
+        <Text style={styles.sectionLabel}>Mediciones</Text>
+        <View style={styles.valueRow}>
+          <InfoField label="Peso (kg)" value={peso} />
+          <InfoField label="Talla (cm)" value={talla} />
+          <InfoField label="IMC" value={imc} />
+        </View>
       </View>
     </View>
   </View>
