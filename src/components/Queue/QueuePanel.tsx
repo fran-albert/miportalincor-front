@@ -86,10 +86,28 @@ const appointmentTypeColors: Record<AppointmentType, string> = {
   ADMINISTRATIVE: 'bg-gray-100 text-gray-800 border-gray-300',
 };
 
+const overturnBadgeClassName = 'bg-cyan-100 text-cyan-800 border-cyan-300';
+
 const hasMeaningfulText = (value: unknown): boolean => {
   if (value === null || value === undefined) return false;
   const normalized = String(value).trim();
   return normalized !== '' && normalized !== '0';
+};
+
+const getAppointmentTypePresentation = (
+  entry: QueueEntry
+): { label: string; className: string } => {
+  if (entry.appointmentType === 'SCHEDULED_APPOINTMENT' && entry.overturnId) {
+    return {
+      label: 'Sobreturno',
+      className: overturnBadgeClassName,
+    };
+  }
+
+  return {
+    label: appointmentTypeLabels[entry.appointmentType],
+    className: appointmentTypeColors[entry.appointmentType],
+  };
 };
 
 const formatQueueHour = (entry: QueueEntry): string => {
@@ -298,7 +316,10 @@ export const QueuePanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeQueue.map((entry) => (
+                {activeQueue.map((entry) => {
+                  const appointmentTypePresentation = getAppointmentTypePresentation(entry);
+
+                  return (
                   <TableRow key={entry.id}>
                     <TableCell>
                       <span className="text-2xl font-bold text-green-600">
@@ -308,9 +329,9 @@ export const QueuePanel = () => {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={appointmentTypeColors[entry.appointmentType]}
+                        className={appointmentTypePresentation.className}
                       >
-                        {appointmentTypeLabels[entry.appointmentType]}
+                        {appointmentTypePresentation.label}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -381,7 +402,7 @@ export const QueuePanel = () => {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </CardContent>
@@ -429,6 +450,7 @@ export const QueuePanel = () => {
                   const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
                   const isGuest = parseBoolean(entry.isGuest);
                   const attention = getAttentionLabels(entry);
+                  const appointmentTypePresentation = getAppointmentTypePresentation(entry);
                   return (
                     <TableRow key={entry.id}>
                       <TableCell>
@@ -439,9 +461,9 @@ export const QueuePanel = () => {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={appointmentTypeColors[entry.appointmentType]}
+                          className={appointmentTypePresentation.className}
                         >
-                          {appointmentTypeLabels[entry.appointmentType]}
+                          {appointmentTypePresentation.label}
                         </Badge>
                       </TableCell>
                       <TableCell>
