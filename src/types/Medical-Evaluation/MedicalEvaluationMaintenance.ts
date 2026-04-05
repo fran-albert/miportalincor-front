@@ -1,3 +1,5 @@
+import { ReportVisibilityOverrides } from "@/common/helpers/report-visibility";
+
 export interface MedicalEvaluationMaintenanceState {
   medicalEvaluationId: number;
   doctorId: number | null;
@@ -11,4 +13,5 @@ export interface MedicalEvaluationMaintenanceState {
 export interface UpdateMedicalEvaluationDto {
   doctorId?: number;
   evaluationTypeId?: number;
+  reportVisibilityOverrides?: ReportVisibilityOverrides;
 }

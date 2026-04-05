@@ -11,11 +11,10 @@ import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { mapMedicalEvaluation, mapOccupationalHistory } from "@/common/helpers/maps";
-import { ReportSectionKey, ReportVisibilityMode } from "@/common/helpers/report-visibility";
 import {
-  loadReportVisibilityOverrides,
-  saveReportVisibilityOverrides,
-} from "@/common/helpers/report-visibility.storage";
+  normalizeReportVisibilityOverrides,
+  ReportVisibilityOverrides,
+} from "@/common/helpers/report-visibility";
 import type { IMedicalEvaluation, Torax, Circulatorio, Gastrointestinal, Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
 import {
   clearUnsavedChanges,
@@ -24,6 +23,8 @@ import {
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { useQueryClient } from "@tanstack/react-query";
 import StageActionBar from "@/components/Pre-Occupational/StageActionBar";
+import { updateMedicalEvaluation } from "@/api/Medical-Evaluation/update.medical.evaluation";
+import { useMutation } from "@tanstack/react-query";
 // const workerMapping: Record<string, string> = {
 //   lugarNacimiento: "Lugar de nacimiento",
 //   nacionalidad: "Nacionalidad",
@@ -706,6 +707,8 @@ export default function MedicalHistoryTab({
   setSavedOccupationalHistory,
   savedMedicalEvaluation,
   setSavedMedicalEvaluation,
+  savedReportVisibilityOverrides,
+  setSavedReportVisibilityOverrides,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
@@ -719,6 +722,8 @@ export default function MedicalHistoryTab({
   setSavedOccupationalHistory?: (value: { id: string; description: string }[]) => void;
   savedMedicalEvaluation?: IMedicalEvaluation | null;
   setSavedMedicalEvaluation?: (value: IMedicalEvaluation) => void;
+  savedReportVisibilityOverrides?: ReportVisibilityOverrides;
+  setSavedReportVisibilityOverrides?: (value: ReportVisibilityOverrides) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const queryClient = useQueryClient();
@@ -744,6 +749,24 @@ export default function MedicalHistoryTab({
   const reportVisibilityOverrides = useSelector(
     (state: RootState) => state.preOccupational.reportVisibilityOverrides
   );
+  const normalizedCurrentReportVisibilityOverrides =
+    normalizeReportVisibilityOverrides(reportVisibilityOverrides);
+  const normalizedSavedReportVisibilityOverrides =
+    normalizeReportVisibilityOverrides(savedReportVisibilityOverrides);
+  const updateMedicalEvaluationMutation = useMutation({
+    mutationFn: (overrides: ReportVisibilityOverrides) =>
+      updateMedicalEvaluation(medicalEvaluationId, {
+        reportVisibilityOverrides: overrides,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["medical-evaluation", medicalEvaluationId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["collaborator-medical-evaluation"],
+      });
+    },
+  });
 
   // const workerDataValues = buildWorkerPayload(fields, workerInfo);
   const antecedentesDataValues = buildOccupationalHistoryPayload(
@@ -770,8 +793,14 @@ export default function MedicalHistoryTab({
     ? JSON.stringify(medicalEvaluation) !==
       JSON.stringify(savedMedicalEvaluation ?? null)
     : false;
+  const hasReportVisibilityChanges = includeMedicalEvaluation
+    ? JSON.stringify(normalizedCurrentReportVisibilityOverrides) !==
+      JSON.stringify(normalizedSavedReportVisibilityOverrides)
+    : false;
   const hasPendingChanges =
-    hasOccupationalHistoryChanges || hasMedicalEvaluationChanges;
+    hasOccupationalHistoryChanges ||
+    hasMedicalEvaluationChanges ||
+    hasReportVisibilityChanges;
   const deletedOccupationalHistoryIds = includeOccupationalHistory
     ? (savedOccupationalHistory ?? [])
         .filter(
@@ -800,12 +829,11 @@ export default function MedicalHistoryTab({
           ...(includeOccupationalHistory ? { occupationalHistory: oh } : {}),
         })
       );
-      dispatch(
-        hydrateReportVisibilityOverrides(
-          loadReportVisibilityOverrides(medicalEvaluationId)
-        )
-      );
     }
+
+    dispatch(
+      hydrateReportVisibilityOverrides(normalizedSavedReportVisibilityOverrides)
+    );
   };
 
   const handleSave = async () => {
@@ -823,6 +851,12 @@ export default function MedicalHistoryTab({
           medicalEvaluationId: medicalEvaluationId,
           dataValues: combinedDataValues,
         });
+      }
+
+      if (includeMedicalEvaluation && hasReportVisibilityChanges) {
+        await updateMedicalEvaluationMutation.mutateAsync(
+          normalizedCurrentReportVisibilityOverrides
+        );
       }
     })();
 
@@ -849,12 +883,7 @@ export default function MedicalHistoryTab({
     }
     if (includeMedicalEvaluation) {
       setSavedMedicalEvaluation?.(medicalEvaluation);
-      saveReportVisibilityOverrides(
-        medicalEvaluationId,
-        reportVisibilityOverrides as Partial<
-          Record<ReportSectionKey, ReportVisibilityMode>
-        >
-      );
+      setSavedReportVisibilityOverrides?.(normalizedCurrentReportVisibilityOverrides);
     }
     dispatch(clearUnsavedChanges());
   };
@@ -905,7 +934,8 @@ export default function MedicalHistoryTab({
           onSave={handleSave}
           isSaving={
             createDataValuesMutation.isPending ||
-            deleteDataValuesMutation.isPending
+            deleteDataValuesMutation.isPending ||
+            updateMedicalEvaluationMutation.isPending
           }
         />
       )}
