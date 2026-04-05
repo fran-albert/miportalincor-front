@@ -3,6 +3,14 @@ export type ReportResolvedVisibility = "visible" | "hidden";
 export type ReportResolvedPresentation = "full" | "summary" | "hidden";
 
 export type ReportSectionKey = "genitourinary" | "genitourinary_gyn_ob";
+export type ReportVisibilityOverrides = Partial<
+  Record<ReportSectionKey, ReportVisibilityMode>
+>;
+
+const REPORT_VISIBILITY_SECTION_KEYS: ReportSectionKey[] = [
+  "genitourinary",
+  "genitourinary_gyn_ob",
+];
 
 export interface ReportVisibilityResolution {
   sectionKey: ReportSectionKey;
@@ -22,6 +30,25 @@ interface ResolveReportVisibilityParams {
   visibilityMode?: ReportVisibilityMode;
   collaboratorGender?: string | null;
   hasData: boolean;
+}
+
+export function normalizeReportVisibilityOverrides(
+  overrides?: ReportVisibilityOverrides | null
+): ReportVisibilityOverrides {
+  if (!overrides) return {};
+
+  return REPORT_VISIBILITY_SECTION_KEYS.reduce<ReportVisibilityOverrides>(
+    (acc, key) => {
+      const value = overrides[key];
+
+      if (value && value !== "automatic") {
+        acc[key] = value;
+      }
+
+      return acc;
+    },
+    {}
+  );
 }
 
 const normalizeGender = (gender?: string | null): string => {

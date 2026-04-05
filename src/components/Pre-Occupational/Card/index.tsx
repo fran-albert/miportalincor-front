@@ -19,6 +19,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   hydrateFormData,
+  hydrateReportVisibilityOverrides,
   resetForm,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
@@ -61,6 +62,10 @@ import {
   mapMedicalEvaluation,
   mapOccupationalHistory,
 } from "@/common/helpers/maps";
+import {
+  normalizeReportVisibilityOverrides,
+  ReportVisibilityOverrides,
+} from "@/common/helpers/report-visibility";
 import type {
   IMedicalEvaluation,
   OccupationalHistoryItem,
@@ -206,6 +211,8 @@ export default function PreOccupationalCards({
   >([]);
   const [savedMedicalEvaluation, setSavedMedicalEvaluation] =
     useState<IMedicalEvaluation | null>(null);
+  const [savedReportVisibilityOverrides, setSavedReportVisibilityOverrides] =
+    useState<ReportVisibilityOverrides>({});
   const [isDoctorDialogOpen, setIsDoctorDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -221,17 +228,27 @@ export default function PreOccupationalCards({
   const currentMedicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
+  const reportVisibilityOverrides = useSelector(
+    (state: RootState) => state.preOccupational.reportVisibilityOverrides
+  );
   const hasAntecedentsUnsavedChanges =
     JSON.stringify(normalizeOccupationalHistory(occupationalHistory)) !==
     JSON.stringify(normalizeOccupationalHistory(savedOccupationalHistory));
   const hasMedicalHistoryUnsavedChanges =
     JSON.stringify(currentMedicalEvaluation) !==
     JSON.stringify(savedMedicalEvaluation);
+  const currentReportVisibilityOverrides = normalizeReportVisibilityOverrides(
+    reportVisibilityOverrides
+  );
+  const hasReportVisibilityUnsavedChanges =
+    JSON.stringify(currentReportVisibilityOverrides) !==
+    JSON.stringify(savedReportVisibilityOverrides);
   const hasAntecedentsSavedData =
     normalizeOccupationalHistory(savedOccupationalHistory).length > 0;
   const hasUnsavedChanges =
     hasAntecedentsUnsavedChanges ||
     hasMedicalHistoryUnsavedChanges ||
+    hasReportVisibilityUnsavedChanges ||
     hasGeneralUnsavedChanges;
   const blocker = useBlocker(hasUnsavedChanges);
   const previewHref = `/incor-laboral/colaboradores/${slug}/examen/${medicalEvaluation.id}/previsualizar-informe`;
@@ -347,18 +364,25 @@ export default function PreOccupationalCards({
       conclusion,
       recomendaciones,
     };
+    const hydratedReportVisibilityOverrides = normalizeReportVisibilityOverrides(
+      medicalEvaluation.reportVisibilityOverrides
+    );
     setSavedOccupationalHistory(hydratedOccupationalHistory);
     setSavedMedicalEvaluation(hydratedMedicalEvaluation);
+    setSavedReportVisibilityOverrides(hydratedReportVisibilityOverrides);
     dispatch(
       hydrateFormData({
         occupationalHistory: hydratedOccupationalHistory,
         medicalEvaluation: hydratedMedicalEvaluation,
       })
     );
+    dispatch(
+      hydrateReportVisibilityOverrides(hydratedReportVisibilityOverrides)
+    );
 
     setGeneralFormData(hydratedState);
     setSavedGeneralFormData(hydratedState);
-  }, [dataValues, dispatch]);
+  }, [dataValues, dispatch, medicalEvaluation.id, medicalEvaluation.reportVisibilityOverrides]);
 
   useEffect(() => {
     setHasGeneralUnsavedChanges(
@@ -886,6 +910,8 @@ export default function PreOccupationalCards({
             includeMedicalEvaluation
             savedMedicalEvaluation={savedMedicalEvaluation}
             setSavedMedicalEvaluation={setSavedMedicalEvaluation}
+            savedReportVisibilityOverrides={savedReportVisibilityOverrides}
+            setSavedReportVisibilityOverrides={setSavedReportVisibilityOverrides}
           />
         )}
 

@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useSelector } from "react-redux";
+import { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Save } from "lucide-react";
 import BreadcrumbComponent from "@/components/Breadcrumb";
@@ -23,6 +23,8 @@ import { useCurrentMedicalEvaluationReport } from "@/hooks/Medical-Evaluation-Re
 import { RootState } from "@/store/store";
 import { useLaborReportBrandingConfig } from "@/hooks/Labor-Report-Branding-Config/useLaborReportBrandingConfig";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
+import { hydrateReportVisibilityOverrides } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { normalizeReportVisibilityOverrides } from "@/common/helpers/report-visibility";
 
 interface Props {
   collaborator: Collaborator;
@@ -37,6 +39,7 @@ export default function PreOccupationalPreviewComponent({
   medicalEvaluation,
   dataValues,
 }: Props) {
+  const dispatch = useDispatch();
   const reportVisibilityOverrides = useSelector(
     (state: RootState) => state.preOccupational.reportVisibilityOverrides
   );
@@ -68,6 +71,16 @@ export default function PreOccupationalPreviewComponent({
   const matchedDoctor = doctors.find(
     (doctor) => String(doctor.userId) === doctorQueryId
   );
+
+  useEffect(() => {
+    dispatch(
+      hydrateReportVisibilityOverrides(
+        normalizeReportVisibilityOverrides(
+          medicalEvaluation.reportVisibilityOverrides
+        )
+      )
+    );
+  }, [dispatch, medicalEvaluation.reportVisibilityOverrides]);
 
   const { upload, cancel } = useUploadStudyWithProgress({
     collaboratorId: collaborator.id,

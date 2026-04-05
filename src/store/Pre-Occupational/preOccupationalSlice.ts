@@ -374,6 +374,15 @@ const preOccupationalSlice = createSlice({
       state.formData = { ...state.formData, ...action.payload };
       state.hasUnsavedChanges = false;
     },
+    hydrateReportVisibilityOverrides(
+      state,
+      action: PayloadAction<
+        Partial<Record<ReportSectionKey, ReportVisibilityMode>>
+      >
+    ) {
+      state.reportVisibilityOverrides = action.payload;
+      state.hasUnsavedChanges = false;
+    },
     setReportVisibilityOverride(
       state,
       action: PayloadAction<{
@@ -412,6 +421,7 @@ export const {
   setCollaborator,
   setFormData,
   hydrateFormData,
+  hydrateReportVisibilityOverrides,
   setReportVisibilityOverride,
   clearUnsavedChanges,
   resetForm,

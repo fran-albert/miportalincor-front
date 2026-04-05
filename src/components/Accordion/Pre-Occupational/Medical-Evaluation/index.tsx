@@ -100,24 +100,47 @@ export default function MedicalEvaluationAccordion({
     field: keyof Circulatorio,
     value: boolean | string | undefined
   ) => {
+    const nextCirculatorio = {
+      ...circulatorio,
+      [field]: value,
+    };
+    const nextExam =
+      field === "frecuenciaCardiaca"
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaCardiaca: value == null ? "" : String(value),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          circulatorio: {
-            ...circulatorio,
-            [field]: value,
-          },
+          examenClinico: nextExam,
+          circulatorio: nextCirculatorio,
         },
       })
     );
   };
   const handleCirculatorioBatchChange = (updates: Partial<Circulatorio>) => {
+    const nextCirculatorio = { ...circulatorio, ...updates };
+    const nextExam =
+      updates.frecuenciaCardiaca !== undefined
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaCardiaca:
+              updates.frecuenciaCardiaca == null
+                ? ""
+                : String(updates.frecuenciaCardiaca),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          circulatorio: { ...circulatorio, ...updates },
+          examenClinico: nextExam,
+          circulatorio: nextCirculatorio,
         },
       })
     );
@@ -145,21 +168,44 @@ export default function MedicalEvaluationAccordion({
     field: keyof Respiratorio,
     value: boolean | string | undefined
   ) => {
+    const nextResp = { ...resp, [field]: value };
+    const nextExam =
+      field === "frecuenciaRespiratoria"
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaRespiratoria: value == null ? "" : String(value),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          respiratorio: { ...resp, [field]: value },
+          examenClinico: nextExam,
+          respiratorio: nextResp,
         },
       })
     );
   };
   const handleRespBatchChange = (updates: Partial<Respiratorio>) => {
+    const nextResp = { ...resp, ...updates };
+    const nextExam =
+      updates.frecuenciaRespiratoria !== undefined
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaRespiratoria:
+              updates.frecuenciaRespiratoria == null
+                ? ""
+                : String(updates.frecuenciaRespiratoria),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          respiratorio: { ...resp, ...updates },
+          examenClinico: nextExam,
+          respiratorio: nextResp,
         },
       })
     );
@@ -256,6 +302,14 @@ export default function MedicalEvaluationAccordion({
     value: string
   ) => {
     const updatedExam = { ...medicalEvaluation.examenClinico, [field]: value };
+    const updatedResp =
+      field === "frecuenciaRespiratoria"
+        ? { ...resp, frecuenciaRespiratoria: value }
+        : resp;
+    const updatedCirculatorio =
+      field === "frecuenciaCardiaca"
+        ? { ...circulatorio, frecuenciaCardiaca: value }
+        : circulatorio;
 
     if (field === "talla" || field === "peso") {
       const heightInCm = parseFloat(updatedExam.talla);
@@ -273,6 +327,8 @@ export default function MedicalEvaluationAccordion({
         medicalEvaluation: {
           ...medicalEvaluation,
           examenClinico: updatedExam,
+          respiratorio: updatedResp,
+          circulatorio: updatedCirculatorio,
         },
       })
     );

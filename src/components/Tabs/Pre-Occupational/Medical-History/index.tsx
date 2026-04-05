@@ -11,10 +11,20 @@ import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { mapMedicalEvaluation, mapOccupationalHistory } from "@/common/helpers/maps";
+import {
+  normalizeReportVisibilityOverrides,
+  ReportVisibilityOverrides,
+} from "@/common/helpers/report-visibility";
 import type { IMedicalEvaluation, Torax, Circulatorio, Gastrointestinal, Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { clearUnsavedChanges, hydrateFormData } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  clearUnsavedChanges,
+  hydrateFormData,
+  hydrateReportVisibilityOverrides,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
 import { useQueryClient } from "@tanstack/react-query";
 import StageActionBar from "@/components/Pre-Occupational/StageActionBar";
+import { updateMedicalEvaluation } from "@/api/Medical-Evaluation/update.medical.evaluation";
+import { useMutation } from "@tanstack/react-query";
 // const workerMapping: Record<string, string> = {
 //   lugarNacimiento: "Lugar de nacimiento",
 //   nacionalidad: "Nacionalidad",
@@ -43,7 +53,7 @@ import StageActionBar from "@/components/Pre-Occupational/StageActionBar";
 //   return workerDataValues;
 // };
 
-const buildOccupationalHistoryPayload = (
+export const buildOccupationalHistoryPayload = (
   occupationalHistory: { id: string; description: string }[],
   fields: DataType[]
 ): { dataTypeId: number; value: string; id?: number }[] => {
@@ -79,7 +89,7 @@ const normalizeOccupationalHistory = (
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b));
 
-const buildMedicalEvaluationPayload = (
+export const buildMedicalEvaluationPayload = (
   fields: DataType[],
   medicalEvaluation: IMedicalEvaluation
 ): { dataTypeId: number; value: string; observations?: string | null }[] => {
@@ -89,6 +99,40 @@ const buildMedicalEvaluationPayload = (
     observations?: string | null;
   }[] = [];
 
+  const pushBooleanItem = ({
+    field,
+    value,
+    observations,
+    fallbackWhenOnlyObservations,
+  }: {
+    field: DataType | undefined;
+    value: boolean | "si" | "no" | undefined;
+    observations?: string | null;
+    fallbackWhenOnlyObservations: boolean;
+  }) => {
+    if (!field) return;
+
+    const normalizedObservations = observations?.trim() || "";
+    const hasObservations = normalizedObservations !== "";
+
+    const normalizedValue =
+      typeof value === "boolean"
+        ? value
+        : value === "si"
+          ? true
+          : value === "no"
+            ? false
+            : undefined;
+
+    if (normalizedValue === undefined && !hasObservations) return;
+
+    payloadItems.push({
+      dataTypeId: field.id,
+      value: String(normalizedValue ?? fallbackWhenOnlyObservations),
+      observations: hasObservations ? normalizedObservations : null,
+    });
+  };
+
   const aspectoField = fields.find(
     (f) => f.category === "HISTORIA_MEDICA" && f.name === "Aspecto general"
   );
@@ -96,6 +140,16 @@ const buildMedicalEvaluationPayload = (
     payloadItems.push({
       dataTypeId: aspectoField.id,
       value: medicalEvaluation.aspectoGeneral,
+    });
+  }
+
+  const tiempoLibreField = fields.find(
+    (f) => f.category === "HISTORIA_MEDICA" && f.name === "Tiempo libre"
+  );
+  if (tiempoLibreField && medicalEvaluation.tiempoLibre.trim() !== "") {
+    payloadItems.push({
+      dataTypeId: tiempoLibreField.id,
+      value: medicalEvaluation.tiempoLibre.trim(),
     });
   }
 
@@ -139,33 +193,6 @@ const buildMedicalEvaluationPayload = (
     });
   }
 
-  const frecuenciaCardiacaField = fields.find(
-    (f) => f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Cardíaca"
-  );
-  if (
-    frecuenciaCardiacaField &&
-    medicalEvaluation.examenClinico.frecuenciaCardiaca
-  ) {
-    payloadItems.push({
-      dataTypeId: frecuenciaCardiacaField.id,
-      value: String(medicalEvaluation.examenClinico.frecuenciaCardiaca),
-    });
-  }
-
-  const frecuenciaRespiratoriaField = fields.find(
-    (f) =>
-      f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Respiratoria"
-  );
-  if (
-    frecuenciaRespiratoriaField &&
-    medicalEvaluation.examenClinico.frecuenciaRespiratoria
-  ) {
-    payloadItems.push({
-      dataTypeId: frecuenciaRespiratoriaField.id,
-      value: String(medicalEvaluation.examenClinico.frecuenciaRespiratoria),
-    });
-  }
-
   const presionSistolicaField = fields.find(
     (f) => f.category === "EXAMEN_CLINICO" && f.name === "Presión Sistólica"
   );
@@ -194,37 +221,34 @@ const buildMedicalEvaluationPayload = (
   const normoField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Normocoloreada"
   );
-  // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
-  if (normoField && medicalEvaluation.piel?.normocoloreada !== undefined) {
-    payloadItems.push({
-      dataTypeId: normoField.id,
-      value: medicalEvaluation.piel.normocoloreada === "si" ? "true" : "false",
-      observations: medicalEvaluation.piel.observaciones?.trim() || null,
-    });
-  }
+  pushBooleanItem({
+    field: normoField,
+    value: medicalEvaluation.piel?.normocoloreada,
+    observations: medicalEvaluation.piel?.observaciones,
+    fallbackWhenOnlyObservations: false,
+  });
 
   // Tatuajes
   const tatField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Tatuajes"
   );
-  // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
-  if (tatField && medicalEvaluation.piel?.tatuajes !== undefined) {
-    payloadItems.push({
-      dataTypeId: tatField.id,
-      value: medicalEvaluation.piel.tatuajes === "si" ? "true" : "false",
-    });
-  }
+  pushBooleanItem({
+    field: tatField,
+    value: medicalEvaluation.piel?.tatuajes,
+    observations: null,
+    fallbackWhenOnlyObservations: true,
+  });
 
   const cabezaBool = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Cabeza y Cuello"
   );
   // Solo enviar si el valor fue explícitamente seleccionado
-  if (cabezaBool && medicalEvaluation.cabezaCuello?.sinAlteraciones !== undefined) {
-    payloadItems.push({
-      dataTypeId: cabezaBool.id,
-      value: medicalEvaluation.cabezaCuello.sinAlteraciones ? "true" : "false",
-    });
-  }
+  pushBooleanItem({
+    field: cabezaBool,
+    value: medicalEvaluation.cabezaCuello?.sinAlteraciones,
+    observations: medicalEvaluation.cabezaCuello?.observaciones,
+    fallbackWhenOnlyObservations: false,
+  });
 
   // 2) Observaciones Cabeza y Cuello - enviar siempre para permitir borrar
   const cabezaObs = fields.find(
@@ -249,13 +273,12 @@ const buildMedicalEvaluationPayload = (
     );
     if (dt && medicalEvaluation.bucodental) {
       const value = medicalEvaluation.bucodental[key as keyof typeof medicalEvaluation.bucodental];
-      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
-      if (value !== undefined) {
-        payloadItems.push({
-          dataTypeId: dt.id,
-          value: value ? "true" : "false",
-        });
-      }
+      pushBooleanItem({
+        field: dt,
+        value: value as boolean | undefined,
+        observations: null,
+        fallbackWhenOnlyObservations: true,
+      });
     }
   });
   // Observaciones Bucodental - enviar siempre para permitir borrar
@@ -283,42 +306,48 @@ const buildMedicalEvaluationPayload = (
       const torax: Torax = medicalEvaluation.torax;
       const value = torax[key as keyof Torax];
       const obsKey = `${key}Obs` as keyof Torax;
-      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
-      if (value !== undefined) {
-        payloadItems.push({
-          dataTypeId: dt.id,
-          value: value === "si" ? "true" : "false",
-          observations: (torax[obsKey] as string)?.trim() || null,
-        });
-      }
+      pushBooleanItem({
+        field: dt,
+        value: value as "si" | "no" | undefined,
+        observations: torax[obsKey] as string | undefined,
+        fallbackWhenOnlyObservations: true,
+      });
     }
   });
 
   // === Respiratorio ===
   if (medicalEvaluation.respiratorio) {
-    // Booleano Aparato Respiratorio - solo enviar si fue seleccionado
-    const respBool = fields.find(
-      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Respiratorio"
+    const sharedRespiratoryFrequency =
+      medicalEvaluation.respiratorio.frecuenciaRespiratoria ||
+      medicalEvaluation.examenClinico.frecuenciaRespiratoria;
+
+    const frecuenciaRespiratoriaField = fields.find(
+      (f) =>
+        f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Respiratoria"
     );
-    if (respBool && medicalEvaluation.respiratorio.sinAlteraciones !== undefined) {
+    if (frecuenciaRespiratoriaField && sharedRespiratoryFrequency) {
       payloadItems.push({
-        dataTypeId: respBool.id,
-        value: medicalEvaluation.respiratorio.sinAlteraciones
-          ? "true"
-          : "false",
-        observations:
-          medicalEvaluation.respiratorio.observaciones?.trim() || null,
+        dataTypeId: frecuenciaRespiratoriaField.id,
+        value: String(sharedRespiratoryFrequency),
       });
     }
 
-    // Campos de clínica (números)
-    ["frecuenciaRespiratoria", "oximetria"].forEach((key) => {
+    const respBool = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Respiratorio"
+    );
+    pushBooleanItem({
+      field: respBool,
+      value: medicalEvaluation.respiratorio.sinAlteraciones,
+      observations: medicalEvaluation.respiratorio.observaciones,
+      fallbackWhenOnlyObservations: false,
+    });
+
+    // Campos de clínica (números) exclusivos de la sección
+    ["oximetria"].forEach((key) => {
       const dt = fields.find(
         (f) =>
           f.category === "EXAMEN_CLINICO" &&
-          (key === "frecuenciaRespiratoria"
-            ? f.name === "Frecuencia Respiratoria"
-            : f.name === "Oximetria")
+          f.name === "Oximetria"
       );
       const val =
         medicalEvaluation.respiratorio![
@@ -336,21 +365,31 @@ const buildMedicalEvaluationPayload = (
   // === Circulatorio ===
   const circ = medicalEvaluation.circulatorio;
   if (circ) {
-    // 1) Booleano Aparato Circulatorio - solo enviar si fue seleccionado
-    const circBool = fields.find(
-      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Circulatorio"
+    const sharedHeartRate =
+      circ.frecuenciaCardiaca || medicalEvaluation.examenClinico.frecuenciaCardiaca;
+
+    const frecuenciaCardiacaField = fields.find(
+      (f) => f.category === "EXAMEN_CLINICO" && f.name === "Frecuencia Cardíaca"
     );
-    if (circBool && circ.sinAlteraciones !== undefined) {
+    if (frecuenciaCardiacaField && sharedHeartRate) {
       payloadItems.push({
-        dataTypeId: circBool.id,
-        value: circ.sinAlteraciones ? "true" : "false",
-        observations: circ.observaciones?.trim() || null,
+        dataTypeId: frecuenciaCardiacaField.id,
+        value: String(sharedHeartRate),
       });
     }
 
-    // 2) Signos vitales circulatorios (números)
+    const circBool = fields.find(
+      (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Circulatorio"
+    );
+    pushBooleanItem({
+      field: circBool,
+      value: circ.sinAlteraciones,
+      observations: circ.observaciones,
+      fallbackWhenOnlyObservations: false,
+    });
+
+    // 2) Signos vitales circulatorios exclusivos de la sección
     const circClin = [
-      { key: "frecuenciaCardiaca", name: "Frecuencia Cardíaca" },
       { key: "presion", name: "TA" },
     ] as const;
 
@@ -371,13 +410,12 @@ const buildMedicalEvaluationPayload = (
     const varicesField = fields.find(
       (f) => f.category === "EXAMEN_FISICO" && f.name === "Várices"
     );
-    if (varicesField && circ.varices !== undefined) {
-      payloadItems.push({
-        dataTypeId: varicesField.id,
-        value: circ.varices ? "true" : "false",
-        observations: circ.varicesObs?.trim() || null,
-      });
-    }
+    pushBooleanItem({
+      field: varicesField,
+      value: circ.varices,
+      observations: circ.varicesObs,
+      fallbackWhenOnlyObservations: true,
+    });
   }
 
   // === Gastrointestinal ===
@@ -386,16 +424,12 @@ const buildMedicalEvaluationPayload = (
       f.category === "EXAMEN_FISICO" && f.name === "Aparato Gastrointestinal"
   );
   // Solo enviar si el valor fue explícitamente seleccionado
-  if (giBool && medicalEvaluation.gastrointestinal?.sinAlteraciones !== undefined) {
-    payloadItems.push({
-      dataTypeId: giBool.id,
-      value: medicalEvaluation.gastrointestinal.sinAlteraciones
-        ? "true"
-        : "false",
-      observations:
-        medicalEvaluation.gastrointestinal.observaciones?.trim() || null,
-    });
-  }
+  pushBooleanItem({
+    field: giBool,
+    value: medicalEvaluation.gastrointestinal?.sinAlteraciones,
+    observations: medicalEvaluation.gastrointestinal?.observaciones,
+    fallbackWhenOnlyObservations: false,
+  });
   if (medicalEvaluation.gastrointestinal) {
     // === Cirugías, hernias, eventraciones, hemorroides ===
     // Solo enviar campos que fueron explícitamente seleccionados (no undefined)
@@ -415,14 +449,12 @@ const buildMedicalEvaluationPayload = (
       const gi: Gastrointestinal = medicalEvaluation.gastrointestinal;
       const val = gi[key as keyof Gastrointestinal] as boolean | undefined;
       const obsKey = `${key}Obs` as keyof Gastrointestinal;
-      // Solo enviar si el valor fue explícitamente seleccionado (true o false, no undefined)
-      if (val !== undefined) {
-        payloadItems.push({
-          dataTypeId: dt.id,
-          value: val === true ? "true" : "false",
-          observations: (gi[obsKey] as string)?.trim() || null,
-        });
-      }
+      pushBooleanItem({
+        field: dt,
+        value: val,
+        observations: gi[obsKey] as string | undefined,
+        fallbackWhenOnlyObservations: true,
+      });
     });
   }
 
@@ -431,41 +463,33 @@ const buildMedicalEvaluationPayload = (
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Neurológico"
   );
   // Solo enviar si el valor fue explícitamente seleccionado
-  if (neuroBool && medicalEvaluation.neurologico?.sinAlteraciones !== undefined) {
-    payloadItems.push({
-      dataTypeId: neuroBool.id,
-      value: medicalEvaluation.neurologico.sinAlteraciones ? "true" : "false",
-      observations: medicalEvaluation.neurologico.observaciones?.trim() || null,
-    });
-  }
+  pushBooleanItem({
+    field: neuroBool,
+    value: medicalEvaluation.neurologico?.sinAlteraciones,
+    observations: medicalEvaluation.neurologico?.observaciones,
+    fallbackWhenOnlyObservations: false,
+  });
 
   // === Genitourinario ===
   const genBool = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Aparato Genitourinario"
   );
   // Solo enviar si el valor fue explícitamente seleccionado
-  if (genBool && medicalEvaluation.genitourinario?.sinAlteraciones !== undefined) {
-    payloadItems.push({
-      dataTypeId: genBool.id,
-      value: medicalEvaluation.genitourinario.sinAlteraciones
-        ? "true"
-        : "false",
-      observations:
-        medicalEvaluation.genitourinario.observaciones?.trim() || null,
-    });
-  }
+  pushBooleanItem({
+    field: genBool,
+    value: medicalEvaluation.genitourinario?.sinAlteraciones,
+    observations: medicalEvaluation.genitourinario?.observaciones,
+    fallbackWhenOnlyObservations: false,
+  });
   const varicoField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "Varicocele"
   );
-  // Solo enviar si el valor fue explícitamente seleccionado
-  if (varicoField && medicalEvaluation.genitourinario?.varicocele !== undefined) {
-    payloadItems.push({
-      dataTypeId: varicoField.id,
-      value: medicalEvaluation.genitourinario.varicocele ? "true" : "false",
-      observations:
-        medicalEvaluation.genitourinario.varicoceleObs?.trim() || null,
-    });
-  }
+  pushBooleanItem({
+    field: varicoField,
+    value: medicalEvaluation.genitourinario?.varicocele,
+    observations: medicalEvaluation.genitourinario?.varicoceleObs,
+    fallbackWhenOnlyObservations: true,
+  });
   const fumField = fields.find(
     (f) => f.category === "EXAMEN_FISICO" && f.name === "FUM"
   );
@@ -523,15 +547,11 @@ const buildMedicalEvaluationPayload = (
       if (!dt) return;
 
       const val = osteo[key as keyof Osteoarticular];
-      // Solo enviar si el valor fue explícitamente seleccionado (no undefined)
-      if (val === undefined) return;
-
-      const obs = (osteo[obsKey as keyof Osteoarticular] as string)?.trim() || undefined;
-
-      payloadItems.push({
-        dataTypeId: dt.id,
-        value: val ? "true" : "false",
-        observations: obs,
+      pushBooleanItem({
+        field: dt,
+        value: val as boolean | undefined,
+        observations: osteo[obsKey as keyof Osteoarticular] as string | undefined,
+        fallbackWhenOnlyObservations: false,
       });
     });
   }
@@ -597,6 +617,83 @@ const buildMedicalEvaluationPayload = (
   return payloadItems;
 };
 
+const CLEARABLE_MEDICAL_EVALUATION_FIELD_NAMES = new Set([
+  "Aspecto general",
+  "Tiempo libre",
+  "Talla",
+  "Peso",
+  "IMC",
+  "Perimetro Abdominal",
+  "Frecuencia Cardíaca",
+  "Frecuencia Respiratoria",
+  "Presión Sistólica",
+  "Presión Diastólica",
+  "Oximetria",
+  "TA",
+  "FUM",
+  "Partos",
+  "Cesárea",
+  "Embarazos",
+  "Agudeza S/C Derecho",
+  "Agudeza S/C Izquierdo",
+  "Agudeza C/C Derecho",
+  "Agudeza C/C Izquierdo",
+]);
+
+export const buildMedicalEvaluationClearPayload = ({
+  fields,
+  currentPayload,
+  savedMedicalEvaluation,
+  dataValues,
+}: {
+  fields: DataType[];
+  currentPayload: { dataTypeId: number; value: string; observations?: string | null }[];
+  savedMedicalEvaluation?: IMedicalEvaluation | null;
+  dataValues?: DataValue[];
+}): { id: number; dataTypeId: number; value: string }[] => {
+  if (!savedMedicalEvaluation || !dataValues?.length) {
+    return [];
+  }
+
+  const previousPayload = buildMedicalEvaluationPayload(fields, savedMedicalEvaluation);
+  const currentPayloadIds = new Set(currentPayload.map((item) => item.dataTypeId));
+  const fieldById = new Map(fields.map((field) => [field.id, field]));
+  const persistedByTypeId = new Map<number, DataValue>();
+
+  [...dataValues]
+    .sort((a, b) => {
+      const updatedDiff =
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      if (updatedDiff !== 0) return updatedDiff;
+      return b.id - a.id;
+    })
+    .forEach((item) => {
+      persistedByTypeId.set(item.dataType.id, item);
+    });
+
+  return previousPayload
+    .filter((item) => {
+      const field = fieldById.get(item.dataTypeId);
+
+      if (!field) return false;
+      if (field.dataType === "BOOLEAN") return false;
+      if (!CLEARABLE_MEDICAL_EVALUATION_FIELD_NAMES.has(field.name)) return false;
+
+      return !currentPayloadIds.has(item.dataTypeId);
+    })
+    .map((item) => {
+      const persisted = persistedByTypeId.get(item.dataTypeId);
+      if (!persisted) return null;
+
+      return {
+        id: persisted.id,
+        dataTypeId: item.dataTypeId,
+        value: "",
+      };
+    })
+    .filter((item): item is { id: number; dataTypeId: number; value: string } => item !== null);
+};
+
 export default function MedicalHistoryTab({
   isEditing,
   setIsEditing,
@@ -610,6 +707,8 @@ export default function MedicalHistoryTab({
   setSavedOccupationalHistory,
   savedMedicalEvaluation,
   setSavedMedicalEvaluation,
+  savedReportVisibilityOverrides,
+  setSavedReportVisibilityOverrides,
 }: {
   isEditing: boolean;
   setIsEditing: (value: boolean) => void;
@@ -623,6 +722,8 @@ export default function MedicalHistoryTab({
   setSavedOccupationalHistory?: (value: { id: string; description: string }[]) => void;
   savedMedicalEvaluation?: IMedicalEvaluation | null;
   setSavedMedicalEvaluation?: (value: IMedicalEvaluation) => void;
+  savedReportVisibilityOverrides?: ReportVisibilityOverrides;
+  setSavedReportVisibilityOverrides?: (value: ReportVisibilityOverrides) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const queryClient = useQueryClient();
@@ -645,6 +746,27 @@ export default function MedicalHistoryTab({
   // const workerInfo = formData.workerInformation;
   const occupationalHistory = formData.occupationalHistory;
   const medicalEvaluation = formData.medicalEvaluation;
+  const reportVisibilityOverrides = useSelector(
+    (state: RootState) => state.preOccupational.reportVisibilityOverrides
+  );
+  const normalizedCurrentReportVisibilityOverrides =
+    normalizeReportVisibilityOverrides(reportVisibilityOverrides);
+  const normalizedSavedReportVisibilityOverrides =
+    normalizeReportVisibilityOverrides(savedReportVisibilityOverrides);
+  const updateMedicalEvaluationMutation = useMutation({
+    mutationFn: (overrides: ReportVisibilityOverrides) =>
+      updateMedicalEvaluation(medicalEvaluationId, {
+        reportVisibilityOverrides: overrides,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["medical-evaluation", medicalEvaluationId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["collaborator-medical-evaluation"],
+      });
+    },
+  });
 
   // const workerDataValues = buildWorkerPayload(fields, workerInfo);
   const antecedentesDataValues = buildOccupationalHistoryPayload(
@@ -655,6 +777,14 @@ export default function MedicalHistoryTab({
     fields,
     medicalEvaluation
   );
+  const medicalEvaluationClearDataValues = includeMedicalEvaluation
+    ? buildMedicalEvaluationClearPayload({
+        fields,
+        currentPayload: medicalEvaluationDataValues,
+        savedMedicalEvaluation,
+        dataValues,
+      })
+    : [];
   const hasOccupationalHistoryChanges = includeOccupationalHistory
     ? JSON.stringify(normalizeOccupationalHistory(occupationalHistory)) !==
       JSON.stringify(normalizeOccupationalHistory(savedOccupationalHistory))
@@ -663,8 +793,14 @@ export default function MedicalHistoryTab({
     ? JSON.stringify(medicalEvaluation) !==
       JSON.stringify(savedMedicalEvaluation ?? null)
     : false;
+  const hasReportVisibilityChanges = includeMedicalEvaluation
+    ? JSON.stringify(normalizedCurrentReportVisibilityOverrides) !==
+      JSON.stringify(normalizedSavedReportVisibilityOverrides)
+    : false;
   const hasPendingChanges =
-    hasOccupationalHistoryChanges || hasMedicalEvaluationChanges;
+    hasOccupationalHistoryChanges ||
+    hasMedicalEvaluationChanges ||
+    hasReportVisibilityChanges;
   const deletedOccupationalHistoryIds = includeOccupationalHistory
     ? (savedOccupationalHistory ?? [])
         .filter(
@@ -679,6 +815,7 @@ export default function MedicalHistoryTab({
   const combinedDataValues = [
     ...(includeOccupationalHistory ? antecedentesDataValues : []),
     ...(includeMedicalEvaluation ? medicalEvaluationDataValues : []),
+    ...medicalEvaluationClearDataValues,
   ];
 
   // Cancelar edición: resetear Redux con los datos originales de la BD
@@ -693,6 +830,10 @@ export default function MedicalHistoryTab({
         })
       );
     }
+
+    dispatch(
+      hydrateReportVisibilityOverrides(normalizedSavedReportVisibilityOverrides)
+    );
   };
 
   const handleSave = async () => {
@@ -710,6 +851,12 @@ export default function MedicalHistoryTab({
           medicalEvaluationId: medicalEvaluationId,
           dataValues: combinedDataValues,
         });
+      }
+
+      if (includeMedicalEvaluation && hasReportVisibilityChanges) {
+        await updateMedicalEvaluationMutation.mutateAsync(
+          normalizedCurrentReportVisibilityOverrides
+        );
       }
     })();
 
@@ -736,6 +883,7 @@ export default function MedicalHistoryTab({
     }
     if (includeMedicalEvaluation) {
       setSavedMedicalEvaluation?.(medicalEvaluation);
+      setSavedReportVisibilityOverrides?.(normalizedCurrentReportVisibilityOverrides);
     }
     dispatch(clearUnsavedChanges());
   };
@@ -786,7 +934,8 @@ export default function MedicalHistoryTab({
           onSave={handleSave}
           isSaving={
             createDataValuesMutation.isPending ||
-            deleteDataValuesMutation.isPending
+            deleteDataValuesMutation.isPending ||
+            updateMedicalEvaluationMutation.isPending
           }
         />
       )}
