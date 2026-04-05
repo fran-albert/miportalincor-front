@@ -55,6 +55,12 @@ export const recallPatient = async (id: number): Promise<QueueEntry> => {
   return response.data;
 };
 
+// POST - Confirmar arribo y pasar a espera médica
+export const confirmArrival = async (id: number): Promise<QueueEntry> => {
+  const response = await apiTurnos.post(`/queue/${id}/confirm-arrival`);
+  return response.data;
+};
+
 // PATCH - Marcar como atendiendo
 export const markAsAttending = async (id: number): Promise<QueueEntry> => {
   const response = await apiTurnos.patch(`/queue/${id}/attending`);

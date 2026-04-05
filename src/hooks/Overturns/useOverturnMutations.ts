@@ -5,7 +5,12 @@ import {
   deleteOverturn,
   updateOverturn,
 } from "@/api/Overturns";
-import { CreateOverturnDto, OverturnStatus, UpdateOverturnDto } from "@/types/Overturn/Overturn";
+import {
+  CreateOverturnDto,
+  OverturnStatus,
+  OverturnStatusTransitionContext,
+  UpdateOverturnDto,
+} from "@/types/Overturn/Overturn";
 
 export const useOverturnMutations = () => {
   const queryClient = useQueryClient();
@@ -25,8 +30,16 @@ export const useOverturnMutations = () => {
   });
 
   const changeStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: OverturnStatus }) =>
-      changeOverturnStatus(id, status),
+    mutationFn: ({
+      id,
+      status,
+      transitionContext,
+    }: {
+      id: number;
+      status: OverturnStatus;
+      transitionContext?: OverturnStatusTransitionContext;
+    }) =>
+      changeOverturnStatus(id, { status, transitionContext }),
     onSuccess: (_, variables) => {
       // Invalidar queries de overturns
       queryClient.invalidateQueries({ queryKey: ['overturns'] });

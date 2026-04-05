@@ -2,7 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "../Select/StatusBadge";
-import { OverturnDetailedDto, OverturnStatus, ALLOWED_OVERTURN_TRANSITIONS } from "@/types/Overturn/Overturn";
+import {
+  OverturnDetailedDto,
+  OverturnStatus,
+  OPERATIONAL_OVERTURN_TRANSITIONS,
+} from "@/types/Overturn/Overturn";
 import { formatDateAR, formatTimeAR } from "@/common/helpers/timezone";
 import { Calendar, Clock, User, Stethoscope, MoreVertical, AlertCircle } from "lucide-react";
 import {
@@ -34,7 +38,7 @@ export const OverturnCard = ({
   showActions = true,
   className
 }: OverturnCardProps) => {
-  const allowedTransitions = ALLOWED_OVERTURN_TRANSITIONS[overturn.status] || [];
+  const allowedTransitions = OPERATIONAL_OVERTURN_TRANSITIONS[overturn.status] || [];
 
   const getStatusAction = (status: OverturnStatus) => {
     switch (status) {

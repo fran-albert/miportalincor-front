@@ -13,6 +13,11 @@ export enum OverturnStatus {
   CANCELLED_BY_SECRETARY = 'CANCELLED_BY_SECRETARY',
 }
 
+export enum OverturnStatusTransitionContext {
+  RECEPTION_FLOW = 'RECEPTION_FLOW',
+  CALENDAR_OVERRIDE = 'CALENDAR_OVERRIDE',
+}
+
 export const OverturnStatusLabels: Record<OverturnStatus, string> = {
   [OverturnStatus.PENDING]: 'Pendiente',
   [OverturnStatus.WAITING]: 'En espera',
@@ -34,6 +39,22 @@ export const OverturnStatusColors: Record<OverturnStatus, string> = {
 export const ALLOWED_OVERTURN_TRANSITIONS: Record<OverturnStatus, OverturnStatus[]> = {
   [OverturnStatus.PENDING]: [
     OverturnStatus.WAITING,
+    OverturnStatus.CANCELLED_BY_PATIENT,
+    OverturnStatus.CANCELLED_BY_SECRETARY,
+  ],
+  [OverturnStatus.WAITING]: [
+    OverturnStatus.ATTENDING,
+    OverturnStatus.CANCELLED_BY_PATIENT,
+    OverturnStatus.CANCELLED_BY_SECRETARY,
+  ],
+  [OverturnStatus.ATTENDING]: [OverturnStatus.COMPLETED],
+  [OverturnStatus.COMPLETED]: [],
+  [OverturnStatus.CANCELLED_BY_PATIENT]: [],
+  [OverturnStatus.CANCELLED_BY_SECRETARY]: [],
+};
+
+export const OPERATIONAL_OVERTURN_TRANSITIONS: Record<OverturnStatus, OverturnStatus[]> = {
+  [OverturnStatus.PENDING]: [
     OverturnStatus.CANCELLED_BY_PATIENT,
     OverturnStatus.CANCELLED_BY_SECRETARY,
   ],
@@ -98,4 +119,5 @@ export interface UpdateOverturnDto {
 
 export interface UpdateOverturnStatusDto {
   status: OverturnStatus;
+  transitionContext?: OverturnStatusTransitionContext;
 }

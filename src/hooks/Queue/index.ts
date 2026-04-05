@@ -6,6 +6,7 @@ export {
   useCallNextPatient,
   useCallSpecificPatient,
   useRecallPatient,
+  useConfirmArrival,
   useMarkAsAttending,
   useMarkAsCompleted,
   useMarkAsNoShow,

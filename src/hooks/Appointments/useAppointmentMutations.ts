@@ -11,6 +11,7 @@ import {
   UpdateAppointmentDto,
   RescheduleAppointmentDto,
   AppointmentStatus,
+  AppointmentStatusTransitionContext,
 } from "@/types/Appointment/Appointment";
 
 export const useAppointmentMutations = () => {
@@ -43,8 +44,16 @@ export const useAppointmentMutations = () => {
   });
 
   const changeStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: AppointmentStatus }) =>
-      changeAppointmentStatus(id, status),
+    mutationFn: ({
+      id,
+      status,
+      transitionContext,
+    }: {
+      id: number;
+      status: AppointmentStatus;
+      transitionContext?: AppointmentStatusTransitionContext;
+    }) =>
+      changeAppointmentStatus(id, { status, transitionContext }),
     onSuccess: (_, variables) => {
       // Invalidar queries de appointments
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
