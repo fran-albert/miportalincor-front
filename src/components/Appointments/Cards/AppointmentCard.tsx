@@ -1,7 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "../Select/StatusBadge";
-import { AppointmentFullResponseDto, AppointmentStatus, ALLOWED_TRANSITIONS } from "@/types/Appointment/Appointment";
+import {
+  AppointmentFullResponseDto,
+  AppointmentStatus,
+  OPERATIONAL_TRANSITIONS,
+} from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR } from "@/common/helpers/timezone";
 import { Calendar, Clock, User, Stethoscope, MoreVertical, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +44,7 @@ export const AppointmentCard = ({
   showActions = true,
   className
 }: AppointmentCardProps) => {
-  const allowedTransitions = ALLOWED_TRANSITIONS[appointment.status] || [];
+  const allowedTransitions = OPERATIONAL_TRANSITIONS[appointment.status] || [];
 
   const getStatusAction = (status: AppointmentStatus) => {
     switch (status) {

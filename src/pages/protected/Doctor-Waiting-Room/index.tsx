@@ -314,7 +314,7 @@ const DoctorWaitingRoomPage = () => {
         <div className="text-center py-12 text-muted-foreground">
           <Armchair className="h-16 w-16 mx-auto mb-4 opacity-30" />
           <p className="text-lg">No hay pacientes esperando</p>
-          <p className="text-sm">Cuando la secretaria marque un paciente "En Espera", aparecerá aquí</p>
+          <p className="text-sm">Cuando secretaría pase un paciente a espera médica, aparecerá aquí</p>
         </div>
       );
     }

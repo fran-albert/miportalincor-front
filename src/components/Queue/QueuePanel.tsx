@@ -47,7 +47,7 @@ import {
   useCallNextPatient,
   useCallSpecificPatient,
   useRecallPatient,
-  useMarkAsAttending,
+  useConfirmArrival,
   useMarkAsCompleted,
   useMarkAsNoShow,
 } from '@/hooks/Queue';
@@ -87,7 +87,7 @@ const appointmentTypeColors: Record<AppointmentType, string> = {
 
 export const QueuePanel = () => {
   const queryClient = useQueryClient();
-  const [servicePoint, setServicePoint] = useState('Consultorio 1');
+  const [servicePoint, setServicePoint] = useState('Recepción');
   const [callDialogOpen, setCallDialogOpen] = useState(false);
 
   // Queries
@@ -99,7 +99,7 @@ export const QueuePanel = () => {
   const callNextMutation = useCallNextPatient();
   const callSpecificMutation = useCallSpecificPatient();
   const recallMutation = useRecallPatient();
-  const attendingMutation = useMarkAsAttending();
+  const confirmArrivalMutation = useConfirmArrival();
   const completedMutation = useMarkAsCompleted();
   const noShowMutation = useMarkAsNoShow();
 
@@ -187,21 +187,21 @@ export const QueuePanel = () => {
           <DialogTrigger asChild>
             <Button size="lg" className="bg-green-600 hover:bg-green-700">
               <PhoneCall className="mr-2 h-5 w-5" />
-              Llamar Siguiente
+              Llamar Siguiente en Recepción
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Llamar al siguiente paciente</DialogTitle>
+              <DialogTitle>Llamar al siguiente paciente en recepción</DialogTitle>
               <DialogDescription>
-                Ingrese el punto de atención (consultorio, box, etc.)
+                Ingrese el punto de atención de recepción
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Input
                 value={servicePoint}
                 onChange={(e) => setServicePoint(e.target.value)}
-                placeholder="Ej: Consultorio 1"
+                placeholder="Ej: Recepción"
               />
             </div>
             <DialogFooter>
@@ -212,7 +212,7 @@ export const QueuePanel = () => {
                 onClick={handleCallNext}
                 disabled={callNextMutation.isPending || !servicePoint}
               >
-                {callNextMutation.isPending ? 'Llamando...' : 'Llamar'}
+                {callNextMutation.isPending ? 'Llamando...' : 'Llamar a recepción'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -230,7 +230,7 @@ export const QueuePanel = () => {
           <CardHeader>
             <CardTitle className="text-green-700 flex items-center gap-2">
               <UserCheck className="h-5 w-5" />
-              Pacientes Activos
+              Recepción Activa
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -293,12 +293,21 @@ export const QueuePanel = () => {
                                 <Volume2 className="mr-2 h-4 w-4" />
                                 Re-llamar
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => attendingMutation.mutate(entry.id)}
-                              >
-                                <UserCheck className="mr-2 h-4 w-4" />
-                                Marcar Atendiendo
-                              </DropdownMenuItem>
+                              {entry.appointmentType === 'SCHEDULED_APPOINTMENT' ? (
+                                <DropdownMenuItem
+                                  onClick={() => confirmArrivalMutation.mutate(entry.id)}
+                                >
+                                  <UserCheck className="mr-2 h-4 w-4" />
+                                  Pasar a espera médica
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => completedMutation.mutate(entry.id)}
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Cerrar trámite
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => noShowMutation.mutate(entry.id)}
                                 className="text-red-600"
@@ -313,7 +322,7 @@ export const QueuePanel = () => {
                               onClick={() => completedMutation.mutate(entry.id)}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              Finalizar Atención
+                              Cerrar trámite
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -332,7 +341,7 @@ export const QueuePanel = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Cola de Espera
+            Cola de Recepción
             {waitingQueue && waitingQueue.length > 0 && (
               <Badge variant="secondary">{waitingQueue.length}</Badge>
             )}
@@ -436,7 +445,7 @@ export const QueuePanel = () => {
                           disabled={callSpecificMutation.isPending}
                         >
                           <PhoneCall className="mr-1 h-3 w-3" />
-                          Llamar
+                          Llamar a recepción
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -6,6 +6,7 @@ import {
   callNextPatient,
   callSpecificPatient,
   recallPatient,
+  confirmArrival,
   markAsAttending,
   markAsCompleted,
   markAsNoShow,
@@ -96,6 +97,21 @@ export const useRecallPatient = () => {
   });
 };
 
+export const useConfirmArrival = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => confirmArrival(id),
+    onSuccess: (data) => {
+      toast.success(`Paciente pasado a espera médica: ${data.patientName}`);
+      queryClient.refetchQueries({ queryKey: queueKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error al pasar paciente a espera médica');
+    },
+  });
+};
+
 // Hook para marcar como atendiendo
 export const useMarkAsAttending = () => {
   const queryClient = useQueryClient();
@@ -120,7 +136,7 @@ export const useMarkAsCompleted = () => {
   return useMutation({
     mutationFn: (id: number) => markAsCompleted(id),
     onSuccess: () => {
-      toast.success('Atención completada');
+      toast.success('Gestión completada');
       // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
