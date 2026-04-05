@@ -19,6 +19,7 @@ import { useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   hydrateFormData,
+  hydrateReportVisibilityOverrides,
   resetForm,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
@@ -61,6 +62,7 @@ import {
   mapMedicalEvaluation,
   mapOccupationalHistory,
 } from "@/common/helpers/maps";
+import { loadReportVisibilityOverrides } from "@/common/helpers/report-visibility.storage";
 import type {
   IMedicalEvaluation,
   OccupationalHistoryItem,
@@ -355,10 +357,15 @@ export default function PreOccupationalCards({
         medicalEvaluation: hydratedMedicalEvaluation,
       })
     );
+    dispatch(
+      hydrateReportVisibilityOverrides(
+        loadReportVisibilityOverrides(medicalEvaluation.id)
+      )
+    );
 
     setGeneralFormData(hydratedState);
     setSavedGeneralFormData(hydratedState);
-  }, [dataValues, dispatch]);
+  }, [dataValues, dispatch, medicalEvaluation.id]);
 
   useEffect(() => {
     setHasGeneralUnsavedChanges(
