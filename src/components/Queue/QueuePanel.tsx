@@ -49,7 +49,12 @@ import {
 } from '@/hooks/Queue';
 import { queueKeys } from '@/hooks/Queue';
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
-import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
+import {
+  formatWaitingTime,
+  getWaitingTimeColor,
+  parseBoolean,
+} from '@/common/helpers/helpers';
+import { formatTimeAR, formatTimeFromDateAR } from '@/common/helpers/timezone';
 import { QueuePatientRegistrationModal } from './QueuePatientRegistrationModal';
 
 const statusColors: Record<QueueStatus, string> = {
@@ -80,11 +85,61 @@ const appointmentTypeColors: Record<AppointmentType, string> = {
   ADMINISTRATIVE: 'bg-gray-100 text-gray-800 border-gray-300',
 };
 
+const hasMeaningfulText = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  const normalized = String(value).trim();
+  return normalized !== '' && normalized !== '0';
+};
+
 const requiresRegistration = (entry: QueueEntry) =>
-  entry.isGuest || entry.patientId === null;
+  parseBoolean(entry.isGuest) || entry.patientId === null;
 
 const isUnregisteredEntry = (entry: QueueEntry) =>
-  !entry.isGuest && entry.patientId === null;
+  !parseBoolean(entry.isGuest) && entry.patientId === null;
+
+const formatQueueHour = (entry: QueueEntry): string => {
+  if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
+    if (!entry.scheduledTime) return '-';
+    return /^\d{2}:\d{2}$/.test(entry.scheduledTime)
+      ? entry.scheduledTime
+      : formatTimeAR(entry.scheduledTime);
+  }
+
+  return formatTimeFromDateAR(entry.checkedInAt);
+};
+
+const formatSecretaryWaitingTime = (minutes: number | undefined): string => {
+  if (minutes === undefined || minutes === null) return '-';
+  if (minutes <= 0) return 'Recién ingresó';
+  return formatWaitingTime(minutes);
+};
+
+const getAttentionLabels = (
+  entry: QueueEntry,
+): { primary: string; secondary?: string } => {
+  if (entry.appointmentType === 'ADMINISTRATIVE') {
+    return {
+      primary: 'Recepción',
+      secondary: 'Trámite administrativo',
+    };
+  }
+
+  if (entry.appointmentType === 'WALK_IN') {
+    return {
+      primary: 'Recepción',
+      secondary: 'Consulta sin turno',
+    };
+  }
+
+  const primary = hasMeaningfulText(entry.doctorName)
+    ? entry.doctorName
+    : 'Recepción';
+  const secondary = hasMeaningfulText(entry.speciality)
+    ? entry.speciality
+    : undefined;
+
+  return { primary, secondary };
+};
 
 type QueueAction = {
   icon: typeof PhoneCall;
@@ -140,7 +195,7 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
 
 const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
   <div className="flex flex-wrap items-center gap-2">
-    {entry.isGuest && (
+    {parseBoolean(entry.isGuest) && (
       <Badge
         variant="outline"
         className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
@@ -498,6 +553,7 @@ export const QueuePanel = () => {
                   const waitTimeColors = getWaitingTimeColor(
                     entry.waitingTimeMinutes,
                   );
+                  const attention = getAttentionLabels(entry);
 
                   return (
                     <TableRow key={entry.id}>
@@ -530,13 +586,15 @@ export const QueuePanel = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{entry.doctorName || 'Recepción'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {entry.speciality || 'Sin especialidad'}
-                          </p>
+                          <p className="font-medium">{attention.primary}</p>
+                          {attention.secondary && (
+                            <p className="text-sm text-muted-foreground">
+                              {attention.secondary}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell>{entry.scheduledTime}</TableCell>
+                      <TableCell>{formatQueueHour(entry)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Badge
@@ -549,7 +607,7 @@ export const QueuePanel = () => {
                             )}
                           >
                             <Clock className="h-3 w-3 mr-1" />
-                            {formatWaitingTime(entry.waitingTimeMinutes)}
+                            {formatSecretaryWaitingTime(entry.waitingTimeMinutes)}
                           </Badge>
                           {entry.waitingTimeMinutes !== undefined &&
                             entry.waitingTimeMinutes > 60 && (
