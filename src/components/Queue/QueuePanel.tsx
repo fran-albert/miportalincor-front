@@ -91,11 +91,13 @@ const hasMeaningfulText = (value: unknown): boolean => {
   return normalized !== '' && normalized !== '0';
 };
 
-const requiresRegistration = (entry: QueueEntry) =>
-  parseBoolean(entry.isGuest) || entry.patientId === null;
+const hasLinkedPatient = (entry: QueueEntry) =>
+  entry.patientId !== null && entry.patientId !== undefined;
+
+const requiresRegistration = (entry: QueueEntry) => !hasLinkedPatient(entry);
 
 const isUnregisteredEntry = (entry: QueueEntry) =>
-  !parseBoolean(entry.isGuest) && entry.patientId === null;
+  !parseBoolean(entry.isGuest) && !hasLinkedPatient(entry);
 
 const formatQueueHour = (entry: QueueEntry): string => {
   if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
@@ -195,7 +197,7 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
 
 const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
   <div className="flex flex-wrap items-center gap-2">
-    {parseBoolean(entry.isGuest) && (
+    {parseBoolean(entry.isGuest) && !hasLinkedPatient(entry) && (
       <Badge
         variant="outline"
         className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
