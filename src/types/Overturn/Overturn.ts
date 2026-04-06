@@ -119,5 +119,5 @@ export interface UpdateOverturnDto {
 
 export interface UpdateOverturnStatusDto {
   status: OverturnStatus;
-  transitionContext?: OverturnStatusTransitionContext;
+  context?: OverturnStatusTransitionContext;
 }

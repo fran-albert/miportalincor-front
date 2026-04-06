@@ -10,6 +10,7 @@ export {
   useMarkAsAttending,
   useMarkAsCompleted,
   useMarkAsNoShow,
+  useRegisterQueuePatient,
 } from './useQueue';
 
 export {

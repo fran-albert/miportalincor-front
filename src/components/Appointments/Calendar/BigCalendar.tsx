@@ -1362,7 +1362,7 @@ export const BigCalendar = ({
   const handleStatusChange = async (
     newStatus: AppointmentStatus | OverturnStatus,
     options?: {
-      transitionContext?:
+      context?:
         | AppointmentStatusTransitionContext
         | OverturnStatusTransitionContext;
       successMessage?: {
@@ -1378,7 +1378,7 @@ export const BigCalendar = ({
         await changeAppointmentStatus.mutateAsync({
           id: selectedEvent.resource.data.id,
           status: newStatus as AppointmentStatus,
-          transitionContext: options?.transitionContext as
+          context: options?.context as
             | AppointmentStatusTransitionContext
             | undefined,
         });
@@ -1386,7 +1386,7 @@ export const BigCalendar = ({
         await changeOverturnStatus.mutateAsync({
           id: selectedEvent.resource.data.id,
           status: newStatus as OverturnStatus,
-          transitionContext: options?.transitionContext as
+          context: options?.context as
             | OverturnStatusTransitionContext
             | undefined,
         });
@@ -1981,7 +1981,7 @@ export const BigCalendar = ({
                             ? AppointmentStatus.WAITING
                             : OverturnStatus.WAITING,
                           {
-                            transitionContext:
+                            context:
                               selectedEvent.resource.type === "appointment"
                                 ? AppointmentStatusTransitionContext.CALENDAR_OVERRIDE
                                 : OverturnStatusTransitionContext.CALENDAR_OVERRIDE,
