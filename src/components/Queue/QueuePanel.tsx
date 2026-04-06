@@ -100,13 +100,18 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
 
   const columnsClass =
     actions.length >= 3
-      ? 'xl:grid-cols-3'
+      ? 'lg:grid-cols-3'
       : actions.length === 2
         ? 'sm:grid-cols-2'
         : 'sm:grid-cols-1';
 
   return (
-    <div className={cn('grid gap-2 sm:min-w-[320px]', columnsClass)}>
+    <div
+      className={cn(
+        'grid gap-2 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-2.5 shadow-sm sm:min-w-[360px]',
+        columnsClass,
+      )}
+    >
       {actions.map((action) => {
         const Icon = action.icon;
         return (
@@ -116,14 +121,16 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
             size="sm"
             variant={action.variant ?? 'outline'}
             className={cn(
-              'h-11 justify-center rounded-xl px-4 text-sm font-semibold shadow-sm',
+              'h-12 w-full justify-start rounded-2xl border px-4 text-left text-sm font-semibold shadow-sm transition-all duration-150 hover:-translate-y-0.5',
               action.className,
             )}
             onClick={action.onClick}
             disabled={action.disabled}
           >
-            <Icon className="mr-2 h-4 w-4" />
-            {action.label}
+            <span className="mr-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-current/10">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="truncate">{action.label}</span>
           </Button>
         );
       })}
@@ -194,7 +201,7 @@ export const QueuePanel = () => {
         onClick: () => handleCallSpecific(entry),
         disabled: callSpecificMutation.isPending,
         className:
-          'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600',
+          'border-emerald-700 bg-emerald-600 text-white hover:border-emerald-800 hover:bg-emerald-700 shadow-emerald-950/15',
       },
     ];
 
@@ -205,7 +212,7 @@ export const QueuePanel = () => {
         onClick: () => setRegistrationEntry(entry),
         disabled: false,
         className:
-          'bg-white text-emerald-700 hover:bg-emerald-50 border-emerald-200',
+          'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50',
       });
     }
 
@@ -222,7 +229,7 @@ export const QueuePanel = () => {
           label: 'Dar de alta paciente',
           onClick: () => setRegistrationEntry(entry),
           className:
-            'bg-white text-emerald-700 hover:bg-emerald-50 border-emerald-200',
+            'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50',
         });
       }
 
@@ -232,7 +239,7 @@ export const QueuePanel = () => {
         onClick: () => completedMutation.mutate(entry.id),
         disabled: completedMutation.isPending,
         className:
-          'bg-slate-900 text-white hover:bg-slate-800 border-slate-900',
+          'border-slate-900 bg-slate-900 text-white hover:border-slate-950 hover:bg-slate-800 shadow-slate-950/15',
       });
 
       return actions;
@@ -254,7 +261,7 @@ export const QueuePanel = () => {
         label: 'Dar de alta paciente',
         onClick: () => setRegistrationEntry(entry),
         className:
-          'bg-white text-emerald-700 hover:bg-emerald-50 border-emerald-200',
+          'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50',
       });
     }
 
@@ -265,7 +272,7 @@ export const QueuePanel = () => {
         onClick: () => confirmArrivalMutation.mutate(entry.id),
         disabled: confirmArrivalMutation.isPending,
         className:
-          'bg-amber-500 text-white hover:bg-amber-600 border-amber-500',
+          'border-amber-500 bg-amber-500 text-white hover:border-amber-600 hover:bg-amber-600 shadow-amber-950/15',
       });
     } else {
       actions.push({
@@ -274,7 +281,7 @@ export const QueuePanel = () => {
         onClick: () => completedMutation.mutate(entry.id),
         disabled: completedMutation.isPending,
         className:
-          'bg-slate-900 text-white hover:bg-slate-800 border-slate-900',
+          'border-slate-900 bg-slate-900 text-white hover:border-slate-950 hover:bg-slate-800 shadow-slate-950/15',
       });
     }
 
@@ -284,8 +291,8 @@ export const QueuePanel = () => {
         label: 'Marcar ausente',
         onClick: () => noShowMutation.mutate(entry.id),
         disabled: noShowMutation.isPending,
-        variant: 'destructive',
-        className: 'bg-rose-600 text-white hover:bg-rose-700 border-rose-600',
+        className:
+          'border-rose-200 bg-white text-rose-700 hover:border-rose-300 hover:bg-rose-50',
       });
     }
 
