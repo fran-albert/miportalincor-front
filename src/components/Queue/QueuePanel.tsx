@@ -46,6 +46,7 @@ import {
   useConfirmArrival,
   useMarkAsCompleted,
   useMarkAsNoShow,
+  useRegisterQueuePatient,
 } from '@/hooks/Queue';
 import { queueKeys } from '@/hooks/Queue';
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
@@ -55,7 +56,12 @@ import {
   parseBoolean,
 } from '@/common/helpers/helpers';
 import { formatTimeAR, formatTimeFromDateAR } from '@/common/helpers/timezone';
+import { useToastContext } from '@/hooks/Toast/toast-context';
 import { QueuePatientRegistrationModal } from './QueuePatientRegistrationModal';
+import {
+  findExactPatientByDocument,
+  normalizeDocument,
+} from './patient-registration.helpers';
 
 const statusColors: Record<QueueStatus, string> = {
   WAITING: 'bg-yellow-500',
@@ -220,11 +226,14 @@ const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
 
 export const QueuePanel = () => {
   const queryClient = useQueryClient();
+  const { showError, showSuccess } = useToastContext();
   const [servicePoint, setServicePoint] = useState('Recepción');
   const [callDialogOpen, setCallDialogOpen] = useState(false);
   const [registrationEntry, setRegistrationEntry] = useState<QueueEntry | null>(
     null,
   );
+  const [resolvingRegistrationEntryId, setResolvingRegistrationEntryId] =
+    useState<number | null>(null);
 
   const { data: waitingQueue, isLoading: loadingWaiting } = useWaitingQueue();
   const { data: activeQueue } = useActiveQueue();
@@ -236,6 +245,7 @@ export const QueuePanel = () => {
   const confirmArrivalMutation = useConfirmArrival();
   const completedMutation = useMarkAsCompleted();
   const noShowMutation = useMarkAsNoShow();
+  const registerQueuePatientMutation = useRegisterQueuePatient();
 
   const handleCallNext = () => {
     callNextMutation.mutate({ servicePoint });
@@ -248,6 +258,45 @@ export const QueuePanel = () => {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: queueKeys.all });
+  };
+
+  const handleRegistrationAction = async (entry: QueueEntry) => {
+    const normalizedDocument = normalizeDocument(entry.patientDocument);
+
+    if (!normalizedDocument) {
+      setRegistrationEntry(entry);
+      return;
+    }
+
+    setResolvingRegistrationEntryId(entry.id);
+
+    try {
+      const existingPatient = await findExactPatientByDocument(normalizedDocument);
+
+      if (existingPatient?.userId) {
+        await registerQueuePatientMutation.mutateAsync({
+          queueEntryId: entry.id,
+          patientId: Number(existingPatient.userId),
+        });
+
+        showSuccess(
+          'Paciente existente vinculado',
+          'La fila quedó asociada automáticamente al paciente ya registrado.',
+        );
+        return;
+      }
+
+      setRegistrationEntry(entry);
+    } catch (error) {
+      console.error('Error resolving queue patient registration', error);
+      showError(
+        'No se pudo vincular automáticamente',
+        'Abrimos el alta manual para completar o revisar el caso.',
+      );
+      setRegistrationEntry(entry);
+    } finally {
+      setResolvingRegistrationEntryId(null);
+    }
   };
 
   const buildWaitingActions = (entry: QueueEntry): QueueAction[] => {
@@ -263,11 +312,16 @@ export const QueuePanel = () => {
     ];
 
     if (requiresRegistration(entry)) {
+      const isResolvingRegistration =
+        resolvingRegistrationEntryId === entry.id ||
+        registerQueuePatientMutation.isPending;
       actions.push({
         icon: UserPlus,
-        label: 'Dar de alta paciente',
-        onClick: () => setRegistrationEntry(entry),
-        disabled: false,
+        label: isResolvingRegistration
+          ? 'Vinculando paciente...'
+          : 'Dar de alta paciente',
+        onClick: () => void handleRegistrationAction(entry),
+        disabled: isResolvingRegistration,
         className:
           'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50',
       });
@@ -317,10 +371,16 @@ export const QueuePanel = () => {
     ];
 
     if (requiresRegistration(entry)) {
+      const isResolvingRegistration =
+        resolvingRegistrationEntryId === entry.id ||
+        registerQueuePatientMutation.isPending;
       actions.push({
         icon: UserPlus,
-        label: 'Dar de alta paciente',
-        onClick: () => setRegistrationEntry(entry),
+        label: isResolvingRegistration
+          ? 'Vinculando paciente...'
+          : 'Dar de alta paciente',
+        onClick: () => void handleRegistrationAction(entry),
+        disabled: isResolvingRegistration,
         className:
           'border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50',
       });
