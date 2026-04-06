@@ -47,13 +47,13 @@ export const useAppointmentMutations = () => {
     mutationFn: ({
       id,
       status,
-      transitionContext,
+      context,
     }: {
       id: number;
       status: AppointmentStatus;
-      transitionContext?: AppointmentStatusTransitionContext;
+      context?: AppointmentStatusTransitionContext;
     }) =>
-      changeAppointmentStatus(id, { status, transitionContext }),
+      changeAppointmentStatus(id, { status, context }),
     onSuccess: (_, variables) => {
       // Invalidar queries de appointments
       queryClient.invalidateQueries({ queryKey: ['appointments'] });

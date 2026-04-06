@@ -33,13 +33,13 @@ export const useOverturnMutations = () => {
     mutationFn: ({
       id,
       status,
-      transitionContext,
+      context,
     }: {
       id: number;
       status: OverturnStatus;
-      transitionContext?: OverturnStatusTransitionContext;
+      context?: OverturnStatusTransitionContext;
     }) =>
-      changeOverturnStatus(id, { status, transitionContext }),
+      changeOverturnStatus(id, { status, context }),
     onSuccess: (_, variables) => {
       // Invalidar queries de overturns
       queryClient.invalidateQueries({ queryKey: ['overturns'] });

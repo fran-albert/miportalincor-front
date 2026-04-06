@@ -51,3 +51,8 @@ export interface CallSpecificPatientDto {
 export interface ChangeQueueStatusDto {
   status: QueueStatus;
 }
+
+export interface RegisterQueuePatientDto {
+  queueEntryId: number;
+  patientId: number;
+}

@@ -10,8 +10,14 @@ import {
   markAsAttending,
   markAsCompleted,
   markAsNoShow,
+  registerQueuePatient,
 } from '@/api/Queue';
-import type { CallPatientDto, CallSpecificPatientDto, QueueEntry } from '@/types/Queue';
+import type {
+  CallPatientDto,
+  CallSpecificPatientDto,
+  QueueEntry,
+  RegisterQueuePatientDto,
+} from '@/types/Queue';
 import { toast } from 'sonner';
 
 // Query keys
@@ -201,6 +207,25 @@ export const useMarkAsNoShow = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Error al marcar como ausente');
+    },
+  });
+};
+
+export const useRegisterQueuePatient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: RegisterQueuePatientDto) => registerQueuePatient(dto),
+    onSuccess: () => {
+      toast.success('Paciente dado de alta y fila actualizada');
+      queryClient.refetchQueries({ queryKey: queueKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['overturns'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error al vincular el paciente a la fila');
     },
   });
 };

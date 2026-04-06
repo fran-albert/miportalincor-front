@@ -203,7 +203,7 @@ export interface RescheduleAppointmentDto {
 
 export interface UpdateAppointmentStatusDto {
   status: AppointmentStatus;
-  transitionContext?: AppointmentStatusTransitionContext;
+  context?: AppointmentStatusTransitionContext;
 }
 
 // ============================================
