@@ -54,7 +54,7 @@ import {
   OverturnStatusTransitionContext,
 } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
-import { formatDoctorName } from "@/common/helpers/helpers";
+import { formatDoctorName, parseBoolean } from "@/common/helpers/helpers";
 import {
   getAppointmentConsultationTypeSummary,
   getAppointmentConsultationTypes,
@@ -1497,7 +1497,7 @@ export const BigCalendar = ({
 
   const selectedEventData = selectedEvent?.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
   const selectedAppointmentData = selectedEventData as AppointmentFullResponseDto | undefined;
-  const selectedIsGuest = !!selectedEvent?.resource.isGuest;
+  const selectedIsGuest = parseBoolean(selectedEvent?.resource.isGuest);
   const selectedPatientName = selectedEventData
     ? selectedIsGuest
       ? `${selectedAppointmentData?.guestFirstName || ""} ${selectedAppointmentData?.guestLastName || ""}`.trim()
@@ -1940,11 +1940,11 @@ export const BigCalendar = ({
                 </div>
               </div>
 
-              {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
+              {selectedIsGuest && (
                 <div className="google-calendar-warning">
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   <span>
-                    Este turno pertenece a un invitado sin registrar. Para cambiar el estado, primero registralo como paciente.
+                    Este turno o sobreturno pertenece a un invitado sin registrar. Para pasarlo a espera médica, primero registralo como paciente.
                   </span>
                 </div>
               )}
@@ -1959,10 +1959,9 @@ export const BigCalendar = ({
                   ).date;
                   const today = formatDateForCalendar(new Date());
                   const isToday = scheduledDate === today;
-                  const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
-                  const disabledWaiting = !isToday || isGuestAppointment;
-                  const waitingTitle = isGuestAppointment
-                    ? "Debe registrar al invitado como paciente antes de cambiar el estado"
+                  const disabledWaiting = !isToday || selectedIsGuest;
+                  const waitingTitle = selectedIsGuest
+                    ? "Debe registrar al invitado como paciente antes de forzar espera médica"
                     : !isToday
                       ? "Solo se puede forzar espera médica para un turno del día de hoy"
                       : undefined;
@@ -2006,7 +2005,7 @@ export const BigCalendar = ({
                 <Button
                   className="google-calendar-action-button justify-start bg-blue-600 text-white hover:bg-blue-700"
                   onClick={() => handleStatusChange(AppointmentStatus.ATTENDING)}
-                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                  disabled={selectedIsGuest}
                 >
                   <PlayCircle className="mr-2 h-4 w-4" />
                   Atender
@@ -2017,7 +2016,7 @@ export const BigCalendar = ({
                 <Button
                   className="google-calendar-action-button justify-start bg-slate-700 text-white hover:bg-slate-800"
                   onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
-                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
+                  disabled={selectedIsGuest}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Completar

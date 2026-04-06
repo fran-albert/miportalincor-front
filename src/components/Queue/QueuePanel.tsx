@@ -275,6 +275,10 @@ export const QueuePanel = () => {
   };
 
   const buildActiveActions = (entry: QueueEntry): QueueAction[] => {
+    const canMoveToMedicalWaiting =
+      entry.appointmentType === 'SCHEDULED_APPOINTMENT' &&
+      !requiresRegistration(entry);
+
     if (entry.status === 'ATTENDING') {
       const actions: QueueAction[] = [];
 
@@ -320,7 +324,7 @@ export const QueuePanel = () => {
       });
     }
 
-    if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
+    if (canMoveToMedicalWaiting) {
       actions.push({
         icon: ArrowRightCircle,
         label: 'Pasar a espera médica',
@@ -579,7 +583,7 @@ export const QueuePanel = () => {
                           </p>
                           {requiresRegistration(entry) && (
                             <p className="text-xs text-amber-700">
-                              Requiere alta administrativa en secretaría
+                              Debe darse de alta antes de pasar a espera médica
                             </p>
                           )}
                         </div>
