@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import {
   getWaitingQueue,
   getActiveQueue,
@@ -44,6 +49,17 @@ const upsertActiveQueueEntry = (
 ) => {
   const filtered = removeQueueEntry(entries, nextEntry.id);
   return sortActiveQueue([nextEntry, ...filtered]);
+};
+
+const invalidateMedicalFlowQueries = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: ['appointments'] });
+  queryClient.invalidateQueries({ queryKey: ['overturns'] });
+  queryClient.invalidateQueries({ queryKey: ['waitingList'] });
+  queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+  queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+  queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+  queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
+  queryClient.invalidateQueries({ queryKey: ['doctorWaitingQueue'] });
 };
 
 // Hook para obtener cola de espera
@@ -144,6 +160,7 @@ export const useConfirmArrival = () => {
     onSuccess: (data) => {
       toast.success(`Paciente pasado a espera médica: ${data.patientName}`);
       queryClient.refetchQueries({ queryKey: queueKeys.all });
+      invalidateMedicalFlowQueries(queryClient);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Error al pasar paciente a espera médica');
@@ -219,10 +236,7 @@ export const useRegisterQueuePatient = () => {
     onSuccess: () => {
       toast.success('Paciente dado de alta y fila actualizada');
       queryClient.refetchQueries({ queryKey: queueKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['overturns'] });
-      queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
-      queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+      invalidateMedicalFlowQueries(queryClient);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Error al vincular el paciente a la fila');
