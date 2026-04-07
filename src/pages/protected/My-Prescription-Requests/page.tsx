@@ -184,8 +184,16 @@ const MyPrescriptionRequestsPage = () => {
     }
   };
 
+  const getDisplayDoctor = (request: PrescriptionRequest) => {
+    const requestWithSigningDoctor = request as PrescriptionRequest & {
+      signingDoctor?: PrescriptionRequest["doctor"];
+    };
+
+    return requestWithSigningDoctor.signingDoctor || request.doctor;
+  };
+
   const getDoctorName = (request: PrescriptionRequest) => {
-    const displayDoctor = request.signingDoctor || request.doctor;
+    const displayDoctor = getDisplayDoctor(request);
     if (!displayDoctor) return "Médico";
     const prefix = displayDoctor.gender === "Femenino" ? "Dra." : "Dr.";
     return `${prefix} ${displayDoctor.firstName} ${displayDoctor.lastName}`;
@@ -371,7 +379,7 @@ const MyPrescriptionRequestsPage = () => {
                 <div className="space-y-3">
                   {historyEntries.map((entry) => {
                     const request = entry.request;
-                    const displayDoctor = request.signingDoctor || request.doctor;
+                    const displayDoctor = getDisplayDoctor(request);
                     const prescriptionUrls =
                       entry.type === "batch"
                         ? entry.prescriptionUrls
