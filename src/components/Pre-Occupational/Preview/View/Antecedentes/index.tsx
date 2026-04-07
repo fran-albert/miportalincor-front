@@ -12,7 +12,6 @@ const AntecedentesList: React.FC<AntecedentesListProps> = ({ dataValues }) => {
 
   return (
     <div className="antecedentes">
-      <h2 className="font-bold mb-2">Antecedentes Personales</h2>
       {antecedentes.length > 0 ? (
         <ul className="list-disc pl-5">
           {antecedentes.map(({ id, value }) => (

@@ -4,7 +4,7 @@ import { StatusBadge } from "../Select/StatusBadge";
 import {
   AppointmentFullResponseDto,
   AppointmentStatus,
-  ALLOWED_TRANSITIONS
+  OPERATIONAL_TRANSITIONS
 } from "@/types/Appointment/Appointment";
 import { formatDateAR, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
@@ -74,7 +74,7 @@ export const getAppointmentColumns = (config: ColumnsConfig): ColumnDef<Appointm
     id: "actions",
     cell: ({ row }) => {
       const appointment = row.original;
-      const allowedTransitions = ALLOWED_TRANSITIONS[appointment.status] || [];
+      const allowedTransitions = OPERATIONAL_TRANSITIONS[appointment.status] || [];
 
       const getStatusLabel = (status: AppointmentStatus) => {
         switch (status) {

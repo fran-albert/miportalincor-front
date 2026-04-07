@@ -1,6 +1,5 @@
-// src/components/pdf/CirculatorioPdf.tsx
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import CheckboxPdf from "@/components/Pdf/CheckBox";
+import { pdfColors } from "../../shared";
 
 interface CirculatorioPdfProps {
   frecuenciaCardiaca?: string;
@@ -13,83 +12,80 @@ interface CirculatorioPdfProps {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 12,
-    padding: 12,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: pdfColors.line,
     borderRadius: 8,
-    backgroundColor: "#FFF",
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+  headerWrap: {
+    backgroundColor: pdfColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: pdfColors.line,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   title: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#187B80",
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 4,
+    color: pdfColors.accentText,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
-  rowInline: {
+  body: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  measurements: {
     flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "nowrap",
-    marginBottom: 8,
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  measurementCard: {
+    width: "48%",
+    borderWidth: 1,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
   label: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginRight: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    marginBottom: 4,
   },
-  valueBox: {
+  value: {
     fontSize: 10,
-    borderWidth: 1,
-    borderColor: "#EEE",
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    width: 32,
-    textAlign: "center",
-    borderRadius: 4,
-    marginRight: 4,
-  },
-  unitText: {
-    fontSize: 10,
-    fontStyle: "italic",
-    marginRight: 12,
-  },
-  checkboxWrapper: {
-    width: 16,
-    alignItems: "center",
-    marginRight: 4,
-  },
-  optionText: {
-    fontSize: 10,
-    fontStyle: "italic",
-    marginRight: 12,
+    color: pdfColors.ink,
+    fontWeight: "bold",
   },
   obsLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginBottom: 4,
+    fontSize: 8,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
   },
   obsText: {
     fontSize: 10,
-    padding: 6,
     borderWidth: 1,
-    borderColor: "#EEE",
-    borderRadius: 4,
-    backgroundColor: "#F9F9F9",
-    marginBottom: 8,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    backgroundColor: "#ffffff",
+    color: pdfColors.ink,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  varicesContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  varicesObs: {
-    fontSize: 10,
-    fontStyle: "italic",
-    marginLeft: 8,
+  statusCard: {
+    borderWidth: 1,
+    borderColor: pdfColors.line,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: "#ffffff",
   },
 });
 
@@ -114,68 +110,62 @@ export default function CirculatorioPdf({
     (presion?.trim() ?? '') !== '' ||
     sinAlteraciones !== undefined;
 
+  const measurementItems = [
+    frecuenciaCardiaca?.trim()
+      ? {
+          label: "Frecuencia cardíaca",
+          value: `${frecuenciaCardiaca} x minuto`,
+        }
+      : null,
+    presion?.trim()
+      ? {
+          label: "Presión arterial",
+          value: `${presion} mmHg`,
+        }
+      : null,
+  ].filter(Boolean);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Aparato Circulatorio</Text>
-
-      {/* Fila única con Frec. Cardíaca, TA y Sin alteraciones - solo si hay datos */}
-      {hasClinicalData && (
-        <View style={styles.rowInline}>
-          {/* Frecuencia Cardíaca */}
-          {frecuenciaCardiaca?.trim() && (
-            <>
-              <Text style={styles.label}>Frec. Cardíaca:</Text>
-              <Text style={styles.valueBox}>{frecuenciaCardiaca}</Text>
-              <Text style={styles.unitText}>x minuto</Text>
-            </>
-          )}
-
-          {/* Tensión Arterial */}
-          {presion?.trim() && (
-            <>
-              <Text style={[styles.label, { marginLeft: frecuenciaCardiaca?.trim() ? 12 : 0 }]}>TA:</Text>
-              <Text style={styles.valueBox}>{presion}</Text>
-              <Text style={styles.unitText}>mmHg</Text>
-            </>
-          )}
-
-          {/* Sin alteraciones */}
-          {sinAlteraciones !== undefined && (
-            <>
-              <View style={[styles.checkboxWrapper, { marginLeft: 12 }]}>
-                <CheckboxPdf checked={sinAlteraciones} />
+      <View style={styles.headerWrap}>
+        <Text style={styles.title}>Aparato circulatorio</Text>
+      </View>
+      <View style={styles.body}>
+        {!!measurementItems.length && (
+          <View style={styles.measurements}>
+            {measurementItems.map((item) => (
+              <View key={item!.label} style={styles.measurementCard}>
+                <Text style={styles.label}>{item!.label}</Text>
+                <Text style={styles.value}>{item!.value}</Text>
               </View>
-              <Text style={styles.optionText}>Sin alteraciones</Text>
-            </>
-          )}
-        </View>
-      )}
-
-      {/* Observaciones - solo si hay */}
-      {observaciones?.trim() && (
-        <>
-          <Text style={styles.obsLabel}>Observaciones</Text>
-          <Text style={styles.obsText}>{observaciones}</Text>
-        </>
-      )}
-
-      {/* Várices - solo si está definido */}
-      {varices !== undefined && (
-        <View style={styles.varicesContainer}>
-          <Text style={styles.label}>Várices:</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={varices === true} />
+            ))}
           </View>
-          <Text style={styles.optionText}>Sí</Text>
-          <View style={styles.checkboxWrapper}>
-            <CheckboxPdf checked={varices === false} />
+        )}
+
+        {hasClinicalData && sinAlteraciones !== undefined && (
+          <View style={styles.statusCard}>
+            <Text style={styles.label}>Sin alteraciones</Text>
+            <Text style={styles.value}>{sinAlteraciones ? "Sí" : "No"}</Text>
           </View>
-          <Text style={styles.optionText}>No</Text>
-          {varicesObs?.trim() && (
-            <Text style={styles.varicesObs}>{varicesObs}</Text>
-          )}
-        </View>
-      )}
+        )}
+
+        {varices !== undefined && (
+          <View style={styles.statusCard}>
+            <Text style={styles.label}>Várices</Text>
+            <Text style={styles.value}>
+              {varices ? "Sí" : "No"}
+              {varicesObs?.trim() ? ` · ${varicesObs}` : ""}
+            </Text>
+          </View>
+        )}
+
+        {observaciones?.trim() && (
+          <View>
+            <Text style={styles.obsLabel}>Observaciones</Text>
+            <Text style={styles.obsText}>{observaciones}</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

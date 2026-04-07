@@ -24,6 +24,7 @@ import { ArrowLeft, Plus, Clock, Settings } from "lucide-react";
 import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailability";
 import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
 import { DurationSettingsCard } from "@/components/DoctorConsultationTypeSettings";
+import { DoctorScheduleExceptionSection } from "@/components/DoctorScheduleException";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import {
   CreateDoctorAvailabilityDto,
@@ -166,7 +167,7 @@ const DoctorHorariosPage = () => {
           {/* Availability Management */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Horarios de Atención</CardTitle>
+              <CardTitle className="text-lg">Horarios habituales</CardTitle>
               <Button onClick={() => setIsFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Agregar Horario
@@ -182,11 +183,13 @@ const DoctorHorariosPage = () => {
             </CardContent>
           </Card>
 
+          <DoctorScheduleExceptionSection doctorId={doctorId} />
+
           {/* Create Dialog */}
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Agregar Disponibilidad</DialogTitle>
+                <DialogTitle>Agregar horario habitual</DialogTitle>
                 <DialogDescription>
                   Configure un nuevo horario de atención para el médico
                 </DialogDescription>
@@ -208,7 +211,7 @@ const DoctorHorariosPage = () => {
           >
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Editar Disponibilidad</DialogTitle>
+                <DialogTitle>Editar horario habitual</DialogTitle>
                 <DialogDescription>
                   Modifique el horario de atención del médico
                 </DialogDescription>

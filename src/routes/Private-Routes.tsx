@@ -3,6 +3,10 @@ import React, { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import LoadingAnimation from "@/components/Loading/loading";
 import { hasPermission } from "@/common/constants/permissions";
+import {
+  hasLaboralCapabilities,
+  LaboralCapability,
+} from "@/common/constants/laboral-permissions";
 import axios from "axios";
 import { environment } from "@/config/environment";
 import { authStorage } from "@/utils/authStorage";
@@ -18,9 +22,11 @@ interface DecodedToken {
 export const Private_Routes = ({
   children,
   allowedRoles,
+  requiredLaboralCapabilities,
 }: {
   children: React.ReactNode;
   allowedRoles?: string[];
+  requiredLaboralCapabilities?: LaboralCapability[];
 }) => {
   const location = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
@@ -61,10 +67,31 @@ export const Private_Routes = ({
             // Token renovado exitosamente - continuar con la verificación de roles
             const refreshedDecodedToken: DecodedToken = jwtDecode(newToken);
 
+            const userRoles = refreshedDecodedToken.roles;
+            const rolesArray = Array.isArray(userRoles)
+              ? userRoles
+              : userRoles
+                ? [userRoles]
+                : [];
+
             if (allowedRoles && allowedRoles.length > 0) {
-              const userRoles = refreshedDecodedToken.roles;
-              const rolesArray = Array.isArray(userRoles) ? userRoles : (userRoles ? [userRoles] : []);
               const hasAccess = hasPermission(rolesArray, allowedRoles);
+
+              if (!hasAccess) {
+                setRedirectPath("/acceso-denegado");
+                setAuthChecked(true);
+                return;
+              }
+            }
+
+            if (
+              requiredLaboralCapabilities &&
+              requiredLaboralCapabilities.length > 0
+            ) {
+              const hasAccess = hasLaboralCapabilities(
+                rolesArray,
+                requiredLaboralCapabilities
+              );
 
               if (!hasAccess) {
                 setRedirectPath("/acceso-denegado");
@@ -85,10 +112,31 @@ export const Private_Routes = ({
         }
 
         // Token válido - verificar roles si se especificaron
+        const userRoles = decodedToken.roles;
+        const rolesArray = Array.isArray(userRoles)
+          ? userRoles
+          : userRoles
+            ? [userRoles]
+            : [];
+
         if (allowedRoles && allowedRoles.length > 0) {
-          const userRoles = decodedToken.roles;
-          const rolesArray = Array.isArray(userRoles) ? userRoles : (userRoles ? [userRoles] : []);
           const hasAccess = hasPermission(rolesArray, allowedRoles);
+
+          if (!hasAccess) {
+            setRedirectPath("/acceso-denegado");
+            setAuthChecked(true);
+            return;
+          }
+        }
+
+        if (
+          requiredLaboralCapabilities &&
+          requiredLaboralCapabilities.length > 0
+        ) {
+          const hasAccess = hasLaboralCapabilities(
+            rolesArray,
+            requiredLaboralCapabilities
+          );
 
           if (!hasAccess) {
             setRedirectPath("/acceso-denegado");
@@ -107,7 +155,7 @@ export const Private_Routes = ({
     };
 
     checkAuth();
-  }, [allowedRoles]);
+  }, [allowedRoles, requiredLaboralCapabilities]);
 
   if (!authChecked) {
     return <LoadingAnimation message="Verificando permisos..." />;

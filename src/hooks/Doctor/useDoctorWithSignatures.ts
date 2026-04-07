@@ -11,6 +11,7 @@ export interface DoctorSignatures {
     fullName: string
     matricula: string
     specialty: string
+    stampText: string
     signatureDataUrl: string
     sealDataUrl?: string
 }
@@ -19,6 +20,7 @@ interface DoctorSignatureResponse {
     fullName?: string
     matricula?: string
     doctorSpeciality?: string
+    stampText?: string
     signature?: string
     sello?: string
 }
@@ -53,6 +55,7 @@ export const useDoctorWithSignatures = ({ id, auth = true }: Params) => {
                 fullName: sig?.fullName ?? "",
                 matricula: sig?.matricula ?? "",
                 specialty: sig?.doctorSpeciality ?? "",
+                stampText: sig?.stampText ?? "",
                 signatureDataUrl,
                 sealDataUrl,
             }

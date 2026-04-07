@@ -15,14 +15,18 @@ export interface DataValueHC extends Base {
     idDataType: string;
     value: string;
     observaciones?: string;
-    dataType: DataType;
-    userHistoriaClinica: UserHistoriaClinica;
+    idPreviousVersion?: string;
+    correctionReason?: string;
+    isCurrent?: boolean;
+    dataType?: DataType;
+    userHistoriaClinica?: UserHistoriaClinica;
 }
 
 export interface CreateDataValueItemDto {
     id?: number;
     dataTypeId: number;
     value: string;
+    observations?: string | null;
 }
 
 export interface CreateDataValuesDto {
@@ -46,4 +50,5 @@ export interface CreateDataValuesHCDto {
 export interface UpdateDataValueHCDto {
     value?: string;
     observaciones?: string;
+    correctionReason?: string;
 }

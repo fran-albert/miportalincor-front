@@ -244,12 +244,14 @@ export const QuickBookAppointmentSheet = ({
     previewMeta: AppointmentCreatePreviewMeta
   ) => {
     try {
+      const consultationTypeIds = data.consultationTypeIds ?? [];
       await createAppointment.mutateAsync({
         doctorId: data.doctorId,
         patientId: data.patientId,
         date: data.date,
         hour: data.hour,
-        consultationTypeId: data.consultationTypeId,
+        consultationTypeId: consultationTypeIds[0],
+        consultationTypeIds,
       });
 
       showSuccess(

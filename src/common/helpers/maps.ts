@@ -1,4 +1,4 @@
-import { Circulatorio, ExamenClinico, Gastrointestinal, Genitourinario, IMedicalEvaluation, Neurologico, Osteoarticular, Respiratorio, resetForm, setFormData, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { Circulatorio, ExamenClinico, Gastrointestinal, Genitourinario, hydrateFormData, IMedicalEvaluation, Neurologico, Osteoarticular, Respiratorio, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
@@ -21,6 +21,67 @@ export function hasSectionData(section: object | undefined | null): boolean {
         if (typeof value === 'number') return true;
         return value !== undefined && value !== null;
     });
+}
+
+export function getLatestDataValueByName(
+    dataValues: DataValue[],
+    name: string
+): DataValue | undefined {
+    return [...dataValues]
+        .filter((dv) => dv.dataType.name === name)
+        .sort((a, b) => {
+            const updatedDiff =
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            if (updatedDiff !== 0) return updatedDiff;
+            return b.id - a.id;
+        })[0];
+}
+
+const normalizeDataTypeName = (value: string) =>
+    value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
+
+export function getLatestDataValueByPossibleNames(
+    dataValues: DataValue[],
+    names: string[]
+): DataValue | undefined {
+    const normalizedNames = names.map(normalizeDataTypeName);
+    return [...dataValues]
+        .filter((dv) =>
+            normalizedNames.includes(normalizeDataTypeName(dv.dataType.name))
+        )
+        .sort((a, b) => {
+            const updatedDiff =
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            if (updatedDiff !== 0) return updatedDiff;
+            return b.id - a.id;
+        })[0];
+}
+
+export function getPreferredDataValueByPossibleNames(
+    dataValues: DataValue[],
+    names: string[]
+): DataValue | undefined {
+    const normalizedNames = names.map(normalizeDataTypeName);
+    return [...dataValues]
+        .filter((dv) =>
+            normalizedNames.includes(normalizeDataTypeName(dv.dataType.name))
+        )
+        .sort((a, b) => {
+            const aHasValue = String(a.value ?? "").trim() !== "";
+            const bHasValue = String(b.value ?? "").trim() !== "";
+            if (aHasValue !== bHasValue) {
+                return aHasValue ? -1 : 1;
+            }
+
+            const updatedDiff =
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            if (updatedDiff !== 0) return updatedDiff;
+            return b.id - a.id;
+        })[0];
 }
 
 
@@ -98,19 +159,19 @@ export function mapPiel(dataValues: DataValue[]): Piel {
     };
 }
 export function mapConclusionText(dataValues: DataValue[]): string {
-    const conclusionData = dataValues.find(
-        (dv) =>
-            dv.dataType.name === "Conclusion" &&
-            typeof dv.value === "string"
-    );
+    const conclusionData = getPreferredDataValueByPossibleNames(dataValues, [
+        "Conclusion",
+        "Conclusión",
+        "Aptitud",
+        "Aptitudes",
+    ]);
     return conclusionData ? String(conclusionData.value) : "";
 }
 export function mapRecomendacionesText(dataValues: DataValue[]): string {
-    const recomendacionesData = dataValues.find(
-        (dv) =>
-            dv.dataType.name === "Recomendaciones" &&
-            typeof dv.value === "string"
-    );
+    const recomendacionesData = getPreferredDataValueByPossibleNames(dataValues, [
+        "Recomendaciones",
+        "Recomendación",
+    ]);
     return recomendacionesData ? String(recomendacionesData.value) : "";
 }
 export function mapConclusionAndRecommendationsData(dataValues: DataValue[]): {
@@ -485,14 +546,10 @@ export function useInitializeMedicalEvaluation(dataValues: DataValue[] | undefin
     const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
-        // SIEMPRE resetear primero para limpiar datos del paciente anterior
-        dispatch(resetForm());
-
         if (dataValues && dataValues.length > 0) {
             const fullEvaluation = mapMedicalEvaluation(dataValues);
-            // Cargamos solo los datos del paciente actual (sin mezclar con anteriores)
             dispatch(
-                setFormData({
+                hydrateFormData({
                     medicalEvaluation: fullEvaluation,
                 })
             );

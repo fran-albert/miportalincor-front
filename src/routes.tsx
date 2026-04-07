@@ -1,4 +1,10 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Navigate,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
 import SpecialityPage from "./pages/protected/Specialities/page";
 import LoginPage from "./pages/auth/Login";
 import HomePage from "./pages/protected/Home";
@@ -25,6 +31,7 @@ import NutritionPage from "./pages/protected/Patient/Nutrition";
 import CreateCollaboratorPage from "./pages/protected/Collaborator/Create";
 import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupattional/Create";
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
+import LaborReportBrandingConfigPage from "./pages/protected/Laboral-Incor/Report-Branding-Config";
 import CompaniesPage from "./pages/protected/Companies";
 import CompanyPage from "./pages/protected/Company";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
@@ -67,11 +74,11 @@ import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
+import { LABORAL_CAPABILITIES } from "./common/constants/laboral-permissions";
 
-function App() {
-  return (
-    <Router>
-      <Routes>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
         {/* Rutas públicas (sin sidebar ni header) */}
         <Route path="/iniciar-sesion" element={<LoginPage />} />
         <Route path="/restablecer-contraseña" element={<RequestEmailPassword />} />
@@ -519,7 +526,9 @@ function App() {
           <Route
             path="/incor-laboral"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[LABORAL_CAPABILITIES.ACCESS]}
+              >
                 <LaboralIncorPage />
               </Private_Routes>
             }
@@ -527,7 +536,11 @@ function App() {
           <Route
             path="/incor-laboral/empresas"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COMPANIES_READ,
+                ]}
+              >
                 <CompaniesPage />
               </Private_Routes>
             }
@@ -535,7 +548,11 @@ function App() {
           <Route
             path="/incor-laboral/empresas/:id"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COMPANIES_READ,
+                ]}
+              >
                 <CompanyPage />
               </Private_Routes>
             }
@@ -543,7 +560,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <PreOcuppationalPage />
               </Private_Routes>
             }
@@ -551,7 +572,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/agregar"
             element={
-              <Private_Routes allowedRoles={["Secretaria", "Administrador", "Medico"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
+                ]}
+              >
                 <CreateCollaboratorPage />
               </Private_Routes>
             }
@@ -559,7 +584,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorPage />
               </Private_Routes>
             }
@@ -567,7 +596,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/editar"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
+                ]}
+              >
                 <CollaboratorEditPage />
               </Private_Routes>
             }
@@ -575,7 +608,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/perfil"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorProfilePage />
               </Private_Routes>
             }
@@ -583,7 +620,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/examenes"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorExamenesPage />
               </Private_Routes>
             }
@@ -591,7 +632,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/evoluciones"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorEvolucionesPage />
               </Private_Routes>
             }
@@ -599,7 +644,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/estudios"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
+                ]}
+              >
                 <CollaboratorStudiesPage />
               </Private_Routes>
             }
@@ -607,7 +656,11 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.EXAMS_READ,
+                ]}
+              >
                 <CreatePreoccupationalPage />
               </Private_Routes>
             }
@@ -615,8 +668,24 @@ function App() {
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId/previsualizar-informe"
             element={
-              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.EXAMS_READ,
+                ]}
+              >
                 <PreOccupationalPreviewPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/incor-laboral/configuracion/informes"
+            element={
+              <Private_Routes
+                requiredLaboralCapabilities={[
+                  LABORAL_CAPABILITIES.REPORT_CONFIG_READ,
+                ]}
+              >
+                <LaborReportBrandingConfigPage />
               </Private_Routes>
             }
           />
@@ -664,9 +733,12 @@ function App() {
             }
           />
         </Route>
-      </Routes>
-    </Router>
-  );
+    </>
+  )
+);
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;

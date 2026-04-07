@@ -36,6 +36,11 @@ export const AppointmentOriginLabels: Record<AppointmentOrigin, string> = {
   [AppointmentOrigin.DOCTOR]: 'Médico (autogestión)',
 };
 
+export enum AppointmentStatusTransitionContext {
+  RECEPTION_FLOW = 'RECEPTION_FLOW',
+  CALENDAR_OVERRIDE = 'CALENDAR_OVERRIDE',
+}
+
 export const AppointmentStatusLabels: Record<AppointmentStatus, string> = {
   [AppointmentStatus.REQUESTED_BY_PATIENT]: 'Solicitado (paciente)',
   [AppointmentStatus.ASSIGNED_BY_SECRETARY]: 'Asignado (secretaria)',
@@ -61,6 +66,19 @@ export const AppointmentStatusColors: Record<AppointmentStatus, string> = {
 export const ALLOWED_TRANSITIONS: Partial<Record<AppointmentStatus, AppointmentStatus[]>> = {
   [AppointmentStatus.PENDING]: [
     AppointmentStatus.WAITING,
+    AppointmentStatus.CANCELLED_BY_PATIENT,
+    AppointmentStatus.CANCELLED_BY_SECRETARY,
+  ],
+  [AppointmentStatus.WAITING]: [
+    AppointmentStatus.ATTENDING,
+    AppointmentStatus.CANCELLED_BY_PATIENT,
+    AppointmentStatus.CANCELLED_BY_SECRETARY,
+  ],
+  [AppointmentStatus.ATTENDING]: [AppointmentStatus.COMPLETED],
+};
+
+export const OPERATIONAL_TRANSITIONS: Partial<Record<AppointmentStatus, AppointmentStatus[]>> = {
+  [AppointmentStatus.PENDING]: [
     AppointmentStatus.CANCELLED_BY_PATIENT,
     AppointmentStatus.CANCELLED_BY_SECRETARY,
   ],
@@ -121,7 +139,9 @@ export interface AppointmentResponseDto {
   guestEmail?: string;
   // Consultation type
   consultationTypeId?: number | null;
+  consultationTypeIds?: number[];
   consultationType?: ConsultationTypeBasicDto | null;
+  consultationTypes?: ConsultationTypeBasicDto[];
   // Duration
   durationMinutes?: number | null;
 }
@@ -137,6 +157,10 @@ export interface AppointmentDetailedDto {
   status: AppointmentStatus;
   origin?: AppointmentOrigin | null;
   isGuest?: boolean | number;
+  consultationTypeId?: number | null;
+  consultationTypeIds?: number[];
+  consultationType?: ConsultationTypeBasicDto | null;
+  consultationTypes?: ConsultationTypeBasicDto[];
   patient?: PatientBasicDto | null;
   doctor?: DoctorBasicDto | null;
 }
@@ -162,11 +186,14 @@ export interface CreateAppointmentDto {
   date: string;
   hour: string;
   consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export interface UpdateAppointmentDto {
   date?: string;
   hour?: string;
+  consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export interface RescheduleAppointmentDto {
@@ -176,6 +203,7 @@ export interface RescheduleAppointmentDto {
 
 export interface UpdateAppointmentStatusDto {
   status: AppointmentStatus;
+  context?: AppointmentStatusTransitionContext;
 }
 
 // ============================================

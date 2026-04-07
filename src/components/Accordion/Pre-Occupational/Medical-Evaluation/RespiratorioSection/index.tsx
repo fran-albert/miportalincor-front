@@ -1,9 +1,11 @@
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Respiratorio } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  BooleanChoiceField,
+  ClinicalBlock,
+  NotesField,
+} from "../FormPrimitives";
 
 interface RespiratorioSectionProps {
   isEditing: boolean;
@@ -45,63 +47,80 @@ export const RespiratorioSection: React.FC<RespiratorioSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <h4 className="font-bold text-base text-greenPrimary">
-        Aparato Respiratorio
-      </h4>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-black">
-        {/* Frecuencia Respiratoria */}
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="resp-frecuencia">Frecuencia Respiratoria</Label>
-          <Input
-            id="resp-frecuencia"
-            className="w-20"
-            value={data.frecuenciaRespiratoria}
-            disabled={!isEditing}
-            onChange={(e) =>
-              onChange("frecuenciaRespiratoria", e.currentTarget.value)
-            }
-            placeholder="15"
-          />
-          <span>x minuto</span>
+      <ClinicalBlock
+        title="Mediciones"
+        description="Registrá la frecuencia respiratoria y la oximetría antes de definir el estado general."
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <label
+              htmlFor="resp-frecuencia"
+              className="text-sm font-medium text-slate-700"
+            >
+              Frecuencia respiratoria
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="resp-frecuencia"
+                className="w-24 bg-white"
+                value={data.frecuenciaRespiratoria}
+                disabled={!isEditing}
+                onChange={(e) =>
+                  onChange("frecuenciaRespiratoria", e.currentTarget.value)
+                }
+                placeholder="15"
+              />
+              <span className="text-sm text-slate-500">x minuto</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label
+              htmlFor="resp-oximetria"
+              className="text-sm font-medium text-slate-700"
+            >
+              Oximetría
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="resp-oximetria"
+                className="w-24 bg-white"
+                value={data.oximetria}
+                disabled={!isEditing}
+                onChange={(e) => onChange("oximetria", e.currentTarget.value)}
+                placeholder="98"
+              />
+              <span className="text-sm text-slate-500">%</span>
+            </div>
+          </div>
         </div>
+      </ClinicalBlock>
 
-        {/* Oximetría */}
-        <div className="flex items-center space-x-2 text-black">
-          <Label htmlFor="resp-oximetria">Oximetría</Label>
-          <Input
-            id="resp-oximetria"
-            className="w-16"
-            value={data.oximetria}
-            disabled={!isEditing}
-            onChange={(e) => onChange("oximetria", e.currentTarget.value)}
-            placeholder="98"
-          />
-          <span>%</span>
-        </div>
-
-        {/* Sin alteraciones */}
-        <div className="flex items-center space-x-2 text-black">
-          <Checkbox
-            id="resp-sinalt"
-            checked={data.sinAlteraciones}
-            disabled={!isEditing}
-            onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
-          />
-          <Label htmlFor="resp-sinalt">Sin alteraciones</Label>
-        </div>
-      </div>
-
-      {/* Observaciones */}
-      <div className="space-y-1 text-black">
-        <Textarea
+      <ClinicalBlock
+        title="Estado general"
+        description="Definí si el sistema respiratorio está sin alteraciones o si requiere observaciones."
+      >
+        <BooleanChoiceField
+          idPrefix="resp-sinalt"
+          label="Resultado"
+          value={data.sinAlteraciones}
+          disabled={!isEditing}
+          positiveLabel="Sin alteraciones"
+          negativeLabel="Con hallazgos"
+          onChange={(value) => handleSinAlteracionesChange(value === true)}
+        />
+        <NotesField
           id="resp-observaciones"
+          label="Observaciones"
           value={data.observaciones}
           disabled={obsDisabled}
-          onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
-          placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Escribe aquí…"}
+          onChange={handleObservacionesChange}
+          placeholder={
+            data.sinAlteraciones
+              ? "Sin observaciones"
+              : "Describí los hallazgos observados"
+          }
         />
-      </div>
+      </ClinicalBlock>
     </div>
   );
 };

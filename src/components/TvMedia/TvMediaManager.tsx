@@ -40,6 +40,7 @@ import {
   Loader2,
   Plus,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   useAllMedia,
   useUploadMedia,
@@ -66,6 +67,8 @@ export function TvMediaManager() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadDescription, setUploadDescription] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: mediaList, isLoading } = useAllMedia();
@@ -92,12 +95,16 @@ export function TvMediaManager() {
       file: uploadFile,
       title: uploadTitle,
       description: uploadDescription || undefined,
+      onProgress: setUploadProgress,
+      onStatusChange: setUploadStatus,
     });
 
     // Reset form
     setUploadFile(null);
     setUploadTitle("");
     setUploadDescription("");
+    setUploadProgress(0);
+    setUploadStatus("");
     setIsUploadOpen(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -200,11 +207,35 @@ export function TvMediaManager() {
                   rows={3}
                 />
               </div>
+              {uploadMutation.isPending && (
+                <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">Subida multipart a S3</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full bg-primary transition-all duration-300"
+                      )}
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {uploadStatus || "Preparando upload..."}
+                  </p>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => setIsUploadOpen(false)}
+                onClick={() => {
+                  setIsUploadOpen(false);
+                  setUploadProgress(0);
+                  setUploadStatus("");
+                }}
+                disabled={uploadMutation.isPending}
               >
                 Cancelar
               </Button>

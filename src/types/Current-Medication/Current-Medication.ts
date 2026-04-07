@@ -1,5 +1,12 @@
 import { Base } from "../Base/Base";
 
+export interface MedicationDoctorInfo {
+  userId: string | number;
+  firstName: string;
+  lastName: string;
+  gender?: string;
+}
+
 export interface CurrentMedication extends Base {
   idUserHistoriaClinica: string;
   idDoctor: string;
@@ -11,6 +18,13 @@ export interface CurrentMedication extends Base {
   observations?: string;
   suspensionDate?: string;
   suspensionReason?: string;
+  lastEditedByDoctorId?: string;
+  suspendedByDoctorId?: string;
+  deletedByDoctorId?: string;
+  doctor?: MedicationDoctorInfo;
+  lastEditedByDoctor?: MedicationDoctorInfo;
+  suspendedByDoctor?: MedicationDoctorInfo;
+  deletedByDoctor?: MedicationDoctorInfo;
 }
 
 export enum MedicationStatus {

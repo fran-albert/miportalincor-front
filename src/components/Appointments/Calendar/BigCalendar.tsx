@@ -45,11 +45,21 @@ import {
   AppointmentStatusLabels,
   AppointmentOrigin,
   AppointmentOriginLabels,
+  AppointmentStatusTransitionContext,
 } from "@/types/Appointment/Appointment";
-import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
+import {
+  OverturnDetailedDto,
+  OverturnStatus,
+  OverturnStatusLabels,
+  OverturnStatusTransitionContext,
+} from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap, AlertCircle } from "lucide-react";
+import {
+  getAppointmentConsultationTypeSummary,
+  getAppointmentConsultationTypes,
+} from "@/common/helpers/appointment-consultation-types";
+import { AlertCircle, CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, FileText, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -112,6 +122,7 @@ interface CalendarEvent {
     healthInsurance?: string;
     affiliationNumber?: string;
     consultationType?: string;
+    consultationTypes?: AppointmentFullResponseDto["consultationTypes"];
   };
 }
 
@@ -792,7 +803,8 @@ export const BigCalendar = ({
           patientDni,
           healthInsurance: apt.patient?.healthInsuranceName,
           affiliationNumber: apt.patient?.affiliationNumber,
-          consultationType: apt.consultationType?.name,
+          consultationType: getAppointmentConsultationTypeSummary(apt) ?? undefined,
+          consultationTypes: getAppointmentConsultationTypes(apt),
         },
       };
     });
@@ -1347,7 +1359,18 @@ export const BigCalendar = ({
   }, []);
 
   // Handle status change
-  const handleStatusChange = async (newStatus: AppointmentStatus | OverturnStatus) => {
+  const handleStatusChange = async (
+    newStatus: AppointmentStatus | OverturnStatus,
+    options?: {
+      context?:
+        | AppointmentStatusTransitionContext
+        | OverturnStatusTransitionContext;
+      successMessage?: {
+        title: string;
+        description: string;
+      };
+    },
+  ) => {
     if (!selectedEvent || !selectedEvent.resource.data) return;
 
     try {
@@ -1355,19 +1378,25 @@ export const BigCalendar = ({
         await changeAppointmentStatus.mutateAsync({
           id: selectedEvent.resource.data.id,
           status: newStatus as AppointmentStatus,
+          context: options?.context as
+            | AppointmentStatusTransitionContext
+            | undefined,
         });
       } else {
         await changeOverturnStatus.mutateAsync({
           id: selectedEvent.resource.data.id,
           status: newStatus as OverturnStatus,
+          context: options?.context as
+            | OverturnStatusTransitionContext
+            | undefined,
         });
       }
 
       // Mensajes específicos por estado
       const messages: Record<string, { title: string; description: string }> = {
         [AppointmentStatus.WAITING]: {
-          title: "Paciente en espera",
-          description: "El paciente fue marcado en sala de espera"
+          title: "Paciente en espera médica",
+          description: "El paciente fue pasado a espera médica"
         },
         [AppointmentStatus.ATTENDING]: {
           title: "Atendiendo paciente",
@@ -1383,7 +1412,10 @@ export const BigCalendar = ({
         },
       };
 
-      const msg = messages[newStatus] || { title: "Estado actualizado", description: "El estado del turno se actualizó correctamente" };
+      const msg = options?.successMessage || messages[newStatus] || {
+        title: "Estado actualizado",
+        description: "El estado del turno se actualizó correctamente",
+      };
       showSuccess(msg.title, msg.description);
 
       setIsEventDialogOpen(false);
@@ -1480,6 +1512,9 @@ export const BigCalendar = ({
   const selectedHealthInsurance = selectedEventData?.patient?.healthInsuranceName;
   const selectedAffiliationNumber = selectedEventData?.patient?.affiliationNumber;
   const selectedConsultationTypeBadge = getConsultationTypeBadgeLabel(selectedEvent?.resource.consultationType);
+  const selectedConsultationTypes = getAppointmentConsultationTypes(
+    selectedAppointmentData
+  );
   const selectedOrigin = selectedEvent?.resource.type === "overturn"
     ? "Sobreturno"
     : selectedAppointmentData?.origin
@@ -1840,6 +1875,33 @@ export const BigCalendar = ({
                 </div>
               </div>
 
+              {selectedConsultationTypes.length > 0 && (
+                <div className="google-calendar-detail-row">
+                  <FileText className="h-4 w-4" />
+                  <div>
+                    <p className="google-calendar-detail-primary">Estudios / tipos</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedConsultationTypes.map((consultationType) => (
+                        <Badge
+                          key={consultationType.id}
+                          variant="outline"
+                          className="google-calendar-origin-pill consultation-type"
+                          style={{
+                            borderColor: consultationType.color || undefined,
+                            color: consultationType.color || undefined,
+                            backgroundColor: consultationType.color
+                              ? `${consultationType.color}12`
+                              : undefined,
+                          }}
+                        >
+                          {consultationType.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="google-calendar-detail-row">
                 <User className="h-4 w-4" />
                 <div>
@@ -1892,25 +1954,50 @@ export const BigCalendar = ({
               <p className="google-calendar-section-title">Acciones</p>
               {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
                 selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (() => {
-                  const appointmentDate = (selectedEvent.resource.data as AppointmentFullResponseDto).date;
+                  const scheduledDate = (
+                    selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto
+                  ).date;
                   const today = formatDateForCalendar(new Date());
-                  const isToday = appointmentDate === today;
+                  const isToday = scheduledDate === today;
                   const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
                   const disabledWaiting = !isToday || isGuestAppointment;
                   const waitingTitle = isGuestAppointment
                     ? "Debe registrar al invitado como paciente antes de cambiar el estado"
                     : !isToday
-                      ? "Solo se puede poner en espera un turno del día de hoy"
+                      ? "Solo se puede forzar espera médica para un turno del día de hoy"
                       : undefined;
                   return (
                     <Button
                       className="google-calendar-action-button justify-start bg-emerald-600 text-white hover:bg-emerald-700"
-                      onClick={() => handleStatusChange(AppointmentStatus.WAITING)}
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          "Esto saltea la recepción y debe usarse solo en contingencias. ¿Querés forzar el pase a espera médica?",
+                        );
+
+                        if (!confirmed) return;
+
+                        handleStatusChange(
+                          selectedEvent.resource.type === "appointment"
+                            ? AppointmentStatus.WAITING
+                            : OverturnStatus.WAITING,
+                          {
+                            context:
+                              selectedEvent.resource.type === "appointment"
+                                ? AppointmentStatusTransitionContext.CALENDAR_OVERRIDE
+                                : OverturnStatusTransitionContext.CALENDAR_OVERRIDE,
+                            successMessage: {
+                              title: "Espera médica forzada",
+                              description:
+                                "El paciente fue pasado a espera médica por override de calendario.",
+                            },
+                          },
+                        );
+                      }}
                       disabled={disabledWaiting}
                       title={waitingTitle}
                     >
                       <Clock className="mr-2 h-4 w-4" />
-                      Marcar en espera
+                      Forzar espera médica
                     </Button>
                   );
                 })()}
@@ -1952,7 +2039,10 @@ export const BigCalendar = ({
                           doctorId: appt.doctorId,
                           date: appt.date,
                           hour: appt.hour,
-                          consultationTypeId: appt.consultationTypeId,
+                          consultationTypeId:
+                            appt.consultationTypeIds?.length === 1
+                              ? appt.consultationTypeIds[0]
+                              : appt.consultationTypeId,
                           doctor: appt.doctor ?? null,
                           patient: appt.patient ?? null,
                         });
@@ -2325,7 +2415,7 @@ export const BigCalendar = ({
       <PrintAgendaView
         open={isPrintDialogOpen}
         onOpenChange={setIsPrintDialogOpen}
-        appointments={appointments}
+        appointments={calendarAppointments}
         overturns={overturns}
         currentDate={currentDate}
         currentView={currentView}
