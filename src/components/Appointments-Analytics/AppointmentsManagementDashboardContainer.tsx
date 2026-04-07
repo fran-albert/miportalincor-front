@@ -24,7 +24,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-export function AppointmentsManagementDashboardContainer() {
+interface AppointmentsManagementDashboardContainerProps {
+  showHeader?: boolean;
+}
+
+export function AppointmentsManagementDashboardContainer({
+  showHeader = true,
+}: AppointmentsManagementDashboardContainerProps) {
   const [dateFrom, setDateFrom] = useState(() =>
     format(subMonths(new Date(), 3), "yyyy-MM-dd")
   );
@@ -58,16 +64,18 @@ export function AppointmentsManagementDashboardContainer() {
   };
 
   return (
-    <div className="space-y-8 p-6">
-      <PageHeader
-        breadcrumbItems={[
-          { label: "Inicio", href: "/inicio" },
-          { label: "Reportes de Turnos" },
-        ]}
-        title="Reportes de Turnos"
-        description="Vista ejecutiva para dirección y gerencia sobre volumen, cancelaciones, origen y sobreturnos."
-        icon={<BarChart3 className="h-6 w-6" />}
-      />
+    <div className={`space-y-8 ${showHeader ? "p-6" : ""}`}>
+      {showHeader && (
+        <PageHeader
+          breadcrumbItems={[
+            { label: "Inicio", href: "/inicio" },
+            { label: "Reportes de Turnos" },
+          ]}
+          title="Reportes de Turnos"
+          description="Vista ejecutiva para dirección y gerencia sobre volumen, cancelaciones, origen y sobreturnos."
+          icon={<BarChart3 className="h-6 w-6" />}
+        />
+      )}
 
       <div className="flex flex-col gap-5 rounded-2xl border bg-card p-5 md:p-6">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
