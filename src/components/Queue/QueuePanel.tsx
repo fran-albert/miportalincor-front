@@ -15,7 +15,6 @@ import {
 import { cn } from '@/lib/utils';
 import {
   Users,
-  PhoneCall,
   UserCheck,
   UserX,
   RefreshCcw,
@@ -31,7 +30,6 @@ import {
 import {
   useWaitingQueue,
   useActiveQueue,
-  useQueueStats,
   useCallNextPatient,
   useCallSpecificPatient,
   useRecallPatient,
@@ -83,9 +81,9 @@ const appointmentTypeBadgeStyles: Record<AppointmentType, string> = {
 
 const appointmentTypeRowStyles: Record<AppointmentType, string> = {
   SCHEDULED_APPOINTMENT:
-    'border-l-4 border-l-greenPrimary bg-[rgba(24,123,128,0.04)] hover:bg-[rgba(24,123,128,0.06)]',
-  WALK_IN: 'border-l-4 border-l-[#9FD5D8] bg-sky-50/60 hover:bg-sky-50',
-  ADMINISTRATIVE: 'border-l-4 border-l-slate-200 bg-white hover:bg-slate-50',
+    'border-l-2 border-l-greenPrimary/50 bg-[rgba(24,123,128,0.025)] hover:bg-[rgba(24,123,128,0.04)]',
+  WALK_IN: 'border-l-2 border-l-sky-100 bg-white hover:bg-slate-50',
+  ADMINISTRATIVE: 'border-l-2 border-l-slate-100 bg-white hover:bg-slate-50',
 };
 
 const waitingSortOrder: Record<AppointmentType, number> = {
@@ -98,21 +96,24 @@ const callDestinationOptions: Array<{
   value: QueueCallDestination;
   label: string;
   Icon: typeof ArrowLeft;
+  variant: 'default' | 'outline';
   className: string;
 }> = [
   {
     value: 'RECEPCION',
     label: 'Recepción',
     Icon: ArrowLeft,
+    variant: 'outline',
     className:
-      'border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 hover:text-slate-950',
+      'border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900',
   },
   {
     value: 'VENTANILLA',
     label: 'Ventanilla',
     Icon: ArrowRight,
+    variant: 'default',
     className:
-      'border-greenPrimary bg-greenPrimary text-white hover:bg-greenSecondary hover:text-white',
+      'bg-greenPrimary text-white hover:bg-greenSecondary hover:text-white',
   },
 ];
 
@@ -200,7 +201,7 @@ const getServicePointBadgeClass = (servicePoint?: string): string => {
 };
 
 type QueueAction = {
-  icon: typeof PhoneCall;
+  icon: typeof Users;
   label: string;
   onClick: () => void;
   className?: string;
@@ -229,7 +230,7 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
             size="sm"
             variant={action.variant ?? 'outline'}
             className={cn(
-              'h-11 justify-center rounded-xl px-4 text-sm font-semibold shadow-sm',
+              'h-9 justify-center px-3 text-sm font-medium',
               action.className,
             )}
             onClick={action.onClick}
@@ -284,36 +285,6 @@ const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
   </div>
 );
 
-const StatsCard = ({
-  label,
-  value,
-  isLoading,
-  Icon,
-  accentClassName,
-}: {
-  label: string;
-  value: string | number;
-  isLoading?: boolean;
-  Icon: typeof Users;
-  accentClassName: string;
-}) => (
-  <Card className="border-slate-200 shadow-sm">
-    <CardContent className="pt-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className={cn('text-3xl font-semibold tracking-tight', accentClassName)}>
-            {isLoading ? <Skeleton className="h-9 w-14" /> : value}
-          </p>
-        </div>
-        <div className={cn('rounded-2xl border p-3', accentClassName)}>
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const CallDestinationButtons = ({
   onCall,
   disabled,
@@ -329,17 +300,17 @@ const CallDestinationButtons = ({
       compact ? 'flex-col xl:flex-row xl:justify-end' : 'flex-col sm:flex-row',
     )}
   >
-    {callDestinationOptions.map(({ value, label, Icon, className }) => {
+    {callDestinationOptions.map(({ value, label, Icon, variant, className }) => {
       const isReception = value === 'RECEPCION';
 
       return (
         <Button
           key={value}
           type="button"
-          variant="outline"
+          variant={variant}
           className={cn(
-            'gap-2 rounded-2xl border text-sm font-semibold shadow-sm transition-colors',
-            compact ? 'h-10 min-w-[148px] px-4' : 'h-12 min-w-[184px] px-5 text-base',
+            'gap-2 text-sm transition-colors',
+            compact ? 'h-9 min-w-[140px] px-3 font-medium' : 'h-9 min-w-[148px] px-4',
             className,
           )}
           disabled={disabled}
@@ -360,7 +331,6 @@ export const QueuePanel = () => {
 
   const { data: waitingQueue, isLoading: loadingWaiting } = useWaitingQueue();
   const { data: activeQueue } = useActiveQueue();
-  const { data: stats, isLoading: loadingStats } = useQueueStats();
 
   const callNextMutation = useCallNextPatient();
   const callSpecificMutation = useCallSpecificPatient();
@@ -480,80 +450,33 @@ export const QueuePanel = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <StatsCard
-            label="En espera"
-            value={stats?.waiting ?? 0}
-            isLoading={loadingStats}
-            Icon={Users}
-            accentClassName="text-amber-700 border-amber-200 bg-amber-50"
-          />
-          <StatsCard
-            label="Llamados"
-            value={stats?.called ?? 0}
-            isLoading={loadingStats}
-            Icon={PhoneCall}
-            accentClassName="text-greenPrimary border-[rgba(24,123,128,0.18)] bg-[rgba(24,123,128,0.08)]"
-          />
-          <StatsCard
-            label="Atendiendo"
-            value={stats?.attending ?? 0}
-            isLoading={loadingStats}
-            Icon={UserCheck}
-            accentClassName="text-greenSecondary border-[rgba(12,72,74,0.16)] bg-[rgba(12,72,74,0.06)]"
-          />
-          <StatsCard
-            label="Tiempo promedio"
-            value={`${stats?.averageWaitTimeMinutes ?? 0}m`}
-            isLoading={loadingStats}
-            Icon={Clock}
-            accentClassName="text-slate-700 border-slate-200 bg-slate-50"
-          />
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Cola del Día
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Usá Recepción o Ventanilla para llamar al siguiente paciente.
+          </p>
         </div>
 
-        <Card className="border-[rgba(24,123,128,0.14)] bg-gradient-to-br from-white via-[rgba(24,123,128,0.05)] to-white shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-greenSecondary">
-                  Operación
-                </p>
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
-                    Llamar siguiente
-                  </h2>
-                  <p className="text-sm text-slate-600">
-                    Elegí el destino y la pantalla de sala de espera mostrará la dirección correspondiente.
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-2xl border-slate-300 bg-white"
-                onClick={handleRefresh}
-              >
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Actualizar
-              </Button>
-            </div>
-
-            <div className="mt-5">
-              <CallDestinationButtons
-                onCall={handleCallNext}
-                disabled={callNextMutation.isPending || prioritizedWaitingQueue.length === 0}
-              />
-            </div>
-
-            {prioritizedWaitingQueue.length === 0 && !loadingWaiting && (
-              <p className="mt-3 text-sm text-slate-500">
-                No hay pacientes en espera para llamar.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button type="button" variant="outline" onClick={handleRefresh}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Actualizar
+          </Button>
+          <CallDestinationButtons
+            onCall={handleCallNext}
+            disabled={callNextMutation.isPending || prioritizedWaitingQueue.length === 0}
+          />
+        </div>
       </div>
+
+      {prioritizedWaitingQueue.length === 0 && !loadingWaiting && (
+        <p className="text-sm text-muted-foreground">
+          No hay pacientes en espera para llamar.
+        </p>
+      )}
 
       {activeQueue && activeQueue.length > 0 && (
         <Card className="border-slate-200 shadow-sm">
@@ -750,7 +673,7 @@ export const QueuePanel = () => {
                                 type="button"
                                 size="sm"
                                 variant="outline"
-                                className="h-10 rounded-2xl border-amber-200 bg-white px-4 text-amber-800 hover:bg-amber-50"
+                                className="h-9 border-amber-200 bg-white px-3 text-amber-800 hover:bg-amber-50"
                                 onClick={() => setRegistrationEntry(entry)}
                               >
                                 <UserPlus className="mr-2 h-4 w-4" />
