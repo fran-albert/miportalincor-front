@@ -20,7 +20,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Collapsible,
   CollapsibleContent,
@@ -209,8 +208,10 @@ const MyPrescriptionRequestsPage = () => {
       r.status === PrescriptionRequestStatus.IN_PROGRESS
   ).length;
 
+  const hasMobileBatchCta = selectionMode && selectedItemIds.length > 0;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className={`space-y-6 p-6 ${hasMobileBatchCta ? "pb-28 md:pb-6" : ""}`}>
       <Helmet>
         <title>Medicación y Recetas</title>
         <meta
@@ -226,24 +227,12 @@ const MyPrescriptionRequestsPage = () => {
         icon={<Pill className="h-6 w-6" />}
       />
 
-      {/* Important Notice - Friday Digital Availability */}
-      <Alert className="border-amber-300 bg-amber-50">
-        <CalendarDays className="h-5 w-5 text-amber-600" />
-        <AlertTitle className="text-amber-800 font-semibold">
-          Disponibilidad de recetas
-        </AlertTitle>
-        <AlertDescription className="text-amber-700">
-          <div className="flex items-center gap-2 mt-1">
-            <Clock className="h-4 w-4" />
-            <span>
-              Las recetas solicitadas estarán disponibles{" "}
-              <strong>todos los viernes a partir de las 14:00 hs</strong>. Una
-              vez procesada, podrá descargar su receta digital directamente
-              desde este portal.
-            </span>
-          </div>
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <CalendarDays className="h-4 w-4 shrink-0 text-amber-600" />
+        <span>
+          <strong>Recetas disponibles:</strong> viernes desde las 14:00 hs.
+        </span>
+      </div>
 
       {/* Green Card Section */}
       <div className="space-y-4">
@@ -268,7 +257,7 @@ const MyPrescriptionRequestsPage = () => {
                   <Button
                     size="sm"
                     onClick={() => setIsBatchModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="hidden bg-blue-600 hover:bg-blue-700 md:inline-flex"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Solicitar Recetas ({selectedItemIds.length})
@@ -288,13 +277,6 @@ const MyPrescriptionRequestsPage = () => {
             )}
           </div>
         </div>
-
-        {/* Info legend */}
-        {greenCard && greenCard.items.length > 0 && !selectionMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
-            Para pedir una receta, toque <strong>Pedir</strong> en el medicamento que necesite. Si necesita pedir varios, use <strong>Seleccionar medicamentos</strong>.
-          </div>
-        )}
 
         {/* Content */}
         {isLoadingCard ? (
@@ -331,6 +313,31 @@ const MyPrescriptionRequestsPage = () => {
           </Card>
         )}
       </div>
+
+      {hasMobileBatchCta && (
+        <div className="fixed inset-x-4 bottom-4 z-40 md:hidden">
+          <div className="rounded-2xl border border-blue-200 bg-white/95 p-3 shadow-xl backdrop-blur">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedItemIds.length} medicamento
+                {selectedItemIds.length !== 1 ? "s" : ""} seleccionado
+                {selectedItemIds.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-xs text-gray-500">
+                Cuando quieras, enviá la solicitud en lote.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setIsBatchModalOpen(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Solicitar recetas ({selectedItemIds.length})
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Prescription Requests History */}
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
