@@ -1,6 +1,7 @@
 export type QueueStatus = 'WAITING' | 'CALLED' | 'ATTENDING' | 'COMPLETED' | 'NO_SHOW';
 
 export type AppointmentType = 'SCHEDULED_APPOINTMENT' | 'WALK_IN' | 'ADMINISTRATIVE';
+export type QueueCallDestination = 'RECEPCION' | 'VENTANILLA';
 
 export interface QueueEntry {
   id: number;
@@ -40,12 +41,12 @@ export interface QueueStats {
 }
 
 export interface CallPatientDto {
-  servicePoint: string;
+  servicePoint: QueueCallDestination;
 }
 
 export interface CallSpecificPatientDto {
   queueEntryId: number;
-  servicePoint: string;
+  servicePoint: QueueCallDestination;
 }
 
 export interface ChangeQueueStatusDto {
