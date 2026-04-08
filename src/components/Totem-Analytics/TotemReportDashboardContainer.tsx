@@ -74,7 +74,29 @@ export function TotemReportDashboardContainer({
   const dailyResolvedMap = useMemo(
     () =>
       new Map(
-        reportQuery.data?.unregistered.dailyResolved.map((item) => [
+        reportQuery.data?.unregistered.dailyResolved?.map((item) => [
+          item.date,
+          item.total,
+        ]) ?? []
+      ),
+    [reportQuery.data]
+  );
+
+  const dailyCreatedMap = useMemo(
+    () =>
+      new Map(
+        reportQuery.data?.unregistered.dailyCreated?.map((item) => [
+          item.date,
+          item.total,
+        ]) ?? []
+      ),
+    [reportQuery.data]
+  );
+
+  const dailyLinkedExistingMap = useMemo(
+    () =>
+      new Map(
+        reportQuery.data?.unregistered.dailyLinkedExisting?.map((item) => [
           item.date,
           item.total,
         ]) ?? []
@@ -127,9 +149,15 @@ export function TotemReportDashboardContainer({
           icon: <ClipboardList className="h-5 w-5" />,
         },
         {
-          title: "Altas/vinculaciones en el rango",
-          value: reportQuery.data.unregistered.resolvedEventsInRange,
-          description: "Resoluciones ocurridas dentro del período filtrado.",
+          title: "Pacientes nuevos creados",
+          value: reportQuery.data.unregistered.createdPatientsInRange ?? 0,
+          description: "Altas nuevas originadas por tickets no registrados del tótem.",
+          icon: <UserRoundPlus className="h-5 w-5" />,
+        },
+        {
+          title: "Vinculados a paciente existente",
+          value: reportQuery.data.unregistered.linkedExistingPatientsInRange ?? 0,
+          description: "Resoluciones que asociaron la fila a un paciente ya existente.",
           icon: <UserRoundPlus className="h-5 w-5" />,
         },
       ]
@@ -153,8 +181,12 @@ export function TotemReportDashboardContainer({
       ["No registrados resueltos", reportQuery.data.unregistered.resolvedTickets],
       ["No registrados pendientes", reportQuery.data.unregistered.pendingTickets],
       [
-        "Altas/vinculaciones en el rango",
-        reportQuery.data.unregistered.resolvedEventsInRange,
+        "Pacientes nuevos creados",
+        reportQuery.data.unregistered.createdPatientsInRange ?? 0,
+      ],
+      [
+        "Vinculados a paciente existente",
+        reportQuery.data.unregistered.linkedExistingPatientsInRange ?? 0,
       ],
       [],
       ["Detalle diario"],
@@ -165,7 +197,9 @@ export function TotemReportDashboardContainer({
         "Invitados",
         "Trámite administrativo",
         "DNI no encontrado",
-        "Altas/vinculadas ese día",
+        "Resueltos ese día",
+        "Pacientes nuevos creados ese día",
+        "Vinculados existentes ese día",
       ],
       ...reportQuery.data.daily.map((item) => [
         item.date,
@@ -175,6 +209,8 @@ export function TotemReportDashboardContainer({
         item.administrative,
         item.unregistered,
         dailyResolvedMap.get(item.date) ?? 0,
+        dailyCreatedMap.get(item.date) ?? 0,
+        dailyLinkedExistingMap.get(item.date) ?? 0,
       ]),
     ];
 
@@ -216,7 +252,8 @@ export function TotemReportDashboardContainer({
             <h2 className="text-lg font-semibold">Filtros del reporte Totem</h2>
             <p className="text-sm text-muted-foreground">
               El detalle diario usa como base cada ticket iniciado en el tótem. Las
-              altas/vinculaciones se muestran como métrica derivada.
+              resoluciones se separan entre pacientes nuevos creados y filas
+              vinculadas a pacientes existentes.
             </p>
           </div>
           <DateRangeFilter
@@ -292,7 +329,9 @@ export function TotemReportDashboardContainer({
                     <TableHead className="text-right">Invitados</TableHead>
                     <TableHead className="text-right">Administrativo</TableHead>
                     <TableHead className="text-right">DNI no encontrado</TableHead>
-                    <TableHead className="text-right">Altas/vinculadas</TableHead>
+                    <TableHead className="text-right">Resueltos</TableHead>
+                    <TableHead className="text-right">Nuevos</TableHead>
+                    <TableHead className="text-right">Vinculados</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -320,6 +359,14 @@ export function TotemReportDashboardContainer({
                       </TableCell>
                       <TableCell className="text-right">
                         {numberFormatter.format(dailyResolvedMap.get(item.date) ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {numberFormatter.format(dailyCreatedMap.get(item.date) ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {numberFormatter.format(
+                          dailyLinkedExistingMap.get(item.date) ?? 0
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -366,7 +413,15 @@ export function TotemReportDashboardContainer({
                         {numberFormatter.format(
                           dailyResolvedMap.get(item.date) ?? 0
                         )}{" "}
-                        resueltos con fecha ese día.
+                        resueltos con fecha ese día.{" "}
+                        {numberFormatter.format(
+                          dailyCreatedMap.get(item.date) ?? 0
+                        )}{" "}
+                        fueron pacientes nuevos y{" "}
+                        {numberFormatter.format(
+                          dailyLinkedExistingMap.get(item.date) ?? 0
+                        )}{" "}
+                        fueron vinculaciones a pacientes existentes.
                       </div>
                     </div>
                   ))}

@@ -92,7 +92,7 @@ export const registerQueuePatient = async (
 ): Promise<QueueEntry> => {
   const response = await apiTurnos.patch(
     `/queue/${dto.queueEntryId}/register-patient`,
-    { patientId: dto.patientId },
+    { patientId: dto.patientId, resolutionType: dto.resolutionType },
   );
   return response.data;
 };
