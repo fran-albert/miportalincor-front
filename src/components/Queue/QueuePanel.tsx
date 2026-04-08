@@ -40,6 +40,7 @@ import {
 import { queueKeys } from '@/hooks/Queue';
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
 import {
+  formatDni,
   formatWaitingTime,
   getWaitingTimeColor,
   parseBoolean,
@@ -151,6 +152,18 @@ const formatSecretaryWaitingTime = (minutes: number | undefined): string => {
   if (minutes === undefined || minutes === null) return '-';
   if (minutes <= 0) return 'Recién ingresó';
   return formatWaitingTime(minutes);
+};
+
+const formatQueueDocument = (document: unknown): string => {
+  if (document === null || document === undefined) return '-';
+
+  const rawDocument = String(document).trim();
+  if (!rawDocument) return '-';
+
+  const numericDocument = rawDocument.replace(/\D/g, '');
+  if (!numericDocument) return rawDocument;
+
+  return formatDni(numericDocument);
 };
 
 const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
@@ -527,7 +540,7 @@ export const QueuePanel = () => {
                           <div className="space-y-1">
                             <p className="font-semibold text-slate-900">{entry.patientName}</p>
                             <p className="text-sm text-slate-500">
-                              DNI {entry.patientDocument}
+                              DNI {formatQueueDocument(entry.patientDocument)}
                             </p>
                           </div>
                           <PatientBadges entry={entry} />
@@ -622,12 +635,12 @@ export const QueuePanel = () => {
                         </TableCell>
                         <TableCell className="align-top">
                           <div className="space-y-2.5">
-                            <div className="space-y-1">
-                              <p className="font-semibold text-slate-900">{entry.patientName}</p>
-                              <p className="text-sm text-slate-500">
-                                DNI {entry.patientDocument}
-                              </p>
-                            </div>
+                          <div className="space-y-1">
+                            <p className="font-semibold text-slate-900">{entry.patientName}</p>
+                            <p className="text-sm text-slate-500">
+                              DNI {formatQueueDocument(entry.patientDocument)}
+                            </p>
+                          </div>
                             <PatientBadges entry={entry} />
                             {requiresRegistration(entry) && (
                               <p className="text-xs font-medium text-amber-700">
