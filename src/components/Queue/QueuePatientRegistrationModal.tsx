@@ -195,10 +195,10 @@ export const QueuePatientRegistrationModal = ({
       return;
     }
 
+    const queueEntryId = entry.id;
     setIsSubmitting(true);
 
     try {
-      const queueEntryId = entry.id;
       const dateInArgentina = moment(data.birthDate).tz(
         'America/Argentina/Buenos_Aires',
       );
