@@ -81,6 +81,8 @@ interface QueuePatientRegistrationModalProps {
 }
 
 const EMPTY_PATIENT_LABEL = 'Registro pendiente';
+const ALREADY_REGISTERED_QUEUE_MESSAGE =
+  'Esta fila no requiere alta administrativa adicional.';
 
 const parseInitialNames = (patientName?: string) => {
   if (!patientName || patientName === EMPTY_PATIENT_LABEL) {
@@ -180,11 +182,19 @@ export const QueuePatientRegistrationModal = ({
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!entry) return;
+    if (
+      !entry ||
+      isSubmitting ||
+      addPatientMutation.isPending ||
+      registerQueuePatient.isPending
+    ) {
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
+      const queueEntryId = entry.id;
       const dateInArgentina = moment(data.birthDate).tz(
         'America/Argentina/Buenos_Aires',
       );
@@ -236,7 +246,7 @@ export const QueuePatientRegistrationModal = ({
       const createdPatient = await addPatientMutation.mutateAsync(patientPayload);
 
       await registerQueuePatient.mutateAsync({
-        queueEntryId: entry.id,
+        queueEntryId,
         patientId: Number(createdPatient.userId),
       });
 
@@ -248,8 +258,15 @@ export const QueuePatientRegistrationModal = ({
       onOpenChange(false);
     } catch (error) {
       const apiError = error as ApiError;
+      const apiMessage = apiError.response?.data?.message;
 
-      if (apiError.response?.status === 409) {
+      if (apiMessage === ALREADY_REGISTERED_QUEUE_MESSAGE) {
+        showSuccess(
+          'Paciente registrado',
+          'La fila ya había quedado vinculada y no requiere repetir el alta.',
+        );
+        onOpenChange(false);
+      } else if (apiError.response?.status === 409) {
         showError(
           'Paciente ya existe',
           'Ese DNI ya está registrado en el sistema. Use el alta normal de pacientes.',
@@ -257,7 +274,7 @@ export const QueuePatientRegistrationModal = ({
       } else {
         showError(
           'Error al registrar paciente',
-          apiError.response?.data?.message || 'No se pudo completar el alta.',
+          apiMessage || 'No se pudo completar el alta.',
         );
       }
     } finally {

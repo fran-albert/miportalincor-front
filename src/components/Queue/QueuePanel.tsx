@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { MouseEvent, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,11 +123,13 @@ const hasMeaningfulText = (value: unknown): boolean => {
   return normalized !== '' && normalized !== '0';
 };
 
-const requiresRegistration = (entry: QueueEntry) =>
-  parseBoolean(entry.isGuest) || entry.patientId === null;
+const hasLinkedPatient = (entry: QueueEntry) =>
+  entry.patientId !== null && entry.patientId !== undefined;
+
+const requiresRegistration = (entry: QueueEntry) => !hasLinkedPatient(entry);
 
 const isUnregisteredEntry = (entry: QueueEntry) =>
-  !parseBoolean(entry.isGuest) && entry.patientId === null;
+  !parseBoolean(entry.isGuest) && !hasLinkedPatient(entry);
 
 const formatQueueHour = (entry: QueueEntry): string => {
   if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
@@ -221,11 +223,11 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
 
   return (
     <div className={cn('grid gap-2 sm:min-w-[320px]', columnsClass)}>
-      {actions.map((action) => {
+      {actions.map((action, index) => {
         const Icon = action.icon;
         return (
           <Button
-            key={action.label}
+            key={`${action.label}-${index}`}
             type="button"
             size="sm"
             variant={action.variant ?? 'outline'}
@@ -233,7 +235,11 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
               'h-9 justify-center px-3 text-sm font-medium',
               action.className,
             )}
-            onClick={action.onClick}
+            onClick={(event: MouseEvent<HTMLButtonElement>) => {
+              event.preventDefault();
+              event.stopPropagation();
+              action.onClick();
+            }}
             disabled={action.disabled}
           >
             <Icon className="mr-2 h-4 w-4" />
@@ -264,7 +270,7 @@ const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
         Sobreturno
       </Badge>
     )}
-    {parseBoolean(entry.isGuest) && (
+    {parseBoolean(entry.isGuest) && !hasLinkedPatient(entry) && (
       <Badge
         variant="outline"
         className="rounded-full border-amber-300 bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-900"
@@ -374,6 +380,10 @@ export const QueuePanel = () => {
   };
 
   const buildActiveActions = (entry: QueueEntry): QueueAction[] => {
+    const canMoveToMedicalWaiting =
+      entry.appointmentType === 'SCHEDULED_APPOINTMENT' &&
+      !requiresRegistration(entry);
+
     if (entry.status === 'ATTENDING') {
       const actions: QueueAction[] = [];
 
@@ -416,7 +426,7 @@ export const QueuePanel = () => {
       });
     }
 
-    if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
+    if (canMoveToMedicalWaiting) {
       actions.push({
         icon: ArrowRightCircle,
         label: 'Pasar a espera médica',
