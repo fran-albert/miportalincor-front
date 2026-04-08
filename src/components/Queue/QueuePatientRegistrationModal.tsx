@@ -253,6 +253,7 @@ export const QueuePatientRegistrationModal = ({
       await registerQueuePatient.mutateAsync({
         queueEntryId,
         patientId: Number(createdPatient.userId),
+        resolutionType: 'CREATED_NEW_PATIENT',
       });
 
       showSuccess(

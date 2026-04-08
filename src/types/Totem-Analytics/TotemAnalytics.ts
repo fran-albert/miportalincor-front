@@ -25,9 +25,13 @@ export interface TotemAnalyticsUnregisteredSummary {
   resolvedTickets: number;
   pendingTickets: number;
   resolvedEventsInRange: number;
+  createdPatientsInRange: number;
+  linkedExistingPatientsInRange: number;
   resolutionRate: number;
   dailyDetected: TotemAnalyticsUnregisteredDailyItem[];
   dailyResolved: TotemAnalyticsUnregisteredDailyItem[];
+  dailyCreated: TotemAnalyticsUnregisteredDailyItem[];
+  dailyLinkedExisting: TotemAnalyticsUnregisteredDailyItem[];
 }
 
 export interface TotemAnalyticsReport {
