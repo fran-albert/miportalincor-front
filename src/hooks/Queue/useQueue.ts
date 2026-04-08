@@ -23,7 +23,11 @@ import type {
   QueueEntry,
   RegisterQueuePatientDto,
 } from '@/types/Queue';
+import type { ApiError } from '@/types/Error/ApiError';
 import { toast } from 'sonner';
+
+const ALREADY_REGISTERED_QUEUE_MESSAGE =
+  'Esta fila no requiere alta administrativa adicional.';
 
 // Query keys
 export const queueKeys = {
@@ -239,7 +243,14 @@ export const useRegisterQueuePatient = () => {
       invalidateMedicalFlowQueries(queryClient);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al vincular el paciente a la fila');
+      const apiError = error as ApiError;
+      const apiMessage = apiError.response?.data?.message || error.message;
+
+      if (apiMessage === ALREADY_REGISTERED_QUEUE_MESSAGE) {
+        return;
+      }
+
+      toast.error(apiMessage || 'Error al vincular el paciente a la fila');
     },
   });
 };

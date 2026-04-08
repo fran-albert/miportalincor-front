@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { MouseEvent, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -229,11 +229,11 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
 
   return (
     <div className={cn('grid gap-2 sm:min-w-[320px]', columnsClass)}>
-      {actions.map((action) => {
+      {actions.map((action, index) => {
         const Icon = action.icon;
         return (
           <Button
-            key={action.label}
+            key={`${action.label}-${index}`}
             type="button"
             size="sm"
             variant={action.variant ?? 'outline'}
@@ -241,7 +241,11 @@ const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
               'h-9 justify-center px-3 text-sm font-medium',
               action.className,
             )}
-            onClick={action.onClick}
+            onClick={(event: MouseEvent<HTMLButtonElement>) => {
+              event.preventDefault();
+              event.stopPropagation();
+              action.onClick();
+            }}
             disabled={action.disabled}
           >
             <Icon className="mr-2 h-4 w-4" />
