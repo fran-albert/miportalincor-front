@@ -34,8 +34,31 @@ export interface TotemAnalyticsUnregisteredSummary {
   dailyLinkedExisting: TotemAnalyticsUnregisteredDailyItem[];
 }
 
+export interface TotemAnalyticsRegistrationBreakdown {
+  total: number;
+  scheduled: number;
+  invited: number;
+  administrative: number;
+  unregistered: number;
+}
+
+export interface TotemAnalyticsRegistrationDailyItem
+  extends TotemAnalyticsRegistrationBreakdown {
+  date: string;
+}
+
+export interface TotemAnalyticsRegistrationsSummary {
+  createdPatientsInRange: number;
+  linkedExistingPatientsInRange: number;
+  createdByFlow: TotemAnalyticsRegistrationBreakdown;
+  linkedExistingByFlow: TotemAnalyticsRegistrationBreakdown;
+  dailyCreated: TotemAnalyticsRegistrationDailyItem[];
+  dailyLinkedExisting: TotemAnalyticsRegistrationDailyItem[];
+}
+
 export interface TotemAnalyticsReport {
   overview: TotemAnalyticsOverview;
   daily: TotemAnalyticsDailyItem[];
   unregistered: TotemAnalyticsUnregisteredSummary;
+  registrations: TotemAnalyticsRegistrationsSummary;
 }
