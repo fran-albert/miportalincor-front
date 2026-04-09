@@ -13,7 +13,13 @@ import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/Appointments-Analytics/DateRangeFilter";
 import { useTotemAnalyticsReport } from "@/hooks/Totem-Analytics";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -24,6 +30,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface TotemReportDashboardContainerProps {
   showHeader?: boolean;
@@ -104,6 +120,54 @@ export function TotemReportDashboardContainer({
     [reportQuery.data]
   );
 
+  const dailyTotemCreatedMap = useMemo(
+    () =>
+      new Map(
+        reportQuery.data?.registrations?.dailyCreated?.map((item) => [
+          item.date,
+          item.total,
+        ]) ?? []
+      ),
+    [reportQuery.data]
+  );
+
+  const dailyTotemLinkedExistingMap = useMemo(
+    () =>
+      new Map(
+        reportQuery.data?.registrations?.dailyLinkedExisting?.map((item) => [
+          item.date,
+          item.total,
+        ]) ?? []
+      ),
+    [reportQuery.data]
+  );
+
+  const registrationTrendData = useMemo(
+    () =>
+      reportQuery.data?.registrations?.dailyCreated?.map((item) => ({
+        ...item,
+        label: format(new Date(`${item.date}T00:00:00`), "d MMM", {
+          locale: es,
+        }),
+        vinculados:
+          reportQuery.data?.registrations?.dailyLinkedExisting?.find(
+            (linked) => linked.date === item.date
+          )?.total ?? 0,
+      })) ?? [],
+    [reportQuery.data]
+  );
+
+  const ticketTrendData = useMemo(
+    () =>
+      reportQuery.data?.daily.map((item) => ({
+        ...item,
+        label: format(new Date(`${item.date}T00:00:00`), "d MMM", {
+          locale: es,
+        }),
+      })) ?? [],
+    [reportQuery.data]
+  );
+
   const cards = reportQuery.data
     ? [
         {
@@ -149,15 +213,21 @@ export function TotemReportDashboardContainer({
           icon: <ClipboardList className="h-5 w-5" />,
         },
         {
-          title: "Pacientes nuevos creados",
-          value: reportQuery.data.unregistered.createdPatientsInRange ?? 0,
-          description: "Altas nuevas originadas por tickets no registrados del tótem.",
+          title: "Pacientes nuevos desde Totem",
+          value:
+            reportQuery.data.registrations?.createdPatientsInRange ??
+            reportQuery.data.unregistered.createdPatientsInRange ??
+            0,
+          description: "Altas nuevas originadas por cualquier ticket del tótem.",
           icon: <UserRoundPlus className="h-5 w-5" />,
         },
         {
-          title: "Vinculados a paciente existente",
-          value: reportQuery.data.unregistered.linkedExistingPatientsInRange ?? 0,
-          description: "Resoluciones que asociaron la fila a un paciente ya existente.",
+          title: "Vinculados desde Totem",
+          value:
+            reportQuery.data.registrations?.linkedExistingPatientsInRange ??
+            reportQuery.data.unregistered.linkedExistingPatientsInRange ??
+            0,
+          description: "Tickets del tótem asociados a pacientes existentes.",
           icon: <UserRoundPlus className="h-5 w-5" />,
         },
       ]
@@ -181,12 +251,20 @@ export function TotemReportDashboardContainer({
       ["No registrados resueltos", reportQuery.data.unregistered.resolvedTickets],
       ["No registrados pendientes", reportQuery.data.unregistered.pendingTickets],
       [
-        "Pacientes nuevos creados",
-        reportQuery.data.unregistered.createdPatientsInRange ?? 0,
+        "Pacientes nuevos desde Totem",
+        reportQuery.data.registrations?.createdPatientsInRange ??
+          reportQuery.data.unregistered.createdPatientsInRange ??
+          0,
       ],
       [
-        "Vinculados a paciente existente",
-        reportQuery.data.unregistered.linkedExistingPatientsInRange ?? 0,
+        "Vinculados desde Totem",
+        reportQuery.data.registrations?.linkedExistingPatientsInRange ??
+          reportQuery.data.unregistered.linkedExistingPatientsInRange ??
+          0,
+      ],
+      [
+        "Pacientes nuevos desde DNI no encontrado",
+        reportQuery.data.unregistered.createdPatientsInRange ?? 0,
       ],
       [],
       ["Detalle diario"],
@@ -198,8 +276,9 @@ export function TotemReportDashboardContainer({
         "Trámite administrativo",
         "DNI no encontrado",
         "Resueltos ese día",
-        "Pacientes nuevos creados ese día",
-        "Vinculados existentes ese día",
+        "Pacientes nuevos Totem ese día",
+        "Vinculados Totem ese día",
+        "Pacientes nuevos desde DNI no encontrado ese día",
       ],
       ...reportQuery.data.daily.map((item) => [
         item.date,
@@ -209,8 +288,9 @@ export function TotemReportDashboardContainer({
         item.administrative,
         item.unregistered,
         dailyResolvedMap.get(item.date) ?? 0,
+        dailyTotemCreatedMap.get(item.date) ?? 0,
+        dailyTotemLinkedExistingMap.get(item.date) ?? 0,
         dailyCreatedMap.get(item.date) ?? 0,
-        dailyLinkedExistingMap.get(item.date) ?? 0,
       ]),
     ];
 
@@ -252,8 +332,8 @@ export function TotemReportDashboardContainer({
             <h2 className="text-lg font-semibold">Filtros del reporte Totem</h2>
             <p className="text-sm text-muted-foreground">
               El detalle diario usa como base cada ticket iniciado en el tótem. Las
-              resoluciones se separan entre pacientes nuevos creados y filas
-              vinculadas a pacientes existentes.
+              altas nuevas se miden para todo el circuito Totem y se desglosan por
+              origen del ticket.
             </p>
           </div>
           <DateRangeFilter
@@ -297,7 +377,7 @@ export function TotemReportDashboardContainer({
 
       {reportQuery.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
+          {Array.from({ length: 9 }).map((_, index) => (
             <Skeleton key={index} className="h-32 rounded-2xl" />
           ))}
         </div>
@@ -308,6 +388,144 @@ export function TotemReportDashboardContainer({
           ))}
         </div>
       )}
+
+      <div className="grid gap-7 xl:grid-cols-2">
+        <Card className="overflow-hidden border-emerald-100/80 bg-gradient-to-br from-emerald-50 via-white to-slate-50">
+          <CardHeader>
+            <CardTitle>Tendencia de altas nuevas</CardTitle>
+            <CardDescription>
+              Pacientes creados desde cualquier ticket iniciado en el tótem.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[320px]">
+            {reportQuery.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : !registrationTrendData.length ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sin altas nuevas para el rango seleccionado.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={registrationTrendData}
+                  margin={{ top: 10, right: 16, left: -18, bottom: 12 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend verticalAlign="top" height={32} />
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    name="Nuevos Totem"
+                    stroke="#059669"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="invited"
+                    name="Invitados"
+                    stroke="#2563EB"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="unregistered"
+                    name="DNI no encontrado"
+                    stroke="#F97316"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="administrative"
+                    name="Administrativo"
+                    stroke="#64748B"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <CardTitle>Tendencia de tickets Totem</CardTitle>
+            <CardDescription>
+              Volumen diario por origen para comparar demanda contra altas nuevas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[320px]">
+            {reportQuery.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : !ticketTrendData.length ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Sin tickets para el rango seleccionado.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={ticketTrendData}
+                  margin={{ top: 10, right: 16, left: -18, bottom: 12 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend verticalAlign="top" height={32} />
+                  <Line
+                    type="monotone"
+                    dataKey="totalTickets"
+                    name="Tickets"
+                    stroke="#0F172A"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="scheduled"
+                    name="Con turno"
+                    stroke="#16A34A"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="invited"
+                    name="Invitados"
+                    stroke="#2563EB"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="administrative"
+                    name="Administrativo"
+                    stroke="#64748B"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="unregistered"
+                    name="DNI no encontrado"
+                    stroke="#F97316"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-7 xl:grid-cols-[1.6fr,1fr]">
         <Card className="overflow-hidden">
@@ -330,8 +548,8 @@ export function TotemReportDashboardContainer({
                     <TableHead className="text-right">Administrativo</TableHead>
                     <TableHead className="text-right">DNI no encontrado</TableHead>
                     <TableHead className="text-right">Resueltos</TableHead>
-                    <TableHead className="text-right">Nuevos</TableHead>
-                    <TableHead className="text-right">Vinculados</TableHead>
+                    <TableHead className="text-right">Nuevos Totem</TableHead>
+                    <TableHead className="text-right">Vinculados Totem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -361,11 +579,13 @@ export function TotemReportDashboardContainer({
                         {numberFormatter.format(dailyResolvedMap.get(item.date) ?? 0)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {numberFormatter.format(dailyCreatedMap.get(item.date) ?? 0)}
+                        {numberFormatter.format(
+                          dailyTotemCreatedMap.get(item.date) ?? 0
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         {numberFormatter.format(
-                          dailyLinkedExistingMap.get(item.date) ?? 0
+                          dailyTotemLinkedExistingMap.get(item.date) ?? 0
                         )}
                       </TableCell>
                     </TableRow>
@@ -393,6 +613,50 @@ export function TotemReportDashboardContainer({
                   </p>
                 </div>
 
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <div className="text-sm font-medium">
+                    Pacientes nuevos desde Totem
+                  </div>
+                  <div className="mt-2 text-3xl font-semibold tracking-tight text-emerald-700">
+                    {numberFormatter.format(
+                      reportQuery.data.registrations?.createdPatientsInRange ??
+                        reportQuery.data.unregistered.createdPatientsInRange ??
+                        0
+                    )}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <span>
+                      Invitados:{" "}
+                      {numberFormatter.format(
+                        reportQuery.data.registrations?.createdByFlow?.invited ?? 0
+                      )}
+                    </span>
+                    <span>
+                      DNI no encontrado:{" "}
+                      {numberFormatter.format(
+                        reportQuery.data.registrations?.createdByFlow
+                          ?.unregistered ??
+                          reportQuery.data.unregistered.createdPatientsInRange ??
+                          0
+                      )}
+                    </span>
+                    <span>
+                      Administrativo:{" "}
+                      {numberFormatter.format(
+                        reportQuery.data.registrations?.createdByFlow
+                          ?.administrative ?? 0
+                      )}
+                    </span>
+                    <span>
+                      Con turno:{" "}
+                      {numberFormatter.format(
+                        reportQuery.data.registrations?.createdByFlow?.scheduled ??
+                          0
+                      )}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
                   {reportQuery.data.unregistered.dailyDetected.map((item) => (
                     <div
@@ -417,7 +681,7 @@ export function TotemReportDashboardContainer({
                         {numberFormatter.format(
                           dailyCreatedMap.get(item.date) ?? 0
                         )}{" "}
-                        fueron pacientes nuevos y{" "}
+                        fueron pacientes nuevos desde DNI no encontrado y{" "}
                         {numberFormatter.format(
                           dailyLinkedExistingMap.get(item.date) ?? 0
                         )}{" "}
