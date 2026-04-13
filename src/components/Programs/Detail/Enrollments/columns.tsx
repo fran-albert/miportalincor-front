@@ -13,7 +13,7 @@ import { es } from "date-fns/locale";
 
 export const getEnrollmentColumns = (
   programId: string,
-  isAdmin: boolean,
+  canManageEnrollments: boolean,
   onChangeStatus: (enrollment: ProgramEnrollment) => void
 ): ColumnDef<ProgramEnrollment>[] => [
   {
@@ -72,7 +72,7 @@ export const getEnrollmentColumns = (
             <Eye className="h-4 w-4" />
           </Button>
         </Link>
-        {isAdmin && (
+        {canManageEnrollments && (
           <Button
             variant="ghost"
             size="icon"

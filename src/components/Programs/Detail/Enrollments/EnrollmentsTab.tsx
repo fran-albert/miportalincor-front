@@ -1,7 +1,7 @@
 import { useState } from "react";
-import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
 import { useProgramEnrollments } from "@/hooks/Program/useProgramEnrollments";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { getEnrollmentColumns } from "./columns";
 import EnrollPatientDialog from "./EnrollPatientDialog";
 import UpdateEnrollmentStatusDialog from "./UpdateEnrollmentStatusDialog";
@@ -12,7 +12,7 @@ interface EnrollmentsTabProps {
 }
 
 export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
-  const { isAdmin } = useRoles();
+  const { isCoordinator } = useProgramMembership(programId);
   const { enrollments, isFetching } = useProgramEnrollments(programId);
   const [isEnrollOpen, setIsEnrollOpen] = useState(false);
   const [statusEnrollment, setStatusEnrollment] =
@@ -24,7 +24,11 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
     setIsStatusOpen(true);
   };
 
-  const columns = getEnrollmentColumns(programId, isAdmin, handleChangeStatus);
+  const columns = getEnrollmentColumns(
+    programId,
+    isCoordinator,
+    handleChangeStatus
+  );
 
   return (
     <div className="space-y-4">
@@ -32,7 +36,7 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
         columns={columns}
         data={enrollments}
         showSearch
-        canAddUser={isAdmin}
+        canAddUser={isCoordinator}
         onAddClick={() => setIsEnrollOpen(true)}
         addLinkPath=""
         addLinkText="Inscribir Paciente"

@@ -107,10 +107,15 @@ const EnrollmentDetailPage = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="plan" className="mt-6">
-            <PlanTab enrollmentId={enrollmentId!} activities={activities} />
+            <PlanTab
+              programId={programId!}
+              enrollmentId={enrollmentId!}
+              activities={activities}
+            />
           </TabsContent>
           <TabsContent value="attendance" className="mt-6">
             <AttendanceTab
+              programId={programId!}
               enrollmentId={enrollmentId!}
               patientUserId={enrollment.patientUserId}
               activities={activities}

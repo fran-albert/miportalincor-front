@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import useRoles from "@/hooks/useRoles";
-import { useProgramMembers } from "@/hooks/Program/useProgramMembers";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useFollowUpEntries } from "@/hooks/Program/useFollowUpEntries";
 import { useMonthlySummary } from "@/hooks/Program/useMonthlySummary";
 import { useFollowUpMutations } from "@/hooks/Program/useFollowUpMutations";
@@ -19,7 +19,6 @@ import { MonthlySummaryDetailDialog } from "@/components/Programs/FollowUp/Month
 import { MonthlySummaryFormDialog } from "@/components/Programs/FollowUp/MonthlySummaryFormDialog";
 import { MonthlySummaryList } from "@/components/Programs/FollowUp/MonthlySummaryList";
 import { NotesList } from "@/components/Programs/FollowUp/NotesList";
-import { MemberRole } from "@/types/Program/ProgramMember";
 import {
   FollowUpEntryType,
   FollowUpVisibility,
@@ -69,8 +68,8 @@ export default function FollowUpTab({
   programName,
 }: FollowUpTabProps) {
   const { toast } = useToast();
-  const { isAdmin, session } = useRoles();
-  const { members } = useProgramMembers(programId);
+  const { session } = useRoles();
+  const { isCoordinator } = useProgramMembership(programId);
   const { entries, isLoading: isLoadingEntries } = useFollowUpEntries(enrollmentId);
   const {
     createNoteMutation,
@@ -129,10 +128,7 @@ export default function FollowUpTab({
     [entries]
   );
   const canManageMonthlySummary =
-    isAdmin ||
-    members.some(
-      (member) => member.userId === session?.id && member.role === MemberRole.COORDINATOR
-    );
+    isCoordinator;
 
   const activeSummaryMonth =
     (isFormOpen ? formMonth : previewMonth) ?? currentMonth;
@@ -169,7 +165,7 @@ export default function FollowUpTab({
   };
 
   const canEditNote = (entry: ProgramFollowUpEntry) =>
-    isAdmin || canManageMonthlySummary || entry.authorUserId === session?.id;
+    canManageMonthlySummary || entry.authorUserId === session?.id;
 
   const startEditingNote = (entry: ProgramFollowUpEntry) => {
     setEditingNoteId(entry.id);

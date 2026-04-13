@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
 export const getMemberColumns = (
-  isAdmin: boolean,
+  canManageMembers: boolean,
   onRemove: (memberId: string) => void
 ): ColumnDef<ProgramMember>[] => [
   {
@@ -42,7 +42,7 @@ export const getMemberColumns = (
   {
     header: " ",
     cell: ({ row }) =>
-      isAdmin ? (
+      canManageMembers ? (
         <div className="flex justify-end">
           <Button
             variant="ghost"

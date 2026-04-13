@@ -1,26 +1,28 @@
 import { useState } from "react";
-import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useAttendanceRecords } from "@/hooks/Program/useAttendanceRecords";
 import { getAttendanceColumns } from "./columns";
 import ManualAttendanceDialog from "./ManualAttendanceDialog";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
 
 interface AttendanceTabProps {
+  programId: string;
   enrollmentId: string;
   patientUserId: string;
   activities: ProgramActivity[];
 }
 
 export default function AttendanceTab({
+  programId,
   enrollmentId,
   patientUserId,
   activities,
 }: AttendanceTabProps) {
-  const { isAdmin, isDoctor, isProfesor } = useRoles();
+  const { isProgramMember } = useProgramMembership(programId);
   const { records, isFetching } = useAttendanceRecords(enrollmentId);
   const [isManualOpen, setIsManualOpen] = useState(false);
-  const canRegister = isAdmin || isDoctor || isProfesor;
+  const canRegister = isProgramMember;
 
   const columns = getAttendanceColumns();
 

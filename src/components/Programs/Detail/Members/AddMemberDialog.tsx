@@ -103,6 +103,11 @@ export default function AddMemberDialog({
                 ))}
               </SelectContent>
             </Select>
+            <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              {role === MemberRole.COORDINATOR
+                ? "Coordinador: organiza actividades, inscripciones, planes y resúmenes del programa."
+                : "Profesional: acompaña al paciente y registra notas o asistencia dentro del programa."}
+            </div>
           </div>
           <DialogFooter>
             <Button

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
-import { useProgramMembers } from "@/hooks/Program/useProgramMembers";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useMemberMutations } from "@/hooks/Program/useMemberMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { getMemberColumns } from "./columns";
@@ -12,8 +11,7 @@ interface MembersTabProps {
 }
 
 export default function MembersTab({ programId }: MembersTabProps) {
-  const { isAdmin } = useRoles();
-  const { members, isFetching } = useProgramMembers(programId);
+  const { members, isFetching, isCoordinator } = useProgramMembership(programId);
   const { removeMemberMutation } = useMemberMutations(programId);
   const { promiseToast } = useToastContext();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -37,7 +35,7 @@ export default function MembersTab({ programId }: MembersTabProps) {
     }
   };
 
-  const columns = getMemberColumns(isAdmin, handleRemove);
+  const columns = getMemberColumns(isCoordinator, handleRemove);
 
   return (
     <div className="space-y-4">
@@ -45,7 +43,7 @@ export default function MembersTab({ programId }: MembersTabProps) {
         columns={columns}
         data={members}
         showSearch
-        canAddUser={isAdmin}
+        canAddUser={isCoordinator}
         onAddClick={() => setIsAddOpen(true)}
         addLinkPath=""
         addLinkText="Agregar Miembro"

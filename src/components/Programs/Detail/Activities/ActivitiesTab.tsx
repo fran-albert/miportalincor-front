@@ -1,8 +1,8 @@
 import { useState } from "react";
-import useRoles from "@/hooks/useRoles";
 import { DataTable } from "@/components/Table/table";
 import { useProgramActivities } from "@/hooks/Program/useProgramActivities";
 import { useActivityMutations } from "@/hooks/Program/useActivityMutations";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { getActivityColumns } from "./columns";
 import CreateActivityDialog from "./CreateActivityDialog";
@@ -12,7 +12,7 @@ interface ActivitiesTabProps {
 }
 
 export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
-  const { isAdmin } = useRoles();
+  const { isCoordinator } = useProgramMembership(programId);
   const { activities, isFetching } = useProgramActivities(programId);
   const { deleteActivityMutation } = useActivityMutations(programId);
   const { promiseToast } = useToastContext();
@@ -37,7 +37,7 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
     }
   };
 
-  const columns = getActivityColumns(programId, isAdmin, handleDelete);
+  const columns = getActivityColumns(programId, isCoordinator, handleDelete);
 
   return (
     <div className="space-y-4">
@@ -45,7 +45,7 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
         columns={columns}
         data={activities}
         showSearch
-        canAddUser={isAdmin}
+        canAddUser={isCoordinator}
         onAddClick={() => setIsCreateOpen(true)}
         addLinkPath=""
         addLinkText="Crear Actividad"

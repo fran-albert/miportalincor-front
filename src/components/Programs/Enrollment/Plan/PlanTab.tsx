@@ -1,9 +1,9 @@
 import { useState } from "react";
-import useRoles from "@/hooks/useRoles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
 import { usePlanVersions } from "@/hooks/Program/usePlanVersions";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
@@ -13,16 +13,21 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface PlanTabProps {
+  programId: string;
   enrollmentId: string;
   activities: ProgramActivity[];
 }
 
-export default function PlanTab({ enrollmentId, activities }: PlanTabProps) {
-  const { isAdmin, isDoctor } = useRoles();
+export default function PlanTab({
+  programId,
+  enrollmentId,
+  activities,
+}: PlanTabProps) {
+  const { isCoordinator } = useProgramMembership(programId);
   const { currentPlan, isLoading } = useCurrentPlan(enrollmentId);
   const { planVersions } = usePlanVersions(enrollmentId);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const canCreate = isAdmin || isDoctor;
+  const canCreate = isCoordinator;
 
   if (isLoading) {
     return <div className="text-gray-500">Cargando plan...</div>;
