@@ -11,6 +11,7 @@ import {
   FileText,
   Calendar,
   TrendingUp,
+  MessageSquareText,
 } from "lucide-react";
 import {
   EnrollmentStatusLabels,
@@ -19,6 +20,7 @@ import {
 import PlanTab from "@/components/Programs/Enrollment/Plan/PlanTab";
 import AttendanceTab from "@/components/Programs/Enrollment/Attendance/AttendanceTab";
 import ComplianceTab from "@/components/Programs/Enrollment/Compliance/ComplianceTab";
+import FollowUpTab from "@/components/Programs/Enrollment/FollowUp/FollowUpTab";
 
 const EnrollmentDetailPage = () => {
   const { programId, enrollmentId } = useParams<{
@@ -80,7 +82,7 @@ const EnrollmentDetailPage = () => {
         />
 
         <Tabs defaultValue="plan" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="plan" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Plan
@@ -99,6 +101,10 @@ const EnrollmentDetailPage = () => {
               <TrendingUp className="h-4 w-4" />
               Cumplimiento
             </TabsTrigger>
+            <TabsTrigger value="follow-up" className="flex items-center gap-2">
+              <MessageSquareText className="h-4 w-4" />
+              Seguimiento
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="plan" className="mt-6">
             <PlanTab enrollmentId={enrollmentId!} activities={activities} />
@@ -112,6 +118,14 @@ const EnrollmentDetailPage = () => {
           </TabsContent>
           <TabsContent value="compliance" className="mt-6">
             <ComplianceTab enrollmentId={enrollmentId!} />
+          </TabsContent>
+          <TabsContent value="follow-up" className="mt-6">
+            <FollowUpTab
+              programId={programId!}
+              enrollmentId={enrollmentId!}
+              patientName={patientName}
+              programName={program?.name ?? "Programa"}
+            />
           </TabsContent>
         </Tabs>
       </div>
