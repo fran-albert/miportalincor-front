@@ -47,7 +47,7 @@ export default function AntecedentesComponent({
   idDoctor,
   patient,
 }: AntecedenteProps) {
-  const { session } = useUserRole();
+  const { session, isAdmin, isDoctor } = useUserRole();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
 
@@ -70,6 +70,9 @@ export default function AntecedentesComponent({
   } = useAntecedentes({
     auth: true,
     userId: parseInt(userId),
+    queryParams: {
+      includeDeleted: true,
+    },
   });
 
   // Pre-load data needed for the modal AND for categories
@@ -115,6 +118,13 @@ export default function AntecedentesComponent({
     setIsViewModalOpen(true);
   };
 
+  const isAntecedenteEditableByCurrentDoctor = (_antecedente: Antecedente) =>
+    isDoctor || isAdmin;
+
+  const canDeleteAntecedente = (antecedente: Antecedente) => {
+    return !antecedente.deletedAt && isAntecedenteEditableByCurrentDoctor(antecedente);
+  };
+
   // Obtener lista de antecedentes, si no hay datos mostrar array vacío
   const antecedentes = antecedentesResponse?.antecedentes || [];
 
@@ -131,17 +141,31 @@ export default function AntecedentesComponent({
     antecedentesTypeData?.map((type) => type.name).sort() || [];
   const categorias = ["Todas", ...categoriasFromSystem];
 
-  const filteredAntecedentes = antecedentes.filter((ant) => {
-    const matchesSearch =
-      ant.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ant.dataType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${ant.doctor.firstName} ${ant.doctor.lastName}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "Todas" || ant.dataType.name === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredAntecedentes = [...antecedentes]
+    .sort((a, b) => {
+      const deletedScoreA = a.deletedAt ? 1 : 0;
+      const deletedScoreB = b.deletedAt ? 1 : 0;
+
+      if (deletedScoreA !== deletedScoreB) {
+        return deletedScoreA - deletedScoreB;
+      }
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .filter((ant) => {
+      const matchesSearch =
+        ant.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ant.observaciones || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        ant.dataType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${ant.doctor.firstName} ${ant.doctor.lastName}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "Todas" || ant.dataType.name === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
 
   const getCategoryColor = (categoria: string) => {
     // Generar colores dinámicamente basados en hash del nombre
@@ -332,6 +356,14 @@ export default function AntecedentesComponent({
                             >
                               {ant.dataType.name}
                             </Badge>
+                            {ant.deletedAt && (
+                              <Badge
+                                variant="outline"
+                                className="border-red-200 bg-red-50 text-red-700"
+                              >
+                                Eliminado
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
@@ -382,14 +414,16 @@ export default function AntecedentesComponent({
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           antecedente={selectedAntecedenteToView}
+          showAuditTrail={true}
           canDelete={
             selectedAntecedenteToView
-              ? selectedAntecedenteToView.doctor?.userId === parseInt(doctorId)
+              ? canDeleteAntecedente(selectedAntecedenteToView)
               : false
           }
           canEdit={
             selectedAntecedenteToView
-              ? selectedAntecedenteToView.doctor?.userId === parseInt(doctorId)
+              ? !selectedAntecedenteToView.deletedAt &&
+                isAntecedenteEditableByCurrentDoctor(selectedAntecedenteToView)
               : false
           }
         />

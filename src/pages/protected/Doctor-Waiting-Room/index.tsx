@@ -66,6 +66,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
+import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
 
 // ============================================
 // HELPERS
@@ -98,7 +99,7 @@ const getTypeColor = (type: AgendaItem['type']): string => {
 const getConsultationTypeName = (item: AgendaItem): string | null => {
   if (item.type !== 'appointment') return null;
   const apt = item.rawData as AppointmentFullResponseDto;
-  return apt.consultationType?.name ?? null;
+  return getAppointmentConsultationTypeSummary(apt);
 };
 
 
@@ -313,7 +314,7 @@ const DoctorWaitingRoomPage = () => {
         <div className="text-center py-12 text-muted-foreground">
           <Armchair className="h-16 w-16 mx-auto mb-4 opacity-30" />
           <p className="text-lg">No hay pacientes esperando</p>
-          <p className="text-sm">Cuando la secretaria marque un paciente "En Espera", aparecerá aquí</p>
+          <p className="text-sm">Cuando secretaría pase un paciente a espera médica, aparecerá aquí</p>
         </div>
       );
     }

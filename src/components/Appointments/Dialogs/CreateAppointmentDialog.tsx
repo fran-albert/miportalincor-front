@@ -78,12 +78,14 @@ export const CreateAppointmentDialog = ({
     previewMeta: AppointmentCreatePreviewMeta
   ) => {
     try {
+      const consultationTypeIds = data.consultationTypeIds ?? [];
       const createdAppointment = await createAppointment.mutateAsync({
         doctorId: data.doctorId,
         patientId: data.patientId,
         date: data.date,
         hour: data.hour,
-        consultationTypeId: data.consultationTypeId,
+        consultationTypeId: consultationTypeIds[0],
+        consultationTypeIds,
       });
       onAppointmentCreated?.({
         ...createdAppointment,
@@ -114,6 +116,8 @@ export const CreateAppointmentDialog = ({
         guestLastName: data.guestLastName,
         guestPhone: data.guestPhone,
         guestEmail: data.guestEmail,
+        consultationTypeId: data.consultationTypeId,
+        consultationTypeIds: data.consultationTypeIds,
       });
       onAppointmentCreated?.({
         ...createdAppointment,

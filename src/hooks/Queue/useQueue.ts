@@ -6,12 +6,22 @@ import {
   callNextPatient,
   callSpecificPatient,
   recallPatient,
+  confirmArrival,
   markAsAttending,
   markAsCompleted,
   markAsNoShow,
+  registerQueuePatient,
 } from '@/api/Queue';
-import type { CallPatientDto, CallSpecificPatientDto } from '@/types/Queue';
+import type {
+  CallPatientDto,
+  CallSpecificPatientDto,
+  RegisterQueuePatientDto,
+} from '@/types/Queue';
+import type { ApiError } from '@/types/Error/ApiError';
 import { toast } from 'sonner';
+
+const ALREADY_REGISTERED_QUEUE_MESSAGE =
+  'Esta fila no requiere alta administrativa adicional.';
 
 // Query keys
 export const queueKeys = {
@@ -96,6 +106,21 @@ export const useRecallPatient = () => {
   });
 };
 
+export const useConfirmArrival = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => confirmArrival(id),
+    onSuccess: (data) => {
+      toast.success(`Paciente pasado a espera médica: ${data.patientName}`);
+      queryClient.refetchQueries({ queryKey: queueKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error al pasar paciente a espera médica');
+    },
+  });
+};
+
 // Hook para marcar como atendiendo
 export const useMarkAsAttending = () => {
   const queryClient = useQueryClient();
@@ -120,7 +145,7 @@ export const useMarkAsCompleted = () => {
   return useMutation({
     mutationFn: (id: number) => markAsCompleted(id),
     onSuccess: () => {
-      toast.success('Atención completada');
+      toast.success('Gestión completada');
       // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
@@ -143,6 +168,32 @@ export const useMarkAsNoShow = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Error al marcar como ausente');
+    },
+  });
+};
+
+export const useRegisterQueuePatient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: RegisterQueuePatientDto) => registerQueuePatient(dto),
+    onSuccess: () => {
+      toast.success('Paciente dado de alta y fila actualizada');
+      queryClient.refetchQueries({ queryKey: queueKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['overturns'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
+      queryClient.invalidateQueries({ queryKey: ['doctorTodayOverturns'] });
+    },
+    onError: (error: Error) => {
+      const apiError = error as ApiError;
+      const apiMessage = apiError.response?.data?.message || error.message;
+
+      if (apiMessage === ALREADY_REGISTERED_QUEUE_MESSAGE) {
+        return;
+      }
+
+      toast.error(apiMessage || 'Error al vincular el paciente a la fila');
     },
   });
 };

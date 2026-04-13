@@ -14,7 +14,6 @@ import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { CreateAntecedenteDialog } from "../Create";
 import { ViewAntecedenteDialog } from "../View";
-import { canDeleteEvolution } from "@/common/helpers/evolutionHelpers";
 
 type UserData = Patient | Doctor;
 
@@ -40,7 +39,7 @@ const AntecedentesSection: React.FC<Props> = ({
 
   // All hooks must be called before any conditional returns
   const navigate = useNavigate();
-  const { session } = useUserRole();
+  const { session, isAdmin, isDoctor } = useUserRole();
   const [wantsToOpenModal, setWantsToOpenModal] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedAntecedenteToView, setSelectedAntecedenteToView] =
@@ -90,6 +89,13 @@ const AntecedentesSection: React.FC<Props> = ({
   const handleCloseModal = () => {
     setIsAddModalOpen(false);
     setWantsToOpenModal(false);
+  };
+
+  const isAntecedenteEditableByCurrentDoctor = (_antecedente: Antecedente) =>
+    isDoctor || isAdmin;
+
+  const canDeleteAntecedente = (antecedente: Antecedente) => {
+    return isAntecedenteEditableByCurrentDoctor(antecedente);
   };
 
   const renderAntecedentesPorCategoria = () => {
@@ -219,14 +225,15 @@ const AntecedentesSection: React.FC<Props> = ({
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         antecedente={selectedAntecedenteToView}
+        showAuditTrail={false}
         canDelete={
           selectedAntecedenteToView
-            ? canDeleteEvolution(selectedAntecedenteToView.createdAt)
+            ? canDeleteAntecedente(selectedAntecedenteToView)
             : false
         }
         canEdit={
-          selectedAntecedenteToView && session?.id
-            ? selectedAntecedenteToView.doctor?.userId === Number(session.id)
+          selectedAntecedenteToView
+            ? isAntecedenteEditableByCurrentDoctor(selectedAntecedenteToView)
             : false
         }
       />

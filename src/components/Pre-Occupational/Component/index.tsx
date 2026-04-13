@@ -12,6 +12,8 @@ export function NewPreOcuppationalComponent({
   Collaborator,
   medicalEvaluation,
 }: Props) {
+  const examsHref = `/incor-laboral/colaboradores/${Collaborator?.slug}/examenes`;
+  const examHref = `/incor-laboral/colaboradores/${Collaborator?.slug}/examen/${medicalEvaluation.id}`;
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral", href: "/incor-laboral" },
@@ -26,8 +28,12 @@ export function NewPreOcuppationalComponent({
       href: `/incor-laboral/colaboradores/${Collaborator?.slug}`,
     },
     {
-      label: "Examen",
-      href: `/incor-laboral/colaboradores/${Collaborator?.slug}/examen`,
+      label: "Exámenes Médicos",
+      href: examsHref,
+    },
+    {
+      label: medicalEvaluation.evaluationType.name,
+      href: examHref,
     },
   ];
 

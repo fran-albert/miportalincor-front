@@ -33,3 +33,46 @@ export interface UpdateTvMediaDto {
 export interface ReorderMediaDto {
   orderedIds: number[];
 }
+
+export interface MultipartTvMediaUploadInitResponse {
+  uploadId: string;
+  s3Key: string;
+  partSizeBytes: number;
+}
+
+export interface SignMultipartTvMediaPartDto {
+  uploadId: string;
+  s3Key: string;
+  partNumber: number;
+}
+
+export interface SignMultipartTvMediaPartResponse {
+  uploadUrl: string;
+}
+
+export interface CompletedMultipartTvMediaPartDto {
+  partNumber: number;
+  eTag: string;
+}
+
+export interface CompleteMultipartTvMediaUploadDto extends CreateTvMediaDto {
+  uploadId: string;
+  s3Key: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  parts: CompletedMultipartTvMediaPartDto[];
+}
+
+export interface AbortMultipartTvMediaUploadDto {
+  uploadId: string;
+  s3Key: string;
+}
+
+export interface UploadMediaMultipartOptions {
+  file: File;
+  title: string;
+  description?: string;
+  mediaType?: MediaType;
+  onProgress?: (progress: number) => void;
+  onStatusChange?: (message: string) => void;
+}

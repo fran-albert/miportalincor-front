@@ -35,6 +35,7 @@ interface ViewAntecedenteDialogProps {
   isOpen: boolean;
   onClose: () => void;
   antecedente: Antecedente | null;
+  showAuditTrail?: boolean;
   canDelete?: boolean;
   canEdit?: boolean;
   onDeleteSuccess?: () => void;
@@ -45,6 +46,7 @@ export const ViewAntecedenteDialog = ({
   isOpen,
   onClose,
   antecedente,
+  showAuditTrail = false,
   canDelete = false,
   canEdit = false,
   onDeleteSuccess,
@@ -79,6 +81,17 @@ export const ViewAntecedenteDialog = ({
   };
 
   const dateTime = formatDateTime(antecedente.createdAt);
+  const historyItems = antecedente.history || [];
+  const deletedDateTime = antecedente.deletedAt
+    ? formatDateTime(antecedente.deletedAt)
+    : null;
+  const isDeleted = Boolean(antecedente.deletedAt);
+  const currentDateLabel =
+    historyItems.length > 0
+      ? "Fecha del último cambio"
+      : "Fecha y hora de registro";
+  const currentDoctorLabel =
+    historyItems.length > 0 ? "Último cambio realizado por" : "Registrado por";
 
   return (
     <TooltipProvider>
@@ -103,8 +116,36 @@ export const ViewAntecedenteDialog = ({
                 <Badge className="text-base px-4 py-2" variant="greenPrimary">
                   {antecedente.dataType.name}
                 </Badge>
+                {showAuditTrail && historyItems.length > 0 && (
+                  <Badge variant="outline" className="bg-white">
+                    {historyItems.length} cambio
+                    {historyItems.length !== 1 ? "s" : ""} previo
+                    {historyItems.length !== 1 ? "s" : ""}
+                  </Badge>
+                )}
+                {showAuditTrail && isDeleted && (
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    Eliminado
+                  </Badge>
+                )}
               </div>
             </div>
+
+            {showAuditTrail && isDeleted && deletedDateTime && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-semibold text-red-800">
+                  Este antecedente fue eliminado de la vista clínica.
+                </p>
+                <p className="text-sm text-red-700 mt-1">
+                  Fecha de eliminación: {deletedDateTime.date} - {deletedDateTime.time}
+                </p>
+                {antecedente.deletedByDoctor && (
+                  <p className="text-sm text-red-700 mt-1">
+                    Eliminado por {formatDoctorName(antecedente.deletedByDoctor)}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Título con ícono */}
             <div className="space-y-3">
@@ -125,12 +166,12 @@ export const ViewAntecedenteDialog = ({
                 <AlignLeft className="h-4 w-4 text-greenPrimary" />
                 Descripción Completa
               </Label>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                  {antecedente.value}
-                </p>
-              </div>
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+              <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {antecedente.value}
+              </p>
             </div>
+          </div>
 
             {/* Timeline de información */}
             <div className="space-y-3">
@@ -144,7 +185,7 @@ export const ViewAntecedenteDialog = ({
                   </div>
                   <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                     <Label className="text-xs text-gray-500 font-medium">
-                      Fecha y Hora de Registro
+                      {currentDateLabel}
                     </Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
                       {dateTime.date} - {dateTime.time}
@@ -158,15 +199,56 @@ export const ViewAntecedenteDialog = ({
                   </div>
                   <div className="flex-1 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                     <Label className="text-xs text-gray-500 font-medium">
-                      Registrado por
+                      {currentDoctorLabel}
                     </Label>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {antecedente.doctor && formatDoctorName(antecedente.doctor)}
+                      {antecedente.doctor
+                        ? formatDoctorName(antecedente.doctor)
+                        : "Profesional no disponible"}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
+
+            {showAuditTrail && historyItems.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-gray-700">
+                  Historial de cambios
+                </Label>
+                <div className="space-y-3">
+                  {historyItems.map((historyItem) => {
+                    const historyDateTime = formatDateTime(historyItem.createdAt);
+
+                    return (
+                      <div
+                        key={historyItem.id}
+                        className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {historyItem.observaciones || "Sin titulo"}
+                          </p>
+                          <div className="text-right">
+                            <span className="text-xs text-gray-500 block">
+                              {historyDateTime.date} - {historyDateTime.time}
+                            </span>
+                            {historyItem.doctor && (
+                              <span className="text-xs text-gray-500 block">
+                                {formatDoctorName(historyItem.doctor)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {historyItem.value}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -210,7 +292,7 @@ export const ViewAntecedenteDialog = ({
                 </TooltipTrigger>
                 <TooltipContent side="top">
                   <p className="text-xs">
-                    Eliminar permanentemente este antecedente
+                    Eliminar este antecedente de la vista clínica
                   </p>
                 </TooltipContent>
               </Tooltip>

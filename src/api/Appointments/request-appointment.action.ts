@@ -5,6 +5,8 @@ export interface RequestAppointmentDto {
   doctorId: number;
   date: string;
   hour: string;
+  consultationTypeId?: number;
+  consultationTypeIds?: number[];
   notes?: string;
 }
 

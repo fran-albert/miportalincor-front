@@ -1,13 +1,16 @@
 import { apiTurnos } from "@/services/axiosConfig";
-import { AppointmentResponseDto, AppointmentStatus } from "@/types/Appointment/Appointment";
+import {
+  AppointmentResponseDto,
+  UpdateAppointmentStatusDto,
+} from "@/types/Appointment/Appointment";
 
 export const changeAppointmentStatus = async (
   id: number,
-  status: AppointmentStatus
+  dto: UpdateAppointmentStatusDto
 ): Promise<AppointmentResponseDto> => {
   const { data } = await apiTurnos.post<AppointmentResponseDto>(
     `appointments/${id}/status`,
-    { status }
+    dto
   );
   return data;
 };

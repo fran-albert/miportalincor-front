@@ -18,6 +18,7 @@ import {
 } from "@/types/Appointment/Appointment";
 import { OverturnDetailedDto, OverturnStatus, OverturnStatusLabels } from "@/types/Overturn/Overturn";
 import { toast } from "sonner";
+import { getAppointmentConsultationTypeSummary } from "@/common/helpers/appointment-consultation-types";
 
 /** Escape HTML entities to prevent XSS in generated print HTML */
 const escapeHtml = (str: string): string =>
@@ -102,7 +103,7 @@ export const PrintAgendaView = ({
         patientDni: isGuest ? apt.guestDocumentNumber : apt.patient?.userName,
         healthInsurance: isGuest ? undefined : apt.patient?.healthInsuranceName,
         affiliationNumber: isGuest ? undefined : apt.patient?.affiliationNumber,
-        consultationType: apt.consultationType?.name,
+        consultationType: getAppointmentConsultationTypeSummary(apt) ?? undefined,
         status: apt.status,
         statusLabel: AppointmentStatusLabels[apt.status],
         type: "appointment",
@@ -112,18 +113,23 @@ export const PrintAgendaView = ({
     });
 
     overturns.forEach((ot) => {
+      const isGuest = ot.isGuest === 1 || ot.isGuest === true;
+      const patientName = isGuest
+        ? `${ot.guestFirstName || ""} ${ot.guestLastName || ""}`.trim()
+        : `${ot.patient?.firstName || ""} ${ot.patient?.lastName || ""}`.trim();
+
       events.push({
         id: `ot-${ot.id}`,
         date: ot.date,
         hour: ot.hour.slice(0, 5),
-        patientName: `${ot.patient?.firstName || ""} ${ot.patient?.lastName || ""}`.trim() || "Sin nombre",
-        patientDni: ot.patient?.userName,
-        healthInsurance: ot.patient?.healthInsuranceName,
-        affiliationNumber: ot.patient?.affiliationNumber,
+        patientName: patientName || "Sin nombre",
+        patientDni: isGuest ? ot.guestDocumentNumber : ot.patient?.userName,
+        healthInsurance: isGuest ? undefined : ot.patient?.healthInsuranceName,
+        affiliationNumber: isGuest ? undefined : ot.patient?.affiliationNumber,
         status: ot.status,
         statusLabel: OverturnStatusLabels[ot.status as OverturnStatus] || ot.status,
         type: "overturn",
-        phone: ot.patient?.phoneNumber,
+        phone: isGuest ? ot.guestPhone : ot.patient?.phoneNumber,
       });
     });
 

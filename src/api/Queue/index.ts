@@ -1,5 +1,12 @@
 import { apiTurnos } from '@/services/axiosConfig';
-import type { QueueEntry, QueueStats, CallPatientDto, CallSpecificPatientDto, ChangeQueueStatusDto } from '@/types/Queue';
+import type {
+  QueueEntry,
+  QueueStats,
+  CallPatientDto,
+  CallSpecificPatientDto,
+  ChangeQueueStatusDto,
+  RegisterQueuePatientDto,
+} from '@/types/Queue';
 
 // GET - Obtener cola de espera
 export const getWaitingQueue = async (): Promise<QueueEntry[]> => {
@@ -55,6 +62,12 @@ export const recallPatient = async (id: number): Promise<QueueEntry> => {
   return response.data;
 };
 
+// POST - Confirmar arribo y pasar a espera médica
+export const confirmArrival = async (id: number): Promise<QueueEntry> => {
+  const response = await apiTurnos.post(`/queue/${id}/confirm-arrival`);
+  return response.data;
+};
+
 // PATCH - Marcar como atendiendo
 export const markAsAttending = async (id: number): Promise<QueueEntry> => {
   const response = await apiTurnos.patch(`/queue/${id}/attending`);
@@ -70,6 +83,17 @@ export const markAsCompleted = async (id: number): Promise<QueueEntry> => {
 // PATCH - Marcar como no-show
 export const markAsNoShow = async (id: number): Promise<QueueEntry> => {
   const response = await apiTurnos.patch(`/queue/${id}/no-show`);
+  return response.data;
+};
+
+// PATCH - Vincular una fila de cola a un paciente registrado
+export const registerQueuePatient = async (
+  dto: RegisterQueuePatientDto,
+): Promise<QueueEntry> => {
+  const response = await apiTurnos.patch(
+    `/queue/${dto.queueEntryId}/register-patient`,
+    { patientId: dto.patientId, resolutionType: dto.resolutionType },
+  );
   return response.data;
 };
 

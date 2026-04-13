@@ -1,12 +1,12 @@
 export enum FrequencyPeriod {
-  DAILY = "DAILY",
   WEEKLY = "WEEKLY",
+  BIWEEKLY = "BIWEEKLY",
   MONTHLY = "MONTHLY",
 }
 
 export const FrequencyPeriodLabels: Record<FrequencyPeriod, string> = {
-  [FrequencyPeriod.DAILY]: "Diario",
   [FrequencyPeriod.WEEKLY]: "Semanal",
+  [FrequencyPeriod.BIWEEKLY]: "Cada 2 semanas",
   [FrequencyPeriod.MONTHLY]: "Mensual",
 };
 

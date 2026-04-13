@@ -20,7 +20,6 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Collapsible,
   CollapsibleContent,
@@ -38,6 +37,7 @@ import {
   PrescriptionRequest,
   PrescriptionRequestStatus,
 } from "@/types/Prescription-Request/Prescription-Request";
+import { buildPrescriptionHistoryEntries } from "./history";
 
 const MyPrescriptionRequestsPage = () => {
   // State for prescription request modal
@@ -184,24 +184,13 @@ const MyPrescriptionRequestsPage = () => {
   };
 
   const getDoctorName = (request: PrescriptionRequest) => {
-    if (!request.doctor) return "Médico";
-    const prefix = request.doctor.gender === "Femenino" ? "Dra." : "Dr.";
-    return `${prefix} ${request.doctor.firstName} ${request.doctor.lastName}`;
+    const displayDoctor = request.signingDoctor || request.doctor;
+    if (!displayDoctor) return "Médico";
+    const prefix = displayDoctor.gender === "Femenino" ? "Dra." : "Dr.";
+    return `${prefix} ${displayDoctor.firstName} ${displayDoctor.lastName}`;
   };
 
-  // Sort requests: pending first, then by date
-  const sortedRequests = [...prescriptionRequests].sort((a, b) => {
-    const statusOrder = {
-      [PrescriptionRequestStatus.PENDING]: 0,
-      [PrescriptionRequestStatus.IN_PROGRESS]: 1,
-      [PrescriptionRequestStatus.COMPLETED]: 2,
-      [PrescriptionRequestStatus.REJECTED]: 3,
-      [PrescriptionRequestStatus.CANCELLED]: 4,
-    };
-    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
-    if (statusDiff !== 0) return statusDiff;
-    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-  });
+  const historyEntries = buildPrescriptionHistoryEntries(prescriptionRequests);
 
   const pendingCount = prescriptionRequests.filter(
     (r) =>
@@ -209,8 +198,13 @@ const MyPrescriptionRequestsPage = () => {
       r.status === PrescriptionRequestStatus.IN_PROGRESS
   ).length;
 
+  const hasMobileBatchCta = selectionMode && selectedItemIds.length > 0;
+  const openResource = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <div className="space-y-6 p-6">
+    <div className={`space-y-6 p-6 ${hasMobileBatchCta ? "pb-28 md:pb-6" : ""}`}>
       <Helmet>
         <title>Medicación y Recetas</title>
         <meta
@@ -226,24 +220,12 @@ const MyPrescriptionRequestsPage = () => {
         icon={<Pill className="h-6 w-6" />}
       />
 
-      {/* Important Notice - Friday Digital Availability */}
-      <Alert className="border-amber-300 bg-amber-50">
-        <CalendarDays className="h-5 w-5 text-amber-600" />
-        <AlertTitle className="text-amber-800 font-semibold">
-          Disponibilidad de recetas
-        </AlertTitle>
-        <AlertDescription className="text-amber-700">
-          <div className="flex items-center gap-2 mt-1">
-            <Clock className="h-4 w-4" />
-            <span>
-              Las recetas solicitadas estarán disponibles{" "}
-              <strong>todos los viernes a partir de las 14:00 hs</strong>. Una
-              vez procesada, podrá descargar su receta digital directamente
-              desde este portal.
-            </span>
-          </div>
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <CalendarDays className="h-4 w-4 shrink-0 text-amber-600" />
+        <span>
+          <strong>Recetas disponibles:</strong> viernes desde las 14:00 hs.
+        </span>
+      </div>
 
       {/* Green Card Section */}
       <div className="space-y-4">
@@ -268,7 +250,7 @@ const MyPrescriptionRequestsPage = () => {
                   <Button
                     size="sm"
                     onClick={() => setIsBatchModalOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="hidden bg-blue-600 hover:bg-blue-700 md:inline-flex"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Solicitar Recetas ({selectedItemIds.length})
@@ -288,13 +270,6 @@ const MyPrescriptionRequestsPage = () => {
             )}
           </div>
         </div>
-
-        {/* Info legend */}
-        {greenCard && greenCard.items.length > 0 && !selectionMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
-            Para pedir una receta, toque <strong>Pedir</strong> en el medicamento que necesite. Si necesita pedir varios, use <strong>Seleccionar medicamentos</strong>.
-          </div>
-        )}
 
         {/* Content */}
         {isLoadingCard ? (
@@ -332,6 +307,31 @@ const MyPrescriptionRequestsPage = () => {
         )}
       </div>
 
+      {hasMobileBatchCta && (
+        <div className="fixed inset-x-4 bottom-4 z-40 md:hidden">
+          <div className="rounded-2xl border border-blue-200 bg-white/95 p-3 shadow-xl backdrop-blur">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedItemIds.length} medicamento
+                {selectedItemIds.length !== 1 ? "s" : ""} seleccionado
+                {selectedItemIds.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-xs text-gray-500">
+                Cuando quieras, enviá la solicitud en lote.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setIsBatchModalOpen(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Solicitar recetas ({selectedItemIds.length})
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Prescription Requests History */}
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
         <Card>
@@ -362,7 +362,7 @@ const MyPrescriptionRequestsPage = () => {
                   <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
                   <p className="text-gray-500 text-sm">Cargando historial...</p>
                 </div>
-              ) : sortedRequests.length === 0 ? (
+              ) : historyEntries.length === 0 ? (
                 <div className="py-8 text-center">
                   <FileText className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                   <p className="text-gray-500 text-sm">
@@ -375,61 +375,142 @@ const MyPrescriptionRequestsPage = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {sortedRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-gray-900">
-                            {request.description}
-                          </span>
-                          {getStatusBadge(request.status)}
-                        </div>
-                        <div className="mt-1 text-sm text-gray-500">
-                          <span>{getDoctorName(request)}</span>
-                          {request.doctor?.specialities?.[0] && (
-                            <span className="text-gray-400">
-                              {" "}
-                              · {request.doctor.specialities[0]}
+                  {historyEntries.map((entry) => {
+                    const request = entry.request;
+                    const displayDoctor = request.signingDoctor || request.doctor;
+                    const prescriptionUrls =
+                      entry.type === "batch"
+                        ? entry.prescriptionUrls
+                        : request.prescriptionUrls || [];
+                    const prescriptionLinks =
+                      entry.type === "batch"
+                        ? entry.prescriptionLinks
+                        : request.prescriptionLink
+                          ? [request.prescriptionLink]
+                          : [];
+                    const rejectedReason =
+                      entry.type === "batch"
+                        ? entry.requests.find((batchRequest) => batchRequest.rejectedReason)
+                            ?.rejectedReason
+                        : request.rejectedReason;
+
+                    return (
+                      <div
+                        key={entry.key}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-4"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900">
+                              {entry.type === "batch"
+                                ? `Lote de recetas (${entry.requests.length} medicamento${entry.requests.length !== 1 ? "s" : ""})`
+                                : request.description}
                             </span>
-                          )}
+                            {getStatusBadge(request.status)}
+                          </div>
+
+                          <div className="text-sm text-gray-500">
+                            <span>{getDoctorName(request)}</span>
+                            {displayDoctor?.specialities?.[0] && (
+                              <span className="text-gray-400">
+                                {" "}
+                                · {displayDoctor.specialities[0]}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="text-xs text-gray-400">
+                            Solicitado {formatRelativeTime(request.createdAt || "")}
+                            {request.completedAt && (
+                              <span>
+                                {" "}
+                                · Completado el {formatDate(request.completedAt)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="mt-1 text-xs text-gray-400">
-                          Solicitado {formatRelativeTime(request.createdAt || "")}
-                          {request.completedAt && (
-                            <span>
-                              {" "}
-                              · Completado el {formatDate(request.completedAt)}
-                            </span>
+
+                        {entry.type === "batch" && (
+                          <div className="rounded-lg border border-slate-200 bg-white p-4">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3">
+                              <ListChecks className="h-4 w-4 text-slate-500" />
+                              Medicamentos incluidos
+                            </div>
+                            <div className="space-y-2">
+                              {entry.medications.map((medication) => (
+                                <div
+                                  key={medication.key}
+                                  className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-700"
+                                >
+                                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                  <span className="font-medium text-slate-900">
+                                    {medication.name}
+                                  </span>
+                                  {medication.dosage && (
+                                    <span className="text-slate-500">
+                                      · {medication.dosage}
+                                    </span>
+                                  )}
+                                  {medication.quantity && (
+                                    <span className="text-slate-500">
+                                      · Cant: {medication.quantity}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {request.status === PrescriptionRequestStatus.COMPLETED &&
+                          (prescriptionUrls.length > 0 || prescriptionLinks.length > 0) && (
+                            <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-3">
+                              <div className="text-sm font-semibold text-green-800">
+                                {entry.type === "batch"
+                                  ? "Archivos disponibles del lote"
+                                  : "Archivo disponible"}
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                                {prescriptionUrls.map((url, index) => (
+                                  <Button
+                                    key={url}
+                                    variant="outline"
+                                    size="sm"
+                                    className="justify-start text-green-700 border-green-300 hover:bg-green-100"
+                                    onClick={() => openResource(url)}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    {prescriptionUrls.length === 1
+                                      ? "Descargar receta"
+                                      : `Descargar receta ${index + 1}`}
+                                  </Button>
+                                ))}
+                                {prescriptionLinks.map((link, index) => (
+                                  <Button
+                                    key={link}
+                                    variant="outline"
+                                    size="sm"
+                                    className="justify-start text-green-700 border-green-300 hover:bg-green-100"
+                                    onClick={() => openResource(link)}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    {prescriptionLinks.length === 1
+                                      ? "Abrir link externo"
+                                      : `Abrir link externo ${index + 1}`}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
                           )}
-                        </div>
-                        {request.rejectedReason && (
-                          <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-                            <strong>Motivo del rechazo:</strong>{" "}
-                            {request.rejectedReason}
+
+                        {rejectedReason && (
+                          <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                            <strong>Motivo del rechazo:</strong> {rejectedReason}
                           </div>
                         )}
                       </div>
-                      {request.status === PrescriptionRequestStatus.COMPLETED &&
-                        (request.prescriptionUrls?.length ?? 0) > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="ml-4 text-green-700 border-green-300 hover:bg-green-50"
-                            onClick={() => {
-                              if (request.prescriptionUrls?.[0]) {
-                                window.open(request.prescriptionUrls[0], "_blank");
-                              }
-                            }}
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Descargar
-                          </Button>
-                        )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

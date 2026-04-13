@@ -1,3 +1,5 @@
+import { MouseEvent, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,54 +12,51 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import {
   Users,
-  PhoneCall,
   UserCheck,
   UserX,
-  MoreHorizontal,
   RefreshCcw,
-  ArrowLeft,
-  ArrowRight,
   Clock,
   CheckCircle,
   Volume2,
   UserPlus,
   AlertTriangle,
+  ArrowRightCircle,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 import {
   useWaitingQueue,
   useActiveQueue,
-  useQueueStats,
   useCallNextPatient,
   useCallSpecificPatient,
   useRecallPatient,
-  useMarkAsAttending,
+  useConfirmArrival,
   useMarkAsCompleted,
   useMarkAsNoShow,
 } from '@/hooks/Queue';
-import type {
-  QueueEntry,
-  QueueStatus,
-  AppointmentType,
-  QueueCallDestination,
-} from '@/types/Queue';
-import { useQueryClient } from '@tanstack/react-query';
 import { queueKeys } from '@/hooks/Queue';
-import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
+import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
+import {
+  formatDni,
+  formatWaitingTime,
+  getWaitingTimeColor,
+  parseBoolean,
+} from '@/common/helpers/helpers';
+import { formatTimeAR } from '@/common/helpers/timezone';
+import { QueuePatientRegistrationModal } from './QueuePatientRegistrationModal';
 
-const statusColors: Record<QueueStatus, string> = {
-  WAITING: 'bg-yellow-500',
-  CALLED: 'bg-blue-500',
-  ATTENDING: 'bg-green-500',
-  COMPLETED: 'bg-gray-500',
-  NO_SHOW: 'bg-red-500',
+type QueueCallDestination = 'RECEPCION' | 'VENTANILLA';
+
+const statusStyles: Record<QueueStatus, string> = {
+  WAITING: 'bg-amber-100 text-amber-900 border-amber-200',
+  CALLED: 'bg-sky-100 text-sky-900 border-sky-200',
+  ATTENDING:
+    'bg-[rgba(24,123,128,0.12)] text-greenSecondary border-[rgba(24,123,128,0.2)]',
+  COMPLETED: 'bg-slate-100 text-slate-700 border-slate-200',
+  NO_SHOW: 'bg-rose-100 text-rose-900 border-rose-200',
 };
 
 const statusLabels: Record<QueueStatus, string> = {
@@ -68,40 +67,125 @@ const statusLabels: Record<QueueStatus, string> = {
   NO_SHOW: 'Ausente',
 };
 
-// Configuracion de badges por tipo de turno
 const appointmentTypeLabels: Record<AppointmentType, string> = {
   SCHEDULED_APPOINTMENT: 'Con turno',
   WALK_IN: 'Sin turno',
   ADMINISTRATIVE: 'Administrativo',
 };
 
-const appointmentTypeColors: Record<AppointmentType, string> = {
-  SCHEDULED_APPOINTMENT: 'bg-green-100 text-green-800 border-green-300',
-  WALK_IN: 'bg-orange-100 text-orange-800 border-orange-300',
-  ADMINISTRATIVE: 'bg-gray-100 text-gray-800 border-gray-300',
+const appointmentTypeBadgeStyles: Record<AppointmentType, string> = {
+  SCHEDULED_APPOINTMENT:
+    'border-[rgba(24,123,128,0.18)] bg-[rgba(24,123,128,0.08)] text-greenSecondary',
+  WALK_IN: 'border-sky-200 bg-sky-50 text-sky-900',
+  ADMINISTRATIVE: 'border-slate-200 bg-slate-100 text-slate-700',
+};
+
+const appointmentTypeRowStyles: Record<AppointmentType, string> = {
+  SCHEDULED_APPOINTMENT:
+    'border-l-2 border-l-greenPrimary/50 bg-[rgba(24,123,128,0.025)] hover:bg-[rgba(24,123,128,0.04)]',
+  WALK_IN: 'border-l-2 border-l-sky-100 bg-white hover:bg-slate-50',
+  ADMINISTRATIVE: 'border-l-2 border-l-slate-100 bg-white hover:bg-slate-50',
+};
+
+const waitingSortOrder: Record<AppointmentType, number> = {
+  SCHEDULED_APPOINTMENT: 0,
+  WALK_IN: 1,
+  ADMINISTRATIVE: 2,
 };
 
 const callDestinationOptions: Array<{
   value: QueueCallDestination;
   label: string;
   Icon: typeof ArrowLeft;
+  variant: 'default' | 'outline';
   className: string;
 }> = [
   {
     value: 'RECEPCION',
     label: 'Recepción',
     Icon: ArrowLeft,
+    variant: 'outline',
     className:
-      'border-2 border-slate-300 bg-slate-200 text-slate-900 hover:bg-slate-300 hover:text-slate-950 shadow-sm shadow-slate-950/10',
+      'border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900',
   },
   {
     value: 'VENTANILLA',
     label: 'Ventanilla',
     Icon: ArrowRight,
+    variant: 'default',
     className:
-      'border-2 border-emerald-200 bg-emerald-500 text-white hover:bg-emerald-600 hover:text-white shadow-sm shadow-emerald-950/15',
+      'bg-greenPrimary text-white hover:bg-greenSecondary hover:text-white',
   },
 ];
+
+const hasMeaningfulText = (value: unknown): boolean => {
+  if (value === null || value === undefined) return false;
+  const normalized = String(value).trim();
+  return normalized !== '' && normalized !== '0';
+};
+
+const hasLinkedPatient = (entry: QueueEntry) =>
+  entry.patientId !== null && entry.patientId !== undefined;
+
+const requiresRegistration = (entry: QueueEntry) => !hasLinkedPatient(entry);
+
+const isUnregisteredEntry = (entry: QueueEntry) =>
+  !parseBoolean(entry.isGuest) && !hasLinkedPatient(entry);
+
+const formatQueueHour = (entry: QueueEntry): string => {
+  if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
+    if (!entry.scheduledTime) return '-';
+    return /^\d{2}:\d{2}$/.test(entry.scheduledTime)
+      ? entry.scheduledTime
+      : formatTimeAR(entry.scheduledTime);
+  }
+
+  return new Intl.DateTimeFormat('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Argentina/Buenos_Aires',
+  }).format(new Date(entry.checkedInAt));
+};
+
+const formatSecretaryWaitingTime = (minutes: number | undefined): string => {
+  if (minutes === undefined || minutes === null) return '-';
+  if (minutes <= 0) return 'Recién ingresó';
+  return formatWaitingTime(minutes);
+};
+
+const formatQueueDocument = (document: unknown): string => {
+  if (document === null || document === undefined) return '-';
+
+  const rawDocument = String(document).trim();
+  if (!rawDocument) return '-';
+
+  const numericDocument = rawDocument.replace(/\D/g, '');
+  if (!numericDocument) return rawDocument;
+
+  return formatDni(numericDocument);
+};
+
+const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
+  if (entry.appointmentType === 'ADMINISTRATIVE') {
+    return {
+      primary: 'Recepción',
+      secondary: 'Trámite administrativo',
+    };
+  }
+
+  if (entry.appointmentType === 'WALK_IN') {
+    return {
+      primary: 'Recepción',
+      secondary: 'Consulta sin turno',
+    };
+  }
+
+  return {
+    primary: hasMeaningfulText(entry.doctorName) ? entry.doctorName : 'Recepción',
+    secondary: hasMeaningfulText(entry.speciality) ? entry.speciality : undefined,
+  };
+};
 
 const formatServicePoint = (servicePoint?: string): string => {
   if (!servicePoint) return '-';
@@ -123,45 +207,131 @@ const getServicePointBadgeClass = (servicePoint?: string): string => {
 
   switch (servicePoint.toUpperCase()) {
     case 'RECEPCION':
-      return 'border-slate-300 bg-slate-200 text-slate-900';
+      return 'border-slate-300 bg-slate-100 text-slate-800';
     case 'VENTANILLA':
-      return 'border-emerald-200 bg-emerald-500 text-white';
+      return 'border-greenPrimary bg-greenPrimary text-white';
     default:
       return 'border-slate-200 bg-white text-slate-900';
   }
 };
 
+type QueueAction = {
+  icon: typeof Users;
+  label: string;
+  onClick: () => void;
+  className?: string;
+  disabled?: boolean;
+  variant?: 'default' | 'outline' | 'secondary' | 'destructive';
+};
+
+const ActionButtons = ({ actions }: { actions: QueueAction[] }) => {
+  if (actions.length === 0) return null;
+
+  const columnsClass =
+    actions.length >= 3
+      ? 'xl:grid-cols-3'
+      : actions.length === 2
+        ? 'sm:grid-cols-2'
+        : 'sm:grid-cols-1';
+
+  return (
+    <div className={cn('grid gap-2 sm:min-w-[320px]', columnsClass)}>
+      {actions.map((action, index) => {
+        const Icon = action.icon;
+        return (
+          <Button
+            key={`${action.label}-${index}`}
+            type="button"
+            size="sm"
+            variant={action.variant ?? 'outline'}
+            className={cn(
+              'h-9 justify-center px-3 text-sm font-medium',
+              action.className,
+            )}
+            onClick={(event: MouseEvent<HTMLButtonElement>) => {
+              event.preventDefault();
+              event.stopPropagation();
+              action.onClick();
+            }}
+            disabled={action.disabled}
+          >
+            <Icon className="mr-2 h-4 w-4" />
+            {action.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+};
+
+const PatientBadges = ({ entry }: { entry: QueueEntry }) => (
+  <div className="flex flex-wrap items-center gap-2">
+    <Badge
+      variant="outline"
+      className={cn(
+        'rounded-full px-2.5 py-1 text-[11px] font-semibold',
+        appointmentTypeBadgeStyles[entry.appointmentType],
+      )}
+    >
+      {appointmentTypeLabels[entry.appointmentType]}
+    </Badge>
+    {entry.overturnId && (
+      <Badge
+        variant="outline"
+        className="rounded-full border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900"
+      >
+        Sobreturno
+      </Badge>
+    )}
+    {parseBoolean(entry.isGuest) && !hasLinkedPatient(entry) && (
+      <Badge
+        variant="outline"
+        className="rounded-full border-amber-300 bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-900"
+      >
+        <UserPlus className="mr-1 h-3 w-3" />
+        Invitado
+      </Badge>
+    )}
+    {isUnregisteredEntry(entry) && (
+      <Badge
+        variant="outline"
+        className="rounded-full border-rose-200 bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-900"
+      >
+        <AlertTriangle className="mr-1 h-3 w-3" />
+        Registro pendiente
+      </Badge>
+    )}
+  </div>
+);
+
 const CallDestinationButtons = ({
   onCall,
   disabled,
-  size = 'default',
   compact = false,
 }: {
   onCall: (destination: QueueCallDestination) => void;
   disabled: boolean;
-  size?: 'sm' | 'default' | 'lg';
   compact?: boolean;
 }) => (
   <div
-    className={
-      compact
-        ? 'flex flex-col gap-2 sm:flex-row sm:justify-end'
-        : 'flex flex-col gap-2 sm:flex-row'
-    }
+    className={cn(
+      'flex gap-2',
+      compact ? 'flex-col xl:flex-row xl:justify-end' : 'flex-col sm:flex-row',
+    )}
   >
-    {callDestinationOptions.map(({ value, label, Icon, className }) => {
+    {callDestinationOptions.map(({ value, label, Icon, variant, className }) => {
       const isReception = value === 'RECEPCION';
-      const sizeClasses = compact
-        ? 'min-w-[148px] px-4 text-sm'
-        : 'min-w-[178px] px-5 text-base';
 
       return (
         <Button
           key={value}
           type="button"
-          size={size}
-          variant="outline"
-          className={`justify-center gap-2 whitespace-nowrap rounded-2xl font-extrabold transition-all ${sizeClasses} ${className}`}
+          variant={variant}
+          className={cn(
+            'gap-2 text-sm transition-colors',
+            compact ? 'h-9 min-w-[140px] px-3 font-medium' : 'h-9 min-w-[148px] px-4',
+            className,
+          )}
           disabled={disabled}
           onClick={() => onCall(value)}
         >
@@ -176,19 +346,36 @@ const CallDestinationButtons = ({
 
 export const QueuePanel = () => {
   const queryClient = useQueryClient();
+  const [registrationEntry, setRegistrationEntry] = useState<QueueEntry | null>(null);
 
-  // Queries
   const { data: waitingQueue, isLoading: loadingWaiting } = useWaitingQueue();
   const { data: activeQueue } = useActiveQueue();
-  const { data: stats, isLoading: loadingStats } = useQueueStats();
 
-  // Mutations
   const callNextMutation = useCallNextPatient();
   const callSpecificMutation = useCallSpecificPatient();
   const recallMutation = useRecallPatient();
-  const attendingMutation = useMarkAsAttending();
+  const confirmArrivalMutation = useConfirmArrival();
   const completedMutation = useMarkAsCompleted();
   const noShowMutation = useMarkAsNoShow();
+
+  const prioritizedWaitingQueue = useMemo(() => {
+    if (!waitingQueue) return [];
+
+    return [...waitingQueue].sort((a, b) => {
+      const typeDiff = waitingSortOrder[a.appointmentType] - waitingSortOrder[b.appointmentType];
+      if (typeDiff !== 0) return typeDiff;
+
+      if (
+        a.appointmentType === 'SCHEDULED_APPOINTMENT' &&
+        b.appointmentType === 'SCHEDULED_APPOINTMENT'
+      ) {
+        const scheduleDiff = (a.scheduledTime || '').localeCompare(b.scheduledTime || '');
+        if (scheduleDiff !== 0) return scheduleDiff;
+      }
+
+      return new Date(a.checkedInAt).getTime() - new Date(b.checkedInAt).getTime();
+    });
+  }, [waitingQueue]);
 
   const handleCallNext = (servicePoint: QueueCallDestination) => {
     callNextMutation.mutate({ servicePoint });
@@ -205,328 +392,343 @@ export const QueuePanel = () => {
     queryClient.invalidateQueries({ queryKey: queueKeys.all });
   };
 
+  const buildActiveActions = (entry: QueueEntry): QueueAction[] => {
+    const canMoveToMedicalWaiting =
+      entry.appointmentType === 'SCHEDULED_APPOINTMENT' &&
+      !requiresRegistration(entry);
+
+    if (entry.status === 'ATTENDING') {
+      const actions: QueueAction[] = [];
+
+      if (requiresRegistration(entry)) {
+        actions.push({
+          icon: UserPlus,
+          label: 'Dar de alta paciente',
+          onClick: () => setRegistrationEntry(entry),
+          className: 'bg-white text-greenPrimary hover:bg-green-50 border-greenLight',
+        });
+      }
+
+      actions.push({
+        icon: CheckCircle,
+        label: 'Cerrar trámite',
+        onClick: () => completedMutation.mutate(entry.id),
+        disabled: completedMutation.isPending,
+        className: 'bg-slate-900 text-white hover:bg-slate-800 border-slate-900',
+      });
+
+      return actions;
+    }
+
+    const actions: QueueAction[] = [
+      {
+        icon: Volume2,
+        label: 'Re-llamar',
+        onClick: () => recallMutation.mutate(entry.id),
+        disabled: recallMutation.isPending,
+        className: 'bg-sky-600 text-white hover:bg-sky-700 border-sky-600',
+      },
+    ];
+
+    if (requiresRegistration(entry)) {
+      actions.push({
+        icon: UserPlus,
+        label: 'Dar de alta paciente',
+        onClick: () => setRegistrationEntry(entry),
+        className: 'bg-white text-greenPrimary hover:bg-green-50 border-greenLight',
+      });
+    }
+
+    if (canMoveToMedicalWaiting) {
+      actions.push({
+        icon: ArrowRightCircle,
+        label: 'Pasar a espera médica',
+        onClick: () => confirmArrivalMutation.mutate(entry.id),
+        disabled: confirmArrivalMutation.isPending || requiresRegistration(entry),
+        className: 'bg-amber-500 text-white hover:bg-amber-600 border-amber-500',
+      });
+    } else {
+      actions.push({
+        icon: CheckCircle,
+        label: 'Cerrar trámite',
+        onClick: () => completedMutation.mutate(entry.id),
+        disabled: completedMutation.isPending,
+        className: 'bg-slate-900 text-white hover:bg-slate-800 border-slate-900',
+      });
+    }
+
+    if (!requiresRegistration(entry)) {
+      actions.push({
+        icon: UserX,
+        label: 'Marcar ausente',
+        onClick: () => noShowMutation.mutate(entry.id),
+        disabled: noShowMutation.isPending,
+        variant: 'destructive',
+        className: 'bg-rose-600 text-white hover:bg-rose-700 border-rose-600',
+      });
+    }
+
+    return actions.slice(0, 3);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">En espera</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {loadingStats ? <Skeleton className="h-9 w-12" /> : stats?.waiting ?? 0}
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-yellow-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Llamados</p>
-                <p className="text-3xl font-bold text-blue-600">
-                  {loadingStats ? <Skeleton className="h-9 w-12" /> : stats?.called ?? 0}
-                </p>
-              </div>
-              <PhoneCall className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Atendiendo</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {loadingStats ? <Skeleton className="h-9 w-12" /> : stats?.attending ?? 0}
-                </p>
-              </div>
-              <UserCheck className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Tiempo promedio</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {loadingStats ? (
-                    <Skeleton className="h-9 w-16" />
-                  ) : (
-                    `${stats?.averageWaitTimeMinutes ?? 0}m`
-                  )}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Call Next Button */}
-      <div className="flex flex-col gap-3 rounded-[1.75rem] border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xl font-semibold">
-            <PhoneCall className="h-5 w-5 text-green-600" />
-            Llamar siguiente
-          </div>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Cola del Día
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Elegí el destino del paciente con un solo click.
+            Usá Recepción o Ventanilla para llamar al siguiente paciente.
           </p>
         </div>
-        <CallDestinationButtons
-          onCall={handleCallNext}
-          disabled={callNextMutation.isPending}
-          size="lg"
-        />
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button type="button" variant="outline" onClick={handleRefresh}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Actualizar
+          </Button>
+          <CallDestinationButtons
+            onCall={handleCallNext}
+            disabled={callNextMutation.isPending || prioritizedWaitingQueue.length === 0}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={handleRefresh}>
-          <RefreshCcw className="mr-2 h-4 w-4" />
-          Actualizar
-        </Button>
-      </div>
+      {prioritizedWaitingQueue.length === 0 && !loadingWaiting && (
+        <p className="text-sm text-muted-foreground">
+          No hay pacientes en espera para llamar.
+        </p>
+      )}
 
-      {/* Active Queue (Called/Attending) */}
       {activeQueue && activeQueue.length > 0 && (
-        <Card className="border-green-200 bg-green-50/50">
-          <CardHeader>
-            <CardTitle className="text-green-700 flex items-center gap-2">
-              <UserCheck className="h-5 w-5" />
-              Pacientes Activos
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-slate-900">
+              <UserCheck className="h-5 w-5 text-greenPrimary" />
+              Pacientes activos
+              <Badge
+                variant="outline"
+                className="rounded-full border-slate-200 bg-slate-50 text-slate-600"
+              >
+                {activeQueue.length}
+              </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Turno</TableHead>
-                  <TableHead>Paciente</TableHead>
-                  <TableHead>Destino</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeQueue.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>
-                      <span className="text-2xl font-bold text-green-600">
-                        {entry.displayNumber}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{entry.patientName}</p>
-                          {entry.isGuest && (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
-                            >
-                              <UserPlus className="w-3 h-3 mr-1" />
-                              INVITADO
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          DNI: {entry.patientDocument}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`rounded-full px-3 py-1 text-sm font-bold ${getServicePointBadgeClass(entry.servicePoint)}`}
-                      >
-                        {formatServicePoint(entry.servicePoint)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[entry.status]}>
-                        {statusLabels[entry.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {entry.status === 'CALLED' && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => recallMutation.mutate(entry.id)}
-                              >
-                                <Volume2 className="mr-2 h-4 w-4" />
-                                Re-llamar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => attendingMutation.mutate(entry.id)}
-                              >
-                                <UserCheck className="mr-2 h-4 w-4" />
-                                Marcar Atendiendo
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => noShowMutation.mutate(entry.id)}
-                                className="text-red-600"
-                              >
-                                <UserX className="mr-2 h-4 w-4" />
-                                Marcar Ausente
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {entry.status === 'ATTENDING' && (
-                            <DropdownMenuItem
-                              onClick={() => completedMutation.mutate(entry.id)}
-                            >
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              Finalizar Atención
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          <CardContent className="pt-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-200">
+                    <TableHead className="w-[92px]">Turno</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Destino</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="min-w-[360px]">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {activeQueue.map((entry) => (
+                    <TableRow key={entry.id} className="border-slate-100">
+                      <TableCell className="align-top">
+                        <span className="text-2xl font-semibold tracking-tight text-slate-900">
+                          {entry.displayNumber}
+                        </span>
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <div className="space-y-2.5">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-slate-900">{entry.patientName}</p>
+                            <p className="text-sm text-slate-500">
+                              DNI {formatQueueDocument(entry.patientDocument)}
+                            </p>
+                          </div>
+                          <PatientBadges entry={entry} />
+                        </div>
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'rounded-full px-3 py-1 text-sm font-semibold',
+                            getServicePointBadgeClass(entry.servicePoint),
+                          )}
+                        >
+                          {formatServicePoint(entry.servicePoint)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'rounded-full px-3 py-1 text-sm font-medium',
+                            statusStyles[entry.status],
+                          )}
+                        >
+                          {statusLabels[entry.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="align-top">
+                        <ActionButtons actions={buildActiveActions(entry)} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Waiting Queue */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Cola de Espera
-            {waitingQueue && waitingQueue.length > 0 && (
-              <Badge variant="secondary">{waitingQueue.length}</Badge>
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-slate-900">
+            <Users className="h-5 w-5 text-greenPrimary" />
+            Cola del Día
+            {prioritizedWaitingQueue.length > 0 && (
+              <Badge
+                variant="outline"
+                className="rounded-full border-slate-200 bg-slate-50 text-slate-600"
+              >
+                {prioritizedWaitingQueue.length}
+              </Badge>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {loadingWaiting ? (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+              {[1, 2, 3].map((item) => (
+                <Skeleton key={item} className="h-16 w-full" />
               ))}
             </div>
-          ) : waitingQueue && waitingQueue.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Turno</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Paciente</TableHead>
-                  <TableHead>Doctor</TableHead>
-                  <TableHead>Hora</TableHead>
-                  <TableHead>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      Tiempo Espera
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {waitingQueue.map((entry) => {
-                  const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
-                  return (
-                    <TableRow key={entry.id} className="bg-slate-50/60">
-                      <TableCell>
-                        <span className="text-xl font-bold text-yellow-600">
-                          {entry.displayNumber}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={appointmentTypeColors[entry.appointmentType]}
-                        >
-                          {appointmentTypeLabels[entry.appointmentType]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{entry.patientName}</p>
-                            {entry.isGuest && (
-                              <Badge
-                                variant="outline"
-                                className="bg-amber-100 text-amber-800 border-amber-300 text-xs"
-                              >
-                                <UserPlus className="w-3 h-3 mr-1" />
-                                INVITADO
-                              </Badge>
+          ) : prioritizedWaitingQueue.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-200">
+                    <TableHead className="w-[92px]">Turno</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Atención</TableHead>
+                    <TableHead className="w-[96px]">Hora</TableHead>
+                    <TableHead className="w-[148px]">Espera</TableHead>
+                    <TableHead className="min-w-[340px] text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {prioritizedWaitingQueue.map((entry) => {
+                    const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
+                    const attention = getAttentionLabels(entry);
+
+                    return (
+                      <TableRow
+                        key={entry.id}
+                        className={cn(
+                          'border-slate-100 transition-colors',
+                          appointmentTypeRowStyles[entry.appointmentType],
+                        )}
+                      >
+                        <TableCell className="align-top">
+                          <span className="text-2xl font-semibold tracking-tight text-slate-900">
+                            {entry.displayNumber}
+                          </span>
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <div className="space-y-2.5">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-slate-900">{entry.patientName}</p>
+                            <p className="text-sm text-slate-500">
+                              DNI {formatQueueDocument(entry.patientDocument)}
+                            </p>
+                          </div>
+                            <PatientBadges entry={entry} />
+                            {requiresRegistration(entry) && (
+                              <p className="text-xs font-medium text-amber-700">
+                                {parseBoolean(entry.isGuest)
+                                  ? 'Requiere registro en recepción.'
+                                  : 'Alta administrativa pendiente.'}
+                              </p>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            DNI: {entry.patientDocument}
-                          </p>
-                          {entry.isGuest && (
-                            <p className="text-xs text-amber-600 mt-1">
-                              Requiere registro en secretaria
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{entry.doctorName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {entry.speciality}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{entry.scheduledTime}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={`font-mono ${waitTimeColors.text} ${waitTimeColors.bg} ${waitTimeColors.border}`}
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatWaitingTime(entry.waitingTimeMinutes)}
-                          </Badge>
-                          {entry.waitingTimeMinutes !== undefined && entry.waitingTimeMinutes > 60 && (
-                            <span title="Tiempo de espera prolongado"><AlertTriangle className="h-4 w-4 text-red-500" /></span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <CallDestinationButtons
-                          onCall={(servicePoint) => handleCallSpecific(entry, servicePoint)}
-                          disabled={callSpecificMutation.isPending}
-                          size="sm"
-                          compact
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <div className="space-y-1">
+                            <p className="font-medium text-slate-900">{attention.primary}</p>
+                            {attention.secondary && (
+                              <p className="text-sm text-slate-500">{attention.secondary}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="align-top text-sm font-medium text-slate-700">
+                          {formatQueueHour(entry)}
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'rounded-full border px-3 py-1 font-mono text-xs font-medium',
+                                waitTimeColors.text,
+                                waitTimeColors.bg,
+                                waitTimeColors.border,
+                              )}
+                            >
+                              <Clock className="mr-1 h-3 w-3" />
+                              {formatSecretaryWaitingTime(entry.waitingTimeMinutes)}
+                            </Badge>
+                            {entry.waitingTimeMinutes !== undefined &&
+                              entry.waitingTimeMinutes > 60 && (
+                                <span title="Tiempo de espera prolongado">
+                                  <AlertTriangle className="h-4 w-4 text-rose-500" />
+                                </span>
+                              )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right align-top">
+                          <div className="flex flex-col items-end gap-2">
+                            <CallDestinationButtons
+                              onCall={(servicePoint) => handleCallSpecific(entry, servicePoint)}
+                              disabled={callSpecificMutation.isPending}
+                              compact
+                            />
+                            {requiresRegistration(entry) && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-9 border-amber-200 bg-white px-3 text-amber-800 hover:bg-amber-50"
+                                onClick={() => setRegistrationEntry(entry)}
+                              >
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Dar de alta paciente
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No hay pacientes en espera</p>
+            <div className="py-10 text-center text-muted-foreground">
+              <Users className="mx-auto mb-4 h-12 w-12 opacity-50" />
+              <p>No hay pacientes en espera en recepción</p>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <QueuePatientRegistrationModal
+        entry={registrationEntry}
+        open={Boolean(registrationEntry)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRegistrationEntry(null);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -11,6 +11,7 @@ export interface CreateGuestAppointmentDto {
   guestPhone: string;
   guestEmail?: string;
   consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 // Backend DTO format
@@ -24,6 +25,7 @@ interface BackendGuestDto {
   phone: string;
   email?: string;
   consultationTypeId?: number;
+  consultationTypeIds?: number[];
 }
 
 export const createGuestAppointment = async (
@@ -42,6 +44,9 @@ export const createGuestAppointment = async (
     ...(dto.guestEmail && dto.guestEmail.trim() !== '' && { email: dto.guestEmail }),
     // Include consultationTypeId if provided
     ...(dto.consultationTypeId && { consultationTypeId: dto.consultationTypeId }),
+    ...(dto.consultationTypeIds && dto.consultationTypeIds.length > 0 && {
+      consultationTypeIds: dto.consultationTypeIds,
+    }),
   };
   const { data } = await apiTurnos.post<AppointmentResponseDto>('appointments/internal-guest', backendDto);
   return data;

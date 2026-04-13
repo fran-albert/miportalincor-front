@@ -8,7 +8,7 @@ const PlanActivityItemSchema = z.object({
   frequencyCount: z
     .number({ required_error: "La frecuencia es obligatoria." })
     .min(1, "Debe ser al menos 1."),
-  frequencyPeriod: z.enum(["DAILY", "WEEKLY", "MONTHLY"], {
+  frequencyPeriod: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"], {
     required_error: "Debe seleccionar un período.",
   }),
   notes: z.string().optional(),

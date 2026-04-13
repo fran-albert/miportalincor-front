@@ -16,7 +16,17 @@ export function formatMatricula(matricula: string): string {
 }
 
 export function getGenderLabel(gender: string): string {
-  return gender === 'Masculino' ? 'Masculino' : 'Femenino';
+  const normalizedGender = gender?.trim().toLowerCase();
+
+  if (
+    normalizedGender === "masculino" ||
+    normalizedGender === "male" ||
+    normalizedGender === "m"
+  ) {
+    return "Masculino";
+  }
+
+  return "Femenino";
 }
 
 export const formatDateOnly = (dateString: string): string => {
@@ -501,4 +511,3 @@ export const getWaitingTimeColor = (minutes: number | undefined): {
     badgeVariant: "secondary"
   };
 };
-

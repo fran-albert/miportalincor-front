@@ -216,7 +216,7 @@ export default function CreatePlanVersionDialog({
                       onValueChange={(v) =>
                         setValue(
                           `activities.${index}.frequencyPeriod`,
-                          v as "DAILY" | "WEEKLY" | "MONTHLY"
+                          v as FrequencyPeriod
                         )
                       }
                     >
