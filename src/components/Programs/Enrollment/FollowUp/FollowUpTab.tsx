@@ -20,10 +20,11 @@ import { MonthlySummarySnapshotCard } from "@/components/Programs/FollowUp/Month
 import { MemberRole } from "@/types/Program/ProgramMember";
 import {
   FollowUpEntryType,
+  ProgramFollowUpEntry,
   FollowUpVisibility,
   ProgramFollowUpSummaryContent,
 } from "@/types/Program/ProgramFollowUp";
-import { Download, Save } from "lucide-react";
+import { Download, Pencil, Save, X } from "lucide-react";
 
 interface FollowUpTabProps {
   programId: string;
@@ -65,6 +66,7 @@ export default function FollowUpTab({
   } = useMonthlySummary(enrollmentId, year, month);
   const {
     createNoteMutation,
+    updateNoteMutation,
     upsertMonthlySummaryMutation,
   } = useFollowUpMutations(enrollmentId);
   const { isGenerating, generatePDF } = useMonthlySummaryPDF();
@@ -72,6 +74,7 @@ export default function FollowUpTab({
   const [noteTitle, setNoteTitle] = useState("");
   const [noteContent, setNoteContent] = useState("");
   const [noteVisibleToPatient, setNoteVisibleToPatient] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   const [summaryTitle, setSummaryTitle] = useState(buildDefaultTitle(selectedMonth));
   const [situation, setSituation] = useState("");
@@ -101,6 +104,25 @@ export default function FollowUpTab({
     );
   }, [selectedMonth, summaryEntry]);
 
+  const resetNoteForm = () => {
+    setEditingNoteId(null);
+    setNoteTitle("");
+    setNoteContent("");
+    setNoteVisibleToPatient(false);
+  };
+
+  const canEditNote = (entry: ProgramFollowUpEntry) =>
+    isAdmin || canManageMonthlySummary || entry.authorUserId === session?.id;
+
+  const startEditingNote = (entry: ProgramFollowUpEntry) => {
+    setEditingNoteId(entry.id);
+    setNoteTitle(entry.title ?? "");
+    setNoteContent(entry.content ?? "");
+    setNoteVisibleToPatient(
+      entry.visibility === FollowUpVisibility.PATIENT_VISIBLE
+    );
+  };
+
   const handleCreateNote = async () => {
     if (!noteContent.trim()) {
       toast({
@@ -111,22 +133,37 @@ export default function FollowUpTab({
     }
 
     try {
-      await createNoteMutation.mutateAsync({
-        title: noteTitle.trim() || undefined,
-        content: noteContent.trim(),
-        visibility: noteVisibleToPatient
-          ? FollowUpVisibility.PATIENT_VISIBLE
-          : FollowUpVisibility.INTERNAL,
-      });
-      setNoteTitle("");
-      setNoteContent("");
-      setNoteVisibleToPatient(false);
+      if (editingNoteId) {
+        await updateNoteMutation.mutateAsync({
+          entryId: editingNoteId,
+          dto: {
+            title: noteTitle.trim() || undefined,
+            content: noteContent.trim(),
+            visibility: noteVisibleToPatient
+              ? FollowUpVisibility.PATIENT_VISIBLE
+              : FollowUpVisibility.INTERNAL,
+          },
+        });
+      } else {
+        await createNoteMutation.mutateAsync({
+          title: noteTitle.trim() || undefined,
+          content: noteContent.trim(),
+          visibility: noteVisibleToPatient
+            ? FollowUpVisibility.PATIENT_VISIBLE
+            : FollowUpVisibility.INTERNAL,
+        });
+      }
+      resetNoteForm();
       toast({
-        title: "Observación guardada",
-        description: "La nota quedó registrada en el seguimiento del programa.",
+        title: editingNoteId
+          ? "Observación actualizada"
+          : "Observación guardada",
+        description: editingNoteId
+          ? "La nota quedó actualizada en el seguimiento del programa."
+          : "La nota quedó registrada en el seguimiento del programa.",
       });
     } catch (error) {
-      console.error("Error al crear la observación del programa:", error);
+      console.error("Error al guardar la observación del programa:", error);
       toast({
         title: "No se pudo guardar",
         description: "Hubo un error al registrar la observación.",
@@ -378,13 +415,27 @@ export default function FollowUpTab({
                   />
                   <Label>Visible para el paciente</Label>
                 </div>
-                <Button
-                  className="w-full"
-                  onClick={handleCreateNote}
-                  disabled={createNoteMutation.isPending}
-                >
-                  Guardar observación
-                </Button>
+                <div className="flex gap-2">
+                  {editingNoteId && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={resetNoteForm}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancelar
+                    </Button>
+                  )}
+                  <Button
+                    className="flex-1"
+                    onClick={handleCreateNote}
+                    disabled={
+                      createNoteMutation.isPending || updateNoteMutation.isPending
+                    }
+                  >
+                    {editingNoteId ? "Actualizar observación" : "Guardar observación"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -398,6 +449,19 @@ export default function FollowUpTab({
               <NotesList
                 entries={noteEntries}
                 emptyMessage="Todavía no hay observaciones registradas para esta inscripción."
+                renderActions={(entry) =>
+                  canEditNote(entry) ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startEditingNote(entry)}
+                    >
+                      <Pencil className="mr-2 h-3.5 w-3.5" />
+                      Editar
+                    </Button>
+                  ) : null
+                }
               />
             )}
           </div>

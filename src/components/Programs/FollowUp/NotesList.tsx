@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
 interface NotesListProps {
   entries: ProgramFollowUpEntry[];
   emptyMessage: string;
+  renderActions?: (entry: ProgramFollowUpEntry) => ReactNode;
 }
 
 const getAuthorName = (entry: ProgramFollowUpEntry) => {
@@ -20,7 +22,11 @@ const getAuthorName = (entry: ProgramFollowUpEntry) => {
   return fullName || entry.authorUserId;
 };
 
-export function NotesList({ entries, emptyMessage }: NotesListProps) {
+export function NotesList({
+  entries,
+  emptyMessage,
+  renderActions,
+}: NotesListProps) {
   if (entries.length === 0) {
     return (
       <Card>
@@ -53,7 +59,12 @@ export function NotesList({ entries, emptyMessage }: NotesListProps) {
                   )}
                 </div>
               </div>
-              <Badge variant="outline">{FollowUpVisibilityLabels[entry.visibility]}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">
+                  {FollowUpVisibilityLabels[entry.visibility]}
+                </Badge>
+                {renderActions?.(entry)}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
