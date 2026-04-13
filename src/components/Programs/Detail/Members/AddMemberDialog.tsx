@@ -74,7 +74,7 @@ export default function AddMemberDialog({
         <DialogHeader>
           <DialogTitle>Agregar Miembro</DialogTitle>
           <DialogDescription>
-            Buscá al profesional y seleccioná su rol en el programa.
+            El administrador define quién coordina y quién integra el equipo del programa.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -105,8 +105,8 @@ export default function AddMemberDialog({
             </Select>
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
               {role === MemberRole.COORDINATOR
-                ? "Coordinador: organiza actividades, inscripciones, planes y resúmenes del programa."
-                : "Profesional: acompaña al paciente y registra notas o asistencia dentro del programa."}
+                ? "Coordinador: gestiona la operatoria del programa, como actividades, inscripciones, planes y resúmenes."
+                : "Profesional: participa del seguimiento asistencial y registra notas o asistencia cuando corresponde."}
             </div>
           </div>
           <DialogFooter>

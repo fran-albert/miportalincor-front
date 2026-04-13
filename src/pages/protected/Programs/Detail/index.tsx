@@ -16,6 +16,7 @@ const ProgramDetailPage = () => {
   const { program, isLoading } = useProgram(programId!);
   const {
     isLoading: isLoadingMembership,
+    isAdmin,
     isProgramMember,
   } = useProgramMembership(programId!);
 
@@ -65,7 +66,19 @@ const ProgramDetailPage = () => {
           }
         />
 
-        {isProgramMember ? (
+        {isAdmin ? (
+          <Tabs defaultValue="members" className="w-full">
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="members" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Miembros
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="members" className="mt-6">
+              <MembersTab programId={programId!} />
+            </TabsContent>
+          </Tabs>
+        ) : isProgramMember ? (
           <Tabs defaultValue="members" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="members" className="flex items-center gap-2">

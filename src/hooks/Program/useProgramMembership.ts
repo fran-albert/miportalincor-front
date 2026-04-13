@@ -4,7 +4,7 @@ import { useProgramMembers } from "@/hooks/Program/useProgramMembers";
 import { MemberRole } from "@/types/Program/ProgramMember";
 
 export const useProgramMembership = (programId: string) => {
-  const { session } = useRoles();
+  const { session, isAdmin } = useRoles();
   const membersState = useProgramMembers(programId);
 
   const currentMember = useMemo(
@@ -16,6 +16,7 @@ export const useProgramMembership = (programId: string) => {
   return {
     ...membersState,
     currentMember,
+    isAdmin,
     isProgramMember: Boolean(currentMember),
     isCoordinator: currentMember?.role === MemberRole.COORDINATOR,
   };

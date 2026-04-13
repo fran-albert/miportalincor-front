@@ -11,7 +11,7 @@ interface MembersTabProps {
 }
 
 export default function MembersTab({ programId }: MembersTabProps) {
-  const { members, isFetching, isCoordinator } = useProgramMembership(programId);
+  const { members, isFetching, isAdmin } = useProgramMembership(programId);
   const { removeMemberMutation } = useMemberMutations(programId);
   const { promiseToast } = useToastContext();
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function MembersTab({ programId }: MembersTabProps) {
     }
   };
 
-  const columns = getMemberColumns(isCoordinator, handleRemove);
+  const columns = getMemberColumns(isAdmin, handleRemove);
 
   return (
     <div className="space-y-4">
@@ -43,17 +43,19 @@ export default function MembersTab({ programId }: MembersTabProps) {
         columns={columns}
         data={members}
         showSearch
-        canAddUser={isCoordinator}
+        canAddUser={isAdmin}
         onAddClick={() => setIsAddOpen(true)}
         addLinkPath=""
         addLinkText="Agregar Miembro"
         isFetching={isFetching}
       />
-      <AddMemberDialog
-        programId={programId}
-        isOpen={isAddOpen}
-        setIsOpen={setIsAddOpen}
-      />
+      {isAdmin ? (
+        <AddMemberDialog
+          programId={programId}
+          isOpen={isAddOpen}
+          setIsOpen={setIsAddOpen}
+        />
+      ) : null}
     </div>
   );
 }
