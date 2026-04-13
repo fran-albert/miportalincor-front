@@ -3,7 +3,13 @@ import { Helmet } from "react-helmet-async";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardCheck, FileText, Calendar, TrendingUp } from "lucide-react";
+import {
+  ClipboardCheck,
+  FileText,
+  Calendar,
+  TrendingUp,
+  MessageSquareText,
+} from "lucide-react";
 import { useMyEnrollments } from "@/hooks/Program/useMyEnrollments";
 import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
 import { useAttendanceRecords } from "@/hooks/Program/useAttendanceRecords";
@@ -20,9 +26,12 @@ import { es } from "date-fns/locale";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import useRoles from "@/hooks/useRoles";
+import MyFollowUpTab from "@/components/Programs/MyPrograms/FollowUp/MyFollowUpTab";
 
 const MyEnrollmentDetailPage = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
+  const { session } = useRoles();
   const { enrollments, isLoading } = useMyEnrollments();
   const enrollment = enrollments.find((e) => e.id === enrollmentId);
 
@@ -55,6 +64,9 @@ const MyEnrollmentDetailPage = () => {
     { label: "Mis Programas", href: "/mis-programas" },
     { label: enrollment.programName ?? "Programa" },
   ];
+  const patientName = [session?.firstName, session?.lastName]
+    .filter(Boolean)
+    .join(" ") || "Paciente";
 
   return (
     <>
@@ -74,7 +86,7 @@ const MyEnrollmentDetailPage = () => {
         />
 
         <Tabs defaultValue="plan" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="plan" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Mi Plan
@@ -92,6 +104,10 @@ const MyEnrollmentDetailPage = () => {
             >
               <TrendingUp className="h-4 w-4" />
               Cumplimiento
+            </TabsTrigger>
+            <TabsTrigger value="follow-up" className="flex items-center gap-2">
+              <MessageSquareText className="h-4 w-4" />
+              Seguimiento
             </TabsTrigger>
           </TabsList>
 
@@ -282,6 +298,14 @@ const MyEnrollmentDetailPage = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="follow-up" className="mt-6">
+            <MyFollowUpTab
+              enrollmentId={enrollmentId!}
+              patientName={patientName}
+              programName={enrollment.programName ?? "Programa"}
+            />
           </TabsContent>
         </Tabs>
       </div>
