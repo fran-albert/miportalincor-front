@@ -97,6 +97,12 @@ const navigationItems = [
     allowedRoles: PERMISSIONS.APPOINTMENTS,
   },
   {
+    title: "Programas",
+    url: "/programas",
+    icon: Activity,
+    allowedRoles: PERMISSIONS.PROGRAMS,
+  },
+  {
     title: "Mi Sala de Espera",
     url: "/mi-sala-de-espera",
     icon: Clock,
@@ -136,6 +142,13 @@ const navigationItems = [
     url: "/mis-chequeos",
     icon: CalendarClock,
     allowedRoles: PERMISSIONS.MY_CHECKUPS,
+    strictRoles: true,
+  },
+  {
+    title: "Mis Programas",
+    url: "/mis-programas",
+    icon: ClipboardList,
+    allowedRoles: PERMISSIONS.MY_PROGRAMS,
     strictRoles: true,
   },
   {
