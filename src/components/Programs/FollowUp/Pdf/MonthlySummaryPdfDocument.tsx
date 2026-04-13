@@ -1,5 +1,6 @@
 import {
   Document,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -12,88 +13,182 @@ import {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 40,
-    paddingBottom: 32,
-    paddingHorizontal: 32,
+    paddingTop: 28,
+    paddingBottom: 34,
+    paddingHorizontal: 30,
     fontSize: 10,
-    color: "#111827",
+    color: "#163243",
+    backgroundColor: "#ffffff",
   },
-  header: {
-    marginBottom: 24,
+  headerShell: {
+    marginBottom: 22,
+  },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#d1d5db",
+    borderBottomColor: "#D8E7EC",
     paddingBottom: 12,
+    marginBottom: 16,
+  },
+  logo: {
+    width: 162,
+    height: 52,
+    objectFit: "contain",
+  },
+  pill: {
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#E9F7FA",
+    fontSize: 9,
+    color: "#0F6B7B",
   },
   title: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "bold",
-    marginBottom: 6,
+    color: "#163243",
+    marginBottom: 5,
   },
   subtitle: {
-    fontSize: 11,
-    color: "#4b5563",
-    marginBottom: 2,
+    fontSize: 10,
+    color: "#4F6B78",
+    lineHeight: 1.5,
   },
-  grid: {
+  infoGrid: {
     flexDirection: "row",
-    gap: 12,
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 14,
+  },
+  infoCard: {
+    width: "48%",
+    borderRadius: 10,
+    backgroundColor: "#F8FBFC",
+    paddingVertical: 9,
+    paddingHorizontal: 11,
+  },
+  infoLabel: {
+    fontSize: 8,
+    color: "#6A8793",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 11,
+    color: "#163243",
+    fontWeight: "bold",
+  },
+  metricsGrid: {
+    flexDirection: "row",
+    gap: 10,
     marginBottom: 20,
   },
   metricCard: {
     flexGrow: 1,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 6,
-    padding: 10,
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: "#F5FBFC",
+  },
+  metricCardPrimary: {
+    backgroundColor: "#EAF7FA",
   },
   metricLabel: {
-    fontSize: 9,
-    color: "#6b7280",
-    marginBottom: 4,
+    fontSize: 8,
+    color: "#6A8793",
+    textTransform: "uppercase",
+    marginBottom: 5,
   },
   metricValue: {
     fontSize: 16,
     fontWeight: "bold",
+    color: "#163243",
+    marginBottom: 2,
+  },
+  metricHelp: {
+    fontSize: 9,
+    color: "#5B7580",
   },
   section: {
-    marginBottom: 18,
+    marginBottom: 16,
+  },
+  sectionCard: {
+    borderRadius: 12,
+    backgroundColor: "#F8FBFC",
+    padding: 14,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
+    color: "#0F6B7B",
     marginBottom: 8,
   },
   bodyText: {
-    lineHeight: 1.5,
-    color: "#1f2937",
+    lineHeight: 1.6,
+    color: "#223C48",
+    fontSize: 10,
+  },
+  tableTitle: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#0F6B7B",
+    marginBottom: 8,
   },
   table: {
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#D7E9ED",
+    borderBottomWidth: 1,
+    borderBottomColor: "#D7E9ED",
   },
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#E6F0F3",
   },
   headerRow: {
-    backgroundColor: "#f3f4f6",
-    fontWeight: "bold",
+    backgroundColor: "#EEF8FA",
   },
   cell: {
     paddingVertical: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     flexGrow: 1,
+    fontSize: 9,
+    color: "#223C48",
+  },
+  headerCell: {
+    fontWeight: "bold",
+    color: "#35515D",
+  },
+  weightGrid: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  weightCard: {
+    flexGrow: 1,
+    borderRadius: 10,
+    backgroundColor: "#F5FBFC",
+    padding: 12,
+  },
+  weightLabel: {
+    fontSize: 8,
+    color: "#6A8793",
+    textTransform: "uppercase",
+    marginBottom: 5,
+  },
+  weightValue: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#163243",
   },
   footer: {
     position: "absolute",
     bottom: 16,
-    left: 32,
-    right: 32,
+    left: 30,
+    right: 30,
     textAlign: "center",
-    fontSize: 9,
-    color: "#6b7280",
+    fontSize: 8,
+    color: "#78919B",
   },
 });
 
@@ -104,6 +199,8 @@ interface MonthlySummaryPdfDocumentProps {
   title: string;
   summaryContent: ProgramFollowUpSummaryContent;
   snapshot: ProgramMonthlySummaryMetricsSnapshot;
+  logoSrc?: string;
+  generatedDateLabel?: string;
 }
 
 const formatWeight = (value?: number) =>
@@ -116,65 +213,114 @@ export function MonthlySummaryPdfDocument({
   title,
   summaryContent,
   snapshot,
+  logoSrc,
+  generatedDateLabel,
 }: MonthlySummaryPdfDocumentProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
+        <View style={styles.headerShell}>
+          <View style={styles.headerTop}>
+            {logoSrc ? <Image src={logoSrc} style={styles.logo} /> : <View />}
+            <Text style={styles.pill}>Resumen de seguimiento</Text>
+          </View>
+
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>Paciente: {patientName}</Text>
-          <Text style={styles.subtitle}>Programa: {programName}</Text>
-          <Text style={styles.subtitle}>Período: {periodLabel}</Text>
           <Text style={styles.subtitle}>
-            Generado: {new Date().toLocaleDateString("es-AR")}
+            Informe mensual del programa con resumen clínico y evolución del período.
           </Text>
+
+          <View style={styles.infoGrid}>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>Paciente</Text>
+              <Text style={styles.infoValue}>{patientName}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>Programa</Text>
+              <Text style={styles.infoValue}>{programName}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>Período</Text>
+              <Text style={styles.infoValue}>{periodLabel}</Text>
+            </View>
+            <View style={styles.infoCard}>
+              <Text style={styles.infoLabel}>Fecha</Text>
+              <Text style={styles.infoValue}>
+                {generatedDateLabel || new Date().toLocaleDateString("es-AR")}
+              </Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.grid}>
-          <View style={styles.metricCard}>
+        <View style={styles.metricsGrid}>
+          <View style={[styles.metricCard, styles.metricCardPrimary]}>
             <Text style={styles.metricLabel}>Cumplimiento global</Text>
             <Text style={styles.metricValue}>
               {snapshot.globalCompliance.toFixed(1)}%
             </Text>
+            <Text style={styles.metricHelp}>Del total esperado para el período</Text>
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Esperado / realizado</Text>
             <Text style={styles.metricValue}>
               {snapshot.totalAttended}/{snapshot.totalExpected}
             </Text>
+            <Text style={styles.metricHelp}>Actividades registradas</Text>
           </View>
           <View style={styles.metricCard}>
-            <Text style={styles.metricLabel}>Registros de asistencia</Text>
+            <Text style={styles.metricLabel}>Registros</Text>
             <Text style={styles.metricValue}>{snapshot.totalRecords}</Text>
+            <Text style={styles.metricHelp}>Asistencias cargadas en el mes</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Situación general</Text>
-          <Text style={styles.bodyText}>{summaryContent.situation}</Text>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Situación general</Text>
+            <Text style={styles.bodyText}>{summaryContent.situation}</Text>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Evolución observada</Text>
-          <Text style={styles.bodyText}>{summaryContent.evolution}</Text>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Evolución observada</Text>
+            <Text style={styles.bodyText}>{summaryContent.evolution}</Text>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Objetivo próximo mes</Text>
-          <Text style={styles.bodyText}>{summaryContent.nextObjective}</Text>
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Objetivo próximo mes</Text>
+            <Text style={styles.bodyText}>{summaryContent.nextObjective}</Text>
+          </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detalle por actividad</Text>
+        <View style={styles.section} wrap={false}>
+          <Text style={styles.tableTitle}>Detalle por actividad</Text>
           <View style={styles.table}>
             <View style={[styles.row, styles.headerRow]}>
-              <Text style={[styles.cell, { flexBasis: "40%" }]}>Actividad</Text>
-              <Text style={[styles.cell, { flexBasis: "20%" }]}>Esperado</Text>
-              <Text style={[styles.cell, { flexBasis: "20%" }]}>Realizado</Text>
-              <Text style={[styles.cell, { flexBasis: "20%" }]}>Cumplimiento</Text>
+              <Text style={[styles.cell, styles.headerCell, { flexBasis: "40%" }]}>
+                Actividad
+              </Text>
+              <Text style={[styles.cell, styles.headerCell, { flexBasis: "20%" }]}>
+                Esperado
+              </Text>
+              <Text style={[styles.cell, styles.headerCell, { flexBasis: "20%" }]}>
+                Realizado
+              </Text>
+              <Text style={[styles.cell, styles.headerCell, { flexBasis: "20%" }]}>
+                Cumplimiento
+              </Text>
             </View>
-            {snapshot.activities.map((activity) => (
-              <View style={styles.row} key={activity.activityId}>
+            {snapshot.activities.map((activity, index) => (
+              <View
+                style={
+                  index === snapshot.activities.length - 1
+                    ? [styles.row, { borderBottomWidth: 0 }]
+                    : styles.row
+                }
+                key={activity.activityId}
+              >
                 <Text style={[styles.cell, { flexBasis: "40%" }]}>
                   {activity.activityName}
                 </Text>
@@ -193,24 +339,24 @@ export function MonthlySummaryPdfDocument({
         </View>
 
         {snapshot.nutrition && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Evolución de peso</Text>
-            <View style={styles.grid}>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Peso inicial</Text>
-                <Text style={styles.metricValue}>
+          <View style={styles.section} wrap={false}>
+            <Text style={styles.tableTitle}>Evolución de peso</Text>
+            <View style={styles.weightGrid}>
+              <View style={styles.weightCard}>
+                <Text style={styles.weightLabel}>Peso inicial</Text>
+                <Text style={styles.weightValue}>
                   {formatWeight(snapshot.nutrition.firstWeight)}
                 </Text>
               </View>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Peso final</Text>
-                <Text style={styles.metricValue}>
+              <View style={styles.weightCard}>
+                <Text style={styles.weightLabel}>Peso final</Text>
+                <Text style={styles.weightValue}>
                   {formatWeight(snapshot.nutrition.lastWeight)}
                 </Text>
               </View>
-              <View style={styles.metricCard}>
-                <Text style={styles.metricLabel}>Delta</Text>
-                <Text style={styles.metricValue}>
+              <View style={styles.weightCard}>
+                <Text style={styles.weightLabel}>Cambio del mes</Text>
+                <Text style={styles.weightValue}>
                   {formatWeight(snapshot.nutrition.deltaWeight)}
                 </Text>
               </View>
@@ -221,7 +367,7 @@ export function MonthlySummaryPdfDocument({
         <Text
           style={styles.footer}
           render={({ pageNumber, totalPages }) =>
-            `Página ${pageNumber} de ${totalPages}`
+            `INCOR Centro Médico · Página ${pageNumber} de ${totalPages}`
           }
           fixed
         />

@@ -6,6 +6,9 @@ import {
   ProgramMonthlySummaryMetricsSnapshot,
 } from "@/types/Program/ProgramFollowUp";
 
+const INCOR_LOGO_URL =
+  "https://res.cloudinary.com/dfoqki8kt/image/upload/v1747930109/sxbdhyslwep6ezukcbr2.png";
+
 interface GenerateMonthlySummaryPDFProps {
   patientName: string;
   programName: string;
@@ -37,6 +40,8 @@ export const useMonthlySummaryPDF = () => {
           title={title}
           summaryContent={summaryContent}
           snapshot={snapshot}
+          logoSrc={INCOR_LOGO_URL}
+          generatedDateLabel={new Date().toLocaleDateString("es-AR")}
         />
       );
 
