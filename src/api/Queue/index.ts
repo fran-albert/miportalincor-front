@@ -1,12 +1,6 @@
 import { apiTurnos } from '@/services/axiosConfig';
-import type {
-  QueueEntry,
-  QueueStats,
-  CallPatientDto,
-  CallSpecificPatientDto,
-  ChangeQueueStatusDto,
-  RegisterQueuePatientDto,
-} from '@/types/Queue';
+import type { QueueEntry, QueueStats, CallPatientDto, CallSpecificPatientDto, ChangeQueueStatusDto } from '@/types/Queue';
+import type { RegisterQueuePatientDto } from '@/types/Queue';
 
 // GET - Obtener cola de espera
 export const getWaitingQueue = async (): Promise<QueueEntry[]> => {

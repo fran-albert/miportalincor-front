@@ -36,6 +36,10 @@ import type { HealthPlans } from '@/types/Health-Plans/HealthPlan';
 import type { Patient } from '@/types/Patient/Patient';
 import { Loader2, UserPlus } from 'lucide-react';
 import { ApiError } from '@/types/Error/ApiError';
+import {
+  findExactPatientByDocument,
+  normalizeDocument,
+} from './patient-registration.helpers';
 
 const QueueRegistrationSchema = z.object({
   firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -52,10 +56,12 @@ const QueueRegistrationSchema = z.object({
       state: z.object({
         id: z.number(),
         name: z.string(),
-        country: z.object({
-          id: z.number(),
-          name: z.string(),
-        }).optional(),
+        country: z
+          .object({
+            id: z.number(),
+            name: z.string(),
+          })
+          .optional(),
       }),
     }),
     street: z.string().optional(),
@@ -191,10 +197,10 @@ export const QueuePatientRegistrationModal = ({
       return;
     }
 
+    const queueEntryId = entry.id;
     setIsSubmitting(true);
 
     try {
-      const queueEntryId = entry.id;
       const dateInArgentina = moment(data.birthDate).tz(
         'America/Argentina/Buenos_Aires',
       );
@@ -214,6 +220,7 @@ export const QueuePatientRegistrationModal = ({
 
       const patientPayload = {
         ...data,
+        userName: normalizeDocument(data.userName),
         email: data.email || '',
         address: {
           ...data.address,
@@ -268,10 +275,34 @@ export const QueuePatientRegistrationModal = ({
         );
         onOpenChange(false);
       } else if (apiError.response?.status === 409) {
-        showError(
-          'Paciente ya existe',
-          'Ese DNI ya está registrado en el sistema. Use el alta normal de pacientes.',
-        );
+        try {
+          const existingPatient = await findExactPatientByDocument(data.userName);
+
+          if (existingPatient?.userId) {
+            await registerQueuePatient.mutateAsync({
+              queueEntryId,
+              patientId: Number(existingPatient.userId),
+            });
+
+            showSuccess(
+              'Paciente existente vinculado',
+              'La fila quedó asociada al paciente ya registrado.',
+            );
+
+            onOpenChange(false);
+          } else {
+            showError(
+              'Paciente ya existe',
+              'El DNI ya está registrado, pero no se pudo vincular automáticamente la fila. Revise el paciente en padrón.',
+            );
+          }
+        } catch (linkError) {
+          console.error('Error auto-linking existing patient', linkError);
+          showError(
+            'No se pudo vincular automáticamente',
+            'El DNI ya existe, pero el sistema no logró asociar la fila. Revise el paciente en padrón.',
+          );
+        }
       } else {
         showError(
           'Error al registrar paciente',
