@@ -82,7 +82,7 @@ const statusLabels: Record<QueueStatus, string> = {
 
 const appointmentTypeLabels: Record<AppointmentType, string> = {
   SCHEDULED_APPOINTMENT: 'Con turno',
-  WALK_IN: 'Sin turno',
+  WALK_IN: 'Administrativo',
   ADMINISTRATIVE: 'Administrativo',
 };
 
@@ -109,12 +109,11 @@ const waitingSortOrder: Record<AppointmentType, number> = {
 const sectionCopy = {
   scheduled: {
     title: 'Con turno',
-    description: 'Pacientes ya agendados, visibles aparte para mantener la prioridad.',
+    description: '',
   },
   unscheduled: {
-    title: 'Sin turno y administrativos',
-    description:
-      'Consultas espontáneas y trámites separados para que no se acumulen al final.',
+    title: 'Administrativo',
+    description: '',
   },
 } as const;
 
@@ -202,7 +201,7 @@ const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: s
   if (entry.appointmentType === 'WALK_IN') {
     return {
       primary: 'Recepción',
-      secondary: 'Consulta sin turno',
+      secondary: 'Administrativo',
     };
   }
 
@@ -638,7 +637,7 @@ const WaitingSection = ({
           </Badge>
         )}
       </CardTitle>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
     </CardHeader>
     <CardContent className="pt-0">
       {loading ? (
@@ -977,7 +976,7 @@ export const QueuePanel = () => {
             Cola del Día
           </h1>
           <p className="text-sm text-muted-foreground">
-            Pacientes con turno y sin turno visibles por separado.
+            Cola organizada por prioridad y gestión.
           </p>
         </div>
 
