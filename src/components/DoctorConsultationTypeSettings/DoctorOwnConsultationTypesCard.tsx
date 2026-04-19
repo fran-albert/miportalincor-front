@@ -38,11 +38,25 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 interface DoctorOwnConsultationTypesCardProps {
   doctorId: number;
   readOnly?: boolean;
+  title?: string;
+  description?: string;
+  emptyMessage?: string;
+  createButtonLabel?: string;
+  createFirstLabel?: string;
+  deactivateDescription?: string;
+  doctorScopeDescription?: string;
 }
 
 export function DoctorOwnConsultationTypesCard({
   doctorId,
   readOnly = false,
+  title = "Mis Tipos de Turno",
+  description = "Estos tipos aparecen solo en tu agenda y también los puede usar secretaría al darte turnos.",
+  emptyMessage = "No tenés tipos propios creados.",
+  createButtonLabel = "Nuevo tipo propio",
+  createFirstLabel = "Crear mi primer tipo",
+  deactivateDescription = "dejará de aparecer al crear turnos nuevos para tu agenda.",
+  doctorScopeDescription,
 }: DoctorOwnConsultationTypesCardProps) {
   const { consultationTypes, isLoading } = useOwnConsultationTypes(doctorId);
   const { mutateAsync: deactivateType, isPending: isDeactivating } =
@@ -128,17 +142,15 @@ export function DoctorOwnConsultationTypesCard({
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5" />
-              Mis Tipos de Turno
+              {title}
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Estos tipos aparecen solo en tu agenda y también los puede usar secretaría al darte turnos.
-            </p>
+            <p className="text-sm text-muted-foreground">{description}</p>
           </div>
 
           {!readOnly && (
             <Button onClick={handleCreate}>
               <Plus className="mr-2 h-4 w-4" />
-              Nuevo tipo propio
+              {createButtonLabel}
             </Button>
           )}
         </CardHeader>
@@ -147,10 +159,10 @@ export function DoctorOwnConsultationTypesCard({
           {sortedTypes.length === 0 ? (
             <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
               <Stethoscope className="mx-auto mb-3 h-10 w-10 opacity-50" />
-              <p>No tenés tipos propios creados.</p>
+              <p>{emptyMessage}</p>
               {!readOnly && (
                 <Button variant="link" onClick={handleCreate}>
-                  Crear mi primer tipo
+                  {createFirstLabel}
                 </Button>
               )}
             </div>
@@ -229,6 +241,7 @@ export function DoctorOwnConsultationTypesCard({
         consultationType={selectedType}
         mode="doctor"
         doctorId={doctorId}
+        doctorScopeDescription={doctorScopeDescription}
       />
 
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
@@ -238,7 +251,7 @@ export function DoctorOwnConsultationTypesCard({
             <AlertDialogDescription>
               {typeToDeactivate ? (
                 <>
-                  <strong>{typeToDeactivate.name}</strong> dejará de aparecer al crear turnos nuevos para tu agenda.
+                  <strong>{typeToDeactivate.name}</strong> {deactivateDescription}
                 </>
               ) : null}
             </AlertDialogDescription>
