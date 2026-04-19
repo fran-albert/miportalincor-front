@@ -29,6 +29,8 @@ import { formatDoctorName } from "@/common/helpers/helpers";
 import { DoctorBasicDto, PatientBasicDto } from "@/types/Appointment/Appointment";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
+import { useConsultationTypes } from "@/hooks/ConsultationType";
+import { useDoctorConsultationTypeSettings } from "@/hooks/DoctorConsultationTypeSettings";
 
 export interface GuestAppointmentData {
   doctorId: number;
@@ -172,6 +174,22 @@ export const CreateAppointmentForm = ({
   const watchDate = form.watch("date");
   const watchHour = form.watch("hour");
   const watchConsultationTypeId = form.watch("consultationTypeId");
+  const { consultationTypes } = useConsultationTypes(
+    typeof watchDoctorId === "number"
+      ? { doctorId: watchDoctorId }
+      : { doctorId: 0 },
+  );
+  const { settings: doctorConsultationTypeSettings } =
+    useDoctorConsultationTypeSettings(watchDoctorId ?? 0, !!watchDoctorId);
+  const selectedConsultationType = consultationTypes.find(
+    (consultationType) => consultationType.id === watchConsultationTypeId,
+  );
+  const doctorSpecificDuration = doctorConsultationTypeSettings.find(
+    (setting) => setting.consultationTypeId === watchConsultationTypeId,
+  )?.durationMinutes;
+  const estimatedDurationMinutes =
+    doctorSpecificDuration ??
+    selectedConsultationType?.defaultDurationMinutes;
 
   // Setear el patientId cuando hay un defaultPatient (fix para react-hook-form)
   useEffect(() => {
@@ -481,8 +499,19 @@ export const CreateAppointmentForm = ({
                   value={field.value}
                   onValueChange={field.onChange}
                   placeholder="Seleccionar tipo (opcional)"
+                  doctorId={watchDoctorId}
+                  requireDoctorSelection
+                  disabled={!watchDoctorId}
                 />
               </FormControl>
+              {selectedConsultationType && estimatedDurationMinutes ? (
+                <p className="text-xs text-muted-foreground">
+                  Duracion estimada para este medico: {estimatedDurationMinutes} min
+                  {doctorSpecificDuration
+                    ? " (configuracion personalizada)"
+                    : " (duracion base del tipo)"}
+                </p>
+              ) : null}
               <FormMessage />
             </FormItem>
           )}
