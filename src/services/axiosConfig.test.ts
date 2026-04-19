@@ -6,6 +6,54 @@ const mockDispatch = vi.fn();
 
 let onTokenChangeCallback: ((token: string | null, expiration: string | null) => void) | null = null;
 
+const createMemoryStorage = (): Storage => {
+  const store = new Map<string, string>();
+
+  return {
+    get length() {
+      return store.size;
+    },
+    clear: () => {
+      store.clear();
+    },
+    getItem: (key: string) => store.get(key) ?? null,
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+  };
+};
+
+const ensureStorage = (storageKey: 'localStorage' | 'sessionStorage') => {
+  const current = globalThis[storageKey] as Storage | undefined;
+
+  if (
+    current &&
+    typeof current.getItem === 'function' &&
+    typeof current.setItem === 'function' &&
+    typeof current.removeItem === 'function' &&
+    typeof current.clear === 'function'
+  ) {
+    return current;
+  }
+
+  const memoryStorage = createMemoryStorage();
+  Object.defineProperty(globalThis, storageKey, {
+    value: memoryStorage,
+    configurable: true,
+    writable: true,
+  });
+  return memoryStorage;
+};
+
+const clearStorage = () => {
+  ensureStorage('localStorage').clear();
+  ensureStorage('sessionStorage').clear();
+};
+
 vi.mock('@/config/environment', () => ({
   environment: {
     API_INCOR_HC_URL: 'http://test-hc-api.com',
@@ -67,8 +115,7 @@ describe('axiosConfig - Cross-tab token sync', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
-    sessionStorage.clear();
+    clearStorage();
   });
 
   it('should register onTokenChange listener on module load', () => {
@@ -99,8 +146,7 @@ describe('axiosConfig - Cross-tab token sync', () => {
 describe('axiosConfig - Interceptor cross-tab refresh dedup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
-    sessionStorage.clear();
+    clearStorage();
   });
 
   it('should skip refresh and use new token when another tab already refreshed', async () => {

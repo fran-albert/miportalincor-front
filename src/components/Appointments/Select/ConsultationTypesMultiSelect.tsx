@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,22 +23,39 @@ interface ConsultationTypesMultiSelectProps {
   onValueChange: (value: number[]) => void;
   placeholder?: string;
   disabled?: boolean;
+  doctorId?: number;
+  requireDoctorSelection?: boolean;
 }
+
+const SCOPE_LABELS = {
+  global: "Global",
+  specialty: "Especialidad",
+  doctor: "Propio",
+} as const;
 
 export const ConsultationTypesMultiSelect = ({
   value = [],
   onValueChange,
   placeholder = "Seleccionar tipos (opcional)",
   disabled = false,
+  doctorId,
+  requireDoctorSelection = false,
 }: ConsultationTypesMultiSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const { consultationTypes, isLoading } = useConsultationTypes();
+  const effectiveDoctorId =
+    requireDoctorSelection && !doctorId ? 0 : doctorId;
+  const { consultationTypes, isLoading } = useConsultationTypes(
+    typeof effectiveDoctorId === "number"
+      ? { doctorId: effectiveDoctorId }
+      : undefined,
+  );
 
   const normalizedValue = useMemo(
     () => Array.from(new Set((value ?? []).filter((id) => typeof id === "number"))),
     [value]
   );
+  const isBlockedUntilDoctorSelected = requireDoctorSelection && !doctorId;
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredTypes = normalizedSearch
@@ -51,6 +68,17 @@ export const ConsultationTypesMultiSelect = ({
   const selectedTypes = consultationTypes.filter((type) =>
     normalizedValue.includes(type.id)
   );
+
+  useEffect(() => {
+    if (!isLoading && normalizedValue.length > 0) {
+      const allowedTypeIds = new Set(consultationTypes.map((type) => type.id));
+      const filteredValue = normalizedValue.filter((id) => allowedTypeIds.has(id));
+
+      if (filteredValue.length !== normalizedValue.length) {
+        onValueChange(filteredValue);
+      }
+    }
+  }, [consultationTypes, isLoading, normalizedValue, onValueChange]);
 
   const toggleType = (typeId: number) => {
     if (normalizedValue.includes(typeId)) {
@@ -94,7 +122,7 @@ export const ConsultationTypesMultiSelect = ({
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
-            disabled={disabled}
+            disabled={disabled || isBlockedUntilDoctorSelected}
           >
             <span
               className={cn(
@@ -103,7 +131,11 @@ export const ConsultationTypesMultiSelect = ({
               )}
             >
               <Stethoscope className="h-4 w-4 shrink-0" />
-              <span className="truncate">{triggerLabel}</span>
+              <span className="truncate">
+                {isBlockedUntilDoctorSelected
+                  ? "Seleccionar medico primero"
+                  : triggerLabel}
+              </span>
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -159,12 +191,19 @@ export const ConsultationTypesMultiSelect = ({
                             />
                           )}
                           <div className="min-w-0">
-                            <p className="truncate font-medium">{type.name}</p>
-                            {type.description && (
-                              <p className="truncate text-xs text-muted-foreground">
-                                {type.description}
-                              </p>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <p className="truncate font-medium">{type.name}</p>
+                              {type.scope && (
+                                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                                  {SCOPE_LABELS[type.scope]}
+                                </span>
+                              )}
+                            </div>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {type.description
+                                ? `${type.description} • ${type.defaultDurationMinutes} min`
+                                : `${type.defaultDurationMinutes} min`}
+                            </p>
                           </div>
                         </div>
                       </CommandItem>
