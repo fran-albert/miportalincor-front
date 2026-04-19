@@ -23,7 +23,7 @@ import {
 import { ArrowLeft, Plus, Clock, Settings } from "lucide-react";
 import { AvailabilityForm, AvailabilityList } from "@/components/DoctorAvailability";
 import { BookingSettingsToggle } from "@/components/DoctorBookingSettings";
-import { DurationSettingsCard } from "@/components/DoctorConsultationTypeSettings";
+import { DoctorOwnConsultationTypesCard } from "@/components/DoctorConsultationTypeSettings";
 import { DoctorScheduleExceptionSection } from "@/components/DoctorScheduleException";
 import { useDoctorAvailabilityMutations } from "@/hooks/DoctorAvailability";
 import {
@@ -118,6 +118,10 @@ const DoctorHorariosPage = () => {
     );
   }
 
+  const doctorFullName = doctor
+    ? `${doctor.firstName} ${doctor.lastName}`
+    : "este médico";
+
   return (
     <div className="space-y-6 p-6">
       <Helmet>
@@ -161,8 +165,16 @@ const DoctorHorariosPage = () => {
             </CardContent>
           </Card>
 
-          {/* Duration per Consultation Type */}
-          <DurationSettingsCard doctorId={doctorId} />
+          <DoctorOwnConsultationTypesCard
+            doctorId={doctorId}
+            title="Tipos propios del médico"
+            description={`Estos tipos quedan disponibles solo para la agenda de ${doctorFullName} y secretaría puede usarlos al crear turnos.`}
+            emptyMessage={`${doctorFullName} no tiene tipos propios creados.`}
+            createButtonLabel="Nuevo tipo propio"
+            createFirstLabel="Crear primer tipo propio"
+            deactivateDescription="dejará de aparecer al crear turnos nuevos para la agenda de este médico."
+            doctorScopeDescription={`Este tipo quedará disponible solo para la agenda de ${doctorFullName} y secretaría podrá usarlo al dar turnos.`}
+          />
 
           {/* Availability Management */}
           <Card>

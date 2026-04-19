@@ -10,9 +10,8 @@ import {
 } from "@/components/MySettings";
 import {
   DoctorOwnConsultationTypesCard,
-  DurationSettingsCard,
 } from "@/components/DoctorConsultationTypeSettings";
-import { Settings, Calendar, CalendarOff, FileText, Timer } from "lucide-react";
+import { Settings, Calendar, CalendarOff, FileText, Stethoscope } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
@@ -52,8 +51,8 @@ export default function MySettingsPage() {
             Mis Ausencias
           </TabsTrigger>
           <TabsTrigger value="durations" className="flex items-center gap-2">
-            <Timer className="h-4 w-4" />
-            Duraciones
+            <Stethoscope className="h-4 w-4" />
+            Tipos de turno
           </TabsTrigger>
           {hasGreenCardService && (
             <TabsTrigger value="prescriptions" className="flex items-center gap-2">
@@ -80,13 +79,10 @@ export default function MySettingsPage() {
         </TabsContent>
 
         <TabsContent value="durations" className="mt-6">
-          <div className="space-y-6">
-            <DoctorOwnConsultationTypesCard
-              doctorId={doctorId}
-              readOnly={!canSelfManage}
-            />
-            <DurationSettingsCard doctorId={doctorId} readOnly={!canSelfManage} />
-          </div>
+          <DoctorOwnConsultationTypesCard
+            doctorId={doctorId}
+            readOnly={!canSelfManage}
+          />
         </TabsContent>
 
         {hasGreenCardService && (

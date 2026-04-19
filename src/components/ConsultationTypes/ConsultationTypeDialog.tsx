@@ -31,6 +31,7 @@ interface ConsultationTypeDialogProps {
   consultationType: ConsultationType | null;
   mode?: "admin" | "doctor";
   doctorId?: number;
+  doctorScopeDescription?: string;
 }
 
 const CONSULTATION_TYPE_COLOR_PALETTE = [
@@ -53,6 +54,7 @@ export function ConsultationTypeDialog({
   consultationType,
   mode = "admin",
   doctorId,
+  doctorScopeDescription,
 }: ConsultationTypeDialogProps) {
   const isEditing = !!consultationType;
   const { consultationTypes: allConsultationTypes } = useAllConsultationTypes();
@@ -188,7 +190,8 @@ export function ConsultationTypeDialog({
         <div className="space-y-4 py-4">
           {mode === "doctor" && (
             <p className="text-sm text-muted-foreground">
-              Este tipo quedará disponible solo para vos y para secretaría al dar turnos con tu agenda.
+              {doctorScopeDescription ??
+                "Este tipo quedará disponible solo para vos y para secretaría al dar turnos con tu agenda."}
             </p>
           )}
 
