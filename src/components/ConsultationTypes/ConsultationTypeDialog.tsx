@@ -20,6 +20,7 @@ import {
 import {
   useAllConsultationTypes,
   useCreateConsultationType,
+  useOwnConsultationTypes,
   useUpdateConsultationType,
 } from "@/hooks/ConsultationType";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -28,6 +29,8 @@ interface ConsultationTypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   consultationType: ConsultationType | null;
+  mode?: "admin" | "doctor";
+  doctorId?: number;
 }
 
 const CONSULTATION_TYPE_COLOR_PALETTE = [
@@ -48,13 +51,20 @@ export function ConsultationTypeDialog({
   open,
   onOpenChange,
   consultationType,
+  mode = "admin",
+  doctorId,
 }: ConsultationTypeDialogProps) {
   const isEditing = !!consultationType;
-  const { consultationTypes } = useAllConsultationTypes();
+  const { consultationTypes: allConsultationTypes } = useAllConsultationTypes();
+  const { consultationTypes: ownConsultationTypes } = useOwnConsultationTypes(
+    doctorId ?? 0,
+    mode === "doctor",
+  );
   const { mutateAsync: createType, isPending: isCreating } = useCreateConsultationType();
   const { mutateAsync: updateType, isPending: isUpdating } = useUpdateConsultationType();
   const { showSuccess, showError } = useToastContext();
-  const nextPaletteColor = getNextPaletteColor(consultationTypes.length);
+  const existingTypes = mode === "doctor" ? ownConsultationTypes : allConsultationTypes;
+  const nextPaletteColor = getNextPaletteColor(existingTypes.length);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -109,6 +119,19 @@ export function ConsultationTypeDialog({
     }
 
     try {
+      const scopeFields =
+        mode === "doctor"
+          ? {
+              scope: "doctor" as const,
+              createdByDoctorId: doctorId,
+            }
+          : {};
+
+      if (mode === "doctor" && !doctorId) {
+        showError("No se pudo identificar el médico");
+        return;
+      }
+
       if (isEditing) {
         const dto: UpdateConsultationTypeDto = {
           name: trimmedName,
@@ -117,6 +140,7 @@ export function ConsultationTypeDialog({
           color: normalizedColor,
           displayOrder: parsedOrder,
           isActive,
+          ...scopeFields,
         };
         await updateType({ id: consultationType.id, dto });
         showSuccess("Tipo de turno actualizado");
@@ -128,6 +152,7 @@ export function ConsultationTypeDialog({
           color: normalizedColor,
           displayOrder: parsedOrder,
           isActive,
+          ...scopeFields,
         };
         await createType(dto);
         showSuccess("Tipo de turno creado");
@@ -150,11 +175,23 @@ export function ConsultationTypeDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Editar tipo de turno" : "Nuevo tipo de turno"}
+            {isEditing
+              ? mode === "doctor"
+                ? "Editar tipo propio"
+                : "Editar tipo de turno"
+              : mode === "doctor"
+                ? "Nuevo tipo propio"
+                : "Nuevo tipo de turno"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {mode === "doctor" && (
+            <p className="text-sm text-muted-foreground">
+              Este tipo quedará disponible solo para vos y para secretaría al dar turnos con tu agenda.
+            </p>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="consultation-type-name">Nombre *</Label>
             <Input

@@ -29,6 +29,7 @@ import { formatDoctorName } from "@/common/helpers/helpers";
 import { DoctorBasicDto, PatientBasicDto } from "@/types/Appointment/Appointment";
 import { Patient } from "@/types/Patient/Patient";
 import { Doctor } from "@/types/Doctor/Doctor";
+import { useConsultationTypes } from "@/hooks/ConsultationType";
 
 export interface GuestAppointmentData {
   doctorId: number;
@@ -177,6 +178,16 @@ export const CreateAppointmentForm = ({
     watchConsultationTypeIds.length === 1
       ? watchConsultationTypeIds[0]
       : undefined;
+  const { consultationTypes } = useConsultationTypes(
+    typeof watchDoctorId === "number"
+      ? { doctorId: watchDoctorId }
+      : { doctorId: 0 },
+  );
+  const selectedConsultationType = consultationTypes.find(
+    (consultationType) => consultationType.id === slotConsultationTypeId,
+  );
+  const estimatedDurationMinutes =
+    selectedConsultationType?.defaultDurationMinutes;
 
   // Setear el patientId cuando hay un defaultPatient (fix para react-hook-form)
   useEffect(() => {
@@ -501,8 +512,17 @@ export const CreateAppointmentForm = ({
                     }
                   }}
                   placeholder="Seleccionar tipos"
+                  doctorId={watchDoctorId}
+                  requireDoctorSelection
+                  disabled={!watchDoctorId}
                 />
               </FormControl>
+              {selectedConsultationType && estimatedDurationMinutes ? (
+                <p className="text-xs text-muted-foreground">
+                  Duracion estimada para este medico: {estimatedDurationMinutes} min
+                  {" (duracion del tipo)"}
+                </p>
+              ) : null}
               <FormMessage />
             </FormItem>
           )}

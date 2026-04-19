@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -22,17 +22,32 @@ interface ConsultationTypeSelectProps {
   onValueChange: (value: number | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  doctorId?: number;
+  requireDoctorSelection?: boolean;
 }
+
+const SCOPE_LABELS = {
+  global: "Global",
+  specialty: "Especialidad",
+  doctor: "Propio",
+} as const;
 
 export const ConsultationTypeSelect = ({
   value,
   onValueChange,
   placeholder = "Tipo de consulta (opcional)",
   disabled = false,
+  doctorId,
+  requireDoctorSelection = false,
 }: ConsultationTypeSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const { consultationTypes, isLoading } = useConsultationTypes();
+  const effectiveDoctorId = requireDoctorSelection && !doctorId ? 0 : doctorId;
+  const { consultationTypes, isLoading } = useConsultationTypes(
+    typeof effectiveDoctorId === "number"
+      ? { doctorId: effectiveDoctorId }
+      : undefined,
+  );
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredTypes = normalizedSearch
@@ -42,6 +57,16 @@ export const ConsultationTypeSelect = ({
       })
     : consultationTypes;
   const selectedType = consultationTypes.find((type) => type.id === value);
+  const isBlockedUntilDoctorSelected = requireDoctorSelection && !doctorId;
+
+  useEffect(() => {
+    if (!isLoading && value !== undefined) {
+      const stillExists = consultationTypes.some((type) => type.id === value);
+      if (!stillExists) {
+        onValueChange(undefined);
+      }
+    }
+  }, [consultationTypes, isLoading, value, onValueChange]);
 
   if (isLoading) {
     return (
@@ -68,7 +93,7 @@ export const ConsultationTypeSelect = ({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
-          disabled={disabled}
+          disabled={disabled || isBlockedUntilDoctorSelected}
         >
           {selectedType ? (
             <span className="flex min-w-0 items-center gap-2">
@@ -82,7 +107,11 @@ export const ConsultationTypeSelect = ({
               <span className="truncate">{selectedType.name}</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="text-muted-foreground">
+              {isBlockedUntilDoctorSelected
+                ? "Seleccionar medico primero"
+                : placeholder}
+            </span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -141,12 +170,19 @@ export const ConsultationTypeSelect = ({
                         />
                       )}
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{type.name}</p>
-                        {type.description && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            {type.description}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-medium">{type.name}</p>
+                          {type.scope && (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {SCOPE_LABELS[type.scope]}
+                            </span>
+                          )}
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {type.description
+                            ? `${type.description} • ${type.defaultDurationMinutes} min`
+                            : `${type.defaultDurationMinutes} min`}
+                        </p>
                       </div>
                     </div>
                   </CommandItem>

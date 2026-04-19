@@ -49,7 +49,7 @@ interface EditingItem {
 export const DurationSettingsCard = ({ doctorId, readOnly = false }: DurationSettingsCardProps) => {
   const { settings, isLoading } = useDoctorConsultationTypeSettings(doctorId);
   const { upsert, remove, isUpserting, isRemoving } = useDoctorConsultationTypeSettingsMutations(doctorId);
-  const { consultationTypes } = useConsultationTypes();
+  const { consultationTypes } = useConsultationTypes({ doctorId });
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null);

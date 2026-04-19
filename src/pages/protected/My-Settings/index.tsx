@@ -8,7 +8,10 @@ import {
   MyAvailabilitiesEditable,
   MyAbsencesEditable
 } from "@/components/MySettings";
-import { DurationSettingsCard } from "@/components/DoctorConsultationTypeSettings";
+import {
+  DoctorOwnConsultationTypesCard,
+  DurationSettingsCard,
+} from "@/components/DoctorConsultationTypeSettings";
 import { Settings, Calendar, CalendarOff, FileText, Timer } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
@@ -77,7 +80,13 @@ export default function MySettingsPage() {
         </TabsContent>
 
         <TabsContent value="durations" className="mt-6">
-          <DurationSettingsCard doctorId={doctorId} readOnly={!canSelfManage} />
+          <div className="space-y-6">
+            <DoctorOwnConsultationTypesCard
+              doctorId={doctorId}
+              readOnly={!canSelfManage}
+            />
+            <DurationSettingsCard doctorId={doctorId} readOnly={!canSelfManage} />
+          </div>
         </TabsContent>
 
         {hasGreenCardService && (
