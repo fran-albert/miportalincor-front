@@ -17,6 +17,8 @@ interface DateRangeFilterProps {
   from: string;
   to: string;
   onRangeChange: (from: string, to: string) => void;
+  minDate?: string;
+  maxDate?: string;
 }
 
 type Preset = {
@@ -55,20 +57,45 @@ const presets: Preset[] = [
   },
 ];
 
-export function DateRangeFilter({ from, to, onRangeChange }: DateRangeFilterProps) {
+const parseDateOnly = (value?: string) =>
+  value ? new Date(`${value}T00:00:00`) : undefined;
+
+const clampDate = (date: Date, minDate?: Date, maxDate?: Date) => {
+  if (minDate && date < minDate) return minDate;
+  if (maxDate && date > maxDate) return maxDate;
+  return date;
+};
+
+export function DateRangeFilter({
+  from,
+  to,
+  onRangeChange,
+  minDate,
+  maxDate,
+}: DateRangeFilterProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const minDateValue = parseDateOnly(minDate);
+  const maxDateValue = parseDateOnly(maxDate);
 
   const dateRange: DateRange = {
     from: from ? new Date(`${from}T00:00:00`) : undefined,
     to: to ? new Date(`${to}T00:00:00`) : undefined,
   };
 
+  const emitRangeChange = (nextFrom: Date, nextTo: Date) => {
+    const normalizedFrom = clampDate(nextFrom, minDateValue, maxDateValue);
+    const normalizedTo = clampDate(nextTo, minDateValue, maxDateValue);
+    const [safeFrom, safeTo] =
+      normalizedFrom <= normalizedTo
+        ? [normalizedFrom, normalizedTo]
+        : [normalizedTo, normalizedFrom];
+
+    onRangeChange(format(safeFrom, "yyyy-MM-dd"), format(safeTo, "yyyy-MM-dd"));
+  };
+
   const handlePreset = (preset: Preset) => {
     const { from: presetFrom, to: presetTo } = preset.getValue();
-    onRangeChange(
-      format(presetFrom, "yyyy-MM-dd"),
-      format(presetTo, "yyyy-MM-dd")
-    );
+    emitRangeChange(presetFrom, presetTo);
   };
 
   const handleCalendarSelect = (range: DateRange | undefined) => {
@@ -77,7 +104,10 @@ export function DateRangeFilter({ from, to, onRangeChange }: DateRangeFilterProp
     const newFrom = format(range.from, "yyyy-MM-dd");
     const newTo = range.to ? format(range.to, "yyyy-MM-dd") : newFrom;
 
-    onRangeChange(newFrom, newTo);
+    emitRangeChange(
+      new Date(`${newFrom}T00:00:00`),
+      new Date(`${newTo}T00:00:00`)
+    );
 
     if (range.to) {
       setCalendarOpen(false);
@@ -129,6 +159,12 @@ export function DateRangeFilter({ from, to, onRangeChange }: DateRangeFilterProp
             onSelect={handleCalendarSelect}
             numberOfMonths={2}
             locale={es}
+            disabled={(date) =>
+              Boolean(
+                (minDateValue && date < minDateValue) ||
+                  (maxDateValue && date > maxDateValue)
+              )
+            }
           />
         </PopoverContent>
       </Popover>

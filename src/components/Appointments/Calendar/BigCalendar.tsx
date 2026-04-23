@@ -54,7 +54,7 @@ import {
   OverturnStatusTransitionContext,
 } from "@/types/Overturn/Overturn";
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
-import { formatDoctorName, parseBoolean } from "@/common/helpers/helpers";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import {
   getAppointmentConsultationTypeSummary,
   getAppointmentConsultationTypes,
@@ -782,15 +782,13 @@ export const BigCalendar = ({
       end.setMinutes(end.getMinutes() + duration);
 
       const isGuestAppointment = apt.isGuest === 1 || apt.isGuest === true;
-      const treatAsGuestAppointment =
-        isGuestAppointment && apt.patientId === null;
-      const patientName = treatAsGuestAppointment
+      const patientName = isGuestAppointment
         ? `${apt.guestFirstName || ''} ${apt.guestLastName || ''}`
         : `${apt.patient?.firstName || ''} ${apt.patient?.lastName || ''}`;
-      const patientDni = treatAsGuestAppointment
+      const patientDni = isGuestAppointment
         ? apt.guestDocumentNumber
         : apt.patient?.userName;
-      const title = treatAsGuestAppointment ? `🆕 ${patientName}` : patientName;
+      const title = isGuestAppointment ? `🆕 ${patientName}` : patientName;
 
       return {
         id: apt.id,
@@ -801,7 +799,7 @@ export const BigCalendar = ({
           type: "appointment" as const,
           data: apt,
           status: apt.status,
-          isGuest: treatAsGuestAppointment,
+          isGuest: isGuestAppointment,
           patientDni,
           healthInsurance: apt.patient?.healthInsuranceName,
           affiliationNumber: apt.patient?.affiliationNumber,
@@ -825,12 +823,10 @@ export const BigCalendar = ({
       end.setMinutes(end.getMinutes() + slotDuration);
 
       const isGuestOverturn = ot.isGuest === 1 || ot.isGuest === true;
-      const treatAsGuestOverturn =
-        isGuestOverturn && (ot.patientId === null || ot.patientId === undefined);
-      const patientName = treatAsGuestOverturn
+      const patientName = isGuestOverturn
         ? `${ot.guestFirstName || ''} ${ot.guestLastName || ''}`
         : `${ot.patient?.firstName || ''} ${ot.patient?.lastName || ''}`;
-      const patientDni = treatAsGuestOverturn
+      const patientDni = isGuestOverturn
         ? ot.guestDocumentNumber
         : ot.patient?.userName;
 
@@ -843,7 +839,7 @@ export const BigCalendar = ({
           type: "overturn" as const,
           data: ot,
           status: ot.status,
-          isGuest: treatAsGuestOverturn,
+          isGuest: isGuestOverturn,
           patientDni,
           healthInsurance: ot.patient?.healthInsuranceName,
           affiliationNumber: ot.patient?.affiliationNumber,
@@ -1501,19 +1497,16 @@ export const BigCalendar = ({
 
   const selectedEventData = selectedEvent?.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
   const selectedAppointmentData = selectedEventData as AppointmentFullResponseDto | undefined;
-  const selectedIsGuest = parseBoolean(selectedEvent?.resource.isGuest);
-  const selectedNeedsRegistration =
-    selectedEventData?.patientId === null || selectedEventData?.patientId === undefined;
-  const selectedTreatAsGuest = selectedIsGuest && selectedNeedsRegistration;
+  const selectedIsGuest = !!selectedEvent?.resource.isGuest;
   const selectedPatientName = selectedEventData
-    ? selectedTreatAsGuest
+    ? selectedIsGuest
       ? `${selectedAppointmentData?.guestFirstName || ""} ${selectedAppointmentData?.guestLastName || ""}`.trim()
       : `${selectedEventData.patient?.firstName || ""} ${selectedEventData.patient?.lastName || ""}`.trim()
     : "";
-  const selectedPatientPhone = selectedTreatAsGuest
+  const selectedPatientPhone = selectedIsGuest
     ? selectedAppointmentData?.guestPhone
     : selectedEventData?.patient?.phoneNumber;
-  const selectedPatientDocument = selectedTreatAsGuest
+  const selectedPatientDocument = selectedIsGuest
     ? selectedAppointmentData?.guestDocumentNumber
     : selectedEventData?.patient?.userName;
   const selectedHealthInsurance = selectedEventData?.patient?.healthInsuranceName;
@@ -1865,7 +1858,7 @@ export const BigCalendar = ({
                       {selectedConsultationTypeBadge}
                     </Badge>
                   )}
-                  {selectedTreatAsGuest && (
+                  {selectedEvent.resource.isGuest && (
                     <Badge variant="outline" className="google-calendar-origin-pill guest">Invitado</Badge>
                   )}
                 </div>
@@ -1947,11 +1940,11 @@ export const BigCalendar = ({
                 </div>
               </div>
 
-              {selectedTreatAsGuest && (
+              {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
                 <div className="google-calendar-warning">
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   <span>
-                    Este turno o sobreturno pertenece a un invitado sin registrar. Para pasarlo a espera médica, primero registralo como paciente.
+                    Este turno pertenece a un invitado sin registrar. Para cambiar el estado, primero registralo como paciente.
                   </span>
                 </div>
               )}
@@ -1966,9 +1959,10 @@ export const BigCalendar = ({
                   ).date;
                   const today = formatDateForCalendar(new Date());
                   const isToday = scheduledDate === today;
-                  const disabledWaiting = !isToday || selectedNeedsRegistration;
-                  const waitingTitle = selectedNeedsRegistration
-                    ? "Debe registrar al invitado como paciente antes de forzar espera médica"
+                  const isGuestAppointment = !!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment";
+                  const disabledWaiting = !isToday || isGuestAppointment;
+                  const waitingTitle = isGuestAppointment
+                    ? "Debe registrar al invitado como paciente antes de cambiar el estado"
                     : !isToday
                       ? "Solo se puede forzar espera médica para un turno del día de hoy"
                       : undefined;
@@ -2012,7 +2006,7 @@ export const BigCalendar = ({
                 <Button
                   className="google-calendar-action-button justify-start bg-blue-600 text-white hover:bg-blue-700"
                   onClick={() => handleStatusChange(AppointmentStatus.ATTENDING)}
-                  disabled={selectedNeedsRegistration}
+                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
                 >
                   <PlayCircle className="mr-2 h-4 w-4" />
                   Atender
@@ -2023,7 +2017,7 @@ export const BigCalendar = ({
                 <Button
                   className="google-calendar-action-button justify-start bg-slate-700 text-white hover:bg-slate-800"
                   onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
-                  disabled={selectedNeedsRegistration}
+                  disabled={!!selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment"}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Completar
@@ -2085,7 +2079,7 @@ export const BigCalendar = ({
                   </Button>
                 )}
 
-              {selectedNeedsRegistration && selectedEvent.resource.type === "appointment" && (
+              {selectedEvent.resource.isGuest && selectedEvent.resource.type === "appointment" && (
                 <Button
                   variant="outline"
                   className="google-calendar-action-button justify-start border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
@@ -2294,7 +2288,7 @@ export const BigCalendar = ({
       />
 
       {/* Register Guest Modal - only render if still a guest */}
-      {selectedNeedsRegistration && selectedEvent?.resource.type === "appointment" && (
+      {selectedEvent?.resource.isGuest && selectedEvent?.resource.type === "appointment" && (
         <RegisterGuestModal
           key={(selectedEvent.resource.data as AppointmentFullResponseDto).id}
           open={isRegisterGuestModalOpen}
@@ -2317,7 +2311,7 @@ export const BigCalendar = ({
               <div className="space-y-3">
                 {selectedEvent && selectedEvent.resource.data && (
                   <div className="mt-2 space-y-1 text-sm">
-                    <p><strong>Paciente:</strong> {selectedTreatAsGuest
+                    <p><strong>Paciente:</strong> {selectedEvent.resource.isGuest
                       ? `${(selectedEvent.resource.data as AppointmentFullResponseDto).guestFirstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto).guestLastName}`
                       : `${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.firstName} ${(selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).patient?.lastName}`
                     }</p>

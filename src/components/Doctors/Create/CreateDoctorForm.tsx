@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -96,6 +97,7 @@ function CreateDoctorComponent() {
         userName: pendingConversionUserName,
         data: {
           matricula: values.matricula,
+          stampText: values.stampText || "",
           specialities: selectedSpecialities
             .filter((speciality) => speciality.id !== undefined)
             .map((speciality) => ({
@@ -142,6 +144,7 @@ function CreateDoctorComponent() {
       gender: values.gender,
       maritalStatus: values.maritalStatus || "",
       matricula: values.matricula,
+      stampText: values.stampText || "",
       bloodType: values.bloodType,
       rhFactor: values.rhFactor,
       observations: values.observations,
@@ -372,6 +375,30 @@ function CreateDoctorComponent() {
                       onSpecialityChange={(newSelection) =>
                         setSelectedSpecialities(newSelection)
                       }
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <FormField
+                      control={control}
+                      name="stampText"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Texto profesional impreso</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              rows={4}
+                              placeholder={"Dra. Nombre Apellido\nEspecialidad\nM.P. 12345"}
+                            />
+                          </FormControl>
+                          <p className="text-sm text-muted-foreground">
+                            Se imprime debajo de la firma en informes y documentos.
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
 

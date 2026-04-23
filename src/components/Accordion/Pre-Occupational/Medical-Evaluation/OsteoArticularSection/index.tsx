@@ -1,9 +1,11 @@
 // components/Accordion/Pre-Occupational/Medical-Evaluation/OsteoarticularSection.tsx
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Osteoarticular } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  BooleanChoiceField,
+  ClinicalBlock,
+  NotesField,
+} from "../FormPrimitives";
 
 interface OsteoarticularSectionProps {
   isEditing: boolean;
@@ -15,90 +17,59 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
   isEditing,
   data,
   onChange,
-}) => (
-  <div className="space-y-4">
-    <h4 className="font-bold text-base text-greenPrimary">
-      Aparato Osteoarticular
-    </h4>
+}) => {
+  const rows = [
+    {
+      key: "mmssSin" as const,
+      label: "MMSS",
+      obsKey: "mmssObs" as const,
+    },
+    {
+      key: "mmiiSin" as const,
+      label: "MMII",
+      obsKey: "mmiiObs" as const,
+    },
+    {
+      key: "columnaSin" as const,
+      label: "Columna",
+      obsKey: "columnaObs" as const,
+    },
+    {
+      key: "amputaciones" as const,
+      label: "Amputaciones",
+      obsKey: "amputacionesObs" as const,
+    },
+  ];
 
-    {/* MMSS */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label htmlFor="osteo-mmss-sin">MMSS</Label>
-      <Label htmlFor="osteo-mmss-sin">Sin Alteraciones:</Label>
-      <Checkbox
-        id="osteo-mmss-sin"
-        checked={data.mmssSin === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("mmssSin", chk ? true : undefined)}
-      />
-      <Input
-        id="osteo-mmss-obs"
-        className="flex-1 ml-4"
-        placeholder="Observaciones…"
-        value={data.mmssObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("mmssObs", e.currentTarget.value)}
-      />
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 xl:grid-cols-2">
+        {rows.map((row) => (
+          <ClinicalBlock
+            key={row.key}
+            title={row.label}
+            description="Indicá si está conservado o si hace falta aclarar hallazgos."
+          >
+            <BooleanChoiceField
+              idPrefix={row.key}
+              label="Estado"
+              value={data[row.key]}
+              disabled={!isEditing}
+              positiveLabel="Sin alteraciones"
+              negativeLabel="Con hallazgos"
+              onChange={(value) => onChange(row.key, value)}
+            />
+            <NotesField
+              id={`${row.obsKey}`}
+              label="Observaciones"
+              value={String(data[row.obsKey] ?? "")}
+              disabled={!isEditing}
+              onChange={(value) => onChange(row.obsKey, value)}
+              placeholder="Detalle clínico o aclaraciones"
+            />
+          </ClinicalBlock>
+        ))}
+      </div>
     </div>
-
-    {/* MMII */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label htmlFor="osteo-mmii-sin">MMII</Label>
-      <Label htmlFor="osteo-mmii-sin">Sin Alteraciones:</Label>
-      <Checkbox
-        id="osteo-mmii-sin"
-        checked={data.mmiiSin === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("mmiiSin", chk ? true : undefined)}
-      />
-      <Input
-        id="osteo-mmii-obs"
-        className="flex-1 ml-4"
-        placeholder="Observaciones…"
-        value={data.mmiiObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("mmiiObs", e.currentTarget.value)}
-      />
-    </div>
-
-    {/* Columna */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label htmlFor="osteo-columna-sin">Columna</Label>
-      <Label htmlFor="osteo-columna-sin">Sin Alteraciones:</Label>
-      <Checkbox
-        id="osteo-columna-sin"
-        checked={data.columnaSin === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("columnaSin", chk ? true : undefined)}
-      />
-      <Input
-        id="osteo-columna-obs"
-        className="flex-1 ml-4"
-        placeholder="Observaciones…"
-        value={data.columnaObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("columnaObs", e.currentTarget.value)}
-      />
-    </div>
-
-    {/* Amputaciones */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label htmlFor="osteo-amputaciones">Amputaciones</Label>
-      <Label htmlFor="osteo-amputaciones">SI:</Label>
-      <Checkbox
-        id="osteo-amputaciones"
-        checked={data.amputaciones === true}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange("amputaciones", chk ? true : undefined)}
-      />
-      <Input
-        id="osteo-amputaciones-obs"
-        className="flex-1 ml-4"
-        placeholder="Observaciones…"
-        value={data.amputacionesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange("amputacionesObs", e.currentTarget.value)}
-      />
-    </div>
-  </div>
-);
+  );
+};

@@ -12,6 +12,8 @@ export const useDataValuesMutations = () => {
         mutationFn: createDataValues,
         onSuccess: (dataValues, variables, context) => {
             queryClient.invalidateQueries({ queryKey: ['data-values'] });
+            queryClient.invalidateQueries({ queryKey: ["medical-evaluation-report-versions"] });
+            queryClient.invalidateQueries({ queryKey: ["collaborator-medical-evaluation"] });
             console.log(" created", dataValues, variables, context);
         },
 
@@ -40,6 +42,8 @@ export const useDataValuesMutations = () => {
         mutationFn: (id: number) => deleteDataValue(id),
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries({ queryKey: ["data-values"] });
+            queryClient.invalidateQueries({ queryKey: ["medical-evaluation-report-versions"] });
+            queryClient.invalidateQueries({ queryKey: ["collaborator-medical-evaluation"] });
             console.log("ok", data, variables, context);
         },
         onError: (error, variables, context) => {
