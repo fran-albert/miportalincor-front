@@ -269,6 +269,10 @@ const DoctorWaitingRoomPage = () => {
   };
 
   const getQueueEntryConsultationType = (entry: typeof waitingQueue[0]): string | null => {
+    if (entry.consultationTypeName) {
+      return entry.consultationTypeName;
+    }
+
     if (entry.overturnId) return null;
     if (!entry.appointmentId) return null;
     const agendaItem = agenda.find(

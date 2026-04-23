@@ -1,3 +1,4 @@
+import AdminTwoFactorCard from "@/components/Profile/Admin/AdminTwoFactorCard";
 import ProfileDoctorCardComponent from "@/components/Profile/Doctor";
 import MyProfilePatientComponent from "@/components/Profile/Patient";
 import SecretaryProfileComponent from "@/components/Profile/Secretary";
@@ -70,7 +71,12 @@ const MyProfilePage = () => {
   }
 
   if (isStaff && staffUser) {
-    return <SecretaryProfileComponent user={staffUser} />;
+    return (
+      <SecretaryProfileComponent
+        user={staffUser}
+        footerContent={isAdmin ? <AdminTwoFactorCard /> : undefined}
+      />
+    );
   }
 
   if (isPatient && patient) {

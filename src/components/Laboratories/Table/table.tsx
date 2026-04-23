@@ -273,8 +273,6 @@ export const LabPatientTable = ({
           />
           <div className="flex gap-4">
             <LabDialog
-              setDates={setDates}
-              dates={dates}
               onSetNote={setNote}
               onAddNewColumn={handleAddNewColumn}
             />
