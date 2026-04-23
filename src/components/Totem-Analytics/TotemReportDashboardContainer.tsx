@@ -1,8 +1,9 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   ClipboardList,
+  Database,
   Download,
   Ticket,
   UserCheck,
@@ -11,7 +12,10 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/Appointments-Analytics/DateRangeFilter";
-import { useTotemAnalyticsReport } from "@/hooks/Totem-Analytics";
+import {
+  useTotemAnalyticsReport,
+  useTotemPatientRegistrationStats,
+} from "@/hooks/Totem-Analytics";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,12 +51,25 @@ interface TotemReportDashboardContainerProps {
 
 interface TotemMetricCardProps {
   title: string;
-  value: number;
+  value: number | string;
   description: string;
   icon: ReactNode;
 }
 
 const numberFormatter = new Intl.NumberFormat("es-AR");
+const TOTEM_OPERATION_START_DATE = "2026-04-06";
+const TOTEM_OPERATION_START_LABEL = "6 abr 2026";
+
+const todayDateString = () => format(new Date(), "yyyy-MM-dd");
+
+const isSundayDateString = (date: string) =>
+  new Date(`${date}T00:00:00`).getDay() === 0;
+
+const sumBy = <T,>(items: T[], getValue: (item: T) => number) =>
+  items.reduce((total, item) => total + getValue(item), 0);
+
+const maxDateString = (first: string, second: string) =>
+  first > second ? first : second;
 
 const escapeCsvValue = (value: string | number) =>
   `"${String(value).replace(/"/g, '""')}"`;
@@ -68,7 +85,7 @@ const TotemMetricCard = ({
       <div className="space-y-1">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <p className="text-3xl font-semibold tracking-tight">
-          {numberFormatter.format(value)}
+          {typeof value === "number" ? numberFormatter.format(value) : value}
         </p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
@@ -80,12 +97,59 @@ const TotemMetricCard = ({
 export function TotemReportDashboardContainer({
   showHeader = true,
 }: TotemReportDashboardContainerProps) {
-  const [dateFrom, setDateFrom] = useState(() =>
-    format(subDays(new Date(), 6), "yyyy-MM-dd")
-  );
-  const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [dateFrom, setDateFrom] = useState(TOTEM_OPERATION_START_DATE);
+  const [dateTo, setDateTo] = useState(todayDateString);
 
   const reportQuery = useTotemAnalyticsReport({ dateFrom, dateTo });
+  const patientRegistrationsQuery = useTotemPatientRegistrationStats({
+    dateFrom,
+    dateTo,
+  });
+
+  const handleRangeChange = (nextFrom: string, nextTo: string) => {
+    const normalizedFrom = maxDateString(nextFrom, TOTEM_OPERATION_START_DATE);
+    const normalizedTo = maxDateString(nextTo, TOTEM_OPERATION_START_DATE);
+
+    if (normalizedFrom > normalizedTo) {
+      setDateFrom(normalizedTo);
+      setDateTo(normalizedTo);
+      return;
+    }
+
+    setDateFrom(normalizedFrom);
+    setDateTo(normalizedTo);
+  };
+
+  const handleInstallToToday = () => {
+    setDateFrom(TOTEM_OPERATION_START_DATE);
+    setDateTo(todayDateString());
+  };
+
+  const visibleDailyItems = useMemo(
+    () =>
+      reportQuery.data?.daily.filter((item) => !isSundayDateString(item.date)) ??
+      [],
+    [reportQuery.data]
+  );
+
+  const visibleRegistrationDailyItems = useMemo(
+    () =>
+      patientRegistrationsQuery.data?.daily.filter(
+        (item) => !isSundayDateString(item.date)
+      ) ?? [],
+    [patientRegistrationsQuery.data]
+  );
+
+  const visibleOverview = useMemo(
+    () => ({
+      totalTickets: sumBy(visibleDailyItems, (item) => item.totalTickets),
+      scheduled: sumBy(visibleDailyItems, (item) => item.scheduled),
+      invited: sumBy(visibleDailyItems, (item) => item.invited),
+      administrative: sumBy(visibleDailyItems, (item) => item.administrative),
+      unregistered: sumBy(visibleDailyItems, (item) => item.unregistered),
+    }),
+    [visibleDailyItems]
+  );
 
   const dailyResolvedMap = useMemo(
     () =>
@@ -142,67 +206,125 @@ export function TotemReportDashboardContainer({
     [reportQuery.data]
   );
 
+  const dailyRealUsersCreatedMap = useMemo(
+    () =>
+      new Map(
+        patientRegistrationsQuery.data?.daily.map((item) => [
+          item.date,
+          item.usersCreated,
+        ]) ?? []
+      ),
+    [patientRegistrationsQuery.data]
+  );
+
+  const dailyPatientProfilesCreatedMap = useMemo(
+    () =>
+      new Map(
+        patientRegistrationsQuery.data?.daily.map((item) => [
+          item.date,
+          item.patientsCreated,
+        ]) ?? []
+      ),
+    [patientRegistrationsQuery.data]
+  );
+
+  const visibleRealRegistrationsTotal = useMemo(
+    () => sumBy(visibleRegistrationDailyItems, (item) => item.usersCreated),
+    [visibleRegistrationDailyItems]
+  );
+
+  const visiblePatientProfilesTotal = useMemo(
+    () => sumBy(visibleRegistrationDailyItems, (item) => item.patientsCreated),
+    [visibleRegistrationDailyItems]
+  );
+
   const registrationTrendData = useMemo(
     () =>
-      reportQuery.data?.registrations?.dailyCreated?.map((item) => ({
+      visibleRegistrationDailyItems.map((item) => ({
         ...item,
         label: format(new Date(`${item.date}T00:00:00`), "d MMM", {
           locale: es,
         }),
-        vinculados:
-          reportQuery.data?.registrations?.dailyLinkedExisting?.find(
-            (linked) => linked.date === item.date
-          )?.total ?? 0,
-      })) ?? [],
-    [reportQuery.data]
+        trazadosTotem: dailyTotemCreatedMap.get(item.date) ?? 0,
+      })),
+    [dailyTotemCreatedMap, visibleRegistrationDailyItems]
   );
 
   const ticketTrendData = useMemo(
     () =>
-      reportQuery.data?.daily.map((item) => ({
+      visibleDailyItems.map((item) => ({
         ...item,
         label: format(new Date(`${item.date}T00:00:00`), "d MMM", {
           locale: es,
         }),
-      })) ?? [],
-    [reportQuery.data]
+      })),
+    [visibleDailyItems]
   );
+
+  const visibleResolvedTicketsTotal = useMemo(
+    () => sumBy(visibleDailyItems, (item) => dailyResolvedMap.get(item.date) ?? 0),
+    [dailyResolvedMap, visibleDailyItems]
+  );
+
+  const visibleTotemCreatedTotal = useMemo(
+    () =>
+      sumBy(visibleDailyItems, (item) => dailyTotemCreatedMap.get(item.date) ?? 0),
+    [dailyTotemCreatedMap, visibleDailyItems]
+  );
+
+  const realRegistrationsValue: number | string =
+    patientRegistrationsQuery.isLoading
+      ? "..."
+      : patientRegistrationsQuery.data
+        ? visibleRealRegistrationsTotal
+        : "Sin dato";
+
+  const realRegistrationsDescription = patientRegistrationsQuery.data
+    ? `Fuente users.createdAt. Fichas paciente: ${numberFormatter.format(
+        visiblePatientProfilesTotal
+      )}.`
+    : patientRegistrationsQuery.isError
+      ? "No se pudo consultar Historia Clínica; no usa el conteo técnico del Totem."
+      : "Altas reales del sistema asociadas al circuito operativo del Totem.";
 
   const cards = reportQuery.data
     ? [
         {
           title: "Tickets Totem",
-          value: reportQuery.data.overview.totalTickets,
-          description: "Interacciones iniciadas desde el tótem en el rango.",
+          value: visibleOverview.totalTickets,
+          description:
+            dateFrom === TOTEM_OPERATION_START_DATE && dateTo === todayDateString()
+              ? "Total desde instalación hasta hoy, sin domingos en detalle."
+              : "Interacciones iniciadas desde el tótem en el rango visible.",
           icon: <Ticket className="h-5 w-5" />,
         },
         {
           title: "Con turno",
-          value: reportQuery.data.overview.scheduled,
+          value: visibleOverview.scheduled,
           description: "Pacientes registrados con turno previo.",
           icon: <UserCheck className="h-5 w-5" />,
         },
         {
           title: "Invitados",
-          value: reportQuery.data.overview.invited,
+          value: visibleOverview.invited,
           description: "Turnos de invitados que hicieron check-in en tótem.",
           icon: <Users className="h-5 w-5" />,
         },
         {
           title: "Trámite administrativo",
-          value: reportQuery.data.overview.administrative,
+          value: visibleOverview.administrative,
           description: "Tickets administrativos originados en el tótem.",
           icon: <ClipboardList className="h-5 w-5" />,
         },
         {
           title: "DNI no encontrado",
-          value: reportQuery.data.overview.unregistered,
+          value: visibleOverview.unregistered,
           description: "Casos detectados por el tótem fuera del sistema.",
           icon: <UserRoundPlus className="h-5 w-5" />,
         },
         {
           title: "No registrados resueltos",
-          value: reportQuery.data.unregistered.resolvedTickets,
+          value: visibleResolvedTicketsTotal,
           description: "Tickets del rango que ya quedaron vinculados o dados de alta.",
           icon: <UserCheck className="h-5 w-5" />,
         },
@@ -213,21 +335,15 @@ export function TotemReportDashboardContainer({
           icon: <ClipboardList className="h-5 w-5" />,
         },
         {
-          title: "Pacientes nuevos desde Totem",
-          value:
-            reportQuery.data.registrations?.createdPatientsInRange ??
-            reportQuery.data.unregistered.createdPatientsInRange ??
-            0,
-          description: "Altas nuevas originadas por cualquier ticket del tótem.",
-          icon: <UserRoundPlus className="h-5 w-5" />,
+          title: "Altas nuevas en sistema",
+          value: realRegistrationsValue,
+          description: realRegistrationsDescription,
+          icon: <Database className="h-5 w-5" />,
         },
         {
-          title: "Vinculados desde Totem",
-          value:
-            reportQuery.data.registrations?.linkedExistingPatientsInRange ??
-            reportQuery.data.unregistered.linkedExistingPatientsInRange ??
-            0,
-          description: "Tickets del tótem asociados a pacientes existentes.",
+          title: "Altas trazadas por Totem",
+          value: visibleTotemCreatedTotal,
+          description: "Conteo técnico de cola; no es la fuente del KPI principal.",
           icon: <UserRoundPlus className="h-5 w-5" />,
         },
       ]
@@ -243,28 +359,24 @@ export function TotemReportDashboardContainer({
       ["Desde", dateFrom, "Hasta", dateTo],
       [],
       ["Resumen"],
-      ["Tickets Totem", reportQuery.data.overview.totalTickets],
-      ["Con turno", reportQuery.data.overview.scheduled],
-      ["Invitados", reportQuery.data.overview.invited],
-      ["Trámite administrativo", reportQuery.data.overview.administrative],
-      ["DNI no encontrado", reportQuery.data.overview.unregistered],
-      ["No registrados resueltos", reportQuery.data.unregistered.resolvedTickets],
+      ["Tickets Totem", visibleOverview.totalTickets],
+      ["Con turno", visibleOverview.scheduled],
+      ["Invitados", visibleOverview.invited],
+      ["Trámite administrativo", visibleOverview.administrative],
+      ["DNI no encontrado", visibleOverview.unregistered],
+      ["No registrados resueltos", visibleResolvedTicketsTotal],
       ["No registrados pendientes", reportQuery.data.unregistered.pendingTickets],
       [
-        "Pacientes nuevos desde Totem",
-        reportQuery.data.registrations?.createdPatientsInRange ??
-          reportQuery.data.unregistered.createdPatientsInRange ??
-          0,
+        "Altas nuevas en sistema",
+        patientRegistrationsQuery.data ? visibleRealRegistrationsTotal : "Sin dato",
       ],
       [
-        "Vinculados desde Totem",
-        reportQuery.data.registrations?.linkedExistingPatientsInRange ??
-          reportQuery.data.unregistered.linkedExistingPatientsInRange ??
-          0,
+        "Fichas pacientes creadas",
+        patientRegistrationsQuery.data ? visiblePatientProfilesTotal : "Sin dato",
       ],
       [
-        "Pacientes nuevos desde DNI no encontrado",
-        reportQuery.data.unregistered.createdPatientsInRange ?? 0,
+        "Altas trazadas por Totem",
+        visibleTotemCreatedTotal,
       ],
       [],
       ["Detalle diario"],
@@ -276,11 +388,12 @@ export function TotemReportDashboardContainer({
         "Trámite administrativo",
         "DNI no encontrado",
         "Resueltos ese día",
-        "Pacientes nuevos Totem ese día",
+        "Altas reales sistema ese día",
+        "Fichas pacientes ese día",
+        "Altas trazadas Totem ese día",
         "Vinculados Totem ese día",
-        "Pacientes nuevos desde DNI no encontrado ese día",
       ],
-      ...reportQuery.data.daily.map((item) => [
+      ...visibleDailyItems.map((item) => [
         item.date,
         item.totalTickets,
         item.scheduled,
@@ -288,9 +401,10 @@ export function TotemReportDashboardContainer({
         item.administrative,
         item.unregistered,
         dailyResolvedMap.get(item.date) ?? 0,
+        dailyRealUsersCreatedMap.get(item.date) ?? 0,
+        dailyPatientProfilesCreatedMap.get(item.date) ?? 0,
         dailyTotemCreatedMap.get(item.date) ?? 0,
         dailyTotemLinkedExistingMap.get(item.date) ?? 0,
-        dailyCreatedMap.get(item.date) ?? 0,
       ]),
     ];
 
@@ -326,32 +440,48 @@ export function TotemReportDashboardContainer({
         />
       )}
 
-      <div className="flex flex-col gap-5 rounded-2xl border bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-5 rounded-2xl border bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-5 text-white shadow-sm md:p-6">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">Filtros del reporte Totem</h2>
-            <p className="text-sm text-muted-foreground">
-              El detalle diario usa como base cada ticket iniciado en el tótem. Las
-              altas nuevas se miden para todo el circuito Totem y se desglosan por
-              origen del ticket.
+            <p className="max-w-3xl text-sm text-slate-200">
+              Operativo desde {TOTEM_OPERATION_START_LABEL}. Las altas reales se
+              leen desde Historia Clínica (`users.createdAt`) porque hoy todo
+              ingreso pasa por el circuito Totem. Los domingos se ocultan del
+              detalle y exportación.
             </p>
           </div>
-          <DateRangeFilter
-            from={dateFrom}
-            to={dateTo}
-            onRangeChange={(nextFrom: string, nextTo: string) => {
-              setDateFrom(nextFrom);
-              setDateTo(nextTo);
-            }}
-          />
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="w-full bg-white text-slate-950 hover:bg-slate-100 xl:w-auto"
+              onClick={handleInstallToToday}
+            >
+              Desde instalación hasta hoy
+            </Button>
+            <div className="[&_button]:border-white/20 [&_button]:bg-white/10 [&_button]:text-white [&_button:hover]:bg-white/20">
+              <DateRangeFilter
+                from={dateFrom}
+                to={dateTo}
+                minDate={TOTEM_OPERATION_START_DATE}
+                maxDate={todayDateString()}
+                onRangeChange={handleRangeChange}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 border-t border-white/10 pt-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              Base: ticket iniciado en tótem
+            <Badge className="bg-white text-slate-950 hover:bg-white">
+              Base Totem: ticket iniciado
             </Badge>
-            <Badge variant="outline">
+            <Badge className="border-white/30 bg-white/10 text-white hover:bg-white/10">
+              Altas reales: users.createdAt
+            </Badge>
+            <Badge className="border-white/30 bg-white/10 text-white hover:bg-white/10">
               {format(new Date(`${dateFrom}T00:00:00`), "d MMM yyyy", {
                 locale: es,
               })}{" "}
@@ -365,7 +495,7 @@ export function TotemReportDashboardContainer({
           <Button
             type="button"
             variant="outline"
-            className="w-full md:w-auto"
+            className="w-full border-white/25 bg-transparent text-white hover:bg-white hover:text-slate-950 md:w-auto"
             onClick={handleExportCsv}
             disabled={!reportQuery.data}
           >
@@ -392,14 +522,18 @@ export function TotemReportDashboardContainer({
       <div className="grid gap-7 xl:grid-cols-2">
         <Card className="overflow-hidden border-emerald-100/80 bg-gradient-to-br from-emerald-50 via-white to-slate-50">
           <CardHeader>
-            <CardTitle>Tendencia de altas nuevas</CardTitle>
+            <CardTitle>Tendencia de altas reales</CardTitle>
             <CardDescription>
-              Pacientes creados desde cualquier ticket iniciado en el tótem.
+              Alta en sistema por día operativo; fuente principal: users.createdAt.
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[320px]">
-            {reportQuery.isLoading ? (
+            {patientRegistrationsQuery.isLoading ? (
               <Skeleton className="h-full w-full" />
+            ) : patientRegistrationsQuery.isError ? (
+              <div className="flex h-full items-center justify-center px-8 text-center text-sm text-muted-foreground">
+                No se pudo consultar Historia Clínica para graficar altas reales.
+              </div>
             ) : !registrationTrendData.length ? (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 Sin altas nuevas para el rango seleccionado.
@@ -417,8 +551,8 @@ export function TotemReportDashboardContainer({
                   <Legend verticalAlign="top" height={32} />
                   <Line
                     type="monotone"
-                    dataKey="total"
-                    name="Nuevos Totem"
+                    dataKey="usersCreated"
+                    name="Altas sistema"
                     stroke="#059669"
                     strokeWidth={3}
                     dot={{ r: 4 }}
@@ -426,25 +560,17 @@ export function TotemReportDashboardContainer({
                   />
                   <Line
                     type="monotone"
-                    dataKey="invited"
-                    name="Invitados"
+                    dataKey="patientsCreated"
+                    name="Fichas paciente"
                     stroke="#2563EB"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
                   <Line
                     type="monotone"
-                    dataKey="unregistered"
-                    name="DNI no encontrado"
+                    dataKey="trazadosTotem"
+                    name="Trazadas por Totem"
                     stroke="#F97316"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="administrative"
-                    name="Administrativo"
-                    stroke="#64748B"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
@@ -533,7 +659,7 @@ export function TotemReportDashboardContainer({
             <CardTitle>Detalle diario del Totem</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            {!reportQuery.data?.daily.length ? (
+            {!visibleDailyItems.length ? (
               <div className="text-sm text-muted-foreground">
                 Sin tickets del tótem para el rango seleccionado.
               </div>
@@ -548,12 +674,13 @@ export function TotemReportDashboardContainer({
                     <TableHead className="text-right">Administrativo</TableHead>
                     <TableHead className="text-right">DNI no encontrado</TableHead>
                     <TableHead className="text-right">Resueltos</TableHead>
-                    <TableHead className="text-right">Nuevos Totem</TableHead>
+                    <TableHead className="text-right">Altas sistema</TableHead>
+                    <TableHead className="text-right">Trazadas Totem</TableHead>
                     <TableHead className="text-right">Vinculados Totem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportQuery.data.daily.map((item) => (
+                  {visibleDailyItems.map((item) => (
                     <TableRow key={item.date}>
                       <TableCell className="font-medium">
                         {format(new Date(`${item.date}T00:00:00`), "EEE d MMM", {
@@ -577,6 +704,11 @@ export function TotemReportDashboardContainer({
                       </TableCell>
                       <TableCell className="text-right">
                         {numberFormatter.format(dailyResolvedMap.get(item.date) ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {numberFormatter.format(
+                          dailyRealUsersCreatedMap.get(item.date) ?? 0
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         {numberFormatter.format(
@@ -615,15 +747,15 @@ export function TotemReportDashboardContainer({
 
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
                   <div className="text-sm font-medium">
-                    Pacientes nuevos desde Totem
+                    Trazabilidad técnica de altas
                   </div>
                   <div className="mt-2 text-3xl font-semibold tracking-tight text-emerald-700">
-                    {numberFormatter.format(
-                      reportQuery.data.registrations?.createdPatientsInRange ??
-                        reportQuery.data.unregistered.createdPatientsInRange ??
-                        0
-                    )}
+                    {numberFormatter.format(visibleTotemCreatedTotal)}
                   </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Eventos de cola que quedaron asociados al alta. Puede ser menor
+                    que las altas reales del sistema.
+                  </p>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                     <span>
                       Invitados:{" "}
@@ -658,37 +790,43 @@ export function TotemReportDashboardContainer({
                 </div>
 
                 <div className="space-y-3">
-                  {reportQuery.data.unregistered.dailyDetected.map((item) => (
-                    <div
-                      key={item.date}
-                      className="rounded-xl border px-4 py-3"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium">
-                          {format(new Date(`${item.date}T00:00:00`), "EEEE d MMM", {
-                            locale: es,
-                          })}
-                        </span>
-                        <Badge variant="secondary">
-                          {numberFormatter.format(item.total)} detectados
-                        </Badge>
+                  {reportQuery.data.unregistered.dailyDetected
+                    .filter((item) => !isSundayDateString(item.date))
+                    .map((item) => (
+                      <div
+                        key={item.date}
+                        className="rounded-xl border px-4 py-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-medium">
+                            {format(
+                              new Date(`${item.date}T00:00:00`),
+                              "EEEE d MMM",
+                              {
+                                locale: es,
+                              }
+                            )}
+                          </span>
+                          <Badge variant="secondary">
+                            {numberFormatter.format(item.total)} detectados
+                          </Badge>
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {numberFormatter.format(
+                            dailyResolvedMap.get(item.date) ?? 0
+                          )}{" "}
+                          resueltos con fecha ese día.{" "}
+                          {numberFormatter.format(
+                            dailyCreatedMap.get(item.date) ?? 0
+                          )}{" "}
+                          fueron altas técnicas desde DNI no encontrado y{" "}
+                          {numberFormatter.format(
+                            dailyLinkedExistingMap.get(item.date) ?? 0
+                          )}{" "}
+                          fueron vinculaciones a pacientes existentes.
+                        </div>
                       </div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        {numberFormatter.format(
-                          dailyResolvedMap.get(item.date) ?? 0
-                        )}{" "}
-                        resueltos con fecha ese día.{" "}
-                        {numberFormatter.format(
-                          dailyCreatedMap.get(item.date) ?? 0
-                        )}{" "}
-                        fueron pacientes nuevos desde DNI no encontrado y{" "}
-                        {numberFormatter.format(
-                          dailyLinkedExistingMap.get(item.date) ?? 0
-                        )}{" "}
-                        fueron vinculaciones a pacientes existentes.
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </>
             ) : (
