@@ -51,6 +51,7 @@ export const DoctorQueueWidget = () => {
               const waitingMinutes = nextPatient.waitingTimeMinutes;
               const waitTimeColors = getWaitingTimeColor(waitingMinutes);
               const type = nextPatient.overturnId ? 'Sobreturno' : 'Turno';
+              const consultationTypeName = nextPatient.consultationTypeName;
 
               return (
                 <div className="bg-muted/50 rounded-lg p-4">
@@ -63,6 +64,12 @@ export const DoctorQueueWidget = () => {
                         <span className="font-mono">{nextPatient.scheduledTime}</span>
                         <span>·</span>
                         <span>{type}</span>
+                        {consultationTypeName ? (
+                          <>
+                            <span>·</span>
+                            <span>{consultationTypeName}</span>
+                          </>
+                        ) : null}
                       </div>
                       {waitingMinutes !== undefined && (
                         <div className="flex items-center gap-2 mt-2">

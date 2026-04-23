@@ -444,6 +444,9 @@ export const QueuePanel = () => {
               <TableBody>
                 {waitingQueue.map((entry) => {
                   const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
+                  const consultationLabel =
+                    entry.consultationTypeName || entry.speciality;
+
                   return (
                     <TableRow key={entry.id} className="bg-slate-50/60">
                       <TableCell>
@@ -486,9 +489,11 @@ export const QueuePanel = () => {
                       <TableCell>
                         <div>
                           <p className="font-medium">{entry.doctorName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {entry.speciality}
-                          </p>
+                          {consultationLabel ? (
+                            <p className="text-sm text-muted-foreground">
+                              {consultationLabel}
+                            </p>
+                          ) : null}
                         </div>
                       </TableCell>
                       <TableCell>{entry.scheduledTime}</TableCell>

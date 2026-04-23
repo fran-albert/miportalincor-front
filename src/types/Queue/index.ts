@@ -14,13 +14,15 @@ export interface QueueEntry {
   isGuest: boolean;
   doctorId: number;
   doctorName: string;
-  speciality: string;
+  speciality?: string;
+  consultationTypeName?: string;
   scheduledTime: string;
   status: QueueStatus;
   displayNumber: string;
   queueNumber: number;
   queuePrefix: string;
   checkedInAt: string;
+  medicalWaitingSince?: string;
   calledAt?: string;
   attendedAt?: string;
   completedAt?: string;
