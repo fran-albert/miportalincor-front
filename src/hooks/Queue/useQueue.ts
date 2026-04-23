@@ -12,6 +12,7 @@ import {
   callSpecificPatient,
   recallPatient,
   confirmArrival,
+  correctQueueDocument,
   markAsAttending,
   markAsCompleted,
   markAsNoShow,
@@ -20,6 +21,7 @@ import {
 import type {
   CallPatientDto,
   CallSpecificPatientDto,
+  CorrectQueueDocumentDto,
   QueueEntry,
   RegisterQueuePatientDto,
 } from '@/types/Queue';
@@ -172,7 +174,30 @@ export const useConfirmArrival = () => {
   });
 };
 
-// Hook para marcar como atendiendo
+export const useCorrectQueueDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: CorrectQueueDocumentDto) => correctQueueDocument(dto),
+    onSuccess: (data) => {
+      toast.success('DNI corregido', {
+        description:
+          data.patientId !== null
+            ? `La fila quedó vinculada a ${data.patientName}.`
+            : 'DNI actualizado. Si el paciente existe, reintentá la vinculación desde secretaría.',
+      });
+      queryClient.refetchQueries({ queryKey: queueKeys.all });
+      invalidateMedicalFlowQueries(queryClient);
+    },
+    onError: (error: Error) => {
+      const apiError = error as ApiError;
+      toast.error(
+        apiError.response?.data?.message || error.message || 'No se pudo corregir el DNI',
+      );
+    },
+  });
+};
+
 export const useMarkAsAttending = () => {
   const queryClient = useQueryClient();
 

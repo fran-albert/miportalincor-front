@@ -54,6 +54,11 @@ export interface CallSpecificPatientDto {
   servicePoint: string;
 }
 
+export interface CorrectQueueDocumentDto {
+  queueEntryId: number;
+  document: string;
+}
+
 export interface ChangeQueueStatusDto {
   status: QueueStatus;
 }
