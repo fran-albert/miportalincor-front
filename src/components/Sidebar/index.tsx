@@ -51,7 +51,6 @@ import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
-import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 const navigationItems = [
   {
@@ -97,12 +96,6 @@ const navigationItems = [
     allowedRoles: PERMISSIONS.APPOINTMENTS,
   },
   {
-    title: "Programas",
-    url: "/programas",
-    icon: Activity,
-    allowedRoles: PERMISSIONS.PROGRAMS,
-  },
-  {
     title: "Mi Sala de Espera",
     url: "/mi-sala-de-espera",
     icon: Clock,
@@ -145,18 +138,17 @@ const navigationItems = [
     strictRoles: true,
   },
   {
-    title: "Mis Programas",
-    url: "/mis-programas",
-    icon: ClipboardList,
-    allowedRoles: PERMISSIONS.MY_PROGRAMS,
-    strictRoles: true,
-  },
-  {
     title: "Solicitudes de Recetas",
     url: "/solicitudes-recetas",
     icon: FileText,
     allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
     strictRoles: true,
+  },
+  {
+    title: "Incor Laboral",
+    url: "/incor-laboral",
+    icon: Briefcase,
+    allowedRoles: PERMISSIONS.INCOR_LABORAL,
   },
 ];
 
@@ -231,7 +223,6 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { handleLogout } = useLogout();
   const { session } = useUserRole();
-  const { canAccessLaboral } = useLaboralPermissions();
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
@@ -248,18 +239,6 @@ export function AppSidebar() {
 
   // Filtrar items del menú según roles del usuario
   let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
-
-  if (canAccessLaboral) {
-    filteredNavigationItems = [
-      ...filteredNavigationItems,
-      {
-        title: "Incor Laboral",
-        url: "/incor-laboral",
-        icon: Briefcase,
-        allowedRoles: PERMISSIONS.APPOINTMENTS,
-      },
-    ];
-  }
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {

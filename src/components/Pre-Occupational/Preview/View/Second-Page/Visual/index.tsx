@@ -6,7 +6,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { pdfColors } from "../../../Pdf/shared";
+import { Label } from "@/components/ui/label";
 
 interface VisualAcuityHtmlProps {
   withoutCorrection: { right: string; left: string };
@@ -22,107 +22,60 @@ export default function VisualAcuityHtml({
   notes = "",
 }: VisualAcuityHtmlProps) {
   return (
-    <div
-      className="mb-2.5 overflow-hidden rounded-[8px] border"
-      style={{ borderColor: pdfColors.line }}
-    >
-      <div
-        className="border-b px-3 py-2"
-        style={{
-          backgroundColor: pdfColors.surface,
-          borderBottomColor: pdfColors.line,
-        }}
-      >
-        <p
-          className="text-[10px] font-bold uppercase tracking-[0.08em]"
-          style={{ color: pdfColors.accentText }}
+    <div className="mt-6">
+      <h4 className="font-bold text-base text-greenPrimary">Agudeza Visual</h4>
+      <p className="text-muted-foreground mb-4">
+        Valores sin corrección (S/C) y con corrección (C/C).
+      </p>
+
+      <Table>
+        <TableHeader className="text-black">
+          <TableRow>
+            <TableCell />
+            <TableCell className="text-center font-medium">S/C</TableCell>
+            <TableCell className="text-center font-medium">C/C</TableCell>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody className="text-black">
+          <TableRow>
+            <TableCell>Ojo Derecho</TableCell>
+            <TableCell className="text-center">
+              {withoutCorrection.right}
+            </TableCell>
+            <TableCell className="text-center">
+              {withCorrection.right}
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>Ojo Izquierdo</TableCell>
+            <TableCell className="text-center">
+              {withoutCorrection.left}
+            </TableCell>
+            <TableCell className="text-center">{withCorrection.left}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+
+      <div className="flex items-center space-x-4 mt-4">
+        <Label className="text-black">Visión Cromática:</Label>
+        <span
+          className={`font-medium ${
+            chromaticVision === "normal"
+              ? "text-greenPrimary"
+              : "text-redPrimary"
+          }`}
         >
-          Agudeza visual
-        </p>
+          {chromaticVision === "normal" ? "Normal" : "Anormal"}
+        </span>
       </div>
 
-      <div className="space-y-2.5 px-3 py-[9px]">
-        <div
-          className="overflow-hidden rounded-[6px] border"
-          style={{ borderColor: pdfColors.line }}
-        >
-          <Table>
-            <TableHeader className="text-black">
-              <TableRow>
-                <TableCell />
-                <TableCell
-                  className="text-center text-[8px] font-medium uppercase"
-                  style={{ color: pdfColors.muted }}
-                >
-                  S/C
-                </TableCell>
-                <TableCell
-                  className="text-center text-[8px] font-medium uppercase"
-                  style={{ color: pdfColors.muted }}
-                >
-                  C/C
-                </TableCell>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody className="text-black">
-              <TableRow>
-                <TableCell>Ojo derecho</TableCell>
-                <TableCell className="text-center">
-                  {withoutCorrection.right}
-                </TableCell>
-                <TableCell className="text-center">
-                  {withCorrection.right}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Ojo izquierdo</TableCell>
-                <TableCell className="text-center">
-                  {withoutCorrection.left}
-                </TableCell>
-                <TableCell className="text-center">
-                  {withCorrection.left}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+      {notes && (
+        <div className="mt-3">
+          <Label className="mb-1">Observaciones:</Label>
+          <p className="text-black">{notes}</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <p
-            className="text-[8px] uppercase tracking-[0.08em]"
-            style={{ color: pdfColors.muted }}
-          >
-            Vision cromatica
-          </p>
-          <span
-            className={`text-[10px] font-semibold ${
-              chromaticVision === "normal"
-                ? "text-greenPrimary"
-                : "text-redPrimary"
-            }`}
-          >
-            {chromaticVision === "normal" ? "Normal" : "Anormal"}
-          </span>
-        </div>
-
-        {notes && (
-          <div className="space-y-1">
-            <p
-              className="text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Observaciones
-            </p>
-            <div
-              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-              style={{ borderColor: pdfColors.line }}
-            >
-              <p className="text-[10px] text-slate-900">{notes}</p>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

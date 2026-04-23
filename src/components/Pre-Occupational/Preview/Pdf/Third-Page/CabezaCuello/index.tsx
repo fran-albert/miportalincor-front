@@ -1,5 +1,6 @@
+// src/components/pdf/CabezaCuelloPdf.tsx
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
 
 interface CabezaCuelloPdfProps {
   sinAlteraciones?: boolean;
@@ -8,66 +9,55 @@ interface CabezaCuelloPdfProps {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginRight: 6,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 4,
-  },
-  value: {
     fontSize: 10,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+    fontWeight: "500",
+    marginRight: 4,
+  },
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
   },
   obsLabel: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 4,
   },
   obsText: {
     fontSize: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    color: pdfColors.ink,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  statusCard: {
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    backgroundColor: "#F9F9F9",
   },
 });
 
@@ -83,24 +73,27 @@ export default function CabezaCuelloPdf({
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Cabeza y cuello</Text>
-      </View>
-      <View style={styles.body}>
-        {sinAlteraciones !== undefined && (
-          <View style={styles.statusCard}>
-            <Text style={styles.label}>Sin alteraciones</Text>
-            <Text style={styles.value}>{sinAlteraciones ? "Sí" : "No"}</Text>
-          </View>
-        )}
+      <Text style={styles.title}>Cabeza y Cuello</Text>
 
-        {observaciones?.trim() && (
-          <View>
-            <Text style={styles.obsLabel}>Observaciones</Text>
-            <Text style={styles.obsText}>{observaciones}</Text>
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
           </View>
-        )}
-      </View>
+          <Text style={styles.optionText}>
+            Sin alteraciones: {sinAlteraciones ? "Sí" : "No"}
+          </Text>
+        </View>
+      )}
+
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

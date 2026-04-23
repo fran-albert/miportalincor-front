@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface ToraxPdfProps {
   deformaciones?: "si" | "no";
@@ -10,50 +10,62 @@ interface ToraxPdfProps {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
+  groupContainer: {
+    marginBottom: 8,
   },
-  statusCard: {
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  groupRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginRight: 6,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 3,
+    fontSize: 10,
+    fontWeight: "500",
+    marginRight: 4,
   },
-  value: {
-    fontSize: 9.4,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
+    marginLeft: 2,
+    marginRight: 12,
+  },
+  obsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 16,
+    marginTop: 2,
+  },
+  obsLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+    marginRight: 4,
+  },
+  obsText: {
+    fontSize: 10,
+    fontStyle: "italic",
+    flex: 1,
   },
 });
 
@@ -64,34 +76,55 @@ export default function ToraxPdf({ deformaciones, deformacionesObs, cicatrices, 
 
   if (!hasAnyData) return null;
 
-  const items = [
-    deformaciones !== undefined
-      ? {
-          label: "Deformaciones",
-          value: `${deformaciones === "si" ? "Sí" : "No"}${deformacionesObs?.trim() ? ` · ${deformacionesObs}` : ""}`,
-        }
-      : null,
-    cicatrices !== undefined
-      ? {
-          label: "Cicatrices",
-          value: `${cicatrices === "si" ? "Sí" : "No"}${cicatricesObs?.trim() ? ` · ${cicatricesObs}` : ""}`,
-        }
-      : null,
-  ].filter(Boolean);
-
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Tórax</Text>
-      </View>
-      <View style={styles.body}>
-        {items.map((item) => (
-          <View key={item!.label} style={styles.statusCard}>
-            <Text style={styles.label}>{item!.label}</Text>
-            <Text style={styles.value}>{item!.value}</Text>
+      <Text style={styles.title}>Tórax</Text>
+
+      {/* Deformaciones - solo mostrar si está definido */}
+      {deformaciones !== undefined && (
+        <View style={styles.groupContainer}>
+          <View style={styles.groupRow}>
+            <Text style={styles.label}>Deformaciones:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={deformaciones === "si"} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={deformaciones === "no"} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
           </View>
-        ))}
-      </View>
+          {deformacionesObs?.trim() && (
+            <View style={styles.obsContainer}>
+              <Text style={styles.obsLabel}>Observaciones:</Text>
+              <Text style={styles.obsText}>{deformacionesObs}</Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Cicatrices - solo mostrar si está definido */}
+      {cicatrices !== undefined && (
+        <View style={styles.groupContainer}>
+          <View style={styles.groupRow}>
+            <Text style={styles.label}>Cicatrices:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={cicatrices === "si"} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={cicatrices === "no"} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
+          </View>
+          {cicatricesObs?.trim() && (
+            <View style={styles.obsContainer}>
+              <Text style={styles.obsLabel}>Observaciones:</Text>
+              <Text style={styles.obsText}>{cicatricesObs}</Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 }

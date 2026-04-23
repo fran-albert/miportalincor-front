@@ -1,22 +1,13 @@
 import React from "react";
+import HeaderPreviewHtml from "../../Header";
+import FooterHtml from "../Footer";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
-import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
-import PreviewPageShell from "../PageShell";
-import {
-  getPresentationModeForSection,
-  getInstitutionalSignerForSection,
-  usesExamDoctorSignature,
-} from "../../signature-policy";
-import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
 
 interface StudyPageHtmlProps {
   studyTitle: string;
   studyUrl: string;
   pageNumber: number;
   examResults: ExamResults;
-  medicalEvaluationType: string;
-  doctorData: DoctorSignatures;
-  brandingConfig?: LaborReportBrandingConfig;
 }
 
 // Definimos los estudios que deben mostrar "INFORME:"
@@ -37,9 +28,6 @@ const StudyPageHtml: React.FC<StudyPageHtmlProps> = ({
   studyUrl,
   pageNumber,
   examResults,
-  medicalEvaluationType,
-  doctorData,
-  brandingConfig,
 }) => {
   let resultTexto = "";
   // Normalizamos para comparar sin problemas de mayúsculas o acentos
@@ -84,40 +72,28 @@ const StudyPageHtml: React.FC<StudyPageHtmlProps> = ({
     }
   }
   return (
-    <PreviewPageShell
-      pageNumber={pageNumber}
-      examType={`Complementarios - ${studyTitle}`}
-      evaluationType={medicalEvaluationType}
-      doctorData={doctorData}
-      brandingConfig={brandingConfig}
-      institutionalSigner={getInstitutionalSignerForSection(
-        "studies",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-      presentationMode={getPresentationModeForSection(
-        "studies",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-      useCustomSignature={usesExamDoctorSignature(
-        "studies",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-      contentClassName="justify-center"
-    >
+    <div className="flex flex-col min-h-screen">
+      {/* Aquí se coloca el header */}
+      <HeaderPreviewHtml
+        evaluationType={"Preocupacional"}
+        examType={`Complementarios - ${studyTitle}`}
+      />
       {studiesConInforme.includes(normalizedTitle) && (
-        <p className="mb-3 text-center text-[11px]">INFORME: {resultTexto}</p>
+        <p className="text-base text-center">INFORME: {resultTexto}</p>
       )}
-      <div className="flex flex-1 items-center justify-center">
-        <img
-          src={studyUrl}
-          alt={studyTitle}
-          className="max-h-[800px] w-full object-contain"
-        />
+      {/* Contenido principal */}
+      <div className="p-[20px] font-sans flex flex-col flex-grow">
+        <div className="flex-grow flex justify-center items-center">
+          <img
+            src={studyUrl}
+            alt={studyTitle}
+            className="w-full max-h-[800px] object-contain"
+          />
+        </div>
       </div>
-    </PreviewPageShell>
+      {/* Aquí se coloca el footer */}
+      <FooterHtml pageNumber={pageNumber} />
+    </div>
   );
 };
 

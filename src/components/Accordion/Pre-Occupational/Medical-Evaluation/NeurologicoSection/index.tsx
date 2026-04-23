@@ -1,10 +1,8 @@
-import React from "react";
-import { Neurologico } from "@/store/Pre-Occupational/preOccupationalSlice";
-import {
-  BooleanChoiceField,
-  ClinicalBlock,
-  NotesField,
-} from "../FormPrimitives";
+import React from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Neurologico } from '@/store/Pre-Occupational/preOccupationalSlice';
 
 interface NeurologicoSectionProps {
   isEditing: boolean;
@@ -36,43 +34,33 @@ export const NeurologicoSection: React.FC<NeurologicoSectionProps> = ({
   };
 
   const obsDisabled = !isEditing || data.sinAlteraciones;
-  const sinAlteracionesValue =
-    data.sinAlteraciones === true ? "si" : data.sinAlteraciones === false ? "no" : "";
 
   return (
     <div className="space-y-4">
-      <ClinicalBlock
-        title="Estado neurológico"
-        description="Marcá si el examen está sin alteraciones o si requiere detallar hallazgos."
-      >
-        <BooleanChoiceField
-          idPrefix="neu-sin"
-          label="Resultado"
-          value={
-            sinAlteracionesValue === "si"
-              ? true
-              : sinAlteracionesValue === "no"
-                ? false
-                : undefined
-          }
+      <h4 className="font-bold text-base text-greenPrimary">
+        Aparato Neurológico
+      </h4>
+
+      {/* Sin alteraciones */}
+      <div className="flex items-center space-x-2 text-black">
+        <Checkbox
+          id="neu-sin"
+          checked={data.sinAlteraciones}
           disabled={!isEditing}
-          positiveLabel="Sin alteraciones"
-          negativeLabel="Con hallazgos"
-          onChange={(value) => handleSinAlteracionesChange(value === true)}
+          onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
         />
-        <NotesField
-          id="neu-obs"
-          label="Observaciones"
-          value={data.observaciones}
-          disabled={obsDisabled}
-          onChange={handleObservacionesChange}
-          placeholder={
-            data.sinAlteraciones
-              ? "Sin observaciones"
-              : "Describí los hallazgos observados"
-          }
-        />
-      </ClinicalBlock>
+        <Label htmlFor="neu-sin">Sin alteraciones</Label>
+      </div>
+
+      {/* Observaciones */}
+      <Input
+        id="neu-obs"
+        className="w-full text-black"
+        value={data.observaciones}
+        disabled={obsDisabled}
+        onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
+        placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
+      />
     </div>
   );
 };

@@ -1,9 +1,7 @@
 import React from "react";
-import {
-  BooleanChoiceField,
-  ClinicalBlock,
-  NotesField,
-} from "../FormPrimitives";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export interface CabezaCuello {
   sinAlteraciones?: boolean;
@@ -43,32 +41,28 @@ export const CabezaCuelloSection: React.FC<CabezaCuelloSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <ClinicalBlock
-        title="Cabeza y cuello"
-        description="Indicá si el examen está sin alteraciones o registrá los hallazgos relevantes."
-      >
-        <BooleanChoiceField
-          idPrefix="cabeza-sin"
-          label="Resultado"
-          value={data.sinAlteraciones}
+      <h4 className="font-bold text-base text-greenPrimary">Cabeza y Cuello</h4>
+
+      {/* Sin alteraciones */}
+      <div className="flex items-center space-x-2 text-black">
+        <Checkbox
+          id="cabeza-sin"
+          checked={data.sinAlteraciones}
           disabled={!isEditing}
-          positiveLabel="Sin alteraciones"
-          negativeLabel="Con hallazgos"
-          onChange={(value) => handleSinAlteracionesChange(value === true)}
+          onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
         />
-        <NotesField
-          id="cabeza-obs"
-          label="Observaciones"
-          value={data.observaciones}
-          disabled={obsDisabled}
-          onChange={handleObservacionesChange}
-          placeholder={
-            data.sinAlteraciones
-              ? "Sin observaciones"
-              : "Describí los hallazgos observados"
-          }
-        />
-      </ClinicalBlock>
+        <Label htmlFor="cabeza-sin">Sin alteraciones</Label>
+      </div>
+
+      {/* Observaciones */}
+      <Input
+        id="cabeza-obs"
+        className="w-full text-black"
+        value={data.observaciones}
+        disabled={obsDisabled}
+        onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
+        placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
+      />
     </div>
   );
 };

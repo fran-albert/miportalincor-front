@@ -5,7 +5,6 @@ import { Address } from "../Address/Address";
 
 export interface Doctor extends User {
   matricula: string;
-  stampText?: string;
   specialities: Speciality[];
   firma?: string;
   sello?: string;
@@ -23,7 +22,6 @@ export interface CreateDoctorDto {
   gender: string;
   maritalStatus: string;
   matricula: string;
-  stampText?: string;
   bloodType?: string;
   rhFactor?: string;
   observations?: string;

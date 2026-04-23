@@ -8,6 +8,7 @@ import { StatusBadge } from "../StatusBadge";
 import {
   FileText,
   Calendar,
+  User,
   ExternalLink,
   Clock,
   X,
@@ -16,7 +17,6 @@ import {
 } from "lucide-react";
 import { formatDateArgentina, formatDoctorName } from "@/common/helpers/helpers";
 import { parseGreenCardDescription } from "../utils/greenCardDescription";
-import PatientInfoCard from "../PatientInfoCard";
 
 interface ViewPrescriptionRequestModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface ViewPrescriptionRequestModalProps {
   request: PrescriptionRequest | null;
   /** If this is a batch, pass all requests in the batch */
   batchRequests?: PrescriptionRequest[];
-  userRole: "patient" | "doctor" | "operator";
+  userRole: "patient" | "doctor";
   onCancel?: (request: PrescriptionRequest) => void;
   isLoading?: boolean;
 }
@@ -76,6 +76,10 @@ export default function ViewPrescriptionRequestModal({
   const isPending = request.status === PrescriptionRequestStatus.PENDING;
   const isCompleted = request.status === PrescriptionRequestStatus.COMPLETED;
   const isRejected = request.status === PrescriptionRequestStatus.REJECTED;
+  const patientHealthInsurance =
+    request.patient?.healthInsuranceName ||
+    request.patient?.healthPlans?.[0]?.healthInsurance?.name;
+  const patientAffiliationNumber = request.patient?.affiliationNumber;
   const parsedRequestDescription = parseGreenCardDescription(request.description);
   const batchPatientMessages = batchRequests
     ? Array.from(
@@ -121,32 +125,54 @@ export default function ViewPrescriptionRequestModal({
 
           {/* Patient/Doctor Info Card */}
           <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4 space-y-3">
-            {(userRole === "doctor" || userRole === "operator") && (
-              <PatientInfoCard patient={request.patient} variant="embedded" />
+            {userRole === "doctor" && request.patient && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900">Paciente</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {request.patient.firstName} {request.patient.lastName}
+                  </p>
+                  {request.patient.phoneNumber && (
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Tel: {request.patient.phoneNumber}
+                    </p>
+                  )}
+                  {patientHealthInsurance && (
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Obra social: {patientHealthInsurance}
+                    </p>
+                  )}
+                  {patientAffiliationNumber && (
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Nro. afiliado: {patientAffiliationNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
 
-            {(request.signingDoctor || request.doctor) && (() => {
-              const displayDoctor = request.signingDoctor || request.doctor;
-              return (
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                    <Stethoscope className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-blue-900">Médico</p>
-                    <p className="text-sm text-blue-700 mt-1">
-                      {formatDoctorName(displayDoctor!)}
-                    </p>
-                    {displayDoctor!.specialities &&
-                      displayDoctor!.specialities.length > 0 && (
-                        <p className="text-xs text-blue-600 mt-0.5">
-                          {displayDoctor!.specialities.join(", ")}
-                        </p>
-                      )}
-                  </div>
+            {request.doctor && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                  <Stethoscope className="h-4 w-4 text-blue-600" />
                 </div>
-              );
-            })()}
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900">Medico</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {formatDoctorName(request.doctor)}
+                  </p>
+                  {request.doctor.specialities &&
+                    request.doctor.specialities.length > 0 && (
+                      <p className="text-xs text-blue-600 mt-0.5">
+                        {request.doctor.specialities.join(", ")}
+                      </p>
+                    )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Periodic Checkup Summary (doctor only) */}

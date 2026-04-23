@@ -1,5 +1,6 @@
+// src/components/pdf/PielPdf.tsx
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
 
 interface PielPdfProps {
   normocoloreada?: "si" | "no";
@@ -9,73 +10,56 @@ interface PielPdfProps {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  optionsContainer: {
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    alignItems: "center",
+    marginBottom: 6,
   },
-  optionItem: {
-    width: "48%",
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: "#ffffff",
-    gap: 4,
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginRight: 6,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 4,
-  },
-  value: {
     fontSize: 10,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+    fontWeight: "500",
+    marginRight: 4,
+  },
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
+    marginRight: 12,
   },
   obsLabel: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 4,
   },
   obsText: {
     fontSize: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    color: pdfColors.ink,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    backgroundColor: "#F9F9F9",
   },
 });
 
@@ -91,45 +75,47 @@ export default function PielPdf({
 
   if (!hasAnyData) return null;
 
-  const items = [
-    normocoloreada !== undefined
-      ? {
-          label: "Normocoloreada",
-          value: normocoloreada === "si" ? "Sí" : "No",
-        }
-      : null,
-    tatuajes !== undefined
-      ? {
-          label: "Tatuajes",
-          value: tatuajes === "si" ? "Sí" : "No",
-        }
-      : null,
-  ].filter(Boolean);
-
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Piel</Text>
-      </View>
-      <View style={styles.body}>
-        {!!items.length && (
-          <View style={styles.optionsContainer}>
-            {items.map((item) => (
-              <View key={item!.label} style={styles.optionItem}>
-                <Text style={styles.label}>{item!.label}</Text>
-                <Text style={styles.value}>{item!.value}</Text>
-              </View>
-            ))}
-          </View>
-        )}
+      <Text style={styles.title}>Piel</Text>
 
-        {observaciones?.trim() && (
-          <View>
-            <Text style={styles.obsLabel}>Observaciones</Text>
-            <Text style={styles.obsText}>{observaciones}</Text>
+      {/* Normocoloreada - solo mostrar si está definido */}
+      {normocoloreada !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Normocoloreada:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={normocoloreada === "si"} />
           </View>
-        )}
-      </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={normocoloreada === "no"} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+        </View>
+      )}
+
+      {/* Tatuajes - solo mostrar si está definido */}
+      {tatuajes !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Tatuajes:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={tatuajes === "si"} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={tatuajes === "no"} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+        </View>
+      )}
+
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 // src/components/pdf/GastrointestinalPdf.tsx
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
 
 interface GastrointestinalPdfProps {
   sinAlteraciones?: boolean;
@@ -17,66 +17,61 @@ interface GastrointestinalPdfProps {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
-  statusCard: {
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "#ffffff",
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginRight: 4,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 3,
+    fontSize: 10,
+    fontWeight: "500",
+    marginRight: 4,
   },
-  value: {
-    fontSize: 9.4,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
+    marginRight: 12,
+  },
+  obsInline: {
+    fontSize: 10,
+    marginLeft: 4,
+    marginRight: 12,
   },
   obsLabel: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 4,
   },
   obsText: {
     fontSize: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    color: pdfColors.ink,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    backgroundColor: "#F9F9F9",
   },
 });
 
@@ -102,56 +97,99 @@ export default function GastrointestinalPdf({
 
   if (!hasAnyData) return null;
 
-  const items = [
-    sinAlteraciones !== undefined
-      ? { label: "Sin alteraciones", value: sinAlteraciones ? "Sí" : "No" }
-      : null,
-    cicatrices !== undefined
-      ? {
-          label: "Cicatrices",
-          value: `${cicatrices ? "Sí" : "No"}${cicatricesObs?.trim() ? ` · ${cicatricesObs}` : ""}`,
-        }
-      : null,
-    hernias !== undefined
-      ? {
-          label: "Hernias",
-          value: `${hernias ? "Sí" : "No"}${herniasObs?.trim() ? ` · ${herniasObs}` : ""}`,
-        }
-      : null,
-    eventraciones !== undefined
-      ? {
-          label: "Eventraciones",
-          value: `${eventraciones ? "Sí" : "No"}${eventracionesObs?.trim() ? ` · ${eventracionesObs}` : ""}`,
-        }
-      : null,
-    hemorroides !== undefined
-      ? {
-          label: "Hemorroides",
-          value: `${hemorroides ? "Sí" : "No"}${hemorroidesObs?.trim() ? ` · ${hemorroidesObs}` : ""}`,
-        }
-      : null,
-  ].filter(Boolean);
-
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Aparato gastrointestinal</Text>
-      </View>
-      <View style={styles.body}>
-        {items.map((item) => (
-          <View key={item!.label} style={styles.statusCard}>
-            <Text style={styles.label}>{item!.label}</Text>
-            <Text style={styles.value}>{item!.value}</Text>
-          </View>
-        ))}
+      <Text style={styles.title}>Aparato Gastrointestinal</Text>
 
-        {observaciones?.trim() && (
-          <View>
-            <Text style={styles.obsLabel}>Observaciones</Text>
-            <Text style={styles.obsText}>{observaciones}</Text>
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
           </View>
-        )}
-      </View>
+          <Text style={styles.optionText}>Sin alteraciones</Text>
+        </View>
+      )}
+
+      {/* Cicatrices - solo mostrar si está definido */}
+      {cicatrices !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Cicatrices:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={cicatrices === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={cicatrices === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {cicatricesObs?.trim() && (
+            <Text style={styles.obsInline}>{cicatricesObs}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Hernias - solo mostrar si está definido */}
+      {hernias !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Hernias:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hernias === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hernias === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {herniasObs?.trim() && (
+            <Text style={styles.obsInline}>{herniasObs}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Eventraciones - solo mostrar si está definido */}
+      {eventraciones !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Eventraciones:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={eventraciones === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={eventraciones === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {eventracionesObs?.trim() && (
+            <Text style={styles.obsInline}>{eventracionesObs}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Hemorroides - solo mostrar si está definido */}
+      {hemorroides !== undefined && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Hemorroides:</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hemorroides === true} />
+          </View>
+          <Text style={styles.optionText}>Sí</Text>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={hemorroides === false} />
+          </View>
+          <Text style={styles.optionText}>No</Text>
+          {hemorroidesObs?.trim() && (
+            <Text style={styles.obsInline}>{hemorroidesObs}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Observaciones generales */}
+      {observaciones?.trim() && (
+        <View>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </View>
+      )}
     </View>
   );
 }

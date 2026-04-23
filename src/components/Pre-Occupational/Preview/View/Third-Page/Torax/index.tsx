@@ -1,68 +1,48 @@
+// src/components/ToraxHtml.tsx
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { pdfColors } from "../../../Pdf/shared";
 
 interface Props {
   data: Torax;
 }
 
 export default function ToraxHtml({ data }: Props) {
+  // Si no hay ningún dato, no mostrar la sección
   const hasData = data.deformaciones !== undefined || data.cicatrices !== undefined;
   if (!hasData) return null;
 
-  const items = [
-    data.deformaciones !== undefined
-      ? {
-          label: "Deformaciones",
-          value: `${data.deformaciones === "si" ? "Sí" : "No"}${data.deformacionesObs?.trim() ? ` · ${data.deformacionesObs}` : ""}`,
-        }
-      : null,
-    data.cicatrices !== undefined
-      ? {
-          label: "Cicatrices",
-          value: `${data.cicatrices === "si" ? "Sí" : "No"}${data.cicatricesObs?.trim() ? ` · ${data.cicatricesObs}` : ""}`,
-        }
-      : null,
-  ].filter(Boolean);
-
   return (
-    <div
-      className="mb-3 overflow-hidden rounded-[8px] border"
-      style={{ borderColor: pdfColors.line }}
-    >
-      <div
-        className="border-b px-3 py-2"
-        style={{
-          backgroundColor: pdfColors.surface,
-          borderBottomColor: pdfColors.line,
-        }}
-      >
-        <p
-          className="text-[10px] font-bold uppercase tracking-[0.08em]"
-          style={{ color: pdfColors.accentText }}
-        >
-          Tórax
-        </p>
-      </div>
+    <div className="space-y-4 mt-6">
+      <h4 className="font-bold text-base text-greenPrimary">Tórax</h4>
 
-      <div className="space-y-3 px-3 py-[10px]">
-        {items.map((item) => (
-          <div
-            key={item!.label}
-            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-            style={{ borderColor: pdfColors.line }}
-          >
-            <p
-              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              {item!.label}
-            </p>
-            <p className="text-[10px] font-semibold text-slate-900">
-              {item!.value}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* Deformaciones - solo mostrar si fue seleccionado */}
+      {data.deformaciones !== undefined && (
+        <div className="flex items-center space-x-2 text-black">
+          <Label>Deformaciones:</Label>
+          <Checkbox id="torax-def-si" checked={data.deformaciones === "si"} disabled />
+          <Label htmlFor="torax-def-si">Sí</Label>
+          <Checkbox id="torax-def-no" checked={data.deformaciones === "no"} disabled />
+          <Label htmlFor="torax-def-no">No</Label>
+          {data.deformacionesObs?.trim() && (
+            <span className="ml-4">{data.deformacionesObs}</span>
+          )}
+        </div>
+      )}
+
+      {/* Cicatrices - solo mostrar si fue seleccionado */}
+      {data.cicatrices !== undefined && (
+        <div className="flex items-center space-x-2 text-black">
+          <Label>Cicatrices:</Label>
+          <Checkbox id="torax-cic-si" checked={data.cicatrices === "si"} disabled />
+          <Label htmlFor="torax-cic-si">Sí</Label>
+          <Checkbox id="torax-cic-no" checked={data.cicatrices === "no"} disabled />
+          <Label htmlFor="torax-cic-no">No</Label>
+          {data.cicatricesObs?.trim() && (
+            <span className="ml-4">{data.cicatricesObs}</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

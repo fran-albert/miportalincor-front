@@ -26,7 +26,6 @@ export interface CreateDataValueItemDto {
     id?: number;
     dataTypeId: number;
     value: string;
-    observations?: string | null;
 }
 
 export interface CreateDataValuesDto {

@@ -1,6 +1,7 @@
 // src/components/RespiratorioHtml.tsx
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Respiratorio } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { pdfColors } from "../../../Pdf/shared";
 
 
 interface Props {
@@ -8,107 +9,35 @@ interface Props {
 }
 
 export default function RespiratorioHtml({ data }: Props) {
-  const hasData =
-    data.frecuenciaRespiratoria?.trim() ||
-    data.oximetria?.trim() ||
-    data.sinAlteraciones !== undefined ||
-    data.observaciones?.trim();
-
-  if (!hasData) return null;
-
   return (
-    <div
-      className="mb-3 overflow-hidden rounded-[8px] border"
-      style={{ borderColor: pdfColors.line }}
-    >
-      <div
-        className="border-b px-3 py-2"
-        style={{
-          backgroundColor: pdfColors.surface,
-          borderBottomColor: pdfColors.line,
-        }}
-      >
-        <p
-          className="text-[10px] font-bold uppercase tracking-[0.08em]"
-          style={{ color: pdfColors.accentText }}
-        >
-          Aparato respiratorio
-        </p>
-      </div>
+    <div className="space-y-4 mt-6">
+      <h4 className="font-bold text-base text-greenPrimary">Aparato Respiratorio</h4>
 
-      <div className="space-y-3 px-3 py-[10px]">
-        <div className="grid grid-cols-2 gap-[10px]">
-          {data.frecuenciaRespiratoria?.trim() && (
-            <div
-              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-              style={{ borderColor: pdfColors.line }}
-            >
-              <p
-                className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-                style={{ color: pdfColors.muted }}
-              >
-                Frecuencia respiratoria
-              </p>
-              <p className="text-[10px] font-semibold text-slate-900">
-                {data.frecuenciaRespiratoria} x minuto
-              </p>
-            </div>
-          )}
-
-          {data.oximetria?.trim() && (
-            <div
-              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-              style={{ borderColor: pdfColors.line }}
-            >
-              <p
-                className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-                style={{ color: pdfColors.muted }}
-              >
-                Oximetria
-              </p>
-              <p className="text-[10px] font-semibold text-slate-900">
-                {data.oximetria} %
-              </p>
-            </div>
-          )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-black">
+        <div className="flex items-center space-x-2">
+          <Label>Frecuencia Respiratoria:</Label>
+          <span>{data.frecuenciaRespiratoria || "—"}</span>
+          <span>x minuto</span>
         </div>
 
-        {data.sinAlteraciones !== undefined && (
-          <div
-            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-            style={{ borderColor: pdfColors.line }}
-          >
-            <p
-              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Sin alteraciones
-            </p>
-            <p className="text-[10px] font-semibold text-slate-900">
-              {data.sinAlteraciones ? "Sí" : "No"}
-            </p>
-          </div>
-        )}
+        <div className="flex items-center space-x-2">
+          <Label>Oximetría:</Label>
+          <span>{data.oximetria || "—"}</span>
+          <span>%</span>
+        </div>
 
-        {data.observaciones?.trim() && (
-          <div className="space-y-1">
-            <p
-              className="text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Observaciones
-            </p>
-            <div
-              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-              style={{ borderColor: pdfColors.line }}
-            >
-              <p className="text-[10px] text-slate-900">
-                {data.observaciones}
-              </p>
-            </div>
-          </div>
-        )}
+        <div className="flex items-center space-x-2">
+          <Checkbox id="resp-sinalt" checked={data.sinAlteraciones} disabled />
+          <Label htmlFor="resp-sinalt">Sin alteraciones</Label>
+        </div>
       </div>
+
+      {data.observaciones && (
+        <div className="space-y-1 text-black">
+          <Label className="mb-1">Observaciones:</Label>
+          <p>{data.observaciones}</p>
+        </div>
+      )}
     </div>
   );
 }

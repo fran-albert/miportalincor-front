@@ -1,5 +1,5 @@
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 const aspectoOptions = ["Bueno", "Regular", "Malo"] as const;
 
@@ -20,49 +20,40 @@ export default function AspectoGeneralCheckboxes({
   if (!isEditing) {
     if (!selectedValue?.trim()) return null;
     return (
-      <div className="space-y-2">
-        <Label className="text-sm font-semibold text-greenPrimary">
-          Aspecto general
-        </Label>
-        <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
-          {selectedValue}
-        </div>
+      <div className="flex items-center">
+        <Label className="whitespace-nowrap mr-4">Aspecto General:</Label>
+        <span className="text-base font-medium">{selectedValue}</span>
       </div>
     );
   }
 
   // En modo editing, mostrar todas las opciones
   return (
-    <div className="space-y-3">
-      <Label className="text-sm font-semibold text-greenPrimary">
-        Aspecto general
-      </Label>
-      <div className="grid gap-3 sm:grid-cols-3">
+    <div className="flex items-center">
+      <Label className="whitespace-nowrap mr-4">Aspecto General:</Label>
+      <div className="flex items-center gap-8">
         {aspectoOptions.map((opt) => {
-          const isSelected = selectedValue === opt;
+          const isChecked = selectedValue === opt;
           const id = `aspecto-${opt}`;
           return (
-            <button
-              key={opt}
-              id={id}
-              type="button"
-              disabled={!isEditing}
-              onClick={() => handleAspectoGeneralChange(selectedValue === opt ? "" : opt)}
-              className={cn(
-                "rounded-xl border px-3 py-3 text-left text-sm font-medium transition-colors",
-                isSelected
-                  ? "border-greenPrimary bg-greenPrimary/8 text-greenSecondary shadow-sm"
-                  : "border-slate-200 bg-slate-50/70 text-slate-700 hover:border-greenPrimary/30 hover:bg-white",
-                !isEditing && "cursor-default opacity-80"
-              )}
-            >
-              <span className="block text-xs uppercase tracking-[0.18em] text-slate-400">
-                Aspecto
-              </span>
-              <span className="mt-1 block">
+            <div key={opt} className="inline-flex items-center space-x-2">
+              <Checkbox
+                id={id}
+                checked={isChecked}
+                disabled={!isEditing}
+                onCheckedChange={(checked) => {
+                  if (!isEditing) return;
+                  handleAspectoGeneralChange(checked ? opt : "");
+                }}
+                className="w-5 h-5"
+              />
+              <label
+                htmlFor={id}
+                className="text-base font-medium"
+              >
                 {opt}
-              </span>
-            </button>
+              </label>
+            </div>
           );
         })}
       </div>

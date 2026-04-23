@@ -1,5 +1,6 @@
+// src/components/pdf/GenitourinarioPdf.tsx
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
 
 interface GenitourinarioPdfProps {
   sinAlteraciones?: boolean;
@@ -10,77 +11,85 @@ interface GenitourinarioPdfProps {
   partos?: string;
   cesarea?: string;
   embarazos?: string;
-  showGinecoData?: boolean;
 }
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 6,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginRight: 6,
+  },
+  optionText: {
+    fontSize: 10,
+    fontStyle: "italic",
+    marginRight: 12,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 3,
-  },
-  value: {
-    fontSize: 9.4,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+    fontSize: 10,
+    fontWeight: "500",
+    marginRight: 4,
   },
   obsLabel: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 4,
   },
   obsText: {
     fontSize: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    color: pdfColors.ink,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    backgroundColor: "#F9F9F9",
   },
+
+  obsInlineInline: {
+    fontSize: 10,
+    marginLeft: 8,
+    flex: 1, // que use el espacio restante
+  },
+
+  // Bloque vertical para FUM / Embarazos / Partos / Cesárea
   dataBlock: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    marginTop: 8,
   },
-  statusCard: {
-    width: "48%",
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  dataRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+  },
+  dataLabel: {
+    width: 90, // ancho fijo para alinear todas las etiquetas
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  dataValue: {
+    flex: 1,
+    fontSize: 10,
   },
 });
 
@@ -93,74 +102,95 @@ export default function GenitourinarioPdf({
   partos,
   cesarea,
   embarazos,
-  showGinecoData = true,
 }: GenitourinarioPdfProps) {
-  const hasCoreData =
-    sinAlteraciones !== undefined ||
+  // Verificar si hay algún dato para mostrar
+  const hasAnyData = sinAlteraciones !== undefined ||
     varicocele !== undefined ||
     (observaciones?.trim() ?? '') !== '' ||
-    (varicoceleObs?.trim() ?? '') !== '';
-  const hasGinecoData = showGinecoData && ((fum?.trim() ?? '') !== '' ||
+    (fum?.trim() ?? '') !== '' ||
     (partos?.trim() ?? '') !== '' ||
     (cesarea?.trim() ?? '') !== '' ||
-    (embarazos?.trim() ?? '') !== '');
-  const hasAnyData = hasCoreData || hasGinecoData;
+    (embarazos?.trim() ?? '') !== '';
 
   if (!hasAnyData) return null;
 
-  const coreItems = [
-    sinAlteraciones !== undefined
-      ? {
-          label: "Sin alteraciones",
-          value: sinAlteraciones ? "Sí" : "No",
-        }
-      : null,
-    varicocele !== undefined
-      ? {
-          label: "Varicocele",
-          value: `${varicocele ? "Sí" : "No"}${varicoceleObs?.trim() ? ` · ${varicoceleObs}` : ""}`,
-        }
-      : null,
-  ].filter(Boolean);
-
-  const gynItems = [
-    fum?.trim() ? { label: "F.U.M.", value: fum } : null,
-    embarazos?.trim() ? { label: "Embarazos", value: embarazos } : null,
-    partos?.trim() ? { label: "Partos", value: partos } : null,
-    cesarea?.trim() ? { label: "Cesárea", value: cesarea } : null,
-  ].filter(Boolean);
+  // Verificar si hay datos gineco-obstétricos
+  const hasGinecoData = (fum?.trim() ?? '') !== '' ||
+    (partos?.trim() ?? '') !== '' ||
+    (cesarea?.trim() ?? '') !== '' ||
+    (embarazos?.trim() ?? '') !== '';
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Aparato genitourinario</Text>
-      </View>
-      <View style={styles.body}>
-        {coreItems.map((item) => (
-          <View key={item!.label} style={styles.statusCard}>
-            <Text style={styles.label}>{item!.label}</Text>
-            <Text style={styles.value}>{item!.value}</Text>
-          </View>
-        ))}
+      <Text style={styles.title}>Aparato Genitourinario</Text>
 
-        {observaciones?.trim() && (
-          <View>
-            <Text style={styles.obsLabel}>Observaciones</Text>
-            <Text style={styles.obsText}>{observaciones}</Text>
+      {/* Sin alteraciones - solo mostrar si está definido */}
+      {sinAlteraciones !== undefined && (
+        <View style={styles.row}>
+          <View style={styles.checkboxWrapper}>
+            <CheckboxPdf checked={sinAlteraciones} />
           </View>
-        )}
+          <Text style={styles.optionText}>Sin alteraciones</Text>
+        </View>
+      )}
 
-        {hasGinecoData && (
-          <View style={styles.dataBlock}>
-            {gynItems.map((item) => (
-              <View key={item!.label} style={styles.statusCard}>
-                <Text style={styles.label}>{item!.label}</Text>
-                <Text style={styles.value}>{item!.value}</Text>
-              </View>
-            ))}
+      {/* Observaciones generales */}
+      {observaciones?.trim() && (
+        <View>
+          <Text style={styles.obsLabel}>Observaciones:</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </View>
+      )}
+
+      {/* Varicocele - solo mostrar si está definido */}
+      {varicocele !== undefined && (
+        <>
+          <View style={[styles.row, { marginTop: 8, alignItems: "flex-start" }]}>
+            <Text style={styles.label}>Varicocele:</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={varicocele === true} />
+            </View>
+            <Text style={styles.optionText}>Sí</Text>
+            <View style={styles.checkboxWrapper}>
+              <CheckboxPdf checked={varicocele === false} />
+            </View>
+            <Text style={styles.optionText}>No</Text>
           </View>
-        )}
-      </View>
+          {varicoceleObs?.trim() && (
+            <Text style={styles.obsInlineInline}>{varicoceleObs}</Text>
+          )}
+        </>
+      )}
+
+      {/* Datos gineco-obstétricos - solo mostrar si hay alguno completado */}
+      {hasGinecoData && (
+        <View style={styles.dataBlock}>
+          {fum?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Fecha F.U.M:</Text>
+              <Text style={styles.dataValue}>{fum}</Text>
+            </View>
+          )}
+          {embarazos?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Embarazos:</Text>
+              <Text style={styles.dataValue}>{embarazos}</Text>
+            </View>
+          )}
+          {partos?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Partos:</Text>
+              <Text style={styles.dataValue}>{partos}</Text>
+            </View>
+          )}
+          {cesarea?.trim() && (
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Cesárea:</Text>
+              <Text style={styles.dataValue}>{cesarea}</Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 }

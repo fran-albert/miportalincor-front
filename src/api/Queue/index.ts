@@ -4,10 +4,9 @@ import type {
   QueueStats,
   CallPatientDto,
   CallSpecificPatientDto,
-  CorrectQueueDocumentDto,
   ChangeQueueStatusDto,
+  RegisterQueuePatientDto,
 } from '@/types/Queue';
-import type { RegisterQueuePatientDto } from '@/types/Queue';
 
 // GET - Obtener cola de espera
 export const getWaitingQueue = async (): Promise<QueueEntry[]> => {
@@ -66,16 +65,6 @@ export const recallPatient = async (id: number): Promise<QueueEntry> => {
 // POST - Confirmar arribo y pasar a espera médica
 export const confirmArrival = async (id: number): Promise<QueueEntry> => {
   const response = await apiTurnos.post(`/queue/${id}/confirm-arrival`);
-  return response.data;
-};
-
-// PATCH - Corregir DNI de una fila administrativa no registrada
-export const correctQueueDocument = async (
-  dto: CorrectQueueDocumentDto,
-): Promise<QueueEntry> => {
-  const response = await apiTurnos.patch(`/queue/${dto.queueEntryId}/document`, {
-    document: dto.document,
-  });
   return response.data;
 };
 

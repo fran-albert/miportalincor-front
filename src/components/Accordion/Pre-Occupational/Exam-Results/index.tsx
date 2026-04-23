@@ -6,13 +6,16 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DataType } from "@/types/Data-Type/Data-Type";
+import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
+import { Button } from "@/components/ui/button";
+import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface ExamsResultsAccordionProps {
   isEditing: boolean;
   fields: DataType[];
   examResults: Record<string, string>;
   setExamResults: (er: Record<string, string>) => void;
-  standalone?: boolean;
+  medicalEvaluationId: number;
 }
 
 export default function ExamsResultsAccordion({
@@ -20,7 +23,7 @@ export default function ExamsResultsAccordion({
   fields,
   examResults,
   setExamResults,
-  standalone = false,
+  medicalEvaluationId
 }: ExamsResultsAccordionProps) {
   const examFilter = [
     { id: "clinico", name: "Clínico" },
@@ -55,29 +58,48 @@ export default function ExamsResultsAccordion({
     label: exam.name,
   }));
 
-  const content = (
-    <div className="space-y-5">
-      <p className="text-sm leading-6 text-slate-600">
-        Registrá un resumen breve de cada estudio. Si necesitás más detalle,
-        usá el campo como observación clínica corta.
-      </p>
-      <div className="grid gap-x-6 gap-y-5 xl:grid-cols-2">
+  const { createDataValuesMutation } = useDataValuesMutations();
+  const { promiseToast } = useToastContext();
+
+  const handleSaveResults = async () => {
+    const payload = {
+      medicalEvaluationId,
+      dataValues: mappedExams
+        .map((exam) => ({
+          dataTypeId: Number(fields.find((f) => f.name === exam.label)!.id),
+          value: examResults[exam.id] || "",
+        }))
+        .filter((dv) => dv.value.trim() !== ""),
+    };
+
+    await promiseToast(createDataValuesMutation.mutateAsync(payload), {
+      loading: {
+        title: "Guardando datos",
+        description: "Por favor espera mientras procesamos tu solicitud",
+      },
+      success: {
+        title: "Datos guardados",
+        description: "Los datos se guardaron exitosamente",
+      },
+      error: (error: unknown) => ({
+        title: "Error al guardar los datos",
+        description: (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
+      }),
+    });
+  };
+
+  return (
+    <AccordionItem value="resultados-examen" className="border rounded-lg">
+      <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
+        Resultados del Examen
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4 space-y-4">
         {mappedExams.map((exam) => (
           <div key={exam.id} className="space-y-2">
-            <div className="space-y-1">
-              <Label
-                htmlFor={exam.id}
-                className="text-sm font-semibold text-greenPrimary"
-              >
-                {exam.label}
-              </Label>
-              <p className="text-xs leading-5 text-slate-500">
-                Resultado resumido para el informe laboral.
-              </p>
-            </div>
+            <Label htmlFor={exam.id}>{exam.label}</Label>
             <Textarea
               id={exam.id}
-              placeholder={`Ej.: ${exam.label} sin alteraciones relevantes`}
+              placeholder={`Ingrese resultados de ${exam.label.toLowerCase()}...`}
               disabled={!isEditing}
               value={examResults[exam.id] || ""}
               onChange={(e) =>
@@ -86,31 +108,21 @@ export default function ExamsResultsAccordion({
                   [exam.id]: e.target.value,
                 })
               }
-              className="min-h-[88px] resize-y border-slate-200 bg-white text-sm leading-6 shadow-none disabled:opacity-60"
+              className="min-h-[100px] disabled:opacity-50"
             />
           </div>
         ))}
-      </div>
-    </div>
-  );
 
-  if (standalone) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="mb-4 text-base font-semibold text-greenPrimary">
-          Resultados del examen
+        <div className="flex justify-end gap-4 mt-2">
+          <Button
+            disabled={!isEditing || createDataValuesMutation.isPending}
+            className="bg-greenPrimary hover:bg-teal-800"
+            onClick={handleSaveResults}
+          >
+            {createDataValuesMutation.isPending ? "Guardando..." : "Guardar"}
+          </Button>
         </div>
-        {content}
-      </div>
-    );
-  }
-
-  return (
-    <AccordionItem value="resultados-examen" className="rounded-lg border border-slate-200 bg-white">
-      <AccordionTrigger className="px-4 text-lg font-bold text-greenPrimary">
-        Resultados del Examen
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4 space-y-4">{content}</AccordionContent>
+      </AccordionContent>
     </AccordionItem>
   );
 }

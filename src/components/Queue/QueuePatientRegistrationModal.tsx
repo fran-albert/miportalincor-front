@@ -56,12 +56,10 @@ const QueueRegistrationSchema = z.object({
       state: z.object({
         id: z.number(),
         name: z.string(),
-        country: z
-          .object({
-            id: z.number(),
-            name: z.string(),
-          })
-          .optional(),
+        country: z.object({
+          id: z.number(),
+          name: z.string(),
+        }).optional(),
       }),
     }),
     street: z.string().optional(),

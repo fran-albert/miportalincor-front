@@ -4,17 +4,15 @@ import { CollaboratorMedicalEvaluation } from "@/types/Collaborator-Medical-Eval
 import { FaFilePdf } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import ActionIcon from "@/components/Icons/action";
+import { ViewButton } from "@/components/Button/View/button";
 import SendEmailDialog from "@/components/Email/Dialog";
+import { useGetStudyFileNameByEvaluationType } from "@/hooks/Study/useStudyFileNameByEvaluationType";
+import { useGetSignedUrlByCollaboratorIdAndFileName } from "@/hooks/Study/useSignedUrlByCollaboratorAndFileName";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
+import DeleteMedicalEvaluation from "../Delete";
 import { CollaboratorMedicalEvaluation as CollaboratorMedicalEvaluationType } from "@/types/Collaborator-Medical-Evaluation/Collaborator-Medical-Evaluation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useCurrentMedicalEvaluationReport } from "@/hooks/Medical-Evaluation-Report-Version/useCurrentMedicalEvaluationReport";
-import {
-  ReportStatusBadge,
-  formatReportDate,
-} from "@/components/Pre-Occupational/Report-Versioning/report-status";
-import { Link } from "react-router-dom";
 
 const formatExamCreatedAt = (createdAt?: string): string => {
   if (!createdAt) return "-";
@@ -28,89 +26,57 @@ const formatExamCreatedAt = (createdAt?: string): string => {
 interface MedicalEvaluationActionsCellProps {
   collaborator: Collaborator;
   medicalEvaluationRow: CollaboratorMedicalEvaluationType;
+  slug: string;
 }
 
 const MedicalEvaluationActionsCell = ({
   collaborator,
   medicalEvaluationRow,
+  slug,
 }: MedicalEvaluationActionsCellProps) => {
   const medicalEvaluation = medicalEvaluationRow.medicalEvaluation;
   const medicalEvaluationId = medicalEvaluation.id;
-  const { currentUrl, hasReport, isLoading } = useCurrentMedicalEvaluationReport(
-    {
-      auth: true,
-      collaboratorId: collaborator.id,
-      medicalEvaluationId,
-    }
-  );
+  const collaboratorId = collaborator.id;
 
-  if (isLoading) {
+  const { data: fileData, isLoading: loadingFileName } =
+    useGetStudyFileNameByEvaluationType({
+      auth: true,
+      medicalEvaluationId,
+    });
+  const fileName = fileData?.fileName || "";
+
+  const { data: signedUrl, isLoading: loadingSignedUrl } =
+    useGetSignedUrlByCollaboratorIdAndFileName({
+      auth: !!fileName,
+      collaboratorId,
+      fileName,
+    });
+
+  if (loadingFileName || loadingSignedUrl) {
     return <div className="w-6 h-6 bg-gray-200 animate-pulse rounded" />;
   }
 
   return (
     <div className="flex items-center justify-end gap-2">
-      {hasReport && currentUrl ? (
-        <>
-          <a href={currentUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="icon">
-              <ActionIcon
-                tooltip="Ver PDF actual"
-                icon={<FaFilePdf className="w-4 h-4 text-red-600" />}
-              />
-            </Button>
-          </a>
-          <SendEmailDialog
-            collaborator={collaborator}
-            url={String(currentUrl)}
-            evaluationType={medicalEvaluation.evaluationType.name}
-          />
-        </>
-      ) : (
-        <Button variant="ghost" size="icon" disabled>
+      <a href={signedUrl?.url} target="_blank" rel="noopener noreferrer">
+        <Button variant="ghost" size="icon">
           <ActionIcon
-            tooltip="Todavía no hay informe"
-            icon={<FaFilePdf className="w-4 h-4 text-gray-300" />}
+            tooltip="Ver PDF"
+            icon={<FaFilePdf className="w-4 h-4 text-red-600" />}
           />
         </Button>
-      )}
-    </div>
-  );
-};
-
-const MedicalEvaluationStatusCell = ({
-  collaborator,
-  medicalEvaluationRow,
-}: Omit<MedicalEvaluationActionsCellProps, "slug">) => {
-  const medicalEvaluationId = medicalEvaluationRow.medicalEvaluation.id;
-  const { currentVersion, finalVersion, hasLegacyCurrentReport, isLoading } =
-    useCurrentMedicalEvaluationReport({
-      auth: true,
-      collaboratorId: collaborator.id,
-      medicalEvaluationId,
-    });
-
-  if (isLoading) {
-    return <div className="h-6 w-36 rounded bg-gray-100 animate-pulse" />;
-  }
-
-  return (
-    <div className="flex flex-col gap-1">
-      <ReportStatusBadge
-        version={currentVersion}
-        hasLegacyReport={hasLegacyCurrentReport}
-        className="w-fit"
+      </a>
+      <SendEmailDialog
+        collaborator={collaborator}
+        url={String(signedUrl?.url)}
+        evaluationType={medicalEvaluation.evaluationType.name}
       />
-      {currentVersion?.outdatedByExamChanges && (
-        <p className="text-xs text-muted-foreground">
-          Editado. Regeneralo desde el examen.
-        </p>
-      )}
-      {finalVersion && finalVersion.id !== currentVersion?.id && (
-        <p className="text-xs text-muted-foreground">
-          Final: {formatReportDate(finalVersion.generatedAt)}
-        </p>
-      )}
+      <ViewButton
+        slug={`${slug}/examen/${medicalEvaluationRow.medicalEvaluation.id}`}
+        text="Ver Exámen"
+        path="incor-laboral/colaboradores"
+      />
+      <DeleteMedicalEvaluation id={medicalEvaluationRow.id} />
     </div>
   );
 };
@@ -132,17 +98,11 @@ export const getColumns = (
       accessorKey: "",
       header: "Tipo de Evaluación",
       cell: ({ row }) => (
-        <Link
-          to={`/incor-laboral/colaboradores/${slug}/examen/${row.original.medicalEvaluation.id}`}
-          className="ml-2 flex flex-col rounded-md px-2 py-1 transition-colors hover:bg-slate-50"
-        >
-          <p className="text-sm font-medium text-slate-900 hover:text-greenPrimary">
+        <div className="flex flex-col ml-2">
+          <p className="text-sm font-medium">
             {row.original.medicalEvaluation.evaluationType.name}
           </p>
-          <span className="text-xs text-muted-foreground">
-            Abrir examen
-          </span>
-        </Link>
+        </div>
       ),
     },
     {
@@ -155,20 +115,12 @@ export const getColumns = (
       ),
     },
     {
-      header: "Estado del informe",
-      cell: ({ row }) => (
-        <MedicalEvaluationStatusCell
-          collaborator={collaborator}
-          medicalEvaluationRow={row.original}
-        />
-      ),
-    },
-    {
-      header: "Informe",
+      header: " ",
       cell: ({ row }) => (
         <MedicalEvaluationActionsCell
           collaborator={collaborator}
           medicalEvaluationRow={row.original}
+          slug={slug}
         />
       ),
     },

@@ -1,10 +1,4 @@
-import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  Navigate,
-  Route,
-  RouterProvider,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import SpecialityPage from "./pages/protected/Specialities/page";
 import LoginPage from "./pages/auth/Login";
 import HomePage from "./pages/protected/Home";
@@ -31,7 +25,6 @@ import NutritionPage from "./pages/protected/Patient/Nutrition";
 import CreateCollaboratorPage from "./pages/protected/Collaborator/Create";
 import CreatePreoccupationalPage from "./pages/protected/Collaborator/Pre-Occupattional/Create";
 import LaboralIncorPage from "./pages/protected/Laboral-Incor";
-import LaborReportBrandingConfigPage from "./pages/protected/Laboral-Incor/Report-Branding-Config";
 import CompaniesPage from "./pages/protected/Companies";
 import CompanyPage from "./pages/protected/Company";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
@@ -74,17 +67,11 @@ import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
-import { LABORAL_CAPABILITIES } from "./common/constants/laboral-permissions";
-import ProgramsPage from "./pages/protected/Programs";
-import ProgramDetailPage from "./pages/protected/Programs/Detail";
-import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
-import MyProgramsPage from "./pages/protected/My-Programs";
-import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
-import QrAttendancePage from "./pages/protected/Attendance/Qr";
 
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
+function App() {
+  return (
+    <Router>
+      <Routes>
         {/* Rutas públicas (sin sidebar ni header) */}
         <Route path="/iniciar-sesion" element={<LoginPage />} />
         <Route path="/restablecer-contraseña" element={<RequestEmailPassword />} />
@@ -532,9 +519,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[LABORAL_CAPABILITIES.ACCESS]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                 <LaboralIncorPage />
               </Private_Routes>
             }
@@ -542,11 +527,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/empresas"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COMPANIES_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CompaniesPage />
               </Private_Routes>
             }
@@ -554,11 +535,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/empresas/:id"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COMPANIES_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CompanyPage />
               </Private_Routes>
             }
@@ -566,11 +543,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <PreOcuppationalPage />
               </Private_Routes>
             }
@@ -578,11 +551,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/agregar"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Secretaria", "Administrador", "Medico"]}>
                 <CreateCollaboratorPage />
               </Private_Routes>
             }
@@ -590,11 +559,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorPage />
               </Private_Routes>
             }
@@ -602,11 +567,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/editar"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_WRITE,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorEditPage />
               </Private_Routes>
             }
@@ -614,11 +575,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/perfil"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorProfilePage />
               </Private_Routes>
             }
@@ -626,11 +583,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examenes"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorExamenesPage />
               </Private_Routes>
             }
@@ -638,11 +591,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/evoluciones"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorEvolucionesPage />
               </Private_Routes>
             }
@@ -650,11 +599,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/estudios"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.COLLABORATORS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CollaboratorStudiesPage />
               </Private_Routes>
             }
@@ -662,11 +607,7 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.EXAMS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <CreatePreoccupationalPage />
               </Private_Routes>
             }
@@ -674,76 +615,24 @@ const router = createBrowserRouter(
           <Route
             path="/incor-laboral/colaboradores/:slug/examen/:medicalEvaluationId/previsualizar-informe"
             element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.EXAMS_READ,
-                ]}
-              >
+              <Private_Routes allowedRoles={["Medico", "Secretaria"]}>
                 <PreOccupationalPreviewPage />
               </Private_Routes>
             }
           />
-          <Route
-            path="/incor-laboral/configuracion/informes"
-            element={
-              <Private_Routes
-                requiredLaboralCapabilities={[
-                  LABORAL_CAPABILITIES.REPORT_CONFIG_READ,
-                ]}
-              >
-                <LaborReportBrandingConfigPage />
-              </Private_Routes>
-            }
-          />
 
-          <Route
-            path="/programas"
-            element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
-                <ProgramsPage />
-              </Private_Routes>
-            }
-          />
-          <Route
-            path="/programas/:programId"
-            element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
-                <ProgramDetailPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/programas" element={<Navigate to="/inicio" replace />} />
+          <Route path="/programas/:programId" element={<Navigate to="/inicio" replace />} />
           <Route
             path="/programas/:programId/inscripciones/:enrollmentId"
-            element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
-                <EnrollmentDetailPage />
-              </Private_Routes>
-            }
+            element={<Navigate to="/inicio" replace />}
           />
-          <Route
-            path="/mis-programas"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyProgramsPage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/mis-programas" element={<Navigate to="/inicio" replace />} />
           <Route
             path="/mis-programas/:enrollmentId"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyEnrollmentDetailPage />
-              </Private_Routes>
-            }
+            element={<Navigate to="/inicio" replace />}
           />
-          <Route
-            path="/asistencia/qr/:qrToken"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <QrAttendancePage />
-              </Private_Routes>
-            }
-          />
+          <Route path="/asistencia/qr/:qrToken" element={<Navigate to="/inicio" replace />} />
 
           {/* Obras Sociales */}
           <Route
@@ -775,12 +664,9 @@ const router = createBrowserRouter(
             }
           />
         </Route>
-    </>
-  )
-);
-
-function App() {
-  return <RouterProvider router={router} />;
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

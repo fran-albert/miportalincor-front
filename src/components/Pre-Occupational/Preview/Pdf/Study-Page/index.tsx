@@ -2,22 +2,12 @@ import { Image, Page, StyleSheet, View, Text } from "@react-pdf/renderer";
 import PdfFooter from "../Footer";
 import HeaderPreviewPdf from "../Header";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
-import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
-import {
-  getPresentationModeForSection,
-  getInstitutionalSignerForSection,
-  usesExamDoctorSignature,
-} from "../../signature-policy";
-import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
 
 interface Props {
   studyTitle: string;
   studyUrl: string;
   pageNumber: number;
   examResults: ExamResults;
-  medicalEvaluationType: string;
-  doctorData: DoctorSignatures;
-  brandingConfig?: LaborReportBrandingConfig;
 }
 
 // Definimos los estudios que deben mostrar "INFORME:"
@@ -66,9 +56,6 @@ const StudyPagePdfDocument = ({
   studyUrl,
   pageNumber,
   examResults,
-  medicalEvaluationType,
-  doctorData,
-  brandingConfig,
 }: Props) => {
   let resultTexto = "";
   // Normalizamos para comparar sin problemas de mayúsculas o acentos
@@ -117,9 +104,8 @@ const StudyPagePdfDocument = ({
   return (
     <Page size="A4" style={styles.page}>
       <HeaderPreviewPdf
-        evaluationType={medicalEvaluationType}
+        evaluationType={"Preocupacional"}
         examType={`Complementarios - ${studyTitle}`}
-        brandingConfig={brandingConfig}
       />
       {studiesConInforme.includes(normalizedTitle) && (
         <Text style={styles.informeText}>INFORME: {resultTexto}</Text>
@@ -129,27 +115,10 @@ const StudyPagePdfDocument = ({
       </View>
       <PdfFooter
         pageNumber={pageNumber}
-        useCustom={usesExamDoctorSignature(
-          "studies",
-          brandingConfig,
-          medicalEvaluationType
-        )}
-        presentationMode={getPresentationModeForSection(
-          "studies",
-          brandingConfig,
-          medicalEvaluationType
-        )}
-        institutionalSigner={getInstitutionalSignerForSection(
-          "studies",
-          brandingConfig,
-          medicalEvaluationType
-        )}
-        doctorName={doctorData.fullName}
-        doctorLicense={doctorData.matricula}
-        doctorSpeciality={doctorData.specialty}
-        doctorStampText={doctorData.stampText}
-        signatureUrl={doctorData.signatureDataUrl}
-        sealUrl={doctorData.sealDataUrl}
+        doctorName="BONIFACIO Ma. CECILIA"
+        doctorLicense="M.P. 96533 - M.L. 7299"
+        doctorSpeciality="Especialista en Medicina del Trabajo"
+        signatureUrl="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
       />
     </Page>
   );

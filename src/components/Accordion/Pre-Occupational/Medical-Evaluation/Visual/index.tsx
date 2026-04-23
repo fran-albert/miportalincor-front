@@ -5,12 +5,9 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  BooleanChoiceField,
-  ClinicalBlock,
-  NotesField,
-} from "../FormPrimitives";
 
 interface VisualAcuityProps {
   isEditing: boolean;
@@ -36,15 +33,17 @@ export function VisualAcuityCard({
   onNotesChange,
 }: VisualAcuityProps) {
   return (
-    <div className="space-y-4">
-      <ClinicalBlock
-        title="Agudeza visual"
-        description="Registrá los valores sin corrección y con corrección para cada ojo."
-      >
+    <div>
+      <h4 className="font-bold text-base text-greenPrimary">Agudeza Visual</h4>
+      <p className="text-muted-foreground">
+        Valores sin corrección (S/C) y con corrección (C/C).
+      </p>
+
+      <div className="space-y-6">
         <Table>
           <TableHeader className="text-black">
             <TableRow>
-              <TableCell className="font-medium text-slate-600" />
+              <TableCell />
               <TableCell className="text-center font-medium">S/C</TableCell>
               <TableCell className="text-center font-medium">C/C</TableCell>
             </TableRow>
@@ -56,25 +55,29 @@ export function VisualAcuityCard({
                 <TableCell>
                   {eye === "right" ? "Ojo Derecho" : "Ojo Izquierdo"}
                 </TableCell>
+
+                {/* S/C cell */}
                 <TableCell className="text-center">
                   {isEditing ? (
                     <Input
                       value={withoutCorrection[eye]}
                       onChange={e => onScChange(eye, e.currentTarget.value)}
                       disabled={!isEditing}
-                      className="mx-auto w-20 bg-white text-center"
+                      className="w-16 mx-auto text-center"
                     />
                   ) : (
                     withoutCorrection[eye]
                   )}
                 </TableCell>
+
+                {/* C/C cell */}
                 <TableCell className="text-center">
                   {isEditing ? (
                     <Input
                       value={withCorrection[eye]}
                       onChange={e => onCcChange(eye, e.currentTarget.value)}
                       disabled={!isEditing}
-                      className="mx-auto w-20 bg-white text-center"
+                      className="w-16 mx-auto text-center"
                     />
                   ) : (
                     withCorrection[eye]
@@ -84,32 +87,52 @@ export function VisualAcuityCard({
             ))}
           </TableBody>
         </Table>
-      </ClinicalBlock>
 
-      <ClinicalBlock
-        title="Visión cromática"
-        description="Indicá si la visión cromática es normal o si requiere observaciones."
-      >
-        <BooleanChoiceField
-          idPrefix="vision-cromatica"
-          label="Resultado"
-          value={chromaticVision === "normal"}
-          disabled={!isEditing}
-          positiveLabel="Normal"
-          negativeLabel="Anormal"
-          onChange={(value) =>
-            onChromaticVisionChange(value === true ? "normal" : "anormal")
-          }
-        />
-        <NotesField
-          id="visual-notes"
-          label="Observaciones"
-          value={notes}
-          disabled={!isEditing}
-          onChange={onNotesChange}
-          placeholder="Detalle clínico o aclaraciones"
-        />
-      </ClinicalBlock>
+        {/* Visión Cromática */}
+        <div className="flex items-center space-x-6">
+          <Label className="text-black">Visión Cromática:</Label>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="vision-normal"
+              disabled={!isEditing}
+              checked={chromaticVision === "normal"}
+              onCheckedChange={chk =>
+                onChromaticVisionChange(chk ? "normal" : "anormal")
+              }
+            />
+            <Label htmlFor="vision-normal" className="text-black">
+              Normal
+            </Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="vision-anormal"
+              disabled={!isEditing}
+              checked={chromaticVision === "anormal"}
+              onCheckedChange={chk =>
+                onChromaticVisionChange(chk ? "anormal" : "normal")
+              }
+            />
+            <Label htmlFor="vision-anormal" className="text-black">
+              Anormal
+            </Label>
+          </div>
+        </div>
+
+        {/* Observaciones */}
+        <div className="space-y-1">
+          <Input
+            id="visual-notes"
+            value={notes}
+            disabled={!isEditing}
+            onChange={e => onNotesChange(e.currentTarget.value)}
+            placeholder="Observaciones..."
+            className="text-black"
+          />
+        </div>
+      </div>
     </div>
   );
 }

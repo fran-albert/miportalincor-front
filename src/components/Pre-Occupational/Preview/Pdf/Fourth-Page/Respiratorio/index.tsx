@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../../shared";
+import CheckboxPdf from "@/components/Pdf/CheckBox";
 
 interface RespiratorioPdfProps {
   frecuenciaRespiratoria?: string;
@@ -10,84 +10,72 @@ interface RespiratorioPdfProps {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: pdfColors.line,
+    borderColor: "#DDD",
     borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 10,
-  },
-  headerWrap: {
-    backgroundColor: pdfColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: pdfColors.line,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "#FFF",
   },
   title: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "bold",
-    color: pdfColors.accentText,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    marginBottom: 8,
+    color: "#187B80",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 4,
   },
-  body: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  measurements: {
+  rowAll: {
     flexDirection: "row",
-    gap: 10,
-  },
-  measurementCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: "#ffffff",
+    alignItems: "center",
+    marginBottom: 6,
   },
   label: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 4,
-  },
-  value: {
     fontSize: 10,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+    fontWeight: "500",
+    marginRight: 4,
   },
-  flagCard: {
+  inputBox: {
+    fontSize: 10,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: "#ffffff",
+    borderColor: "#EEE",
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    width: 32,
+    textAlign: "center",
+    borderRadius: 4,
+    marginRight: 8,
   },
-  flagValue: {
+  unitText: {
     fontSize: 10,
-    color: pdfColors.ink,
-    fontWeight: "bold",
+    fontStyle: "italic",
+    marginRight: 12,
+  },
+  checkboxWrapper: {
+    width: 16,
+    alignItems: "center",
+    marginLeft: 12,
+    marginRight: 4,
+  },
+  checkboxLabel: {
+    fontSize: 10,
+    fontWeight: "500",
   },
   obsLabel: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 4,
   },
   obsText: {
     fontSize: 10,
+    padding: 6,
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
-    color: pdfColors.ink,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderColor: "#EEE",
+    borderRadius: 4,
+    backgroundColor: "#F9F9F9",
   },
 });
 
@@ -111,46 +99,45 @@ export default function RespiratorioPdf({
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerWrap}>
-        <Text style={styles.title}>Aparato respiratorio</Text>
-      </View>
-      <View style={styles.body}>
-        {hasClinicalData && (
-          <>
-            <View style={styles.measurements}>
-              {frecuenciaRespiratoria?.trim() && (
-                <View style={styles.measurementCard}>
-                  <Text style={styles.label}>Frecuencia respiratoria</Text>
-                  <Text style={styles.value}>
-                    {frecuenciaRespiratoria} x minuto
-                  </Text>
-                </View>
-              )}
-              {oximetria?.trim() && (
-                <View style={styles.measurementCard}>
-                  <Text style={styles.label}>Oximetria</Text>
-                  <Text style={styles.value}>{oximetria} %</Text>
-                </View>
-              )}
-            </View>
-            {sinAlteraciones !== undefined && (
-              <View style={styles.flagCard}>
-                <Text style={styles.label}>Sin alteraciones</Text>
-                <Text style={styles.flagValue}>
-                  {sinAlteraciones ? "Sí" : "No"}
-                </Text>
-              </View>
-            )}
-          </>
-        )}
+      <Text style={styles.title}>Aparato Respiratorio</Text>
 
-        {observaciones?.trim() && (
-          <View>
-            <Text style={styles.obsLabel}>Observaciones</Text>
-            <Text style={styles.obsText}>{observaciones}</Text>
-          </View>
-        )}
-      </View>
+      {/* Frecuencia, Oximetría y Sin Alteraciones en una misma fila - solo si hay datos */}
+      {hasClinicalData && (
+        <View style={styles.rowAll}>
+          {frecuenciaRespiratoria?.trim() && (
+            <>
+              <Text style={styles.label}>Frecuencia Resp.:</Text>
+              <Text style={styles.inputBox}>{frecuenciaRespiratoria}</Text>
+              <Text style={styles.unitText}>x minuto</Text>
+            </>
+          )}
+
+          {oximetria?.trim() && (
+            <>
+              <Text style={[styles.label, { marginLeft: frecuenciaRespiratoria?.trim() ? 12 : 0 }]}>Oximetría:</Text>
+              <Text style={styles.inputBox}>{oximetria}</Text>
+              <Text style={styles.unitText}>%</Text>
+            </>
+          )}
+
+          {sinAlteraciones !== undefined && (
+            <>
+              <View style={styles.checkboxWrapper}>
+                <CheckboxPdf checked={sinAlteraciones} />
+              </View>
+              <Text style={styles.checkboxLabel}>Sin alteraciones</Text>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* Observaciones - solo si hay */}
+      {observaciones?.trim() && (
+        <>
+          <Text style={styles.obsLabel}>Observaciones</Text>
+          <Text style={styles.obsText}>{observaciones}</Text>
+        </>
+      )}
     </View>
   );
 }

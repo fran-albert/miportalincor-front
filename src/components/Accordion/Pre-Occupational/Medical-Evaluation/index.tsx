@@ -7,18 +7,17 @@ import {
   Neurologico,
   Osteoarticular,
   Respiratorio,
-  setReportVisibilityOverride,
   setFormData,
   Torax,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { DataValue } from "@/types/Data-Value/Data-Value";
 import AspectoGeneralCheckboxes from "./AspectoGeneralCheckbox";
 import { VisualAcuityCard } from "./Visual";
 import { OsteoarticularSection } from "./OsteoArticularSection";
@@ -31,40 +30,25 @@ import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
-import { useState } from "react";
-import { ClinicalBlock } from "./FormPrimitives";
+import { useEffect, useRef } from "react";
+import { mapMedicalEvaluation } from "@/common/helpers/maps";
 
 interface Props {
   isEditing: boolean;
-  standalone?: boolean;
+  dataValues?: DataValue[];
 }
 
 export default function MedicalEvaluationAccordion({
   isEditing,
-  standalone = false,
+  dataValues,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-  const reportVisibilityOverrides = useSelector(
-    (state: RootState) => state.preOccupational.reportVisibilityOverrides
-  );
 
-  const [activeSection, setActiveSection] = useState<
-    | "clinical"
-    | "visual"
-    | "skin"
-    | "head-neck"
-    | "oral"
-    | "thorax"
-    | "respiratory"
-    | "circulatory"
-    | "neurological"
-    | "gastrointestinal"
-    | "genitourinary"
-    | "osteoarticular"
-  >("clinical");
+  // Ref para evitar que el useEffect se ejecute múltiples veces con los mismos datos
+  const dataValuesLoadedRef = useRef<string | null>(null);
 
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
@@ -77,6 +61,24 @@ export default function MedicalEvaluationAccordion({
     }
     return "";
   };
+
+  useEffect(() => {
+    if (dataValues && dataValues.length > 0) {
+      // Crear un hash simple de los dataValues para comparar si realmente cambiaron
+      const dataHash = dataValues.map(dv => `${dv.id}-${dv.value}`).join("|");
+
+      // Solo cargar si los datos son diferentes a los ya cargados
+      if (dataValuesLoadedRef.current !== dataHash) {
+        dataValuesLoadedRef.current = dataHash;
+        const me = mapMedicalEvaluation(dataValues);
+        dispatch(
+          setFormData({
+            medicalEvaluation: me,
+          })
+        );
+      }
+    }
+  }, [dataValues, dispatch]);
 
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (value: string) => {
@@ -100,47 +102,24 @@ export default function MedicalEvaluationAccordion({
     field: keyof Circulatorio,
     value: boolean | string | undefined
   ) => {
-    const nextCirculatorio = {
-      ...circulatorio,
-      [field]: value,
-    };
-    const nextExam =
-      field === "frecuenciaCardiaca"
-        ? {
-            ...medicalEvaluation.examenClinico,
-            frecuenciaCardiaca: value == null ? "" : String(value),
-          }
-        : medicalEvaluation.examenClinico;
-
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenClinico: nextExam,
-          circulatorio: nextCirculatorio,
+          circulatorio: {
+            ...circulatorio,
+            [field]: value,
+          },
         },
       })
     );
   };
   const handleCirculatorioBatchChange = (updates: Partial<Circulatorio>) => {
-    const nextCirculatorio = { ...circulatorio, ...updates };
-    const nextExam =
-      updates.frecuenciaCardiaca !== undefined
-        ? {
-            ...medicalEvaluation.examenClinico,
-            frecuenciaCardiaca:
-              updates.frecuenciaCardiaca == null
-                ? ""
-                : String(updates.frecuenciaCardiaca),
-          }
-        : medicalEvaluation.examenClinico;
-
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenClinico: nextExam,
-          circulatorio: nextCirculatorio,
+          circulatorio: { ...circulatorio, ...updates },
         },
       })
     );
@@ -168,44 +147,21 @@ export default function MedicalEvaluationAccordion({
     field: keyof Respiratorio,
     value: boolean | string | undefined
   ) => {
-    const nextResp = { ...resp, [field]: value };
-    const nextExam =
-      field === "frecuenciaRespiratoria"
-        ? {
-            ...medicalEvaluation.examenClinico,
-            frecuenciaRespiratoria: value == null ? "" : String(value),
-          }
-        : medicalEvaluation.examenClinico;
-
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenClinico: nextExam,
-          respiratorio: nextResp,
+          respiratorio: { ...resp, [field]: value },
         },
       })
     );
   };
   const handleRespBatchChange = (updates: Partial<Respiratorio>) => {
-    const nextResp = { ...resp, ...updates };
-    const nextExam =
-      updates.frecuenciaRespiratoria !== undefined
-        ? {
-            ...medicalEvaluation.examenClinico,
-            frecuenciaRespiratoria:
-              updates.frecuenciaRespiratoria == null
-                ? ""
-                : String(updates.frecuenciaRespiratoria),
-          }
-        : medicalEvaluation.examenClinico;
-
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          examenClinico: nextExam,
-          respiratorio: nextResp,
+          respiratorio: { ...resp, ...updates },
         },
       })
     );
@@ -302,14 +258,6 @@ export default function MedicalEvaluationAccordion({
     value: string
   ) => {
     const updatedExam = { ...medicalEvaluation.examenClinico, [field]: value };
-    const updatedResp =
-      field === "frecuenciaRespiratoria"
-        ? { ...resp, frecuenciaRespiratoria: value }
-        : resp;
-    const updatedCirculatorio =
-      field === "frecuenciaCardiaca"
-        ? { ...circulatorio, frecuenciaCardiaca: value }
-        : circulatorio;
 
     if (field === "talla" || field === "peso") {
       const heightInCm = parseFloat(updatedExam.talla);
@@ -327,8 +275,6 @@ export default function MedicalEvaluationAccordion({
         medicalEvaluation: {
           ...medicalEvaluation,
           examenClinico: updatedExam,
-          respiratorio: updatedResp,
-          circulatorio: updatedCirculatorio,
         },
       })
     );
@@ -499,412 +445,148 @@ const handleNeuChange = (
     );
   };
 
-  const sectionCardClass =
-    "rounded-lg border border-slate-200 bg-slate-50/60 p-4";
-  const sections = [
-    { key: "clinical" as const, label: "Clínico" },
-    { key: "visual" as const, label: "Visual" },
-    { key: "skin" as const, label: "Piel" },
-    { key: "head-neck" as const, label: "Cabeza y cuello" },
-    { key: "oral" as const, label: "Bucodental" },
-    { key: "thorax" as const, label: "Tórax" },
-    { key: "respiratory" as const, label: "Respiratorio" },
-    { key: "circulatory" as const, label: "Circulatorio" },
-    { key: "neurological" as const, label: "Neurológico" },
-    { key: "gastrointestinal" as const, label: "Gastro" },
-    { key: "genitourinary" as const, label: "Genitourinario" },
-    { key: "osteoarticular" as const, label: "Osteoarticular" },
-  ];
-
-  const content = (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {sections.map((section) => (
-          <Button
-            key={section.key}
-            type="button"
-            variant="outline"
-            size="sm"
-            className={
-              activeSection === section.key
-                ? "border-greenPrimary/20 bg-greenPrimary/5 text-greenPrimary"
-                : "border-slate-200 bg-white text-slate-700 hover:border-greenPrimary/30 hover:bg-greenPrimary/5 hover:text-greenPrimary"
-            }
-            onClick={() => setActiveSection(section.key)}
-          >
-            {section.label}
-          </Button>
-        ))}
-      </div>
-
-      {activeSection === "clinical" && (
-        <div className="grid gap-4">
-          <ClinicalBlock
-            title="Aspecto general"
-            description="Elegí una valoración general rápida del colaborador."
-          >
-            <AspectoGeneralCheckboxes
-              isEditing={isEditing}
-              medicalEvaluation={medicalEvaluation}
-              handleAspectoGeneralChange={handleAspectoGeneralChange}
-            />
-          </ClinicalBlock>
-          <ClinicalBlock
-            title="Mediciones clínicas"
-            description="Cargá las medidas básicas que después también se reflejan en el informe."
-          >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+  return (
+    <AccordionItem value="medical-evaluation" className="border rounded-lg">
+      <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
+        Evaluación Médica
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4">
+        <div className="space-y-6">
+          {/* Aspecto general */}
+          <AspectoGeneralCheckboxes
+            isEditing={isEditing}
+            medicalEvaluation={medicalEvaluation}
+            handleAspectoGeneralChange={handleAspectoGeneralChange}
+          />
+          {/* Examen Clínico */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-base text-greenPrimary">
+              Examen Clínico
+            </h4>
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Talla */}
               <div className="space-y-2">
-                <Label htmlFor="talla" className="text-sm font-medium text-slate-700">
-                  Talla
-                </Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="talla">Talla</Label>
+                {isEditing ? (
                   <Input
                     id="talla"
                     value={medicalEvaluation.examenClinico.talla || ""}
                     onChange={(e) =>
                       handleExamenClinicoChange("talla", e.target.value)
                     }
-                    disabled={!isEditing}
-                    className="bg-white"
                   />
-                  <span className="text-sm text-slate-500">cm</span>
-                </div>
+                ) : (
+                  <Input
+                    id="talla"
+                    value={medicalEvaluation.examenClinico.talla || ""}
+                    disabled
+                    className="disabled:opacity-50"
+                  />
+                )}
               </div>
+              {/* Peso */}
               <div className="space-y-2">
-                <Label htmlFor="peso" className="text-sm font-medium text-slate-700">
-                  Peso
-                </Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="peso">Peso</Label>
+                {isEditing ? (
                   <Input
                     id="peso"
                     value={medicalEvaluation.examenClinico.peso || ""}
                     onChange={(e) =>
                       handleExamenClinicoChange("peso", e.target.value)
                     }
-                    disabled={!isEditing}
-                    className="bg-white"
                   />
-                  <span className="text-sm text-slate-500">kg</span>
-                </div>
+                ) : (
+                  <Input
+                    id="peso"
+                    value={medicalEvaluation.examenClinico.peso || ""}
+                    disabled
+                    className="disabled:opacity-50"
+                  />
+                )}
               </div>
+              {/* IMC calculado */}
               <div className="space-y-2">
-                <Label htmlFor="imc" className="text-sm font-medium text-slate-700">
-                  IMC
-                </Label>
-                <div
-                  className="rounded-md border border-greenPrimary/12 bg-slate-50 px-3 py-2 text-sm text-slate-700"
-                  id="imc"
-                >
+                <Label htmlFor="imc">IMC</Label>
+                <div className="p-2 border rounded bg-gray-50" id="imc">
                   {computeImc()}
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="perimetro-abdominal"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Perímetro abdominal
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="perimetro-abdominal"
-                    value={
-                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "perimetroAbdominal",
-                        e.target.value
-                      )
-                    }
-                    disabled={!isEditing}
-                    className="bg-white"
-                  />
-                  <span className="text-sm text-slate-500">cm</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="frecuencia-cardiaca-clinica"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Frecuencia cardíaca
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="frecuencia-cardiaca-clinica"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "frecuenciaCardiaca",
-                        e.target.value
-                      )
-                    }
-                    disabled={!isEditing}
-                    className="bg-white"
-                  />
-                  <span className="text-sm text-slate-500">x min</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="frecuencia-respiratoria-clinica"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Frecuencia respiratoria
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="frecuencia-respiratoria-clinica"
-                    value={
-                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "frecuenciaRespiratoria",
-                        e.target.value
-                      )
-                    }
-                    disabled={!isEditing}
-                    className="bg-white"
-                  />
-                  <span className="text-sm text-slate-500">x min</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="presion-sistolica"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Presión sistólica
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="presion-sistolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionSistolica || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "presionSistolica",
-                        e.target.value
-                      )
-                    }
-                    disabled={!isEditing}
-                    className="bg-white"
-                  />
-                  <span className="text-sm text-slate-500">mmHg</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="presion-diastolica"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Presión diastólica
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="presion-diastolica"
-                    value={
-                      medicalEvaluation.examenClinico.presionDiastolica || ""
-                    }
-                    onChange={(e) =>
-                      handleExamenClinicoChange(
-                        "presionDiastolica",
-                        e.target.value
-                      )
-                    }
-                    disabled={!isEditing}
-                    className="bg-white"
-                  />
-                  <span className="text-sm text-slate-500">mmHg</span>
-                </div>
-              </div>
             </div>
-          </ClinicalBlock>
-        </div>
-      )}
-
-      {activeSection === "visual" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <VisualAcuityCard
-              withoutCorrection={withoutCorr}
-              withCorrection={withCorr}
-              chromaticVision={chromatic}
-              isEditing={isEditing}
-              onScChange={handleScChange}
-              onCcChange={handleCcChange}
-              onChromaticVisionChange={handleChromaticChange}
-              notes={notes}
-              onNotesChange={handleNotesChange}
-            />
           </div>
-        </div>
-      )}
-
-      {activeSection === "skin" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
+          <VisualAcuityCard
+            withoutCorrection={withoutCorr}
+            withCorrection={withCorr}
+            chromaticVision={chromatic}
+            isEditing={isEditing}
+            onScChange={handleScChange} 
+            onCcChange={handleCcChange} 
+            onChromaticVisionChange={handleChromaticChange}
+            notes={notes}
+            onNotesChange={handleNotesChange}
+          />
+          <div className="space-y-4">
             <PielSection
               isEditing={isEditing}
               data={pielData}
               onChange={handlePielChange}
             />
           </div>
-        </div>
-      )}
-
-      {activeSection === "head-neck" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
+          <div className="space-y-6">
             <CabezaCuelloSection
               isEditing={isEditing}
               data={cabezaData}
               onChange={handleCabezaChange}
               onBatchChange={handleCabezaBatchChange}
             />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "oral" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
             <BucodentalSection
               isEditing={isEditing}
               data={bucodental}
               onChange={handleBucodentalChange}
               onBatchChange={handleBucodentalBatchChange}
             />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "thorax" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
             <ToraxSection
               isEditing={isEditing}
               data={toraxData}
               onChange={handleToraxChange}
             />
           </div>
+          <RespiratorioSection
+            isEditing={isEditing}
+            data={resp}
+            onChange={handleRespChange}
+            onBatchChange={handleRespBatchChange}
+          />
+          <CirculatorioSection
+            isEditing={isEditing}
+            data={circulatorio}
+            onChange={handleCirculatorioChange}
+            onBatchChange={handleCirculatorioBatchChange}
+          />
+          <NeurologicoSection
+            isEditing={isEditing}
+            data={neu}
+            onChange={handleNeuChange}
+            onBatchChange={handleNeuBatchChange}
+          />
+          <GastrointestinalSection
+            isEditing={isEditing}
+            data={gi}
+            onChange={handleGIChange}
+            onBatchChange={handleGIBatchChange}
+          />
+          <GenitourinarioSection
+            isEditing={isEditing}
+            data={genito}
+            onChange={handleGenitoChange}
+            onBatchChange={handleGenitoBatchChange}
+          />
+          <OsteoarticularSection
+            isEditing={isEditing}
+            data={osteo}
+            onChange={handleOsteoChange}
+          />
         </div>
-      )}
-
-      {activeSection === "respiratory" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <RespiratorioSection
-              isEditing={isEditing}
-              data={resp}
-              onChange={handleRespChange}
-              onBatchChange={handleRespBatchChange}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "circulatory" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <CirculatorioSection
-              isEditing={isEditing}
-              data={circulatorio}
-              onChange={handleCirculatorioChange}
-              onBatchChange={handleCirculatorioBatchChange}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "neurological" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <NeurologicoSection
-              isEditing={isEditing}
-              data={neu}
-              onChange={handleNeuChange}
-              onBatchChange={handleNeuBatchChange}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "gastrointestinal" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <GastrointestinalSection
-              isEditing={isEditing}
-              data={gi}
-              onChange={handleGIChange}
-              onBatchChange={handleGIBatchChange}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "genitourinary" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <GenitourinarioSection
-              isEditing={isEditing}
-              data={genito}
-              pdfVisibilityMode={
-                reportVisibilityOverrides.genitourinary_gyn_ob ?? "automatic"
-              }
-              onChange={handleGenitoChange}
-              onBatchChange={handleGenitoBatchChange}
-              onPdfVisibilityModeChange={(mode) =>
-                dispatch(
-                  setReportVisibilityOverride({
-                    sectionKey: "genitourinary_gyn_ob",
-                    mode,
-                  })
-                )
-              }
-            />
-          </div>
-        </div>
-      )}
-
-      {activeSection === "osteoarticular" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <OsteoarticularSection
-              isEditing={isEditing}
-              data={osteo}
-              onChange={handleOsteoChange}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  if (standalone) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        {content}
-      </div>
-    );
-  }
-
-  return (
-    <AccordionItem
-      value="medical-evaluation"
-      className="rounded-lg border border-slate-200 bg-white"
-    >
-      <AccordionTrigger className="px-4 text-base font-semibold text-greenPrimary">
-        Evaluación Médica
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4">{content}</AccordionContent>
+      </AccordionContent>
     </AccordionItem>
   );
 }

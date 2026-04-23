@@ -1,11 +1,14 @@
+// src/components/CirculatorioHtml.tsx
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Circulatorio } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { pdfColors } from "../../../Pdf/shared";
 
 interface Props {
   data: Circulatorio;
 }
 
 export default function CirculatorioHtml({ data }: Props) {
+  // Si no hay ningún dato relevante, no mostrar la sección
   const hasData =
     data.frecuenciaCardiaca?.trim() ||
     data.presion?.trim() ||
@@ -15,116 +18,59 @@ export default function CirculatorioHtml({ data }: Props) {
 
   if (!hasData) return null;
 
-  const measurementItems = [
-    data.frecuenciaCardiaca?.trim()
-      ? {
-          label: "Frecuencia cardíaca",
-          value: `${data.frecuenciaCardiaca} x minuto`,
-        }
-      : null,
-    data.presion?.trim()
-      ? {
-          label: "Presión arterial",
-          value: `${data.presion} mmHg`,
-        }
-      : null,
-  ].filter(Boolean);
-
   return (
-    <div
-      className="mb-3 overflow-hidden rounded-[8px] border"
-      style={{ borderColor: pdfColors.line }}
-    >
-      <div
-        className="border-b px-3 py-2"
-        style={{
-          backgroundColor: pdfColors.surface,
-          borderBottomColor: pdfColors.line,
-        }}
-      >
-        <p
-          className="text-[10px] font-bold uppercase tracking-[0.08em]"
-          style={{ color: pdfColors.accentText }}
-        >
-          Aparato circulatorio
-        </p>
-      </div>
+    <div className="space-y-4 mt-6">
+      <h4 className="font-bold text-base text-greenPrimary">
+        Aparato Circulatorio
+      </h4>
 
-      <div className="space-y-3 px-3 py-[10px]">
-        {!!measurementItems.length && (
-          <div className="grid grid-cols-2 gap-[8px]">
-            {measurementItems.map((item) => (
-              <div
-                key={item!.label}
-                className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-                style={{ borderColor: pdfColors.line }}
-              >
-                <p
-                  className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-                  style={{ color: pdfColors.muted }}
-                >
-                  {item!.label}
-                </p>
-                <p className="text-[10px] font-semibold text-slate-900">
-                  {item!.value}
-                </p>
-              </div>
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-black">
+        {/* Frecuencia Cardíaca - solo mostrar si tiene valor */}
+        {data.frecuenciaCardiaca?.trim() && (
+          <div className="flex items-center space-x-2">
+            <Label>Frecuencia Cardíaca:</Label>
+            <span>{data.frecuenciaCardiaca}</span>
+            <span>x minuto</span>
           </div>
         )}
 
+        {/* Tensión Arterial - solo mostrar si tiene valor */}
+        {data.presion?.trim() && (
+          <div className="flex items-center space-x-2">
+            <Label>TA:</Label>
+            <span>{data.presion}</span>
+            <span>mmHg</span>
+          </div>
+        )}
+
+        {/* Sin alteraciones - solo mostrar si fue seleccionado */}
         {data.sinAlteraciones !== undefined && (
-          <div
-            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-            style={{ borderColor: pdfColors.line }}
-          >
-            <p
-              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Sin alteraciones
-            </p>
-            <p className="text-[10px] font-semibold text-slate-900">
-              {data.sinAlteraciones ? "Sí" : "No"}
-            </p>
-          </div>
-        )}
-
-        {data.varices !== undefined && (
-          <div
-            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-            style={{ borderColor: pdfColors.line }}
-          >
-            <p
-              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Várices
-            </p>
-            <p className="text-[10px] font-semibold text-slate-900">
-              {data.varices ? "Sí" : "No"}
-              {data.varicesObs?.trim() ? ` · ${data.varicesObs}` : ""}
-            </p>
-          </div>
-        )}
-
-        {data.observaciones?.trim() && (
-          <div className="space-y-1">
-            <p
-              className="text-[8px] uppercase tracking-[0.08em]"
-              style={{ color: pdfColors.muted }}
-            >
-              Observaciones
-            </p>
-            <div
-              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-              style={{ borderColor: pdfColors.line }}
-            >
-              <p className="text-[10px] text-slate-900">{data.observaciones}</p>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="circ-sinalt" checked={data.sinAlteraciones === true} disabled />
+            <Label htmlFor="circ-sinalt">Sin alteraciones</Label>
           </div>
         )}
       </div>
+
+      {/* Observaciones - solo mostrar si tiene contenido */}
+      {data.observaciones?.trim() && (
+        <div className="space-y-2 text-black">
+          <Label className="mb-1">Observaciones:</Label>
+          <p>{data.observaciones}</p>
+        </div>
+      )}
+
+      {/* Várices - solo mostrar si fue seleccionado */}
+      {data.varices !== undefined && (
+        <div className="flex items-center space-x-2 text-black">
+          <Label>Várices:</Label>
+          <Checkbox id="circ-varices-si" checked={data.varices === true} disabled />
+          <Label htmlFor="circ-varices-si">Sí</Label>
+          <Checkbox id="circ-varices-no" checked={data.varices === false} disabled />
+          <Label htmlFor="circ-varices-no">No</Label>
+          {data.varicesObs?.trim() && <span className="ml-4">{data.varicesObs}</span>}
+        </div>
+      )}
     </div>
   );
 }

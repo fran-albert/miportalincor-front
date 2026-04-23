@@ -62,25 +62,3 @@ export interface TotemAnalyticsReport {
   unregistered: TotemAnalyticsUnregisteredSummary;
   registrations: TotemAnalyticsRegistrationsSummary;
 }
-
-export interface TotemPatientRegistrationStatsSource {
-  primary: string;
-  secondary: string;
-  note: string;
-}
-
-export interface TotemPatientRegistrationDailyStats {
-  date: string;
-  usersCreated: number;
-  patientsCreated: number;
-}
-
-export interface TotemPatientRegistrationStats {
-  dateFrom: string;
-  dateTo: string;
-  timezone: string;
-  source: TotemPatientRegistrationStatsSource;
-  totalUsersCreated: number;
-  totalPatientsCreated: number;
-  daily: TotemPatientRegistrationDailyStats[];
-}

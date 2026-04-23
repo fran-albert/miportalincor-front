@@ -128,44 +128,6 @@ describe('DoctorSchema (creación)', () => {
       expect(fieldErrors).toContain('matricula');
     }
   });
-
-  it('debe aceptar stampText como campo opcional en creación', () => {
-    const result = DoctorSchema.safeParse({
-      firstName: 'Dr. Carlos',
-      lastName: 'López',
-      userName: '30111222',
-      birthDate: '1990-01-01',
-      gender: 'Masculino',
-      maritalStatus: 'Soltero',
-      address: {
-        street: 'Siempre Viva',
-        number: '123',
-        description: '',
-        phoneNumber: '',
-        city: {
-          id: 1,
-          name: 'Córdoba',
-          state: {
-            id: 1,
-            name: 'Córdoba',
-            country: {
-              id: 1,
-              name: 'Argentina',
-            },
-          },
-        },
-      },
-      phoneNumber: '+541234567890',
-      email: 'carlos@test.com',
-      matricula: 'MP-12345',
-      stampText: 'Dr. Carlos López\nCardiología\nM.P. 12345',
-    });
-
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.stampText).toBe('Dr. Carlos López\nCardiología\nM.P. 12345');
-    }
-  });
 });
 
 describe('UpdateDoctorProfileSchema (edición)', () => {
@@ -223,14 +185,6 @@ describe('UpdateDoctorProfileSchema (edición)', () => {
       healthInsurances: [{ id: 1, name: 'OSDE' }],
     };
     const result = UpdateDoctorProfileSchema.safeParse(fullUpdate);
-    expect(result.success).toBe(true);
-  });
-
-  it('debe aceptar stampText parcial en edición', () => {
-    const result = UpdateDoctorProfileSchema.safeParse({
-      stampText: 'Dra. Juliana Albert\nCardiología\nM.P. 789',
-    });
-
     expect(result.success).toBe(true);
   });
 });

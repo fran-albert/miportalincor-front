@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router-dom";
-import { getGenderLabel, parseSlug } from "@/common/helpers/helpers";
+import { parseSlug } from "@/common/helpers/helpers";
 import { useCollaborator } from "@/hooks/Collaborator/useCollaborator";
 import LoadingAnimation from "@/components/Loading/loading";
 import { PageHeader } from "@/components/PageHeader";
@@ -183,7 +183,7 @@ const CollaboratorProfilePage = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Género</p>
                       <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
-                        {getGenderLabel(collaborator.gender)}
+                        {collaborator.gender}
                       </Badge>
                     </div>
                   )}

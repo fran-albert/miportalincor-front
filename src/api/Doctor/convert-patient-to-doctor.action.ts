@@ -3,7 +3,6 @@ import { apiIncorHC } from "@/services/axiosConfig";
 
 export interface ConvertPatientToDoctorDto {
   matricula: string;
-  stampText?: string;
   firma?: string;
   sello?: string;
   specialities?: { id: number; name: string }[];

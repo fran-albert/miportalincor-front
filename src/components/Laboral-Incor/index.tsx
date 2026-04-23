@@ -1,12 +1,10 @@
-import { Building2, Users, UserCog, ArrowRight, FileBadge2 } from "lucide-react";
+import { Building2, Users, UserCog, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 export default function LaboralIncorComponent() {
-  const { canReadLaboralReportConfig } = useLaboralPermissions();
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Incor Laboral" },
@@ -26,17 +24,6 @@ export default function LaboralIncorComponent() {
       icon: Users,
       href: "/incor-laboral/colaboradores",
     },
-    ...(canReadLaboralReportConfig
-      ? [
-          {
-            title: "Informes laborales",
-            description:
-              "Configura branding institucional, firmantes y política de firmas",
-            icon: FileBadge2,
-            href: "/incor-laboral/configuracion/informes",
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -50,7 +37,7 @@ export default function LaboralIncorComponent() {
       />
 
       {/* Quick Access Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {quickAccessCards.map((card, index) => (
           <motion.div
             key={card.href}

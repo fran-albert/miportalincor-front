@@ -211,12 +211,7 @@ export const RegisterGuestModal = ({
       } catch (error) {
         const apiError = error as ApiError;
         if (apiError.response?.status === 409) {
-          showError(
-            apiError.response?.data?.code === "POTENTIAL_DUPLICATE_PATIENT"
-              ? "Posible paciente duplicado"
-              : "Paciente ya existe",
-            apiError.response?.data?.message || "Este paciente ya está registrado en el sistema"
-          );
+          showError("Paciente ya existe", "Este DNI ya está registrado en el sistema");
         } else {
           showError("Error al crear paciente", apiError.response?.data?.message || "No se pudo crear el paciente");
         }

@@ -1,116 +1,110 @@
 import React from "react";
 import { Text, View, StyleSheet, Image } from "@react-pdf/renderer";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { pdfColors } from "../shared";
-import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
-import { resolveLaborReportBrandingConfig } from "../../signature-policy";
 
 interface HeaderPreviewPdfProps {
   evaluationType: string;
   examType: string;
-  brandingConfig?: LaborReportBrandingConfig;
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: 14,
+  headerBox: {
     borderWidth: 1,
-    borderColor: pdfColors.line,
-    borderRadius: 8,
-    overflow: "hidden",
+    borderColor: "#000",
+    padding: 4,
+    marginBottom: 8,
   },
-  topBand: {
-    height: 8,
-    backgroundColor: pdfColors.accent,
-  },
-  content: {
+  headerInner: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: "#ffffff",
+    justifyContent: "space-between",
+    height: 70,
   },
-  brandBlock: {
-    width: 110,
-    alignItems: "flex-start",
+  headerLeft: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
     justifyContent: "center",
-  },
-  logo: {
-    width: 78,
-    height: 42,
-    objectFit: "contain",
   },
   divider: {
     width: 1,
-    alignSelf: "stretch",
-    marginHorizontal: 14,
-    backgroundColor: pdfColors.line,
+    backgroundColor: "#333",
+    height: "100%",
   },
-  titleBlock: {
+  headerRight: {
     flex: 1,
-    gap: 4,
-  },
-  metaBlock: {
-    alignItems: "flex-end",
+    paddingRight: 10,
+    alignItems: "center",
     justifyContent: "center",
-    minWidth: 72,
-    gap: 3,
   },
-  eyebrow: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
-  title: {
-    fontSize: 16,
+  headerTitle: {
+    fontSize: 12,
     fontWeight: "bold",
-    color: pdfColors.accentText,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 10,
-    color: pdfColors.muted,
   },
-  metaLabel: {
-    fontSize: 7.2,
-    color: pdfColors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.9,
+  section: {
+    marginBottom: 8,
   },
-  metaValue: {
-    fontSize: 9,
+  sectionTitle: {
+    fontSize: 12,
     fontWeight: "bold",
-    color: pdfColors.ink,
+    marginBottom: 4,
+  },
+  gridTwoColumns: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  gridColumn: {
+    flex: 1,
+    paddingRight: 4,
+  },
+  gridColumnRight: {
+    flex: 1,
+    paddingLeft: 4,
+  },
+  gridThreeColumns: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  columnTwoThirds: {
+    flex: 2,
+    paddingRight: 4,
+  },
+  columnOneThird: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  text: {
+    fontSize: 10,
+    marginBottom: 2,
   },
 });
 
 const HeaderPreviewPdf: React.FC<HeaderPreviewPdfProps> = ({
   evaluationType,
   examType,
-  brandingConfig,
 }) => {
-  const currentDate = format(new Date(), "dd/MM/yyyy", { locale: es });
-  const resolvedBranding = resolveLaborReportBrandingConfig(brandingConfig);
-
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.topBand} />
-      <View style={styles.content}>
-        <View style={styles.brandBlock}>
-          {resolvedBranding.logoUrl ? (
-            <Image style={styles.logo} src={resolvedBranding.logoUrl} />
-          ) : null}
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.titleBlock}>
-          <Text style={styles.eyebrow}>{resolvedBranding.institutionName}</Text>
-          <Text style={styles.title}>{examType}</Text>
-          <Text style={styles.subtitle}>{evaluationType}</Text>
-        </View>
-        <View style={styles.metaBlock}>
-          <Text style={styles.metaLabel}>Fecha</Text>
-          <Text style={styles.metaValue}>{currentDate}</Text>
+    <View>
+      {/* Encabezado en recuadro */}
+      <View style={styles.headerBox}>
+        <View style={styles.headerInner}>
+          {/* Izquierda: Logo */}
+          <View style={styles.headerLeft}>
+            <Image
+              style={{ width: 80, height: 60 }}
+              src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1743117056/dpwo5yinodpy9ibpjtum.png"
+            />
+          </View>
+          {/* Línea divisoria */}
+          <View style={styles.divider} />
+          {/* Derecha: Texto */}
+          <View style={styles.headerRight}>
+            <Text style={styles.headerTitle}>{examType}</Text>
+            <Text style={styles.headerSubtitle}>{evaluationType}</Text>
+          </View>
         </View>
       </View>
     </View>

@@ -19,15 +19,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import {
   Users,
@@ -50,7 +41,6 @@ import {
   useCallSpecificPatient,
   useRecallPatient,
   useConfirmArrival,
-  useCorrectQueueDocument,
   useMarkAsCompleted,
   useMarkAsNoShow,
   useRegisterQueuePatient,
@@ -165,12 +155,6 @@ const requiresRegistration = (entry: QueueEntry) => !hasLinkedPatient(entry);
 
 const isUnregisteredEntry = (entry: QueueEntry) =>
   !parseBoolean(entry.isGuest) && !hasLinkedPatient(entry);
-
-const canCorrectQueueDocument = (entry: QueueEntry) =>
-  isUnregisteredEntry(entry) &&
-  entry.appointmentType === 'ADMINISTRATIVE' &&
-  entry.status !== 'COMPLETED' &&
-  entry.status !== 'NO_SHOW';
 
 const formatQueueHour = (entry: QueueEntry): string => {
   if (entry.appointmentType === 'SCHEDULED_APPOINTMENT') {
@@ -478,7 +462,6 @@ const QueueEntryDetailsDialog = ({
   onOpenChange,
   onCall,
   onRegistration,
-  onCorrectDocument,
   activeActions,
   isCalling,
   isResolvingRegistration,
@@ -487,7 +470,6 @@ const QueueEntryDetailsDialog = ({
   onOpenChange: (open: boolean) => void;
   onCall: (entry: QueueEntry, servicePoint: QueueCallDestination) => void;
   onRegistration: (entry: QueueEntry) => void;
-  onCorrectDocument: (entry: QueueEntry) => void;
   activeActions: QueueAction[];
   isCalling: boolean;
   isResolvingRegistration: boolean;
@@ -626,17 +608,6 @@ const QueueEntryDetailsDialog = ({
                       onCall={(servicePoint) => onCall(entry, servicePoint)}
                       disabled={isCalling}
                     />
-                    {canCorrectQueueDocument(entry) && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-10 border-slate-300 bg-white px-4 text-slate-700 hover:bg-slate-50"
-                        onClick={() => onCorrectDocument(entry)}
-                      >
-                        <AlertTriangle className="mr-2 h-4 w-4" />
-                        Corregir DNI
-                      </Button>
-                    )}
                     {requiresRegistration(entry) && (
                       <Button
                         type="button"
@@ -793,8 +764,6 @@ export const QueuePanel = () => {
   const { showError, showSuccess } = useToastContext();
   const [registrationEntry, setRegistrationEntry] = useState<QueueEntry | null>(null);
   const [detailsState, setDetailsState] = useState<QueueDetailsState | null>(null);
-  const [documentDialogEntry, setDocumentDialogEntry] = useState<QueueEntry | null>(null);
-  const [correctedDocument, setCorrectedDocument] = useState('');
   const [resolvingRegistrationEntryId, setResolvingRegistrationEntryId] =
     useState<number | null>(null);
 
@@ -804,7 +773,6 @@ export const QueuePanel = () => {
   const callSpecificMutation = useCallSpecificPatient();
   const recallMutation = useRecallPatient();
   const confirmArrivalMutation = useConfirmArrival();
-  const correctQueueDocumentMutation = useCorrectQueueDocument();
   const completedMutation = useMarkAsCompleted();
   const noShowMutation = useMarkAsNoShow();
   const registerQueuePatientMutation = useRegisterQueuePatient();
@@ -846,36 +814,6 @@ export const QueuePanel = () => {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: queueKeys.all });
-  };
-
-  const handleOpenDocumentCorrection = (entry: QueueEntry) => {
-    setDocumentDialogEntry(entry);
-    setCorrectedDocument(normalizeDocument(entry.patientDocument));
-  };
-
-  const handleCloseDocumentCorrection = () => {
-    setDocumentDialogEntry(null);
-    setCorrectedDocument('');
-  };
-
-  const handleCorrectDocument = async () => {
-    if (!documentDialogEntry) return;
-
-    const normalizedDocument = normalizeDocument(correctedDocument);
-    if (!normalizedDocument || normalizedDocument.length < 7) {
-      showError('DNI inválido', 'Ingresá un DNI válido para reintentar la búsqueda.');
-      return;
-    }
-
-    try {
-      await correctQueueDocumentMutation.mutateAsync({
-        queueEntryId: documentDialogEntry.id,
-        document: normalizedDocument,
-      });
-      handleCloseDocumentCorrection();
-    } catch {
-      // El hook ya muestra el error.
-    }
   };
 
   const handleCallSpecific = (
@@ -1055,11 +993,6 @@ export const QueuePanel = () => {
     void handleRegistrationAction(entry);
   };
 
-  const handleDialogCorrectDocument = (entry: QueueEntry) => {
-    setDetailsState(null);
-    handleOpenDocumentCorrection(entry);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -1196,73 +1129,12 @@ export const QueuePanel = () => {
         }}
         onCall={handleDialogCall}
         onRegistration={handleDialogRegistration}
-        onCorrectDocument={handleDialogCorrectDocument}
         activeActions={activeDetailActions}
         isCalling={callSpecificMutation.isPending}
         isResolvingRegistration={
           detailsState?.entry ? isResolvingRegistration(detailsState.entry) : false
         }
       />
-
-      <Dialog
-        open={Boolean(documentDialogEntry)}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDocumentCorrection();
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Corregir DNI</DialogTitle>
-            <DialogDescription>
-              Reintentá la búsqueda exacta del paciente. Si ya existe, la fila se vincula sin crear
-              un duplicado.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="font-medium text-slate-900">
-                {documentDialogEntry?.patientName || 'Registro pendiente'}
-              </p>
-              <p className="text-slate-500">
-                Ticket {documentDialogEntry?.displayNumber || '-'}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-900" htmlFor="queue-document-correction">
-                DNI corregido
-              </label>
-              <Input
-                id="queue-document-correction"
-                inputMode="numeric"
-                placeholder="Ej: 30111222"
-                value={correctedDocument}
-                onChange={(event) =>
-                  setCorrectedDocument(normalizeDocument(event.target.value).slice(0, 10))
-                }
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDocumentCorrection}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => void handleCorrectDocument()}
-              disabled={
-                correctQueueDocumentMutation.isPending ||
-                normalizeDocument(correctedDocument).length < 7
-              }
-            >
-              {correctQueueDocumentMutation.isPending ? 'Corrigiendo...' : 'Guardar DNI'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <QueuePatientRegistrationModal
         entry={registrationEntry}

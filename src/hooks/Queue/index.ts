@@ -7,7 +7,6 @@ export {
   useCallSpecificPatient,
   useRecallPatient,
   useConfirmArrival,
-  useCorrectQueueDocument,
   useMarkAsAttending,
   useMarkAsCompleted,
   useMarkAsNoShow,

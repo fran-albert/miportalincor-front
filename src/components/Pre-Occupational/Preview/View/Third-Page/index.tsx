@@ -1,17 +1,12 @@
+import HeaderPreviewHtml from "../../Header";
 import BucodentalHtml from "./Bucodental";
 import ToraxHtml from "./Torax";
 import { Piel, Torax } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { PielSection } from "@/components/Accordion/Pre-Occupational/Medical-Evaluation/PielSection";
 import CabezaCuelloHtml from "../Second-Page/CabezaCuello";
 import { DoctorSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import FooterHtmlConditional from "../Footer";
 import { hasSectionData } from "@/common/helpers/maps";
-import PreviewPageShell from "../PageShell";
-import PielHtml from "./Piel";
-import {
-  getPresentationModeForSection,
-  getInstitutionalSignerForSection,
-  usesExamDoctorSignature,
-} from "../../signature-policy";
-import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
 
 interface Props {
   bucodental: {
@@ -24,9 +19,6 @@ interface Props {
   doctorData: DoctorSignatures;
   pielData: Piel;
   cabezaCuello: { sinAlteraciones?: boolean; observaciones?: string };
-  medicalEvaluationType: string;
-  brandingConfig?: LaborReportBrandingConfig;
-  pageNumber?: number;
 }
 const ThirdPageHTML = ({
   bucodental,
@@ -34,9 +26,6 @@ const ThirdPageHTML = ({
   doctorData,
   pielData,
   cabezaCuello,
-  medicalEvaluationType,
-  brandingConfig,
-  pageNumber = 3,
 }: Props) => {
   // Verificar si hay datos en alguna sección de esta página
   const hasPiel = hasSectionData(pielData);
@@ -50,33 +39,23 @@ const ThirdPageHTML = ({
   }
 
   return (
-    <PreviewPageShell
-      pageNumber={pageNumber}
-      examType="Examen Clínico"
-      evaluationType={medicalEvaluationType}
-      doctorData={doctorData}
-      brandingConfig={brandingConfig}
-      institutionalSigner={getInstitutionalSignerForSection(
-        "clinical",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-      presentationMode={getPresentationModeForSection(
-        "clinical",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-      useCustomSignature={usesExamDoctorSignature(
-        "clinical",
-        brandingConfig,
-        medicalEvaluationType
-      )}
-    >
-      <PielHtml data={pielData} />
+    <>
+      <HeaderPreviewHtml examType="Examen" evaluationType="Preocupacional" />
+      <PielSection isEditing={false} data={pielData} />
       <CabezaCuelloHtml data={cabezaCuello} />
       <BucodentalHtml data={bucodental} />
       <ToraxHtml data={torax} />
-    </PreviewPageShell>
+
+      {/* <PhysicalEvaluationHtml examenFisico={examenFisico} section={2} /> */}
+      <FooterHtmlConditional
+        pageNumber={3}
+        useCustom
+        doctorLicense={doctorData.matricula}
+        doctorName={doctorData.fullName}
+        doctorSpeciality={doctorData.specialty}
+        signatureUrl={doctorData.signatureDataUrl}
+      />
+    </>
   );
 };
 

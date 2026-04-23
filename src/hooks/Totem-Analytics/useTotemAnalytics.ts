@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getTotemAnalyticsReport,
-  getTotemPatientRegistrationStats,
-} from "@/api/Totem-Analytics";
+import { getTotemAnalyticsReport } from "@/api/Totem-Analytics";
 import { TotemAnalyticsFilters } from "@/types/Totem-Analytics/TotemAnalytics";
 
 const serializeFilters = (filters: TotemAnalyticsFilters) => ({
@@ -14,28 +11,12 @@ export const totemAnalyticsKeys = {
   all: ["totemAnalytics"] as const,
   report: (filters: TotemAnalyticsFilters) =>
     [...totemAnalyticsKeys.all, "report", serializeFilters(filters)] as const,
-  patientRegistrations: (filters: TotemAnalyticsFilters) =>
-    [
-      ...totemAnalyticsKeys.all,
-      "patientRegistrations",
-      serializeFilters(filters),
-    ] as const,
 };
 
 export const useTotemAnalyticsReport = (filters: TotemAnalyticsFilters) =>
   useQuery({
     queryKey: totemAnalyticsKeys.report(filters),
     queryFn: () => getTotemAnalyticsReport(filters),
-    enabled: !!filters.dateFrom && !!filters.dateTo,
-    staleTime: 5 * 60 * 1000,
-  });
-
-export const useTotemPatientRegistrationStats = (
-  filters: TotemAnalyticsFilters
-) =>
-  useQuery({
-    queryKey: totemAnalyticsKeys.patientRegistrations(filters),
-    queryFn: () => getTotemPatientRegistrationStats(filters),
     enabled: !!filters.dateFrom && !!filters.dateTo,
     staleTime: 5 * 60 * 1000,
   });

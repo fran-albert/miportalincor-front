@@ -1,156 +1,119 @@
+// components/FooterPdfConditional.tsx
 import React from "react";
 import { View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import { pdfColors } from "../shared";
-import {
-  LaborReportSignaturePresentationMode,
-  LaborReportSignerDisplay,
-} from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
-import {
-  getInstitutionalSignerForSection,
-  resolveStampTextLines,
-} from "../../signature-policy";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface Props {
   pageNumber: number;
   useCustom?: boolean;
-  fixed?: boolean;
-  containerStyle?: React.ComponentProps<typeof View>["style"];
-  presentationMode?: LaborReportSignaturePresentationMode;
-  institutionalSigner?: LaborReportSignerDisplay;
   doctorName?: string;
   doctorLicense?: string;
   doctorSpeciality?: string;
-  doctorStampText?: string;
   signatureUrl?: string;
   sealUrl?: string;
 }
 
+const DEFAULT_DOCTOR = {
+  name: "BONIFACIO Ma. CECILIA",
+  license: "M.P. 96533 - M.L. 7299",
+  speciality: "Especialista en Medicina del Trabajo",
+  signatureUrl:
+    "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png",
+};
+
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    borderTopWidth: 1,
-    borderTopColor: pdfColors.line,
-    paddingTop: 5,
-    marginTop: 4,
+    flexDirection: "row",
+    paddingTop: 8,
+    marginTop: 16,
+    minHeight: 80,
     position: "relative",
   },
-  doctorBlock: {
-    flex: 1.8,
-    minHeight: 46,
-    paddingRight: 24,
+  leftBlock: {
+    flex: 2,
+    flexDirection: "column",
   },
   imagesBlock: {
-    position: "relative",
-    height: 32,
-    marginBottom: 0.5,
+    marginBottom: 4,
   },
   signature: {
-    width: 100,
-    height: 30,
+    width: 120,
+    height: 50,
     objectFit: "contain",
+    marginBottom: 4,
   },
   seal: {
     position: "absolute",
-    left: 58,
-    bottom: -1,
-    width: 40,
-    height: 40,
-    objectFit: "contain",
-    opacity: 0.88,
-  },
-  stampPrimaryLine: {
-    fontSize: 8.2,
-    fontWeight: 500,
-    lineHeight: 1.15,
-    color: pdfColors.ink,
-  },
-  stampSecondaryLine: {
-    fontSize: 6.8,
-    lineHeight: 1.15,
-    color: pdfColors.muted,
-    marginTop: 0.25,
-  },
-  stampSpacer: {
-    height: 8,
-  },
-  pageNumberBlock: {
-    position: "absolute",
-    right: 0,
     bottom: 0,
-    width: 18,
-    alignItems: "flex-end",
+    left: 0,
+    width: 80,
+    height: 80,
+    objectFit: "contain",
   },
-  metaValue: {
-    fontSize: 8.6,
+  name: {
+    fontSize: 10,
     fontWeight: "bold",
-    color: pdfColors.ink,
+  },
+  speciality: {
+    fontSize: 8,
+    fontStyle: "italic",
+    marginBottom: 2,
+  },
+  license: {
+    fontSize: 8,
+  },
+  dateContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  pageContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
   },
 });
 
 const FooterPdfConditional: React.FC<Props> = ({
   pageNumber,
   useCustom = false,
-  fixed = false,
-  containerStyle,
-  presentationMode = "signature_and_text",
-  institutionalSigner,
   doctorName,
   doctorLicense,
   doctorSpeciality,
-  doctorStampText,
   signatureUrl,
-  sealUrl,
 }) => {
-  const defaultSigner =
-    institutionalSigner ?? getInstitutionalSignerForSection("cover");
-  const name = useCustom && doctorName ? doctorName : defaultSigner.name;
+  const currentDate = format(new Date(), "dd/MM/yyyy", { locale: es });
+  const name = useCustom && doctorName ? doctorName : DEFAULT_DOCTOR.name;
   const licence =
-    useCustom && doctorLicense ? doctorLicense : defaultSigner.license;
-  const speciality =
-    useCustom && doctorSpeciality
-      ? doctorSpeciality
-      : defaultSigner.specialty;
-  const resolvedStampText = useCustom ? doctorStampText : defaultSigner.stampText;
-  const sigUrl = useCustom ? signatureUrl : defaultSigner.signatureUrl;
-  const resolvedSealUrl = useCustom ? sealUrl : defaultSigner.sealUrl;
-  const stampLines = resolveStampTextLines({
-    stampText: resolvedStampText,
-    name,
-    specialty: speciality,
-    license: licence,
-  });
-  const shouldShowSignature =
-    presentationMode !== "text_only" && Boolean(sigUrl);
-  const shouldShowSeal =
-    presentationMode === "signature_seal_and_text" && Boolean(resolvedSealUrl);
-  const resolvedContainerStyle = (
-    containerStyle ? [styles.container, containerStyle] : styles.container
-  ) as React.ComponentProps<typeof View>["style"];
+    useCustom && doctorLicense ? doctorLicense : DEFAULT_DOCTOR.license;
+  const speciality = useCustom && doctorSpeciality ? doctorSpeciality : DEFAULT_DOCTOR.speciality;
+  const sigUrl =
+    useCustom && signatureUrl ? signatureUrl : DEFAULT_DOCTOR.signatureUrl;
 
   return (
-    <View style={resolvedContainerStyle} wrap={false} fixed={fixed}>
-      <View style={styles.doctorBlock}>
-        {shouldShowSignature ? (
-          <View style={styles.imagesBlock}>
-            <Image src={sigUrl} style={styles.signature} />
-            {shouldShowSeal ? (
-              <Image src={resolvedSealUrl!} style={styles.seal} />
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.stampSpacer} />
-        )}
-        {stampLines.map((line, index) => (
-          <Text
-            key={`${line}-${index}`}
-            style={index === 0 ? styles.stampPrimaryLine : styles.stampSecondaryLine}
-          >
-            {line}
-          </Text>
-        ))}
+    <View style={styles.container}>
+      <View style={styles.leftBlock}>
+        {/* Firma */}
+        <View style={styles.imagesBlock}>
+          <Image src={sigUrl} style={styles.signature} />
+        </View>
+
+        {/* Datos del doctor */}
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.speciality}>{speciality}</Text>
+        <Text style={styles.license}>{licence}</Text>
       </View>
-      <View style={styles.pageNumberBlock}>
-        <Text style={styles.metaValue}>{pageNumber}</Text>
+
+      {/* Fecha */}
+      <View style={styles.dateContainer}>
+        <Text>Fecha {currentDate}</Text>
+      </View>
+
+      {/* Página */}
+      <View style={styles.pageContainer}>
+        <Text>Página {pageNumber}</Text>
       </View>
     </View>
   );

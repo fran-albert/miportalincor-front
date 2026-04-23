@@ -13,6 +13,7 @@ import {
   FileText,
   Link,
   CheckCircle,
+  User,
   Upload,
   X,
   Loader2,
@@ -20,7 +21,6 @@ import {
   Plus,
 } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
-import PatientInfoCard from "../PatientInfoCard";
 
 interface UploadedFile {
   file: File;
@@ -232,7 +232,23 @@ export default function CompletePrescriptionRequestModal({
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {/* Patient Info */}
-          <PatientInfoCard patient={request.patient} />
+          {request.patient && (
+            <div className="bg-blue-50 border-l-4 border-l-blue-500 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-blue-900">
+                    Paciente
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {request.patient.firstName} {request.patient.lastName}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Request Description */}
           <div className="space-y-2">
