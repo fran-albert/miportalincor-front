@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Form,
   FormControl,
@@ -42,7 +42,15 @@ import { useToastContext } from "@/hooks/Toast/toast-context";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
 type FormValues = z.infer<typeof UpdateSecretarySchema>;
-export default function SecretaryProfileComponent({ user }: { user: User }) {
+interface SecretaryProfileComponentProps {
+  user: User;
+  footerContent?: ReactNode;
+}
+
+export default function SecretaryProfileComponent({
+  user,
+  footerContent,
+}: SecretaryProfileComponentProps) {
   const { updateUserMutation } = useUserMutations();
   const { promiseToast } = useToastContext();
   const form = useForm<FormValues>({
@@ -735,6 +743,7 @@ export default function SecretaryProfileComponent({ user }: { user: User }) {
           </motion.div>
         </form>
       </Form>
+      {footerContent}
     </div>
   );
 }

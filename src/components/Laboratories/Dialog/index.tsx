@@ -13,35 +13,53 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 
 const LabDialog = ({
-  setDates,
-  dates,
   onAddNewColumn,
   onSetNote,
 }: {
-  setDates: (dates: string[]) => void;
-  dates: string[];
   onAddNewColumn: (newDate: string) => void;
   onSetNote: (note: string) => void;
 }) => {
   const [newDate, setNewDate] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState<string>("");
+
+  const resetForm = () => {
+    setNewDate(null);
+    setNote("");
+  };
+
   const handleSave = () => {
     if (newDate) {
-      setDates([...dates, newDate]);
-      setNewDate(null);
       onSetNote(note);
-      setIsOpen(false);
       onAddNewColumn(newDate);
+      resetForm();
+      setIsOpen(false);
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      resetForm();
+    }
+  };
+
+  const handleTriggerClick = () => {
+    if (!isOpen) {
+      resetForm();
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+      resetForm();
     }
   };
 
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button
-            onClick={() => setIsOpen(true)}
+            onClick={handleTriggerClick}
             className="bg-greenPrimary hover:bg-teal-700 text-white px-4 py-2 ml-2 rounded-md shadow-lg flex items-center"
           >
             Agregar Laboratorio

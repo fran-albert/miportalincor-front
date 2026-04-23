@@ -191,6 +191,8 @@ const formatQueueDocument = (document: unknown): string => {
 };
 
 const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
+  const consultationLabel = entry.consultationTypeName || entry.speciality;
+
   if (entry.appointmentType === 'ADMINISTRATIVE') {
     return {
       primary: 'Recepción',
@@ -207,8 +209,22 @@ const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: s
 
   return {
     primary: hasMeaningfulText(entry.doctorName) ? entry.doctorName : 'Recepción',
-    secondary: hasMeaningfulText(entry.speciality) ? entry.speciality : undefined,
+    secondary: hasMeaningfulText(consultationLabel) ? consultationLabel : undefined,
   };
+};
+
+const getQueueContextLabel = (entry: QueueEntry): string | null => {
+  if (entry.appointmentType !== 'SCHEDULED_APPOINTMENT') {
+    return null;
+  }
+
+  const consultationLabel = entry.consultationTypeName || entry.speciality;
+  const parts = [
+    hasMeaningfulText(entry.doctorName) ? entry.doctorName : null,
+    hasMeaningfulText(consultationLabel) ? consultationLabel : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.length > 0 ? parts.join(' · ') : null;
 };
 
 const formatServicePoint = (servicePoint?: string): string => {
@@ -363,15 +379,24 @@ const CompactPatientCell = ({
 }: {
   entry: QueueEntry;
   showAppointmentType?: boolean;
-}) => (
-  <div className="space-y-1">
-    <p className="font-semibold leading-tight text-slate-900">{entry.patientName}</p>
-    <CompactPatientMeta
-      entry={entry}
-      showAppointmentType={showAppointmentType}
-    />
-  </div>
-);
+}) => {
+  const queueContextLabel = getQueueContextLabel(entry);
+
+  return (
+    <div className="space-y-1">
+      <p className="font-semibold leading-tight text-slate-900">{entry.patientName}</p>
+      <CompactPatientMeta
+        entry={entry}
+        showAppointmentType={showAppointmentType}
+      />
+      {queueContextLabel ? (
+        <p className="text-xs font-medium leading-tight text-slate-600">
+          {queueContextLabel}
+        </p>
+      ) : null}
+    </div>
+  );
+};
 
 const CallDestinationButtons = ({
   onCall,
