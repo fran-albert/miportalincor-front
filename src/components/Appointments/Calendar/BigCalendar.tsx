@@ -1952,6 +1952,20 @@ export const BigCalendar = ({
 
             <div className="google-calendar-side-panel-actions">
               <p className="google-calendar-section-title">Acciones</p>
+              {selectedEvent.resource.type === "appointment" && (
+                <div className="google-calendar-info-card">
+                  <div className="google-calendar-info-row">
+                    <Stethoscope className="h-4 w-4" />
+                    <div>
+                      <p className="google-calendar-info-label">Tipo de turno</p>
+                      <p className="google-calendar-info-value">
+                        {selectedConsultationTypeBadge || "No informado"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
                 selectedEvent.resource.status === AppointmentStatus.ASSIGNED_BY_SECRETARY) && (() => {
                   const scheduledDate = (
