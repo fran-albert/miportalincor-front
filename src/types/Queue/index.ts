@@ -6,6 +6,12 @@ export type QueueRegistrationResolutionType =
   | 'CREATED_NEW_PATIENT'
   | 'LINKED_EXISTING_PATIENT';
 
+export interface QueueConsultationType {
+  id?: number;
+  name: string;
+  color?: string | null;
+}
+
 export interface QueueEntry {
   id: number;
   appointmentId?: number;
@@ -19,6 +25,9 @@ export interface QueueEntry {
   doctorName: string;
   speciality?: string;
   consultationTypeName?: string;
+  consultationTypeNames?: string[];
+  consultationTypes?: Array<QueueConsultationType | string>;
+  consultationType?: QueueConsultationType | null;
   scheduledTime: string;
   status: QueueStatus;
   displayNumber: string;

@@ -206,8 +206,25 @@ const formatQueueDocument = (document: unknown): string => {
   return formatDni(numericDocument);
 };
 
+const getConsultationTypeLabels = (entry: QueueEntry): string[] => {
+  const consultationTypes = entry.consultationTypes ?? [];
+  const labelsFromObjects = consultationTypes
+    .map((type) => (typeof type === 'string' ? type : type.name))
+    .filter((value): value is string => hasMeaningfulText(value));
+
+  const labels = [
+    ...(entry.consultationTypeNames ?? []),
+    ...labelsFromObjects,
+    entry.consultationType?.name,
+    entry.consultationTypeName,
+  ].filter((value): value is string => hasMeaningfulText(value));
+
+  return Array.from(new Set(labels));
+};
+
 const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
-  const consultationLabel = entry.consultationTypeName || entry.speciality;
+  const consultationLabel =
+    getConsultationTypeLabels(entry).join(' · ') || entry.speciality;
 
   if (entry.appointmentType === 'ADMINISTRATIVE') {
     return {
@@ -234,13 +251,36 @@ const getQueueContextLabel = (entry: QueueEntry): string | null => {
     return null;
   }
 
-  const consultationLabel = entry.consultationTypeName || entry.speciality;
+  const consultationLabel =
+    getConsultationTypeLabels(entry).join(' · ') || entry.speciality;
   const parts = [
     hasMeaningfulText(entry.doctorName) ? entry.doctorName : null,
     hasMeaningfulText(consultationLabel) ? consultationLabel : null,
   ].filter((value): value is string => Boolean(value));
 
   return parts.length > 0 ? parts.join(' · ') : null;
+};
+
+const ConsultationTypeBadges = ({ entry }: { entry: QueueEntry }) => {
+  const labels = getConsultationTypeLabels(entry);
+
+  if (labels.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {labels.map((label) => (
+        <Badge
+          key={label}
+          variant="outline"
+          className="rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-900"
+        >
+          {label}
+        </Badge>
+      ))}
+    </div>
+  );
 };
 
 const formatServicePoint = (servicePoint?: string): string => {
@@ -410,6 +450,7 @@ const CompactPatientCell = ({
           {queueContextLabel}
         </p>
       ) : null}
+      <ConsultationTypeBadges entry={entry} />
     </div>
   );
 };
@@ -529,6 +570,14 @@ const QueueEntryDetailsDialog = ({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <QueueDetailField
+                    label="Tipo de turno"
+                    value={
+                      <div className="min-h-6">
+                        <ConsultationTypeBadges entry={entry} />
+                      </div>
+                    }
+                  />
                   <QueueDetailField
                     label="Atención"
                     value={
