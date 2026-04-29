@@ -537,6 +537,7 @@ const QueueEntryDetailsDialog = ({
 
   const { entry, mode } = details;
   const attention = getAttentionLabels(entry);
+  const consultationTypeLabels = getConsultationTypeLabels(entry);
   const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
   const isWaitingEntry = mode === 'waiting';
 
@@ -570,14 +571,12 @@ const QueueEntryDetailsDialog = ({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  <QueueDetailField
-                    label="Tipo de turno"
-                    value={
-                      <div className="min-h-6">
-                        <ConsultationTypeBadges entry={entry} />
-                      </div>
-                    }
-                  />
+                  {consultationTypeLabels.length > 0 && (
+                    <QueueDetailField
+                      label="Tipo de turno"
+                      value={<ConsultationTypeBadges entry={entry} />}
+                    />
+                  )}
                   <QueueDetailField
                     label="Atención"
                     value={
