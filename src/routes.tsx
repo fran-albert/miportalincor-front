@@ -89,6 +89,7 @@ const router = createBrowserRouter(
         <Route path="/iniciar-sesion" element={<LoginPage />} />
         <Route path="/restablecer-contraseña" element={<RequestEmailPassword />} />
         <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
+        <Route path="/reset-password" element={<ResetPaswordPage />} />
         <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
 
         {/* Rutas protegidas (con sidebar y header) */}

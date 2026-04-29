@@ -26,7 +26,7 @@ import {
   AppointmentFullResponseDto,
   AppointmentStatus
 } from "@/types/Appointment/Appointment";
-import { formatDateAR, formatTimeAR, isPastDateAR } from "@/common/helpers/timezone";
+import { formatDateAR, formatTimeAR, isPastDateAR, isPastTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
 import { getAppointmentConsultationTypes } from "@/common/helpers/appointment-consultation-types";
 import {
@@ -64,30 +64,43 @@ const MyAppointmentsPage = () => {
   const { changeStatus, isChangingStatus } = useAppointmentMutations();
   const reschedulePatient = useReschedulePatientAppointment();
 
-  // Separate upcoming and past appointments
-  const upcomingAppointments = appointments.filter(
-    apt => !isPastDateAR(apt.date) &&
-      apt.status !== AppointmentStatus.CANCELLED_BY_PATIENT &&
-      apt.status !== AppointmentStatus.CANCELLED_BY_SECRETARY &&
-      apt.status !== AppointmentStatus.COMPLETED
-  );
+  const isAppointmentExpired = (apt: AppointmentFullResponseDto) => {
+    return isPastDateAR(apt.date) || isPastTimeAR(apt.date, apt.hour);
+  };
 
-  const pastAppointments = appointments.filter(
-    apt => isPastDateAR(apt.date) ||
+  const isTerminalStatus = (apt: AppointmentFullResponseDto) => {
+    return (
       apt.status === AppointmentStatus.CANCELLED_BY_PATIENT ||
       apt.status === AppointmentStatus.CANCELLED_BY_SECRETARY ||
       apt.status === AppointmentStatus.COMPLETED
+    );
+  };
+
+  const shouldShowAsFinishedForPatient = (apt: AppointmentFullResponseDto) => {
+    return isAppointmentExpired(apt) && !isTerminalStatus(apt);
+  };
+
+  // Separate upcoming and past appointments
+  const upcomingAppointments = appointments.filter(
+    apt => !isAppointmentExpired(apt) && !isTerminalStatus(apt)
+  );
+
+  const pastAppointments = appointments.filter(
+    apt => isAppointmentExpired(apt) || isTerminalStatus(apt)
   );
 
   const canCancel = (apt: AppointmentFullResponseDto) => {
     return (
-      apt.status === AppointmentStatus.PENDING ||
-      apt.status === AppointmentStatus.WAITING
+      !isAppointmentExpired(apt) &&
+      (
+        apt.status === AppointmentStatus.PENDING ||
+        apt.status === AppointmentStatus.WAITING
+      )
     );
   };
 
   const canReschedule = (apt: AppointmentFullResponseDto) => {
-    return apt.status === AppointmentStatus.PENDING;
+    return !isAppointmentExpired(apt) && apt.status === AppointmentStatus.PENDING;
   };
 
   const handleCancelClick = (apt: AppointmentFullResponseDto) => {
@@ -123,7 +136,16 @@ const MyAppointmentsPage = () => {
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <StatusBadge status={appointment.status} />
+              {shouldShowAsFinishedForPatient(appointment) ? (
+                <Badge
+                  variant="outline"
+                  className="border-0 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700"
+                >
+                  Finalizado
+                </Badge>
+              ) : (
+                <StatusBadge status={appointment.status} />
+              )}
               {getAppointmentConsultationTypes(appointment).map((consultationType) => (
                 <Badge
                   key={consultationType.id}
