@@ -103,10 +103,12 @@ const AntecedentesSection: React.FC<Props> = ({
 
     const antecedentesPorCategoria = antecedentes.antecedentes.reduce(
       (acc, ant) => {
-        if (!acc[ant.dataType.name]) {
-          acc[ant.dataType.name] = [];
+        const categoryName = ant.dataType?.name || "Sin categoría";
+
+        if (!acc[categoryName]) {
+          acc[categoryName] = [];
         }
-        acc[ant.dataType.name].push(ant);
+        acc[categoryName].push(ant);
         return acc;
       },
       {} as Record<string, Antecedente[]>

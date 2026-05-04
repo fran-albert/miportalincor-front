@@ -222,7 +222,7 @@ export function EvolutionPdfDocument({
                   {evolution.evolucionCompleta.mediciones.map((medicion: EvolucionData, index: number) => (
                     <View key={index} style={styles.medicionBadge}>
                       <Text style={styles.medicionText}>
-                        {medicion.dataType.name}: {medicion.value}
+                        {medicion.dataType?.name || "Medición"}: {medicion.value}
                         {medicion.observaciones && ` (${medicion.observaciones})`}
                       </Text>
                     </View>

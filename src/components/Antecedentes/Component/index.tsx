@@ -158,12 +158,12 @@ export default function AntecedentesComponent({
         (ant.observaciones || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        ant.dataType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${ant.doctor.firstName} ${ant.doctor.lastName}`
+        (ant.dataType?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${ant.doctor?.firstName || ""} ${ant.doctor?.lastName || ""}`
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
       const matchesCategory =
-        selectedCategory === "Todas" || ant.dataType.name === selectedCategory;
+        selectedCategory === "Todas" || ant.dataType?.name === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
@@ -351,10 +351,10 @@ export default function AntecedentesComponent({
                           <div className="flex items-center gap-3 flex-wrap">
                             <Badge
                               className={`${getCategoryColor(
-                                ant.dataType.name
+                                ant.dataType?.name || "Sin categoría"
                               )} border text-xs font-semibold`}
                             >
-                              {ant.dataType.name}
+                              {ant.dataType?.name || "Sin categoría"}
                             </Badge>
                             {ant.deletedAt && (
                               <Badge

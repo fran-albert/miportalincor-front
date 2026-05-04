@@ -114,7 +114,7 @@ export const ViewAntecedenteDialog = ({
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-greenPrimary/10 to-teal-50 rounded-lg border-l-4 border-l-greenPrimary">
               <div className="flex items-center gap-3 flex-wrap">
                 <Badge className="text-base px-4 py-2" variant="greenPrimary">
-                  {antecedente.dataType.name}
+                  {antecedente.dataType?.name || "Sin categoría"}
                 </Badge>
                 {showAuditTrail && historyItems.length > 0 && (
                   <Badge variant="outline" className="bg-white">

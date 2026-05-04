@@ -15,7 +15,7 @@ import {
   Pencil
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatDoctorInfo } from "@/common/helpers/helpers";
+import { formatDoctorName } from "@/common/helpers/helpers";
 import {
   canDeleteEvolution,
   canEditEvolution,
@@ -180,11 +180,13 @@ export const getEvolutionColumns = ({
     accessorKey: "doctor",
     header: "Médico",
     cell: ({ row }) => {
-      const doctorInfo = formatDoctorInfo(row.original.doctor);
+      const primarySpeciality = row.original.doctor.specialities?.[0]?.name;
+      const doctorName = formatDoctorName(row.original.doctor);
+
       return (
         <div className="min-w-[200px]">
           <div className="font-medium text-sm">
-            {doctorInfo.fullNameWithPrimarySpeciality}
+            {primarySpeciality ? `${doctorName} - ${primarySpeciality}` : doctorName}
           </div>
         </div>
       );
