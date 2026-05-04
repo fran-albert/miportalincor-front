@@ -9,6 +9,10 @@ import {
 import type { CallSpecificPatientDto } from '@/types/Queue';
 import { toast } from 'sonner';
 
+const getErrorMessage = (error: Error): string =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+  error.message;
+
 // Query keys para la cola del doctor
 export const doctorQueueKeys = {
   all: ['doctorQueue'] as const,
@@ -88,7 +92,7 @@ export const useDoctorMarkAsAttending = () => {
       queryClient.refetchQueries({ queryKey: doctorQueueKeys.all });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Error al marcar como atendiendo');
+      toast.error(getErrorMessage(error) || 'Error al marcar como atendiendo');
     },
   });
 };

@@ -1,7 +1,18 @@
 import React, { useState } from "react";
+import { useBeforeUnload, useBlocker } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Activity, Calendar, ClipboardList, FileText, Plus, Stethoscope } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MedicionInputs } from "@/components/Select/Medicion/select";
@@ -51,15 +62,18 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   });
   const { createEvolutionMutation } = useEvolutionMutation();
   const { promiseToast } = useToastContext();
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
 
-  const [newEvolucion, setNewEvolucion] = useState({
+  const emptyEvolucion = {
     motivoConsulta: "",
     enfermedadActual: "",
     examenFisico: "",
     diagnosticosPresuntivos: "",
     especialidad: "",
     doctor: "",
-  });
+  };
+
+  const [newEvolucion, setNewEvolucion] = useState(emptyEvolucion);
 
   const [parametrosSeleccionados, setParametrosSeleccionados] = useState<
     Parametro[]
@@ -69,6 +83,23 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   const [medicionesDinamicas, setMedicionesDinamicas] = useState<{
     [key: string]: string;
   }>({});
+
+  const hasUnsavedChanges =
+    isOpen &&
+    (Object.values(newEvolucion).some((value) => value.trim() !== "") ||
+      parametrosSeleccionados.length > 0 ||
+      Object.values(medicionesDinamicas).some((value) => value.trim() !== ""));
+  const blocker = useBlocker(hasUnsavedChanges);
+
+  useBeforeUnload(
+    (event) => {
+      if (!hasUnsavedChanges) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    },
+    { capture: true }
+  );
 
   // Función para manejar cambios en mediciones dinámicas
   const handleMedicionChange = (medicionId: string, value: string) => {
@@ -199,25 +230,44 @@ const CreateEvolucionDialog: React.FC<Props> = ({
       });
 
       // Reset form on success
-      handleClose();
+      closeAndReset();
     } catch (error) {
       console.error("Error creating evolution:", error);
     }
   };
 
-  const handleClose = () => {
-    setNewEvolucion({
-      motivoConsulta: "",
-      enfermedadActual: "",
-      examenFisico: "",
-      diagnosticosPresuntivos: "",
-      especialidad: "",
-      doctor: "",
-    });
+  const closeAndReset = () => {
+    setNewEvolucion(emptyEvolucion);
     setParametrosSeleccionados([]);
     setMedicionesDinamicas({});
     reset();
+    setIsDiscardDialogOpen(false);
     onClose();
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setIsDiscardDialogOpen(true);
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleDiscard = () => {
+    if (blocker.state === "blocked") {
+      blocker.proceed?.();
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleKeepEditing = () => {
+    if (blocker.state === "blocked") {
+      blocker.reset?.();
+    }
+    setIsDiscardDialogOpen(false);
   };
 
   const currentDate = new Date().toLocaleDateString("es-AR", {
@@ -228,8 +278,34 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-hidden p-0">
+    <>
+      <AlertDialog
+        open={isDiscardDialogOpen || blocker.state === "blocked"}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleKeepEditing();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tenés cambios sin guardar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Si salís ahora, vas a perder la evolución en curso. Guardá primero o confirmá que querés salir igual.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleKeepEditing}>
+              Seguir editando
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDiscard}>
+              Salir sin guardar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+        <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-hidden p-0">
         {/* Gradient Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-greenPrimary to-teal-600 text-white p-6 rounded-t-lg">
           <div className="flex items-center gap-3">
@@ -443,6 +519,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

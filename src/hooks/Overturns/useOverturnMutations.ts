@@ -11,6 +11,11 @@ import {
   OverturnStatusTransitionContext,
   UpdateOverturnDto,
 } from "@/types/Overturn/Overturn";
+import { toast } from "sonner";
+
+const getErrorMessage = (error: Error): string =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+  error.message;
 
 export const useOverturnMutations = () => {
   const queryClient = useQueryClient();
@@ -54,6 +59,9 @@ export const useOverturnMutations = () => {
       // Sincronizar con la agenda del día del médico
       queryClient.invalidateQueries({ queryKey: ['doctorAgenda'] });
       queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || "No se pudo cambiar el estado del sobreturno");
     },
   });
 

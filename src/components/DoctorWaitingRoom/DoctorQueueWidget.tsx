@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Clock, ArrowRight, UserCheck, AlertTriangle } from 'lucide-react';
 import { useDoctorWaitingQueue } from '@/hooks/Doctor/useDoctorWaitingQueue';
+import { useDoctorWorkingToday } from '@/hooks/Doctor/useDoctorWorkingToday';
 import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 
 /**
@@ -15,8 +16,16 @@ import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers
 export const DoctorQueueWidget = () => {
   const navigate = useNavigate();
   const { waitingQueue, isLoading } = useDoctorWaitingQueue({ refetchInterval: 15000 });
+  const {
+    shouldRestrictWaitingRoom,
+    isLoading: isWorkingTodayLoading,
+  } = useDoctorWorkingToday();
 
   const nextPatient = waitingQueue[0];
+
+  if (shouldRestrictWaitingRoom) {
+    return null;
+  }
 
   return (
     <Card className="border-l-4 border-l-teal-500">
@@ -34,7 +43,7 @@ export const DoctorQueueWidget = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading ? (
+        {isLoading || isWorkingTodayLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-16 w-full" />
             <Skeleton className="h-10 w-full" />

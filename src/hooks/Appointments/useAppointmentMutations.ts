@@ -13,6 +13,11 @@ import {
   AppointmentStatus,
   AppointmentStatusTransitionContext,
 } from "@/types/Appointment/Appointment";
+import { toast } from "sonner";
+
+const getErrorMessage = (error: Error): string =>
+  (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+  error.message;
 
 export const useAppointmentMutations = () => {
   const queryClient = useQueryClient();
@@ -40,6 +45,9 @@ export const useAppointmentMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['waitingList'] });
       queryClient.invalidateQueries({ queryKey: ['doctorTodayAppointments'] });
       queryClient.invalidateQueries({ queryKey: ['doctorDashboard'] });
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || "No se pudo cambiar el estado del turno");
     },
   });
 

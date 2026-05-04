@@ -91,11 +91,11 @@ const AntecedentesSection: React.FC<Props> = ({
     setWantsToOpenModal(false);
   };
 
-  const isAntecedenteEditableByCurrentDoctor = (_antecedente: Antecedente) =>
+  const isAntecedenteEditableByCurrentDoctor = () =>
     isDoctor || isAdmin;
 
-  const canDeleteAntecedente = (antecedente: Antecedente) => {
-    return isAntecedenteEditableByCurrentDoctor(antecedente);
+  const canDeleteAntecedente = () => {
+    return isAntecedenteEditableByCurrentDoctor();
   };
 
   const renderAntecedentesPorCategoria = () => {
@@ -228,12 +228,12 @@ const AntecedentesSection: React.FC<Props> = ({
         showAuditTrail={false}
         canDelete={
           selectedAntecedenteToView
-            ? canDeleteAntecedente(selectedAntecedenteToView)
+            ? canDeleteAntecedente()
             : false
         }
         canEdit={
           selectedAntecedenteToView
-            ? isAntecedenteEditableByCurrentDoctor(selectedAntecedenteToView)
+            ? isAntecedenteEditableByCurrentDoctor()
             : false
         }
       />
