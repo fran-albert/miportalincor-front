@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FileText, Plus, Stethoscope, User } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBeforeUnload } from "react-router-dom";
 import { useState } from "react";
 import { AntecedentesSelect } from "@/components/Select/Antecedentes/select";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
@@ -73,8 +73,6 @@ export const CreateAntecedenteDialog = ({
     (Boolean(categoriaValue) ||
       Boolean(descripcionValue?.trim()) ||
       Boolean(observacionesValue?.trim()));
-  const blocker = useBlocker(hasUnsavedChanges);
-
   useBeforeUnload(
     (event) => {
       if (!hasUnsavedChanges) return;
@@ -152,18 +150,10 @@ export const CreateAntecedenteDialog = ({
   };
 
   const handleDiscard = () => {
-    if (blocker.state === "blocked") {
-      blocker.proceed?.();
-      return;
-    }
-
     closeAndReset();
   };
 
   const handleKeepEditing = () => {
-    if (blocker.state === "blocked") {
-      blocker.reset?.();
-    }
     setIsDiscardDialogOpen(false);
   };
 
@@ -177,7 +167,7 @@ export const CreateAntecedenteDialog = ({
   return (
     <>
     <AlertDialog
-      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      open={isDiscardDialogOpen}
       onOpenChange={(open) => {
         if (!open) {
           handleKeepEditing();

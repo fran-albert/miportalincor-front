@@ -35,7 +35,7 @@ import {
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBeforeUnload } from "react-router-dom";
 
 interface EditAntecedenteModalProps {
   isOpen: boolean;
@@ -136,8 +136,6 @@ export const EditAntecedenteModal = ({
     isOpen &&
     (value !== (antecedente?.value || "") ||
       observaciones !== (antecedente?.observaciones || ""));
-  const blocker = useBlocker(hasChanges);
-
   useBeforeUnload(
     (event) => {
       if (!hasChanges) return;
@@ -158,18 +156,10 @@ export const EditAntecedenteModal = ({
   };
 
   const handleDiscard = () => {
-    if (blocker.state === "blocked") {
-      blocker.proceed?.();
-      return;
-    }
-
     closeAndReset();
   };
 
   const handleKeepEditing = () => {
-    if (blocker.state === "blocked") {
-      blocker.reset?.();
-    }
     setIsDiscardDialogOpen(false);
   };
 
@@ -178,7 +168,7 @@ export const EditAntecedenteModal = ({
   return (
     <>
     <AlertDialog
-      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      open={isDiscardDialogOpen}
       onOpenChange={(open) => {
         if (!open) {
           handleKeepEditing();

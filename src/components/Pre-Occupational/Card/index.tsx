@@ -14,7 +14,7 @@ import {
 import CollaboratorInformationCard from "../Collaborator-Information";
 import GeneralTab from "@/components/Tabs/Pre-Occupational/General";
 import MedicalHistoryTab from "@/components/Tabs/Pre-Occupational/Medical-History";
-import { useBeforeUnload, useBlocker, useNavigate } from "react-router-dom";
+import { useBeforeUnload, useNavigate } from "react-router-dom";
 import { useMemo, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -31,16 +31,6 @@ import { useDataTypes } from "@/hooks/Data-Type/useDataTypes";
 import ReportVersioningCard from "../Report-Versioning";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -250,7 +240,6 @@ export default function PreOccupationalCards({
     hasMedicalHistoryUnsavedChanges ||
     hasReportVisibilityUnsavedChanges ||
     hasGeneralUnsavedChanges;
-  const blocker = useBlocker(hasUnsavedChanges);
   const previewHref = `/incor-laboral/colaboradores/${slug}/examen/${medicalEvaluation.id}/previsualizar-informe`;
   const doctorQueryId = medicalEvaluation.doctorId
     ? String(medicalEvaluation.doctorId)
@@ -550,32 +539,6 @@ export default function PreOccupationalCards({
   return (
     <div className="min-h-screen p-4">
       <div className="mx-auto space-y-4">
-        <AlertDialog
-          open={blocker.state === "blocked"}
-          onOpenChange={(open) => {
-            if (!open && blocker.state === "blocked") {
-              blocker.reset?.();
-            }
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Tenés cambios sin guardar</AlertDialogTitle>
-              <AlertDialogDescription>
-                Si salís ahora, vas a perder la edición en curso de este
-                examen. Guardá primero o confirmá que querés salir igual.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => blocker.reset?.()}>
-                Seguir editando
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={() => blocker.proceed?.()}>
-                Salir sin guardar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
         <Dialog open={isDoctorDialogOpen} onOpenChange={setIsDoctorDialogOpen}>
           <DialogContent className="sm:max-w-[460px]">
             <DialogHeader>

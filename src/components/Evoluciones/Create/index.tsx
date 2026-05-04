@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBeforeUnload } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Activity, Calendar, ClipboardList, FileText, Plus, Stethoscope } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -89,8 +89,6 @@ const CreateEvolucionDialog: React.FC<Props> = ({
     (Object.values(newEvolucion).some((value) => value.trim() !== "") ||
       parametrosSeleccionados.length > 0 ||
       Object.values(medicionesDinamicas).some((value) => value.trim() !== ""));
-  const blocker = useBlocker(hasUnsavedChanges);
-
   useBeforeUnload(
     (event) => {
       if (!hasUnsavedChanges) return;
@@ -255,18 +253,10 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   };
 
   const handleDiscard = () => {
-    if (blocker.state === "blocked") {
-      blocker.proceed?.();
-      return;
-    }
-
     closeAndReset();
   };
 
   const handleKeepEditing = () => {
-    if (blocker.state === "blocked") {
-      blocker.reset?.();
-    }
     setIsDiscardDialogOpen(false);
   };
 
@@ -280,7 +270,7 @@ const CreateEvolucionDialog: React.FC<Props> = ({
   return (
     <>
       <AlertDialog
-        open={isDiscardDialogOpen || blocker.state === "blocked"}
+        open={isDiscardDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
             handleKeepEditing();
