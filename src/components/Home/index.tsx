@@ -1,6 +1,7 @@
 import { WelcomeHero } from "./Dashboard/WelcomeHero";
 import { StatsCard } from "./Dashboard/StatsCard";
 import { QuickAccessCard } from "./Dashboard/QuickAccessCard";
+import { OperationsTodayDashboard } from "./Dashboard/OperationsTodayDashboard";
 import { DoctorQueueWidget } from "@/components/DoctorWaitingRoom";
 import { useDashboardStats } from "@/hooks/Dashboard/useDashboardStats";
 import {
@@ -119,6 +120,10 @@ export default function HomeComponent({ name }: { name: string }) {
     <div className="space-y-6 p-6">
       {/* Hero Section */}
       <WelcomeHero name={name} />
+
+      {(isSecretary || isAdmin) && (
+        <OperationsTodayDashboard enabled={!!session} />
+      )}
 
       {/* Doctor Waiting Room Widget - Solo para médicos */}
       {isDoctor && (
