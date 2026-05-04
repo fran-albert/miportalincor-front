@@ -30,7 +30,7 @@ import { ApiError } from "@/types/Error/ApiError";
 import { Evolucion } from "@/types/Antecedentes/Antecedentes";
 import { getEditTimeRemaining } from "@/common/helpers/evolutionHelpers";
 import { UpdateDataValueDto } from "@/api/Evolution/update-evolution";
-import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useBeforeUnload } from "react-router-dom";
 
 interface Props {
   isOpen: boolean;
@@ -115,8 +115,6 @@ const EditEvolucionDialog: React.FC<Props> = ({
     isOpen &&
     (JSON.stringify(formData) !== JSON.stringify(initialFormData) ||
       JSON.stringify(medicionesDinamicas) !== JSON.stringify(initialMediciones));
-  const blocker = useBlocker(hasUnsavedChanges);
-
   useBeforeUnload(
     (event) => {
       if (!hasUnsavedChanges) return;
@@ -264,18 +262,10 @@ const EditEvolucionDialog: React.FC<Props> = ({
   };
 
   const handleDiscard = () => {
-    if (blocker.state === "blocked") {
-      blocker.proceed?.();
-      return;
-    }
-
     closeAndReset();
   };
 
   const handleKeepEditing = () => {
-    if (blocker.state === "blocked") {
-      blocker.reset?.();
-    }
     setIsDiscardDialogOpen(false);
   };
 
@@ -284,7 +274,7 @@ const EditEvolucionDialog: React.FC<Props> = ({
   return (
     <>
     <AlertDialog
-      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      open={isDiscardDialogOpen}
       onOpenChange={(open) => {
         if (!open) {
           handleKeepEditing();
