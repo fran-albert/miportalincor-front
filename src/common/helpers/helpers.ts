@@ -248,12 +248,14 @@ export function getDoctorTitle(gender?: string): string {
  * @param doctor - Objeto con firstName, lastName, gender
  * @returns "Dr. Juan Pérez" o "Dra. María García"
  */
-export function formatDoctorName(doctor: {
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-}): string {
-  const title = getDoctorTitle(doctor.gender);
+export function formatDoctorName(doctor?: {
+  firstName?: string | null;
+  lastName?: string | null;
+  gender?: string | null;
+} | null): string {
+  if (!doctor) return "Médico no registrado";
+
+  const title = getDoctorTitle(doctor.gender ?? undefined);
   return `${title} ${doctor.firstName || ''} ${doctor.lastName || ''}`.trim();
 }
 

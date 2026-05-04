@@ -4,6 +4,7 @@ import { Patient } from "@/types/Patient/Patient";
 import { formatDni, calculateAge, formatDoctorName } from "@/common/helpers/helpers";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
 import { EvolutionTableRow } from "../Table/columns";
+import { getDoctorSpecialities } from "../evolutionSafeAccess";
 
 const styles = StyleSheet.create({
   page: {
@@ -310,8 +311,8 @@ export function EvolucionesPdfDocument({
                     </Text>
                     <Text style={styles.evolutionDoctor}>
                       {formatDoctorName(evolution.doctor)}
-                      {evolution.doctor.specialities?.[0] &&
-                        ` - ${evolution.doctor.specialities[0].name}`}
+                      {getDoctorSpecialities(evolution.doctor)[0] &&
+                        ` - ${getDoctorSpecialities(evolution.doctor)[0].name}`}
                     </Text>
                   </View>
                 </View>
@@ -364,7 +365,7 @@ export function EvolucionesPdfDocument({
                             (medicion, index) => (
                               <View key={index} style={styles.medicionBadge}>
                                 <Text style={styles.medicionText}>
-                                  {medicion.dataType.name}: {medicion.value}
+                                  {medicion.dataType?.name || "Medición"}: {medicion.value}
                                   {medicion.observaciones &&
                                     ` (${medicion.observaciones})`}
                                 </Text>

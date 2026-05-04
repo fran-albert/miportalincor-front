@@ -318,6 +318,11 @@ describe('helpers', () => {
       const result = formatDoctorName({});
       expect(result).toBe('Dr.');
     });
+
+    it('debe manejar médico no registrado', () => {
+      expect(formatDoctorName(null)).toBe('Médico no registrado');
+      expect(formatDoctorName(undefined)).toBe('Médico no registrado');
+    });
   });
 
   describe('formatDoctorInfo', () => {

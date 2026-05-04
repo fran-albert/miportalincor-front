@@ -46,20 +46,21 @@ export interface AntecedentesQueryParams {
 export interface EvolucionData extends Base {
   value: string;
   observaciones: string | null;
-  dataType: DataType;
+  dataType?: DataType | null;
 }
 
 export interface Evolucion extends Base {
-  doctor: {
+  doctor?: {
     userId: number;
-    firstName: string;
-    lastName: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    gender?: string | null;
     specialities: {
       id: number;
       name: string;
     }[];
-  };
-  data: EvolucionData[];
+  } | null;
+  data?: EvolucionData[];
 }
 
 export interface AntecedentesResponse {

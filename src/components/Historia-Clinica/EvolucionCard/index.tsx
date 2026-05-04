@@ -12,6 +12,11 @@ import { Evolucion } from "@/types/Antecedentes/Antecedentes";
 import { motion } from "framer-motion";
 import { Clock, Stethoscope } from "lucide-react";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import {
+  getDoctorInitials,
+  getDoctorSpecialities,
+  getEvolutionData,
+} from "@/components/Evoluciones/evolutionSafeAccess";
 
 interface EvolucionCardProps {
   evolucion: Evolucion;
@@ -19,9 +24,9 @@ interface EvolucionCardProps {
 }
 
 export const EvolucionCard = ({ evolucion, index }: EvolucionCardProps) => {
-  const doctorInitials = `${evolucion.doctor.firstName?.[0] || ""}${
-    evolucion.doctor.lastName?.[0] || ""
-  }`.toUpperCase();
+  const doctorInitials = getDoctorInitials(evolucion.doctor);
+  const doctorSpecialities = getDoctorSpecialities(evolucion.doctor);
+  const evolutionData = getEvolutionData(evolucion);
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("es-ES", {
@@ -70,14 +75,13 @@ export const EvolucionCard = ({ evolucion, index }: EvolucionCardProps) => {
                   <h3 className="font-semibold text-gray-900">
                     {formatDoctorName(evolucion.doctor)}
                   </h3>
-                  {evolucion.doctor.specialities &&
-                    evolucion.doctor.specialities.length > 0 && (
+                  {doctorSpecialities.length > 0 && (
                       <Badge
                         variant="outline"
                         className="text-xs bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20"
                       >
                         <Stethoscope className="h-3 w-3 mr-1" />
-                        {evolucion.doctor.specialities[0].name}
+                        {doctorSpecialities[0].name}
                       </Badge>
                     )}
                 </div>
@@ -96,9 +100,9 @@ export const EvolucionCard = ({ evolucion, index }: EvolucionCardProps) => {
         </CardHeader>
 
         <CardContent className="pt-0">
-          {evolucion.data && evolucion.data.length > 0 ? (
+          {evolutionData.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
-              {evolucion.data.map((item, idx) => (
+              {evolutionData.map((item, idx) => (
                 <AccordionItem
                   key={idx}
                   value={`item-${idx}`}

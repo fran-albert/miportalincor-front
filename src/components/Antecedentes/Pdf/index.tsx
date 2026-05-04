@@ -23,7 +23,7 @@ const groupAntecedentesByCategory = (
   const grouped: Record<string, Antecedente[]> = {};
 
   antecedentes.forEach((ant) => {
-    const category = ant.dataType.name;
+    const category = ant.dataType?.name || "Sin categoría";
     if (!grouped[category]) {
       grouped[category] = [];
     }

@@ -30,6 +30,15 @@ import {
 } from "@/types/Antecedentes/Antecedentes";
 import useUserRole from "@/hooks/useRoles";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import {
+  getDoctorInitials,
+  getDoctorSpecialities,
+  getEvolutionData,
+  getEvolutionDataTypeCategory,
+  getEvolutionDataTypeName,
+  getFechaConsultaFromEvolution,
+} from "../evolutionSafeAccess";
+import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
 
 type UserData = Patient | Doctor;
 
@@ -114,14 +123,7 @@ const EvolutionSection: React.FC<Props> = ({
 
   // Función para obtener la fecha de consulta de una evolución
   const getFechaConsulta = (evolucion: EvolucionType) => {
-    // Buscar el campo de fecha de consulta en el array data
-    const fechaData = evolucion.data.find(
-      (d) => d.dataType && d.dataType.name.toLowerCase() === "fecha de consulta"
-    );
-
-    return fechaData
-      ? fechaData.value
-      : new Date(evolucion.createdAt).toISOString();
+    return getFechaConsultaFromEvolution(evolucion);
   };
 
   // Función para procesar evoluciones en una lista simple
@@ -138,12 +140,10 @@ const EvolutionSection: React.FC<Props> = ({
       let textoImportado: string | null = null;
       const mediciones: EvolucionData[] = [];
 
-      evolucion.data.forEach((dataItem) => {
-        if (!dataItem.dataType) return;
+      getEvolutionData(evolucion).forEach((dataItem) => {
+        const dataTypeName = getEvolutionDataTypeName(dataItem);
 
-        const dataTypeName = dataItem.dataType.name.toLowerCase();
-
-        if (dataItem.dataType.category === "MEDICION") {
+        if (getEvolutionDataTypeCategory(dataItem) === "MEDICION") {
           mediciones.push(dataItem);
         } else {
           if (dataTypeName.includes("especialidad")) {
@@ -203,9 +203,13 @@ const EvolutionSection: React.FC<Props> = ({
           consulta.mediciones.length > 0
       )
       .sort(
-        (a, b) =>
-          new Date(b.fechaConsulta).getTime() -
-          new Date(a.fechaConsulta).getTime()
+        (a, b) => {
+          const bTime = new Date(b.fechaConsulta).getTime();
+          const aTime = new Date(a.fechaConsulta).getTime();
+
+          return (Number.isNaN(bTime) ? 0 : bTime) -
+            (Number.isNaN(aTime) ? 0 : aTime);
+        }
       );
   };
 
@@ -280,31 +284,10 @@ const EvolutionSection: React.FC<Props> = ({
             ) : (
               <div className="space-y-3">
                 {evolucionesLista.slice(0, visibleCount).map((evolucion, index) => {
-                  const fechaConsulta = new Date(evolucion.fechaConsulta);
-                  const formattedDate = fechaConsulta.toLocaleDateString(
-                    "es-AR",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    }
-                  );
-                  const formattedTime = fechaConsulta.toLocaleTimeString(
-                    "es-AR",
-                    {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }
-                  );
-
-                  // Obtener iniciales del doctor
-                  const doctorInitials = `${
-                    evolucion.doctor.firstName?.[0] || ""
-                  }${evolucion.doctor.lastName?.[0] || ""}`.toUpperCase();
-
-                  // Obtener especialidad primaria
+                  const dateTime = formatEvolutionDateTime(evolucion.fechaConsulta);
+                  const doctorInitials = getDoctorInitials(evolucion.doctor);
                   const primarySpeciality =
-                    evolucion.doctor.specialities?.[0]?.name;
+                    getDoctorSpecialities(evolucion.doctor)[0]?.name;
 
                   return (
                     <motion.div
@@ -333,10 +316,10 @@ const EvolutionSection: React.FC<Props> = ({
                                 <div className="flex items-center gap-1.5 text-xs text-gray-600">
                                   <Calendar className="h-3.5 w-3.5 text-greenPrimary" />
                                   <span className="font-medium">
-                                    {formattedDate}
+                                    {dateTime.date}
                                   </span>
                                   <Clock className="h-3.5 w-3.5 text-gray-400 ml-0.5" />
-                                  <span>{formattedTime}</span>
+                                  <span>{dateTime.time}</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5">
@@ -417,9 +400,7 @@ const EvolutionSection: React.FC<Props> = ({
                   {/* Avatar del Doctor */}
                   <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border-2 border-white/30 shadow-lg">
                     <span className="text-lg font-bold text-white">
-                      {`${selectedConsultaToView.doctor.firstName?.[0] || ""}${
-                        selectedConsultaToView.doctor.lastName?.[0] || ""
-                      }`.toUpperCase()}
+                      {getDoctorInitials(selectedConsultaToView.doctor)}
                     </span>
                   </div>
 
@@ -433,34 +414,30 @@ const EvolutionSection: React.FC<Props> = ({
                       <div className="flex items-center gap-2 text-white/90">
                         <Calendar className="h-4 w-4" />
                         <span className="text-sm">
-                          {new Date(
+                          {formatEvolutionDateTime(
                             selectedConsultaToView.fechaConsulta
-                          ).toLocaleDateString("es-AR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
+                          ).date}
                         </span>
                       </div>
                       {/* Hora */}
                       <div className="flex items-center gap-2 text-white/90">
                         <Clock className="h-4 w-4" />
                         <span className="text-sm">
-                          {new Date(
+                          {formatEvolutionDateTime(
                             selectedConsultaToView.fechaConsulta
-                          ).toLocaleTimeString("es-AR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          ).time}
                         </span>
                       </div>
                       {/* Especialidad */}
-                      {selectedConsultaToView.doctor.specialities &&
-                        selectedConsultaToView.doctor.specialities.length >
-                          0 && (
+                      {getDoctorSpecialities(selectedConsultaToView.doctor)
+                        .length > 0 && (
                           <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
                             <Stethoscope className="h-3 w-3 mr-1" />
-                            {selectedConsultaToView.doctor.specialities[0].name}
+                            {
+                              getDoctorSpecialities(
+                                selectedConsultaToView.doctor
+                              )[0].name
+                            }
                           </Badge>
                         )}
                     </div>
@@ -562,7 +539,7 @@ const EvolutionSection: React.FC<Props> = ({
                             className="bg-white p-3 rounded-lg border border-purple-200 text-center shadow-sm hover:shadow-md transition-shadow"
                           >
                             <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-1">
-                              {medicion.dataType.name}
+                              {medicion.dataType?.name || "Medición"}
                             </p>
                             <p className="text-2xl font-bold text-gray-900">
                               {medicion.value}

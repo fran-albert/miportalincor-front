@@ -65,23 +65,24 @@ const EditEvolucionDialog: React.FC<Props> = ({
   }>({});
 
   const initialFormData = useMemo(() => {
-    const motivoData = evolucion.data.find(
+    const evolutionData = evolucion.data ?? [];
+    const motivoData = evolutionData.find(
       (d) =>
-        d.dataType.name.toLowerCase().includes("motivo de consulta") ||
-        d.dataType.name.toLowerCase() === "motivo consulta"
+        d.dataType?.name.toLowerCase().includes("motivo de consulta") ||
+        d.dataType?.name.toLowerCase() === "motivo consulta"
     );
-    const enfermedadData = evolucion.data.find((d) =>
-      d.dataType.name.toLowerCase().includes("enfermedad")
+    const enfermedadData = evolutionData.find((d) =>
+      d.dataType?.name.toLowerCase().includes("enfermedad")
     );
-    const examenData = evolucion.data.find(
+    const examenData = evolutionData.find(
       (d) =>
-        d.dataType.name.toLowerCase().includes("examen fisico") ||
-        d.dataType.name.toLowerCase().includes("examen físico")
+        d.dataType?.name.toLowerCase().includes("examen fisico") ||
+        d.dataType?.name.toLowerCase().includes("examen físico")
     );
-    const diagnosticoData = evolucion.data.find(
+    const diagnosticoData = evolutionData.find(
       (d) =>
-        d.dataType.name.toLowerCase().includes("diagnóstico") ||
-        d.dataType.name.toLowerCase().includes("diagnostico")
+        d.dataType?.name.toLowerCase().includes("diagnóstico") ||
+        d.dataType?.name.toLowerCase().includes("diagnostico")
     );
 
     return {
@@ -94,8 +95,8 @@ const EditEvolucionDialog: React.FC<Props> = ({
 
   const initialMediciones = useMemo(() => {
     const mediciones: { [key: string]: string } = {};
-    evolucion.data.forEach((d) => {
-      if (d.dataType.category === "MEDICION") {
+    (evolucion.data ?? []).forEach((d) => {
+      if (d.dataType?.category === "MEDICION") {
         mediciones[d.dataType.id.toString()] = d.value;
       }
     });
@@ -198,8 +199,8 @@ const EditEvolucionDialog: React.FC<Props> = ({
 
       // Keep the original date
       if (fechaType) {
-        const originalFechaData = evolucion.data.find(
-          (d) => d.dataType.name.toLowerCase() === "fecha de consulta"
+        const originalFechaData = (evolucion.data ?? []).find(
+          (d) => d.dataType?.name.toLowerCase() === "fecha de consulta"
         );
         if (originalFechaData) {
           dataValues.push({

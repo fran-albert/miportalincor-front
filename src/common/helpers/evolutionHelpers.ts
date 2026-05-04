@@ -52,8 +52,24 @@ export const getDeleteTimeRemaining = (createdAt: string): string => {
 /**
  * Formatea la fecha y hora de una evolución para mostrar en la tabla
  */
-export const formatEvolutionDateTime = (dateTimeString: string) => {
+export const formatEvolutionDateTime = (dateTimeString?: string | null) => {
+  if (!dateTimeString) {
+    return {
+      date: "-",
+      time: "-",
+      full: "-",
+    };
+  }
+
   const date = new Date(dateTimeString);
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      date: "-",
+      time: "-",
+      full: "-",
+    };
+  }
 
   const formattedDate = date.toLocaleDateString('es-AR', {
     day: '2-digit',

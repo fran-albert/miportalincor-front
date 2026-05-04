@@ -230,7 +230,7 @@ export const EditAntecedenteModal = ({
                 <div>
                   <p className="text-xs text-blue-700 font-medium">Categoria</p>
                   <Badge variant="greenPrimary" className="mt-1">
-                    {antecedente.dataType.name}
+                    {antecedente.dataType?.name || "Sin categoría"}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-blue-600">

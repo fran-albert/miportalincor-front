@@ -43,6 +43,14 @@ import EvolutionTable from "../Table/table";
 import { EvolutionTableRow } from "../Table/columns";
 import { formatEvolutionDateTime } from "@/common/helpers/evolutionHelpers";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import {
+  getDoctorSpecialities,
+  getEvolutionData,
+  getEvolutionDataTypeCategory,
+  getEvolutionDataTypeName,
+  getFechaConsultaFromEvolution,
+  normalizeEvolutionDoctor,
+} from "../evolutionSafeAccess";
 import { useEvolutionPDF } from "@/hooks/Evolution/useEvolutionPDF";
 import { useEvolucionesPDF } from "@/hooks/Evolution/useEvolucionesPDF";
 import { useToast } from "@/hooks/Toast/useToast";
@@ -204,12 +212,7 @@ export default function EvolucionesComponent({
 
   // Función para obtener la fecha de consulta de una evolución
   const getFechaConsulta = (evolucion: Evolucion) => {
-    // Buscar el campo de fecha de consulta en el array data
-    const fechaData = evolucion.data.find(d => 
-      d.dataType && d.dataType.name.toLowerCase() === 'fecha de consulta'
-    );
-    
-    return fechaData ? fechaData.value : new Date(evolucion.createdAt).toISOString().split('T')[0];
+    return getFechaConsultaFromEvolution(evolucion);
   };
 
   // Función para transformar evoluciones a formato de tabla
@@ -254,12 +257,10 @@ export default function EvolucionesComponent({
       }
 
       // Procesar cada item de data dentro de la evolución
-      evolucion.data.forEach((dataItem: EvolucionData) => {
-        if (!dataItem.dataType) return;
+      getEvolutionData(evolucion).forEach((dataItem: EvolucionData) => {
+        const dataTypeName = getEvolutionDataTypeName(dataItem);
 
-        const dataTypeName = dataItem.dataType.name.toLowerCase();
-
-        if (dataItem.dataType.category === "MEDICION") {
+        if (getEvolutionDataTypeCategory(dataItem) === "MEDICION") {
           // Agregar a mediciones
           grouped[key].mediciones.push(dataItem);
         } else {
@@ -315,12 +316,7 @@ export default function EvolucionesComponent({
       id: String(consulta.evolucionPrincipal?.id ?? `evolution_${index}`),
       fechaConsulta: consulta.fechaConsulta,
       fechaCreacion: consulta.fechaCreacion,
-      doctor: {
-        userId: consulta.doctor.userId,
-        firstName: consulta.doctor.firstName,
-        lastName: consulta.doctor.lastName,
-        specialities: consulta.doctor.specialities || []
-      },
+      doctor: normalizeEvolutionDoctor(consulta.doctor),
       motivoConsulta: consulta.motivoConsulta,
       enfermedadActual: consulta.enfermedadActual,
       examenFisico: consulta.examenFisico,
@@ -355,7 +351,7 @@ export default function EvolucionesComponent({
       row.textoImportado
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      `${row.doctor.firstName} ${row.doctor.lastName}`
+      formatDoctorName(row.doctor)
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
@@ -569,10 +565,9 @@ export default function EvolucionesComponent({
                         <p className="text-sm font-semibold text-gray-900 mt-1">
                           {formatDoctorName(selectedConsultaToView.doctor)}
                         </p>
-                        {selectedConsultaToView.doctor.specialities &&
-                         selectedConsultaToView.doctor.specialities.length > 0 && (
+                        {getDoctorSpecialities(selectedConsultaToView.doctor).length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            {selectedConsultaToView.doctor.specialities.map((specialty, index) => (
+                            {getDoctorSpecialities(selectedConsultaToView.doctor).map((specialty, index) => (
                               <Badge
                                 key={index}
                                 variant="outline"
@@ -689,7 +684,7 @@ export default function EvolucionesComponent({
                               className="bg-white p-2 rounded border text-center relative group"
                             >
                               <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                                {medicion.dataType.name}
+                                {medicion.dataType?.name || "Medición"}
                               </p>
                               <p className="text-lg font-bold text-gray-800 mt-1">
                                 {medicion.value}
