@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
@@ -10,6 +10,16 @@ import {
   Clock,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MedicionInputs } from "@/components/Select/Medicion/select";
@@ -20,6 +30,7 @@ import { ApiError } from "@/types/Error/ApiError";
 import { Evolucion } from "@/types/Antecedentes/Antecedentes";
 import { getEditTimeRemaining } from "@/common/helpers/evolutionHelpers";
 import { UpdateDataValueDto } from "@/api/Evolution/update-evolution";
+import { useBeforeUnload, useBlocker } from "react-router-dom";
 
 interface Props {
   isOpen: boolean;
@@ -40,6 +51,7 @@ const EditEvolucionDialog: React.FC<Props> = ({
   });
   const { updateEvolutionMutation } = useEvolutionMutation();
   const { promiseToast } = useToastContext();
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     motivoConsulta: "",
@@ -52,45 +64,67 @@ const EditEvolucionDialog: React.FC<Props> = ({
     [key: string]: string;
   }>({});
 
+  const initialFormData = useMemo(() => {
+    const motivoData = evolucion.data.find(
+      (d) =>
+        d.dataType.name.toLowerCase().includes("motivo de consulta") ||
+        d.dataType.name.toLowerCase() === "motivo consulta"
+    );
+    const enfermedadData = evolucion.data.find((d) =>
+      d.dataType.name.toLowerCase().includes("enfermedad")
+    );
+    const examenData = evolucion.data.find(
+      (d) =>
+        d.dataType.name.toLowerCase().includes("examen fisico") ||
+        d.dataType.name.toLowerCase().includes("examen físico")
+    );
+    const diagnosticoData = evolucion.data.find(
+      (d) =>
+        d.dataType.name.toLowerCase().includes("diagnóstico") ||
+        d.dataType.name.toLowerCase().includes("diagnostico")
+    );
+
+    return {
+      motivoConsulta: motivoData?.value || "",
+      enfermedadActual: enfermedadData?.value || "",
+      examenFisico: examenData?.value || "",
+      diagnosticosPresuntivos: diagnosticoData?.value || "",
+    };
+  }, [evolucion.data]);
+
+  const initialMediciones = useMemo(() => {
+    const mediciones: { [key: string]: string } = {};
+    evolucion.data.forEach((d) => {
+      if (d.dataType.category === "MEDICION") {
+        mediciones[d.dataType.id.toString()] = d.value;
+      }
+    });
+    return mediciones;
+  }, [evolucion.data]);
+
   // Initialize form with existing evolution data
   useEffect(() => {
     if (evolucion && evolucion.data) {
-      const motivoData = evolucion.data.find(
-        (d) =>
-          d.dataType.name.toLowerCase().includes("motivo de consulta") ||
-          d.dataType.name.toLowerCase() === "motivo consulta"
-      );
-      const enfermedadData = evolucion.data.find((d) =>
-        d.dataType.name.toLowerCase().includes("enfermedad")
-      );
-      const examenData = evolucion.data.find(
-        (d) =>
-          d.dataType.name.toLowerCase().includes("examen fisico") ||
-          d.dataType.name.toLowerCase().includes("examen físico")
-      );
-      const diagnosticoData = evolucion.data.find(
-        (d) =>
-          d.dataType.name.toLowerCase().includes("diagnóstico") ||
-          d.dataType.name.toLowerCase().includes("diagnostico")
-      );
-
-      setFormData({
-        motivoConsulta: motivoData?.value || "",
-        enfermedadActual: enfermedadData?.value || "",
-        examenFisico: examenData?.value || "",
-        diagnosticosPresuntivos: diagnosticoData?.value || "",
-      });
-
-      // Initialize mediciones
-      const mediciones: { [key: string]: string } = {};
-      evolucion.data.forEach((d) => {
-        if (d.dataType.category === "MEDICION") {
-          mediciones[d.dataType.id.toString()] = d.value;
-        }
-      });
-      setMedicionesDinamicas(mediciones);
+      setFormData(initialFormData);
+      setMedicionesDinamicas(initialMediciones);
     }
-  }, [evolucion]);
+  }, [evolucion, initialFormData, initialMediciones]);
+
+  const hasUnsavedChanges =
+    isOpen &&
+    (JSON.stringify(formData) !== JSON.stringify(initialFormData) ||
+      JSON.stringify(medicionesDinamicas) !== JSON.stringify(initialMediciones));
+  const blocker = useBlocker(hasUnsavedChanges);
+
+  useBeforeUnload(
+    (event) => {
+      if (!hasUnsavedChanges) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    },
+    { capture: true }
+  );
 
   const handleMedicionChange = (medicionId: string, value: string) => {
     setMedicionesDinamicas((prev) => ({
@@ -206,20 +240,74 @@ const EditEvolucionDialog: React.FC<Props> = ({
         }),
       });
 
-      handleClose();
+      closeAndReset();
     } catch (error) {
       console.error("Error updating evolution:", error);
     }
   };
 
-  const handleClose = () => {
+  const closeAndReset = () => {
+    setFormData(initialFormData);
+    setMedicionesDinamicas(initialMediciones);
+    setIsDiscardDialogOpen(false);
     onClose();
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setIsDiscardDialogOpen(true);
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleDiscard = () => {
+    if (blocker.state === "blocked") {
+      blocker.proceed?.();
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleKeepEditing = () => {
+    if (blocker.state === "blocked") {
+      blocker.reset?.();
+    }
+    setIsDiscardDialogOpen(false);
   };
 
   const timeRemaining = getEditTimeRemaining(evolucion.createdAt);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+    <AlertDialog
+      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleKeepEditing();
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tenés cambios sin guardar</AlertDialogTitle>
+          <AlertDialogDescription>
+            Si salís ahora, vas a perder los cambios de la evolución. Guardá primero o confirmá que querés salir igual.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleKeepEditing}>
+            Seguir editando
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={handleDiscard}>
+            Salir sin guardar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[750px] max-h-[90vh] overflow-hidden p-0">
         {/* Gradient Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-6 rounded-t-lg">
@@ -448,6 +536,7 @@ const EditEvolucionDialog: React.FC<Props> = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

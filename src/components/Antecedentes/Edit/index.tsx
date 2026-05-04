@@ -8,6 +8,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -25,6 +35,7 @@ import {
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import { useBeforeUnload, useBlocker } from "react-router-dom";
 
 interface EditAntecedenteModalProps {
   isOpen: boolean;
@@ -41,6 +52,7 @@ export const EditAntecedenteModal = ({
 }: EditAntecedenteModalProps) => {
   const [observaciones, setObservaciones] = useState("");
   const [value, setValue] = useState("");
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
 
   const { updateDataValuesHCMutation } = useDataValuesMutations();
   const { promiseToast, showError } = useToastContext();
@@ -52,8 +64,6 @@ export const EditAntecedenteModal = ({
       setValue(antecedente.value || "");
     }
   }, [antecedente, isOpen]);
-
-  if (!antecedente) return null;
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -68,6 +78,10 @@ export const EditAntecedenteModal = ({
   };
 
   const handleUpdateAntecedente = async () => {
+    if (!antecedente) {
+      return;
+    }
+
     if (!value.trim()) {
       showError(
         "Campo requerido",
@@ -104,25 +118,91 @@ export const EditAntecedenteModal = ({
         }),
       });
 
-      handleClose();
+      closeAndReset();
       onEditSuccess?.();
     } catch {
       // Error already handled by promiseToast
     }
   };
 
-  const handleClose = () => {
+  const closeAndReset = () => {
     setObservaciones(antecedente?.observaciones || "");
     setValue(antecedente?.value || "");
+    setIsDiscardDialogOpen(false);
     onClose();
   };
 
   const hasChanges =
-    value !== (antecedente?.value || "") ||
-    observaciones !== (antecedente?.observaciones || "");
+    isOpen &&
+    (value !== (antecedente?.value || "") ||
+      observaciones !== (antecedente?.observaciones || ""));
+  const blocker = useBlocker(hasChanges);
+
+  useBeforeUnload(
+    (event) => {
+      if (!hasChanges) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    },
+    { capture: true }
+  );
+
+  const handleClose = () => {
+    if (hasChanges) {
+      setIsDiscardDialogOpen(true);
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleDiscard = () => {
+    if (blocker.state === "blocked") {
+      blocker.proceed?.();
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleKeepEditing = () => {
+    if (blocker.state === "blocked") {
+      blocker.reset?.();
+    }
+    setIsDiscardDialogOpen(false);
+  };
+
+  if (!antecedente) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <>
+    <AlertDialog
+      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleKeepEditing();
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tenés cambios sin guardar</AlertDialogTitle>
+          <AlertDialogDescription>
+            Si salís ahora, vas a perder los cambios del antecedente. Guardá primero o confirmá que querés salir igual.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleKeepEditing}>
+            Seguir editando
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={handleDiscard}>
+            Salir sin guardar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden p-0">
         {/* Gradient Header */}
         <DialogHeader className="sticky top-0 z-10 bg-gradient-to-r from-greenPrimary to-teal-600 text-white p-6 rounded-t-lg">
@@ -252,6 +332,7 @@ export const EditAntecedenteModal = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

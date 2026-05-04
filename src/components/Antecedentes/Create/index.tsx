@@ -1,11 +1,23 @@
 "use client";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FileText, Plus, Stethoscope, User } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
+import { useBeforeUnload, useBlocker } from "react-router-dom";
+import { useState } from "react";
 import { AntecedentesSelect } from "@/components/Select/Antecedentes/select";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { CreateDataValuesHCDto } from "@/types/Data-Value/Data-Value";
@@ -38,6 +50,7 @@ export const CreateAntecedenteDialog = ({
 }: CreateAntecedenteDialogProps) => {
   const { doctor } = useDoctor({ auth: true, id: idDoctor });
   const { promiseToast } = useToastContext();
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const { control, handleSubmit, reset, watch } = useForm<FormData>({
     defaultValues: {
       categoria: "",
@@ -55,6 +68,22 @@ export const CreateAntecedenteDialog = ({
   const categoriaValue = watch("categoria");
   const descripcionValue = watch("descripcion");
   const observacionesValue = watch("observaciones");
+  const hasUnsavedChanges =
+    isOpen &&
+    (Boolean(categoriaValue) ||
+      Boolean(descripcionValue?.trim()) ||
+      Boolean(observacionesValue?.trim()));
+  const blocker = useBlocker(hasUnsavedChanges);
+
+  useBeforeUnload(
+    (event) => {
+      if (!hasUnsavedChanges) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    },
+    { capture: true }
+  );
 
   const handleCreateAntecedente = async (data: FormData) => {
     try {
@@ -100,17 +129,42 @@ export const CreateAntecedenteDialog = ({
         }),
       });
 
-      reset();
-      onClose();
+      closeAndReset();
       onSuccess?.();
     } catch (error) {
       console.error("Error creating antecedente:", error);
     }
   };
 
-  const handleClose = () => {
+  const closeAndReset = () => {
     reset();
+    setIsDiscardDialogOpen(false);
     onClose();
+  };
+
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setIsDiscardDialogOpen(true);
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleDiscard = () => {
+    if (blocker.state === "blocked") {
+      blocker.proceed?.();
+      return;
+    }
+
+    closeAndReset();
+  };
+
+  const handleKeepEditing = () => {
+    if (blocker.state === "blocked") {
+      blocker.reset?.();
+    }
+    setIsDiscardDialogOpen(false);
   };
 
   const currentDate = new Date().toLocaleDateString("es-AR", {
@@ -121,7 +175,33 @@ export const CreateAntecedenteDialog = ({
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <>
+    <AlertDialog
+      open={isDiscardDialogOpen || blocker.state === "blocked"}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleKeepEditing();
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Tenés cambios sin guardar</AlertDialogTitle>
+          <AlertDialogDescription>
+            Si salís ahora, vas a perder el antecedente en curso. Guardá primero o confirmá que querés salir igual.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleKeepEditing}>
+            Seguir editando
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={handleDiscard}>
+            Salir sin guardar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden p-0">
         {/* Gradient Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-greenPrimary to-teal-600 text-white p-6 rounded-t-lg">
@@ -295,5 +375,6 @@ export const CreateAntecedenteDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };

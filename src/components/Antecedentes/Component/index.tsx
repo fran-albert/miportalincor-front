@@ -118,11 +118,11 @@ export default function AntecedentesComponent({
     setIsViewModalOpen(true);
   };
 
-  const isAntecedenteEditableByCurrentDoctor = (_antecedente: Antecedente) =>
+  const isAntecedenteEditableByCurrentDoctor = () =>
     isDoctor || isAdmin;
 
   const canDeleteAntecedente = (antecedente: Antecedente) => {
-    return !antecedente.deletedAt && isAntecedenteEditableByCurrentDoctor(antecedente);
+    return !antecedente.deletedAt && isAntecedenteEditableByCurrentDoctor();
   };
 
   // Obtener lista de antecedentes, si no hay datos mostrar array vacío
@@ -423,7 +423,7 @@ export default function AntecedentesComponent({
           canEdit={
             selectedAntecedenteToView
               ? !selectedAntecedenteToView.deletedAt &&
-                isAntecedenteEditableByCurrentDoctor(selectedAntecedenteToView)
+                isAntecedenteEditableByCurrentDoctor()
               : false
           }
         />

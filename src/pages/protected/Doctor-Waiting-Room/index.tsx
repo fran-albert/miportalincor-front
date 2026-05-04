@@ -37,6 +37,7 @@ import {
   Armchair,
   Stethoscope,
   AlertTriangle,
+  CalendarOff,
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -49,6 +50,7 @@ import {
   isCancelled,
 } from '@/hooks/Doctor/useDoctorDayAgenda';
 import { useDoctorWaitingQueue, doctorWaitingQueueKeys } from '@/hooks/Doctor/useDoctorWaitingQueue';
+import { useDoctorWorkingToday } from '@/hooks/Doctor/useDoctorWorkingToday';
 import { useDoctorMarkAsAttending, doctorQueueKeys } from '@/hooks/Queue/useDoctorQueue';
 import { useAppointmentMutations } from '@/hooks/Appointments/useAppointmentMutations';
 import { useOverturnMutations } from '@/hooks/Overturns/useOverturnMutations';
@@ -168,6 +170,10 @@ const DoctorWaitingRoomPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const {
+    shouldRestrictWaitingRoom,
+    isLoading: isWorkingTodayLoading,
+  } = useDoctorWorkingToday();
 
   // Agenda del día (appointments + overturns) - para attending, completed, cancelled
   const {
@@ -184,12 +190,13 @@ const DoctorWaitingRoomPage = () => {
     isFetching: isQueueFetching,
   } = useDoctorWaitingQueue({ refetchInterval: 15000 });
 
-  const isLoading = isAgendaLoading || isQueueLoading;
+  const isLoading = isAgendaLoading || isQueueLoading || isWorkingTodayLoading;
   const isFetching = isAgendaFetching || isQueueFetching;
 
   // Filtrar por estados específicos (usando agenda para attending/history)
   const attendingItems = agenda.filter((i) => isAttending(i.status));
   const historyItems = agenda.filter((i) => isCompleted(i.status) || isCancelled(i.status));
+  const hasAttendingPatient = attendingItems.length > 0;
 
   // Mutations
   const appointmentMutations = useAppointmentMutations();
@@ -283,6 +290,10 @@ const DoctorWaitingRoomPage = () => {
   };
 
   const handleQueueEntryAttend = (entry: typeof waitingQueue[0]) => {
+    if (hasAttendingPatient) {
+      return;
+    }
+
     // Usar el endpoint de queue para marcar como attending
     // Esto actualiza tanto la queue entry como el appointment/overturn
     markAsAttendingMutation.mutate(entry.id, {
@@ -328,6 +339,7 @@ const DoctorWaitingRoomPage = () => {
         {waitingQueue.map((entry, index) => {
           const type = getQueueEntryType(entry);
           const isChangingStatus = markAsAttendingMutation.isPending;
+          const isAttendDisabled = isChangingStatus || hasAttendingPatient;
 
           const waitingMinutes = entry.waitingTimeMinutes;
           const waitTimeColors = getWaitingTimeColor(waitingMinutes);
@@ -381,11 +393,21 @@ const DoctorWaitingRoomPage = () => {
                   size="lg"
                   className="bg-gradient-to-r from-greenPrimary to-teal-600 hover:from-greenPrimary/90 hover:to-teal-600/90 shadow-md"
                   onClick={() => handleQueueEntryAttend(entry)}
-                  disabled={isChangingStatus}
+                  disabled={isAttendDisabled}
+                  title={
+                    hasAttendingPatient
+                      ? 'Complete el paciente en atención antes de iniciar otro'
+                      : undefined
+                  }
                 >
                   <Play className="h-5 w-5 mr-2" />
                   Atender
                 </Button>
+                {hasAttendingPatient && (
+                  <p className="max-w-[180px] text-xs text-muted-foreground">
+                    Complete el paciente en atención para iniciar otro.
+                  </p>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon">
@@ -612,6 +634,23 @@ const DoctorWaitingRoomPage = () => {
         }
       />
 
+      {shouldRestrictWaitingRoom ? (
+        <Card className="border-dashed border-slate-300 shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <CalendarOff className="h-12 w-12 text-slate-400" />
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-slate-800">
+                Hoy no tenés sala de espera activa
+              </p>
+              <p className="text-sm text-muted-foreground">
+                La sala aparece únicamente los días configurados en tus horarios de atención.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+
       {/* Stats Cards con animaciones */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsCards.map((stat, index) => (
@@ -658,6 +697,8 @@ const DoctorWaitingRoomPage = () => {
       >
         {renderHistory()}
       </motion.div>
+        </>
+      )}
     </div>
   );
 };
