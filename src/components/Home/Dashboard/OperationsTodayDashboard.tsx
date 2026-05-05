@@ -228,51 +228,58 @@ export function OperationsTodayDashboardContent({
             {!isLoading && visibleDoctors.length === 0 ? (
               <EmptyState message="No hay médicos con atención configurada para hoy." />
             ) : null}
-            {visibleDoctors.map((doctor) => (
-              <div
-                key={doctor.doctorId}
-                className="rounded-lg border border-gray-100 px-3 py-3"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-gray-900">
-                      {doctor.doctorName}
-                    </p>
-                    <p className="truncate text-xs text-gray-500">
-                      {doctor.specialities?.join(", ") || "Sin especialidad"}
-                    </p>
+            {visibleDoctors.map((doctor) => {
+              const hasRemainingWorkingHours =
+                doctor.hasRemainingWorkingHours ?? doctor.isWorkingToday;
+
+              return (
+                <div
+                  key={doctor.doctorId}
+                  className="rounded-lg border border-gray-100 px-3 py-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-gray-900">
+                        {doctor.doctorName}
+                      </p>
+                      <p className="truncate text-xs text-gray-500">
+                        {doctor.specialities?.join(", ") || "Sin especialidad"}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        hasRemainingWorkingHours
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
+                      }
+                    >
+                      {hasRemainingWorkingHours
+                        ? "Con horario"
+                        : "Con actividad"}
+                    </Badge>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      doctor.isWorkingToday
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-amber-200 bg-amber-50 text-amber-700"
-                    }
-                  >
-                    {doctor.isWorkingToday ? "Trabaja hoy" : "Con actividad"}
-                  </Badge>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <DoctorDatum
+                      label="Horario"
+                      value={
+                        doctor.startTime && doctor.endTime
+                          ? `${doctor.startTime}-${doctor.endTime}`
+                          : "-"
+                      }
+                    />
+                    <DoctorDatum
+                      label="Turnos"
+                      value={String(doctor.appointments + doctor.overturns)}
+                    />
+                    <DoctorDatum
+                      label="Espera"
+                      value={String(doctor.waiting + doctor.called)}
+                    />
+                  </div>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <DoctorDatum
-                    label="Horario"
-                    value={
-                      doctor.startTime && doctor.endTime
-                        ? `${doctor.startTime}-${doctor.endTime}`
-                        : "-"
-                    }
-                  />
-                  <DoctorDatum
-                    label="Turnos"
-                    value={String(doctor.appointments + doctor.overturns)}
-                  />
-                  <DoctorDatum
-                    label="Espera"
-                    value={String(doctor.waiting + doctor.called)}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       </div>
