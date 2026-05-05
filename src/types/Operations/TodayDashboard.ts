@@ -46,6 +46,7 @@ export interface OperationsTodayDoctor {
   doctorName: string;
   specialities?: string[];
   isWorkingToday: boolean;
+  hasRemainingWorkingHours?: boolean;
   startTime?: string;
   endTime?: string;
   appointments: number;

@@ -59,6 +59,7 @@ const dashboard: OperationsTodayDashboard = {
       doctorName: "Lopez, Ana",
       specialities: ["Cardiologia"],
       isWorkingToday: true,
+      hasRemainingWorkingHours: true,
       startTime: "08:00",
       endTime: "14:00",
       appointments: 3,
@@ -90,7 +91,7 @@ describe("OperationsTodayDashboardContent", () => {
     expect(screen.getByText("Perez, Juan")).toBeInTheDocument();
     expect(screen.getByText("Rios, Lucia")).toBeInTheDocument();
     expect(screen.getByText("Lopez, Ana")).toBeInTheDocument();
-    expect(screen.getByText("Trabaja hoy")).toBeInTheDocument();
+    expect(screen.getByText("Con horario")).toBeInTheDocument();
     expect(screen.getByText("Sobreturno")).toBeInTheDocument();
   });
 

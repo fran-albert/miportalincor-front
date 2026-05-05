@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatOperationsDate,
+  getOperationsStatusClass,
   getOperationsStatusLabel,
   getVisibleOperationsDoctors,
 } from "../operationsTodayDashboard.utils";
@@ -12,6 +13,7 @@ const createDoctor = (
   doctorId: 1,
   doctorName: "Lopez, Ana",
   isWorkingToday: false,
+  hasRemainingWorkingHours: false,
   appointments: 0,
   overturns: 0,
   waiting: 0,
@@ -36,12 +38,29 @@ describe("operationsTodayDashboard utils", () => {
 
   it("keeps doctors visible only when they work today or have activity", () => {
     const doctors = [
-      createDoctor({ doctorId: 1, isWorkingToday: true, status: "working" }),
-      createDoctor({ doctorId: 2, appointments: 1, status: "with_activity" }),
-      createDoctor({ doctorId: 3 }),
+      createDoctor({
+        doctorId: 1,
+        isWorkingToday: true,
+        hasRemainingWorkingHours: true,
+        status: "working",
+      }),
+      createDoctor({ doctorId: 2, waiting: 1, status: "with_activity" }),
+      createDoctor({
+        doctorId: 3,
+        appointments: 1,
+        nextEventHour: "18:00",
+        status: "with_activity",
+      }),
+      createDoctor({ doctorId: 4, isWorkingToday: true, appointments: 1 }),
+      createDoctor({ doctorId: 5 }),
     ];
 
     expect(getVisibleOperationsDoctors(doctors).map((doctor) => doctor.doctorId))
-      .toEqual([1, 2]);
+      .toEqual([1, 2, 3]);
+  });
+
+  it("uses red styles for cancelled statuses", () => {
+    expect(getOperationsStatusClass("CANCELLED_BY_SECRETARY")).toContain("bg-red-100");
+    expect(getOperationsStatusClass("CANCELLED_BY_PATIENT")).toContain("text-red-800");
   });
 });

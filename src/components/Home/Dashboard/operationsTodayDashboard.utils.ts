@@ -26,7 +26,7 @@ export const getOperationsStatusClass = (
   if (status === "ATTENDING") return "bg-blue-100 text-blue-800 border-blue-200";
   if (status === "COMPLETED") return "bg-emerald-100 text-emerald-800 border-emerald-200";
   if (status === "NO_SHOW") return "bg-red-100 text-red-800 border-red-200";
-  if (status.startsWith("CANCELLED")) return "bg-gray-100 text-gray-700 border-gray-200";
+  if (status.startsWith("CANCELLED")) return "bg-red-100 text-red-800 border-red-200";
   return "bg-slate-100 text-slate-700 border-slate-200";
 };
 
@@ -45,9 +45,8 @@ export const getVisibleOperationsDoctors = (
 ): OperationsTodayDoctor[] =>
   doctors.filter(
     (doctor) =>
-      doctor.isWorkingToday ||
-      doctor.appointments > 0 ||
-      doctor.overturns > 0 ||
+      (doctor.hasRemainingWorkingHours ?? doctor.isWorkingToday) ||
+      Boolean(doctor.nextEventHour) ||
       doctor.waiting > 0 ||
       doctor.called > 0 ||
       doctor.attending > 0
