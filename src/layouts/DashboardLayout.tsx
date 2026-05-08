@@ -32,7 +32,7 @@ export function DashboardLayout() {
 
   return (
     <>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <AppSidebar />
         <SidebarInset className="min-w-0 overflow-x-hidden">
           {isStaging() && (

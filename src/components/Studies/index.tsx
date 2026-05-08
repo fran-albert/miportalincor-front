@@ -138,6 +138,27 @@ const parseDisplayDate = (date: string) => {
     : fallbackDate.getTime();
 };
 
+const compareNewestFirst = (a: Study, b: Study) => {
+  const dateA = parseDisplayDate(a.fecha);
+  const dateB = parseDisplayDate(b.fecha);
+  const aMissingDate = dateA === Number.MAX_SAFE_INTEGER;
+  const bMissingDate = dateB === Number.MAX_SAFE_INTEGER;
+
+  if (aMissingDate && bMissingDate) {
+    return 0;
+  }
+
+  if (aMissingDate) {
+    return 1;
+  }
+
+  if (bMissingDate) {
+    return -1;
+  }
+
+  return dateB - dateA;
+};
+
 export default function PatientStudies({
   patientData,
   initialStudies = [],
@@ -178,9 +199,7 @@ export default function PatientStudies({
       estado: lab.estado as "Completado" | "Pendiente" | "En proceso",
     }));
 
-    const allStudies = [...initialStudies, ...labStudies].sort(
-      (a, b) => parseDisplayDate(a.fecha) - parseDisplayDate(b.fecha)
-    );
+    const allStudies = [...initialStudies, ...labStudies].sort(compareNewestFirst);
 
     // Si no es médico, filtrar los estudios externos y los manuales (sin archivo)
     if (!isDoctor) {

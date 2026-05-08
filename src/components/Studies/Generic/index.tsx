@@ -102,24 +102,46 @@ const categorizeStudy = (studyTypeName?: string): string => {
   return "Otros";
 };
 
+const getStudyDateTime = (date: Date | string | undefined): number => {
+  if (!date) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const parsedDate = new Date(date).getTime();
+  return Number.isNaN(parsedDate) ? Number.MAX_SAFE_INTEGER : parsedDate;
+};
+
+const formatStudyDate = (date: Date | string | undefined): string => {
+  const dateTime = getStudyDateTime(date);
+
+  if (dateTime === Number.MAX_SAFE_INTEGER) {
+    return "Sin fecha";
+  }
+
+  return new Date(date as Date | string).toLocaleDateString("es-ES");
+};
+
 // Transform StudiesWithURL to the format expected by PatientStudies
 const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
   return [...studies]
     .sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = getStudyDateTime(a.date);
+      const dateB = getStudyDateTime(b.date);
+      const aMissingDate = dateA === Number.MAX_SAFE_INTEGER;
+      const bMissingDate = dateB === Number.MAX_SAFE_INTEGER;
 
-      return (
-        (Number.isNaN(dateA) ? Number.MAX_SAFE_INTEGER : dateA) -
-        (Number.isNaN(dateB) ? Number.MAX_SAFE_INTEGER : dateB)
-      );
+      if (aMissingDate && bMissingDate) return 0;
+      if (aMissingDate) return 1;
+      if (bMissingDate) return -1;
+
+      return dateB - dateA;
     })
     .map((study, index) => ({
       id: study.id || index,
       tipo: study.studyType?.name || "Estudio",
       categoria: categorizeStudy(study.studyType?.name),
       descripcion: study.note || "Sin descripción",
-      fecha: new Date(study.date).toLocaleDateString("es-ES"),
+      fecha: formatStudyDate(study.date),
       medico: "No especificado", // No viene del backend
       archivo: {
         nombre: study.locationS3?.split("/").pop() || "archivo.pdf",
