@@ -382,7 +382,7 @@ export const LabPatientTable = ({
 
         <div
           ref={tableScrollRef}
-          className="max-h-[28rem] overflow-auto rounded-md border border-gray-200"
+          className="isolate max-h-[28rem] overflow-auto rounded-md border border-gray-200"
           onScroll={(event) => syncHorizontalScroll(event, topScrollRef)}
         >
           <Table
@@ -391,19 +391,19 @@ export const LabPatientTable = ({
           >
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 top-0 z-30 min-w-[190px] max-w-[230px] border-b border-r bg-white px-3 py-3 shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)]">
+                <TableHead className="sticky left-0 top-0 z-50 min-w-[190px] max-w-[230px] border-b border-r bg-slate-50 px-3 py-3 shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Análisis
                 </TableHead>
-                <TableHead className="sticky top-0 z-20 min-w-[220px] border-b bg-white px-3 py-3">
+                <TableHead className="sticky top-0 z-40 min-w-[220px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Valor de Referencia
                 </TableHead>
-                <TableHead className="sticky top-0 z-20 min-w-[130px] border-b bg-white px-3 py-3">
+                <TableHead className="sticky top-0 z-40 min-w-[130px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Unidad
                 </TableHead>
                 {dates.map((date) => (
                   <TableHead
                     key={date.key}
-                    className="sticky top-0 z-20 min-w-[132px] border-b bg-white px-3 py-3 text-center"
+                    className="sticky top-0 z-40 min-w-[132px] border-b bg-slate-50 px-3 py-3 text-center shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]"
                   >
                     {date.label}
                   </TableHead>
@@ -413,8 +413,8 @@ export const LabPatientTable = ({
             <TableBody>
               {filteredBloodTests.map((bloodTest) => {
                 return (
-                  <TableRow key={bloodTest.id} className="hover:bg-gray-50/70">
-                    <TableCell className="sticky left-0 z-10 min-w-[190px] max-w-[230px] border-r bg-white px-3 py-2 font-medium leading-snug shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)]">
+                  <TableRow key={bloodTest.id} className="group hover:bg-gray-50/70">
+                    <TableCell className="sticky left-0 z-30 min-w-[190px] max-w-[230px] border-r bg-white px-3 py-2 font-medium leading-snug shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)] group-hover:bg-gray-50">
                       {bloodTest.originalName}
                     </TableCell>
                     <TableCell className="min-w-[220px] max-w-[260px] whitespace-pre-wrap px-3 py-2 text-gray-700">
