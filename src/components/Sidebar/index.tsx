@@ -10,7 +10,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "../ui/sidebar";
 import {
   User,
@@ -36,6 +35,7 @@ import {
   FileText,
   Pill,
   CreditCard,
+  Briefcase,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -49,7 +49,6 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
@@ -224,7 +223,6 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { handleLogout } = useLogout();
   const { session } = useUserRole();
-  const { isMobile, setOpen } = useSidebar();
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
@@ -252,15 +250,7 @@ export function AppSidebar() {
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
   return (
-    <Sidebar
-      collapsible="icon"
-      onMouseEnter={() => {
-        if (!isMobile) setOpen(true);
-      }}
-      onMouseLeave={() => {
-        if (!isMobile) setOpen(false);
-      }}
-    >
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
