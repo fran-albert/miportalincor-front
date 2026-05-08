@@ -103,7 +103,9 @@ const MedicalEvaluationStatusCell = ({
       />
       {currentVersion?.outdatedByExamChanges && (
         <p className="text-xs text-muted-foreground">
-          Editado. Regeneralo desde el examen.
+          {currentVersion.isFinal
+            ? "Final con cambios posteriores. Regeneralo."
+            : "Editado. Regeneralo desde el examen."}
         </p>
       )}
       {finalVersion && finalVersion.id !== currentVersion?.id && (

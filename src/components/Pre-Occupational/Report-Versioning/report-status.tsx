@@ -29,6 +29,13 @@ export function getReportStatus(
     return { label: "Sin informe", variant: "outline" };
   }
 
+  if (version.isFinal && version.outdatedByExamChanges) {
+    return {
+      label: "Final desactualizada",
+      variant: "warning",
+    };
+  }
+
   if (version.outdatedByExamChanges) {
     return {
       label: "Editado, falta regenerar",

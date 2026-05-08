@@ -303,9 +303,9 @@ export default function ReportVersioningCard({
 
           {!isLoading && currentStatus.variant === "warning" && (
             <div className="mt-4 rounded-lg border border-yellow-300/80 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-3 text-sm text-yellow-900 shadow-[0_12px_24px_-20px_rgba(202,138,4,0.6)]">
-              Este examen tuvo cambios después del último PDF. El informe actual
-              sigue disponible, pero conviene regenerarlo desde la
-              previsualización.
+              {currentVersion?.isFinal
+                ? "La versión marcada como final tuvo cambios posteriores en el examen. Sigue disponible como referencia, pero ya no debería entregarse sin regenerar un nuevo informe."
+                : "Este examen tuvo cambios después del último PDF. El informe actual sigue disponible, pero conviene regenerarlo desde la previsualización."}
             </div>
           )}
 

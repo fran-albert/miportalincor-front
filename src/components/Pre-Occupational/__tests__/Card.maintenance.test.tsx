@@ -16,6 +16,7 @@ const mockPromiseToast = vi.fn((promise: Promise<unknown>) => promise);
 const mockGetMaintenanceState = vi.fn();
 const mockUpdateMedicalEvaluation = vi.fn();
 const mockDeleteMedicalEvaluation = vi.fn();
+const mockUseLaboralPermissions = vi.fn();
 const emptyUrls: [] = [];
 const emptyDataValues: [] = [];
 const emptyFields: [] = [];
@@ -51,6 +52,25 @@ vi.mock("@/hooks/Toast/toast-context", () => ({
   useToastContext: () => ({
     promiseToast: mockPromiseToast,
   }),
+}));
+
+vi.mock("@/hooks/Laboral/useLaboralPermissions", () => ({
+  default: () => mockUseLaboralPermissions(),
+}));
+
+vi.mock("@/utils/authStorage", () => ({
+  authStorage: {
+    getToken: vi.fn(() => null),
+    getTokenExpiration: vi.fn(() => null),
+    getRememberMe: vi.fn(() => false),
+    setToken: vi.fn(),
+    setTokenExpiration: vi.fn(),
+    setSession: vi.fn(),
+    setRememberMe: vi.fn(),
+    removeToken: vi.fn(),
+    clearAll: vi.fn(),
+    onTokenChange: vi.fn(() => vi.fn()),
+  },
 }));
 
 vi.mock("@/api/Medical-Evaluation/get-maintenance-state.medical.evaluation", () => ({
@@ -267,6 +287,10 @@ describe("PreOccupationalCards maintenance flow", () => {
     };
     mockUpdateMedicalEvaluation.mockResolvedValue({});
     mockDeleteMedicalEvaluation.mockResolvedValue(undefined);
+    mockUseLaboralPermissions.mockReturnValue({
+      canManageLaboralExam: true,
+      canDeleteLaboralExam: true,
+    });
   });
 
   it("shows invalid doctor state when doctor lookup fails", async () => {
@@ -280,7 +304,7 @@ describe("PreOccupationalCards maintenance flow", () => {
 
     expect(await screen.findByText("Médico no válido para firma")).toBeInTheDocument();
     expect(
-      screen.getByText("doctorId 80 no resuelve en Historia Clínica")
+      screen.getByText("doctorId 80 no existe hoy en Historia Clínica")
     ).toBeInTheDocument();
   });
 

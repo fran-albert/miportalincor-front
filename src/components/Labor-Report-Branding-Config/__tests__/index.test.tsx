@@ -9,6 +9,11 @@ const mockUseBrandingConfig = vi.fn();
 const mockUseBrandingMutations = vi.fn();
 const mockUseDoctors = vi.fn();
 const mockUseDoctorWithSignatures = vi.fn();
+const mockUseLaboralPermissions = vi.fn();
+
+vi.mock("@/hooks/Laboral/useLaboralPermissions", () => ({
+  default: () => mockUseLaboralPermissions(),
+}));
 
 vi.mock(
   "@/hooks/Labor-Report-Branding-Config/useLaborReportBrandingConfig",
@@ -182,6 +187,10 @@ describe("LaborReportBrandingConfigManager", () => {
     mockUseDoctorWithSignatures.mockReturnValue({
       data: undefined,
       isLoading: false,
+    });
+
+    mockUseLaboralPermissions.mockReturnValue({
+      canWriteLaboralReportConfig: true,
     });
   });
 

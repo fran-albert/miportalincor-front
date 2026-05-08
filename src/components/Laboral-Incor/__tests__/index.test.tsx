@@ -5,16 +5,16 @@ import { MemoryRouter } from "react-router-dom";
 import { render, screen } from "@testing-library/react";
 import LaboralIncorComponent from "..";
 
-const mockUseRoles = vi.fn();
+const mockUseLaboralPermissions = vi.fn();
 
-vi.mock("@/hooks/useRoles", () => ({
-  default: () => mockUseRoles(),
+vi.mock("@/hooks/Laboral/useLaboralPermissions", () => ({
+  default: () => mockUseLaboralPermissions(),
 }));
 
 describe("LaboralIncorComponent", () => {
   beforeEach(() => {
-    mockUseRoles.mockReturnValue({
-      isAdmin: false,
+    mockUseLaboralPermissions.mockReturnValue({
+      canReadLaboralReportConfig: false,
     });
   });
 
@@ -28,9 +28,9 @@ describe("LaboralIncorComponent", () => {
     expect(screen.queryByText("Informes laborales")).not.toBeInTheDocument();
   });
 
-  it("shows the branding config access card for admin users", () => {
-    mockUseRoles.mockReturnValue({
-      isAdmin: true,
+  it("shows the branding config access card for users with read capability", () => {
+    mockUseLaboralPermissions.mockReturnValue({
+      canReadLaboralReportConfig: true,
     });
 
     render(
