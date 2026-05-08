@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { RefObject, UIEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -8,7 +8,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Search } from "@/components/ui/search";
-import { formatDate, normalizeDate } from "@/common/helpers/helpers";
+import { normalizeDate } from "@/common/helpers/helpers";
 import LabDialog from "../Dialog";
 import { Button } from "@/components/ui/button";
 import { useToastContext } from "@/hooks/Toast/toast-context";
@@ -20,6 +20,16 @@ import {
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
 import { BloodTestDataResponse } from "@/types/Blod-Test-Data/Blod-Test-Data";
+
+type LabDateColumn = {
+  key: string;
+  label: string;
+  normalizedDate: string;
+  sortValue: number;
+  studyId?: string;
+};
+
+const MISSING_DATE_LABEL = "Sin fecha";
 
 const transformData = (originalData: BloodTestData[]): BloodTestDataResponse[] => {
   // Agrupar los datos por estudio
@@ -45,7 +55,7 @@ const transformData = (originalData: BloodTestData[]): BloodTestDataResponse[] =
 };
 
 const getDateTime = (date: string): number => {
-  const normalizedDate = normalizeDate(String(date).trim());
+  const normalizedDate = normalizeLabDate(date);
 
   if (normalizedDate) {
     const parsedDate = new Date(`${normalizedDate}T12:00:00`);
@@ -57,8 +67,61 @@ const getDateTime = (date: string): number => {
   return Number.MAX_SAFE_INTEGER;
 };
 
-const compareDisplayDates = (a: string, b: string) =>
-  getDateTime(a) - getDateTime(b);
+const normalizeLabDate = (date: string): string => {
+  const trimmedDate = String(date ?? "").trim();
+
+  if (!trimmedDate || trimmedDate === MISSING_DATE_LABEL) {
+    return "";
+  }
+
+  return normalizeDate(trimmedDate);
+};
+
+const formatLabDateLabel = (date: string): string => {
+  const normalizedDate = normalizeLabDate(date);
+
+  if (!normalizedDate) {
+    return MISSING_DATE_LABEL;
+  }
+
+  const [year, month, day] = normalizedDate.split("-");
+  return `${day}-${month}-${year}`;
+};
+
+const buildStudyColumn = (study: BloodTestDataResponse["study"]): LabDateColumn => {
+  const normalizedDate = normalizeLabDate(study.date ?? "");
+
+  return {
+    key: `study:${study.id}`,
+    label: formatLabDateLabel(study.date ?? ""),
+    normalizedDate,
+    sortValue: getDateTime(study.date ?? ""),
+    studyId: String(study.id),
+  };
+};
+
+const buildNewColumn = (newDate: string): LabDateColumn | null => {
+  const normalizedDate = normalizeLabDate(newDate);
+
+  if (!normalizedDate) {
+    return null;
+  }
+
+  return {
+    key: `new:${normalizedDate}`,
+    label: formatLabDateLabel(normalizedDate),
+    normalizedDate,
+    sortValue: getDateTime(normalizedDate),
+  };
+};
+
+const compareColumns = (a: LabDateColumn, b: LabDateColumn) => {
+  if (a.sortValue !== b.sortValue) {
+    return a.sortValue - b.sortValue;
+  }
+
+  return a.key.localeCompare(b.key);
+};
 
 export const LabPatientTable = ({
   bloodTestsData = [],
@@ -72,7 +135,9 @@ export const LabPatientTable = ({
   const { addBlodTestDataMutation, updateBlodTestMutation } =
     useBlodTestDataMutations();
   const [searchTerm, setSearchTerm] = useState("");
-  const [dates, setDates] = useState<string[]>([]);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const [dates, setDates] = useState<LabDateColumn[]>([]);
   const [editedValues, setEditedValues] = useState<{
     [key: string]: { [bloodTestId: string]: string };
   }>({});
@@ -83,17 +148,19 @@ export const LabPatientTable = ({
   >([]);
   const { promiseToast } = useToastContext();
 
+  const tableMinWidth = useMemo(() => 540 + dates.length * 132, [dates.length]);
+
   useEffect(() => {
     const transformedData = transformData(bloodTestsData);
     setTransformedBloodTestsData(transformedData);
 
-    const uniqueDates = Array.from(
-      new Set(
-        transformedData.map((group) => formatDate(group.study.date ?? "").trim())
-      )
-    );
+    const columnsByKey = transformedData.reduce((acc, group) => {
+      const column = buildStudyColumn(group.study);
+      acc.set(column.key, column);
+      return acc;
+    }, new Map<string, LabDateColumn>());
 
-    const sortedDates = uniqueDates.sort(compareDisplayDates);
+    const sortedDates = Array.from(columnsByKey.values()).sort(compareColumns);
 
     setDates(sortedDates);
   }, [bloodTestsData]);
@@ -103,15 +170,15 @@ export const LabPatientTable = ({
   );
 
   const handleInputChange = (
-    date: string,
+    dateKey: string,
     bloodTestId: string,
     value: string
   ) => {
     setEditedValues((prev) => {
       const updated = {
         ...prev,
-        [date]: {
-          ...(prev[date] || {}),
+        [dateKey]: {
+          ...(prev[dateKey] || {}),
           [bloodTestId]: value,
         },
       };
@@ -120,39 +187,60 @@ export const LabPatientTable = ({
     });
   };
   const handleAddNewColumn = (newDate: string) => {
-    setDates((prevDates) => {
-      // Convert YYYY-MM-DD (from input) to DD-MM-YYYY for display consistency
-      const formattedNewDate = newDate.includes("-") && newDate.split("-")[0].length === 4
-        ? newDate.split("-").reverse().join("-")  // YYYY-MM-DD -> DD-MM-YYYY
-        : newDate;
+    const newColumn = buildNewColumn(newDate);
 
-      if (prevDates.includes(formattedNewDate)) {
+    if (!newColumn) {
+      return;
+    }
+
+    setDates((prevDates) => {
+      if (prevDates.some((date) => date.normalizedDate === newColumn.normalizedDate)) {
         return prevDates;
       }
-      const updatedDates = [...prevDates, formattedNewDate].sort(compareDisplayDates);
+      const updatedDates = [...prevDates, newColumn].sort(compareColumns);
       return updatedDates;
     });
+  };
+
+  const syncHorizontalScroll = (
+    event: UIEvent<HTMLDivElement>,
+    targetRef: RefObject<HTMLDivElement | null>
+  ) => {
+    const target = targetRef.current;
+
+    if (!target || target.scrollLeft === event.currentTarget.scrollLeft) {
+      return;
+    }
+
+    target.scrollLeft = event.currentTarget.scrollLeft;
   };
 
   const handleConfirmChanges = async () => {
     try {
       const updates: {
-        idStudy: number;
+        idStudy: string;
         blodTest: BloodTestDataUpdateRequestItem[];
       }[] = [];
       const newEntries: BloodTestDataRequest[] = [];
 
-      Object.entries(editedValues).forEach(([date, tests]) => {
-        const cleanDate = date.trim();
-        const existingStudyForDate = bloodTestsData.find(
-          (data) =>
-            normalizeDate(String(data.study.date).trim()) === normalizeDate(cleanDate)
-        )?.study;
+      Object.entries(editedValues).forEach(([dateKey, tests]) => {
+        const column = dates.find((date) => date.key === dateKey);
+
+        if (!column) {
+          return;
+        }
+
+        const existingStudyForDate = column.studyId
+          ? bloodTestsData.find((data) => String(data.study.id) === column.studyId)
+              ?.study
+          : bloodTestsData.find(
+              (data) => normalizeLabDate(data.study.date) === column.normalizedDate
+            )?.study;
 
         // Si existe un estudio para esta fecha, será una actualización
         if (existingStudyForDate) {
           const updateGroup = {
-            idStudy: Number(existingStudyForDate.id),
+            idStudy: String(existingStudyForDate.id),
             blodTest: [] as BloodTestDataUpdateRequestItem[],
           };
 
@@ -160,8 +248,7 @@ export const LabPatientTable = ({
             const bloodTestIdAsNumber = parseInt(bloodTestId, 10);
             const existingData = bloodTestsData.find(
               (data) =>
-                normalizeDate(String(data.study.date).trim()) ===
-                normalizeDate(cleanDate) &&
+                String(data.study.id) === String(existingStudyForDate.id) &&
                 data.bloodTest.id === bloodTestIdAsNumber
             );
 
@@ -188,12 +275,15 @@ export const LabPatientTable = ({
             updates.push(updateGroup);
           }
         } else {
+          if (!column.normalizedDate) {
+            return;
+          }
+
           // Crear nuevo estudio con sus valores
-          // Normalize date to YYYY-MM-DD format for backend
           const newEntry: BloodTestDataRequest = {
             userId: idUser,
             note,
-            date: normalizeDate(cleanDate),
+            date: column.normalizedDate,
             bloodTestDatas: Object.entries(tests).map(
               ([bloodTestId, value]) => ({
                 id: 0,
@@ -282,8 +372,23 @@ export const LabPatientTable = ({
           </div>
         </div>
 
-        <div className="max-h-[28rem] overflow-auto rounded-md border border-gray-200">
-          <Table className="w-max min-w-full border-separate border-spacing-0 text-sm">
+        <div
+          ref={topScrollRef}
+          className="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+          onScroll={(event) => syncHorizontalScroll(event, tableScrollRef)}
+        >
+          <div style={{ width: tableMinWidth, height: 1 }} />
+        </div>
+
+        <div
+          ref={tableScrollRef}
+          className="max-h-[28rem] overflow-auto rounded-md border border-gray-200"
+          onScroll={(event) => syncHorizontalScroll(event, topScrollRef)}
+        >
+          <Table
+            className="w-max min-w-full border-separate border-spacing-0 text-sm"
+            style={{ minWidth: tableMinWidth }}
+          >
             <TableHeader>
               <TableRow>
                 <TableHead className="sticky left-0 top-0 z-30 min-w-[190px] max-w-[230px] border-b border-r bg-white px-3 py-3 shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)]">
@@ -297,10 +402,10 @@ export const LabPatientTable = ({
                 </TableHead>
                 {dates.map((date) => (
                   <TableHead
-                    key={date}
+                    key={date.key}
                     className="sticky top-0 z-20 min-w-[132px] border-b bg-white px-3 py-3 text-center"
                   >
-                    {date}
+                    {date.label}
                   </TableHead>
                 ))}
               </TableRow>
@@ -323,7 +428,10 @@ export const LabPatientTable = ({
                       // Encontramos el estudio correspondiente a la fecha
                       const relatedStudy = transformedBloodTestsData.find(
                         (studyGroup) =>
-                          formatDate(studyGroup.study.date ?? "").trim() === date
+                          date.studyId
+                            ? String(studyGroup.study.id) === date.studyId
+                            : normalizeLabDate(studyGroup.study.date) ===
+                              date.normalizedDate
                       );
 
                       // Si hay un estudio en esta fecha, buscar el análisis de sangre dentro de él
@@ -333,18 +441,18 @@ export const LabPatientTable = ({
 
                       // Verificar si se encontró el valor y asignarlo
                       const inputValue =
-                        editedValues[date]?.[bloodTest.id as number] ??
+                        editedValues[date.key]?.[bloodTest.id as number] ??
                         (relatedData ? relatedData.value : "");
 
                       return (
-                        <TableCell key={date} className="min-w-[132px] px-3 py-2 text-center">
+                        <TableCell key={date.key} className="min-w-[132px] px-3 py-2 text-center">
                           <input
                             type="text"
                             value={inputValue}
                             className="h-9 w-full rounded-md border px-2 text-center text-sm focus:border-greenPrimary focus:outline-none focus:ring-1 focus:ring-greenPrimary"
                             onChange={(e) =>
                               handleInputChange(
-                                date,
+                                date.key,
                                 String(bloodTest.id),
                                 e.target.value
                               )

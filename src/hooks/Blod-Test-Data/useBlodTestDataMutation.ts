@@ -23,7 +23,7 @@ export const useBlodTestDataMutations = () => {
             idStudy,
             bloodTestDataRequests,
         }: {
-            idStudy: number;
+            idStudy: number | string;
             bloodTestDataRequests: BloodTestDataUpdateRequestItem[];
         }) => updateBlodTestData(String(idStudy), bloodTestDataRequests),
         onSuccess: async () => {
@@ -37,4 +37,3 @@ export const useBlodTestDataMutations = () => {
 
     return { addBlodTestDataMutation, updateBlodTestMutation };
 };
-

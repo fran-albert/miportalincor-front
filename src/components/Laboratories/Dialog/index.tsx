@@ -22,19 +22,24 @@ const LabDialog = ({
   const [newDate, setNewDate] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState<string>("");
+  const [dateError, setDateError] = useState<string>("");
 
   const resetForm = () => {
     setNewDate(null);
     setNote("");
+    setDateError("");
   };
 
   const handleSave = () => {
-    if (newDate) {
-      onSetNote(note);
-      onAddNewColumn(newDate);
-      resetForm();
-      setIsOpen(false);
+    if (!newDate) {
+      setDateError("La fecha del laboratorio es obligatoria.");
+      return;
     }
+
+    onSetNote(note);
+    onAddNewColumn(newDate);
+    resetForm();
+    setIsOpen(false);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -94,13 +99,24 @@ const LabDialog = ({
               type="date"
               placeholder="Fecha"
               value={newDate || ""}
-              onChange={(e) => setNewDate(e.target.value)}
+              onChange={(e) => {
+                setNewDate(e.target.value);
+                if (e.target.value) {
+                  setDateError("");
+                }
+              }}
+              aria-invalid={!!dateError}
+              required
             />
+            {dateError && (
+              <p className="text-sm font-medium text-red-600">{dateError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button
               onClick={handleSave}
               className="bg-greenPrimary hover:bg-teal-700"
+              disabled={!newDate}
             >
               Guardar
             </Button>

@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "../ui/sidebar";
 import {
   User,
@@ -232,6 +233,7 @@ export function AppSidebar() {
   const { handleLogout } = useLogout();
   const { session } = useUserRole();
   const { canAccessLaboral } = useLaboralPermissions();
+  const { isMobile, setOpen } = useSidebar();
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
@@ -271,11 +273,19 @@ export function AppSidebar() {
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
   return (
-    <Sidebar>
+    <Sidebar
+      collapsible="icon"
+      onMouseEnter={() => {
+        if (!isMobile) setOpen(true);
+      }}
+      onMouseLeave={() => {
+        if (!isMobile) setOpen(false);
+      }}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild tooltip="Incor Centro Médico">
               <Link to="/inicio">
                 <img
                   src="https://res.cloudinary.com/dfoqki8kt/image/upload/v1748058948/bligwub9dzzcxzm4ovgv.png"
@@ -306,7 +316,11 @@ export function AppSidebar() {
                   if (isComingSoon) {
                     return (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton disabled className="opacity-60 cursor-not-allowed">
+                        <SidebarMenuButton
+                          disabled
+                          className="opacity-60 cursor-not-allowed"
+                          tooltip={item.title}
+                        >
                           <item.icon className="text-gray-400" />
                           <span className="text-gray-400 flex-1">{item.title}</span>
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
@@ -327,7 +341,11 @@ export function AppSidebar() {
 
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={active}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                      >
                         <Link
                           to={item.url}
                           className={`flex items-center gap-2 px-2 py-1 rounded ${
@@ -367,7 +385,11 @@ export function AppSidebar() {
                   if (isComingSoon) {
                     return (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton disabled className="opacity-60 cursor-not-allowed">
+                        <SidebarMenuButton
+                          disabled
+                          className="opacity-60 cursor-not-allowed"
+                          tooltip={item.title}
+                        >
                           <item.icon className="text-gray-400" />
                           <span className="text-gray-400">{item.title}</span>
                         </SidebarMenuButton>
@@ -378,7 +400,11 @@ export function AppSidebar() {
                   const active = pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={active}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                      >
                         <Link
                           to={item.url}
                           className={`flex items-center gap-2 px-2 py-1 rounded ${
@@ -408,7 +434,11 @@ export function AppSidebar() {
                   const active = pathname === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={active}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                      >
                         <Link
                           to={item.url}
                           className={`flex items-center gap-2 px-2 py-1 rounded ${
@@ -435,7 +465,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton tooltip={userName}>
                   <User />
                   <span>{userName}</span>
                   <ChevronDown className="ml-auto" />
