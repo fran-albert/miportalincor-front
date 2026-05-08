@@ -2,24 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import { pdfColors } from "../../shared";
+import {
+  emptyExamResultsMessage,
+  getVisibleExamResultRows,
+} from "../../../exam-results-visibility";
 
 interface ExamResultsPdfProps {
   examResults: ExamResults;
 }
-
-const normalizeResultValue = (value?: string) => {
-  const text = String(value ?? "").trim();
-
-  if (!text) {
-    return "Sin dato registrado";
-  }
-
-  if (!/\s/.test(text) && text.length > 72) {
-    return `${text.slice(0, 69)}...`;
-  }
-
-  return text;
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -72,26 +62,25 @@ const styles = StyleSheet.create({
     lineHeight: 1.22,
     flexShrink: 1,
   },
+  emptyMessage: {
+    fontSize: 8,
+    color: pdfColors.muted,
+    lineHeight: 1.22,
+  },
 });
 
-const rows = [
-  { label: "Clinico", valueKey: "clinico" },
-  { label: "Audiometria", valueKey: "audiometria" },
-  { label: "Psicotecnico", valueKey: "psicotecnico" },
-  { label: "RX torax frente", valueKey: "rx-torax" },
-  { label: "Electrocardiograma", valueKey: "electrocardiograma-result" },
-  { label: "Laboratorio basico ley", valueKey: "laboratorio" },
-  { label: "Electroencefalograma", valueKey: "electroencefalograma" },
-] as const;
-
 const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
+  const rows = getVisibleExamResultRows(examResults);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Resultados del examen</Text>
       </View>
       <View style={styles.body}>
-        {rows.map((row, index) => (
+        {rows.length === 0 ? (
+          <Text style={styles.emptyMessage}>{emptyExamResultsMessage}</Text>
+        ) : rows.map((row, index) => (
           <View
             key={row.valueKey}
             style={
@@ -101,9 +90,7 @@ const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
             }
           >
             <Text style={styles.label}>{row.label}</Text>
-            <Text style={styles.value}>
-              {normalizeResultValue(examResults?.[row.valueKey])}
-            </Text>
+            <Text style={styles.value}>{row.value}</Text>
           </View>
         ))}
       </View>

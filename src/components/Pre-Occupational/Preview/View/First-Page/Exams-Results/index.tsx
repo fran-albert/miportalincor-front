@@ -1,42 +1,18 @@
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import React from "react";
 import { pdfColors } from "../../../Pdf/shared";
+import {
+  emptyExamResultsMessage,
+  getVisibleExamResultRows,
+} from "../../../exam-results-visibility";
 
 
 interface ExamResultsHtmlProps {
   examResults: ExamResults;
 }
 
-const normalizeResultValue = (value?: string) => {
-  const text = String(value ?? "").trim();
-
-  if (!text) {
-    return "Sin dato registrado";
-  }
-
-  if (!/\s/.test(text) && text.length > 72) {
-    return `${text.slice(0, 69)}...`;
-  }
-
-  return text;
-};
-
 const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
-  const rows = [
-    { label: "Clinico", value: examResults?.clinico },
-    { label: "Audiometria", value: examResults?.audiometria },
-    { label: "Psicotecnico", value: examResults?.psicotecnico },
-    { label: "RX torax frente", value: examResults?.["rx-torax"] },
-    {
-      label: "Electrocardiograma",
-      value: examResults?.["electrocardiograma-result"],
-    },
-    { label: "Laboratorio basico ley", value: examResults?.laboratorio },
-    {
-      label: "Electroencefalograma",
-      value: examResults?.electroencefalograma,
-    },
-  ];
+  const rows = getVisibleExamResultRows(examResults);
 
   return (
     <div
@@ -58,9 +34,16 @@ const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
         </p>
       </div>
       <div className="space-y-1 px-[10px] py-[8px]">
-        {rows.map((row, index) => (
+        {rows.length === 0 ? (
+          <p
+            className="text-[8px] leading-[1.22]"
+            style={{ color: pdfColors.muted }}
+          >
+            {emptyExamResultsMessage}
+          </p>
+        ) : rows.map((row, index) => (
           <div
-            key={row.label}
+            key={row.valueKey}
             className={`grid grid-cols-[124px_1fr] gap-[8px] pb-[4px] ${
               index === rows.length - 1 ? "border-b-0 pb-0" : "border-b"
             }`}
@@ -79,7 +62,7 @@ const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
               className="min-w-0 break-words text-[8px] leading-[1.22]"
               style={{ color: pdfColors.ink }}
             >
-              {normalizeResultValue(row.value)}
+              {row.value}
             </p>
           </div>
         ))}

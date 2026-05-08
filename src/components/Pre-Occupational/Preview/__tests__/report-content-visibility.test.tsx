@@ -1,0 +1,135 @@
+// @vitest-environment jsdom
+import React from "react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import preOccupationalReducer, {
+  setFormData,
+} from "@/store/Pre-Occupational/preOccupationalSlice";
+import type { ExamResults } from "@/common/helpers/examsResults.maps";
+
+vi.mock("@react-pdf/renderer", () => ({
+  View: ({ children }: React.PropsWithChildren) => <div>{children}</div>,
+  Text: ({ children }: React.PropsWithChildren) => <span>{children}</span>,
+  StyleSheet: {
+    create: <T,>(styles: T) => styles,
+  },
+}));
+
+import TestsPreview from "../Tests";
+import ExamResultsHtml from "../View/First-Page/Exams-Results";
+import ExamResultsPdf from "../Pdf/First-Page/Exams-Results";
+
+const renderTestsPreview = (formData: Parameters<typeof setFormData>[0]) => {
+  const store = configureStore({
+    reducer: {
+      preOccupational: preOccupationalReducer,
+    },
+  });
+
+  store.dispatch(setFormData(formData));
+
+  return render(
+    <Provider store={store}>
+      <TestsPreview />
+    </Provider>
+  );
+};
+
+describe("labor report content visibility", () => {
+  it("shows only selected tests in report preview", () => {
+    renderTestsPreview({
+      testsPerformed: {
+        examenFisico: true,
+        glucemia: false,
+        tuberculosis: false,
+        espirometria: false,
+        capacidadFisica: false,
+        examenVisual: false,
+        radiografia: false,
+        audiometria: true,
+        hemograma: false,
+        historiaClinica: false,
+        examenOrina: false,
+        electrocardiograma: false,
+        panelDrogas: false,
+        hepaticas: false,
+        psicotecnico: false,
+      },
+      otrasPruebas: "",
+    });
+
+    expect(screen.getByText("Examen físico")).toBeInTheDocument();
+    expect(screen.getByText("Audiometría")).toBeInTheDocument();
+    expect(screen.queryByText("Glucemia en Ayuna")).not.toBeInTheDocument();
+    expect(screen.queryByText("Espirometría")).not.toBeInTheDocument();
+  });
+
+  it("shows a clear empty message when no tests were registered", () => {
+    renderTestsPreview({
+      testsPerformed: {
+        examenFisico: false,
+        glucemia: false,
+        tuberculosis: false,
+        espirometria: false,
+        capacidadFisica: false,
+        examenVisual: false,
+        radiografia: false,
+        audiometria: false,
+        hemograma: false,
+        historiaClinica: false,
+        examenOrina: false,
+        electrocardiograma: false,
+        panelDrogas: false,
+        hepaticas: false,
+        psicotecnico: false,
+      },
+      otrasPruebas: "",
+    });
+
+    expect(
+      screen.getByText("No se registraron pruebas realizadas")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Examen físico")).not.toBeInTheDocument();
+  });
+
+  it("hides empty exam result rows in HTML preview", () => {
+    render(
+      <ExamResultsHtml
+        examResults={{
+          clinico: "Apto",
+          audiometria: "",
+          psicotecnico: "   ",
+          laboratorio: "Normal",
+        } as ExamResults}
+      />
+    );
+
+    expect(screen.getByText("Clinico")).toBeInTheDocument();
+    expect(screen.getByText("Apto")).toBeInTheDocument();
+    expect(screen.getByText("Laboratorio basico ley")).toBeInTheDocument();
+    expect(screen.queryByText("Audiometria")).not.toBeInTheDocument();
+    expect(screen.queryByText("Psicotecnico")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sin dato registrado")).not.toBeInTheDocument();
+  });
+
+  it("uses the same empty result message in HTML preview and PDF", () => {
+    const emptyResults = {} as ExamResults;
+
+    const { unmount } = render(<ExamResultsHtml examResults={emptyResults} />);
+
+    expect(
+      screen.getByText("No se registraron resultados de estudios")
+    ).toBeInTheDocument();
+
+    unmount();
+
+    render(<ExamResultsPdf examResults={emptyResults} />);
+
+    expect(
+      screen.getByText("No se registraron resultados de estudios")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Sin dato registrado")).not.toBeInTheDocument();
+  });
+});
