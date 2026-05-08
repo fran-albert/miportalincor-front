@@ -1,6 +1,5 @@
 import { RefObject, UIEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Table,
   TableHeader,
   TableRow,
   TableHead,
@@ -385,7 +384,7 @@ export const LabPatientTable = ({
           className="isolate max-h-[28rem] overflow-auto rounded-md border border-gray-200"
           onScroll={(event) => syncHorizontalScroll(event, topScrollRef)}
         >
-          <Table
+          <table
             className="w-max min-w-full border-separate border-spacing-0 text-sm"
             style={{ minWidth: tableMinWidth }}
           >
@@ -465,7 +464,7 @@ export const LabPatientTable = ({
                 );
               })}
             </TableBody>
-          </Table>
+          </table>
         </div>
         {hasPendingChanges && (
           <div className="flex justify-end mt-4">

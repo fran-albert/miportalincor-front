@@ -36,7 +36,10 @@ import {
   FileText,
   Pill,
   CreditCard,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -233,7 +236,7 @@ export function AppSidebar() {
   const { handleLogout } = useLogout();
   const { session } = useUserRole();
   const { canAccessLaboral } = useLaboralPermissions();
-  const { isMobile, setOpen } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
@@ -273,15 +276,7 @@ export function AppSidebar() {
   const filteredSystemItems = filterMenuItems(systemItems, userRoles);
 
   return (
-    <Sidebar
-      collapsible="icon"
-      onMouseEnter={() => {
-        if (!isMobile) setOpen(true);
-      }}
-      onMouseLeave={() => {
-        if (!isMobile) setOpen(false);
-      }}
-    >
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -298,6 +293,26 @@ export function AppSidebar() {
                   </span>
                 </div>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem className="hidden md:block">
+            <SidebarMenuButton
+              asChild
+              tooltip={open ? "Contraer menú" : "Expandir menú"}
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-8 w-full justify-start gap-2 px-2 text-gray-600 hover:bg-gray-50 hover:text-greenPrimary group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!p-2"
+                onClick={toggleSidebar}
+              >
+                {open ? (
+                  <ChevronsLeft className="h-4 w-4 text-greenPrimary" />
+                ) : (
+                  <ChevronsRight className="h-4 w-4 text-greenPrimary" />
+                )}
+                <span>{open ? "Contraer menú" : "Expandir menú"}</span>
+              </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

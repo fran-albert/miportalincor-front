@@ -23,6 +23,13 @@ export function DashboardLayout() {
   const { handleLogout } = useLogout();
   const { session, isPatient, isDoctor } = useUserRole();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.localStorage.getItem("incor_sidebar_open") !== "false";
+  });
 
   const userName = session?.firstName || "Usuario";
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -30,9 +37,18 @@ export function DashboardLayout() {
   // Determinar si mostrar el buscador (no mostrar para pacientes)
   const showSearchBar = !isPatient;
 
+  const handleSidebarOpenChange = (open: boolean) => {
+    setSidebarOpen(open);
+    window.localStorage.setItem("incor_sidebar_open", String(open));
+  };
+
   return (
     <>
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider
+        defaultOpen
+        open={sidebarOpen}
+        onOpenChange={handleSidebarOpenChange}
+      >
         <AppSidebar />
         <SidebarInset className="min-w-0 overflow-x-hidden">
           {isStaging() && (
