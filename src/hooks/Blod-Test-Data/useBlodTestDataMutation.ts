@@ -10,7 +10,7 @@ export const useBlodTestDataMutations = () => {
     const addBlodTestDataMutation = useMutation({
         mutationFn: createBlodTestData,
         onSuccess: async () => {
-            // Invalidar todas las listas de blood test data (dispara refetch automático)
+            await queryClient.invalidateQueries({ queryKey: ["studiesByUserId"] });
             await queryClient.invalidateQueries({ queryKey: bloodTestDataKeys.lists() });
         },
         onError: (error) => {
