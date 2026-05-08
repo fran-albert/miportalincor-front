@@ -112,6 +112,32 @@ const STUDY_CATEGORIES = [
   { key: "Otros", label: "Otros", icon: FileText, color: "gray" },
 ] as const;
 
+const parseDisplayDate = (date: string) => {
+  if (!date) return Number.MAX_SAFE_INTEGER;
+
+  const trimmedDate = date.trim();
+  const separator = trimmedDate.includes("/") ? "/" : "-";
+  const parts = trimmedDate.split(separator).map(Number);
+
+  if (parts.length === 3) {
+    const [first, second, third] = parts;
+    const [day, month, year] =
+      trimmedDate.split(separator)[0].length === 4
+        ? [third, second, first]
+        : [first, second, third];
+    const parsedDate = new Date(year, month - 1, day);
+
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate.getTime();
+    }
+  }
+
+  const fallbackDate = new Date(trimmedDate);
+  return Number.isNaN(fallbackDate.getTime())
+    ? Number.MAX_SAFE_INTEGER
+    : fallbackDate.getTime();
+};
+
 export default function PatientStudies({
   patientData,
   initialStudies = [],
@@ -152,7 +178,9 @@ export default function PatientStudies({
       estado: lab.estado as "Completado" | "Pendiente" | "En proceso",
     }));
 
-    const allStudies = [...initialStudies, ...labStudies];
+    const allStudies = [...initialStudies, ...labStudies].sort(
+      (a, b) => parseDisplayDate(a.fecha) - parseDisplayDate(b.fecha)
+    );
 
     // Si no es médico, filtrar los estudios externos y los manuales (sin archivo)
     if (!isDoctor) {

@@ -104,30 +104,40 @@ const categorizeStudy = (studyTypeName?: string): string => {
 
 // Transform StudiesWithURL to the format expected by PatientStudies
 const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
-  return studies.map((study, index) => ({
-    id: study.id || index,
-    tipo: study.studyType?.name || "Estudio",
-    categoria: categorizeStudy(study.studyType?.name),
-    descripcion: study.note || "Sin descripción",
-    fecha: new Date(study.date).toLocaleDateString("es-ES"),
-    medico: "No especificado", // No viene del backend
-    archivo: {
-      nombre: study.locationS3?.split("/").pop() || "archivo.pdf",
-      tipo: (study.locationS3?.includes(".pdf")
-        ? "PDF"
-        : study.locationS3?.includes(".jpg") ||
-          study.locationS3?.includes(".png")
-        ? "JPG"
-        : "PDF") as "PDF" | "JPG" | "PNG" | "DICOM",
-      tamaño: "1.0 MB",
-      url: study.signedUrl || "",
-    },
-    signedUrl: study.signedUrl,
-    estado: "Completado" as const,
-    isExternal: study.isExternal || false,
-    externalInstitution: study.externalInstitution,
-    signedDoctorId: study.signedDoctorId,
-  }));
+  return [...studies]
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+
+      return (
+        (Number.isNaN(dateA) ? Number.MAX_SAFE_INTEGER : dateA) -
+        (Number.isNaN(dateB) ? Number.MAX_SAFE_INTEGER : dateB)
+      );
+    })
+    .map((study, index) => ({
+      id: study.id || index,
+      tipo: study.studyType?.name || "Estudio",
+      categoria: categorizeStudy(study.studyType?.name),
+      descripcion: study.note || "Sin descripción",
+      fecha: new Date(study.date).toLocaleDateString("es-ES"),
+      medico: "No especificado", // No viene del backend
+      archivo: {
+        nombre: study.locationS3?.split("/").pop() || "archivo.pdf",
+        tipo: (study.locationS3?.includes(".pdf")
+          ? "PDF"
+          : study.locationS3?.includes(".jpg") ||
+            study.locationS3?.includes(".png")
+          ? "JPG"
+          : "PDF") as "PDF" | "JPG" | "PNG" | "DICOM",
+        tamaño: "1.0 MB",
+        url: study.signedUrl || "",
+      },
+      signedUrl: study.signedUrl,
+      estado: "Completado" as const,
+      isExternal: study.isExternal || false,
+      externalInstitution: study.externalInstitution,
+      signedDoctorId: study.signedDoctorId,
+    }));
 };
 
 // Transform patient data to the format expected by PatientStudies
