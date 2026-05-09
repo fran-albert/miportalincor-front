@@ -670,71 +670,47 @@ export default function PreOccupationalCards({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Card className="overflow-hidden border border-slate-200 shadow-sm">
-          <CardContent className="space-y-4 p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <Card className="border border-slate-200 shadow-sm">
+          <CardContent className="p-3">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="min-w-0 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                     Examen laboral
-                  </div>
-                  <div className="text-xl font-semibold text-greenPrimary">
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-greenPrimary">
                     {medicalEvaluation.evaluationType.name}
-                  </div>
+                  </span>
+                  <ReportStatusBadge
+                    version={currentVersion}
+                    hasLegacyReport={hasLegacyCurrentReport}
+                  />
                 </div>
-                <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Colaborador
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900">
-                      {collaborator.firstName} {collaborator.lastName}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Médico asignado
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900">
-                      {!doctorQueryId
-                        ? "Sin médico asignado"
-                        : isDoctorLookupError
-                          ? "Médico no válido para firma"
-                          : doctorData?.fullName || "Cargando médico"}
-                    </div>
-                    {doctorQueryId ? (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {isDoctorLookupError
-                          ? matchedDoctor
-                            ? `doctorId ${doctorQueryId} existe en HC, pero falló la firma/sello`
-                            : `doctorId ${doctorQueryId} no existe hoy en Historia Clínica`
-                          : `doctorId ${doctorQueryId}`}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Fecha de creación
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900">
-                      {examDate}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Informe actual
-                    </div>
-                    <div className="mt-1">
-                      <ReportStatusBadge
-                        version={currentVersion}
-                        hasLegacyReport={hasLegacyCurrentReport}
-                      />
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+                  <span className="font-semibold text-slate-900">
+                    {collaborator.firstName} {collaborator.lastName}
+                  </span>
+                  <span>{examDate}</span>
+                  <span>
+                    {!doctorQueryId
+                      ? "Sin médico asignado"
+                      : isDoctorLookupError
+                        ? "Médico no válido para firma"
+                        : doctorData?.fullName || "Cargando médico"}
+                  </span>
+                  {doctorQueryId ? (
+                    <span className="text-xs text-slate-500">
+                      {isDoctorLookupError
+                        ? matchedDoctor
+                          ? `doctorId ${doctorQueryId} existe en HC, pero falló la firma/sello`
+                          : `doctorId ${doctorQueryId} no existe hoy en Historia Clínica`
+                        : `doctorId ${doctorQueryId}`}
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex shrink-0 flex-wrap gap-2">
                 {canManageLaboralExam ? (
                   <Button
                     size="sm"
@@ -759,7 +735,7 @@ export default function PreOccupationalCards({
                 {nextStage ? (
                   <Button
                     size="sm"
-                    className="border border-greenPrimary/10 bg-gradient-to-r from-greenSecondary via-greenPrimary to-incor text-white shadow-[0_16px_30px_-18px_rgba(12,72,74,0.9)] hover:from-greenSecondary hover:via-greenSecondary hover:to-greenPrimary"
+                    className="bg-greenPrimary text-white hover:bg-greenSecondary"
                     onClick={() => setActiveStage(nextStage.key)}
                   >
                     Continuar con {nextStage.label}
@@ -768,7 +744,7 @@ export default function PreOccupationalCards({
                 ) : (
                   <Button
                     size="sm"
-                    className="border border-greenPrimary/10 bg-gradient-to-r from-greenSecondary via-greenPrimary to-incor text-white shadow-[0_16px_30px_-18px_rgba(12,72,74,0.9)] hover:from-greenSecondary hover:via-greenSecondary hover:to-greenPrimary"
+                    className="bg-greenPrimary text-white hover:bg-greenSecondary"
                     onClick={() => navigate(previewHref)}
                   >
                     <Eye className="mr-2 h-4 w-4" />
@@ -779,50 +755,38 @@ export default function PreOccupationalCards({
             </div>
           </CardContent>
         </Card>
-        <Card className="border border-slate-200 shadow-sm">
-          <CardContent className="space-y-3 p-4">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-              {stages.map((stage) => {
-                const Icon = stage.icon;
-                const isActive = activeStage === stage.key;
+        <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {stages.map((stage) => {
+              const Icon = stage.icon;
+              const isActive = activeStage === stage.key;
 
-                return (
-                  <button
-                    key={stage.key}
-                    type="button"
-                    onClick={() => setActiveStage(stage.key)}
-                    className={`rounded-lg border p-3 text-left transition-colors ${
-                      isActive
-                        ? "border-greenPrimary bg-greenPrimary/5 shadow-sm"
-                        : "border-slate-200 bg-white hover:border-greenPrimary/30 hover:bg-slate-50"
-                    }`}
+              return (
+                <button
+                  key={stage.key}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setActiveStage(stage.key)}
+                  className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                    isActive
+                      ? "border-greenPrimary bg-greenPrimary/5 text-greenPrimary"
+                      : "border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="font-medium">{stage.label}</span>
+                  <span
+                    className={`hidden rounded-full border px-2 py-0.5 text-[11px] font-semibold sm:inline-flex ${getStageStatusClasses(
+                      stage.status
+                    )}`}
                   >
-                    <div className="flex min-h-[104px] flex-col justify-between gap-3">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-greenPrimary">
-                          <Icon className="h-4 w-4" />
-                          {stage.label}
-                        </div>
-                        <p className="text-xs leading-5 text-slate-500">
-                          {stage.description}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getStageStatusClasses(
-                            stage.status
-                          )}`}
-                        >
-                          {stage.status}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                    {stage.status}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {activeStage === "details" && (
           <div className="space-y-3">
