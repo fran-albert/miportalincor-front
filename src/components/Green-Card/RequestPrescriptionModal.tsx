@@ -17,11 +17,10 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, FileText, User, CalendarDays, Clock } from "lucide-react";
+import { CheckCircle2, Loader2, FileText } from "lucide-react";
 import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
 import { useAvailableDoctorsForPrescriptions } from "@/hooks/Doctor-Settings/useDoctorSettings";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
 interface RequestPrescriptionModalProps {
@@ -44,34 +43,45 @@ export function RequestPrescriptionModal({
 
   const [selectedDoctorUserId, setSelectedDoctorUserId] = useState<string>("");
   const [patientMessage, setPatientMessage] = useState("");
+  const [isDoctorAutoSelected, setIsDoctorAutoSelected] = useState(false);
+
+  const findMatchingDoctor = () => {
+    if (!availableDoctors) return null;
+
+    return availableDoctors.find(
+      (doctor) =>
+        doctor.userId === item.doctorUserId || doctor.id === item.doctor?.id
+    );
+  };
 
   // Pre-select the doctor who added the medication only on first open
   useEffect(() => {
     if (!isOpen) {
       setSelectedDoctorUserId("");
       setPatientMessage("");
+      setIsDoctorAutoSelected(false);
       return;
     }
-    if (availableDoctors && item.doctorUserId && !selectedDoctorUserId) {
-      const found = availableDoctors.find(
-        (d) => d.userId === item.doctorUserId
-      );
-      if (found) {
-        setSelectedDoctorUserId(found.userId);
+
+    if (!selectedDoctorUserId) {
+      const foundDoctor = findMatchingDoctor();
+      if (foundDoctor) {
+        setSelectedDoctorUserId(foundDoctor.userId);
+        setIsDoctorAutoSelected(true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, availableDoctors, item.doctorUserId]);
+  }, [isOpen, availableDoctors, item.doctorUserId, item.doctor?.id]);
+
+  const selectedDoctor = availableDoctors?.find(
+    (doctor) => doctor.userId === selectedDoctorUserId
+  );
 
   // Get doctor display name for the selected doctor
   const getSelectedDoctorName = () => {
-    if (!availableDoctors || !selectedDoctorUserId) return "el médico";
-    const doctor = availableDoctors.find(
-      (d) => d.userId === selectedDoctorUserId
-    );
-    if (!doctor) return "el médico";
-    const prefix = doctor.gender === "Femenino" ? "Dra." : "Dr.";
-    return `${prefix} ${doctor.firstName} ${doctor.lastName}`;
+    if (!selectedDoctor) return "el médico";
+    const prefix = selectedDoctor.gender === "Femenino" ? "Dra." : "Dr.";
+    return `${prefix} ${selectedDoctor.firstName} ${selectedDoctor.lastName}`;
   };
 
   const handleRequestPrescription = async () => {
@@ -113,12 +123,13 @@ export function RequestPrescriptionModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-blue-700">
+          <DialogTitle className="flex items-center gap-2 text-blue-700 text-xl">
             <FileText className="h-5 w-5" />
             Solicitar Receta
           </DialogTitle>
-          <DialogDescription>
-            Seleccioná el médico al que querés enviar la solicitud
+          <DialogDescription className="text-base">
+            Revisá el medicamento, elegí el médico que hará la receta y enviá
+            la solicitud.
           </DialogDescription>
         </DialogHeader>
 
@@ -127,9 +138,6 @@ export function RequestPrescriptionModal({
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="space-y-3">
               <div>
-                <div className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-                  Medicamento
-                </div>
                 <div className="text-lg font-bold text-gray-900">
                   {item.medicationName}
                 </div>
@@ -162,60 +170,65 @@ export function RequestPrescriptionModal({
           </div>
 
           {/* Doctor Selector */}
-          <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-1">
-              <User className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-gray-500 mb-1">
+          <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/70 p-4">
+            <div className="space-y-1">
+              <Label className="text-base font-semibold text-slate-900">
                 Médico que recibe la solicitud
-              </div>
-              {isLoadingDoctors ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Cargando médicos...
-                </div>
-              ) : !availableDoctors || availableDoctors.length === 0 ? (
-                <div className="text-sm text-red-600">
-                  No hay médicos disponibles para recetas
-                </div>
-              ) : (
-                <>
-                  <Select
-                    value={selectedDoctorUserId}
-                    onValueChange={setSelectedDoctorUserId}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Seleccioná un médico" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDoctors.map((doctor) => {
-                        const prefix =
-                          doctor.gender === "Femenino" ? "Dra." : "Dr.";
-                        return (
-                          <SelectItem key={doctor.userId} value={doctor.userId}>
-                            {prefix} {doctor.firstName} {doctor.lastName}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {selectedDoctorUserId && (() => {
-                    const selected = availableDoctors.find(
-                      (d) => d.userId === selectedDoctorUserId
-                    );
-                    if (selected?.specialities && selected.specialities.length > 0) {
-                      return (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {selected.specialities[0].name}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </>
-              )}
+              </Label>
+              <p className="text-sm leading-5 text-slate-600">
+                Esta receta se enviará al médico que selecciones acá.
+              </p>
             </div>
+            {isLoadingDoctors ? (
+              <div className="flex items-center gap-2 text-base text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando médicos...
+              </div>
+            ) : !availableDoctors || availableDoctors.length === 0 ? (
+              <div className="text-base font-medium text-red-600">
+                No hay médicos disponibles para recetas
+              </div>
+            ) : (
+              <>
+                <Select
+                  value={selectedDoctorUserId}
+                  onValueChange={(value) => {
+                    setSelectedDoctorUserId(value);
+                    setIsDoctorAutoSelected(false);
+                  }}
+                >
+                  <SelectTrigger className="h-12 w-full bg-white text-base">
+                    <SelectValue placeholder="Elegí el médico que debe hacer la receta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDoctors.map((doctor) => {
+                      const prefix =
+                        doctor.gender === "Femenino" ? "Dra." : "Dr.";
+                      return (
+                        <SelectItem key={doctor.userId} value={doctor.userId}>
+                          {prefix} {doctor.firstName} {doctor.lastName}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {selectedDoctor && isDoctorAutoSelected && (
+                  <div className="flex gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm leading-5 text-green-800">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>
+                      Preseleccionamos el médico asociado a este medicamento.
+                      Podés cambiarlo si corresponde.
+                    </span>
+                  </div>
+                )}
+                {selectedDoctor?.specialities &&
+                  selectedDoctor.specialities.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      Especialidad: {selectedDoctor.specialities[0].name}
+                    </div>
+                  )}
+              </>
+            )}
           </div>
 
           <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -223,53 +236,42 @@ export function RequestPrescriptionModal({
               htmlFor="green-card-prescription-message"
               className="text-sm font-semibold text-slate-700"
             >
-              Mensaje para el médico
-              <span className="ml-1 font-normal text-slate-500">(opcional)</span>
+              Mensaje opcional
             </Label>
             <Textarea
               id="green-card-prescription-message"
               value={patientMessage}
               onChange={(event) => setPatientMessage(event.target.value)}
-              placeholder="Podés dejar una nota u observación para acompañar la solicitud."
+              placeholder="Nota para el médico."
               maxLength={500}
               className="min-h-[96px] resize-none bg-white"
             />
-            <p className="text-xs text-slate-500">
-              Este mensaje se enviará junto con la solicitud de receta.
-            </p>
+            <p className="text-xs text-slate-500">Opcional.</p>
           </div>
 
-          {/* Friday Notice */}
-          <Alert className="border-amber-200 bg-amber-50">
-            <CalendarDays className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>
-                  La receta estará disponible para descargar el{" "}
-                  <strong>próximo viernes a partir de las 14:00 hs</strong>
-                </span>
-              </div>
-            </AlertDescription>
-          </Alert>
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-800">
+            Si el médico aprueba la solicitud, la receta estará disponible el
+            próximo viernes a partir de las 14:00 hs.
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-3 pt-2 sm:items-center">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="h-12 text-base"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleRequestPrescription}
             disabled={isLoading || !selectedDoctorUserId || isLoadingDoctors}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="h-12 bg-blue-600 px-5 text-base font-semibold hover:bg-blue-700"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirmar Solicitud
+            Enviar solicitud
           </Button>
         </DialogFooter>
       </DialogContent>
