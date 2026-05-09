@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -58,28 +58,30 @@ export function BatchRequestPrescriptionModal({
   const [patientMessage, setPatientMessage] = useState<string>("");
   const [isDoctorAutoSelected, setIsDoctorAutoSelected] = useState(false);
 
-  // Separate selected items into sendable and skipped
-  const selectedItems = greenCard.items.filter((item) =>
-    selectedItemIds.includes(item.id)
-  );
+  const { sendableItems, skippedItems } = useMemo(() => {
+    const selectedItems = greenCard.items.filter((item) =>
+      selectedItemIds.includes(item.id)
+    );
+    const sendableItems: GreenCardItem[] = [];
+    const skippedItems: SkippedItem[] = [];
 
-  const sendableItems: GreenCardItem[] = [];
-  const skippedItems: SkippedItem[] = [];
-
-  for (const item of selectedItems) {
-    if (!item.isActive) {
-      skippedItems.push({ item, reason: "Medicamento suspendido" });
-    } else if (item.hasPendingPrescription) {
-      skippedItems.push({
-        item,
-        reason: "Ya tiene una solicitud pendiente",
-      });
-    } else {
-      sendableItems.push(item);
+    for (const item of selectedItems) {
+      if (!item.isActive) {
+        skippedItems.push({ item, reason: "Medicamento suspendido" });
+      } else if (item.hasPendingPrescription) {
+        skippedItems.push({
+          item,
+          reason: "Ya tiene una solicitud pendiente",
+        });
+      } else {
+        sendableItems.push(item);
+      }
     }
-  }
 
-  const findMatchingDoctorUserId = (item: GreenCardItem) => {
+    return { sendableItems, skippedItems };
+  }, [greenCard.items, selectedItemIds]);
+
+  const findMatchingDoctorUserId = useCallback((item: GreenCardItem) => {
     if (!availableDoctors) return null;
 
     const foundDoctor = availableDoctors.find(
@@ -88,7 +90,7 @@ export function BatchRequestPrescriptionModal({
     );
 
     return foundDoctor?.userId ?? null;
-  };
+  }, [availableDoctors]);
 
   // Reset selection when modal closes
   useEffect(() => {
@@ -118,7 +120,13 @@ export function BatchRequestPrescriptionModal({
 
     setSelectedDoctorUserId(uniqueDoctorUserIds[0]);
     setIsDoctorAutoSelected(true);
-  }, [isOpen, availableDoctors, sendableItems, selectedDoctorUserId]);
+  }, [
+    isOpen,
+    availableDoctors,
+    findMatchingDoctorUserId,
+    sendableItems,
+    selectedDoctorUserId,
+  ]);
 
   const selectedDoctor = availableDoctors?.find(
     (doctor) => doctor.userId === selectedDoctorUserId
@@ -160,13 +168,13 @@ export function BatchRequestPrescriptionModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-blue-700">
+          <DialogTitle className="flex items-center gap-2 text-blue-700 text-xl">
             <FileText className="h-5 w-5" />
             Solicitar Recetas en Lote
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-base">
             {sendableItems.length > 0
-              ? `${sendableItems.length} receta(s) listas para enviar.`
+              ? `${sendableItems.length} receta(s) listas para enviar al médico que elijas.`
               : "No hay medicamentos disponibles para solicitar"}
           </DialogDescription>
         </DialogHeader>
@@ -174,15 +182,22 @@ export function BatchRequestPrescriptionModal({
         <div className="space-y-4 max-h-[400px] overflow-y-auto">
           {/* Doctor Selector */}
           {sendableItems.length > 0 && (
-            <div className="space-y-2 rounded-lg bg-gray-50 p-3">
-              <Label className="text-sm font-semibold text-slate-700">Médico</Label>
+            <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/70 p-4">
+              <div className="space-y-1">
+                <Label className="text-base font-semibold text-slate-900">
+                  Médico que recibe las solicitudes
+                </Label>
+                <p className="text-sm leading-5 text-slate-600">
+                  Este médico recibirá todas las recetas seleccionadas.
+                </p>
+              </div>
               {isLoadingDoctors ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-base text-gray-500">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Cargando médicos...
                 </div>
               ) : !availableDoctors || availableDoctors.length === 0 ? (
-                <div className="text-sm text-red-600">
+                <div className="text-base font-medium text-red-600">
                   No hay médicos disponibles para recetas
                 </div>
               ) : (
@@ -194,8 +209,8 @@ export function BatchRequestPrescriptionModal({
                       setIsDoctorAutoSelected(false);
                     }}
                   >
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue placeholder="Seleccioná un médico" />
+                    <SelectTrigger className="h-12 w-full bg-white text-base">
+                      <SelectValue placeholder="Elegí el médico que debe hacer las recetas" />
                     </SelectTrigger>
                     <SelectContent>
                       {availableDoctors.map((doctor) => {
@@ -210,8 +225,12 @@ export function BatchRequestPrescriptionModal({
                     </SelectContent>
                   </Select>
                   {selectedDoctor && isDoctorAutoSelected && (
-                    <div className="text-xs text-green-700">
-                      Preseleccionado automáticamente.
+                    <div className="flex gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm leading-5 text-green-800">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>
+                        Preseleccionamos el médico asociado a los medicamentos.
+                        Podés cambiarlo si corresponde.
+                      </span>
                     </div>
                   )}
                 </>
@@ -295,8 +314,9 @@ export function BatchRequestPrescriptionModal({
           )}
 
           {sendableItems.length > 0 && (
-            <div className="text-xs text-amber-700">
-              Disponibles para descargar el viernes desde las 14:00 hs.
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-800">
+              Si el médico aprueba la solicitud, las recetas estarán disponibles
+              el próximo viernes a partir de las 14:00 hs.
             </div>
           )}
         </div>
@@ -307,16 +327,17 @@ export function BatchRequestPrescriptionModal({
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="h-12 text-base"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleBatchRequest}
             disabled={isLoading || sendableItems.length === 0 || !selectedDoctorUserId || isLoadingDoctors}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="h-12 bg-blue-600 px-5 text-base font-semibold hover:bg-blue-700"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Solicitar Recetas ({sendableItems.length})
+            Enviar solicitud de recetas ({sendableItems.length})
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -196,7 +196,7 @@ describe("RequestPrescriptionModal", () => {
       // y está en mockAvailableDoctors, entonces debe quedar pre-seleccionado
       // La pre-selección se refleja en que canSubmit=true (botón habilitado)
       await waitFor(() => {
-        const submitBtn = screen.getByText("Confirmar Solicitud");
+        const submitBtn = screen.getByText("Enviar solicitud");
         expect(submitBtn.closest("button")).not.toBeDisabled();
       });
     });
@@ -210,7 +210,7 @@ describe("RequestPrescriptionModal", () => {
       renderModal({ item: itemWithUnknownDoctor });
 
       // El botón debe estar deshabilitado porque no hay pre-selección
-      const submitBtn = screen.getByText("Confirmar Solicitud");
+      const submitBtn = screen.getByText("Enviar solicitud");
       expect(submitBtn.closest("button")).toBeDisabled();
     });
   });
@@ -242,7 +242,7 @@ describe("RequestPrescriptionModal", () => {
 
       renderModal({ item: itemWithDifferentDoctor });
 
-      const submitBtn = screen.getByText("Confirmar Solicitud");
+      const submitBtn = screen.getByText("Enviar solicitud");
       expect(submitBtn.closest("button")).toBeDisabled();
     });
 
@@ -256,7 +256,7 @@ describe("RequestPrescriptionModal", () => {
 
       renderModal();
 
-      const submitBtn = screen.getByText("Confirmar Solicitud");
+      const submitBtn = screen.getByText("Enviar solicitud");
       expect(submitBtn.closest("button")).toBeDisabled();
     });
 
@@ -264,7 +264,7 @@ describe("RequestPrescriptionModal", () => {
       renderModal(); // doctorUserId='user-doc-1' está en mockAvailableDoctors
 
       await waitFor(() => {
-        const submitBtn = screen.getByText("Confirmar Solicitud");
+        const submitBtn = screen.getByText("Enviar solicitud");
         expect(submitBtn.closest("button")).not.toBeDisabled();
       });
     });
@@ -277,11 +277,11 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       expect(mockRequestPrescriptionMutateAsync).toHaveBeenCalledWith({
         cardId: "card-123",
@@ -296,11 +296,11 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(mockShowSuccess).toHaveBeenCalledWith(
@@ -320,11 +320,11 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(mockShowError).toHaveBeenCalledWith(
@@ -344,11 +344,11 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(mockShowError).toHaveBeenCalledWith(
@@ -365,11 +365,11 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(onClose).toHaveBeenCalled();
@@ -383,12 +383,12 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
       const user = userEvent.setup();
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(mockShowSuccess).toHaveBeenCalledWith(
@@ -409,12 +409,12 @@ describe("RequestPrescriptionModal", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Confirmar Solicitud").closest("button")
+          screen.getByText("Enviar solicitud").closest("button")
         ).not.toBeDisabled();
       });
 
       const user = userEvent.setup();
-      await user.click(screen.getByText("Confirmar Solicitud"));
+      await user.click(screen.getByText("Enviar solicitud"));
 
       await waitFor(() => {
         expect(mockShowSuccess).toHaveBeenCalledWith(
@@ -459,7 +459,7 @@ describe("RequestPrescriptionModal", () => {
 
       // Se re-aplica la pre-selección al volver a abrir
       await waitFor(() => {
-        const submitBtn = screen.getByText("Confirmar Solicitud");
+        const submitBtn = screen.getByText("Enviar solicitud");
         expect(submitBtn).toBeInTheDocument();
       });
     });

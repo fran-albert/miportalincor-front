@@ -235,33 +235,47 @@ const MyPrescriptionRequestsPage = () => {
             <Pill className="h-5 w-5 text-green-600" />
             Mi Cartón Verde
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {greenCard && greenCard.items.length > 0 && (
               <>
-                <Button
-                  variant={selectionMode ? "destructive" : "outline"}
-                  size="sm"
-                  onClick={handleToggleSelectionMode}
-                >
-                  <ListChecks className="h-4 w-4 mr-2" />
-                  {selectionMode ? "Cancelar seleccion" : "Seleccionar medicamentos"}
-                </Button>
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant={selectionMode ? "outline" : "default"}
+                    size="lg"
+                    onClick={handleToggleSelectionMode}
+                    className={
+                      selectionMode
+                        ? "h-12 justify-center border-red-200 text-base font-semibold text-red-700 hover:bg-red-50 sm:min-w-[210px]"
+                        : "h-14 justify-center bg-blue-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-blue-700 sm:min-w-[310px]"
+                    }
+                  >
+                    <ListChecks className="h-5 w-5 mr-2" />
+                    {selectionMode
+                      ? "Cancelar selección"
+                      : "Seleccionar medicamentos para pedir recetas"}
+                  </Button>
+                  {!selectionMode && (
+                    <span className="text-center text-sm text-gray-500 sm:text-left">
+                      Podés pedir varios medicamentos juntos.
+                    </span>
+                  )}
+                </div>
                 {selectionMode && selectedItemIds.length > 0 && (
                   <Button
-                    size="sm"
+                    size="lg"
                     onClick={() => setIsBatchModalOpen(true)}
-                    className="hidden bg-blue-600 hover:bg-blue-700 md:inline-flex"
+                    className="hidden h-12 bg-blue-600 px-5 text-base font-semibold hover:bg-blue-700 md:inline-flex"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    Solicitar Recetas ({selectedItemIds.length})
+                    Pedir recetas ({selectedItemIds.length})
                   </Button>
                 )}
                 <Button
                   variant="default"
-                  size="sm"
+                  size="lg"
                   onClick={handleDownloadPDF}
                   disabled={isGenerating}
-                  className="bg-green-700 hover:bg-green-800"
+                  className="h-12 bg-green-700 text-base font-semibold hover:bg-green-800"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   {isGenerating ? "Generando..." : "Descargar PDF"}
@@ -321,12 +335,12 @@ const MyPrescriptionRequestsPage = () => {
               </p>
             </div>
             <Button
-              size="sm"
+              size="lg"
               onClick={() => setIsBatchModalOpen(true)}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="h-12 w-full bg-blue-600 text-base font-semibold hover:bg-blue-700"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Solicitar recetas ({selectedItemIds.length})
+              Pedir recetas ({selectedItemIds.length})
             </Button>
           </div>
         </div>

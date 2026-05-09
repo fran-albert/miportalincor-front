@@ -246,9 +246,11 @@ function renderBatchModal(
 
 /** Helper to get the submit button by its role */
 function getSubmitButton() {
-  // The submit button contains text "Solicitar Recetas" and is a button
+  // The submit button contains text "Enviar solicitud de recetas" and is a button
   const buttons = screen.getAllByRole("button");
-  return buttons.find((btn) => btn.textContent?.includes("Solicitar Recetas ("));
+  return buttons.find((btn) =>
+    btn.textContent?.includes("Enviar solicitud de recetas (")
+  );
 }
 
 // --- Tests ---
@@ -289,7 +291,7 @@ describe("BatchRequestPrescriptionModal", () => {
     it("debe mostrar el aviso del viernes", () => {
       renderBatchModal();
       expect(
-        screen.getByText(/proximo viernes a partir de las 14:00 hs/)
+        screen.getByText(/próximo viernes a partir de las 14:00 hs/)
       ).toBeInTheDocument();
     });
 
@@ -297,7 +299,9 @@ describe("BatchRequestPrescriptionModal", () => {
       renderBatchModal();
       const submitBtn = getSubmitButton();
       expect(submitBtn).toBeDefined();
-      expect(submitBtn?.textContent).toContain("Solicitar Recetas (2)");
+      expect(submitBtn?.textContent).toContain(
+        "Enviar solicitud de recetas (2)"
+      );
     });
   });
 
@@ -361,7 +365,9 @@ describe("BatchRequestPrescriptionModal", () => {
     it("debe mostrar la cantidad correcta de medicamentos enviables en la descripción", () => {
       renderBatchModal({ selectedItemIds: ["item-1", "item-2"] });
       expect(
-        screen.getByText("Se enviarán 2 solicitud(es) al médico seleccionado")
+        screen.getByText(
+          "2 receta(s) listas para enviar al médico que elijas."
+        )
       ).toBeInTheDocument();
     });
   });
@@ -380,7 +386,7 @@ describe("BatchRequestPrescriptionModal", () => {
       // El botón muestra "(0)" items
       const buttons = screen.getAllByRole("button");
       const submitBtn = buttons.find((btn) =>
-        btn.textContent?.includes("Solicitar Recetas (0)")
+        btn.textContent?.includes("Enviar solicitud de recetas (0)")
       );
       expect(submitBtn).toBeDefined();
       expect(submitBtn).toBeDisabled();
@@ -517,7 +523,7 @@ describe("BatchRequestPrescriptionModal", () => {
   });
 
   describe("Reset al cerrar modal", () => {
-    it("debe resetear la selección del médico cuando se cierra", async () => {
+    it("debe resetear y reaplicar la preselección automática al reabrir", async () => {
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
       });
@@ -557,10 +563,14 @@ describe("BatchRequestPrescriptionModal", () => {
         </QueryClientProvider>
       );
 
-      // El botón debe estar deshabilitado (selección reseteada)
-      const submitBtn = getSubmitButton();
-      expect(submitBtn).toBeDefined();
-      expect(submitBtn).toBeDisabled();
+      await waitFor(() => {
+        const submitBtn = getSubmitButton();
+        expect(submitBtn).toBeDefined();
+        expect(submitBtn).not.toBeDisabled();
+      });
+      expect(
+        screen.getByText(/Preseleccionamos el médico asociado/)
+      ).toBeInTheDocument();
     });
   });
 });
