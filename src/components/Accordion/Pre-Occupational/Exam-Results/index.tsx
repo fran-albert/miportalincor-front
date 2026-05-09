@@ -56,28 +56,22 @@ export default function ExamsResultsAccordion({
   }));
 
   const content = (
-    <div className="space-y-5">
-      <p className="text-sm leading-6 text-slate-600">
-        Registrá un resumen breve de cada estudio. Si necesitás más detalle,
-        usá el campo como observación clínica corta.
+    <div className="space-y-4">
+      <p className="text-sm leading-5 text-slate-600">
+        Cargá solo los resultados que tengan que figurar en el informe.
       </p>
-      <div className="grid gap-x-6 gap-y-5 xl:grid-cols-2">
+      <div className="grid gap-x-6 gap-y-4 xl:grid-cols-2">
         {mappedExams.map((exam) => (
           <div key={exam.id} className="space-y-2">
-            <div className="space-y-1">
-              <Label
-                htmlFor={exam.id}
-                className="text-sm font-semibold text-greenPrimary"
-              >
-                {exam.label}
-              </Label>
-              <p className="text-xs leading-5 text-slate-500">
-                Resultado resumido para el informe laboral.
-              </p>
-            </div>
+            <Label
+              htmlFor={exam.id}
+              className="text-sm font-semibold text-greenPrimary"
+            >
+              {exam.label}
+            </Label>
             <Textarea
               id={exam.id}
-              placeholder={`Ej.: ${exam.label} sin alteraciones relevantes`}
+              placeholder="Sin alteraciones relevantes"
               disabled={!isEditing}
               value={examResults[exam.id] || ""}
               onChange={(e) =>
