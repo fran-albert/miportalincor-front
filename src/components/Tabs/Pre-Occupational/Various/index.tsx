@@ -159,6 +159,10 @@ export default function VariousTab({
           title: studyName,
           files: [] as UploadedFile[],
         }));
+  const totalFiles = visibleSections.reduce(
+    (total, section) => total + section.files.length,
+    0
+  );
 
   const updateSectionsWithUrls = useCallback(
     (sectionUrls: { id: number; url: string; dataTypeName: string }[]) => {
@@ -265,8 +269,9 @@ export default function VariousTab({
             Estudios y archivos
           </h4>
           <p className="text-sm leading-6 text-slate-600">
-            Subí la documentación del examen y mantené cada estudio ordenado
-            por categoría.
+            {totalFiles > 0
+              ? `${totalFiles} archivo${totalFiles === 1 ? "" : "s"} cargado${totalFiles === 1 ? "" : "s"} en el examen.`
+              : "Subí únicamente los estudios que correspondan al examen."}
           </p>
         </div>
         {!isEditing && (
@@ -284,18 +289,20 @@ export default function VariousTab({
         {visibleSections.map((section) => (
           <section
             key={section.id}
-            className="rounded-lg border border-slate-200 bg-white p-4"
+            className="rounded-lg border border-slate-200 bg-white p-3"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <h5 className="text-sm font-semibold text-greenPrimary">
                   {section.title}
                 </h5>
-                <p className="text-xs leading-5 text-slate-500">
-                  {section.files.length > 0
-                    ? `${section.files.length} archivo${section.files.length === 1 ? "" : "s"} cargado${section.files.length === 1 ? "" : "s"}`
-                    : "Sin archivos cargados por ahora."}
-                </p>
+                {section.files.length > 0 ? (
+                  <p className="text-xs leading-5 text-slate-500">
+                    {section.files.length} archivo
+                    {section.files.length === 1 ? "" : "s"} cargado
+                    {section.files.length === 1 ? "" : "s"}
+                  </p>
+                ) : null}
               </div>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                 {section.files.length}
@@ -354,11 +361,7 @@ export default function VariousTab({
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-3 text-sm text-slate-500">
-                  Sin archivos cargados por ahora.
-                </div>
-              )}
+              ) : null}
 
               <label
                 htmlFor={`file-input-${section.id}`}
