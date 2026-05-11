@@ -20,12 +20,12 @@ export function ClinicalBlock({
   return (
     <section
       className={cn(
-        "space-y-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm",
+        "space-y-3",
         className
       )}
     >
       <div className="space-y-1">
-        <h4 className="text-sm font-semibold text-greenPrimary">{title}</h4>
+        <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
         {description ? (
           <p className="text-xs leading-5 text-slate-500">{description}</p>
         ) : null}
