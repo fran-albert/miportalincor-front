@@ -1,16 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  ChevronRight,
-  ClipboardList,
-  Eye,
-  FileCheck,
-  FolderOpen,
-  HeartPulse,
-  Stethoscope,
-  Trash2,
-  UserRoundPen,
-} from "lucide-react";
+import { Eye, Trash2, UserRoundPen } from "lucide-react";
 import CollaboratorInformationCard from "../Collaborator-Information";
 import GeneralTab from "@/components/Tabs/Pre-Occupational/General";
 import MedicalHistoryTab from "@/components/Tabs/Pre-Occupational/Medical-History";
@@ -48,7 +38,6 @@ import { ReportStatusBadge } from "@/components/Pre-Occupational/Report-Versioni
 import { mapExamResults } from "@/common/helpers/examsResults.maps";
 import {
   getPreferredDataValueByPossibleNames,
-  hasSectionData,
   mapMedicalEvaluation,
   mapOccupationalHistory,
 } from "@/common/helpers/maps";
@@ -68,20 +57,18 @@ import { getMedicalEvaluationMaintenanceState } from "@/api/Medical-Evaluation/g
 import { updateMedicalEvaluation } from "@/api/Medical-Evaluation/update.medical.evaluation";
 import { deleteMedicalEvaluation } from "@/api/Medical-Evaluation/delete.medical.evaluation";
 import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface Props {
   slug: string;
   collaborator: Collaborator;
   medicalEvaluation: MedicalEvaluation;
 }
-
-type ExamStageKey =
-  | "details"
-  | "antecedents"
-  | "general"
-  | "history"
-  | "studies"
-  | "closing";
 
 const normalizeOccupationalHistory = (
   items: OccupationalHistoryItem[] | undefined
@@ -90,49 +77,6 @@ const normalizeOccupationalHistory = (
     .map((item) => item.description.trim())
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b));
-
-const hasSavedGeneralData = (formData: {
-  examResults: Record<string, string>;
-  conclusion: string;
-  recomendaciones: string;
-}) =>
-  Object.values(formData.examResults).some((value) => value.trim() !== "") ||
-  formData.conclusion.trim() !== "" ||
-  formData.recomendaciones.trim() !== "";
-
-const hasSavedMedicalEvaluationData = (
-  medicalEvaluation: IMedicalEvaluation | null
-) => {
-  if (!medicalEvaluation) return false;
-
-  if (medicalEvaluation.aspectoGeneral.trim() !== "") return true;
-  if (medicalEvaluation.tiempoLibre.trim() !== "") return true;
-  if (Object.values(medicalEvaluation.examenClinico).some((value) => value !== "")) {
-    return true;
-  }
-  if (
-    medicalEvaluation.agudezaSc.right.trim() !== "" ||
-    medicalEvaluation.agudezaSc.left.trim() !== "" ||
-    medicalEvaluation.agudezaCc.right.trim() !== "" ||
-    medicalEvaluation.agudezaCc.left.trim() !== "" ||
-    (medicalEvaluation.notasVision ?? "").trim() !== ""
-  ) {
-    return true;
-  }
-
-  return [
-    medicalEvaluation.piel,
-    medicalEvaluation.cabezaCuello,
-    medicalEvaluation.bucodental,
-    medicalEvaluation.torax,
-    medicalEvaluation.respiratorio,
-    medicalEvaluation.circulatorio,
-    medicalEvaluation.neurologico,
-    medicalEvaluation.gastrointestinal,
-    medicalEvaluation.genitourinario,
-    medicalEvaluation.osteoarticular,
-  ].some((section) => hasSectionData(section));
-};
 
 export default function PreOccupationalCards({
   slug,
@@ -175,7 +119,6 @@ export default function PreOccupationalCards({
     id: medicalEvaluation.id,
   });
 
-  const [activeStage, setActiveStage] = useState<ExamStageKey>("details");
   const [isEditing] = useState(true);
   const [hasGeneralUnsavedChanges, setHasGeneralUnsavedChanges] = useState(false);
   const [generalFormData, setGeneralFormData] = useState<{
@@ -233,8 +176,6 @@ export default function PreOccupationalCards({
   const hasReportVisibilityUnsavedChanges =
     JSON.stringify(currentReportVisibilityOverrides) !==
     JSON.stringify(savedReportVisibilityOverrides);
-  const hasAntecedentsSavedData =
-    normalizeOccupationalHistory(savedOccupationalHistory).length > 0;
   const hasUnsavedChanges =
     hasAntecedentsUnsavedChanges ||
     hasMedicalHistoryUnsavedChanges ||
@@ -253,14 +194,6 @@ export default function PreOccupationalCards({
   const studiesCategory = useMemo(
     () => fields?.filter((f) => f.category === "ESTUDIOS") ?? [],
     [fields]
-  );
-  const hasGeneralSavedData = useMemo(
-    () => hasSavedGeneralData(savedGeneralFormData),
-    [savedGeneralFormData]
-  );
-  const hasMedicalHistorySavedData = useMemo(
-    () => hasSavedMedicalEvaluationData(savedMedicalEvaluation),
-    [savedMedicalEvaluation]
   );
   const {
     data: doctorData,
@@ -401,76 +334,6 @@ export default function PreOccupationalCards({
   if (isErrorUrls || isErrorValues) {
     return <div>Error cargando datos</div>;
   }
-
-  const stages = [
-    {
-      key: "details" as const,
-      label: "Datos del examen",
-      description: "Colaborador, médico y fecha",
-      icon: ClipboardList,
-      status: "Guardado",
-    },
-    {
-      key: "antecedents" as const,
-      label: "Antecedentes",
-      description: "Historia ocupacional previa",
-      icon: HeartPulse,
-      status: hasAntecedentsUnsavedChanges
-        ? "En curso"
-        : hasAntecedentsSavedData
-          ? "Guardado"
-          : "Pendiente",
-    },
-    {
-      key: "general" as const,
-      label: "Resultados y conclusión",
-      icon: Stethoscope,
-      description: "Resultados, conclusión y recomendaciones",
-      status: hasGeneralUnsavedChanges
-        ? "En curso"
-        : hasGeneralSavedData
-          ? "Guardado"
-          : "Pendiente",
-    },
-    {
-      key: "history" as const,
-      label: "Historia médica y físico",
-      description: "Examen físico y sistemas",
-      icon: Stethoscope,
-      status: hasMedicalHistoryUnsavedChanges
-        ? "En curso"
-        : hasMedicalHistorySavedData
-          ? "Guardado"
-          : "Pendiente",
-    },
-    {
-      key: "studies" as const,
-      label: "Estudios",
-      description: "Archivos por categoría",
-      icon: FolderOpen,
-      status: urls && urls.length > 0 ? "Guardado" : "Pendiente",
-    },
-    {
-      key: "closing" as const,
-      label: "Cierre e informe",
-      description: "Informe actual y regeneración",
-      icon: FileCheck,
-      status: hasReport ? "Guardado" : "Pendiente",
-    },
-  ];
-
-  const currentStageIndex = stages.findIndex((stage) => stage.key === activeStage);
-  const nextStage = stages[currentStageIndex + 1];
-  const getStageStatusClasses = (status: string) => {
-    switch (status) {
-      case "Guardado":
-        return "border-emerald-200 bg-emerald-50 text-emerald-700";
-      case "En curso":
-        return "border-amber-200 bg-amber-50 text-amber-700";
-      default:
-        return "border-slate-200 bg-slate-100 text-slate-600";
-    }
-  };
 
   const handleConfirmDoctorUpdate = async () => {
     const nextDoctorId = Number(doctorForm.getValues("DoctorId"));
@@ -671,46 +534,45 @@ export default function PreOccupationalCards({
           </DialogContent>
         </Dialog>
         <Card className="border border-slate-200 shadow-sm">
-          <CardContent className="p-3">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="min-w-0 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Examen laboral
-                  </span>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-greenPrimary">
-                    {medicalEvaluation.evaluationType.name}
-                  </span>
-                  <ReportStatusBadge
-                    version={currentVersion}
-                    hasLegacyReport={hasLegacyCurrentReport}
-                  />
+          <CardContent className="space-y-4 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="grid min-w-0 flex-1 gap-4 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <div className="text-sm text-slate-500">Fecha</div>
+                  <div className="font-semibold text-slate-900">{examDate}</div>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
-                  <span className="font-semibold text-slate-900">
-                    {collaborator.firstName} {collaborator.lastName}
-                  </span>
-                  <span>{examDate}</span>
-                  <span>
+                <div className="space-y-1">
+                  <div className="text-sm text-slate-500">Descripción</div>
+                  <div className="font-semibold text-slate-900">
+                    {medicalEvaluation.evaluationType.name}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm text-slate-500">Médico</div>
+                  <div className="font-semibold text-slate-900">
                     {!doctorQueryId
                       ? "Sin médico asignado"
                       : isDoctorLookupError
                         ? "Médico no válido para firma"
                         : doctorData?.fullName || "Cargando médico"}
-                  </span>
+                  </div>
                   {doctorQueryId ? (
-                    <span className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500">
                       {isDoctorLookupError
                         ? matchedDoctor
                           ? `doctorId ${doctorQueryId} existe en HC, pero falló la firma/sello`
                           : `doctorId ${doctorQueryId} no existe hoy en Historia Clínica`
                         : `doctorId ${doctorQueryId}`}
-                    </span>
+                    </div>
                   ) : null}
                 </div>
               </div>
 
               <div className="flex shrink-0 flex-wrap gap-2">
+                <ReportStatusBadge
+                  version={currentVersion}
+                  hasLegacyReport={hasLegacyCurrentReport}
+                />
                 {canManageLaboralExam ? (
                   <Button
                     size="sm"
@@ -732,138 +594,102 @@ export default function PreOccupationalCards({
                     Eliminar examen
                   </Button>
                 ) : null}
-                {nextStage ? (
-                  <Button
-                    size="sm"
-                    className="bg-greenPrimary text-white hover:bg-greenSecondary"
-                    onClick={() => setActiveStage(nextStage.key)}
-                  >
-                    Continuar con {nextStage.label}
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="bg-greenPrimary text-white hover:bg-greenSecondary"
-                    onClick={() => navigate(previewHref)}
-                  >
-                    <Eye className="mr-2 h-4 w-4" />
-                    Ir a previsualización
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  className="bg-greenPrimary text-white hover:bg-greenSecondary"
+                  onClick={() => navigate(previewHref)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Previsualizar informe
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
-        <div className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
-          <div className="flex flex-wrap gap-2">
-            {stages.map((stage) => {
-              const Icon = stage.icon;
-              const isActive = activeStage === stage.key;
 
-              return (
-                <button
-                  key={stage.key}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => setActiveStage(stage.key)}
-                  className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
-                    isActive
-                      ? "border-greenPrimary bg-greenPrimary/5 text-greenPrimary"
-                      : "border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="font-medium">{stage.label}</span>
-                  <span
-                    className={`hidden rounded-full border px-2 py-0.5 text-[11px] font-semibold sm:inline-flex ${getStageStatusClasses(
-                      stage.status
-                    )}`}
-                  >
-                    {stage.status}
-                  </span>
-                </button>
-              );
-            })}
+        <CollaboratorInformationCard collaborator={collaborator} />
+
+        <Card className="border border-slate-200 shadow-sm">
+          <CardContent className="p-4">
+            <Tabs defaultValue="general" className="w-full text-greenPrimary">
+              <TabsList className="grid h-auto w-full grid-cols-1 gap-1 bg-slate-100 p-1 sm:grid-cols-3">
+                <TabsTrigger value="general" className="py-2">
+                  Resultados y conclusión
+                </TabsTrigger>
+                <TabsTrigger value="medical-history" className="py-2">
+                  Historia médica y examen físico
+                </TabsTrigger>
+                <TabsTrigger value="studies" className="py-2">
+                  Estudios
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="general" className="mt-4">
+                <GeneralTab
+                  standalone
+                  showEditToggle={false}
+                  isEditing={isEditing}
+                  setIsEditing={setIsEditing}
+                  formData={generalFormData}
+                  savedFormData={savedGeneralFormData}
+                  setFormData={setGeneralFormData}
+                  setSavedFormData={setSavedGeneralFormData}
+                  medicalEvaluationId={medicalEvaluation.id}
+                  dataValues={dataValues}
+                  fields={fields ?? []}
+                />
+              </TabsContent>
+
+              <TabsContent value="medical-history" className="mt-4">
+                <MedicalHistoryTab
+                  standalone
+                  showEditToggle={false}
+                  isEditing={isEditing}
+                  dataValues={dataValues}
+                  medicalEvaluationId={medicalEvaluation.id}
+                  setIsEditing={setIsEditing}
+                  includeOccupationalHistory
+                  includeMedicalEvaluation
+                  savedOccupationalHistory={savedOccupationalHistory}
+                  setSavedOccupationalHistory={setSavedOccupationalHistory}
+                  savedMedicalEvaluation={savedMedicalEvaluation}
+                  setSavedMedicalEvaluation={setSavedMedicalEvaluation}
+                  savedReportVisibilityOverrides={savedReportVisibilityOverrides}
+                  setSavedReportVisibilityOverrides={setSavedReportVisibilityOverrides}
+                />
+              </TabsContent>
+
+              <TabsContent value="studies" className="mt-4">
+                <VariousTab
+                  standalone
+                  isEditing={isEditing}
+                  setIsEditing={setIsEditing}
+                  studiesCategory={studiesCategory}
+                  medicalEvaluationId={medicalEvaluation.id}
+                  collaborator={collaborator}
+                  urls={urls ?? []}
+                  dataValues={dataValues}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-base font-semibold text-greenPrimary">
+              Informe laboral
+            </h3>
+            <span className="text-xs text-slate-500">
+              {hasReport ? "Informe disponible" : "Sin informe generado"}
+            </span>
           </div>
-        </div>
-
-        {activeStage === "details" && (
-          <div className="space-y-3">
-            <CollaboratorInformationCard collaborator={collaborator} />
-          </div>
-        )}
-
-        {activeStage === "general" && (
-          <GeneralTab
-            standalone
-            showEditToggle={false}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            formData={generalFormData}
-            savedFormData={savedGeneralFormData}
-            setFormData={setGeneralFormData}
-            setSavedFormData={setSavedGeneralFormData}
-            medicalEvaluationId={medicalEvaluation.id}
-            dataValues={dataValues}
-            fields={fields ?? []}
-          />
-        )}
-
-        {activeStage === "antecedents" && (
-          <MedicalHistoryTab
-            standalone
-            showEditToggle={false}
-            isEditing={isEditing}
-            dataValues={dataValues}
-            medicalEvaluationId={medicalEvaluation.id}
-            setIsEditing={setIsEditing}
-            includeOccupationalHistory
-            includeMedicalEvaluation={false}
-            savedOccupationalHistory={savedOccupationalHistory}
-            setSavedOccupationalHistory={setSavedOccupationalHistory}
-          />
-        )}
-
-        {activeStage === "history" && (
-          <MedicalHistoryTab
-            standalone
-            showEditToggle={false}
-            isEditing={isEditing}
-            dataValues={dataValues}
-            medicalEvaluationId={medicalEvaluation.id}
-            setIsEditing={setIsEditing}
-            includeOccupationalHistory={false}
-            includeMedicalEvaluation
-            savedMedicalEvaluation={savedMedicalEvaluation}
-            setSavedMedicalEvaluation={setSavedMedicalEvaluation}
-            savedReportVisibilityOverrides={savedReportVisibilityOverrides}
-            setSavedReportVisibilityOverrides={setSavedReportVisibilityOverrides}
-          />
-        )}
-
-        {activeStage === "studies" && (
-          <VariousTab
-            standalone
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            studiesCategory={studiesCategory}
-            medicalEvaluationId={medicalEvaluation.id}
+          <ReportVersioningCard
             collaborator={collaborator}
-            urls={urls ?? []}
-            dataValues={dataValues}
+            medicalEvaluationId={medicalEvaluation.id}
+            previewHref={previewHref}
           />
-        )}
-
-        {activeStage === "closing" && (
-          <div className="space-y-3">
-            <ReportVersioningCard
-              collaborator={collaborator}
-              medicalEvaluationId={medicalEvaluation.id}
-              previewHref={previewHref}
-            />
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
