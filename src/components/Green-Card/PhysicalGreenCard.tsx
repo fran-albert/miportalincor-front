@@ -101,154 +101,154 @@ export function PhysicalGreenCard({
             <div className="mb-4">
               {/* Table Container - Hand-drawn style */}
               <ScrollArea className="border-2 border-gray-700 rounded bg-white/20">
-                <div className="min-w-[600px]">
-                <table className="w-full">
-                  {/* Table Header */}
-                  <thead>
-                    <tr className="bg-white/30 border-b-2 border-gray-700">
-                      {selectionMode && (
-                        <th className="px-2 py-2.5 text-center border-r border-gray-600 w-[40px]">
-                          <Checkbox
-                            checked={allEligibleSelected}
-                            onCheckedChange={() => onSelectAll?.()}
-                            disabled={eligibleItems.length === 0}
-                            className="border-gray-600"
-                          />
-                        </th>
-                      )}
-                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[100px]">
-                        <span className="font-bold text-sm text-gray-800 uppercase">Hora</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-left border-r border-gray-600">
-                        <span className="font-bold text-sm text-gray-800 uppercase">Medicamento</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[120px]">
-                        <span className="font-bold text-sm text-gray-800 uppercase">Dosis</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[70px]">
-                        <span className="font-bold text-sm text-gray-800 uppercase">Cant.</span>
-                      </th>
-                      <th className="px-3 py-2.5 text-center w-[110px]">
-                        <span className="font-bold text-sm text-gray-800 uppercase">Solicitud</span>
-                      </th>
-                    </tr>
-                  </thead>
+                  <div className="min-w-[600px]">
+                    <table className="w-full">
+                      {/* Table Header */}
+                      <thead>
+                        <tr className="bg-white/30 border-b-2 border-gray-700">
+                          {selectionMode && (
+                            <th className="px-2 py-2.5 text-center border-r border-gray-600 w-[40px]">
+                              <Checkbox
+                                checked={allEligibleSelected}
+                                onCheckedChange={() => onSelectAll?.()}
+                                disabled={eligibleItems.length === 0}
+                                className="border-gray-600"
+                              />
+                            </th>
+                          )}
+                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[100px]">
+                            <span className="font-bold text-sm text-gray-800 uppercase">Hora</span>
+                          </th>
+                          <th className="px-3 py-2.5 text-left border-r border-gray-600">
+                            <span className="font-bold text-sm text-gray-800 uppercase">Medicamento</span>
+                          </th>
+                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[120px]">
+                            <span className="font-bold text-sm text-gray-800 uppercase">Dosis</span>
+                          </th>
+                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[70px]">
+                            <span className="font-bold text-sm text-gray-800 uppercase">Cant.</span>
+                          </th>
+                          <th className="px-3 py-2.5 text-center w-[110px]">
+                            <span className="font-bold text-sm text-gray-800 uppercase">Solicitud</span>
+                          </th>
+                        </tr>
+                      </thead>
 
-                  {/* Table Body */}
-                  <tbody>
-                    {activeItems.length === 0 && emptyRowsCount === 0 ? (
-                      <tr>
-                        <td colSpan={selectionMode ? 6 : 5} className="text-center py-8 text-gray-600 italic">
-                          No hay medicamentos registrados
-                        </td>
-                      </tr>
-                    ) : (
-                      <>
-                        {/* Active medications */}
-                        {activeItems.map((item) => {
-                          const isSelectable = item.isActive && !item.hasPendingPrescription;
-                          const isSelected = selectedItemIds.includes(item.id);
-
-                          return (
-                          <tr
-                            key={item.id}
-                            className={`border-b border-gray-500 hover:bg-white/20 transition-colors ${
-                              selectionMode && isSelected ? "bg-white/30" : ""
-                            }`}
-                          >
-                            {/* Checkbox */}
-                            {selectionMode && (
-                              <td className="px-2 py-3 text-center border-r border-gray-500">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => onToggleItemSelection?.(item.id)}
-                                  disabled={!isSelectable}
-                                  className="border-gray-600"
-                                />
-                              </td>
-                            )}
-                            {/* Hora */}
-                            <td className="px-3 py-3 text-center border-r border-gray-500">
-                              <span className="text-sm font-medium text-gray-800">
-                                {item.schedule}
-                              </span>
-                            </td>
-                            {/* Medicamento */}
-                            <td className="px-3 py-3 border-r border-gray-500">
-                              <span className="text-sm font-semibold text-gray-900 uppercase">
-                                {item.medicationName}
-                              </span>
-                            </td>
-                            {/* Dosis */}
-                            <td className="px-3 py-3 text-center border-r border-gray-500">
-                              <span className="text-sm text-gray-800">
-                                {item.dosage}
-                              </span>
-                            </td>
-                            {/* Cantidad */}
-                            <td className="px-3 py-3 text-center border-r border-gray-500">
-                              <span className="text-sm text-gray-800">
-                                {item.quantity || "-"}
-                              </span>
-                            </td>
-                            {/* Solicitud */}
-                            <td className="px-2 py-2 text-center">
-                              {(() => {
-                                const canRequest = onRequestPrescription &&
-                                  !item.hasPendingPrescription;
-
-                                if (canRequest && !selectionMode) {
-                                  return (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => onRequestPrescription(item)}
-                                      className="h-7 px-2 text-xs bg-white/70 hover:bg-white text-gray-800 border border-gray-500 font-medium"
-                                    >
-                                      <FileText className="h-3 w-3 mr-1" />
-                                      Pedir
-                                    </Button>
-                                  );
-                                }
-                                if (item.hasPendingPrescription) {
-                                  return (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px] bg-amber-100 text-amber-800 border border-amber-400"
-                                    >
-                                      Pendiente
-                                    </Badge>
-                                  );
-                                }
-                                return <span className="text-gray-400">-</span>;
-                              })()}
+                      {/* Table Body */}
+                      <tbody>
+                        {activeItems.length === 0 && emptyRowsCount === 0 ? (
+                          <tr>
+                            <td colSpan={selectionMode ? 6 : 5} className="text-center py-8 text-gray-600 italic">
+                              No hay medicamentos registrados
                             </td>
                           </tr>
-                          );
-                        })}
+                        ) : (
+                          <>
+                            {/* Active medications */}
+                            {activeItems.map((item) => {
+                              const isSelectable = item.isActive && !item.hasPendingPrescription;
+                              const isSelected = selectedItemIds.includes(item.id);
 
-                        {/* Empty rows to fill the table */}
-                        {Array.from({ length: emptyRowsCount }).map((_, i) => (
-                          <tr
-                            key={`empty-${i}`}
-                            className="border-b border-gray-500 opacity-40"
-                          >
-                            {selectionMode && (
-                              <td className="px-2 py-3 border-r border-gray-500">&nbsp;</td>
-                            )}
-                            <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                            <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                            <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                            <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                            <td className="px-3 py-3">&nbsp;</td>
-                          </tr>
-                        ))}
-                      </>
-                    )}
-                  </tbody>
-                </table>
-                </div>
-                <ScrollBar orientation="horizontal" />
+                              return (
+                                <tr
+                                  key={item.id}
+                                  className={`border-b border-gray-500 hover:bg-white/20 transition-colors ${
+                                    selectionMode && isSelected ? "bg-white/30" : ""
+                                  }`}
+                                >
+                                  {/* Checkbox */}
+                                  {selectionMode && (
+                                    <td className="px-2 py-3 text-center border-r border-gray-500">
+                                      <Checkbox
+                                        checked={isSelected}
+                                        onCheckedChange={() => onToggleItemSelection?.(item.id)}
+                                        disabled={!isSelectable}
+                                        className="border-gray-600"
+                                      />
+                                    </td>
+                                  )}
+                                  {/* Hora */}
+                                  <td className="px-3 py-3 text-center border-r border-gray-500">
+                                    <span className="text-sm font-medium text-gray-800">
+                                      {item.schedule}
+                                    </span>
+                                  </td>
+                                  {/* Medicamento */}
+                                  <td className="px-3 py-3 border-r border-gray-500">
+                                    <span className="text-sm font-semibold text-gray-900 uppercase">
+                                      {item.medicationName}
+                                    </span>
+                                  </td>
+                                  {/* Dosis */}
+                                  <td className="px-3 py-3 text-center border-r border-gray-500">
+                                    <span className="text-sm text-gray-800">
+                                      {item.dosage}
+                                    </span>
+                                  </td>
+                                  {/* Cantidad */}
+                                  <td className="px-3 py-3 text-center border-r border-gray-500">
+                                    <span className="text-sm text-gray-800">
+                                      {item.quantity || "-"}
+                                    </span>
+                                  </td>
+                                  {/* Solicitud */}
+                                  <td className="px-2 py-2 text-center">
+                                    {(() => {
+                                      const canRequest = onRequestPrescription &&
+                                        !item.hasPendingPrescription;
+
+                                      if (canRequest && !selectionMode) {
+                                        return (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onRequestPrescription(item)}
+                                            className="h-7 px-2 text-xs bg-white/70 hover:bg-white text-gray-800 border border-gray-500 font-medium"
+                                          >
+                                            <FileText className="h-3 w-3 mr-1" />
+                                            Pedir
+                                          </Button>
+                                        );
+                                      }
+                                      if (item.hasPendingPrescription) {
+                                        return (
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[10px] bg-amber-100 text-amber-800 border border-amber-400"
+                                          >
+                                            Pendiente
+                                          </Badge>
+                                        );
+                                      }
+                                      return <span className="text-gray-400">-</span>;
+                                    })()}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+
+                            {/* Empty rows to fill the table */}
+                            {Array.from({ length: emptyRowsCount }).map((_, i) => (
+                              <tr
+                                key={`empty-${i}`}
+                                className="border-b border-gray-500 opacity-40"
+                              >
+                                {selectionMode && (
+                                  <td className="px-2 py-3 border-r border-gray-500">&nbsp;</td>
+                                )}
+                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
+                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
+                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
+                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
+                                <td className="px-3 py-3">&nbsp;</td>
+                              </tr>
+                            ))}
+                          </>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
               </ScrollArea>
 
               {/* Suspended medications */}
