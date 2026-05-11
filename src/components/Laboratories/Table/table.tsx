@@ -29,6 +29,11 @@ type LabDateColumn = {
 };
 
 const MISSING_DATE_LABEL = "Sin fecha";
+const STICKY_ANALYSIS_WIDTH = 220;
+const STICKY_REFERENCE_WIDTH = 240;
+const STICKY_UNIT_WIDTH = 120;
+const STICKY_BASE_WIDTH =
+  STICKY_ANALYSIS_WIDTH + STICKY_REFERENCE_WIDTH + STICKY_UNIT_WIDTH;
 
 const transformData = (originalData: BloodTestData[]): BloodTestDataResponse[] => {
   // Agrupar los datos por estudio
@@ -147,7 +152,10 @@ export const LabPatientTable = ({
   >([]);
   const { promiseToast } = useToastContext();
 
-  const tableMinWidth = useMemo(() => 540 + dates.length * 132, [dates.length]);
+  const tableMinWidth = useMemo(
+    () => STICKY_BASE_WIDTH + dates.length * 132,
+    [dates.length]
+  );
 
   useEffect(() => {
     const transformedData = transformData(bloodTestsData);
@@ -390,13 +398,13 @@ export const LabPatientTable = ({
           >
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 top-0 z-50 min-w-[190px] max-w-[230px] border-b border-r bg-slate-50 px-3 py-3 shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
+                <TableHead className="sticky left-0 top-0 z-50 w-[220px] min-w-[220px] max-w-[220px] border-b border-r bg-slate-50 px-3 py-3 shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Análisis
                 </TableHead>
-                <TableHead className="sticky top-0 z-40 min-w-[220px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]">
+                <TableHead className="sticky top-0 z-40 w-[240px] min-w-[240px] max-w-[240px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)] md:left-[220px] md:z-50 md:border-r md:shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Valor de Referencia
                 </TableHead>
-                <TableHead className="sticky top-0 z-40 min-w-[130px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]">
+                <TableHead className="sticky top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)] md:left-[460px] md:z-50 md:border-r md:shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Unidad
                 </TableHead>
                 {dates.map((date) => (
@@ -413,13 +421,13 @@ export const LabPatientTable = ({
               {filteredBloodTests.map((bloodTest) => {
                 return (
                   <TableRow key={bloodTest.id} className="group hover:bg-gray-50/70">
-                    <TableCell className="sticky left-0 z-30 min-w-[190px] max-w-[230px] border-r bg-white px-3 py-2 font-medium leading-snug shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)] group-hover:bg-gray-50">
+                    <TableCell className="sticky left-0 z-30 w-[220px] min-w-[220px] max-w-[220px] border-r bg-white px-3 py-2 font-medium leading-snug shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45)] group-hover:bg-gray-50">
                       {bloodTest.originalName}
                     </TableCell>
-                    <TableCell className="min-w-[220px] max-w-[260px] whitespace-pre-wrap px-3 py-2 text-gray-700">
+                    <TableCell className="w-[240px] min-w-[240px] max-w-[240px] whitespace-pre-wrap bg-white px-3 py-2 text-gray-700 group-hover:bg-gray-50 md:sticky md:left-[220px] md:z-20 md:border-r md:shadow-[6px_0_10px_-10px_rgba(15,23,42,0.35)]">
                       {bloodTest.referenceValue || "N/A"}
                     </TableCell>
-                    <TableCell className="min-w-[130px] px-3 py-2 text-gray-700">
+                    <TableCell className="w-[120px] min-w-[120px] max-w-[120px] bg-white px-3 py-2 text-gray-700 group-hover:bg-gray-50 md:sticky md:left-[460px] md:z-20 md:border-r md:shadow-[6px_0_10px_-10px_rgba(15,23,42,0.35)]">
                       {bloodTest.unit?.shortName || bloodTest.unit?.name || "N/A"}
                     </TableCell>
 
