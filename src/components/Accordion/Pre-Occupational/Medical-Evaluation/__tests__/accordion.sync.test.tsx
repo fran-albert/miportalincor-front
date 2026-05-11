@@ -53,6 +53,9 @@ describe("MedicalEvaluationAccordion shared clinical fields", () => {
     expect(screen.getAllByText("Aspecto general").length).toBeGreaterThan(0);
     expect(screen.getByText("Mediciones")).toBeInTheDocument();
     expect(screen.getByText("Signos y mediciones")).toBeInTheDocument();
+    expect(screen.getByText("Aparato respiratorio")).toBeInTheDocument();
+    expect(screen.getByText("Aparato circulatorio")).toBeInTheDocument();
+    expect(screen.getByText("Aparato gastrointestinal")).toBeInTheDocument();
   });
 
   it("sincroniza frecuencia cardíaca desde el bloque clínico hacia circulatorio", async () => {

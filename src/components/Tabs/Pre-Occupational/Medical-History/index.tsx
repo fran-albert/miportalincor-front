@@ -922,7 +922,7 @@ export default function MedicalHistoryTab({
       <Accordion
         type="multiple"
         defaultValue={defaultOpenSections}
-        className="space-y-4"
+        className="overflow-hidden rounded-lg border border-slate-200 bg-white"
       >
         {includeOccupationalHistory && (
           <OccupationalHistoryAccordion
