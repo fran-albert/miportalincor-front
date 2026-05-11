@@ -13,7 +13,6 @@ interface ClinicalBlockProps {
 
 export function ClinicalBlock({
   title,
-  description,
   children,
   className,
 }: ClinicalBlockProps) {
@@ -26,9 +25,6 @@ export function ClinicalBlock({
     >
       <div className="space-y-1">
         <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
-        {description ? (
-          <p className="text-xs leading-5 text-slate-500">{description}</p>
-        ) : null}
       </div>
       {children}
     </section>

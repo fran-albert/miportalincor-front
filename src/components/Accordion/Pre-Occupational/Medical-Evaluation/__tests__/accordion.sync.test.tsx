@@ -59,6 +59,16 @@ describe("MedicalEvaluationAccordion shared clinical fields", () => {
     expect(
       screen.getAllByText("Cicatrices")[0].closest("section")
     ).not.toHaveClass("rounded-xl", "border", "shadow-sm");
+    expect(
+      screen.queryByText(
+        "Indicá si hay deformaciones torácicas y agregá observaciones si corresponde."
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Indicá si el examen está sin alteraciones o registrá los hallazgos relevantes."
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("sincroniza frecuencia cardíaca desde el bloque clínico hacia circulatorio", async () => {
