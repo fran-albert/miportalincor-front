@@ -2,22 +2,36 @@ const AUTH_TOKEN_KEY = 'authToken';
 const TOKEN_EXPIRATION_KEY = 'tokenExpiration';
 const REMEMBER_ME_KEY = 'rememberMe';
 
+const getRememberMe = (): boolean => {
+  return localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+};
+
 const getStorage = (): Storage => {
   // Si ya hay token en localStorage, seguir usandolo (usuario eligio "Recordarme")
-  if (localStorage.getItem(REMEMBER_ME_KEY) === 'true') {
+  if (getRememberMe()) {
     return localStorage;
   }
   return sessionStorage;
 };
 
+const getOppositeStorage = (): Storage => {
+  return getStorage() === localStorage ? sessionStorage : localStorage;
+};
+
+const clearOppositeSession = (): void => {
+  const oppositeStorage = getOppositeStorage();
+  oppositeStorage.removeItem(AUTH_TOKEN_KEY);
+  oppositeStorage.removeItem(TOKEN_EXPIRATION_KEY);
+};
+
 export const authStorage = {
   getToken: (): string | null => {
-    // Buscar en localStorage primero (por si eligio recordarme), luego sessionStorage
-    return localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
+    return getStorage().getItem(AUTH_TOKEN_KEY);
   },
 
   setToken: (token: string): void => {
     getStorage().setItem(AUTH_TOKEN_KEY, token);
+    clearOppositeSession();
   },
 
   removeToken: (): void => {
@@ -26,11 +40,12 @@ export const authStorage = {
   },
 
   getTokenExpiration: (): string | null => {
-    return localStorage.getItem(TOKEN_EXPIRATION_KEY) || sessionStorage.getItem(TOKEN_EXPIRATION_KEY);
+    return getStorage().getItem(TOKEN_EXPIRATION_KEY);
   },
 
   setTokenExpiration: (exp: string): void => {
     getStorage().setItem(TOKEN_EXPIRATION_KEY, exp);
+    clearOppositeSession();
   },
 
   clearAll: (): void => {
@@ -45,6 +60,7 @@ export const authStorage = {
     const storage = getStorage();
     storage.setItem(AUTH_TOKEN_KEY, token);
     storage.setItem(TOKEN_EXPIRATION_KEY, expiration);
+    clearOppositeSession();
   },
 
   setRememberMe: (remember: boolean): void => {
@@ -56,7 +72,7 @@ export const authStorage = {
   },
 
   getRememberMe: (): boolean => {
-    return localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+    return getRememberMe();
   },
 
   /**
@@ -68,6 +84,7 @@ export const authStorage = {
   onTokenChange: (callback: (token: string | null, expiration: string | null) => void): (() => void) => {
     const handler = (event: StorageEvent) => {
       if (event.key === AUTH_TOKEN_KEY) {
+        if (!getRememberMe()) return;
         const newToken = event.newValue;
         const newExpiration = localStorage.getItem(TOKEN_EXPIRATION_KEY);
         callback(newToken, newExpiration);
