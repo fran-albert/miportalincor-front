@@ -13,7 +13,6 @@ import {
 } from "@/store/Pre-Occupational/preOccupationalSlice";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   AccordionContent,
   AccordionItem,
@@ -31,7 +30,6 @@ import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
-import { useState } from "react";
 import { ClinicalBlock } from "./FormPrimitives";
 
 interface Props {
@@ -50,21 +48,6 @@ export default function MedicalEvaluationAccordion({
   const reportVisibilityOverrides = useSelector(
     (state: RootState) => state.preOccupational.reportVisibilityOverrides
   );
-
-  const [activeSection, setActiveSection] = useState<
-    | "clinical"
-    | "visual"
-    | "skin"
-    | "head-neck"
-    | "oral"
-    | "thorax"
-    | "respiratory"
-    | "circulatory"
-    | "neurological"
-    | "gastrointestinal"
-    | "genitourinary"
-    | "osteoarticular"
-  >("clinical");
 
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
@@ -501,44 +484,10 @@ const handleNeuChange = (
 
   const sectionCardClass =
     "rounded-lg border border-slate-200 bg-slate-50/60 p-4";
-  const sections = [
-    { key: "clinical" as const, label: "Clínico" },
-    { key: "visual" as const, label: "Visual" },
-    { key: "skin" as const, label: "Piel" },
-    { key: "head-neck" as const, label: "Cabeza y cuello" },
-    { key: "oral" as const, label: "Bucodental" },
-    { key: "thorax" as const, label: "Tórax" },
-    { key: "respiratory" as const, label: "Respiratorio" },
-    { key: "circulatory" as const, label: "Circulatorio" },
-    { key: "neurological" as const, label: "Neurológico" },
-    { key: "gastrointestinal" as const, label: "Gastro" },
-    { key: "genitourinary" as const, label: "Genitourinario" },
-    { key: "osteoarticular" as const, label: "Osteoarticular" },
-  ];
 
   const content = (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {sections.map((section) => (
-          <Button
-            key={section.key}
-            type="button"
-            variant="outline"
-            size="sm"
-            className={
-              activeSection === section.key
-                ? "border-greenPrimary/20 bg-greenPrimary/5 text-greenPrimary"
-                : "border-slate-200 bg-white text-slate-700 hover:border-greenPrimary/30 hover:bg-greenPrimary/5 hover:text-greenPrimary"
-            }
-            onClick={() => setActiveSection(section.key)}
-          >
-            {section.label}
-          </Button>
-        ))}
-      </div>
-
-      {activeSection === "clinical" && (
-        <div className="grid gap-4">
+      <div className="grid gap-4">
           <ClinicalBlock
             title="Aspecto general"
             description="Elegí una valoración general rápida del colaborador."
@@ -728,163 +677,140 @@ const handleNeuChange = (
             </div>
           </ClinicalBlock>
         </div>
-      )}
 
-      {activeSection === "visual" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <VisualAcuityCard
-              withoutCorrection={withoutCorr}
-              withCorrection={withCorr}
-              chromaticVision={chromatic}
-              isEditing={isEditing}
-              onScChange={handleScChange}
-              onCcChange={handleCcChange}
-              onChromaticVisionChange={handleChromaticChange}
-              notes={notes}
-              onNotesChange={handleNotesChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <VisualAcuityCard
+            withoutCorrection={withoutCorr}
+            withCorrection={withCorr}
+            chromaticVision={chromatic}
+            isEditing={isEditing}
+            onScChange={handleScChange}
+            onCcChange={handleCcChange}
+            onChromaticVisionChange={handleChromaticChange}
+            notes={notes}
+            onNotesChange={handleNotesChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "skin" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <PielSection
-              isEditing={isEditing}
-              data={pielData}
-              onChange={handlePielChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <PielSection
+            isEditing={isEditing}
+            data={pielData}
+            onChange={handlePielChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "head-neck" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <CabezaCuelloSection
-              isEditing={isEditing}
-              data={cabezaData}
-              onChange={handleCabezaChange}
-              onBatchChange={handleCabezaBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <CabezaCuelloSection
+            isEditing={isEditing}
+            data={cabezaData}
+            onChange={handleCabezaChange}
+            onBatchChange={handleCabezaBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "oral" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <BucodentalSection
-              isEditing={isEditing}
-              data={bucodental}
-              onChange={handleBucodentalChange}
-              onBatchChange={handleBucodentalBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <BucodentalSection
+            isEditing={isEditing}
+            data={bucodental}
+            onChange={handleBucodentalChange}
+            onBatchChange={handleBucodentalBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "thorax" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <ToraxSection
-              isEditing={isEditing}
-              data={toraxData}
-              onChange={handleToraxChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <ToraxSection
+            isEditing={isEditing}
+            data={toraxData}
+            onChange={handleToraxChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "respiratory" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <RespiratorioSection
-              isEditing={isEditing}
-              data={resp}
-              onChange={handleRespChange}
-              onBatchChange={handleRespBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <RespiratorioSection
+            isEditing={isEditing}
+            data={resp}
+            onChange={handleRespChange}
+            onBatchChange={handleRespBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "circulatory" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <CirculatorioSection
-              isEditing={isEditing}
-              data={circulatorio}
-              onChange={handleCirculatorioChange}
-              onBatchChange={handleCirculatorioBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <CirculatorioSection
+            isEditing={isEditing}
+            data={circulatorio}
+            onChange={handleCirculatorioChange}
+            onBatchChange={handleCirculatorioBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "neurological" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <NeurologicoSection
-              isEditing={isEditing}
-              data={neu}
-              onChange={handleNeuChange}
-              onBatchChange={handleNeuBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <NeurologicoSection
+            isEditing={isEditing}
+            data={neu}
+            onChange={handleNeuChange}
+            onBatchChange={handleNeuBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "gastrointestinal" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <GastrointestinalSection
-              isEditing={isEditing}
-              data={gi}
-              onChange={handleGIChange}
-              onBatchChange={handleGIBatchChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <GastrointestinalSection
+            isEditing={isEditing}
+            data={gi}
+            onChange={handleGIChange}
+            onBatchChange={handleGIBatchChange}
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "genitourinary" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <GenitourinarioSection
-              isEditing={isEditing}
-              data={genito}
-              pdfVisibilityMode={
-                reportVisibilityOverrides.genitourinary_gyn_ob ?? "automatic"
-              }
-              onChange={handleGenitoChange}
-              onBatchChange={handleGenitoBatchChange}
-              onPdfVisibilityModeChange={(mode) =>
-                dispatch(
-                  setReportVisibilityOverride({
-                    sectionKey: "genitourinary_gyn_ob",
-                    mode,
-                  })
-                )
-              }
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <GenitourinarioSection
+            isEditing={isEditing}
+            data={genito}
+            pdfVisibilityMode={
+              reportVisibilityOverrides.genitourinary_gyn_ob ?? "automatic"
+            }
+            onChange={handleGenitoChange}
+            onBatchChange={handleGenitoBatchChange}
+            onPdfVisibilityModeChange={(mode) =>
+              dispatch(
+                setReportVisibilityOverride({
+                  sectionKey: "genitourinary_gyn_ob",
+                  mode,
+                })
+              )
+            }
+          />
         </div>
-      )}
+      </div>
 
-      {activeSection === "osteoarticular" && (
-        <div className="grid gap-4">
-          <div className={sectionCardClass}>
-            <OsteoarticularSection
-              isEditing={isEditing}
-              data={osteo}
-              onChange={handleOsteoChange}
-            />
-          </div>
+      <div className="grid gap-4">
+        <div className={sectionCardClass}>
+          <OsteoarticularSection
+            isEditing={isEditing}
+            data={osteo}
+            onChange={handleOsteoChange}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -902,7 +828,7 @@ const handleNeuChange = (
       className="rounded-lg border border-slate-200 bg-white"
     >
       <AccordionTrigger className="px-4 text-base font-semibold text-greenPrimary">
-        Evaluación Médica
+        Evaluación médica
       </AccordionTrigger>
       <AccordionContent className="px-4 pb-4">{content}</AccordionContent>
     </AccordionItem>

@@ -146,7 +146,7 @@ export default function OccupationalHistoryAccordion({
       className="rounded-lg border border-slate-200 bg-white"
     >
       <AccordionTrigger className="px-4 text-base font-semibold text-greenPrimary">
-        Antecedentes Ocupacionales
+        Antecedentes
       </AccordionTrigger>
       <AccordionContent className="px-4 pb-4">{content}</AccordionContent>
     </AccordionItem>

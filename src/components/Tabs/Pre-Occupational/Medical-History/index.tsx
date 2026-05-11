@@ -1,4 +1,5 @@
 import { TabsContent } from "@/components/ui/tabs";
+import { Accordion } from "@/components/ui/accordion";
 import { HeartPulse } from "lucide-react";
 // import WorkerInformationAccordion from "@/components/Accordion/Pre-Occupational/Worker-Information";
 import OccupationalHistoryAccordion from "@/components/Accordion/Pre-Occupational/Occupational-History";
@@ -894,6 +895,10 @@ export default function MedicalHistoryTab({
       : includeOccupationalHistory
         ? "Antecedentes ocupacionales"
         : "Historia médica y examen físico";
+  const defaultOpenSections = [
+    includeOccupationalHistory ? "occupational-history" : null,
+    includeMedicalEvaluation ? "medical-evaluation" : null,
+  ].filter(Boolean) as string[];
 
   const content = (
     <div className="space-y-3">
@@ -914,20 +919,22 @@ export default function MedicalHistoryTab({
           )}
         </div>
       )}
-      <div className="space-y-4">
+      <Accordion
+        type="multiple"
+        defaultValue={defaultOpenSections}
+        className="space-y-4"
+      >
         {includeOccupationalHistory && (
           <OccupationalHistoryAccordion
-            standalone
             isEditing={isEditing}
           />
         )}
         {includeMedicalEvaluation && (
           <MedicalEvaluationAccordion
-            standalone
             isEditing={isEditing}
           />
         )}
-      </div>
+      </Accordion>
       {isEditing && hasPendingChanges && (
         <StageActionBar
           onCancel={handleCancel}

@@ -44,15 +44,31 @@ const renderAccordion = () => {
 };
 
 describe("MedicalEvaluationAccordion shared clinical fields", () => {
+  it("muestra todas las secciones medicas sin navegacion interna por botones", () => {
+    renderAccordion();
+
+    expect(screen.queryByRole("button", { name: "Clínico" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Respiratorio" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Circulatorio" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Aspecto general").length).toBeGreaterThan(0);
+    expect(screen.getByText("Mediciones")).toBeInTheDocument();
+    expect(screen.getByText("Signos y mediciones")).toBeInTheDocument();
+  });
+
   it("sincroniza frecuencia cardíaca desde el bloque clínico hacia circulatorio", async () => {
     const user = userEvent.setup();
     const store = renderAccordion();
+    const clinicalInput = screen.getByLabelText("Frecuencia cardíaca", {
+      selector: "input#frecuencia-cardiaca-clinica",
+    });
+    const circulatoryInput = screen.getByLabelText("Frecuencia cardíaca", {
+      selector: "input#circ-frecuencia",
+    });
 
-    await user.clear(screen.getByLabelText("Frecuencia cardíaca"));
-    await user.type(screen.getByLabelText("Frecuencia cardíaca"), "75");
-    await user.click(screen.getByRole("button", { name: "Circulatorio" }));
+    await user.clear(clinicalInput);
+    await user.type(clinicalInput, "75");
 
-    expect(screen.getByLabelText("Frecuencia cardíaca")).toHaveValue("75");
+    expect(circulatoryInput).toHaveValue("75");
     expect(
       store.getState().preOccupational.formData.medicalEvaluation.circulatorio
         ?.frecuenciaCardiaca
@@ -62,13 +78,17 @@ describe("MedicalEvaluationAccordion shared clinical fields", () => {
   it("sincroniza frecuencia cardíaca desde circulatorio hacia el bloque clínico", async () => {
     const user = userEvent.setup();
     const store = renderAccordion();
+    const clinicalInput = screen.getByLabelText("Frecuencia cardíaca", {
+      selector: "input#frecuencia-cardiaca-clinica",
+    });
+    const circulatoryInput = screen.getByLabelText("Frecuencia cardíaca", {
+      selector: "input#circ-frecuencia",
+    });
 
-    await user.click(screen.getByRole("button", { name: "Circulatorio" }));
-    await user.clear(screen.getByLabelText("Frecuencia cardíaca"));
-    await user.type(screen.getByLabelText("Frecuencia cardíaca"), "81");
-    await user.click(screen.getByRole("button", { name: "Clínico" }));
+    await user.clear(circulatoryInput);
+    await user.type(circulatoryInput, "81");
 
-    expect(screen.getByLabelText("Frecuencia cardíaca")).toHaveValue("81");
+    expect(clinicalInput).toHaveValue("81");
     expect(
       store.getState().preOccupational.formData.medicalEvaluation.examenClinico
         .frecuenciaCardiaca
@@ -78,12 +98,17 @@ describe("MedicalEvaluationAccordion shared clinical fields", () => {
   it("sincroniza frecuencia respiratoria desde el bloque clínico hacia respiratorio", async () => {
     const user = userEvent.setup();
     const store = renderAccordion();
+    const clinicalInput = screen.getByLabelText("Frecuencia respiratoria", {
+      selector: "input#frecuencia-respiratoria-clinica",
+    });
+    const respiratoryInput = screen.getByLabelText("Frecuencia respiratoria", {
+      selector: "input#resp-frecuencia",
+    });
 
-    await user.clear(screen.getByLabelText("Frecuencia respiratoria"));
-    await user.type(screen.getByLabelText("Frecuencia respiratoria"), "18");
-    await user.click(screen.getByRole("button", { name: "Respiratorio" }));
+    await user.clear(clinicalInput);
+    await user.type(clinicalInput, "18");
 
-    expect(screen.getByLabelText("Frecuencia respiratoria")).toHaveValue("18");
+    expect(respiratoryInput).toHaveValue("18");
     expect(
       store.getState().preOccupational.formData.medicalEvaluation.respiratorio
         ?.frecuenciaRespiratoria
@@ -93,13 +118,17 @@ describe("MedicalEvaluationAccordion shared clinical fields", () => {
   it("sincroniza frecuencia respiratoria desde respiratorio hacia el bloque clínico", async () => {
     const user = userEvent.setup();
     const store = renderAccordion();
+    const clinicalInput = screen.getByLabelText("Frecuencia respiratoria", {
+      selector: "input#frecuencia-respiratoria-clinica",
+    });
+    const respiratoryInput = screen.getByLabelText("Frecuencia respiratoria", {
+      selector: "input#resp-frecuencia",
+    });
 
-    await user.click(screen.getByRole("button", { name: "Respiratorio" }));
-    await user.clear(screen.getByLabelText("Frecuencia respiratoria"));
-    await user.type(screen.getByLabelText("Frecuencia respiratoria"), "22");
-    await user.click(screen.getByRole("button", { name: "Clínico" }));
+    await user.clear(respiratoryInput);
+    await user.type(respiratoryInput, "22");
 
-    expect(screen.getByLabelText("Frecuencia respiratoria")).toHaveValue("22");
+    expect(clinicalInput).toHaveValue("22");
     expect(
       store.getState().preOccupational.formData.medicalEvaluation.examenClinico
         .frecuenciaRespiratoria
