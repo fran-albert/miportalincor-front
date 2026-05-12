@@ -56,6 +56,7 @@ describe("LabPatientTable", () => {
         bloodTests={[bloodTest]}
         bloodTestsData={bloodTestsData}
         idUser={1}
+        fitContainer
       />
     );
 
@@ -70,5 +71,9 @@ describe("LabPatientTable", () => {
 
     expect(saveButton).toBeInTheDocument();
     expect(saveButton.parentElement).toHaveClass("sticky", "bottom-0");
+    expect(screen.getByTestId("lab-table-scroll")).toHaveClass(
+      "min-h-0",
+      "flex-1"
+    );
   });
 });
