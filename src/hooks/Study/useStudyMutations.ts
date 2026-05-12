@@ -25,13 +25,15 @@ export const useStudyMutations = () => {
     });
 
     const deleteStudyMutation = useMutation({
-        mutationFn: ({ studyId }: { studyId: number, userId: number }) => deleteStudy(String(studyId)),
+        mutationFn: ({ studyId }: { studyId: number | string, userId: number }) => deleteStudy(String(studyId)),
         onSuccess: () => {
             // Invalidar todas las queries de estudios para asegurar que se refresquen
             queryClient.invalidateQueries({
                 predicate: (query) =>
+                    query.queryKey[0] === "studiesByUserId" ||
                     query.queryKey[0] === "studies-by-user-id" ||
-                    query.queryKey[0] === "studies-with-urls"
+                    query.queryKey[0] === "studies-with-urls" ||
+                    query.queryKey[0] === "bloodTestsData"
             });
             console.log("Study deleted successfully");
         },

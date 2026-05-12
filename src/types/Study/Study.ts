@@ -23,6 +23,7 @@ export interface Study {
   isExternal?: boolean;
   externalInstitution?: string;
   signedDoctorId?: string;
+  isManualLaboratory?: boolean;
   parsingResult?: ParsingResult;
 }
 
@@ -54,4 +55,5 @@ export interface StudiesWithURL {
   isExternal?: boolean;
   externalInstitution?: string;
   signedDoctorId?: string;
+  isManualLaboratory?: boolean;
 }

@@ -150,9 +150,10 @@ export const createStudiesColumns = (
     cell: ({ row }) => {
       const study = row.original;
       const hasFile = !!(study.signedUrl || study.archivo?.url);
-      const isManual = !hasFile;
+      const isManualLaboratory = !hasFile && !study.isExternal;
       // Doctor can delete if it's an external study they created
       const canDeleteAsDoctor = study.isExternal && study.signedDoctorId && currentDoctorId && study.signedDoctorId === currentDoctorId;
+      const canDeleteManualLaboratory = isManualLaboratory && study.signedDoctorId && currentDoctorId && study.signedDoctorId === currentDoctorId;
 
       return (
         <div className="flex gap-2 items-center">
@@ -200,7 +201,7 @@ export const createStudiesColumns = (
               Manual
             </Badge>
           )}
-          {(canDelete || isManual || canDeleteAsDoctor) && (
+          {((canDelete && !isManualLaboratory) || canDeleteManualLaboratory || canDeleteAsDoctor) && (
             <DeleteStudyDialog
               idStudy={study.id}
               userId={parseInt(patientId)}
