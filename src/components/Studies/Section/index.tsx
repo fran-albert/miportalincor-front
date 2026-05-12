@@ -241,20 +241,22 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
                         <span className="hidden sm:inline">Laboratorios</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="grid max-h-[90vh] max-w-[96vw] grid-rows-[auto,minmax(0,1fr)] overflow-hidden xl:max-w-7xl">
-                      <DialogHeader>
+                    <DialogContent className="flex h-[90vh] max-h-[90vh] max-w-[96vw] flex-col gap-0 overflow-hidden p-0 xl:max-w-7xl">
+                      <DialogHeader className="shrink-0 border-b px-6 py-4 pr-12">
                         <DialogTitle className="flex items-center gap-2">
                           <FlaskConical className="h-5 w-5 text-greenPrimary" />
                           Tabla de Laboratorios
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="min-h-0 overflow-y-auto pr-1">
+                      <div className="flex min-h-0 flex-1 flex-col px-6 py-4">
                         <LabCard
                           studiesByUserId={[]}
                           bloodTests={bloodTests}
                           bloodTestsData={bloodTestsData}
                           role="Doctor"
                           idUser={userData.userId}
+                          variant="embedded"
+                          fitTableToContainer
                         />
                       </div>
                     </DialogContent>

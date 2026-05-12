@@ -131,10 +131,12 @@ export const LabPatientTable = ({
   bloodTestsData = [],
   bloodTests = [],
   idUser,
+  fitContainer = false,
 }: {
   bloodTests: BloodTest[];
   bloodTestsData: BloodTestData[];
   idUser: number;
+  fitContainer?: boolean;
 }) => {
   const { addBlodTestDataMutation, updateBlodTestMutation } =
     useBlodTestDataMutations();
@@ -361,8 +363,16 @@ export const LabPatientTable = ({
   };
 
   return (
-    <div className="flex min-h-0 w-full flex-col">
-      <div className="flex min-h-0 flex-col space-y-4">
+    <div
+      className={`flex min-h-0 w-full flex-col ${
+        fitContainer ? "flex-1" : ""
+      }`}
+    >
+      <div
+        className={`flex min-h-0 flex-col space-y-4 ${
+          fitContainer ? "flex-1" : ""
+        }`}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Search
             placeholder="Buscar análisis..."
@@ -381,7 +391,7 @@ export const LabPatientTable = ({
 
         <div
           ref={topScrollRef}
-          className="overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
+          className="shrink-0 overflow-x-auto overflow-y-hidden rounded-md border border-gray-200 bg-white"
           onScroll={(event) => syncHorizontalScroll(event, tableScrollRef)}
         >
           <div style={{ width: tableMinWidth, height: 1 }} />
@@ -389,7 +399,10 @@ export const LabPatientTable = ({
 
         <div
           ref={tableScrollRef}
-          className="isolate max-h-[28rem] overflow-auto rounded-md border border-gray-200"
+          data-testid="lab-table-scroll"
+          className={`isolate overflow-auto rounded-md border border-gray-200 ${
+            fitContainer ? "min-h-0 flex-1" : "max-h-[28rem]"
+          }`}
           onScroll={(event) => syncHorizontalScroll(event, topScrollRef)}
         >
           <table
@@ -475,7 +488,7 @@ export const LabPatientTable = ({
           </table>
         </div>
         {hasPendingChanges && (
-          <div className="sticky bottom-0 z-50 flex justify-end border-t border-gray-200 bg-white/95 py-3 backdrop-blur">
+          <div className="sticky bottom-0 z-50 flex shrink-0 justify-end border-t border-gray-200 bg-white/95 py-3 backdrop-blur">
             <Button
               className="bg-greenPrimary text-white"
               onClick={handleConfirmChanges}

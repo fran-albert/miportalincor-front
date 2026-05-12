@@ -18,12 +18,16 @@ const LabCard = ({
   idUser,
   bloodTests = [],
   role,
+  variant = "card",
+  fitTableToContainer = false,
 }: {
   studiesByUserId: Study[];
   bloodTestsData: BloodTestData[];
   bloodTests: BloodTest[];
   role: string;
   idUser: number;
+  variant?: "card" | "embedded";
+  fitTableToContainer?: boolean;
 }) => {
   const { dismissParsingAlertMutation } = useStudyMutations();
 
@@ -66,15 +70,35 @@ const LabCard = ({
   //       })
   //     : [];
 
+  const alerts =
+    showAlerts && studiesWithParsingIssues.length > 0 ? (
+      <ParsingAlert
+        parsingInfos={studiesWithParsingIssues}
+        onDismiss={handleDismissAlert}
+        isLoading={dismissParsingAlertMutation.isPending}
+      />
+    ) : null;
+  const table = (
+    <LabPatientTable
+      bloodTests={bloodTests || []}
+      bloodTestsData={bloodTestsData || []}
+      idUser={idUser}
+      fitContainer={fitTableToContainer}
+    />
+  );
+
+  if (variant === "embedded") {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {alerts}
+        {table}
+      </div>
+    );
+  }
+
   return (
     <>
-      {showAlerts && studiesWithParsingIssues.length > 0 && (
-        <ParsingAlert
-          parsingInfos={studiesWithParsingIssues}
-          onDismiss={handleDismissAlert}
-          isLoading={dismissParsingAlertMutation.isPending}
-        />
-      )}
+      {alerts}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-greenPrimary">
@@ -83,11 +107,7 @@ const LabCard = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <LabPatientTable
-            bloodTests={bloodTests || []}
-            bloodTestsData={bloodTestsData || []}
-            idUser={idUser}
-          />
+          {table}
         </CardContent>
       </Card>
       {/* <Card>
