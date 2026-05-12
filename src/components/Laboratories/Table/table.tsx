@@ -1,4 +1,6 @@
 import { RefObject, UIEvent, useEffect, useMemo, useRef, useState } from "react";
+import moment from "moment-timezone";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   TableHeader,
   TableRow,
@@ -19,6 +21,26 @@ import {
 import { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import { useBlodTestDataMutations } from "@/hooks/Blod-Test-Data/useBlodTestDataMutation";
 import { BloodTestDataResponse } from "@/types/Blod-Test-Data/Blod-Test-Data";
+import useRoles from "@/hooks/useRoles";
+import { useStudyMutations } from "@/hooks/Study/useStudyMutations";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type LabDateColumn = {
   key: string;
@@ -26,12 +48,16 @@ type LabDateColumn = {
   normalizedDate: string;
   sortValue: number;
   studyId?: string;
+  signedDoctorId?: string;
+  isManualLaboratory?: boolean;
 };
 
+const ARGENTINA_TIMEZONE = "America/Argentina/Buenos_Aires";
 const MISSING_DATE_LABEL = "Sin fecha";
 const STICKY_ANALYSIS_WIDTH = 220;
 const STICKY_REFERENCE_WIDTH = 240;
 const STICKY_UNIT_WIDTH = 120;
+const DATE_COLUMN_WIDTH = 148;
 const STICKY_BASE_WIDTH =
   STICKY_ANALYSIS_WIDTH + STICKY_REFERENCE_WIDTH + STICKY_UNIT_WIDTH;
 
@@ -78,6 +104,11 @@ const normalizeLabDate = (date: string): string => {
     return "";
   }
 
+  if (trimmedDate.includes("T")) {
+    const parsedDate = moment.tz(trimmedDate, ARGENTINA_TIMEZONE);
+    return parsedDate.isValid() ? parsedDate.format("YYYY-MM-DD") : "";
+  }
+
   return normalizeDate(trimmedDate);
 };
 
@@ -101,6 +132,10 @@ const buildStudyColumn = (study: BloodTestDataResponse["study"]): LabDateColumn 
     normalizedDate,
     sortValue: getDateTime(study.date ?? ""),
     studyId: String(study.id),
+    signedDoctorId: study.signedDoctorId
+      ? String(study.signedDoctorId)
+      : undefined,
+    isManualLaboratory: Boolean(study.isManualLaboratory),
   };
 };
 
@@ -138,12 +173,24 @@ export const LabPatientTable = ({
   idUser: number;
   fitContainer?: boolean;
 }) => {
-  const { addBlodTestDataMutation, updateBlodTestMutation } =
+  const {
+    addBlodTestDataMutation,
+    updateBlodTestMutation,
+    updateManualBloodTestStudyDateMutation,
+  } =
     useBlodTestDataMutations();
+  const { deleteStudyMutation } = useStudyMutations();
+  const { isDoctor, session } = useRoles();
+  const currentDoctorId = isDoctor && session?.id ? String(session.id) : "";
   const [searchTerm, setSearchTerm] = useState("");
   const topScrollRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const [dates, setDates] = useState<LabDateColumn[]>([]);
+  const [dateColumnToEdit, setDateColumnToEdit] =
+    useState<LabDateColumn | null>(null);
+  const [dateDraft, setDateDraft] = useState("");
+  const [dateColumnToDelete, setDateColumnToDelete] =
+    useState<LabDateColumn | null>(null);
   const [editedValues, setEditedValues] = useState<{
     [key: string]: { [bloodTestId: string]: string };
   }>({});
@@ -155,9 +202,23 @@ export const LabPatientTable = ({
   const { promiseToast } = useToastContext();
 
   const tableMinWidth = useMemo(
-    () => STICKY_BASE_WIDTH + dates.length * 132,
+    () => STICKY_BASE_WIDTH + dates.length * DATE_COLUMN_WIDTH,
     [dates.length]
   );
+
+  const canManageManualLabColumn = (column: LabDateColumn) =>
+    Boolean(
+      column.studyId &&
+        column.isManualLaboratory &&
+        column.signedDoctorId &&
+        currentDoctorId &&
+        String(column.signedDoctorId) === currentDoctorId
+    );
+
+  const canEditColumnValues = (column: LabDateColumn) =>
+    !column.studyId ||
+    !column.isManualLaboratory ||
+    canManageManualLabColumn(column);
 
   useEffect(() => {
     const transformedData = transformData(bloodTestsData);
@@ -236,6 +297,10 @@ export const LabPatientTable = ({
         const column = dates.find((date) => date.key === dateKey);
 
         if (!column) {
+          return;
+        }
+
+        if (!canEditColumnValues(column)) {
           return;
         }
 
@@ -362,6 +427,117 @@ export const LabPatientTable = ({
     }
   };
 
+  const openDateEditor = (column: LabDateColumn) => {
+    setDateColumnToEdit(column);
+    setDateDraft(column.normalizedDate);
+  };
+
+  const closeDateEditor = () => {
+    setDateColumnToEdit(null);
+    setDateDraft("");
+  };
+
+  const handleUpdateStudyDate = async () => {
+    if (!dateColumnToEdit?.studyId || !dateDraft) {
+      return;
+    }
+
+    try {
+      const normalizedDraft = normalizeLabDate(dateDraft);
+
+      await promiseToast(
+        updateManualBloodTestStudyDateMutation.mutateAsync({
+          idStudy: dateColumnToEdit.studyId,
+          date: normalizedDraft,
+        }),
+        {
+          loading: {
+            title: "Actualizando fecha",
+            description: "Guardando la fecha del laboratorio manual",
+          },
+          success: {
+            title: "Fecha actualizada",
+            description: "El laboratorio se reordenó con la nueva fecha",
+          },
+          error: (error: unknown) => ({
+            title: "Error al actualizar la fecha",
+            description:
+              (error as { response?: { data?: { message?: string } } })
+                .response?.data?.message || "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
+
+      setDates((prevDates) =>
+        prevDates
+          .map((column) =>
+            column.key === dateColumnToEdit.key
+              ? {
+                  ...column,
+                  label: formatLabDateLabel(normalizedDraft),
+                  normalizedDate: normalizedDraft,
+                  sortValue: getDateTime(normalizedDraft),
+                }
+              : column
+          )
+          .sort(compareColumns)
+      );
+      closeDateEditor();
+    } catch (error) {
+      console.error("Error al actualizar la fecha del laboratorio:", error);
+    }
+  };
+
+  const handleDeleteManualLaboratory = async () => {
+    if (!dateColumnToDelete?.studyId) {
+      return;
+    }
+
+    try {
+      await promiseToast(
+        deleteStudyMutation.mutateAsync({
+          studyId: dateColumnToDelete.studyId,
+          userId: idUser,
+        }),
+        {
+          loading: {
+            title: "Eliminando laboratorio",
+            description: "Quitando la carga manual del paciente",
+          },
+          success: {
+            title: "Laboratorio eliminado",
+            description: "La columna se quitó de la tabla",
+          },
+          error: (error: unknown) => ({
+            title: "Error al eliminar el laboratorio",
+            description:
+              (error as { response?: { data?: { message?: string } } })
+                .response?.data?.message || "Ha ocurrido un error inesperado",
+          }),
+        }
+      );
+
+      const deletedColumn = dateColumnToDelete;
+      setDates((prevDates) =>
+        prevDates.filter((column) => column.key !== deletedColumn.key)
+      );
+      setTransformedBloodTestsData((prevData) =>
+        prevData.filter(
+          (group) => String(group.study.id) !== deletedColumn.studyId
+        )
+      );
+      setEditedValues((prevValues) => {
+        const nextValues = { ...prevValues };
+        delete nextValues[deletedColumn.key];
+        setHasPendingChanges(Object.keys(nextValues).length > 0);
+        return nextValues;
+      });
+      setDateColumnToDelete(null);
+    } catch (error) {
+      console.error("Error al eliminar el laboratorio manual:", error);
+    }
+  };
+
   return (
     <div
       className={`flex min-h-0 w-full flex-col ${
@@ -420,14 +596,48 @@ export const LabPatientTable = ({
                 <TableHead className="sticky top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] border-b bg-slate-50 px-3 py-3 shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)] md:left-[460px] md:z-50 md:border-r md:shadow-[6px_0_10px_-10px_rgba(15,23,42,0.45),0_8px_12px_-12px_rgba(15,23,42,0.45)]">
                   Unidad
                 </TableHead>
-                {dates.map((date) => (
-                  <TableHead
-                    key={date.key}
-                    className="sticky top-0 z-40 min-w-[132px] border-b bg-slate-50 px-3 py-3 text-center shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]"
-                  >
-                    {date.label}
-                  </TableHead>
-                ))}
+                {dates.map((date) => {
+                  const canManageManualLab = canManageManualLabColumn(date);
+
+                  return (
+                    <TableHead
+                      key={date.key}
+                      className="sticky top-0 z-40 min-w-[148px] border-b bg-slate-50 px-2 py-2 text-center shadow-[0_8px_12px_-12px_rgba(15,23,42,0.45)]"
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="whitespace-nowrap font-medium">
+                          {date.label}
+                        </span>
+                        {canManageManualLab && (
+                          <div className="flex items-center gap-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-600 hover:bg-teal-50 hover:text-greenPrimary"
+                              aria-label={`Editar fecha ${date.label}`}
+                              title="Editar fecha"
+                              onClick={() => openDateEditor(date)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-600 hover:bg-red-50 hover:text-red-600"
+                              aria-label={`Eliminar laboratorio ${date.label}`}
+                              title="Eliminar laboratorio"
+                              onClick={() => setDateColumnToDelete(date)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -463,13 +673,20 @@ export const LabPatientTable = ({
                       const inputValue =
                         editedValues[date.key]?.[bloodTest.id as number] ??
                         (relatedData ? relatedData.value : "");
+                      const canEditValue = canEditColumnValues(date);
 
                       return (
-                        <TableCell key={date.key} className="min-w-[132px] px-3 py-2 text-center">
+                        <TableCell key={date.key} className="min-w-[148px] px-3 py-2 text-center">
                           <input
                             type="text"
                             value={inputValue}
-                            className="h-9 w-full rounded-md border px-2 text-center text-sm focus:border-greenPrimary focus:outline-none focus:ring-1 focus:ring-greenPrimary"
+                            disabled={!canEditValue}
+                            title={
+                              canEditValue
+                                ? undefined
+                                : "Solo el medico que creo este laboratorio manual puede modificarlo"
+                            }
+                            className="h-9 w-full rounded-md border px-2 text-center text-sm focus:border-greenPrimary focus:outline-none focus:ring-1 focus:ring-greenPrimary disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-500"
                             onChange={(e) =>
                               handleInputChange(
                                 date.key,
@@ -498,6 +715,79 @@ export const LabPatientTable = ({
           </div>
         )}
       </div>
+      <Dialog
+        open={Boolean(dateColumnToEdit)}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeDateEditor();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <DialogTitle>Editar fecha del laboratorio</DialogTitle>
+            <DialogDescription>
+              Seleccioná la fecha correcta del laboratorio manual.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700" htmlFor="manual-lab-date">
+              Fecha
+            </label>
+            <input
+              id="manual-lab-date"
+              type="date"
+              value={dateDraft}
+              className="h-10 w-full rounded-md border px-3 text-sm focus:border-greenPrimary focus:outline-none focus:ring-1 focus:ring-greenPrimary"
+              onChange={(event) => setDateDraft(event.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDateEditor}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-greenPrimary text-white"
+              onClick={handleUpdateStudyDate}
+              disabled={
+                !dateDraft || updateManualBloodTestStudyDateMutation.isPending
+              }
+            >
+              Guardar fecha
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog
+        open={Boolean(dateColumnToDelete)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDateColumnToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar laboratorio manual</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará la carga manual del {dateColumnToDelete?.label}. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDeleteManualLaboratory();
+              }}
+              disabled={deleteStudyMutation.isPending}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

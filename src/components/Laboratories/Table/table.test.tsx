@@ -8,6 +8,11 @@ import { LabPatientTable } from "./table";
 import type { BloodTest } from "@/types/Blod-Test/Blod-Test";
 import type { BloodTestData } from "@/types/Blod-Test-Data/Blod-Test-Data";
 
+const mutationMocks = vi.hoisted(() => ({
+  updateManualBloodTestStudyDateMutateAsync: vi.fn(),
+  deleteStudyMutateAsync: vi.fn(),
+}));
+
 vi.mock("@/hooks/Blod-Test-Data/useBlodTestDataMutation", () => ({
   useBlodTestDataMutations: () => ({
     addBlodTestDataMutation: {
@@ -16,12 +21,32 @@ vi.mock("@/hooks/Blod-Test-Data/useBlodTestDataMutation", () => ({
     updateBlodTestMutation: {
       mutateAsync: vi.fn(),
     },
+    updateManualBloodTestStudyDateMutation: {
+      mutateAsync: mutationMocks.updateManualBloodTestStudyDateMutateAsync,
+      isPending: false,
+    },
+  }),
+}));
+
+vi.mock("@/hooks/Study/useStudyMutations", () => ({
+  useStudyMutations: () => ({
+    deleteStudyMutation: {
+      mutateAsync: mutationMocks.deleteStudyMutateAsync,
+      isPending: false,
+    },
   }),
 }));
 
 vi.mock("@/hooks/Toast/toast-context", () => ({
   useToastContext: () => ({
     promiseToast: (promise: Promise<unknown>) => promise,
+  }),
+}));
+
+vi.mock("@/hooks/useRoles", () => ({
+  default: () => ({
+    isDoctor: true,
+    session: { id: "3" },
   }),
 }));
 
@@ -75,5 +100,55 @@ describe("LabPatientTable", () => {
       "min-h-0",
       "flex-1"
     );
+  });
+
+  it("shows manual laboratory actions only to the doctor who created it", () => {
+    render(
+      <LabPatientTable
+        bloodTests={[bloodTest]}
+        bloodTestsData={[
+          {
+            ...bloodTestsData[0],
+            study: {
+              ...bloodTestsData[0].study,
+              signedDoctorId: "3",
+              isManualLaboratory: true,
+            },
+          },
+        ]}
+        idUser={1}
+      />
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Editar fecha 01-05-2026" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Eliminar laboratorio 01-05-2026" })
+    ).toBeInTheDocument();
+  });
+
+  it("blocks values and hides actions for manual laboratories created by another doctor", () => {
+    render(
+      <LabPatientTable
+        bloodTests={[bloodTest]}
+        bloodTestsData={[
+          {
+            ...bloodTestsData[0],
+            study: {
+              ...bloodTestsData[0].study,
+              signedDoctorId: "99",
+              isManualLaboratory: true,
+            },
+          },
+        ]}
+        idUser={1}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Editar fecha 01-05-2026" })
+    ).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue("90")).toBeDisabled();
   });
 });
