@@ -322,6 +322,17 @@ describe("PreOccupationalCards maintenance flow", () => {
     expect(await screen.findByText("Sin médico asignado")).toBeInTheDocument();
   });
 
+  it("uses operational copy for the report section", () => {
+    renderComponent();
+
+    expect(screen.getByText("Informe del examen")).toBeInTheDocument();
+    expect(screen.getByText("Sin PDF generado")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Previsualizar/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Informe laboral")).not.toBeInTheDocument();
+  });
+
   it("updates the exam doctor from the maintenance dialog", async () => {
     const user = userEvent.setup();
     renderComponent();

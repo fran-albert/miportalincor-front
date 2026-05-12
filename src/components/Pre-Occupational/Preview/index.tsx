@@ -154,7 +154,7 @@ export default function PreOccupationalPreviewComponent({
       href: examHref,
     },
     {
-      label: "Previsualizar informe",
+      label: "Previsualizar",
       href: previewHref,
     },
   ];
@@ -406,8 +406,8 @@ export default function PreOccupationalPreviewComponent({
           {isGenerating
             ? "Generando..."
             : hasReport
-              ? "Regenerar informe actual"
-              : "Generar informe"}
+              ? "Regenerar PDF"
+              : "Generar PDF"}
         </Button>
       </div>
     </div>

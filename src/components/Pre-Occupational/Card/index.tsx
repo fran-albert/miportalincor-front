@@ -600,7 +600,7 @@ export default function PreOccupationalCards({
                   onClick={() => navigate(previewHref)}
                 >
                   <Eye className="mr-2 h-4 w-4" />
-                  Previsualizar informe
+                  Previsualizar
                 </Button>
               </div>
             </div>
@@ -678,10 +678,10 @@ export default function PreOccupationalCards({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-greenPrimary">
-              Informe laboral
+              Informe del examen
             </h3>
             <span className="text-xs text-slate-500">
-              {hasReport ? "Informe disponible" : "Sin informe generado"}
+              {hasReport ? "PDF disponible" : "Sin PDF generado"}
             </span>
           </div>
           <ReportVersioningCard

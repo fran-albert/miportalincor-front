@@ -117,16 +117,14 @@ export default function ReportVersioningCard({
             <div className="space-y-2">
               <div className="inline-flex w-fit items-center gap-2 rounded-full border border-greenPrimary/15 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-greenSecondary shadow-sm backdrop-blur-sm">
                 <FileClock className="h-4 w-4" />
-                Estado del informe
+                PDF final
               </div>
               <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-greenSecondary">
-                  Informe actual del examen
+                  Informe del examen
                 </h3>
                 <p className="max-w-2xl text-sm leading-6 text-slate-700">
-                  El PDF de la tabla sigue siendo el informe actual. Desde acá
-                  solo ves su estado y las acciones principales para generar o
-                  regenerar el documento.
+                  Previsualizá el documento y generá el PDF final del examen.
                 </p>
               </div>
             </div>
@@ -139,7 +137,7 @@ export default function ReportVersioningCard({
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             <div className="rounded-lg border border-greenPrimary/10 bg-white/90 p-4 shadow-[0_12px_28px_-24px_rgba(12,72,74,0.45)]">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Informe actual
+                PDF actual
               </div>
               <div className="mt-2 font-medium text-greenSecondary">
                 {isLoading
@@ -147,17 +145,17 @@ export default function ReportVersioningCard({
                   : currentVersion
                     ? `Versión ${currentVersion.version}`
                     : hasLegacyCurrentReport
-                      ? "Informe generado en flujo anterior"
-                      : "Todavía no hay informe generado"}
+                      ? "PDF generado en flujo anterior"
+                      : "Todavía no hay PDF generado"}
               </div>
               <div className="mt-1 text-sm leading-6 text-slate-700">
                 {isLoading
-                  ? "Estamos consultando el documento actual."
+                  ? "Consultando el PDF actual."
                   : currentVersion
                     ? `Generado el ${formatReportDate(currentVersion.generatedAt)}`
                     : hasLegacyCurrentReport
-                      ? "El examen ya tiene un PDF disponible y seguirá siendo el informe actual hasta que regeneres uno nuevo."
-                      : "Cuando generes el primer informe, va a quedar disponible desde la tabla del colaborador."}
+                      ? "Este examen ya tiene un PDF disponible. Podés regenerarlo desde la previsualización."
+                      : "Cuando generes el primer PDF, va a quedar disponible desde la tabla del colaborador."}
               </div>
               {currentVersion?.generatedByEmail && (
                 <div className="mt-1 text-sm text-slate-500">
@@ -168,7 +166,7 @@ export default function ReportVersioningCard({
 
             <div className="rounded-lg border border-greenPrimary/10 bg-white/90 p-4 shadow-[0_12px_28px_-24px_rgba(12,72,74,0.45)]">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Última final entregada
+                Entrega final
               </div>
               <div className="mt-2 font-medium text-greenSecondary">
                 {finalVersion
@@ -178,7 +176,7 @@ export default function ReportVersioningCard({
               <div className="mt-1 text-sm leading-6 text-slate-700">
                 {finalVersion
                   ? `Marcada como final el ${formatReportDate(finalVersion.generatedAt)}`
-                  : "Podés marcar como final la versión vigente cuando sea la entrega formal."}
+                  : "Sin PDF marcado como entrega final."}
               </div>
               {finalVersion && finalVersion.id !== currentVersion?.id && (
                 <div className="mt-2">
@@ -197,7 +195,7 @@ export default function ReportVersioningCard({
               disabled={!hasReport || !currentUrl}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Ver informe actual
+              Ver PDF actual
             </Button>
             <Button
               variant="default"
@@ -206,7 +204,7 @@ export default function ReportVersioningCard({
               onClick={() => navigate(previewHref)}
             >
               <Save className="mr-2 h-4 w-4" />
-              {hasReport ? "Regenerar desde previsualización" : "Generar informe"}
+              {hasReport ? "Regenerar PDF" : "Generar PDF"}
             </Button>
             {reportVersions?.versions.length ? (
               <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
@@ -220,8 +218,7 @@ export default function ReportVersioningCard({
                   <DialogHeader>
                     <DialogTitle>Historial de informes</DialogTitle>
                     <DialogDescription>
-                      Mostramos el detalle de versiones como información
-                      secundaria para que el flujo principal siga siendo simple.
+                      Versiones generadas para este examen.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3">
@@ -304,16 +301,15 @@ export default function ReportVersioningCard({
           {!isLoading && currentStatus.variant === "warning" && (
             <div className="mt-4 rounded-lg border border-yellow-300/80 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-3 text-sm text-yellow-900 shadow-[0_12px_24px_-20px_rgba(202,138,4,0.6)]">
               {currentVersion?.isFinal
-                ? "La versión marcada como final tuvo cambios posteriores en el examen. Sigue disponible como referencia, pero ya no debería entregarse sin regenerar un nuevo informe."
-                : "Este examen tuvo cambios después del último PDF. El informe actual sigue disponible, pero conviene regenerarlo desde la previsualización."}
+                ? "La entrega final tuvo cambios posteriores en el examen. Generá un nuevo PDF antes de entregarlo."
+                : "El examen cambió después del último PDF. Regenerá el PDF antes de entregarlo."}
             </div>
           )}
 
           {!isLoading && hasLegacyCurrentReport && (
             <div className="mt-4 rounded-lg border border-greenPrimary/12 bg-white/95 px-4 py-3 text-sm leading-6 text-slate-700 shadow-[0_12px_24px_-22px_rgba(12,72,74,0.35)]">
-              Este examen tiene un informe del flujo anterior. Cuando regeneres
-              desde la previsualización, el sistema empezará a guardar versiones
-              nuevas sin cambiar cómo trabaja secretaría.
+              Este examen tiene un PDF generado en el flujo anterior. Al
+              regenerarlo, se guardará una nueva versión.
             </div>
           )}
 
