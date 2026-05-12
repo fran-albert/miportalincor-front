@@ -248,7 +248,7 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
                           Tabla de Laboratorios
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="min-h-0 overflow-hidden">
+                      <div className="min-h-0 overflow-y-auto pr-1">
                         <LabCard
                           studiesByUserId={[]}
                           bloodTests={bloodTests}
