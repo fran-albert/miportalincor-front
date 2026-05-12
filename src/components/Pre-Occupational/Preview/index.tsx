@@ -71,6 +71,7 @@ export default function PreOccupationalPreviewComponent({
   const matchedDoctor = doctors.find(
     (doctor) => String(doctor.userId) === doctorQueryId
   );
+  const pageShellClass = "px-4 py-4 sm:px-6 lg:px-8 xl:px-10";
 
   useEffect(() => {
     dispatch(
@@ -166,7 +167,7 @@ export default function PreOccupationalPreviewComponent({
         : "No pudimos obtener la firma y el sello del médico.";
 
     return (
-      <div className="mt-4 space-y-4">
+      <div className={`${pageShellClass} space-y-4`}>
         <BreadcrumbComponent items={breadcrumbItems} />
         <Card className="border-red-200 bg-red-50">
           <CardContent className="space-y-4 p-6">
@@ -220,7 +221,7 @@ export default function PreOccupationalPreviewComponent({
 
   if (isLoading || !data) {
     return (
-      <div className="flex justify-center items-center p-6">
+      <div className={`${pageShellClass} flex items-center justify-center`}>
         <p className="text-gray-500">Cargando datos del doctor...</p>
       </div>
     );
@@ -228,7 +229,7 @@ export default function PreOccupationalPreviewComponent({
 
   if (!doctorQueryId) {
     return (
-      <div className="mt-4 space-y-4">
+      <div className={`${pageShellClass} space-y-4`}>
         <BreadcrumbComponent items={breadcrumbItems} />
         <Card className="border-yellow-300 bg-yellow-50">
           <CardContent className="space-y-4 p-6">
@@ -320,7 +321,7 @@ export default function PreOccupationalPreviewComponent({
   };
   if (urls === undefined) {
     return (
-      <div className="flex justify-center items-center p-6">
+      <div className={`${pageShellClass} flex items-center justify-center`}>
         <p className="text-gray-500">Cargando estudios...</p>
       </div>
     );
@@ -334,7 +335,7 @@ export default function PreOccupationalPreviewComponent({
   //   );
   // }
   return (
-    <div className="space-y-2 mt-2">
+    <div className={`${pageShellClass} space-y-4`}>
       <BreadcrumbComponent items={breadcrumbItems} />
       <Card className="overflow-hidden border-greenPrimary/20 bg-[linear-gradient(135deg,rgba(12,72,74,0.09)_0%,rgba(24,123,128,0.14)_22%,rgba(255,255,255,0.96)_58%,rgba(1,169,164,0.07)_100%)] shadow-[0_24px_60px_-32px_rgba(12,72,74,0.45)]">
         <CardContent className="p-4">
