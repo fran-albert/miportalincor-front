@@ -361,8 +361,8 @@ export const LabPatientTable = ({
   };
 
   return (
-    <div className="w-full">
-      <div className="space-y-4">
+    <div className="flex min-h-0 w-full flex-col">
+      <div className="flex min-h-0 flex-col space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Search
             placeholder="Buscar análisis..."
@@ -475,7 +475,7 @@ export const LabPatientTable = ({
           </table>
         </div>
         {hasPendingChanges && (
-          <div className="flex justify-end mt-4">
+          <div className="sticky bottom-0 z-50 flex justify-end border-t border-gray-200 bg-white/95 py-3 backdrop-blur">
             <Button
               className="bg-greenPrimary text-white"
               onClick={handleConfirmChanges}
