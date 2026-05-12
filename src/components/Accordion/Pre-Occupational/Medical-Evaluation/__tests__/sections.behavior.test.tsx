@@ -401,7 +401,6 @@ describe("MedicalEvaluation clinical sections", () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
       const onBatchChange = vi.fn();
-      const onPdfVisibilityModeChange = vi.fn();
 
       render(
         <GenitourinarioSection
@@ -418,9 +417,15 @@ describe("MedicalEvaluation clinical sections", () => {
           }}
           onChange={onChange}
           onBatchChange={onBatchChange}
-          onPdfVisibilityModeChange={onPdfVisibilityModeChange}
         />
       );
+
+      expect(
+        screen.queryByText("Incluir datos gineco-obstétricos en el informe")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Está usando el criterio automático del sistema.")
+      ).not.toBeInTheDocument();
 
       await user.click(
         screen.getByRole("radio", { name: "Sin alteraciones" })

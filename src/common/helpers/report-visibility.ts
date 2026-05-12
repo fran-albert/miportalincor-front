@@ -7,9 +7,8 @@ export type ReportVisibilityOverrides = Partial<
   Record<ReportSectionKey, ReportVisibilityMode>
 >;
 
-const REPORT_VISIBILITY_SECTION_KEYS: ReportSectionKey[] = [
+const MANUAL_REPORT_VISIBILITY_SECTION_KEYS: ReportSectionKey[] = [
   "genitourinary",
-  "genitourinary_gyn_ob",
 ];
 
 export interface ReportVisibilityResolution {
@@ -37,18 +36,17 @@ export function normalizeReportVisibilityOverrides(
 ): ReportVisibilityOverrides {
   if (!overrides) return {};
 
-  return REPORT_VISIBILITY_SECTION_KEYS.reduce<ReportVisibilityOverrides>(
-    (acc, key) => {
-      const value = overrides[key];
+  return MANUAL_REPORT_VISIBILITY_SECTION_KEYS.reduce<
+    ReportVisibilityOverrides
+  >((acc, key) => {
+    const value = overrides[key];
 
-      if (value && value !== "automatic") {
-        acc[key] = value;
-      }
+    if (value && value !== "automatic") {
+      acc[key] = value;
+    }
 
-      return acc;
-    },
-    {}
-  );
+    return acc;
+  }, {});
 }
 
 const normalizeGender = (gender?: string | null): string => {
@@ -63,20 +61,23 @@ export function resolveReportVisibility({
   collaboratorGender,
   hasData,
 }: ResolveReportVisibilityParams): ReportVisibilityResolution {
-  if (visibilityMode === "force_show") {
+  const effectiveVisibilityMode =
+    sectionKey === "genitourinary_gyn_ob" ? "automatic" : visibilityMode;
+
+  if (effectiveVisibilityMode === "force_show") {
     return {
       sectionKey,
-      visibilityMode,
+      visibilityMode: effectiveVisibilityMode,
       resolvedVisibility: "visible",
       resolvedPresentation: "full",
       reason: "force_show",
     };
   }
 
-  if (visibilityMode === "force_hide") {
+  if (effectiveVisibilityMode === "force_hide") {
     return {
       sectionKey,
-      visibilityMode,
+      visibilityMode: effectiveVisibilityMode,
       resolvedVisibility: "hidden",
       resolvedPresentation: "hidden",
       reason: "force_hide",
@@ -86,7 +87,7 @@ export function resolveReportVisibility({
   if (!hasData) {
     return {
       sectionKey,
-      visibilityMode,
+      visibilityMode: effectiveVisibilityMode,
       resolvedVisibility: "hidden",
       resolvedPresentation: "hidden",
       reason: "empty_section",
@@ -99,7 +100,7 @@ export function resolveReportVisibility({
   ) {
     return {
       sectionKey,
-      visibilityMode,
+      visibilityMode: effectiveVisibilityMode,
       resolvedVisibility: "hidden",
       resolvedPresentation: "hidden",
       reason: "gender_male",
@@ -108,7 +109,7 @@ export function resolveReportVisibility({
 
   return {
     sectionKey,
-    visibilityMode,
+    visibilityMode: effectiveVisibilityMode,
     resolvedVisibility: "visible",
     resolvedPresentation: "full",
     reason: "has_data",

@@ -8,7 +8,6 @@ import {
   Neurologico,
   Osteoarticular,
   Respiratorio,
-  setReportVisibilityOverride,
   setFormData,
   Torax,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
@@ -71,9 +70,6 @@ export default function MedicalEvaluationAccordion({
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
-  );
-  const reportVisibilityOverrides = useSelector(
-    (state: RootState) => state.preOccupational.reportVisibilityOverrides
   );
 
   // Función para calcular el IMC a partir de la talla y el peso
@@ -795,19 +791,8 @@ const handleNeuChange = (
         <GenitourinarioSection
           isEditing={isEditing}
           data={genito}
-          pdfVisibilityMode={
-            reportVisibilityOverrides.genitourinary_gyn_ob ?? "automatic"
-          }
           onChange={handleGenitoChange}
           onBatchChange={handleGenitoBatchChange}
-          onPdfVisibilityModeChange={(mode) =>
-            dispatch(
-              setReportVisibilityOverride({
-                sectionKey: "genitourinary_gyn_ob",
-                mode,
-              })
-            )
-          }
         />
       </EvaluationSection>
 

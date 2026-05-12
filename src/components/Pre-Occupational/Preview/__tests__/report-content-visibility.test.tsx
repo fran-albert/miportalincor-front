@@ -20,6 +20,7 @@ vi.mock("@react-pdf/renderer", () => ({
 import TestsPreview from "../Tests";
 import ExamResultsHtml from "../View/First-Page/Exams-Results";
 import ExamResultsPdf from "../Pdf/First-Page/Exams-Results";
+import FifthPageHTML from "../View/Fifth-Page";
 
 const renderTestsPreview = (formData: Parameters<typeof setFormData>[0]) => {
   const store = configureStore({
@@ -131,5 +132,35 @@ describe("labor report content visibility", () => {
       screen.getByText("No se registraron resultados de estudios")
     ).toBeInTheDocument();
     expect(screen.queryByText("Sin dato registrado")).not.toBeInTheDocument();
+  });
+
+  it("ignores old gineco-obstetric force_hide overrides in HTML preview", () => {
+    render(
+      <FifthPageHTML
+        collaboratorGender="femenino"
+        genitourinaryGynObVisibilityMode="force_hide"
+        gastrointestinal={{}}
+        genitourinario={{
+          fum: "2026-01-10",
+          embarazos: "1",
+          partos: "",
+          cesarea: "",
+        }}
+        osteoarticular={{}}
+        doctorData={{
+          fullName: "",
+          matricula: "",
+          specialty: "",
+          stampText: "",
+          signatureDataUrl: "",
+        }}
+        medicalEvaluationType="preocupacional"
+      />
+    );
+
+    expect(screen.getByText("F.U.M.")).toBeInTheDocument();
+    expect(screen.getByText("2026-01-10")).toBeInTheDocument();
+    expect(screen.getByText("Embarazos")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 });
