@@ -57,12 +57,7 @@ export default function OccupationalHistoryAccordion({
 
   const content = (
     <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm leading-6 text-slate-600">
-        Registrá antecedentes laborales previos del colaborador. Cada tarjeta
-        puede representar un trabajo, una exposición o un antecedente clínico
-        laboral relevante.
-      </div>
-      <div className="flex items-center justify-between">
+      <div className="flex justify-end">
         <Button
           variant="outline"
           size="sm"
@@ -76,21 +71,16 @@ export default function OccupationalHistoryAccordion({
       </div>
 
       {historyItems.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {historyItems.map((item, index) => (
-            <div
+            <section
               key={item.id}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="space-y-3 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Antecedente {index + 1}
-                  </div>
-                  <div className="text-sm font-semibold text-greenPrimary">
-                    Historia laboral relevante
-                  </div>
-                </div>
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-slate-800">
+                  Antecedente {index + 1}
+                </h4>
                 {isEditing && (
                   <Button
                     variant="ghost"
@@ -103,25 +93,24 @@ export default function OccupationalHistoryAccordion({
                 )}
               </div>
 
-              <div className="mt-4">
-                {isEditing ? (
-                  <Textarea
-                    rows={4}
-                    value={item.description}
-                    placeholder="Describí el antecedente, tareas previas, exposición o dato ocupacional relevante..."
-                    onChange={(e) => {
-                      const newValue = e.currentTarget.value;
-                      handleUpdateDescription(item.id, newValue);
-                    }}
-                    className="resize-none bg-white"
-                  />
-                ) : (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-3 text-sm leading-6 text-slate-700">
-                    {item.description || "Sin descripción"}
-                  </div>
-                )}
-              </div>
-            </div>
+              {isEditing ? (
+                <Textarea
+                  rows={4}
+                  value={item.description}
+                  aria-label={`Antecedente ${index + 1}`}
+                  placeholder="Describí tareas previas, exposición o dato ocupacional relevante..."
+                  onChange={(e) => {
+                    const newValue = e.currentTarget.value;
+                    handleUpdateDescription(item.id, newValue);
+                  }}
+                  className="resize-none bg-white text-slate-900"
+                />
+              ) : (
+                <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                  {item.description || "Sin descripción"}
+                </p>
+              )}
+            </section>
           ))}
         </div>
       ) : (
