@@ -7,7 +7,10 @@ export interface PublicAppointmentSpeciality {
 
 export interface PublicAppointmentDoctor {
   id: number;
-  name: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  providerName?: string;
 }
 
 export interface PublicAppointmentSlot {
