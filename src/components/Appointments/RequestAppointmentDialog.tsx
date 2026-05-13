@@ -17,6 +17,11 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -26,7 +31,7 @@ import {
   usePublicDoctorsBySpeciality,
   useRequestAppointment,
 } from "@/hooks/Appointments";
-import type { PublicAppointmentSlot } from "@/api/Appointments";
+import type { PublicAppointmentDoctor, PublicAppointmentSlot } from "@/api/Appointments";
 import { addDays, format, isAfter, isBefore, isValid, parse, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -70,6 +75,26 @@ const getErrorMessage = (error: unknown): string => {
   return responseData?.error || responseData?.message || "No pudimos reservar el turno.";
 };
 
+const getDoctorLabel = (
+  doctor: PublicAppointmentDoctor | null | undefined,
+  fallbackName?: string,
+): string => {
+  if (!doctor) return "Profesional";
+
+  const fullName = [doctor.firstName, doctor.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return (
+    doctor.name?.trim() ||
+    fullName ||
+    doctor.providerName?.trim() ||
+    fallbackName?.trim() ||
+    `Profesional ${doctor.id}`
+  );
+};
+
 export function RequestAppointmentDialog({
   open,
   onOpenChange,
@@ -80,6 +105,7 @@ export function RequestAppointmentDialog({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const requestMutation = useRequestAppointment();
 
@@ -125,6 +151,26 @@ export function RequestAppointmentDialog({
     [selectedDoctorId, slots],
   );
 
+  const providerNameById = useMemo(() => {
+    const names = new Map<number, string>();
+
+    slots.forEach((slot) => {
+      if (slot.providerName?.trim() && !names.has(slot.providerId)) {
+        names.set(slot.providerId, slot.providerName.trim());
+      }
+    });
+
+    return names;
+  }, [slots]);
+
+  const selectedDoctorLabel = useMemo(
+    () => getDoctorLabel(
+      selectedDoctor,
+      selectedDoctorId ? providerNameById.get(selectedDoctorId) : undefined,
+    ),
+    [providerNameById, selectedDoctor, selectedDoctorId],
+  );
+
   const availableDateSet = useMemo(() => {
     const availableDates = new Set<string>();
 
@@ -166,6 +212,7 @@ export function RequestAppointmentDialog({
       setSelectedDate(undefined);
       setSelectedTime(null);
       setBookingError(null);
+      setDatePickerOpen(false);
     }
   }, [open]);
 
@@ -178,17 +225,20 @@ export function RequestAppointmentDialog({
     setSelectedDoctorId(null);
     setSelectedDate(undefined);
     setSelectedTime(null);
+    setDatePickerOpen(false);
   };
 
   const handleDoctorChange = (value: string) => {
     setSelectedDoctorId(Number(value));
     setSelectedDate(undefined);
     setSelectedTime(null);
+    setDatePickerOpen(false);
   };
 
   const handleSelectDate = (date: Date | undefined) => {
     setSelectedDate(date);
     setSelectedTime(null);
+    setDatePickerOpen(false);
   };
 
   const handleBack = () => {
@@ -301,7 +351,7 @@ export function RequestAppointmentDialog({
             {step === "selection" && "Seleccioná especialidad y profesional para ver disponibilidad."}
             {step === "schedule" &&
               selectedDoctor &&
-              `Turnos disponibles con ${selectedDoctor.name}.`}
+              `Turnos disponibles con ${selectedDoctorLabel}.`}
             {step === "confirm" && "Revisá los datos antes de reservar el turno."}
           </DialogDescription>
         </DialogHeader>
@@ -358,7 +408,7 @@ export function RequestAppointmentDialog({
                       <SelectContent>
                         {doctors.map((doctor) => (
                           <SelectItem key={doctor.id} value={String(doctor.id)}>
-                            {doctor.name}
+                            {getDoctorLabel(doctor, providerNameById.get(doctor.id))}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -397,7 +447,7 @@ export function RequestAppointmentDialog({
             {step === "schedule" && (
               <div className="space-y-5">
                 <div className="rounded-lg border bg-muted/30 p-3">
-                  <p className="text-sm font-medium text-foreground">{selectedDoctor?.name}</p>
+                  <p className="text-sm font-medium text-foreground">{selectedDoctorLabel}</p>
                   {selectedSpeciality && (
                     <Badge variant="secondary" className="mt-2">
                       {selectedSpeciality.name}
@@ -432,17 +482,38 @@ export function RequestAppointmentDialog({
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
                     <div className="space-y-2">
                       <Label>Fecha</Label>
-                      <div className="flex justify-center rounded-lg border p-2">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={handleSelectDate}
-                          disabled={isDateDisabled}
-                          locale={es}
-                          fromDate={minDate}
-                          toDate={maxDate}
-                        />
-                      </div>
+                      <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              "h-11 w-full justify-start text-left font-normal",
+                              !selectedDate && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate
+                              ? format(selectedDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })
+                              : "Seleccionar fecha"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={handleSelectDate}
+                            disabled={isDateDisabled}
+                            locale={es}
+                            fromDate={minDate}
+                            toDate={maxDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        Sólo vas a poder elegir días con horarios disponibles.
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -492,7 +563,7 @@ export function RequestAppointmentDialog({
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <dt className="text-muted-foreground">Profesional</dt>
-                      <dd className="text-right font-medium">{selectedDoctor?.name}</dd>
+                      <dd className="text-right font-medium">{selectedDoctorLabel}</dd>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <dt className="text-muted-foreground">Fecha</dt>
