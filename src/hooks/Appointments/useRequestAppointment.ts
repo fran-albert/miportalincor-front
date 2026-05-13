@@ -11,6 +11,7 @@ export const useRequestAppointment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patientAppointments"] });
       queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["publicAvailableSlotsBySpeciality"] });
       toast({
         title: "Turno reservado",
         description: "Tu turno ha sido reservado exitosamente",

@@ -13,6 +13,14 @@ export { getAllAppointmentsByMonthYear } from './get-all-by-month-year';
 export { getDoctorsWithAvailability } from './get-doctors-with-availability.action';
 export { getDoctorPublicInfo, getDoctorsPublicInfo, type DoctorPublicInfo } from './get-doctor-public-info.action';
 export { getAppointmentsByPatientId } from './get-by-patient-id.action';
+export {
+  getPublicAppointmentSpecialities,
+  getPublicDoctorsBySpeciality,
+  getPublicAvailableSlotsBySpeciality,
+  type PublicAppointmentSpeciality,
+  type PublicAppointmentDoctor,
+  type PublicAppointmentSlot,
+} from './get-public-booking-catalog.action';
 
 // MUTATIONS
 export { createAppointment } from './create.action';

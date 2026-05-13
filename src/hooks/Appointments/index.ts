@@ -10,6 +10,11 @@ export { useDoctorTodayAppointments } from './useDoctorTodayAppointments';
 export { usePatientAppointments } from './usePatientAppointments';
 export { usePatientAppointmentsByUserId } from './usePatientAppointmentsByUserId';
 export { useDoctorsWithAvailability } from './useDoctorsWithAvailability';
+export {
+  usePublicAppointmentSpecialities,
+  usePublicDoctorsBySpeciality,
+  usePublicAvailableSlotsBySpeciality,
+} from './usePatientBookingCatalog';
 
 // Legacy hooks (for backwards compatibility)
 export { useGetByDate } from './useGetByDate';

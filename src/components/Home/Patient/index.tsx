@@ -69,7 +69,7 @@ export default function PatientHomePage({ name }: { name: string }) {
     },
     {
       title: "Mis Turnos",
-      description: "Visualiza tus próximas citas médicas",
+      description: "Sacá, reprogramá o cancelá tus turnos médicos",
       icon: Calendar,
       href: "/mis-turnos",
       gradient: "from-purple-500 to-purple-600",
@@ -274,22 +274,23 @@ export default function PatientHomePage({ name }: { name: string }) {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                <Link
+                  to="/mis-turnos"
+                  className="group flex items-start gap-3 rounded-lg transition-colors hover:bg-greenPrimary/5"
+                >
                   <div className="p-2 rounded-lg bg-greenPrimary/10">
                     <Calendar className="h-5 w-5 text-greenPrimary" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-900">Gestión de turnos</h4>
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 text-xs">
-                        Próximamente
-                      </Badge>
-                    </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 group-hover:text-greenPrimary">
+                      Gestión de turnos
+                    </h4>
                     <p className="text-sm text-gray-600">
-                      Visualiza y administra tus citas médicas fácilmente
+                      Sacá un turno nuevo o administrá tus próximas citas médicas
                     </p>
                   </div>
-                </div>
+                  <ArrowRight className="mt-1 h-4 w-4 text-gray-400 transition-all group-hover:translate-x-1 group-hover:text-greenPrimary" />
+                </Link>
               </div>
             </CardContent>
           </Card>
