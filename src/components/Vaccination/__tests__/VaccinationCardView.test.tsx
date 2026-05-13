@@ -145,6 +145,33 @@ describe("VaccinationCardView", () => {
     expect(screen.getByText("Sin reacciones")).toBeInTheDocument();
     expect(screen.getByText("Vencida")).toBeInTheDocument();
     expect(
+      screen.getByRole("tab", { name: /vista general/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /vacuna y dosis/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /calendario/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /registro/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: /^edad$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: /^recomendada$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: /^aplicada$/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Requieren revision")).toBeInTheDocument();
+    expect(screen.getByText("Aun no corresponden")).toBeInTheDocument();
+    expect(screen.getByText("Ya registradas")).toBeInTheDocument();
+    expect(screen.getAllByText("Fecha esperada")).toHaveLength(3);
+    expect(screen.getAllByText(/Edad calendario:/)).toHaveLength(3);
+    expect(screen.getAllByText("Sin registro")).toHaveLength(2);
+    expect(
       screen.queryByRole("button", { name: /cargar vacuna/i })
     ).not.toBeInTheDocument();
     expect(
