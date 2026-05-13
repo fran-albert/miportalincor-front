@@ -24,6 +24,14 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import {
   Users,
   UserCheck,
   MoreHorizontal,
@@ -38,8 +46,9 @@ import {
   Stethoscope,
   AlertTriangle,
   CalendarOff,
+  CalendarDays,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   useDoctorDayAgenda,
@@ -51,6 +60,10 @@ import {
 } from '@/hooks/Doctor/useDoctorDayAgenda';
 import { useDoctorWaitingQueue, doctorWaitingQueueKeys } from '@/hooks/Doctor/useDoctorWaitingQueue';
 import { useDoctorWorkingToday } from '@/hooks/Doctor/useDoctorWorkingToday';
+import {
+  doctorWaitingRoomHistoryKeys,
+  useDoctorWaitingRoomHistory,
+} from '@/hooks/Doctor/useDoctorWaitingRoomHistory';
 import { useDoctorMarkAsAttending, doctorQueueKeys } from '@/hooks/Queue/useDoctorQueue';
 import { useAppointmentMutations } from '@/hooks/Appointments/useAppointmentMutations';
 import { useOverturnMutations } from '@/hooks/Overturns/useOverturnMutations';
@@ -69,6 +82,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
 import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
+import { getArgentinaTodayDate } from '@/common/helpers/argentinaDate';
 
 // ============================================
 // HELPERS
@@ -102,6 +116,24 @@ const getConsultationTypeName = (item: AgendaItem): string | null => {
   if (item.type !== 'appointment') return null;
   const apt = item.rawData as AppointmentFullResponseDto;
   return getAppointmentConsultationTypeSummary(apt);
+};
+
+type HistorySelectorValue = 'today' | 'yesterday' | 'last7' | 'date';
+
+const formatHistoryDate = (date: string): string => {
+  const [year, month, day] = date.split('-');
+  if (!year || !month || !day) return date;
+  return `${day}/${month}/${year}`;
+};
+
+const getHistoryPeriodLabel = (
+  value: HistorySelectorValue,
+  customDate: string,
+): string => {
+  if (value === 'today') return 'Hoy';
+  if (value === 'yesterday') return 'Ayer';
+  if (value === 'last7') return 'Últimos 7 días';
+  return customDate ? formatHistoryDate(customDate) : 'Fecha puntual';
 };
 
 
@@ -170,6 +202,17 @@ const DoctorWaitingRoomPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyPeriod, setHistoryPeriod] =
+    useState<HistorySelectorValue>('today');
+  const [historyDate, setHistoryDate] = useState(getArgentinaTodayDate());
+  const isLiveHistory = historyPeriod === 'today';
+  const historyQueryParams = useMemo(
+    () =>
+      historyPeriod === 'date'
+        ? { preset: 'date' as const, date: historyDate }
+        : { preset: historyPeriod },
+    [historyDate, historyPeriod],
+  );
   const {
     shouldRestrictWaitingRoom,
     isLoading: isWorkingTodayLoading,
@@ -190,12 +233,25 @@ const DoctorWaitingRoomPage = () => {
     isFetching: isQueueFetching,
   } = useDoctorWaitingQueue({ refetchInterval: 15000 });
 
+  const {
+    agenda: historicalAgenda,
+    response: historicalResponse,
+    isLoading: isHistoricalLoading,
+    isFetching: isHistoricalFetching,
+    isError: isHistoricalError,
+  } = useDoctorWaitingRoomHistory({
+    params: historyQueryParams,
+    enabled: !isLiveHistory && (historyPeriod !== 'date' || Boolean(historyDate)),
+  });
+
   const isLoading = isAgendaLoading || isQueueLoading || isWorkingTodayLoading;
   const isFetching = isAgendaFetching || isQueueFetching;
 
   // Filtrar por estados específicos (usando agenda para attending/history)
   const attendingItems = agenda.filter((i) => isAttending(i.status));
-  const historyItems = agenda.filter((i) => isCompleted(i.status) || isCancelled(i.status));
+  const todayHistoryItems = agenda.filter((i) => isCompleted(i.status) || isCancelled(i.status));
+  const selectedHistoryItems = isLiveHistory ? todayHistoryItems : historicalAgenda;
+  const isSelectedHistoryLoading = isLiveHistory ? isLoading : isHistoricalLoading;
   const hasAttendingPatient = attendingItems.length > 0;
 
   // Mutations
@@ -207,6 +263,17 @@ const DoctorWaitingRoomPage = () => {
     queryClient.invalidateQueries({ queryKey: doctorAgendaKeys.all });
     queryClient.invalidateQueries({ queryKey: doctorWaitingQueueKeys.all });
     queryClient.invalidateQueries({ queryKey: doctorQueueKeys.all });
+    queryClient.invalidateQueries({ queryKey: doctorWaitingRoomHistoryKeys.all });
+  };
+
+  const handleHistoryPeriodChange = (value: string) => {
+    setHistoryPeriod(value as HistorySelectorValue);
+    setIsHistoryOpen(true);
+  };
+
+  const handleHistoryDateChange = (value: string) => {
+    setHistoryDate(value);
+    setIsHistoryOpen(true);
   };
 
   const handleOpenHistoriaClinica = (item: AgendaItem) => {
@@ -518,6 +585,20 @@ const DoctorWaitingRoomPage = () => {
 
   // Historial colapsable
   const renderHistory = () => {
+    const showDateColumn =
+      !isLiveHistory &&
+      Boolean(historicalResponse) &&
+      historicalResponse?.dateFrom !== historicalResponse?.dateTo;
+    const nonWorkingCount = historicalResponse?.nonWorkingDates.length ?? 0;
+    const hasNoWorkedDates =
+      !isLiveHistory &&
+      Boolean(historicalResponse) &&
+      historicalResponse?.workedDates.length === 0;
+
+    const emptyMessage = hasNoWorkedDates
+      ? 'No fue un día de atención del médico.'
+      : 'No hay turnos completados o cancelados';
+
     return (
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
         <Card className="shadow-lg">
@@ -528,7 +609,7 @@ const DoctorWaitingRoomPage = () => {
                   <div className="p-2 rounded-lg bg-gradient-to-br from-gray-500 to-gray-600">
                     <Clock className="h-5 w-5 text-white" />
                   </div>
-                  Historial del Día ({historyItems.length})
+                  Historial ({selectedHistoryItems.length})
                 </div>
                 {isHistoryOpen ? (
                   <ChevronUp className="h-5 w-5 text-gray-500" />
@@ -539,16 +620,75 @@ const DoctorWaitingRoomPage = () => {
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent>
-              {historyItems.length === 0 ? (
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="w-full sm:w-56">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Período
+                    </label>
+                    <Select
+                      value={historyPeriod}
+                      onValueChange={handleHistoryPeriodChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar período" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Hoy</SelectItem>
+                        <SelectItem value="yesterday">Ayer</SelectItem>
+                        <SelectItem value="last7">Últimos 7 días</SelectItem>
+                        <SelectItem value="date">Elegir fecha</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {historyPeriod === 'date' && (
+                    <div className="w-full sm:w-44">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Fecha
+                      </label>
+                      <Input
+                        type="date"
+                        value={historyDate}
+                        max={getArgentinaTodayDate()}
+                        onChange={(event) =>
+                          handleHistoryDateChange(event.target.value)
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  <span>
+                    {getHistoryPeriodLabel(historyPeriod, historyDate)}
+                    {!isLiveHistory && nonWorkingCount > 0
+                      ? ` · ${nonWorkingCount} día${nonWorkingCount === 1 ? '' : 's'} sin horario`
+                      : ''}
+                  </span>
+                </div>
+              </div>
+
+              {isSelectedHistoryLoading ? (
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, index) => (
+                    <Skeleton key={index} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : isHistoricalError && !isLiveHistory ? (
+                <p className="text-center py-4 text-red-600">
+                  No se pudo cargar el historial seleccionado.
+                </p>
+              ) : selectedHistoryItems.length === 0 ? (
                 <p className="text-center py-4 text-muted-foreground">
-                  No hay turnos completados o cancelados
+                  {emptyMessage}
                 </p>
               ) : (
                 <div className="rounded-lg border overflow-hidden overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50">
+                        {showDateColumn && <TableHead>Fecha</TableHead>}
                         <TableHead>Hora</TableHead>
                         <TableHead>Paciente</TableHead>
                         <TableHead>Tipo</TableHead>
@@ -558,8 +698,11 @@ const DoctorWaitingRoomPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {historyItems.map((item) => (
-                        <TableRow key={`${item.type}-${item.id}`} className="opacity-70 hover:opacity-100 transition-opacity">
+                      {selectedHistoryItems.map((item) => (
+                        <TableRow key={`${item.type}-${item.date}-${item.id}`} className="opacity-70 hover:opacity-100 transition-opacity">
+                          {showDateColumn && (
+                            <TableCell>{formatHistoryDate(item.date)}</TableCell>
+                          )}
                           <TableCell className="font-mono">{item.hour}</TableCell>
                           <TableCell>{renderPatientName(item)}</TableCell>
                           <TableCell>
@@ -625,10 +768,14 @@ const DoctorWaitingRoomPage = () => {
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={isFetching}
+            disabled={isFetching || isHistoricalFetching}
             className="shadow-sm hover:shadow-md transition-shadow"
           >
-            <RefreshCcw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            <RefreshCcw
+              className={`h-4 w-4 mr-2 ${
+                isFetching || isHistoricalFetching ? 'animate-spin' : ''
+              }`}
+            />
             Actualizar
           </Button>
         }
@@ -651,43 +798,43 @@ const DoctorWaitingRoomPage = () => {
       ) : (
         <>
 
-      {/* Stats Cards con animaciones */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsCards.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            gradient={stat.gradient}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
+          {/* Stats Cards con animaciones */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statsCards.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                gradient={stat.gradient}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
 
-      {/* Paciente en Atención (si hay) */}
-      {renderAttendingCard()}
+          {/* Paciente en Atención (si hay) */}
+          {renderAttendingCard()}
 
-      {/* Pacientes en Espera - Vista Principal */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
-        <Card className="border-orange-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-700">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
-                <Armchair className="h-5 w-5 text-white" />
-              </div>
-              Pacientes en Espera ({waitingQueue.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {renderWaitingTable()}
-          </CardContent>
-        </Card>
-      </motion.div>
+          {/* Pacientes en Espera - Vista Principal */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="border-orange-200 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600">
+                    <Armchair className="h-5 w-5 text-white" />
+                  </div>
+                  Pacientes en Espera ({waitingQueue.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>{renderWaitingTable()}</CardContent>
+            </Card>
+          </motion.div>
+        </>
+      )}
 
       {/* Historial Colapsable */}
       <motion.div
@@ -697,8 +844,6 @@ const DoctorWaitingRoomPage = () => {
       >
         {renderHistory()}
       </motion.div>
-        </>
-      )}
     </div>
   );
 };
