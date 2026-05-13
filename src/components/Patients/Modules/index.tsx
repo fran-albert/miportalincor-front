@@ -1,5 +1,13 @@
 import useUserRole from "@/hooks/useRoles";
-import { Stethoscope, Calendar, FileImage, ClipboardPlus, CalendarCheck, Pill } from "lucide-react";
+import {
+  Calendar,
+  CalendarCheck,
+  ClipboardPlus,
+  FileImage,
+  Pill,
+  Stethoscope,
+  Syringe,
+} from "lucide-react";
 import { ModuleCard } from "@/components/shared/ModuleCard";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
@@ -10,6 +18,7 @@ interface PatientModulesProps {
   onCitasMedicasClick?: () => void;
   onChequeosPeriodicosClick?: () => void;
   onCartonVerdeClick?: () => void;
+  onVacunacionClick?: () => void;
   totalStudies?: number;
 }
 
@@ -20,6 +29,7 @@ export default function PatientModules({
   onCitasMedicasClick,
   onChequeosPeriodicosClick,
   onCartonVerdeClick,
+  onVacunacionClick,
   totalStudies,
 }: PatientModulesProps) {
   const { isDoctor } = useUserRole();
@@ -49,6 +59,14 @@ export default function PatientModules({
       gradient: "bg-gradient-to-br from-green-500 to-green-600",
       onClick: onCartonVerdeClick || (() => {}),
       visible: isDoctor && hasGreenCardService,
+    },
+    {
+      title: "Vacunación",
+      description: "Carnet, vacunas aplicadas y pendientes",
+      icon: Syringe,
+      gradient: "bg-gradient-to-br from-sky-500 to-cyan-600",
+      onClick: onVacunacionClick || (() => {}),
+      visible: isDoctor,
     },
     {
       title: "Estudios e Imágenes",

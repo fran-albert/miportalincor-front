@@ -1,7 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { User, FileText, Calendar, ArrowRight, Sparkles, X, ClipboardList, CalendarCheck, Activity } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  Calendar,
+  CalendarCheck,
+  ClipboardList,
+  FileText,
+  Sparkles,
+  Syringe,
+  User,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -70,6 +81,14 @@ export default function PatientHomePage({ name }: { name: string }) {
       icon: CalendarCheck,
       href: "/mis-chequeos",
       gradient: "from-orange-500 to-orange-600",
+      comingSoon: false,
+    },
+    {
+      title: "Mis Vacunas",
+      description: "Consulta tu carnet y vacunas pendientes",
+      icon: Syringe,
+      href: "/mis-vacunas",
+      gradient: "from-sky-500 to-cyan-600",
       comingSoon: false,
     },
     {
