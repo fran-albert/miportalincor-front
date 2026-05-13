@@ -62,8 +62,10 @@ import AuditPage from "./pages/protected/Audit";
 import SettingsPage from "./pages/protected/Settings";
 import MyPrescriptionRequestsPage from "./pages/protected/My-Prescription-Requests/page";
 import MyCheckupsPage from "./pages/protected/My-Checkups/page";
+import MyVaccinationPage from "./pages/protected/My-Vaccination/page";
 import DoctorPrescriptionRequestsPage from "./pages/protected/Doctor-Prescription-Requests/page";
 import PatientGreenCardPage from "./pages/protected/Patient/Green-Card";
+import PatientVaccinationPage from "./pages/protected/Patient/Vaccination";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
@@ -283,6 +285,14 @@ function App() {
               </Private_Routes>
             }
           />
+          <Route
+            path="/mis-vacunas"
+            element={
+              <Private_Routes allowedRoles={["Paciente"]}>
+                <MyVaccinationPage />
+              </Private_Routes>
+            }
+          />
 
           {/* Solicitudes de Recetas - Médico */}
           <Route
@@ -406,6 +416,14 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <PatientGreenCardPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/pacientes/:slug/vacunacion"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <PatientVaccinationPage />
               </Private_Routes>
             }
           />

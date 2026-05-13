@@ -36,6 +36,7 @@ import {
   Pill,
   CreditCard,
   Briefcase,
+  Syringe,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -135,6 +136,13 @@ const navigationItems = [
     url: "/mis-chequeos",
     icon: CalendarClock,
     allowedRoles: PERMISSIONS.MY_CHECKUPS,
+    strictRoles: true,
+  },
+  {
+    title: "Mis Vacunas",
+    url: "/mis-vacunas",
+    icon: Syringe,
+    allowedRoles: PERMISSIONS.MY_VACCINATION,
     strictRoles: true,
   },
   {
