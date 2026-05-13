@@ -142,35 +142,19 @@ describe("VaccinationCardView", () => {
 
     expect(screen.getByText("Carnet de vacunacion")).toBeInTheDocument();
     expect(screen.getByText("Triple viral")).toBeInTheDocument();
+    expect(screen.getByText("1ra dosis")).toBeInTheDocument();
+    expect(screen.getByText("20/01/2021")).toBeInTheDocument();
+    expect(screen.getByText("Carlos Gomez")).toBeInTheDocument();
     expect(screen.getByText("Sin reacciones")).toBeInTheDocument();
-    expect(screen.getByText("Vencida")).toBeInTheDocument();
-    expect(
-      screen.getByRole("tab", { name: /vista general/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("columnheader", { name: /vacuna y dosis/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("columnheader", { name: /calendario/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("columnheader", { name: /registro/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("columnheader", { name: /^edad$/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("columnheader", { name: /^recomendada$/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("columnheader", { name: /^aplicada$/i })
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Requieren revision")).toBeInTheDocument();
-    expect(screen.getByText("Aun no corresponden")).toBeInTheDocument();
-    expect(screen.getByText("Ya registradas")).toBeInTheDocument();
-    expect(screen.getAllByText("Fecha esperada")).toHaveLength(3);
-    expect(screen.getAllByText(/Edad calendario:/)).toHaveLength(3);
-    expect(screen.getAllByText("Sin registro")).toHaveLength(2);
+    expect(screen.getByText("Aplicada")).toBeInTheDocument();
+    expect(screen.queryByText("VPH")).not.toBeInTheDocument();
+    expect(screen.queryByText("dTpa")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pendientes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Vencidas")).not.toBeInTheDocument();
+    expect(screen.queryByText("Proximas")).not.toBeInTheDocument();
+    expect(screen.queryByText("Vencida")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /cargar vacuna/i })
     ).not.toBeInTheDocument();
@@ -193,5 +177,24 @@ describe("VaccinationCardView", () => {
       screen.getByRole("button", { name: /eliminar triple viral 1ra dosis/i })
     ).toBeInTheDocument();
     expect(mocks.useVaccinationCatalog).toHaveBeenCalledWith(true);
+  });
+
+  it("shows an empty state when the card has no applied vaccines", () => {
+    render(
+      <VaccinationCardView
+        vaccinationCard={{
+          ...vaccinationCard,
+          canAddApplications: false,
+          items: vaccinationCard.items.filter((item) => !item.application),
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText("No hay vacunas aplicadas cargadas")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("VPH")).not.toBeInTheDocument();
+    expect(screen.queryByText("dTpa")).not.toBeInTheDocument();
+    expect(screen.queryByText("Vencidas")).not.toBeInTheDocument();
   });
 });
