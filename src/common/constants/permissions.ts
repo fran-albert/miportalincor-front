@@ -57,6 +57,7 @@ export const PERMISSIONS = {
 
   // Chequeos Periódicos
   MY_CHECKUPS: [Role.PACIENTE],
+  MY_VACCINATION: [Role.PACIENTE],
 
   // Programas
   PROGRAMS: [Role.ADMINISTRADOR, Role.MEDICO, Role.PROFESOR],
@@ -76,6 +77,7 @@ export const STRICT_PERMISSIONS = [
   'DOCTOR_PRESCRIPTION_REQUESTS',
   'MY_GREEN_CARDS',
   'MY_CHECKUPS',
+  'MY_VACCINATION',
   'MY_PROGRAMS',
 ] as const;
 
