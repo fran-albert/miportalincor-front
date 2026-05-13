@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -44,6 +43,7 @@ import {
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { PageHeader } from "@/components/PageHeader";
+import { cn } from "@/lib/utils";
 
 const MyAppointmentsPage = () => {
   const { toast } = useToast();
@@ -130,95 +130,120 @@ const MyAppointmentsPage = () => {
     }
   };
 
-  const AppointmentCardPatient = ({ appointment }: { appointment: AppointmentFullResponseDto }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              {shouldShowAsFinishedForPatient(appointment) ? (
-                <Badge
-                  variant="outline"
-                  className="border-0 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700"
-                >
-                  Finalizado
-                </Badge>
-              ) : (
-                <StatusBadge status={appointment.status} />
-              )}
-              {getAppointmentConsultationTypes(appointment).map((consultationType) => (
-                <Badge
-                  key={consultationType.id}
-                  variant="outline"
-                  className="text-xs"
-                  style={{
-                    borderColor: consultationType.color || undefined,
-                    color: consultationType.color || undefined,
-                    backgroundColor: consultationType.color
-                      ? `${consultationType.color}12`
-                      : undefined,
-                  }}
-                >
-                  {consultationType.name}
-                </Badge>
-              ))}
-            </div>
+  const AppointmentCardPatient = ({ appointment }: { appointment: AppointmentFullResponseDto }) => {
+    const consultationTypes = getAppointmentConsultationTypes(appointment);
+    const doctorName = appointment.doctor ? formatDoctorName(appointment.doctor) : "Médico no especificado";
+    const primarySpeciality = appointment.doctor?.specialities?.[0]?.name;
+    const isFinished = shouldShowAsFinishedForPatient(appointment);
+    const isCancelled =
+      appointment.status === AppointmentStatus.CANCELLED_BY_PATIENT ||
+      appointment.status === AppointmentStatus.CANCELLED_BY_SECRETARY;
+    const showActions = canReschedule(appointment) || canCancel(appointment);
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {formatDateAR(appointment.date)}
+    return (
+      <Card
+        className={cn(
+          "overflow-hidden border-l-4 transition-shadow hover:shadow-sm",
+          isCancelled || isFinished
+            ? "border-l-slate-300 bg-slate-50/70"
+            : "border-l-greenPrimary bg-white",
+        )}
+      >
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {isFinished ? (
+                  <Badge
+                    variant="outline"
+                    className="border-0 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700"
+                  >
+                    Finalizado
+                  </Badge>
+                ) : (
+                  <StatusBadge status={appointment.status} />
+                )}
+                {consultationTypes.map((consultationType) => (
+                  <Badge
+                    key={consultationType.id}
+                    variant="outline"
+                    className="text-xs"
+                    style={{
+                      borderColor: consultationType.color || undefined,
+                      color: consultationType.color || undefined,
+                      backgroundColor: consultationType.color
+                        ? `${consultationType.color}12`
+                        : undefined,
+                    }}
+                  >
+                    {consultationType.name}
+                  </Badge>
+                ))}
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {formatTimeAR(appointment.hour)}
+
+              <div className="rounded-lg bg-slate-50 px-3 py-3 sm:bg-transparent sm:p-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Fecha y hora
+                </p>
+                <div className="mt-2 grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2">
+                  <div className="flex items-center gap-2 text-lg font-semibold leading-tight text-slate-950">
+                    <Calendar className="h-5 w-5 shrink-0 text-greenPrimary" />
+                    <span>{formatDateAR(appointment.date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-base font-semibold text-slate-800">
+                    <Clock className="h-5 w-5 shrink-0 text-greenPrimary" />
+                    <span>{formatTimeAR(appointment.hour)} hs</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 text-sm">
+                <Stethoscope className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 space-y-1">
+                  <p className="break-words font-medium text-slate-900">{doctorName}</p>
+                  {primarySpeciality && (
+                    <Badge variant="secondary" className="text-xs">
+                      {primarySpeciality}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Stethoscope className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">
-                {appointment.doctor ? formatDoctorName(appointment.doctor) : 'No especificado'}
-              </span>
-              {appointment.doctor?.specialities && appointment.doctor.specialities.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {appointment.doctor.specialities[0].name}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            {canReschedule(appointment) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRescheduleAppointment(appointment);
-                  setRescheduleDialogOpen(true);
-                }}
-                className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-              >
-                <CalendarDays className="h-4 w-4 mr-1" />
-                Reprogramar
-              </Button>
-            )}
-            {canCancel(appointment) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleCancelClick(appointment)}
-                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Cancelar
-              </Button>
+            {showActions && (
+              <div className="grid gap-2 sm:min-w-[150px]">
+                {canReschedule(appointment) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setRescheduleAppointment(appointment);
+                      setRescheduleDialogOpen(true);
+                    }}
+                    className="h-10 w-full justify-center text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    Reprogramar
+                  </Button>
+                )}
+                {canCancel(appointment) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCancelClick(appointment)}
+                    className="h-10 w-full justify-center text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancelar
+                  </Button>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -226,7 +251,7 @@ const MyAppointmentsPage = () => {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
       <Helmet>
         <title>Mis Turnos</title>
       </Helmet>
@@ -255,51 +280,14 @@ const MyAppointmentsPage = () => {
         }
       />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-green-600" />
-              Próximos Turnos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {upcomingAppointments.length}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              turnos agendados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CalendarX className="h-5 w-5 text-muted-foreground" />
-              Historial
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-muted-foreground">
-              {pastAppointments.length}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              turnos pasados
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Tabs */}
       <Tabs defaultValue="upcoming" className="flex-1">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="upcoming" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 sm:max-w-md">
+          <TabsTrigger value="upcoming" className="flex items-center gap-1.5 text-xs sm:gap-2 sm:text-sm">
             <CalendarCheck className="h-4 w-4" />
             Próximos ({upcomingAppointments.length})
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
+          <TabsTrigger value="history" className="flex items-center gap-1.5 text-xs sm:gap-2 sm:text-sm">
             <CalendarX className="h-4 w-4" />
             Historial ({pastAppointments.length})
           </TabsTrigger>
@@ -331,13 +319,11 @@ const MyAppointmentsPage = () => {
               </CardContent>
             </Card>
           ) : (
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-4">
-                {upcomingAppointments.map((apt) => (
-                  <AppointmentCardPatient key={apt.id} appointment={apt} />
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="space-y-3 sm:space-y-4">
+              {upcomingAppointments.map((apt) => (
+                <AppointmentCardPatient key={apt.id} appointment={apt} />
+              ))}
+            </div>
           )}
         </TabsContent>
 
@@ -357,13 +343,11 @@ const MyAppointmentsPage = () => {
               </CardContent>
             </Card>
           ) : (
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-4">
-                {pastAppointments.map((apt) => (
-                  <AppointmentCardPatient key={apt.id} appointment={apt} />
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="space-y-3 sm:space-y-4">
+              {pastAppointments.map((apt) => (
+                <AppointmentCardPatient key={apt.id} appointment={apt} />
+              ))}
+            </div>
           )}
         </TabsContent>
       </Tabs>
