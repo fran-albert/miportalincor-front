@@ -18,6 +18,8 @@ export const PatientSchema = UserSchema.extend({
  * .partial() makes all fields optional for partial updates.
  */
 export const UpdatePatientSchema = PatientSchema.extend({
+    email: z.union([z.literal(""), z.string().email()]).optional(),
+    affiliationNumber: z.string().optional(),
     healthPlans: z.array(z.object({
         id: z.number(),
         name: z.string(),
