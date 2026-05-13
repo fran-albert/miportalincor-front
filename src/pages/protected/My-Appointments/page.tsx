@@ -138,6 +138,7 @@ const MyAppointmentsPage = () => {
     const isCancelled =
       appointment.status === AppointmentStatus.CANCELLED_BY_PATIENT ||
       appointment.status === AppointmentStatus.CANCELLED_BY_SECRETARY;
+    const showConsultationTypes = !isFinished && !isCancelled;
     const showActions = canReschedule(appointment) || canCancel(appointment);
 
     return (
@@ -163,22 +164,23 @@ const MyAppointmentsPage = () => {
                 ) : (
                   <StatusBadge status={appointment.status} />
                 )}
-                {consultationTypes.map((consultationType) => (
-                  <Badge
-                    key={consultationType.id}
-                    variant="outline"
-                    className="text-xs"
-                    style={{
-                      borderColor: consultationType.color || undefined,
-                      color: consultationType.color || undefined,
-                      backgroundColor: consultationType.color
-                        ? `${consultationType.color}12`
-                        : undefined,
-                    }}
-                  >
-                    {consultationType.name}
-                  </Badge>
-                ))}
+                {showConsultationTypes &&
+                  consultationTypes.map((consultationType) => (
+                    <Badge
+                      key={consultationType.id}
+                      variant="outline"
+                      className="text-xs"
+                      style={{
+                        borderColor: consultationType.color || undefined,
+                        color: consultationType.color || undefined,
+                        backgroundColor: consultationType.color
+                          ? `${consultationType.color}12`
+                          : undefined,
+                      }}
+                    >
+                      {consultationType.name}
+                    </Badge>
+                  ))}
               </div>
 
               <div className="rounded-lg bg-slate-50 px-3 py-3 sm:bg-transparent sm:p-0">
