@@ -29,11 +29,11 @@ import { useAvailableSlotsRange } from "@/hooks/Appointments";
 interface RescheduleAppointmentInfo {
   type?: "appointment" | "overturn";
   id: number;
-  doctorId: number;
+  doctorId?: number | null;
   date: string;
   hour: string;
   consultationTypeId?: number | null;
-  doctor?: { firstName: string; lastName: string } | null;
+  doctor?: { userId?: number | null; firstName: string; lastName: string } | null;
   patient?: { firstName: string; lastName: string } | null;
 }
 
@@ -60,7 +60,7 @@ export function RescheduleAppointmentDialog({
     ({
       type: "appointment",
       id: 0,
-      doctorId: 0,
+      doctorId: null,
       date: "",
       hour: "",
       consultationTypeId: undefined,
@@ -77,6 +77,8 @@ export function RescheduleAppointmentDialog({
 
   const itemType = currentAppointment.type ?? "appointment";
   const useAvailabilityDrivenDates = itemType === "appointment";
+  const effectiveDoctorId =
+    currentAppointment.doctorId ?? currentAppointment.doctor?.userId ?? 0;
   const availabilityRangeStart = useMemo(() => {
     const base = new Date();
     base.setHours(0, 0, 0, 0);
@@ -88,7 +90,7 @@ export function RescheduleAppointmentDialog({
     [availabilityRangeStart]
   );
   const { slots: rangeSlots, isLoading: isLoadingAvailabilityRange } = useAvailableSlotsRange({
-    doctorId: currentAppointment.doctorId,
+    doctorId: effectiveDoctorId,
     startDate: availabilityRangeStart,
     endDate: availabilityRangeEnd,
     enabled: open && !!appointment && useAvailabilityDrivenDates,
@@ -270,7 +272,7 @@ export function RescheduleAppointmentDialog({
               />
             ) : (
               <TimeSlotSelect
-                doctorId={appointment.doctorId}
+                doctorId={effectiveDoctorId}
                 date={dateStr}
                 consultationTypeId={
                   appointment.consultationTypeId ?? undefined
