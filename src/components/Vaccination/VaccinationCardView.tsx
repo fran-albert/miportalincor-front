@@ -174,7 +174,7 @@ export function VaccinationCardView({
               {formatDate(item.application.appliedDate)}
             </p>
           </div>
-          {item.application.doctor && (
+          {isDoctor && item.application.doctor && (
             <div>
               <p className="text-xs font-medium uppercase text-gray-500">
                 Medico

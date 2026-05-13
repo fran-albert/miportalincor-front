@@ -144,9 +144,10 @@ describe("VaccinationCardView", () => {
     expect(screen.getByText("Triple viral")).toBeInTheDocument();
     expect(screen.getByText("1ra dosis")).toBeInTheDocument();
     expect(screen.getByText("20/01/2021")).toBeInTheDocument();
-    expect(screen.getByText("Carlos Gomez")).toBeInTheDocument();
     expect(screen.getByText("Sin reacciones")).toBeInTheDocument();
     expect(screen.getByText("Aplicada")).toBeInTheDocument();
+    expect(screen.queryByText("Medico")).not.toBeInTheDocument();
+    expect(screen.queryByText("Carlos Gomez")).not.toBeInTheDocument();
     expect(screen.queryByText("VPH")).not.toBeInTheDocument();
     expect(screen.queryByText("dTpa")).not.toBeInTheDocument();
     expect(screen.queryByText("Pendientes")).not.toBeInTheDocument();
@@ -167,6 +168,8 @@ describe("VaccinationCardView", () => {
   it("shows doctor actions when the card allows applications", () => {
     render(<VaccinationCardView vaccinationCard={vaccinationCard} isDoctor />);
 
+    expect(screen.getByText("Medico")).toBeInTheDocument();
+    expect(screen.getByText("Carlos Gomez")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /cargar vacuna/i })
     ).toBeInTheDocument();
