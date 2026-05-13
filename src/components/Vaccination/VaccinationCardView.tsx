@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   AlertCircle,
   CalendarClock,
@@ -86,12 +86,49 @@ const statusMeta: Record<
 
 const tabItems: Array<{ value: VaccinationCardStatus | "all"; label: string }> =
   [
-    { value: "all", label: "Todas" },
+    { value: "all", label: "Vista general" },
     { value: "overdue", label: "Vencidas" },
     { value: "pending", label: "Pendientes" },
     { value: "upcoming", label: "Proximas" },
     { value: "applied", label: "Aplicadas" },
   ];
+
+const statusOrder: VaccinationCardStatus[] = [
+  "overdue",
+  "pending",
+  "upcoming",
+  "applied",
+];
+
+const groupMeta: Record<
+  VaccinationCardStatus,
+  {
+    title: string;
+    detail: string;
+    className: string;
+  }
+> = {
+  overdue: {
+    title: "Vencidas",
+    detail: "Requieren revision",
+    className: "border-red-500 bg-red-50 text-red-900",
+  },
+  pending: {
+    title: "Pendientes",
+    detail: "Falta registrar",
+    className: "border-yellow-500 bg-yellow-50 text-yellow-900",
+  },
+  upcoming: {
+    title: "Proximas",
+    detail: "Aun no corresponden",
+    className: "border-blue-500 bg-blue-50 text-blue-900",
+  },
+  applied: {
+    title: "Aplicadas",
+    detail: "Ya registradas",
+    className: "border-green-500 bg-green-50 text-green-900",
+  },
+};
 
 const formatDate = (value?: string) => {
   if (!value) return "-";
@@ -144,6 +181,22 @@ export function VaccinationCardView({
     if (activeTab === "all") return vaccinationCard.items;
     return vaccinationCard.items.filter((item) => item.status === activeTab);
   }, [activeTab, vaccinationCard.items]);
+
+  const groupedItems = useMemo(
+    () =>
+      statusOrder
+        .map((status) => ({
+          status,
+          items: vaccinationCard.items.filter((item) => item.status === status),
+        }))
+        .filter((group) => group.items.length > 0),
+    [vaccinationCard.items]
+  );
+
+  const showActionsColumn =
+    canAddApplications ||
+    vaccinationCard.items.some((item) => isDoctor && item.application?.canEdit);
+  const tableColumnCount = showActionsColumn ? 6 : 5;
 
   const openCreateModal = (scheduleRuleId?: string) => {
     setSelectedApplication(null);
@@ -236,6 +289,73 @@ export function VaccinationCardView({
     return <span className="text-sm text-gray-400">-</span>;
   };
 
+  const renderCalendarCell = (item: VaccinationCardItem) => (
+    <div className="space-y-1 text-sm">
+      <div>
+        <span className="text-xs font-medium uppercase text-gray-500">
+          Fecha esperada
+        </span>
+        <div className="font-medium text-gray-900">
+          {formatDate(item.recommendedDate)}
+        </div>
+      </div>
+      <div className="text-xs text-gray-500">
+        Edad calendario: {formatAge(item.recommendedAgeMonths)}
+      </div>
+    </div>
+  );
+
+  const renderApplicationCell = (item: VaccinationCardItem) => {
+    if (!item.application) {
+      return <span className="text-sm text-gray-400">Sin registro</span>;
+    }
+
+    return (
+      <div className="space-y-1 text-sm">
+        <div className={statusMeta[item.status].textClassName}>
+          <span className="text-xs font-medium uppercase text-gray-500">
+            Aplicada
+          </span>
+          <div className="font-medium">
+            {formatDate(item.application.appliedDate)}
+          </div>
+        </div>
+        {item.application.doctor && (
+          <div className="text-xs text-gray-500">
+            {getDoctorName(item.application)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderVaccinationRow = (item: VaccinationCardItem) => (
+    <TableRow key={item.scheduleRuleId}>
+      <TableCell>{renderStatusBadge(item.status)}</TableCell>
+      <TableCell className="min-w-[240px]">
+        <div className="font-medium text-gray-900">{item.vaccine.name}</div>
+        <div className="mt-1 text-sm text-gray-600">{item.doseLabel}</div>
+        {item.notes && (
+          <div className="mt-1 max-w-[320px] text-xs text-gray-500">
+            {item.notes}
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="min-w-[170px]">
+        {renderCalendarCell(item)}
+      </TableCell>
+      <TableCell className="min-w-[150px]">
+        {renderApplicationCell(item)}
+      </TableCell>
+      <TableCell className="max-w-[280px] text-sm text-gray-600">
+        {item.application?.observations || "-"}
+      </TableCell>
+      {showActionsColumn && (
+        <TableCell className="w-24">{renderActionCell(item)}</TableCell>
+      )}
+    </TableRow>
+  );
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -321,60 +441,59 @@ export function VaccinationCardView({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-32">Estado</TableHead>
-                  <TableHead>Vacuna</TableHead>
-                  <TableHead>Dosis</TableHead>
-                  <TableHead className="w-28">Edad</TableHead>
-                  <TableHead className="w-32">Recomendada</TableHead>
-                  <TableHead className="w-32">Aplicada</TableHead>
+                  <TableHead>Vacuna y dosis</TableHead>
+                  <TableHead className="w-44">Calendario</TableHead>
+                  <TableHead className="w-44">Registro</TableHead>
                   <TableHead>Observaciones</TableHead>
-                  <TableHead className="w-24 text-right">Acciones</TableHead>
+                  {showActionsColumn && (
+                    <TableHead className="w-24 text-right">Acciones</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredItems.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={tableColumnCount}
                       className="py-8 text-center text-gray-500"
                     >
                       No hay vacunas para el filtro seleccionado
                     </TableCell>
                   </TableRow>
+                ) : activeTab === "all" ? (
+                  groupedItems.map((group) => {
+                    const meta = groupMeta[group.status];
+
+                    return (
+                      <Fragment key={group.status}>
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell
+                            colSpan={tableColumnCount}
+                            className="px-0 py-3"
+                          >
+                            <div
+                              className={`flex items-center justify-between rounded-md border-l-4 px-3 py-2 ${meta.className}`}
+                            >
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  {meta.title}
+                                </div>
+                                <div className="text-xs opacity-80">
+                                  {meta.detail}
+                                </div>
+                              </div>
+                              <Badge variant="outline" className="bg-white/70">
+                                {group.items.length}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {group.items.map(renderVaccinationRow)}
+                      </Fragment>
+                    );
+                  })
                 ) : (
-                  filteredItems.map((item) => (
-                    <TableRow key={item.scheduleRuleId}>
-                      <TableCell>{renderStatusBadge(item.status)}</TableCell>
-                      <TableCell>
-                        <div className="font-medium text-gray-900">
-                          {item.vaccine.name}
-                        </div>
-                        {item.notes && (
-                          <div className="mt-1 max-w-[260px] text-xs text-gray-500">
-                            {item.notes}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-gray-700">
-                        {item.doseLabel}
-                      </TableCell>
-                      <TableCell>{formatAge(item.recommendedAgeMonths)}</TableCell>
-                      <TableCell>{formatDate(item.recommendedDate)}</TableCell>
-                      <TableCell>
-                        <div className={statusMeta[item.status].textClassName}>
-                          {formatDate(item.application?.appliedDate)}
-                        </div>
-                        {item.application?.doctor && (
-                          <div className="mt-1 text-xs text-gray-500">
-                            {getDoctorName(item.application)}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[260px] text-sm text-gray-600">
-                        {item.application?.observations || "-"}
-                      </TableCell>
-                      <TableCell>{renderActionCell(item)}</TableCell>
-                    </TableRow>
-                  ))
+                  filteredItems.map(renderVaccinationRow)
                 )}
               </TableBody>
             </Table>
