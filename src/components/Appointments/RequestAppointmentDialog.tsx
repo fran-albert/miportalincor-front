@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,329 +8,556 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  useDoctorsWithAvailability,
-  useAvailableSlots,
+  usePublicAppointmentSpecialities,
+  usePublicAvailableSlotsBySpeciality,
+  usePublicDoctorsBySpeciality,
   useRequestAppointment,
 } from "@/hooks/Appointments";
-import { getDoctorsPublicInfo, DoctorPublicInfo } from "@/api/Appointments";
-import { useQuery } from "@tanstack/react-query";
-import { format, addDays, isWeekend, isBefore, startOfDay } from "date-fns";
+import type { PublicAppointmentSlot } from "@/api/Appointments";
+import { addDays, format, isAfter, isBefore, isValid, parse, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import {
-  Loader2,
+  AlertTriangle,
+  Calendar as CalendarIcon,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  User,
-  Calendar as CalendarIcon,
-  Clock,
-  CheckCircle,
+  Loader2,
   Stethoscope,
 } from "lucide-react";
-import { formatDoctorName } from "@/common/helpers/helpers";
+import { cn } from "@/lib/utils";
 
 interface RequestAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-type Step = "doctor" | "date" | "time" | "confirm";
+type Step = "selection" | "schedule" | "confirm";
+
+const steps: Array<{ id: Step; label: string }> = [
+  { id: "selection", label: "Especialidad" },
+  { id: "schedule", label: "Fecha y hora" },
+  { id: "confirm", label: "Confirmar" },
+];
+
+const parseSlotDate = (date: string): Date | null => {
+  const parsedDate = parse(date, "dd-MM-yyyy", new Date());
+  return isValid(parsedDate) ? parsedDate : null;
+};
+
+const normalizeAppointmentHour = (time: string): string => {
+  const trimmedTime = time.trim();
+  return /^\d{2}:\d{2}$/.test(trimmedTime) ? `${trimmedTime}:00` : trimmedTime;
+};
+
+const getErrorMessage = (error: unknown): string => {
+  const responseData = (error as { response?: { data?: { error?: string; message?: string } } })
+    ?.response?.data;
+
+  return responseData?.error || responseData?.message || "No pudimos reservar el turno.";
+};
 
 export function RequestAppointmentDialog({
   open,
   onOpenChange,
 }: RequestAppointmentDialogProps) {
-  const [step, setStep] = useState<Step>("doctor");
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorPublicInfo | null>(null);
+  const [step, setStep] = useState<Step>("selection");
+  const [selectedSpecialityId, setSelectedSpecialityId] = useState<number | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
-  // Reset state when dialog closes
+  const requestMutation = useRequestAppointment();
+
+  const minDate = useMemo(() => startOfDay(new Date()), []);
+  const maxDate = useMemo(() => addDays(minDate, 90), [minDate]);
+
+  const {
+    specialities,
+    isLoading: loadingSpecialities,
+    isError: specialitiesError,
+  } = usePublicAppointmentSpecialities({ enabled: open });
+
+  const {
+    doctors,
+    isLoading: loadingDoctors,
+    isError: doctorsError,
+  } = usePublicDoctorsBySpeciality({
+    specialityId: selectedSpecialityId,
+    enabled: open,
+  });
+
+  const {
+    slots,
+    isLoading: loadingSlots,
+    isError: slotsError,
+  } = usePublicAvailableSlotsBySpeciality({
+    specialityId: selectedSpecialityId,
+    enabled: open,
+  });
+
+  const selectedSpeciality = useMemo(
+    () => specialities.find((speciality) => speciality.id === selectedSpecialityId) ?? null,
+    [selectedSpecialityId, specialities],
+  );
+
+  const selectedDoctor = useMemo(
+    () => doctors.find((doctor) => doctor.id === selectedDoctorId) ?? null,
+    [selectedDoctorId, doctors],
+  );
+
+  const doctorSlots = useMemo(
+    () => slots.filter((slot) => slot.providerId === selectedDoctorId),
+    [selectedDoctorId, slots],
+  );
+
+  const availableDateSet = useMemo(() => {
+    const availableDates = new Set<string>();
+
+    doctorSlots.forEach((slot) => {
+      if (slot.date && parseSlotDate(slot.date)) {
+        availableDates.add(slot.date);
+      }
+    });
+
+    return availableDates;
+  }, [doctorSlots]);
+
+  const formattedSelectedDate = selectedDate ? format(selectedDate, "dd-MM-yyyy") : "";
+
+  const slotsForSelectedDate = useMemo(() => {
+    const uniqueSlots = new Map<string, PublicAppointmentSlot>();
+
+    doctorSlots
+      .filter((slot) => slot.date === formattedSelectedDate && slot.time?.trim())
+      .forEach((slot) => {
+        const time = slot.time.trim();
+        if (!uniqueSlots.has(time)) {
+          uniqueSlots.set(time, { ...slot, time });
+        }
+      });
+
+    return Array.from(uniqueSlots.values()).sort((a, b) => a.time.localeCompare(b.time));
+  }, [doctorSlots, formattedSelectedDate]);
+
+  const canContinue =
+    (step === "selection" && !!selectedSpecialityId && !!selectedDoctorId) ||
+    (step === "schedule" && !!selectedDate && !!selectedTime);
+
   useEffect(() => {
     if (!open) {
-      setStep("doctor");
-      setSelectedDoctor(null);
+      setStep("selection");
+      setSelectedSpecialityId(null);
+      setSelectedDoctorId(null);
       setSelectedDate(undefined);
       setSelectedTime(null);
+      setBookingError(null);
     }
   }, [open]);
 
-  // Fetch doctors with availability
-  const { doctorIds, isLoading: loadingDoctorIds } = useDoctorsWithAvailability();
+  useEffect(() => {
+    setBookingError(null);
+  }, [step, selectedSpecialityId, selectedDoctorId, selectedDate, selectedTime]);
 
-  // Fetch doctor details for each ID (solo info publica)
-  const { data: doctors, isLoading: loadingDoctors } = useQuery({
-    queryKey: ["doctorPublicDetails", doctorIds],
-    queryFn: () => getDoctorsPublicInfo(doctorIds),
-    enabled: doctorIds.length > 0,
-  });
+  const handleSpecialityChange = (value: string) => {
+    setSelectedSpecialityId(Number(value));
+    setSelectedDoctorId(null);
+    setSelectedDate(undefined);
+    setSelectedTime(null);
+  };
 
-  // Fetch available slots when date is selected
-  const dateString = selectedDate ? format(selectedDate, "yyyy-MM-dd") : "";
-  const { slots, isLoading: loadingSlots } = useAvailableSlots({
-    doctorId: selectedDoctor?.userId ?? 0,
-    date: dateString,
-    enabled: !!selectedDoctor && !!selectedDate,
-  });
-
-  // Request appointment mutation
-  const requestMutation = useRequestAppointment();
-
-  const handleSelectDoctor = (doctor: DoctorPublicInfo) => {
-    setSelectedDoctor(doctor);
-    setStep("date");
+  const handleDoctorChange = (value: string) => {
+    setSelectedDoctorId(Number(value));
+    setSelectedDate(undefined);
+    setSelectedTime(null);
   };
 
   const handleSelectDate = (date: Date | undefined) => {
     setSelectedDate(date);
     setSelectedTime(null);
-    if (date) {
-      setStep("time");
+  };
+
+  const handleBack = () => {
+    if (step === "confirm") {
+      setStep("schedule");
+      return;
+    }
+
+    if (step === "schedule") {
+      setStep("selection");
     }
   };
 
-  const handleSelectTime = (time: string) => {
-    setSelectedTime(time);
-    setStep("confirm");
+  const handleNext = () => {
+    if (step === "selection" && canContinue) {
+      setStep("schedule");
+      return;
+    }
+
+    if (step === "schedule" && canContinue) {
+      setStep("confirm");
+    }
   };
 
   const handleConfirm = async () => {
     if (!selectedDoctor || !selectedDate || !selectedTime) return;
 
     try {
+      setBookingError(null);
       await requestMutation.mutateAsync({
-        doctorId: selectedDoctor.userId,
+        doctorId: selectedDoctor.id,
         date: format(selectedDate, "yyyy-MM-dd"),
-        hour: selectedTime,
+        hour: normalizeAppointmentHour(selectedTime),
       });
       onOpenChange(false);
-    } catch {
-      // Error is handled by the mutation
+    } catch (error) {
+      setBookingError(getErrorMessage(error));
     }
   };
 
-  const handleBack = () => {
-    switch (step) {
-      case "date":
-        setStep("doctor");
-        setSelectedDoctor(null);
-        break;
-      case "time":
-        setStep("date");
-        setSelectedDate(undefined);
-        break;
-      case "confirm":
-        setStep("time");
-        setSelectedTime(null);
-        break;
-    }
-  };
-
-  const isLoadingDoctors = loadingDoctorIds || loadingDoctors;
-
-  // Disable weekends and past dates
   const isDateDisabled = (date: Date) => {
-    const today = startOfDay(new Date());
-    return isWeekend(date) || isBefore(date, today);
+    const day = startOfDay(date);
+
+    if (isBefore(day, minDate) || isAfter(day, maxDate)) {
+      return true;
+    }
+
+    if (loadingSlots || !availableDateSet.size) {
+      return true;
+    }
+
+    return !availableDateSet.has(format(date, "dd-MM-yyyy"));
   };
+
+  const renderStepIndicator = () => (
+    <div className="grid grid-cols-3 gap-2">
+      {steps.map((item, index) => {
+        const currentIndex = steps.findIndex((currentStep) => currentStep.id === step);
+        const isActive = item.id === step;
+        const isComplete = index < currentIndex;
+
+        return (
+          <div key={item.id} className="space-y-1.5">
+            <div
+              className={cn(
+                "h-1.5 rounded-full bg-muted transition-colors",
+                (isActive || isComplete) && "bg-greenPrimary",
+              )}
+            />
+            <p
+              className={cn(
+                "text-xs font-medium text-muted-foreground",
+                isActive && "text-greenPrimary",
+                isComplete && "text-foreground",
+              )}
+            >
+              {item.label}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {step === "doctor" && (
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            {step === "selection" && (
               <>
-                <User className="h-5 w-5" />
-                Selecciona un medico
+                <Stethoscope className="h-5 w-5 text-greenPrimary" />
+                Sacar turno
               </>
             )}
-            {step === "date" && (
+            {step === "schedule" && (
               <>
-                <CalendarIcon className="h-5 w-5" />
-                Selecciona una fecha
-              </>
-            )}
-            {step === "time" && (
-              <>
-                <Clock className="h-5 w-5" />
-                Selecciona un horario
+                <CalendarIcon className="h-5 w-5 text-greenPrimary" />
+                Elegir fecha y horario
               </>
             )}
             {step === "confirm" && (
               <>
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle2 className="h-5 w-5 text-greenPrimary" />
                 Confirmar turno
               </>
             )}
           </DialogTitle>
           <DialogDescription>
-            {step === "doctor" && "Elige el medico con el que deseas atenderte"}
-            {step === "date" && selectedDoctor && `Turnos con ${formatDoctorName(selectedDoctor)}`}
-            {step === "time" && `Horarios disponibles para el ${selectedDate ? format(selectedDate, "d 'de' MMMM", { locale: es }) : ""}`}
-            {step === "confirm" && "Revisa los datos y confirma tu turno"}
+            {step === "selection" && "Seleccioná especialidad y profesional para ver disponibilidad."}
+            {step === "schedule" &&
+              selectedDoctor &&
+              `Turnos disponibles con ${selectedDoctor.name}.`}
+            {step === "confirm" && "Revisá los datos antes de reservar el turno."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
-          {/* Step: Select Doctor */}
-          {step === "doctor" && (
-            <ScrollArea className="h-[400px] pr-4">
-              {isLoadingDoctors ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
-                  ))}
-                </div>
-              ) : doctors && doctors.length > 0 ? (
-                <div className="space-y-3">
-                  {doctors.map((doctor) => (
-                    <Button
-                      key={doctor.userId}
-                      variant="outline"
-                      className="w-full h-auto p-4 justify-start"
-                      onClick={() => handleSelectDoctor(doctor)}
+        {renderStepIndicator()}
+
+        <ScrollArea className="max-h-[58vh] pr-4">
+          <div className="py-5">
+            {step === "selection" && (
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="speciality">Especialidad</Label>
+                  {loadingSpecialities ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select
+                      value={selectedSpecialityId ? String(selectedSpecialityId) : ""}
+                      onValueChange={handleSpecialityChange}
+                      disabled={specialitiesError || !specialities.length}
                     >
-                      <div className="flex flex-col items-start gap-1">
-                        <div className="flex items-center gap-2">
-                          <Stethoscope className="h-4 w-4 text-greenPrimary" />
-                          <span className="font-medium">
-                            {formatDoctorName(doctor)}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {doctor.specialities?.map((spec) => (
-                            <Badge key={spec.id} variant="secondary" className="text-xs">
-                              {spec.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
+                      <SelectTrigger id="speciality">
+                        <SelectValue placeholder="Seleccionar especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialities.map((speciality) => (
+                          <SelectItem key={speciality.id} value={String(speciality.id)}>
+                            {speciality.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No hay medicos con disponibilidad configurada
-                </p>
-              )}
-            </ScrollArea>
-          )}
 
-          {/* Step: Select Date */}
-          {step === "date" && (
-            <div className="flex flex-col items-center">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={handleSelectDate}
-                disabled={isDateDisabled}
-                locale={es}
-                fromDate={new Date()}
-                toDate={addDays(new Date(), 60)}
-                className="rounded-md border"
-              />
-            </div>
-          )}
-
-          {/* Step: Select Time */}
-          {step === "time" && (
-            <ScrollArea className="h-[300px] pr-4">
-              {loadingSlots ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
-                  ))}
-                </div>
-              ) : slots.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {slots.map((slot) => (
-                    <Button
-                      key={slot.hour}
-                      variant={selectedTime === slot.hour ? "default" : "outline"}
-                      className="h-10"
-                      onClick={() => handleSelectTime(slot.hour)}
+                <div className="space-y-2">
+                  <Label htmlFor="doctor">Profesional</Label>
+                  {loadingDoctors ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : (
+                    <Select
+                      value={selectedDoctorId ? String(selectedDoctorId) : ""}
+                      onValueChange={handleDoctorChange}
+                      disabled={!selectedSpecialityId || doctorsError || !doctors.length}
                     >
-                      {slot.hour}
-                    </Button>
-                  ))}
+                      <SelectTrigger id="doctor">
+                        <SelectValue
+                          placeholder={
+                            selectedSpecialityId
+                              ? "Seleccionar profesional"
+                              : "Primero seleccioná una especialidad"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {doctors.map((doctor) => (
+                          <SelectItem key={doctor.id} value={String(doctor.id)}>
+                            {doctor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No hay horarios disponibles para esta fecha.
-                  <br />
-                  Por favor selecciona otra fecha.
-                </p>
-              )}
-            </ScrollArea>
-          )}
 
-          {/* Step: Confirm */}
-          {step === "confirm" && (
-            <div className="space-y-4">
-              <div className="bg-muted rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Medico:</span>
-                  <span className="font-medium">
-                    {selectedDoctor && formatDoctorName(selectedDoctor)}
-                  </span>
-                </div>
-                {selectedDoctor?.specialities && selectedDoctor.specialities.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
-                      {selectedDoctor.specialities[0].name}
+                {specialitiesError && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>No pudimos cargar las especialidades</AlertTitle>
+                    <AlertDescription>Intentá nuevamente en unos minutos.</AlertDescription>
+                  </Alert>
+                )}
+
+                {selectedSpecialityId && !loadingDoctors && !doctorsError && !doctors.length && (
+                  <Alert>
+                    <Stethoscope className="h-4 w-4" />
+                    <AlertTitle>Sin profesionales disponibles</AlertTitle>
+                    <AlertDescription>
+                      La especialidad seleccionada no tiene turnos publicados por ahora.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {doctorsError && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>No pudimos cargar los profesionales</AlertTitle>
+                    <AlertDescription>Probá con otra especialidad o intentá nuevamente.</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+
+            {step === "schedule" && (
+              <div className="space-y-5">
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <p className="text-sm font-medium text-foreground">{selectedDoctor?.name}</p>
+                  {selectedSpeciality && (
+                    <Badge variant="secondary" className="mt-2">
+                      {selectedSpeciality.name}
                     </Badge>
+                  )}
+                </div>
+
+                {loadingSlots ? (
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
+                    <Skeleton className="h-[320px] w-full" />
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
+                      {[1, 2, 3, 4, 5, 6].map((item) => (
+                        <Skeleton key={item} className="h-10 w-full" />
+                      ))}
+                    </div>
+                  </div>
+                ) : slotsError ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>No pudimos cargar la disponibilidad</AlertTitle>
+                    <AlertDescription>Volvé a intentar o elegí otro profesional.</AlertDescription>
+                  </Alert>
+                ) : !availableDateSet.size ? (
+                  <Alert>
+                    <CalendarIcon className="h-4 w-4" />
+                    <AlertTitle>Sin turnos disponibles</AlertTitle>
+                    <AlertDescription>
+                      No hay fechas publicadas para este profesional en los próximos 90 días.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+                    <div className="space-y-2">
+                      <Label>Fecha</Label>
+                      <div className="flex justify-center rounded-lg border p-2">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={handleSelectDate}
+                          disabled={isDateDisabled}
+                          locale={es}
+                          fromDate={minDate}
+                          toDate={maxDate}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Horario</Label>
+                      {selectedDate ? (
+                        slotsForSelectedDate.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {slotsForSelectedDate.map((slot) => (
+                              <Button
+                                key={`${slot.id}-${slot.time}`}
+                                type="button"
+                                variant={selectedTime === slot.time ? "default" : "outline"}
+                                className={cn(
+                                  "h-10",
+                                  selectedTime === slot.time &&
+                                    "bg-greenPrimary hover:bg-greenPrimary/90",
+                                )}
+                                onClick={() => setSelectedTime(slot.time)}
+                              >
+                                {slot.time}
+                              </Button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
+                            No hay horarios libres para la fecha seleccionada.
+                          </p>
+                        )
+                      ) : (
+                        <p className="rounded-lg border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">
+                          Seleccioná una fecha marcada como disponible.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Fecha:</span>
-                  <span className="font-medium">
-                    {selectedDate
-                      ? format(selectedDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })
-                      : ""}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Hora:</span>
-                  <span className="font-medium">{selectedTime}</span>
-                </div>
               </div>
+            )}
 
-              <p className="text-sm text-muted-foreground text-center">
-                Al confirmar, el turno quedara reservado automaticamente.
-              </p>
-            </div>
-          )}
-        </div>
+            {step === "confirm" && (
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <dl className="grid gap-3 text-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-muted-foreground">Especialidad</dt>
+                      <dd className="text-right font-medium">{selectedSpeciality?.name}</dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-muted-foreground">Profesional</dt>
+                      <dd className="text-right font-medium">{selectedDoctor?.name}</dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-muted-foreground">Fecha</dt>
+                      <dd className="text-right font-medium">
+                        {selectedDate
+                          ? format(selectedDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })
+                          : "-"}
+                      </dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-muted-foreground">Hora</dt>
+                      <dd className="text-right font-medium">{selectedTime} hs</dd>
+                    </div>
+                  </dl>
+                </div>
 
-        {/* Navigation buttons */}
-        <div className="flex justify-between gap-2">
-          {step !== "doctor" ? (
-            <Button variant="outline" onClick={handleBack}>
-              <ChevronLeft className="h-4 w-4 mr-1" />
+                <p className="text-center text-sm text-muted-foreground">
+                  El turno quedará asociado a tu cuenta del portal.
+                </p>
+
+                {bookingError && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>No pudimos reservar el turno</AlertTitle>
+                    <AlertDescription>{bookingError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        <div className="flex justify-between gap-3 border-t pt-4">
+          {step !== "selection" ? (
+            <Button type="button" variant="outline" onClick={handleBack}>
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Volver
             </Button>
           ) : (
             <div />
           )}
 
-          {step === "confirm" && (
+          {step === "confirm" ? (
             <Button
+              type="button"
               onClick={handleConfirm}
               disabled={requestMutation.isPending}
               className="bg-greenPrimary hover:bg-greenPrimary/90"
             >
-              {requestMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {requestMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-2 h-4 w-4" />
               )}
               Confirmar turno
-              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleNext}
+              disabled={!canContinue}
+              className="bg-greenPrimary hover:bg-greenPrimary/90"
+            >
+              Siguiente
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           )}
         </div>
