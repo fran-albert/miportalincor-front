@@ -1,6 +1,10 @@
 import { apiLaboral } from "@/services/axiosConfig";
 
 export async function fetchImageAsDataUrl(presignedUrl: string): Promise<string> {
+    if (presignedUrl.startsWith("data:image/")) {
+        return presignedUrl;
+    }
+
     // Llamo al proxy de tu backend, pasando la URL presignada como parámetro
     const response = await apiLaboral.get<Blob>("/file/proxy-image", {
         params: { url: presignedUrl },
