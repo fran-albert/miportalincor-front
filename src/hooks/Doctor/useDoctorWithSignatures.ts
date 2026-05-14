@@ -3,15 +3,16 @@ import { useQuery } from "@tanstack/react-query"
 import { fetchImageAsDataUrl } from "@/api/Study/Collaborator/get-proxy-url.action"
 import { apiIncorHC } from "@/services/axiosConfig"
 
-// Firma por defecto
-const DEFAULT_SIGNATURE_URL =
-    "https://res.cloudinary.com/dfoqki8kt/image/upload/v1743624646/aw6shqkcieys3flbrn0c.png"
+export type DoctorSignatureAssetStatus = "available" | "missing" | "broken"
 
 export interface DoctorSignatures {
     fullName: string
     matricula: string
     specialty: string
-    signatureDataUrl: string
+    stampText: string
+    signatureStatus: DoctorSignatureAssetStatus
+    sealStatus: DoctorSignatureAssetStatus
+    signatureDataUrl?: string
     sealDataUrl?: string
 }
 
@@ -19,8 +20,11 @@ interface DoctorSignatureResponse {
     fullName?: string
     matricula?: string
     doctorSpeciality?: string
+    stampText?: string
     signature?: string
+    signatureStatus?: DoctorSignatureAssetStatus
     sello?: string
+    selloStatus?: DoctorSignatureAssetStatus
 }
 
 interface Params {
@@ -39,25 +43,45 @@ export const useDoctorWithSignatures = ({ id, auth = true }: Params) => {
 
             const sig = res.data.doctorSignature
 
-            // 2) Decidir URL de firma y sello
-            const sigUrl = sig?.signature ?? DEFAULT_SIGNATURE_URL
-            const selloUrl = sig?.sello
+            const signatureStatus = sig?.signatureStatus ?? (sig?.signature ? "available" : "missing")
+            const sealStatus = sig?.selloStatus ?? (sig?.sello ? "available" : "missing")
 
-            // 3) Transformar a data URLs
-            const [signatureDataUrl, sealDataUrl] = await Promise.all([
-                fetchImageAsDataUrl(sigUrl),
-                selloUrl ? fetchImageAsDataUrl(selloUrl) : Promise.resolve(undefined),
+            const [signatureAsset, sealAsset] = await Promise.all([
+                resolveImageDataUrl(sig?.signature, signatureStatus),
+                resolveImageDataUrl(sig?.sello, sealStatus),
             ])
 
             return {
                 fullName: sig?.fullName ?? "",
                 matricula: sig?.matricula ?? "",
                 specialty: sig?.doctorSpeciality ?? "",
-                signatureDataUrl,
-                sealDataUrl,
+                stampText: sig?.stampText ?? "",
+                signatureStatus: signatureAsset.status,
+                sealStatus: sealAsset.status,
+                signatureDataUrl: signatureAsset.dataUrl,
+                sealDataUrl: sealAsset.dataUrl,
             }
         },
         enabled: auth && Boolean(id),
         staleTime: 1000 * 60, // 1 minuto
     })
+}
+
+async function resolveImageDataUrl(
+    url: string | undefined,
+    status: DoctorSignatureAssetStatus,
+): Promise<{ dataUrl?: string; status: DoctorSignatureAssetStatus }> {
+    if (status !== "available" || !url) {
+        return { status }
+    }
+
+    try {
+        return {
+            dataUrl: await fetchImageAsDataUrl(url),
+            status: "available",
+        }
+    } catch (error) {
+        console.warn("No se pudo resolver la firma/sello del médico", error)
+        return { status: "broken" }
+    }
 }

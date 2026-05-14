@@ -35,8 +35,8 @@ export const useDoctorMutations = () => {
     mutationFn: async (values: UploadSignatureProps) => {
       return await uploadSignature(values);
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["doctor", variables.idUser] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["doctor"] });
       console.log("Firma subida correctamente", data);
     },
     onError: (error, variables, context) => {
@@ -48,8 +48,8 @@ export const useDoctorMutations = () => {
     mutationFn: async (values: UploadSelloProps) => {
       return await uploadSello(values);
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["doctor", variables.idUser] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["doctor"] });
       console.log("Sello subida correctamente", data);
     },
     onError: (error, variables, context) => {

@@ -5,6 +5,11 @@ import { useDoctorMutations } from "@/hooks/Doctor/useDoctorMutation";
 import ImagePickerDialog from "@/components/Image-Picker/Dialog";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { ApiError } from "@/types/Error/ApiError";
+import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import {
+  DoctorSignatureAsset,
+  DoctorSignatureAssetStatusBadge,
+} from "@/components/Doctors/SignatureAsset";
 
 interface ImageUploadBoxProps {
   id: string;
@@ -27,15 +32,29 @@ export function ImageUploadBox({
   const { promiseToast } = useToastContext();
   const [currentImage, setCurrentImage] = useState<string | null>(image);
   const [isUploading, setIsUploading] = useState(false);
+  const assetType = label.toLowerCase() === "sello" ? "sello" : "firma";
+  const {
+    data: signatureAssets,
+    isLoading: isLoadingAsset,
+  } = useDoctorWithSignatures({
+    id: String(doctorId),
+    auth: Boolean(doctorId),
+  });
 
   useEffect(() => {
     setCurrentImage(image);
   }, [image]);
 
   const mutation =
-    label.toLowerCase() === "sello"
-      ? uploadSelloMutation
-      : uploadSignatureMutation;
+    assetType === "sello" ? uploadSelloMutation : uploadSignatureMutation;
+  const assetSrc =
+    assetType === "sello"
+      ? signatureAssets?.sealDataUrl
+      : signatureAssets?.signatureDataUrl;
+  const assetStatus =
+    assetType === "sello"
+      ? signatureAssets?.sealStatus
+      : signatureAssets?.signatureStatus;
 
   const handleImageSelect = async (croppedImage: string) => {
     try {
@@ -47,7 +66,7 @@ export function ImageUploadBox({
         formData,
       });
 
-      const returnedUrl = await promiseToast(promise, {
+      await promiseToast(promise, {
         loading: {
           title: "Subiendo imagen...",
           description: "Por favor espera mientras procesamos tu solicitud",
@@ -70,7 +89,7 @@ export function ImageUploadBox({
           };
         },
       });
-      setCurrentImage(returnedUrl);
+      setCurrentImage(null);
 
       onImageUploaded?.();
     } catch (error) {
@@ -90,10 +109,10 @@ export function ImageUploadBox({
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-    const file = new File([u8arr], "image.jpg", { type: mime });
+    const file = new File([u8arr], `${assetType}.jpg`, { type: mime });
     const formData = new FormData();
 
-    if (label.toLowerCase() === "sello") {
+    if (assetType === "sello") {
       formData.append("sello", file);
     } else {
       formData.append("firma", file);
@@ -103,7 +122,13 @@ export function ImageUploadBox({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        <DoctorSignatureAssetStatusBadge
+          label={label as "Firma" | "Sello"}
+          status={assetStatus}
+        />
+      </div>
       <Card
         className={`p-4 h-40 flex flex-col items-center justify-center border-2 border-dashed relative 
           ${
@@ -112,24 +137,14 @@ export function ImageUploadBox({
               : "cursor-not-allowed "
           }`}
       >
-        {currentImage ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <img
-              src={currentImage || "/placeholder.svg"}
-              alt={label}
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
-        ) : (
-          <>
-            <p className="text-center font-medium mb-2">{label}</p>
-            <p className="text-sm text-muted-foreground text-center">
-              {isEditing
-                ? "Haga clic en 'Subir imagen' para seleccionar una imagen"
-                : "Edición deshabilitada"}
-            </p>
-          </>
-        )}
+        <DoctorSignatureAsset
+          label={label as "Firma" | "Sello"}
+          src={assetSrc ?? currentImage}
+          status={assetStatus}
+          isLoading={isLoadingAsset}
+          isUploading={isUploading}
+          className="min-h-0 border-0 bg-transparent"
+        />
       </Card>
       {isEditing && !isUploading && (
         <div className="pt-2">

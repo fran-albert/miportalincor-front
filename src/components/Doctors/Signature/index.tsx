@@ -1,36 +1,34 @@
 import React from "react";
-import { useDoctor } from "@/hooks/Doctor/useDoctor";
-import { getDoctorTitle } from "@/common/helpers/helpers";
+import { useDoctorWithSignatures } from "@/hooks/Doctor/useDoctorWithSignatures";
+import { DoctorSignatureAsset } from "@/components/Doctors/SignatureAsset";
 
 interface Props {
   doctorId: string;
 }
 
 export const DoctorSignature: React.FC<Props> = ({ doctorId }) => {
-  const { doctor, isLoading, isError } = useDoctor({
+  const { data, isLoading, isError } = useDoctorWithSignatures({
     auth: true,
     id: doctorId,
   });
 
   if (isLoading) return <div>Cargando...</div>;
-  if (isError || !doctor) return null;
+  if (isError || !data) return null;
 
   return (
-    <div className="flex flex-col items-center space-y-1 mt-4">
-      {doctor.firma && (
-        <img
-          src={doctor.firma}
-          alt={`Firma ${getDoctorTitle(doctor.gender)} ${doctor.lastName}`}
-          className="h-16 object-contain"
-        />
-      )}
-      {doctor.sello && (
-        <img
-          src={doctor.sello}
-          alt={`Sello ${getDoctorTitle(doctor.gender)} ${doctor.lastName}`}
-          className="h-12 object-contain"
-        />
-      )}
+    <div className="mt-4 grid gap-2">
+      <DoctorSignatureAsset
+        label="Firma"
+        src={data.signatureDataUrl}
+        status={data.signatureStatus}
+        className="min-h-20"
+      />
+      <DoctorSignatureAsset
+        label="Sello"
+        src={data.sealDataUrl}
+        status={data.sealStatus}
+        className="min-h-20"
+      />
     </div>
   );
 };
