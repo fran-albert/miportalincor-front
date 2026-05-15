@@ -13,10 +13,16 @@ import ImagePicker from "..";
 
 interface ImagePickerDialogProps {
   onImageSelect: (image: string) => void;
+  cleanLightBackground?: boolean;
+  description?: string;
+  helperText?: string;
 }
 
 const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
   onImageSelect,
+  cleanLightBackground = false,
+  description = "Elige una imagen para subir o captura una desde la cámara.",
+  helperText,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -33,11 +39,13 @@ const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Seleccionar Imagen</DialogTitle>
-          <DialogDescription>
-            Elige una imagen para subir o captura una desde la cámara.
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <ImagePicker onImageSelect={handleImageSelect} />
+        <ImagePicker
+          onImageSelect={handleImageSelect}
+          cleanLightBackground={cleanLightBackground}
+          helperText={helperText}
+        />
       </DialogContent>
     </Dialog>
   );
