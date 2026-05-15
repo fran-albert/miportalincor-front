@@ -1,10 +1,13 @@
 const MIN_LIGHT_BORDER_RATIO = 0.35;
 const MIN_LIGHT_BORDER_SAMPLES = 12;
-const BACKGROUND_MIN_BRIGHTNESS = 215;
-const PIXEL_MIN_BRIGHTNESS = 210;
-const MAX_NEUTRAL_SATURATION = 42;
-const FULL_TRANSPARENT_DISTANCE = 18;
-const MAX_TRANSPARENT_DISTANCE = 48;
+const BACKGROUND_MIN_BRIGHTNESS = 160;
+const MAX_NEUTRAL_SATURATION = 22;
+const WHITE_BACKGROUND_BRIGHTNESS = 235;
+const WHITE_FULL_TRANSPARENT_DISTANCE = 18;
+const WHITE_MAX_TRANSPARENT_DISTANCE = 48;
+const PAPER_MAX_TRANSPARENT_DISTANCE = 70;
+const MIN_PAPER_PIXEL_BRIGHTNESS = 145;
+const PAPER_PIXEL_BRIGHTNESS_OFFSET = 28;
 
 interface RgbColor {
   r: number;
@@ -29,6 +32,9 @@ export function removeLightBackgroundFromPixels(
     return output;
   }
 
+  const backgroundBrightness = brightness(background);
+  const thresholds = transparencyThresholds(backgroundBrightness);
+
   for (let index = 0; index < width * height * 4; index += 4) {
     const alpha = input[index + 3];
 
@@ -42,21 +48,26 @@ export function removeLightBackgroundFromPixels(
       b: input[index + 2],
     };
 
-    if (!isNeutralLightPixel(pixel, PIXEL_MIN_BRIGHTNESS)) {
+    if (!isNeutralLightPixel(pixel, thresholds.minPixelBrightness)) {
       continue;
     }
 
     const distance = colorDistance(pixel, background);
 
-    if (distance > MAX_TRANSPARENT_DISTANCE) {
+    if (distance > thresholds.maxDistance) {
+      continue;
+    }
+
+    if (thresholds.mode === "paper") {
+      output[index + 3] = 0;
       continue;
     }
 
     const remainingAlpha =
-      distance <= FULL_TRANSPARENT_DISTANCE
+      distance <= thresholds.fullDistance
         ? 0
-        : (distance - FULL_TRANSPARENT_DISTANCE) /
-          (MAX_TRANSPARENT_DISTANCE - FULL_TRANSPARENT_DISTANCE);
+        : (distance - thresholds.fullDistance) /
+          (thresholds.maxDistance - thresholds.fullDistance);
 
     output[index + 3] = Math.round(alpha * remainingAlpha);
   }
@@ -160,11 +171,34 @@ function averageColor(samples: RgbColor[]): RgbColor {
 function isNeutralLightPixel(pixel: RgbColor, minBrightness: number): boolean {
   const max = Math.max(pixel.r, pixel.g, pixel.b);
   const min = Math.min(pixel.r, pixel.g, pixel.b);
-  const brightness = (pixel.r + pixel.g + pixel.b) / 3;
-
-  return brightness >= minBrightness && max - min <= MAX_NEUTRAL_SATURATION;
+  return brightness(pixel) >= minBrightness && max - min <= MAX_NEUTRAL_SATURATION;
 }
 
 function colorDistance(a: RgbColor, b: RgbColor): number {
   return Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+}
+
+function brightness(pixel: RgbColor): number {
+  return (pixel.r + pixel.g + pixel.b) / 3;
+}
+
+function transparencyThresholds(backgroundBrightness: number) {
+  if (backgroundBrightness >= WHITE_BACKGROUND_BRIGHTNESS) {
+    return {
+      mode: "white" as const,
+      minPixelBrightness: 210,
+      fullDistance: WHITE_FULL_TRANSPARENT_DISTANCE,
+      maxDistance: WHITE_MAX_TRANSPARENT_DISTANCE,
+    };
+  }
+
+  return {
+    mode: "paper" as const,
+    minPixelBrightness: Math.max(
+      MIN_PAPER_PIXEL_BRIGHTNESS,
+      backgroundBrightness - PAPER_PIXEL_BRIGHTNESS_OFFSET,
+    ),
+    fullDistance: 0,
+    maxDistance: PAPER_MAX_TRANSPARENT_DISTANCE,
+  };
 }
