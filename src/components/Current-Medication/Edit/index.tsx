@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -38,9 +39,24 @@ export default function EditCurrentMedicationModal({
     medication.observations || ""
   );
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
+  const wasOpenRef = useRef(isOpen);
+  const medicationIdRef = useRef(medication.id);
   const updateMutation = useUpdateCurrentMedication();
   const { promiseToast, showError } = useToastContext();
   const suspendMutation = useSuspendCurrentMedication();
+
+  useEffect(() => {
+    const opened = isOpen && !wasOpenRef.current;
+    const medicationChanged = isOpen && medicationIdRef.current !== medication.id;
+
+    if (opened || medicationChanged) {
+      setObservations(medication.observations || "");
+      setShowSuspendConfirm(false);
+    }
+
+    wasOpenRef.current = isOpen;
+    medicationIdRef.current = medication.id;
+  }, [isOpen, medication.id, medication.observations]);
 
   const handleUpdateMedication = async () => {
     if (!observations.trim()) {
@@ -85,7 +101,6 @@ export default function EditCurrentMedicationModal({
   };
 
   const handleClose = () => {
-    setObservations(medication.observations || "");
     setShowSuspendConfirm(false);
     onClose();
   };
@@ -160,10 +175,12 @@ export default function EditCurrentMedicationModal({
               <Edit className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">Actualizar Medicación</h2>
-              <p className="text-sm text-white/80 mt-1">
+              <DialogTitle className="text-2xl font-bold text-white">
+                Actualizar Medicación
+              </DialogTitle>
+              <DialogDescription className="text-sm text-white/80 mt-1">
                 Modifica la información de la medicación actual
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </div>

@@ -15,8 +15,16 @@ import {
   ReactivateCurrentMedicationDto,
   CurrentMedicationFilters,
 } from "@/types/Current-Medication/Current-Medication";
+import {
+  isCurrentMedicationListForHistoriaQueryKey,
+  isCurrentMedicationListQueryKey,
+  isHistoriaCurrentMedicationQueryKey,
+  reconcileCurrentMedicationQueryData,
+  removeCurrentMedicationQueryData,
+} from "./currentMedicationCache";
 
-// Query Keys
+type CurrentMedicationQueryClient = ReturnType<typeof useQueryClient>;
+
 export const currentMedicationKeys = {
   all: ["currentMedications"] as const,
   lists: () => [...currentMedicationKeys.all, "list"] as const,
@@ -26,7 +34,90 @@ export const currentMedicationKeys = {
   detail: (id: string) => [...currentMedicationKeys.details(), id] as const,
 };
 
-// Get Current Medications List
+const invalidateCurrentMedicationQueries = (
+  queryClient: CurrentMedicationQueryClient
+) =>
+  Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: currentMedicationKeys.lists(),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["historia-clinica"],
+      type: "all",
+    }),
+  ]);
+
+const reconcileMedicationInCachedQueries = (
+  queryClient: CurrentMedicationQueryClient,
+  medication: CurrentMedication,
+  mode: "replace" | "upsert",
+  historiaUserId?: string | number
+) => {
+  queryClient.setQueryData(
+    currentMedicationKeys.detail(String(medication.id)),
+    medication
+  );
+
+  queryClient
+    .getQueryCache()
+    .findAll({
+      predicate: (query) =>
+        isHistoriaCurrentMedicationQueryKey(query.queryKey, historiaUserId),
+    })
+    .forEach((query) => {
+      queryClient.setQueryData(query.queryKey, (data: unknown) =>
+        reconcileCurrentMedicationQueryData(
+          data,
+          medication,
+          query.queryKey,
+          mode
+        )
+      );
+    });
+
+  queryClient
+    .getQueryCache()
+    .findAll({
+      predicate: (query) =>
+        isCurrentMedicationListForHistoriaQueryKey(
+          query.queryKey,
+          mode === "upsert" ? medication.idUserHistoriaClinica : undefined
+        ),
+    })
+    .forEach((query) => {
+      queryClient.setQueryData(query.queryKey, (data: unknown) =>
+        reconcileCurrentMedicationQueryData(
+          data,
+          medication,
+          query.queryKey,
+          mode
+        )
+      );
+    });
+};
+
+const removeMedicationFromCachedQueries = (
+  queryClient: CurrentMedicationQueryClient,
+  medicationId: string
+) => {
+  queryClient.removeQueries({
+    queryKey: currentMedicationKeys.detail(medicationId),
+  });
+
+  queryClient
+    .getQueryCache()
+    .findAll({
+      predicate: (query) =>
+        isHistoriaCurrentMedicationQueryKey(query.queryKey) ||
+        isCurrentMedicationListQueryKey(query.queryKey),
+    })
+    .forEach((query) => {
+      queryClient.setQueryData(query.queryKey, (data: unknown) =>
+        removeCurrentMedicationQueryData(data, medicationId)
+      );
+    });
+};
+
 export const useCurrentMedications = (
   idUserHistoriaClinica: string,
   filters?: CurrentMedicationFilters,
@@ -37,37 +128,33 @@ export const useCurrentMedications = (
     queryFn: () =>
       getCurrentMedicationsByUser(idUserHistoriaClinica, filters),
     enabled: enabled && !!idUserHistoriaClinica,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Get Current Medication by ID
 export const useCurrentMedication = (id: string, enabled: boolean = true) => {
   return useQuery<CurrentMedication>({
     queryKey: currentMedicationKeys.detail(id),
     queryFn: () => getCurrentMedicationById(id),
     enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Create Current Medication
 export const useCreateCurrentMedication = () => {
   const queryClient = useQueryClient();
 
   return useMutation<CurrentMedication, Error, CreateCurrentMedicationDto>({
     mutationFn: createCurrentMedication,
-    onSuccess: () => {
-      // Invalidate and refetch current medications list
-      queryClient.invalidateQueries({
-        queryKey: currentMedicationKeys.lists(),
-      });
+    onSuccess: (data, variables) => {
+      reconcileMedicationInCachedQueries(
+        queryClient,
+        data,
+        "upsert",
+        variables.idUser
+      );
 
-      // Invalidate all historia-clinica queries to refresh medication lists
-      queryClient.invalidateQueries({
-        queryKey: ['historia-clinica'],
-        type: 'all'
-      });
+      return invalidateCurrentMedicationQueries(queryClient);
     },
     onError: (error) => {
       console.error("Error creating current medication:", error);
@@ -75,7 +162,6 @@ export const useCreateCurrentMedication = () => {
   });
 };
 
-// Update Current Medication
 export const useUpdateCurrentMedication = () => {
   const queryClient = useQueryClient();
 
@@ -84,26 +170,11 @@ export const useUpdateCurrentMedication = () => {
     Error,
     { id: string; data: UpdateCurrentMedicationDto }
   >({
-    mutationFn: ({ id, data }) =>
-      updateCurrentMedication(id, data),
+    mutationFn: ({ id, data }) => updateCurrentMedication(id, data),
     onSuccess: (data) => {
-      // Update the specific medication in cache
-      queryClient.setQueryData(
-        currentMedicationKeys.detail(String(data.id)),
-        data
-      );
+      reconcileMedicationInCachedQueries(queryClient, data, "replace");
 
-      // Invalidate and refetch lists
-      queryClient.invalidateQueries({
-        queryKey: currentMedicationKeys.lists(),
-      });
-
-      // Invalidate all historia-clinica queries to refresh medication lists
-      queryClient.invalidateQueries({
-        queryKey: ['historia-clinica'],
-        type: 'all'
-      });
-
+      return invalidateCurrentMedicationQueries(queryClient);
     },
     onError: (error) => {
       console.error("Error updating current medication:", error);
@@ -111,7 +182,6 @@ export const useUpdateCurrentMedication = () => {
   });
 };
 
-// Suspend Current Medication
 export const useSuspendCurrentMedication = () => {
   const queryClient = useQueryClient();
 
@@ -120,26 +190,11 @@ export const useSuspendCurrentMedication = () => {
     Error,
     { id: string; data: SuspendCurrentMedicationDto }
   >({
-    mutationFn: ({ id, data }) =>
-      suspendCurrentMedication(id, data),
+    mutationFn: ({ id, data }) => suspendCurrentMedication(id, data),
     onSuccess: (data) => {
-      // Update the specific medication in cache
-      queryClient.setQueryData(
-        currentMedicationKeys.detail(String(data.id)),
-        data
-      );
+      reconcileMedicationInCachedQueries(queryClient, data, "replace");
 
-      // Invalidate and refetch lists
-      queryClient.invalidateQueries({
-        queryKey: currentMedicationKeys.lists(),
-      });
-
-      // Invalidate all historia-clinica queries to refresh medication lists
-      queryClient.invalidateQueries({
-        queryKey: ['historia-clinica'],
-        type: 'all'
-      });
-
+      return invalidateCurrentMedicationQueries(queryClient);
     },
     onError: (error) => {
       console.error("Error suspending current medication:", error);
@@ -147,7 +202,6 @@ export const useSuspendCurrentMedication = () => {
   });
 };
 
-// Reactivate Current Medication
 export const useReactivateCurrentMedication = () => {
   const queryClient = useQueryClient();
 
@@ -156,26 +210,11 @@ export const useReactivateCurrentMedication = () => {
     Error,
     { id: string; data: ReactivateCurrentMedicationDto }
   >({
-    mutationFn: ({ id, data }) =>
-      reactivateCurrentMedication(id, data),
+    mutationFn: ({ id, data }) => reactivateCurrentMedication(id, data),
     onSuccess: (data) => {
-      // Update the specific medication in cache
-      queryClient.setQueryData(
-        currentMedicationKeys.detail(String(data.id)),
-        data
-      );
+      reconcileMedicationInCachedQueries(queryClient, data, "replace");
 
-      // Invalidate and refetch lists
-      queryClient.invalidateQueries({
-        queryKey: currentMedicationKeys.lists(),
-      });
-
-      // Invalidate all historia-clinica queries to refresh medication lists
-      queryClient.invalidateQueries({
-        queryKey: ['historia-clinica'],
-        type: 'all'
-      });
-
+      return invalidateCurrentMedicationQueries(queryClient);
     },
     onError: (error) => {
       console.error("Error reactivating current medication:", error);
@@ -183,29 +222,15 @@ export const useReactivateCurrentMedication = () => {
   });
 };
 
-// Delete Current Medication
 export const useDeleteCurrentMedication = () => {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
     mutationFn: deleteCurrentMedication,
     onSuccess: (_, id) => {
-      // Remove from cache
-      queryClient.removeQueries({
-        queryKey: currentMedicationKeys.detail(id),
-      });
+      removeMedicationFromCachedQueries(queryClient, id);
 
-      // Invalidate and refetch lists
-      queryClient.invalidateQueries({
-        queryKey: currentMedicationKeys.lists(),
-      });
-
-      // Invalidate all historia-clinica queries to refresh medication lists
-      queryClient.invalidateQueries({
-        queryKey: ['historia-clinica'],
-        type: 'all'
-      });
-
+      return invalidateCurrentMedicationQueries(queryClient);
     },
     onError: (error) => {
       console.error("Error deleting current medication:", error);
