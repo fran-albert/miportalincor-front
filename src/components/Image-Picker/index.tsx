@@ -1,10 +1,15 @@
 import React, { useState, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
-import ReactCrop, { Crop } from "react-image-crop";
+import ReactCrop, {
+  type Crop,
+  type PixelCrop,
+  convertToPixelCrop,
+} from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Camera, Upload, Check, X, Crop as CropIcon, Undo } from "lucide-react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
+import { applyLightBackgroundTransparency } from "@/utils/signatureImageBackground";
 
 interface CropWithAspect extends Crop {
   aspect?: number;
@@ -12,9 +17,15 @@ interface CropWithAspect extends Crop {
 
 interface ImagePickerProps {
   onImageSelect: (image: string) => void;
+  cleanLightBackground?: boolean;
+  helperText?: string;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ onImageSelect }) => {
+const ImagePicker: React.FC<ImagePickerProps> = ({
+  onImageSelect,
+  cleanLightBackground = false,
+  helperText,
+}) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [crop, setCrop] = useState<CropWithAspect>({
     x: 0,
@@ -62,25 +73,35 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ onImageSelect }) => {
 
   const generateCroppedImage = () => {
     if (imgRef.current && crop.width && crop.height) {
+      const pixelCrop = resolvePixelCrop(crop, imgRef.current);
       const canvas = document.createElement("canvas");
       const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
       const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
-      canvas.width = crop.width;
-      canvas.height = crop.height;
+      const outputWidth = Math.max(1, Math.round(pixelCrop.width * scaleX));
+      const outputHeight = Math.max(1, Math.round(pixelCrop.height * scaleY));
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(
           imgRef.current,
-          (crop.x || 0) * scaleX,
-          (crop.y || 0) * scaleY,
-          (crop.width || 0) * scaleX,
-          (crop.height || 0) * scaleY,
+          pixelCrop.x * scaleX,
+          pixelCrop.y * scaleY,
+          pixelCrop.width * scaleX,
+          pixelCrop.height * scaleY,
           0,
           0,
-          crop.width,
-          crop.height
+          outputWidth,
+          outputHeight
         );
-        const base64Image = canvas.toDataURL("image/jpeg");
+
+        if (cleanLightBackground) {
+          applyLightBackgroundTransparency(ctx, outputWidth, outputHeight);
+        }
+
+        const base64Image = canvas.toDataURL(
+          cleanLightBackground ? "image/png" : "image/jpeg",
+        );
         setCroppedImage(base64Image);
         setIsPreviewMode(true);
       }
@@ -115,6 +136,11 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ onImageSelect }) => {
             />
           </Label>
         </div>
+        {helperText ? (
+          <p className="text-center text-xs leading-5 text-muted-foreground">
+            {helperText}
+          </p>
+        ) : null}
 
         {usingWebcam && (
           <div className="space-y-4">
@@ -216,5 +242,16 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ onImageSelect }) => {
     </div>
   );
 };
+
+function resolvePixelCrop(
+  crop: CropWithAspect,
+  image: HTMLImageElement,
+): PixelCrop {
+  if (crop.unit === "%") {
+    return convertToPixelCrop(crop, image.width, image.height);
+  }
+
+  return crop as PixelCrop;
+}
 
 export default ImagePicker;

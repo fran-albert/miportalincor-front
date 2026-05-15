@@ -109,7 +109,9 @@ export function ImageUploadBox({
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-    const file = new File([u8arr], `${assetType}.jpg`, { type: mime });
+    const file = new File([u8arr], `${assetType}.${extensionForMime(mime)}`, {
+      type: mime,
+    });
     const formData = new FormData();
 
     if (assetType === "sello") {
@@ -148,9 +150,26 @@ export function ImageUploadBox({
       </Card>
       {isEditing && !isUploading && (
         <div className="pt-2">
-          <ImagePickerDialog onImageSelect={handleImageSelect} />
+          <ImagePickerDialog
+            onImageSelect={handleImageSelect}
+            cleanLightBackground
+            description="Seleccioná o capturá la imagen. Al confirmar el recorte, el fondo claro se guarda transparente."
+            helperText="Usá una foto bien iluminada sobre papel blanco. El sistema limpia solo fondos claros y conserva trazos del sello o firma."
+          />
         </div>
       )}
     </div>
   );
+}
+
+function extensionForMime(mime: string) {
+  if (mime === "image/png") {
+    return "png";
+  }
+
+  if (mime === "image/webp") {
+    return "webp";
+  }
+
+  return "jpg";
 }
