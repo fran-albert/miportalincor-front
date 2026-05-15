@@ -77,6 +77,19 @@ describe("removeLightBackgroundFromPixels", () => {
     expect(result[pixelIndex(width, 4, 4) + 3]).toBe(255);
   });
 
+  it("cleans a neutral gray paper background while preserving a fine stroke", () => {
+    const width = 8;
+    const data = createImage(width, 8, [178, 177, 166, 255]);
+    setPixel(data, width, 3, 3, [45, 42, 45, 255]);
+    setPixel(data, width, 4, 4, [132, 130, 128, 255]);
+
+    const result = removeLightBackgroundFromPixels(data, width, 8);
+
+    expect(result[pixelIndex(width, 0, 0) + 3]).toBe(0);
+    expect(result[pixelIndex(width, 3, 3) + 3]).toBe(255);
+    expect(result[pixelIndex(width, 4, 4) + 3]).toBe(255);
+  });
+
   it("softens near-background pixels instead of cutting a hard edge", () => {
     const width = 8;
     const data = createImage(width, 8, [255, 255, 255, 255]);
