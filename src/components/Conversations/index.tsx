@@ -238,7 +238,7 @@ export function ConversationsInbox({
         </Tabs>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1 [&>div>div]:!block">
         {isLoading ? (
           <div className="space-y-1 px-2 py-1">
             {Array.from({ length: 8 }).map((_, index) => (
@@ -668,7 +668,7 @@ export function MessageThread({
   const grouped = useMemo(() => groupMessages(messages), [messages]);
 
   return (
-    <ScrollArea className="min-h-0 flex-1">
+    <ScrollArea className="min-h-0 flex-1 [&>div>div]:!block">
       <div className="flex w-full flex-col px-4 py-5 sm:px-[8%]">
         {grouped.map(({ message, firstOfGroup, lastOfGroup, showDate }) => (
           <div key={message.id} className="flex flex-col">
