@@ -1,0 +1,61 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  addInternalNote,
+  closeConversation,
+  conversationKeys,
+  reopenConversation,
+  rerouteConversation,
+  sendMessage,
+  takeConversation,
+  updateTags,
+} from "@/api/Conversations/conversations.api";
+import {
+  RerouteConversationInput,
+  SendConversationMessageInput,
+} from "@/types/Conversations";
+
+export function useConversationMutations(conversationId: string | null) {
+  const queryClient = useQueryClient();
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+  };
+
+  return {
+    sendMessage: useMutation({
+      mutationFn: (input: SendConversationMessageInput) =>
+        sendMessage(requireId(conversationId), input),
+      onSuccess: invalidate,
+    }),
+    takeConversation: useMutation({
+      mutationFn: () => takeConversation(requireId(conversationId)),
+      onSuccess: invalidate,
+    }),
+    closeConversation: useMutation({
+      mutationFn: (resolutionNote?: string) =>
+        closeConversation(requireId(conversationId), resolutionNote),
+      onSuccess: invalidate,
+    }),
+    reopenConversation: useMutation({
+      mutationFn: () => reopenConversation(requireId(conversationId)),
+      onSuccess: invalidate,
+    }),
+    rerouteConversation: useMutation({
+      mutationFn: (input: RerouteConversationInput) =>
+        rerouteConversation(requireId(conversationId), input),
+      onSuccess: invalidate,
+    }),
+    addInternalNote: useMutation({
+      mutationFn: (content: string) => addInternalNote(requireId(conversationId), content),
+      onSuccess: invalidate,
+    }),
+    updateTags: useMutation({
+      mutationFn: (tags: string[]) => updateTags(requireId(conversationId), tags),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+function requireId(id: string | null): string {
+  if (!id) throw new Error("conversationId required");
+  return id;
+}

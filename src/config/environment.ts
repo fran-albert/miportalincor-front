@@ -13,6 +13,9 @@ export interface EnvironmentConfig {
   DEBUG_MODE: boolean;
   SHOW_DEV_TOOLS: boolean;
   API_TURNOS_URL: string;
+  API_CONVERSATIONS_URL: string;
+  CONVERSATIONS_WS_URL: string;
+  CONVERSATIONS_MOCK: boolean;
 }
 
 /**
@@ -52,6 +55,10 @@ function envToBoolean(value: string | undefined, defaultValue: boolean = false):
   return value.toLowerCase() === 'true';
 }
 
+function optionalEnvVar(value: string | undefined, fallback: string): string {
+  return value || fallback;
+}
+
 /**
  * Configuración del entorno actual
  */
@@ -63,6 +70,15 @@ export const environment: EnvironmentConfig = {
   DEBUG_MODE: envToBoolean(import.meta.env.VITE_DEBUG_MODE, false),
   SHOW_DEV_TOOLS: envToBoolean(import.meta.env.VITE_SHOW_DEV_TOOLS, false),
   API_TURNOS_URL: requireEnvVar('VITE_BACKEND_API_TURNOS', import.meta.env.VITE_BACKEND_API_TURNOS),
+  API_CONVERSATIONS_URL: optionalEnvVar(
+    import.meta.env.VITE_CONVERSATIONS_API_URL,
+    import.meta.env.VITE_BACKEND_API_TURNOS,
+  ),
+  CONVERSATIONS_WS_URL: optionalEnvVar(
+    import.meta.env.VITE_CONVERSATIONS_WS_URL,
+    `${import.meta.env.VITE_BACKEND_API_TURNOS?.replace(/\/api\/?$/, "") ?? ""}/api/conversations/stream`,
+  ),
+  CONVERSATIONS_MOCK: envToBoolean(import.meta.env.VITE_CONVERSATIONS_MOCK, false),
 };
 
 /**

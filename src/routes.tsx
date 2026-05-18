@@ -83,6 +83,11 @@ import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
 import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
+import ConversationsPage from "./pages/protected/Conversations";
+import { environment } from "./config/environment";
+
+const enableConversationsPreview =
+  environment.NODE_ENV !== "production" && environment.CONVERSATIONS_MOCK;
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -93,6 +98,12 @@ const router = createBrowserRouter(
         <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
         <Route path="/reset-password" element={<ResetPaswordPage />} />
         <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
+        {enableConversationsPreview && (
+          <Route
+            path="/conversaciones-preview"
+            element={<ConversationsPage standalonePreview />}
+          />
+        )}
 
         {/* Rutas protegidas (con sidebar y header) */}
         <Route element={<DashboardLayout />}>
@@ -139,6 +150,15 @@ const router = createBrowserRouter(
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                 <ShiftsPage />
+              </Private_Routes>
+            }
+          />
+
+          <Route
+            path="/conversaciones"
+            element={
+              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <ConversationsPage />
               </Private_Routes>
             }
           />
