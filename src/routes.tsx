@@ -74,6 +74,7 @@ import { environment } from "./config/environment";
 
 const enableConversationsPreview =
   environment.NODE_ENV !== "production" && environment.CONVERSATIONS_MOCK;
+const enableConversations = environment.CONVERSATIONS_ENABLED;
 
 function App() {
   return (
@@ -141,14 +142,16 @@ function App() {
             }
           />
 
-          <Route
-            path="/conversaciones"
-            element={
-              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
-                <ConversationsPage />
-              </Private_Routes>
-            }
-          />
+          {enableConversations && (
+            <Route
+              path="/conversaciones"
+              element={
+                <Private_Routes allowedRoles={["Administrador"]}>
+                  <ConversationsPage />
+                </Private_Routes>
+              }
+            />
+          )}
 
           {/* Usuarios del Sistema */}
           <Route

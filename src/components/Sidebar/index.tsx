@@ -51,6 +51,7 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
+import { environment } from "@/config/environment";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 
@@ -254,6 +255,12 @@ export function AppSidebar() {
 
   // Filtrar items del menú según roles del usuario
   let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
+
+  if (!environment.CONVERSATIONS_ENABLED || !environment.CONVERSATIONS_NAV_VISIBLE) {
+    filteredNavigationItems = filteredNavigationItems.filter(
+      (item) => item.url !== "/conversaciones"
+    );
+  }
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {
