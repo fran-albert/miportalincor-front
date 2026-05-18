@@ -37,6 +37,7 @@ import {
   CreditCard,
   Briefcase,
   Syringe,
+  MessageCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,6 +96,12 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
+  },
+  {
+    title: "Conversaciones",
+    url: "/conversaciones",
+    icon: MessageCircle,
+    allowedRoles: PERMISSIONS.CONVERSATIONS,
   },
   {
     title: "Mi Sala de Espera",

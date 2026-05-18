@@ -69,6 +69,11 @@ import PatientVaccinationPage from "./pages/protected/Patient/Vaccination";
 import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
+import ConversationsPage from "./pages/protected/Conversations";
+import { environment } from "./config/environment";
+
+const enableConversationsPreview =
+  environment.NODE_ENV !== "production" && environment.CONVERSATIONS_MOCK;
 
 function App() {
   return (
@@ -80,6 +85,12 @@ function App() {
         <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
         <Route path="/reset-password" element={<ResetPaswordPage />} />
         <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
+        {enableConversationsPreview && (
+          <Route
+            path="/conversaciones-preview"
+            element={<ConversationsPage standalonePreview />}
+          />
+        )}
 
         {/* Rutas protegidas (con sidebar y header) */}
         <Route element={<DashboardLayout />}>
@@ -126,6 +137,15 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico", "Secretaria", "Administrador"]}>
                 <ShiftsPage />
+              </Private_Routes>
+            }
+          />
+
+          <Route
+            path="/conversaciones"
+            element={
+              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <ConversationsPage />
               </Private_Routes>
             }
           />
