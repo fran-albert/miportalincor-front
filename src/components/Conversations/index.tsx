@@ -1,10 +1,17 @@
-import { KeyboardEvent, useEffect, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   AlertCircle,
   ArrowRightLeft,
   Bot,
   CalendarDays,
   Check,
+  CheckCheck,
   Clock3,
   FileText,
   Lock,
@@ -18,7 +25,6 @@ import {
   Tag,
   UserRound,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,11 +66,83 @@ import {
   ConversationQueue,
   ConversationTab,
   InboxFilters,
+  MessageStatus,
   QUEUE_LABELS,
   QueueRouting,
   STATUS_LABELS,
 } from "@/types/Conversations";
 import { useConversationMutations } from "@/hooks/Conversations/useConversationMutations";
+
+/* -------------------------------------------------------------------------- */
+/*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
+/* -------------------------------------------------------------------------- */
+
+const CHAT_WALLPAPER: CSSProperties = {
+  backgroundColor: "#eaf1f0",
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='none' stroke='%23187B80' stroke-opacity='0.045' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M18 20h7M21.5 16.5v7'/%3E%3Ccircle cx='66' cy='62' r='4.5'/%3E%3Cpath d='M12 64h9M58 16l6 6M70 22l-6 6'/%3E%3Cpath d='M40 46c0-3 3-5 6-4'/%3E%3C/g%3E%3C/svg%3E\")",
+};
+
+const AVATAR_PALETTE = [
+  "bg-rose-100 text-rose-700",
+  "bg-amber-100 text-amber-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
+  "bg-teal-100 text-teal-700",
+  "bg-orange-100 text-orange-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+];
+
+function avatarColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+function Avatar({
+  name,
+  size = "md",
+}: {
+  name: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  const dims =
+    size === "lg"
+      ? "h-16 w-16 text-xl"
+      : size === "sm"
+        ? "h-9 w-9 text-xs"
+        : "h-12 w-12 text-sm";
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 select-none items-center justify-center rounded-full font-semibold",
+        dims,
+        avatarColor(name),
+      )}
+    >
+      {initials(name)}
+    </div>
+  );
+}
+
+function StatusDot({ status }: { status: Conversation["status"] }) {
+  const color =
+    status === "awaiting_human"
+      ? "bg-amber-500"
+      : status === "human_handled"
+        ? "bg-sky-500"
+        : status === "closed"
+          ? "bg-gray-400"
+          : "bg-emerald-500";
+  return <span className={cn("h-2 w-2 shrink-0 rounded-full", color)} />;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Bandeja (lista de chats)                                                   */
+/* -------------------------------------------------------------------------- */
 
 interface ConversationsInboxProps {
   conversations: Conversation[];
@@ -96,33 +174,36 @@ export function ConversationsInbox({
   };
 
   return (
-    <section className="flex min-h-0 flex-col border-r bg-white">
-      <div className="space-y-3 border-b px-4 py-4">
-        <div className="flex items-center justify-between gap-3">
+    <section className="flex min-h-0 flex-col border-r border-gray-200 bg-white">
+      <div className="space-y-3 px-3 pb-3 pt-4">
+        <div className="flex items-center justify-between gap-3 px-1">
           <div>
-            <h2 className="text-base font-semibold text-gray-950">Bandeja</h2>
-            <p className="text-xs text-gray-500">
-              {total} {total === 1 ? "caso visible" : "casos visibles"}
+            <h2 className="text-[15px] font-semibold text-gray-900">Chats</h2>
+            <p className="text-xs text-gray-400">
+              {total} {total === 1 ? "conversación" : "conversaciones"}
             </p>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
             onClick={onRefresh}
             disabled={isFetching}
             aria-label="Actualizar conversaciones"
+            className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100"
           >
-            <RefreshCcw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+            <RefreshCcw
+              className={cn("h-4 w-4", isFetching && "animate-spin")}
+            />
           </Button>
         </div>
 
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
             value={filters.search ?? ""}
             onChange={(event) => update({ search: event.target.value })}
             placeholder="Buscar por nombre, DNI o teléfono"
-            className="pl-9"
+            className="h-10 rounded-full border-0 bg-gray-100 pl-10 text-sm shadow-none focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-greenPrimary/30"
           />
         </div>
 
@@ -136,30 +217,54 @@ export function ConversationsInbox({
           value={filters.tab}
           onValueChange={(value) => update({ tab: value as ConversationTab })}
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-gray-100 p-1">
-            <TabsTrigger value="activas">Activas</TabsTrigger>
-            <TabsTrigger value="mias">Mías</TabsTrigger>
-            <TabsTrigger value="sin_asignar">Sin asignar</TabsTrigger>
-            <TabsTrigger value="cerradas">Cerradas</TabsTrigger>
+          <TabsList className="grid h-9 w-full grid-cols-4 gap-1 rounded-full bg-gray-100 p-1">
+            {(
+              [
+                ["activas", "Activas"],
+                ["mias", "Mías"],
+                ["sin_asignar", "Sin asignar"],
+                ["cerradas", "Cerradas"],
+              ] as const
+            ).map(([value, label]) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="rounded-full px-1 text-[12px] data-[state=active]:bg-white data-[state=active]:text-greenSecondary data-[state=active]:shadow-sm"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
         {isLoading ? (
-          <div className="space-y-2 p-3">
+          <div className="space-y-1 px-2 py-1">
             {Array.from({ length: 8 }).map((_, index) => (
-              <Skeleton key={index} className="h-24 rounded-md" />
+              <div key={index} className="flex items-center gap-3 px-2 py-3">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-2/3 rounded" />
+                  <Skeleton className="h-3 w-1/2 rounded" />
+                </div>
+              </div>
             ))}
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center px-6 text-center">
-            <MessageCircle className="mb-3 h-8 w-8 text-gray-300" />
-            <p className="text-sm font-medium text-gray-700">No hay conversaciones</p>
-            <p className="mt-1 text-xs text-gray-500">Probá con otra cola o pestaña.</p>
+          <div className="flex h-64 flex-col items-center justify-center px-8 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+              <MessageCircle className="h-7 w-7 text-gray-300" />
+            </div>
+            <p className="text-sm font-medium text-gray-700">
+              No hay conversaciones
+            </p>
+            <p className="mt-1 text-xs text-gray-400">
+              Probá con otra cola o pestaña.
+            </p>
           </div>
         ) : (
-          <div className="space-y-2 p-3">
+          <div className="pb-2">
             {conversations.map((conversation) => (
               <ConversationListItem
                 key={conversation.id}
@@ -187,47 +292,78 @@ export function ConversationListItem({
   onSelect,
 }: ConversationListItemProps) {
   const name = getPatientName(conversation);
-  const pending = conversation.status === "awaiting_human" && !conversation.assignedToUserId;
+  const urgent =
+    conversation.priority === "urgent" ||
+    (conversation.status === "awaiting_human" &&
+      !conversation.assignedToUserId);
 
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full gap-3 rounded-md border px-3 py-3 text-left transition-colors",
-        "border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/40",
-        selected && "border-teal-300 bg-teal-50/80 shadow-sm",
+        "relative flex w-full items-center gap-3 px-3 py-3 text-left transition-colors",
+        "hover:bg-gray-50",
+        selected && "bg-greenPrimary/[0.07] hover:bg-greenPrimary/[0.07]",
       )}
     >
-      <div className="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
-        {initials(name)}
+      {selected && (
+        <span className="absolute inset-y-0 left-0 w-[3px] rounded-r bg-greenPrimary" />
+      )}
+      <div className="relative">
+        <Avatar name={name} />
         {conversation.unread && (
-          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-red-500" />
+          <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-greenPrimary" />
         )}
       </div>
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-950">{name}</p>
-            <p className="truncate text-xs text-gray-500">
-              {conversation.patient.dni ?? conversation.patient.phone}
-            </p>
-          </div>
-          <span className="shrink-0 text-[11px] text-gray-400">
-            {formatRelative(conversation.lastMessageAt ?? conversation.createdAt)}
+      <div className="min-w-0 flex-1 border-b border-gray-100 pb-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <p
+            className={cn(
+              "truncate text-sm text-gray-900",
+              conversation.unread ? "font-semibold" : "font-medium",
+            )}
+          >
+            {name}
+          </p>
+          <span
+            className={cn(
+              "shrink-0 text-[11px]",
+              conversation.unread
+                ? "font-semibold text-greenPrimary"
+                : "text-gray-400",
+            )}
+          >
+            {formatRelative(
+              conversation.lastMessageAt ?? conversation.createdAt,
+            )}
           </span>
         </div>
-        <p className="line-clamp-2 text-sm leading-5 text-gray-600">
-          {conversation.lastMessagePreview || "Sin mensajes disponibles"}
-        </p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <QueueBadge queue={conversation.queue} />
-          <StatusBadge status={conversation.status} />
-          {pending && (
-            <Badge className="border-red-200 bg-red-50 text-red-700 hover:bg-red-50">
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <p
+            className={cn(
+              "truncate text-[13px] leading-5",
+              conversation.unread
+                ? "text-gray-700"
+                : "text-gray-500",
+            )}
+          >
+            {conversation.lastMessagePreview || "Sin mensajes disponibles"}
+          </p>
+          {urgent && (
+            <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-px text-[10px] font-semibold text-white">
               Urgente
-            </Badge>
+            </span>
           )}
+        </div>
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-greenPrimary/10 px-2 py-0.5 text-[10.5px] font-medium text-greenSecondary">
+            {QUEUE_LABELS[conversation.queue]}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10.5px] text-gray-400">
+            <StatusDot status={conversation.status} />
+            {STATUS_LABELS[conversation.status]}
+          </span>
         </div>
       </div>
     </button>
@@ -246,8 +382,11 @@ export function QueueSelector({ value, queues, onChange }: QueueSelectorProps) {
   }
 
   return (
-    <Select value={value} onValueChange={(next) => onChange(next as ConversationQueue | "all")}>
-      <SelectTrigger>
+    <Select
+      value={value}
+      onValueChange={(next) => onChange(next as ConversationQueue | "all")}
+    >
+      <SelectTrigger className="h-9 rounded-full border-0 bg-gray-100 text-sm shadow-none focus:ring-2 focus:ring-greenPrimary/30">
         <SelectValue placeholder="Cola" />
       </SelectTrigger>
       <SelectContent>
@@ -261,6 +400,10 @@ export function QueueSelector({ value, queues, onChange }: QueueSelectorProps) {
     </Select>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Vista de conversación                                                      */
+/* -------------------------------------------------------------------------- */
 
 interface ConversationDetailViewProps {
   detail: ConversationDetail | undefined;
@@ -280,10 +423,15 @@ export function ConversationDetailView({
 
   if (isLoading) {
     return (
-      <section className="flex min-h-0 flex-1 flex-col bg-[#f5f7f6]">
-        <div className="space-y-4 p-4">
-          <Skeleton className="h-16 rounded-md" />
-          <Skeleton className="h-[420px] rounded-md" />
+      <section
+        className="flex min-h-0 flex-1 flex-col"
+        style={CHAT_WALLPAPER}
+      >
+        <div className="h-[68px] border-b border-gray-200 bg-white" />
+        <div className="flex-1 space-y-4 p-6">
+          <Skeleton className="h-12 w-1/2 rounded-2xl" />
+          <Skeleton className="ml-auto h-16 w-2/3 rounded-2xl" />
+          <Skeleton className="h-12 w-2/5 rounded-2xl" />
         </div>
       </section>
     );
@@ -291,11 +439,20 @@ export function ConversationDetailView({
 
   if (!detail) {
     return (
-      <section className="flex min-h-0 flex-1 items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <MessageCircle className="mx-auto mb-3 h-9 w-9 text-gray-300" />
-          <p className="text-sm font-medium text-gray-700">
-            Seleccioná una conversación
+      <section
+        className="flex min-h-0 flex-1 flex-col items-center justify-center border-b-4 border-greenPrimary/70"
+        style={CHAT_WALLPAPER}
+      >
+        <div className="max-w-sm px-6 text-center">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-white/70 shadow-sm">
+            <MessageCircle className="h-9 w-9 text-greenPrimary" />
+          </div>
+          <p className="text-lg font-semibold text-gray-700">
+            Bandeja de WhatsApp
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Seleccioná una conversación de la izquierda para ver los mensajes y
+            responder al paciente.
           </p>
         </div>
       </section>
@@ -305,7 +462,7 @@ export function ConversationDetailView({
   const canRespond = detail.status !== "closed";
 
   return (
-    <section className="flex min-h-0 flex-1 bg-[#f5f7f6]">
+    <section className="flex min-h-0 flex-1" style={CHAT_WALLPAPER}>
       <div className="flex min-h-0 flex-1 flex-col">
         <ConversationHeader
           conversation={detail}
@@ -369,124 +526,252 @@ function ConversationHeader({
   onReroute,
   onOpenPatient,
 }: ConversationHeaderProps) {
+  const name = getPatientName(conversation);
+
   return (
-    <div className="border-b bg-white px-5 py-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2.5">
+      <button
+        type="button"
+        onClick={onOpenPatient}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1 pr-2 text-left transition-colors hover:bg-gray-50"
+      >
+        <Avatar name={name} size="sm" />
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-lg font-semibold text-gray-950">
-              {getPatientName(conversation)}
-            </h2>
-            <QueueBadge queue={conversation.queue} />
-            <StatusBadge status={conversation.status} />
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-            <span className="inline-flex items-center gap-1">
-              <Phone className="h-3.5 w-3.5" />
-              {conversation.patient.phone}
+          <p className="truncate text-sm font-semibold text-gray-900">
+            {name}
+          </p>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <StatusDot status={conversation.status} />
+            <span className="truncate">
+              {QUEUE_LABELS[conversation.queue]} ·{" "}
+              {STATUS_LABELS[conversation.status]}
+              {conversation.assignedToName
+                ? ` · ${conversation.assignedToName}`
+                : ""}
             </span>
-            {conversation.assignedToName && (
-              <span className="inline-flex items-center gap-1">
-                <UserRound className="h-3.5 w-3.5" />
-                {conversation.assignedToName}
-              </span>
-            )}
-            {conversation.zammadTicketId && (
-              <span className="inline-flex items-center gap-1">
-                <FileText className="h-3.5 w-3.5" />
-                Ticket #{conversation.zammadTicketId}
-              </span>
-            )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={onOpenPatient}>
-            <FileText className="mr-2 h-4 w-4" />
-            Datos
+      </button>
+
+      <div className="flex shrink-0 items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onOpenPatient}
+          aria-label="Datos del paciente"
+          className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100"
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+
+        {conversation.status === "closed" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReopen}
+            disabled={isBusy}
+            className="rounded-full"
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Reabrir
           </Button>
-          {conversation.status === "closed" ? (
-            <Button variant="outline" size="sm" onClick={onReopen} disabled={isBusy}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Reabrir
+        ) : (
+          <>
+            <Button
+              size="sm"
+              onClick={onTake}
+              disabled={isBusy}
+              className="rounded-full bg-greenPrimary hover:bg-greenSecondary"
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Tomar
             </Button>
-          ) : (
-            <>
-              <Button size="sm" onClick={onTake} disabled={isBusy}>
-                <Lock className="mr-2 h-4 w-4" />
-                Tomar
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" aria-label="Más acciones">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={onReroute}>
-                    <ArrowRightLeft className="mr-2 h-4 w-4" />
-                    Transferir
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onClose} disabled={isBusy}>
-                    <Check className="mr-2 h-4 w-4" />
-                    Cerrar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          )}
-        </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Más acciones"
+                  className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onReroute}>
+                  <ArrowRightLeft className="mr-2 h-4 w-4" />
+                  Transferir
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onClose} disabled={isBusy}>
+                  <Check className="mr-2 h-4 w-4" />
+                  Cerrar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-export function MessageThread({ messages }: { messages: ConversationMessage[] }) {
+interface GroupedMessage {
+  message: ConversationMessage;
+  firstOfGroup: boolean;
+  lastOfGroup: boolean;
+  showDate: boolean;
+}
+
+const GROUP_GAP_MS = 5 * 60 * 1000;
+
+function groupMessages(messages: ConversationMessage[]): GroupedMessage[] {
+  return messages.map((message, index) => {
+    const prev = messages[index - 1];
+    const next = messages[index + 1];
+
+    const sameSenderAsPrev =
+      !!prev &&
+      prev.direction === message.direction &&
+      prev.sender === message.sender;
+    const closeToPrev =
+      !!prev &&
+      new Date(message.createdAt).getTime() -
+        new Date(prev.createdAt).getTime() <
+        GROUP_GAP_MS;
+    const sameDayAsPrev =
+      !!prev && isSameDay(prev.createdAt, message.createdAt);
+
+    const sameGroupAsNext =
+      !!next &&
+      next.direction === message.direction &&
+      next.sender === message.sender &&
+      isSameDay(next.createdAt, message.createdAt) &&
+      new Date(next.createdAt).getTime() -
+        new Date(message.createdAt).getTime() <
+        GROUP_GAP_MS;
+
+    return {
+      message,
+      firstOfGroup:
+        !prev || !sameSenderAsPrev || !closeToPrev || !sameDayAsPrev,
+      lastOfGroup: !sameGroupAsNext,
+      showDate: !prev || !sameDayAsPrev,
+    };
+  });
+}
+
+export function MessageThread({
+  messages,
+}: {
+  messages: ConversationMessage[];
+}) {
+  const grouped = useMemo(() => groupMessages(messages), [messages]);
+
   return (
     <ScrollArea className="min-h-0 flex-1">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-5 py-4">
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+      <div className="flex w-full flex-col px-4 py-5 sm:px-[8%]">
+        {grouped.map(({ message, firstOfGroup, lastOfGroup, showDate }) => (
+          <div key={message.id} className="flex flex-col">
+            {showDate && (
+              <div className="my-3 flex justify-center">
+                <span className="rounded-full bg-white/85 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-gray-500 shadow-sm">
+                  {dateSeparatorLabel(message.createdAt)}
+                </span>
+              </div>
+            )}
+            <MessageBubble
+              message={message}
+              firstOfGroup={firstOfGroup}
+              lastOfGroup={lastOfGroup}
+            />
+          </div>
         ))}
       </div>
     </ScrollArea>
   );
 }
 
-export function MessageBubble({ message }: { message: ConversationMessage }) {
+interface MessageBubbleProps {
+  message: ConversationMessage;
+  firstOfGroup?: boolean;
+  lastOfGroup?: boolean;
+}
+
+export function MessageBubble({
+  message,
+  firstOfGroup = true,
+  lastOfGroup = true,
+}: MessageBubbleProps) {
   const inbound = message.direction === "inbound";
+  const isBot = message.sender === "bot";
   const senderLabel =
     message.sender === "bot"
-      ? "Bot"
+      ? "Bot Incor"
       : message.sender === "human"
         ? message.senderName ?? "Agente"
         : message.senderName ?? "Paciente";
 
   return (
-    <div className={cn("flex", inbound ? "justify-start" : "justify-end")}>
+    <div
+      className={cn(
+        "flex",
+        inbound ? "justify-start" : "justify-end",
+        lastOfGroup ? "mb-2.5" : "mb-0.5",
+      )}
+    >
       <div
         className={cn(
-          "max-w-[78%] rounded-md border px-3 py-2 shadow-sm",
+          "relative max-w-[85%] px-3 py-1.5 text-sm shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] sm:max-w-[65%]",
+          "rounded-2xl",
           inbound
-            ? "border-gray-200 bg-white text-gray-900"
-            : "border-teal-200 bg-[#E5F7F5] text-gray-950",
+            ? "bg-white text-gray-900"
+            : isBot
+              ? "bg-[#e8f4ec] text-[#0c3f3f]"
+              : "bg-[#d6efea] text-[#0c3f3f]",
+          firstOfGroup && (inbound ? "rounded-tl-md" : "rounded-tr-md"),
         )}
       >
-        <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-          {message.sender === "bot" ? (
-            <Bot className="h-3.5 w-3.5" />
-          ) : (
-            <UserRound className="h-3.5 w-3.5" />
-          )}
-          {senderLabel}
-        </div>
-        <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
-        <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-gray-400">
+        {firstOfGroup && !inbound && (
+          <div
+            className={cn(
+              "mb-0.5 flex items-center gap-1 text-[11px] font-semibold",
+              isBot ? "text-emerald-700" : "text-greenSecondary",
+            )}
+          >
+            {isBot ? (
+              <Bot className="h-3.5 w-3.5" />
+            ) : (
+              <UserRound className="h-3.5 w-3.5" />
+            )}
+            {senderLabel}
+          </div>
+        )}
+        <p className="whitespace-pre-wrap break-words text-[14px] leading-[19px]">
+          {message.content}
+        </p>
+        <div className="float-right ml-2 mt-1 flex translate-y-0.5 items-center gap-1 text-[10px] text-gray-400">
           <span>{formatTime(message.createdAt)}</span>
-          {!inbound && <span>{message.status === "failed" ? "!" : "✓"}</span>}
+          {!inbound && <DeliveryStatus status={message.status} />}
         </div>
       </div>
     </div>
   );
+}
+
+function DeliveryStatus({ status }: { status: MessageStatus }) {
+  if (status === "failed") {
+    return <AlertCircle className="h-3.5 w-3.5 text-red-500" />;
+  }
+  if (status === "pending") {
+    return <Clock3 className="h-3 w-3 text-gray-400" />;
+  }
+  if (status === "read") {
+    return <CheckCheck className="h-3.5 w-3.5 text-sky-500" />;
+  }
+  if (status === "delivered") {
+    return <CheckCheck className="h-3.5 w-3.5 text-gray-400" />;
+  }
+  return <Check className="h-3.5 w-3.5 text-gray-400" />;
 }
 
 interface MessageComposerProps {
@@ -505,28 +790,35 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       submit();
     }
   };
 
   return (
-    <div className="border-t bg-white px-5 py-4">
-      <div className="mx-auto flex max-w-5xl items-end gap-2">
-        <Textarea
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          placeholder={disabled ? "Conversación cerrada" : "Responder por WhatsApp"}
-          className="max-h-36 min-h-[52px] resize-none rounded-md"
-        />
+    <div className="border-t border-gray-200 bg-[#f0f2f1] px-4 py-3">
+      <div className="flex items-end gap-2">
+        <div className="flex-1 rounded-3xl bg-white shadow-sm">
+          <Textarea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={
+              disabled
+                ? "Conversación cerrada"
+                : "Escribí un mensaje  ·  Enter para enviar, Shift+Enter para salto de línea"
+            }
+            className="max-h-40 min-h-[44px] resize-none border-0 bg-transparent px-4 py-3 text-sm shadow-none focus-visible:ring-0"
+          />
+        </div>
         <Button
           size="icon"
           onClick={submit}
           disabled={!trimmed || disabled}
           aria-label="Enviar mensaje"
+          className="h-11 w-11 shrink-0 rounded-full bg-greenPrimary hover:bg-greenSecondary disabled:bg-gray-300"
         >
           <Send className="h-4 w-4" />
         </Button>
@@ -534,6 +826,10 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Panel de paciente                                                          */
+/* -------------------------------------------------------------------------- */
 
 interface PatientContextSheetProps extends PatientPanelProps {
   open: boolean;
@@ -548,7 +844,7 @@ function PatientContextSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-md">
-        <SheetHeader className="border-b px-5 py-4">
+        <SheetHeader className="border-b border-gray-200 px-5 py-4">
           <SheetTitle>Datos del paciente</SheetTitle>
         </SheetHeader>
         <PatientPanel {...panelProps} />
@@ -575,6 +871,7 @@ export function PatientPanel({
   const [note, setNote] = useState("");
   const conversationTags = conversation.tags.join(", ");
   const [tags, setTags] = useState(conversationTags);
+  const name = getPatientName(conversation);
   const parsedTags = useMemo(
     () =>
       tags
@@ -589,15 +886,33 @@ export function PatientPanel({
   }, [conversationTags]);
 
   return (
-    <aside className="min-h-0 bg-white p-5">
-      <div className="space-y-6">
+    <aside className="min-h-0 bg-white">
+      <div className="flex flex-col items-center gap-3 border-b border-gray-100 px-5 py-6 text-center">
+        <Avatar name={name} size="lg" />
+        <div>
+          <p className="text-base font-semibold text-gray-900">{name}</p>
+          <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-gray-500">
+            <Phone className="h-3.5 w-3.5" />
+            {conversation.patient.phone}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-5">
         <section>
-          <h3 className="text-sm font-semibold text-gray-950">Paciente</h3>
-          <div className="mt-3 space-y-2 text-sm">
-            <InfoRow label="Nombre" value={getPatientName(conversation)} />
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+            Datos
+          </h3>
+          <div className="space-y-2 text-sm">
             <InfoRow label="DNI" value={conversation.patient.dni ?? "Sin DNI"} />
-            <InfoRow label="Obra social" value={conversation.patient.healthInsurance ?? "Sin dato"} />
-            <InfoRow label="Email" value={conversation.patient.email ?? "Sin email"} />
+            <InfoRow
+              label="Obra social"
+              value={conversation.patient.healthInsurance ?? "Sin dato"}
+            />
+            <InfoRow
+              label="Email"
+              value={conversation.patient.email ?? "Sin email"}
+            />
           </div>
         </section>
 
@@ -606,17 +921,22 @@ export function PatientPanel({
         <section>
           <div className="mb-3 flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-greenPrimary" />
-            <h3 className="text-sm font-semibold text-gray-950">Próximos turnos</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Próximos turnos
+            </h3>
           </div>
           {conversation.upcomingAppointments.length === 0 ? (
-            <p className="rounded-md border border-dashed bg-gray-50 p-3 text-sm text-gray-500">
+            <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
               No hay turnos próximos cargados para mostrar.
             </p>
           ) : (
             <div className="space-y-2">
               {conversation.upcomingAppointments.map((appointment) => (
-                <div key={appointment.id} className="rounded-md border bg-gray-50 p-3">
-                  <p className="text-sm font-medium text-gray-950">
+                <div
+                  key={appointment.id}
+                  className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+                >
+                  <p className="text-sm font-medium text-gray-900">
                     {appointment.doctorName}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
@@ -637,7 +957,7 @@ export function PatientPanel({
         <section>
           <div className="mb-2 flex items-center gap-2">
             <Tag className="h-4 w-4 text-greenPrimary" />
-            <h3 className="text-sm font-semibold text-gray-950">Tags</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Tags</h3>
           </div>
           <Input
             value={tags}
@@ -660,7 +980,9 @@ export function PatientPanel({
         <section>
           <div className="mb-2 flex items-center gap-2">
             <StickyNote className="h-4 w-4 text-greenPrimary" />
-            <h3 className="text-sm font-semibold text-gray-950">Notas internas</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Notas internas
+            </h3>
           </div>
           <Textarea
             value={note}
@@ -682,13 +1004,16 @@ export function PatientPanel({
           </Button>
           <div className="mt-3 space-y-2">
             {conversation.internalNotes.map((item) => (
-              <div key={item.id} className="rounded-md border bg-gray-50 p-2 text-xs">
+              <div
+                key={item.id}
+                className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-xs"
+              >
                 <p className="font-medium text-gray-800">{item.author}</p>
                 <p className="mt-1 text-gray-600">{item.content}</p>
               </div>
             ))}
             {conversation.internalNotes.length === 0 && (
-              <p className="rounded-md border border-dashed bg-gray-50 p-3 text-sm text-gray-500">
+              <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
                 Todavía no hay notas internas.
               </p>
             )}
@@ -731,7 +1056,10 @@ export function RerouteDialog({
           <DialogTitle>Transferir conversación</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <Select value={queue} onValueChange={(value) => setQueue(value as ConversationQueue)}>
+          <Select
+            value={queue}
+            onValueChange={(value) => setQueue(value as ConversationQueue)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Cola destino" />
             </SelectTrigger>
@@ -768,41 +1096,16 @@ export function RerouteDialog({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <span className="text-gray-500">{label}</span>
       <span className="text-right font-medium text-gray-900">{value}</span>
     </div>
-  );
-}
-
-function QueueBadge({ queue }: { queue: ConversationQueue }) {
-  return (
-    <Badge className="border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-50">
-      {QUEUE_LABELS[queue]}
-    </Badge>
-  );
-}
-
-function StatusBadge({ status }: { status: Conversation["status"] }) {
-  const className =
-    status === "awaiting_human"
-      ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-      : status === "human_handled"
-        ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50"
-        : status === "closed"
-          ? "border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-100"
-          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50";
-
-  return (
-    <Badge className={className}>
-      {status === "awaiting_human" && <AlertCircle className="mr-1 h-3 w-3" />}
-      {status === "bot_active" && <Bot className="mr-1 h-3 w-3" />}
-      {status === "human_handled" && <UserRound className="mr-1 h-3 w-3" />}
-      {status === "closed" && <Check className="mr-1 h-3 w-3" />}
-      {STATUS_LABELS[status]}
-    </Badge>
   );
 }
 
@@ -825,10 +1128,36 @@ function getPatientName(conversation: Conversation): string {
 
 function initials(value: string): string {
   const words = value.trim().split(/\s+/).filter(Boolean);
-  return words
+  const result = words
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase())
     .join("");
+  return result || "?";
+}
+
+function isSameDay(a: string, b: string): boolean {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+function dateSeparatorLabel(value: string): string {
+  const date = new Date(value);
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  if (isSameDay(value, now.toISOString())) return "Hoy";
+  if (isSameDay(value, yesterday.toISOString())) return "Ayer";
+  return date.toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
 }
 
 function formatRelative(value: string): string {
@@ -838,7 +1167,10 @@ function formatRelative(value: string): string {
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours} h`;
-  return date.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+  return date.toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
 }
 
 function formatTime(value: string): string {

@@ -69,27 +69,28 @@ export default function ConversationsPage({
           standalonePreview ? "h-screen" : "h-[calc(100vh-4rem)]"
         }`}
       >
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b bg-white px-5 py-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-greenSecondary px-5 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="hidden h-10 w-10 items-center justify-center rounded-md bg-greenPrimary text-white sm:flex">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
               <MessageCircle className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-semibold text-gray-950">
+              <h1 className="truncate text-base font-semibold text-white">
                 Conversaciones
               </h1>
-              <p className="truncate text-sm text-gray-500">
+              <p className="truncate text-xs text-white/70">
                 WhatsApp del bot Incor
               </p>
             </div>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => {
               conversationsQuery.refetch();
               if (selectedId) detailQuery.refetch();
             }}
+            className="rounded-full text-white hover:bg-white/15 hover:text-white"
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
             Actualizar
