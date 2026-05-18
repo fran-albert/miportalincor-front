@@ -16,6 +16,8 @@ export interface EnvironmentConfig {
   API_CONVERSATIONS_URL: string;
   CONVERSATIONS_WS_URL: string;
   CONVERSATIONS_MOCK: boolean;
+  CONVERSATIONS_ENABLED: boolean;
+  CONVERSATIONS_NAV_VISIBLE: boolean;
 }
 
 /**
@@ -79,6 +81,11 @@ export const environment: EnvironmentConfig = {
     `${import.meta.env.VITE_BACKEND_API_TURNOS?.replace(/\/api\/?$/, "") ?? ""}/api/conversations/stream`,
   ),
   CONVERSATIONS_MOCK: envToBoolean(import.meta.env.VITE_CONVERSATIONS_MOCK, false),
+  CONVERSATIONS_ENABLED: envToBoolean(import.meta.env.VITE_CONVERSATIONS_ENABLED, false),
+  CONVERSATIONS_NAV_VISIBLE: envToBoolean(
+    import.meta.env.VITE_CONVERSATIONS_NAV_VISIBLE,
+    false,
+  ),
 };
 
 /**
