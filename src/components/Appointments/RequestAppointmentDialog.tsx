@@ -31,6 +31,7 @@ import {
   usePublicDoctorsBySpeciality,
   useRequestAppointment,
 } from "@/hooks/Appointments";
+import { getAppointmentRequestErrorMessage } from "./requestAppointmentError";
 import type { PublicAppointmentDoctor, PublicAppointmentSlot } from "@/api/Appointments";
 import { addDays, format, isAfter, isBefore, isValid, parse, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -66,13 +67,6 @@ const parseSlotDate = (date: string): Date | null => {
 const normalizeAppointmentHour = (time: string): string => {
   const trimmedTime = time.trim();
   return /^\d{2}:\d{2}$/.test(trimmedTime) ? `${trimmedTime}:00` : trimmedTime;
-};
-
-const getErrorMessage = (error: unknown): string => {
-  const responseData = (error as { response?: { data?: { error?: string; message?: string } } })
-    ?.response?.data;
-
-  return responseData?.error || responseData?.message || "No pudimos reservar el turno.";
 };
 
 const getDoctorLabel = (
@@ -275,7 +269,7 @@ export function RequestAppointmentDialog({
       });
       onOpenChange(false);
     } catch (error) {
-      setBookingError(getErrorMessage(error));
+      setBookingError(getAppointmentRequestErrorMessage(error));
     }
   };
 
