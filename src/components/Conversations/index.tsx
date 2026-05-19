@@ -1,4 +1,5 @@
 import {
+  ChangeEvent,
   CSSProperties,
   KeyboardEvent,
   useCallback,
@@ -21,10 +22,12 @@ import {
   Lock,
   MoreHorizontal,
   MessageCircle,
+  Paperclip,
   Phone,
   RefreshCcw,
   Search,
   Send,
+  X,
   StickyNote,
   Tag,
   UserRound,
@@ -77,6 +80,8 @@ import {
 } from "@/types/Conversations";
 import { useConversationMutations } from "@/hooks/Conversations/useConversationMutations";
 import { useConversationTabCounts } from "@/hooks/Conversations/useConversationTabCounts";
+import { getMessageMedia } from "@/api/Conversations/conversations.api";
+import { toast } from "sonner";
 
 /* -------------------------------------------------------------------------- */
 /*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
@@ -501,8 +506,13 @@ export function ConversationDetailView({
         />
         <MessageThread messages={detail.messages} />
         <MessageComposer
-          disabled={!canRespond || mutations.sendMessage.isPending}
-          onSend={(content) => mutations.sendMessage.mutate({ content })}
+          disabled={
+            !canRespond ||
+            mutations.sendMessage.isPending ||
+            mutations.sendMedia.isPending
+          }
+          onSend={(content) => mutations.sendMessage.mutateAsync({ content })}
+          onSendMedia={(input) => mutations.sendMedia.mutateAsync(input)}
         />
       </div>
       <PatientContextSheet
@@ -799,6 +809,89 @@ interface MessageBubbleProps {
   lastOfGroup?: boolean;
 }
 
+function isMediaPlaceholder(message: ConversationMessage): boolean {
+  return (
+    !!message.mediaUrl &&
+    /^\[(image|document|audio|video|sticker)\]$/i.test(
+      message.content.trim(),
+    )
+  );
+}
+
+function MediaAttachment({ message }: { message: ConversationMessage }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const type = (message.mediaType ?? "").toLowerCase();
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    setUrl(null);
+    setFailed(false);
+    getMessageMedia(message.conversationId, message.id)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [message.conversationId, message.id]);
+
+  if (failed) {
+    return (
+      <div className="mb-1 rounded-lg bg-black/5 px-3 py-2 text-[12px] text-gray-500">
+        No se pudo cargar el adjunto
+      </div>
+    );
+  }
+  if (!url) {
+    return (
+      <div className="mb-1 h-40 w-56 max-w-full animate-pulse rounded-lg bg-black/5" />
+    );
+  }
+  if (type === "image" || type === "sticker") {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="block">
+        <img
+          src={url}
+          alt="Adjunto"
+          className="mb-1 max-h-72 w-auto max-w-full rounded-lg object-cover"
+        />
+      </a>
+    );
+  }
+  if (type === "audio") {
+    return <audio controls src={url} className="mb-1 w-60 max-w-full" />;
+  }
+  if (type === "video") {
+    return (
+      <video
+        controls
+        src={url}
+        className="mb-1 max-h-72 w-auto max-w-full rounded-lg"
+      />
+    );
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      download
+      className="mb-1 inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 text-[13px] font-medium text-greenSecondary hover:bg-black/10"
+    >
+      <FileText className="h-4 w-4" />
+      Abrir adjunto
+    </a>
+  );
+}
+
 export function MessageBubble({
   message,
   firstOfGroup = true,
@@ -848,9 +941,12 @@ export function MessageBubble({
             {senderLabel}
           </div>
         )}
-        <p className="whitespace-pre-wrap break-words text-[14px] leading-[19px]">
-          {message.content}
-        </p>
+        {message.mediaUrl && <MediaAttachment message={message} />}
+        {!isMediaPlaceholder(message) && (
+          <p className="whitespace-pre-wrap break-words text-[14px] leading-[19px]">
+            {message.content}
+          </p>
+        )}
         <div className="float-right ml-2 mt-1 flex translate-y-0.5 items-center gap-1 text-[10px] text-gray-400">
           <span>{formatTime(message.createdAt)}</span>
           {!inbound && <DeliveryStatus status={message.status} />}
@@ -876,49 +972,126 @@ function DeliveryStatus({ status }: { status: MessageStatus }) {
   return <Check className="h-3.5 w-3.5 text-gray-400" />;
 }
 
+const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
+
 interface MessageComposerProps {
   disabled: boolean;
-  onSend: (content: string) => void;
+  onSend: (content: string) => Promise<unknown> | unknown;
+  onSendMedia: (input: { file: File; caption?: string }) => Promise<unknown> | unknown;
 }
 
-export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
+export function MessageComposer({
+  disabled,
+  onSend,
+  onSendMedia,
+}: MessageComposerProps) {
   const [content, setContent] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmed = content.trim();
+  const canSubmit = !disabled && !isSubmitting && (!!file || !!trimmed);
 
-  const submit = () => {
-    if (!trimmed || disabled) return;
-    onSend(trimmed);
+  const reset = () => {
     setContent("");
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    setIsSubmitting(true);
+    try {
+      if (file) {
+        await onSendMedia({ file, caption: trimmed || undefined });
+      } else {
+        await onSend(trimmed);
+      }
+      reset();
+    } catch {
+      // El hook de mutación muestra el error. Mantener el borrador evita perder el adjunto.
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      submit();
+      void submit();
     }
+  };
+
+  const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+    if (selected.size > MAX_ATTACHMENT_BYTES) {
+      toast.error("El archivo supera el límite de 16 MB");
+      event.target.value = "";
+      return;
+    }
+    setFile(selected);
   };
 
   return (
     <div className="border-t border-gray-200 bg-[#f0f2f1] px-4 py-3">
+      {file && (
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
+          <Paperclip className="h-4 w-4 shrink-0 text-greenPrimary" />
+          <span className="min-w-0 flex-1 truncate text-gray-700">
+            {file.name}
+          </span>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => {
+              setFile(null);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+            aria-label="Quitar adjunto"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <div className="flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFile}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || isSubmitting}
+          aria-label="Adjuntar archivo"
+          className="h-11 w-11 shrink-0 rounded-full text-gray-500 hover:bg-gray-200"
+        >
+          <Paperclip className="h-5 w-5" />
+        </Button>
         <div className="flex-1 rounded-3xl bg-white shadow-sm">
           <Textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
             placeholder={
               disabled
                 ? "Conversación cerrada"
-                : "Escribí un mensaje  ·  Enter para enviar, Shift+Enter para salto de línea"
+                : file
+                  ? "Agregá un comentario (opcional)"
+                  : "Escribí un mensaje  ·  Enter para enviar, Shift+Enter para salto de línea"
             }
             className="max-h-40 min-h-[44px] resize-none border-0 bg-transparent px-4 py-3 text-sm shadow-none focus-visible:ring-0"
           />
         </div>
         <Button
           size="icon"
-          onClick={submit}
-          disabled={!trimmed || disabled}
+          onClick={() => void submit()}
+          disabled={!canSubmit}
           aria-label="Enviar mensaje"
           className="h-11 w-11 shrink-0 rounded-full bg-greenPrimary hover:bg-greenSecondary disabled:bg-gray-300"
         >

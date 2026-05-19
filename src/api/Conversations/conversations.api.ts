@@ -64,6 +64,17 @@ export async function getMessages(
   return data;
 }
 
+export async function getMessageMedia(
+  conversationId: string,
+  messageId: string,
+): Promise<Blob> {
+  const { data } = await apiConversations.get<Blob>(
+    `/conversations/${conversationId}/messages/${messageId}/media`,
+    { responseType: "blob" },
+  );
+  return data;
+}
+
 export async function sendMessage(
   id: string,
   input: SendConversationMessageInput,
@@ -76,6 +87,28 @@ export async function sendMessage(
     },
   );
   return data;
+}
+
+export async function sendConversationMedia(
+  id: string,
+  file: File,
+  caption?: string,
+): Promise<void> {
+  if (environment.CONVERSATIONS_MOCK) {
+    throw new Error("Adjuntar archivos no está disponible en modo demo");
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  const trimmedCaption = caption?.trim();
+  if (trimmedCaption) {
+    formData.append("caption", trimmedCaption);
+  }
+  await apiConversations.post(`/conversations/${id}/media`, formData);
+}
+
+export async function markConversationRead(id: string): Promise<void> {
+  if (environment.CONVERSATIONS_MOCK) return;
+  await apiConversations.post(`/conversations/${id}/read`);
 }
 
 export async function takeConversation(id: string): Promise<Conversation> {
