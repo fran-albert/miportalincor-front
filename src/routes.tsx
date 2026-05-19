@@ -148,7 +148,7 @@ function App() {
             <Route
               path="/conversaciones"
               element={
-                <Private_Routes allowedRoles={["Administrador"]}>
+                <Private_Routes allowedRoles={["Administrador", "Secretaria"]}>
                   <ConversationsPage />
                 </Private_Routes>
               }

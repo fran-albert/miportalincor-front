@@ -76,6 +76,7 @@ import {
   STATUS_LABELS,
 } from "@/types/Conversations";
 import { useConversationMutations } from "@/hooks/Conversations/useConversationMutations";
+import { useConversationTabCounts } from "@/hooks/Conversations/useConversationTabCounts";
 
 /* -------------------------------------------------------------------------- */
 /*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
@@ -176,6 +177,7 @@ export function ConversationsInbox({
   const update = (patch: Partial<InboxFilters>) => {
     onFiltersChange({ ...filters, ...patch });
   };
+  const tabCounts = useConversationTabCounts(filters.queue);
 
   return (
     <section className="flex min-h-0 flex-col border-r border-gray-200 bg-white">
@@ -229,15 +231,31 @@ export function ConversationsInbox({
                 ["sin_asignar", "Sin asignar"],
                 ["cerradas", "Cerradas"],
               ] as const
-            ).map(([value, label]) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="rounded-full px-1 text-[12px] data-[state=active]:bg-white data-[state=active]:text-greenSecondary data-[state=active]:shadow-sm"
-              >
-                {label}
-              </TabsTrigger>
-            ))}
+            ).map(([value, label]) => {
+              const count = tabCounts[value];
+              const isUrgent = value === "sin_asignar" && count > 0;
+              return (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="flex items-center justify-center gap-1 rounded-full px-1 text-[12px] data-[state=active]:bg-white data-[state=active]:text-greenSecondary data-[state=active]:shadow-sm"
+                >
+                  <span className="truncate">{label}</span>
+                  {count > 0 && (
+                    <span
+                      className={cn(
+                        "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none",
+                        isUrgent
+                          ? "bg-red-500 text-white"
+                          : "bg-greenPrimary/15 text-greenSecondary",
+                      )}
+                    >
+                      {count > 99 ? "99+" : count}
+                    </span>
+                  )}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </Tabs>
       </div>
