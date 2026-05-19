@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { toast } from "sonner";
 import {
   addInternalNote,
   closeConversation,
@@ -25,6 +27,11 @@ export function useConversationMutations(conversationId: string | null) {
       mutationFn: (input: SendConversationMessageInput) =>
         sendMessage(requireId(conversationId), input),
       onSuccess: invalidate,
+      onError: (error: unknown) => {
+        toast.error(
+          extractErrorMessage(error, "No se pudo enviar el mensaje"),
+        );
+      },
     }),
     takeConversation: useMutation({
       mutationFn: () => takeConversation(requireId(conversationId)),
@@ -58,4 +65,16 @@ export function useConversationMutations(conversationId: string | null) {
 function requireId(id: string | null): string {
   if (!id) throw new Error("conversationId required");
   return id;
+}
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as
+      | { message?: string | string[] }
+      | undefined;
+    const message = data?.message;
+    if (Array.isArray(message)) return message.join(", ");
+    if (typeof message === "string") return message;
+  }
+  return fallback;
 }
