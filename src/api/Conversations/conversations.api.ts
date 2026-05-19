@@ -89,19 +89,6 @@ export async function sendMessage(
   return data;
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
-    reader.onload = () => {
-      const result = String(reader.result);
-      const comma = result.indexOf(",");
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 export async function sendConversationMedia(
   id: string,
   file: File,
@@ -110,13 +97,13 @@ export async function sendConversationMedia(
   if (environment.CONVERSATIONS_MOCK) {
     throw new Error("Adjuntar archivos no está disponible en modo demo");
   }
-  const dataBase64 = await fileToBase64(file);
-  await apiConversations.post(`/conversations/${id}/media`, {
-    mimeType: file.type || "application/octet-stream",
-    filename: file.name,
-    dataBase64,
-    caption: caption?.trim() || undefined,
-  });
+  const formData = new FormData();
+  formData.append("file", file);
+  const trimmedCaption = caption?.trim();
+  if (trimmedCaption) {
+    formData.append("caption", trimmedCaption);
+  }
+  await apiConversations.post(`/conversations/${id}/media`, formData);
 }
 
 export async function markConversationRead(id: string): Promise<void> {

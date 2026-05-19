@@ -511,8 +511,8 @@ export function ConversationDetailView({
             mutations.sendMessage.isPending ||
             mutations.sendMedia.isPending
           }
-          onSend={(content) => mutations.sendMessage.mutate({ content })}
-          onSendMedia={(input) => mutations.sendMedia.mutate(input)}
+          onSend={(content) => mutations.sendMessage.mutateAsync({ content })}
+          onSendMedia={(input) => mutations.sendMedia.mutateAsync(input)}
         />
       </div>
       <PatientContextSheet
@@ -976,8 +976,8 @@ const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
 
 interface MessageComposerProps {
   disabled: boolean;
-  onSend: (content: string) => void;
-  onSendMedia: (input: { file: File; caption?: string }) => void;
+  onSend: (content: string) => Promise<unknown> | unknown;
+  onSendMedia: (input: { file: File; caption?: string }) => Promise<unknown> | unknown;
 }
 
 export function MessageComposer({
@@ -987,9 +987,10 @@ export function MessageComposer({
 }: MessageComposerProps) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmed = content.trim();
-  const canSubmit = !disabled && (!!file || !!trimmed);
+  const canSubmit = !disabled && !isSubmitting && (!!file || !!trimmed);
 
   const reset = () => {
     setContent("");
@@ -997,20 +998,27 @@ export function MessageComposer({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSubmit) return;
-    if (file) {
-      onSendMedia({ file, caption: trimmed || undefined });
-    } else {
-      onSend(trimmed);
+    setIsSubmitting(true);
+    try {
+      if (file) {
+        await onSendMedia({ file, caption: trimmed || undefined });
+      } else {
+        await onSend(trimmed);
+      }
+      reset();
+    } catch {
+      // El hook de mutación muestra el error. Mantener el borrador evita perder el adjunto.
+    } finally {
+      setIsSubmitting(false);
     }
-    reset();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      submit();
+      void submit();
     }
   };
 
@@ -1035,6 +1043,7 @@ export function MessageComposer({
           </span>
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={() => {
               setFile(null);
               if (fileInputRef.current) fileInputRef.current.value = "";
@@ -1057,7 +1066,7 @@ export function MessageComposer({
           size="icon"
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
+          disabled={disabled || isSubmitting}
           aria-label="Adjuntar archivo"
           className="h-11 w-11 shrink-0 rounded-full text-gray-500 hover:bg-gray-200"
         >
@@ -1068,7 +1077,7 @@ export function MessageComposer({
             value={content}
             onChange={(event) => setContent(event.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
             placeholder={
               disabled
                 ? "Conversación cerrada"
@@ -1081,7 +1090,7 @@ export function MessageComposer({
         </div>
         <Button
           size="icon"
-          onClick={submit}
+          onClick={() => void submit()}
           disabled={!canSubmit}
           aria-label="Enviar mensaje"
           className="h-11 w-11 shrink-0 rounded-full bg-greenPrimary hover:bg-greenSecondary disabled:bg-gray-300"
