@@ -58,7 +58,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -858,13 +860,10 @@ function MediaAttachment({ message }: { message: ConversationMessage }) {
   }
   if (type === "image" || type === "sticker") {
     return (
-      <a href={url} target="_blank" rel="noreferrer" className="block">
-        <img
-          src={url}
-          alt="Adjunto"
-          className="mb-1 max-h-72 w-auto max-w-full rounded-lg object-cover"
-        />
-      </a>
+      <ImageAttachmentPreview
+        url={url}
+        title={type === "sticker" ? "Sticker recibido" : "Imagen recibida"}
+      />
     );
   }
   if (type === "audio") {
@@ -890,6 +889,71 @@ function MediaAttachment({ message }: { message: ConversationMessage }) {
       <FileText className="h-4 w-4" />
       Abrir adjunto
     </a>
+  );
+}
+
+function ImageAttachmentPreview({
+  url,
+  title,
+}: {
+  url: string;
+  title: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mb-1 block max-w-full rounded-lg text-left outline-none ring-greenPrimary/40 transition hover:brightness-95 focus-visible:ring-2"
+        aria-label={`Ver ${title.toLowerCase()}`}
+      >
+        <img
+          src={url}
+          alt={title}
+          className="max-h-72 w-auto max-w-full rounded-lg object-cover"
+        />
+      </button>
+      <DialogContent className="max-h-[92vh] max-w-[94vw] gap-3 border-white/10 bg-slate-950 p-3 text-white shadow-2xl sm:max-w-[88vw] sm:rounded-xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            Vista ampliada del adjunto recibido en la conversacion.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex max-h-[78vh] min-h-[220px] items-center justify-center overflow-hidden rounded-lg bg-black">
+          <img
+            src={url}
+            alt={title}
+            className="max-h-[78vh] max-w-full object-contain"
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-white/70">
+          <span>{title}</span>
+          <div className="flex items-center gap-2">
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              download
+              className="rounded-full bg-white/10 px-3 py-1.5 font-medium text-white transition hover:bg-white/20"
+            >
+              Abrir original
+            </a>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-8 rounded-full px-3 text-xs text-white hover:bg-white/15 hover:text-white"
+              >
+                Cerrar
+              </Button>
+            </DialogClose>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
