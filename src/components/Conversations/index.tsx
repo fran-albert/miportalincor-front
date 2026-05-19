@@ -1,4 +1,5 @@
 import {
+  ChangeEvent,
   CSSProperties,
   KeyboardEvent,
   useCallback,
@@ -21,10 +22,12 @@ import {
   Lock,
   MoreHorizontal,
   MessageCircle,
+  Paperclip,
   Phone,
   RefreshCcw,
   Search,
   Send,
+  X,
   StickyNote,
   Tag,
   UserRound,
@@ -78,6 +81,7 @@ import {
 import { useConversationMutations } from "@/hooks/Conversations/useConversationMutations";
 import { useConversationTabCounts } from "@/hooks/Conversations/useConversationTabCounts";
 import { getMessageMedia } from "@/api/Conversations/conversations.api";
+import { toast } from "sonner";
 
 /* -------------------------------------------------------------------------- */
 /*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
@@ -502,8 +506,13 @@ export function ConversationDetailView({
         />
         <MessageThread messages={detail.messages} />
         <MessageComposer
-          disabled={!canRespond || mutations.sendMessage.isPending}
+          disabled={
+            !canRespond ||
+            mutations.sendMessage.isPending ||
+            mutations.sendMedia.isPending
+          }
           onSend={(content) => mutations.sendMessage.mutate({ content })}
+          onSendMedia={(input) => mutations.sendMedia.mutate(input)}
         />
       </div>
       <PatientContextSheet
@@ -963,19 +972,39 @@ function DeliveryStatus({ status }: { status: MessageStatus }) {
   return <Check className="h-3.5 w-3.5 text-gray-400" />;
 }
 
+const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
+
 interface MessageComposerProps {
   disabled: boolean;
   onSend: (content: string) => void;
+  onSendMedia: (input: { file: File; caption?: string }) => void;
 }
 
-export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
+export function MessageComposer({
+  disabled,
+  onSend,
+  onSendMedia,
+}: MessageComposerProps) {
   const [content, setContent] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const trimmed = content.trim();
+  const canSubmit = !disabled && (!!file || !!trimmed);
+
+  const reset = () => {
+    setContent("");
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const submit = () => {
-    if (!trimmed || disabled) return;
-    onSend(trimmed);
-    setContent("");
+    if (!canSubmit) return;
+    if (file) {
+      onSendMedia({ file, caption: trimmed || undefined });
+    } else {
+      onSend(trimmed);
+    }
+    reset();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -985,9 +1014,55 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
     }
   };
 
+  const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+    if (selected.size > MAX_ATTACHMENT_BYTES) {
+      toast.error("El archivo supera el límite de 16 MB");
+      event.target.value = "";
+      return;
+    }
+    setFile(selected);
+  };
+
   return (
     <div className="border-t border-gray-200 bg-[#f0f2f1] px-4 py-3">
+      {file && (
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
+          <Paperclip className="h-4 w-4 shrink-0 text-greenPrimary" />
+          <span className="min-w-0 flex-1 truncate text-gray-700">
+            {file.name}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setFile(null);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+            aria-label="Quitar adjunto"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <div className="flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFile}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled}
+          aria-label="Adjuntar archivo"
+          className="h-11 w-11 shrink-0 rounded-full text-gray-500 hover:bg-gray-200"
+        >
+          <Paperclip className="h-5 w-5" />
+        </Button>
         <div className="flex-1 rounded-3xl bg-white shadow-sm">
           <Textarea
             value={content}
@@ -997,7 +1072,9 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
             placeholder={
               disabled
                 ? "Conversación cerrada"
-                : "Escribí un mensaje  ·  Enter para enviar, Shift+Enter para salto de línea"
+                : file
+                  ? "Agregá un comentario (opcional)"
+                  : "Escribí un mensaje  ·  Enter para enviar, Shift+Enter para salto de línea"
             }
             className="max-h-40 min-h-[44px] resize-none border-0 bg-transparent px-4 py-3 text-sm shadow-none focus-visible:ring-0"
           />
@@ -1005,7 +1082,7 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
         <Button
           size="icon"
           onClick={submit}
-          disabled={!trimmed || disabled}
+          disabled={!canSubmit}
           aria-label="Enviar mensaje"
           className="h-11 w-11 shrink-0 rounded-full bg-greenPrimary hover:bg-greenSecondary disabled:bg-gray-300"
         >

@@ -7,6 +7,7 @@ import {
   conversationKeys,
   reopenConversation,
   rerouteConversation,
+  sendConversationMedia,
   sendMessage,
   takeConversation,
   updateTags,
@@ -30,6 +31,20 @@ export function useConversationMutations(conversationId: string | null) {
       onError: (error: unknown) => {
         toast.error(
           extractErrorMessage(error, "No se pudo enviar el mensaje"),
+        );
+      },
+    }),
+    sendMedia: useMutation({
+      mutationFn: (input: { file: File; caption?: string }) =>
+        sendConversationMedia(
+          requireId(conversationId),
+          input.file,
+          input.caption,
+        ),
+      onSuccess: invalidate,
+      onError: (error: unknown) => {
+        toast.error(
+          extractErrorMessage(error, "No se pudo enviar el adjunto"),
         );
       },
     }),
