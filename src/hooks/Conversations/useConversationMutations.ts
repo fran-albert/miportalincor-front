@@ -8,6 +8,7 @@ import {
   reopenConversation,
   rerouteConversation,
   sendConversationMedia,
+  sendConversationTyping,
   sendMessage,
   takeConversation,
   updateTags,
@@ -47,6 +48,9 @@ export function useConversationMutations(conversationId: string | null) {
           extractErrorMessage(error, "No se pudo enviar el adjunto"),
         );
       },
+    }),
+    sendTyping: useMutation({
+      mutationFn: () => sendConversationTyping(requireId(conversationId)),
     }),
     takeConversation: useMutation({
       mutationFn: () => takeConversation(requireId(conversationId)),

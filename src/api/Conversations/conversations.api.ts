@@ -111,6 +111,11 @@ export async function markConversationRead(id: string): Promise<void> {
   await apiConversations.post(`/conversations/${id}/read`);
 }
 
+export async function sendConversationTyping(id: string): Promise<void> {
+  if (environment.CONVERSATIONS_MOCK) return;
+  await apiConversations.post(`/conversations/${id}/typing`);
+}
+
 export async function takeConversation(id: string): Promise<Conversation> {
   const { data } = await apiConversations.post<Conversation>(
     `/conversations/${id}/take`,

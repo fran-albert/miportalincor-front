@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { MessageComposer } from ".";
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("MessageComposer", () => {
   it("keeps the selected file and caption when media sending fails", async () => {
@@ -59,6 +63,49 @@ describe("MessageComposer", () => {
     );
 
     expect(screen.getByRole("textbox")).toHaveValue("");
+  });
+
+  it("emits throttled typing pulses while composing", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-19T15:00:00.000Z"));
+    const onTyping = vi.fn();
+    render(
+      <MessageComposer
+        disabled={false}
+        onSend={vi.fn()}
+        onSendMedia={vi.fn()}
+        onTyping={onTyping}
+      />,
+    );
+
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "Hola" } });
+    fireEvent.change(input, { target: { value: "Hola, te respondo" } });
+
+    expect(onTyping).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(8_000);
+    fireEvent.change(input, { target: { value: "Hola, te respondo por aca" } });
+
+    expect(onTyping).toHaveBeenCalledTimes(2);
+  });
+
+  it("emits a typing pulse when attaching a file", () => {
+    const onTyping = vi.fn();
+    const { container } = render(
+      <MessageComposer
+        disabled={false}
+        onSend={vi.fn()}
+        onSendMedia={vi.fn()}
+        onTyping={onTyping}
+      />,
+    );
+
+    selectFile(container, new File(["orden"], "orden.pdf", {
+      type: "application/pdf",
+    }));
+
+    expect(onTyping).toHaveBeenCalledTimes(1);
   });
 });
 

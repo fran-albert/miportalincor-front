@@ -513,6 +513,7 @@ export function ConversationDetailView({
           }
           onSend={(content) => mutations.sendMessage.mutateAsync({ content })}
           onSendMedia={(input) => mutations.sendMedia.mutateAsync(input)}
+          onTyping={() => mutations.sendTyping.mutate()}
         />
       </div>
       <PatientContextSheet
@@ -973,22 +974,26 @@ function DeliveryStatus({ status }: { status: MessageStatus }) {
 }
 
 const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
+const TYPING_PULSE_INTERVAL_MS = 8_000;
 
 interface MessageComposerProps {
   disabled: boolean;
   onSend: (content: string) => Promise<unknown> | unknown;
   onSendMedia: (input: { file: File; caption?: string }) => Promise<unknown> | unknown;
+  onTyping?: () => void;
 }
 
 export function MessageComposer({
   disabled,
   onSend,
   onSendMedia,
+  onTyping,
 }: MessageComposerProps) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastTypingPulseRef = useRef(0);
   const trimmed = content.trim();
   const canSubmit = !disabled && !isSubmitting && (!!file || !!trimmed);
 
@@ -998,8 +1003,17 @@ export function MessageComposer({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const pulseTyping = () => {
+    if (disabled || isSubmitting || !onTyping) return;
+    const now = Date.now();
+    if (now - lastTypingPulseRef.current < TYPING_PULSE_INTERVAL_MS) return;
+    lastTypingPulseRef.current = now;
+    onTyping();
+  };
+
   const submit = async () => {
     if (!canSubmit) return;
+    pulseTyping();
     setIsSubmitting(true);
     try {
       if (file) {
@@ -1031,6 +1045,7 @@ export function MessageComposer({
       return;
     }
     setFile(selected);
+    pulseTyping();
   };
 
   return (
@@ -1075,7 +1090,15 @@ export function MessageComposer({
         <div className="flex-1 rounded-3xl bg-white shadow-sm">
           <Textarea
             value={content}
-            onChange={(event) => setContent(event.target.value)}
+            onChange={(event) => {
+              setContent(event.target.value);
+              if (event.target.value.trim()) {
+                pulseTyping();
+              }
+            }}
+            onFocus={() => {
+              if (trimmed || file) pulseTyping();
+            }}
             onKeyDown={handleKeyDown}
             disabled={disabled || isSubmitting}
             placeholder={
