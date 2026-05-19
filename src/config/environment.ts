@@ -18,6 +18,7 @@ export interface EnvironmentConfig {
   CONVERSATIONS_MOCK: boolean;
   CONVERSATIONS_ENABLED: boolean;
   CONVERSATIONS_NAV_VISIBLE: boolean;
+  PATIENT_VACCINATION_ENABLED: boolean;
 }
 
 /**
@@ -84,6 +85,10 @@ export const environment: EnvironmentConfig = {
   CONVERSATIONS_ENABLED: envToBoolean(import.meta.env.VITE_CONVERSATIONS_ENABLED, false),
   CONVERSATIONS_NAV_VISIBLE: envToBoolean(
     import.meta.env.VITE_CONVERSATIONS_NAV_VISIBLE,
+    false,
+  ),
+  PATIENT_VACCINATION_ENABLED: envToBoolean(
+    import.meta.env.VITE_PATIENT_VACCINATION_ENABLED,
     false,
   ),
 };

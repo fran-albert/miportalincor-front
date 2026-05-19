@@ -273,6 +273,12 @@ export function AppSidebar() {
     );
   }
 
+  if (!environment.PATIENT_VACCINATION_ENABLED) {
+    filteredNavigationItems = filteredNavigationItems.filter(
+      (item) => item.url !== "/mis-vacunas"
+    );
+  }
+
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {
     filteredNavigationItems = filteredNavigationItems.filter(

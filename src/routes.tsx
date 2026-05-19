@@ -76,6 +76,7 @@ import { environment } from "./config/environment";
 const enableConversationsPreview =
   environment.NODE_ENV !== "production" && environment.CONVERSATIONS_MOCK;
 const enableConversations = environment.CONVERSATIONS_ENABLED;
+const enablePatientVaccination = environment.PATIENT_VACCINATION_ENABLED;
 
 function App() {
   return (
@@ -312,9 +313,13 @@ function App() {
           <Route
             path="/mis-vacunas"
             element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <MyVaccinationPage />
-              </Private_Routes>
+              enablePatientVaccination ? (
+                <Private_Routes allowedRoles={["Paciente"]}>
+                  <MyVaccinationPage />
+                </Private_Routes>
+              ) : (
+                <Navigate to="/inicio" replace />
+              )
             }
           />
 

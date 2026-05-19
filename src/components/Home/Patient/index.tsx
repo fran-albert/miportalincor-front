@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { environment } from "@/config/environment";
 
 export default function PatientHomePage({ name }: { name: string }) {
   const [showSurveyBanner, setShowSurveyBanner] = useState(false);
@@ -82,14 +83,18 @@ export default function PatientHomePage({ name }: { name: string }) {
       gradient: "from-orange-500 to-orange-600",
       comingSoon: false,
     },
-    {
-      title: "Mis Vacunas",
-      description: "Consulta tu carnet y vacunas pendientes",
-      icon: Syringe,
-      href: "/mis-vacunas",
-      gradient: "from-sky-500 to-cyan-600",
-      comingSoon: false,
-    },
+    ...(environment.PATIENT_VACCINATION_ENABLED
+      ? [
+          {
+            title: "Mis Vacunas",
+            description: "Consulta tu carnet y vacunas pendientes",
+            icon: Syringe,
+            href: "/mis-vacunas",
+            gradient: "from-sky-500 to-cyan-600",
+            comingSoon: false,
+          },
+        ]
+      : []),
   ];
 
   return (
