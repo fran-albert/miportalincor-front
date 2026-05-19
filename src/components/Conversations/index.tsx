@@ -1,8 +1,10 @@
 import {
   CSSProperties,
   KeyboardEvent,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -12,6 +14,7 @@ import {
   CalendarDays,
   Check,
   CheckCheck,
+  ChevronDown,
   Clock3,
   FileText,
   Lock,
@@ -666,28 +669,89 @@ export function MessageThread({
   messages: ConversationMessage[];
 }) {
   const grouped = useMemo(() => groupMessages(messages), [messages]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLElement | null>(null);
+  const lastLenRef = useRef(0);
+  const [showJump, setShowJump] = useState(false);
+
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = "auto") => {
+      bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const viewport = rootRef.current?.querySelector<HTMLElement>(
+      "[data-radix-scroll-area-viewport]",
+    );
+    viewportRef.current = viewport ?? null;
+    if (!viewport) return undefined;
+
+    const onScroll = () => {
+      const distance =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      setShowJump(distance > 240);
+    };
+
+    viewport.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => viewport.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const length = messages.length;
+    const grew = length > lastLenRef.current;
+    lastLenRef.current = length;
+
+    if (!viewport) {
+      scrollToBottom("auto");
+      return;
+    }
+
+    const distance =
+      viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    if (!grew || distance < 320) {
+      scrollToBottom(grew ? "smooth" : "auto");
+    }
+  }, [messages.length, scrollToBottom]);
 
   return (
-    <ScrollArea className="min-h-0 flex-1 [&>div>div]:!block">
-      <div className="flex w-full flex-col px-4 py-5 sm:px-[8%]">
-        {grouped.map(({ message, firstOfGroup, lastOfGroup, showDate }) => (
-          <div key={message.id} className="flex flex-col">
-            {showDate && (
-              <div className="my-3 flex justify-center">
-                <span className="rounded-full bg-white/85 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-gray-500 shadow-sm">
-                  {dateSeparatorLabel(message.createdAt)}
-                </span>
-              </div>
-            )}
-            <MessageBubble
-              message={message}
-              firstOfGroup={firstOfGroup}
-              lastOfGroup={lastOfGroup}
-            />
-          </div>
-        ))}
-      </div>
-    </ScrollArea>
+    <div ref={rootRef} className="relative min-h-0 flex-1">
+      <ScrollArea className="h-full [&>div>div]:!block">
+        <div className="flex w-full flex-col px-4 py-5 sm:px-[8%]">
+          {grouped.map(({ message, firstOfGroup, lastOfGroup, showDate }) => (
+            <div key={message.id} className="flex flex-col">
+              {showDate && (
+                <div className="my-3 flex justify-center">
+                  <span className="rounded-full bg-white/85 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-gray-500 shadow-sm">
+                    {dateSeparatorLabel(message.createdAt)}
+                  </span>
+                </div>
+              )}
+              <MessageBubble
+                message={message}
+                firstOfGroup={firstOfGroup}
+                lastOfGroup={lastOfGroup}
+              />
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+      </ScrollArea>
+      {showJump && (
+        <button
+          type="button"
+          onClick={() => scrollToBottom("smooth")}
+          aria-label="Ir al último mensaje"
+          className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-greenPrimary shadow-md ring-1 ring-black/5 transition hover:bg-gray-50"
+        >
+          <ChevronDown className="h-5 w-5" />
+        </button>
+      )}
+    </div>
   );
 }
 

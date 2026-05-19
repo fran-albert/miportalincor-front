@@ -53,6 +53,7 @@ import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { environment } from "@/config/environment";
 import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
+import { useConversationNotifications } from "@/hooks/Conversations/useConversationNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
@@ -262,6 +263,16 @@ export function AppSidebar() {
     showToasts: false, // Toasts are handled in DashboardLayout
   });
 
+  // Pendientes de conversaciones (toasts manejados en DashboardLayout)
+  const canSeeConversations = PERMISSIONS.CONVERSATIONS.some((role) =>
+    userRoles.includes(role),
+  );
+  const { pendingCount: conversationsPendingCount } =
+    useConversationNotifications({
+      enabled: canSeeConversations,
+      notify: false,
+    });
+
   // Filtrar items del menú según roles del usuario
   let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
 
@@ -346,9 +357,13 @@ export function AppSidebar() {
                   // Check if this is the prescription requests item for doctors
                   const isPrescriptionRequestsItem =
                     item.url === "/solicitudes-recetas" && isDoctor;
+                  const isConversationsItem =
+                    item.url === "/conversaciones";
                   const badgeCount = isPrescriptionRequestsItem
                     ? pendingCount
-                    : 0;
+                    : isConversationsItem
+                      ? conversationsPendingCount
+                      : 0;
                   const showBadge = badgeCount > 0;
 
                   return (

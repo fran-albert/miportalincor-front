@@ -84,6 +84,7 @@ import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
 import ConversationsPage from "./pages/protected/Conversations";
+import { Toaster as SonnerToaster } from "sonner";
 import { environment } from "./config/environment";
 
 const enableConversationsPreview =
@@ -822,7 +823,18 @@ const router = createBrowserRouter(
 );
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <SonnerToaster
+        position="top-right"
+        richColors
+        closeButton
+        expand
+        duration={6000}
+      />
+    </>
+  );
 }
 
 export default App;
