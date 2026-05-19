@@ -11,8 +11,9 @@ export enum ConversationSocketEvents {
   ASSIGNED = "conversation.assigned",
   CLOSED = "conversation.closed",
   REROUTED = "conversation.rerouted",
-  MESSAGE_CREATED = "message.created",
-  STATUS_UPDATED = "message.status.updated",
+  MESSAGE_RECEIVED = "message.received",
+  MESSAGE_SENT = "message.sent",
+  STATUS_UPDATED = "message.status_changed",
   SUBSCRIBE = "subscribe.conversation",
   UNSUBSCRIBE = "unsubscribe.conversation",
 }

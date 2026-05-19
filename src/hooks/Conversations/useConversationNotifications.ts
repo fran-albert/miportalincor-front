@@ -236,12 +236,12 @@ export function useConversationNotifications(
     if (!socketEnabled) return undefined;
 
     const socket = connectConversationsSocket();
-    socket.on(ConversationSocketEvents.MESSAGE_CREATED, handleIncoming);
+    socket.on(ConversationSocketEvents.MESSAGE_RECEIVED, handleIncoming);
     socket.on(ConversationSocketEvents.CREATED, handleIncoming);
     socket.on(ConversationSocketEvents.ESCALATED, handleIncoming);
 
     return () => {
-      socket.off(ConversationSocketEvents.MESSAGE_CREATED, handleIncoming);
+      socket.off(ConversationSocketEvents.MESSAGE_RECEIVED, handleIncoming);
       socket.off(ConversationSocketEvents.CREATED, handleIncoming);
       socket.off(ConversationSocketEvents.ESCALATED, handleIncoming);
       if (timerRef.current) {

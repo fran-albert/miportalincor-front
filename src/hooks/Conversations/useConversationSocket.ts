@@ -24,7 +24,8 @@ export function useConversationSocket(conversationId: string | null) {
     socket.on(ConversationSocketEvents.ASSIGNED, invalidateAll);
     socket.on(ConversationSocketEvents.CLOSED, invalidateAll);
     socket.on(ConversationSocketEvents.REROUTED, invalidateAll);
-    socket.on(ConversationSocketEvents.MESSAGE_CREATED, invalidateAll);
+    socket.on(ConversationSocketEvents.MESSAGE_RECEIVED, invalidateAll);
+    socket.on(ConversationSocketEvents.MESSAGE_SENT, invalidateAll);
     socket.on(ConversationSocketEvents.STATUS_UPDATED, invalidateAll);
     socket.on("connect", invalidateAll);
 
@@ -35,7 +36,8 @@ export function useConversationSocket(conversationId: string | null) {
       socket.off(ConversationSocketEvents.ASSIGNED, invalidateAll);
       socket.off(ConversationSocketEvents.CLOSED, invalidateAll);
       socket.off(ConversationSocketEvents.REROUTED, invalidateAll);
-      socket.off(ConversationSocketEvents.MESSAGE_CREATED, invalidateAll);
+      socket.off(ConversationSocketEvents.MESSAGE_RECEIVED, invalidateAll);
+      socket.off(ConversationSocketEvents.MESSAGE_SENT, invalidateAll);
       socket.off(ConversationSocketEvents.STATUS_UPDATED, invalidateAll);
       socket.off("connect", invalidateAll);
     };
