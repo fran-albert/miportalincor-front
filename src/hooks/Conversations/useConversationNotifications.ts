@@ -60,15 +60,44 @@ function extractInfo(payload: unknown): IncomingInfo | undefined {
   return { name: name || undefined, preview: preview || undefined };
 }
 
-function playPing(): void {
+let sharedAudioCtx: AudioContext | null = null;
+let audioUnlockBound = false;
+
+function getAudioContext(): AudioContext | null {
   try {
     const AudioCtx =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext?: typeof AudioContext })
         .webkitAudioContext;
-    if (!AudioCtx) return;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx) sharedAudioCtx = new AudioCtx();
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
 
-    const ctx = new AudioCtx();
+/** Los navegadores bloquean el audio hasta que el usuario interactúa. */
+function ensureAudioUnlock(): void {
+  if (audioUnlockBound) return;
+  audioUnlockBound = true;
+  const unlock = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => undefined);
+    }
+  };
+  window.addEventListener("pointerdown", unlock);
+  window.addEventListener("keydown", unlock);
+}
+
+function playPing(): void {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => undefined);
+    }
     const now = ctx.currentTime;
 
     const play = (freq: number, start: number, duration: number) => {
@@ -90,18 +119,9 @@ function playPing(): void {
 
     play(880, 0, 0.16);
     play(1175, 0.13, 0.18);
-
-    window.setTimeout(() => ctx.close().catch(() => undefined), 600);
   } catch {
     /* el audio es best-effort, nunca debe romper la app */
   }
-}
-
-function isViewingConversations(): boolean {
-  return (
-    !document.hidden &&
-    window.location.pathname.startsWith("/conversaciones")
-  );
 }
 
 export function useConversationNotifications(
@@ -146,8 +166,6 @@ export function useConversationNotifications(
     queryClient.invalidateQueries({
       queryKey: conversationNotificationKeys.pendingCount,
     });
-
-    if (isViewingConversations()) return;
 
     const title =
       count === 1
@@ -198,6 +216,11 @@ export function useConversationNotifications(
     },
     [queryClient, flush],
   );
+
+  // Habilitar el audio en la primera interacción del usuario.
+  useEffect(() => {
+    if (liveEnabled && notify) ensureAudioUnlock();
+  }, [liveEnabled, notify]);
 
   // Pedir permiso de notificaciones del navegador una sola vez.
   useEffect(() => {

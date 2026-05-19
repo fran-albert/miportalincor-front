@@ -3,6 +3,7 @@ import {
   KeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -669,24 +670,34 @@ export function MessageThread({
   messages: ConversationMessage[];
 }) {
   const grouped = useMemo(() => groupMessages(messages), [messages]);
+  const conversationId = messages[0]?.conversationId ?? null;
   const rootRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLElement | null>(null);
+  const prevConvRef = useRef<string | null>(null);
   const lastLenRef = useRef(0);
   const [showJump, setShowJump] = useState(false);
 
+  const getViewport = useCallback((): HTMLElement | null => {
+    if (!viewportRef.current) {
+      viewportRef.current =
+        rootRef.current?.querySelector<HTMLElement>(
+          "[data-radix-scroll-area-viewport]",
+        ) ?? null;
+    }
+    return viewportRef.current;
+  }, []);
+
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = "auto") => {
-      bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+      const viewport = getViewport();
+      if (!viewport) return;
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior });
     },
-    [],
+    [getViewport],
   );
 
   useEffect(() => {
-    const viewport = rootRef.current?.querySelector<HTMLElement>(
-      "[data-radix-scroll-area-viewport]",
-    );
-    viewportRef.current = viewport ?? null;
+    const viewport = getViewport();
     if (!viewport) return undefined;
 
     const onScroll = () => {
@@ -698,14 +709,24 @@ export function MessageThread({
     viewport.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => viewport.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [getViewport]);
 
-  useEffect(() => {
-    const viewport = viewportRef.current;
+  useLayoutEffect(() => {
+    const changedConversation = prevConvRef.current !== conversationId;
     const length = messages.length;
-    const grew = length > lastLenRef.current;
+    const grew = !changedConversation && length > lastLenRef.current;
+    prevConvRef.current = conversationId;
     lastLenRef.current = length;
 
+    if (changedConversation) {
+      // Esperar al pintado y bajar al último mensaje sí o sí.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => scrollToBottom("auto")),
+      );
+      return;
+    }
+
+    const viewport = getViewport();
     if (!viewport) {
       scrollToBottom("auto");
       return;
@@ -714,9 +735,9 @@ export function MessageThread({
     const distance =
       viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
     if (!grew || distance < 320) {
-      scrollToBottom(grew ? "smooth" : "auto");
+      requestAnimationFrame(() => scrollToBottom(grew ? "smooth" : "auto"));
     }
-  }, [messages.length, scrollToBottom]);
+  }, [conversationId, messages.length, scrollToBottom, getViewport]);
 
   return (
     <div ref={rootRef} className="relative min-h-0 flex-1">
@@ -738,7 +759,6 @@ export function MessageThread({
               />
             </div>
           ))}
-          <div ref={bottomRef} />
         </div>
       </ScrollArea>
       {showJump && (
