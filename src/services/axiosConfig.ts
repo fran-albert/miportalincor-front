@@ -93,11 +93,32 @@ const getAxiosInstance = (config: InternalAxiosRequestConfig) => {
 };
 
 const addAuthToken = (config: InternalAxiosRequestConfig) => {
+  stripJsonContentTypeForFormData(config);
   const token = authStorage.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+};
+
+const stripJsonContentTypeForFormData = (config: InternalAxiosRequestConfig) => {
+  if (typeof FormData === "undefined" || !(config.data instanceof FormData)) {
+    return;
+  }
+
+  const headers = config.headers as InternalAxiosRequestConfig["headers"] & {
+    delete?: (name: string) => boolean;
+  };
+
+  if (typeof headers.delete === "function") {
+    headers.delete("Content-Type");
+    headers.delete("content-type");
+    return;
+  }
+
+  const mutableHeaders = headers as unknown as Record<string, unknown>;
+  delete mutableHeaders["Content-Type"];
+  delete mutableHeaders["content-type"];
 };
 
 const handleAuthError = async (error: AxiosError) => {

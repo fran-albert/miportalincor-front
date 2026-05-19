@@ -59,6 +59,7 @@ vi.mock('@/config/environment', () => ({
     API_INCOR_HC_URL: 'http://test-hc-api.com',
     API_INCOR_LABORAL_URL: 'http://test-laboral-api.com',
     API_TURNOS_URL: 'http://test-turnos-api.com',
+    API_CONVERSATIONS_URL: 'http://test-conversations-api.com',
   },
   currentConfig: {
     apiTimeout: 5000,
@@ -196,5 +197,36 @@ describe('axiosConfig - Interceptor cross-tab refresh dedup', () => {
         'Bearer new-token-from-other-tab',
       );
     }
+  });
+});
+
+describe('axiosConfig - FormData uploads', () => {
+  it('removes the default JSON content type when the request body is FormData', async () => {
+    const { apiConversations } = await import('./axiosConfig');
+
+    const formData = new FormData();
+    formData.append('file', new File(['orden'], 'orden.pdf'));
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: formData,
+      url: '/conversations/conv-1/media',
+      baseURL: 'http://test-conversations-api.com',
+    } as unknown as InternalAxiosRequestConfig;
+
+    const interceptors = (apiConversations.interceptors.request as unknown as {
+      handlers: Array<{
+        fulfilled: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
+      }>;
+    }).handlers;
+    const requestHandler = interceptors[interceptors.length - 1]?.fulfilled;
+
+    const nextConfig = requestHandler(config);
+    const headers = nextConfig.headers as unknown as Record<string, unknown>;
+
+    expect(headers['Content-Type']).toBeUndefined();
+    expect(headers['content-type']).toBeUndefined();
   });
 });
