@@ -70,6 +70,7 @@ import DoctorServicesPage from "./pages/protected/Admin/Doctor-Services";
 import HolidaysPage from "./pages/protected/Admin/Holidays";
 import AppointmentsReportsPage from "./pages/protected/Admin/Appointments-Reports";
 import ConversationsPage from "./pages/protected/Conversations";
+import { Toaster as SonnerToaster } from "sonner";
 import { environment } from "./config/environment";
 
 const enableConversationsPreview =
@@ -707,6 +708,13 @@ function App() {
           />
         </Route>
       </Routes>
+      <SonnerToaster
+        position="top-right"
+        richColors
+        closeButton
+        expand
+        duration={6000}
+      />
     </Router>
   );
 }

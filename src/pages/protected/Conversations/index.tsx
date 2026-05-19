@@ -31,10 +31,14 @@ export default function ConversationsPage({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const conversationsQuery = useConversations(filters);
   const queuesQuery = useConversationQueues();
-  const conversations = useMemo(
-    () => conversationsQuery.data?.items ?? [],
-    [conversationsQuery.data?.items],
-  );
+  const conversations = useMemo(() => {
+    const items = conversationsQuery.data?.items ?? [];
+    return [...items].sort((a, b) => {
+      const aTime = new Date(a.lastMessageAt ?? a.createdAt).getTime();
+      const bTime = new Date(b.lastMessageAt ?? b.createdAt).getTime();
+      return bTime - aTime;
+    });
+  }, [conversationsQuery.data?.items]);
   const detailQuery = useConversationDetail(selectedId);
   const mutations = useConversationMutations(selectedId);
 

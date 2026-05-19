@@ -18,10 +18,21 @@ import { PrescriptionNotificationDropdown } from "@/components/Notifications";
 import { isStaging } from "@/config/environment";
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
+import { PERMISSIONS } from "@/common/constants/permissions";
+import { useConversationNotifications } from "@/hooks/Conversations/useConversationNotifications";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
   const { session, isPatient, isDoctor } = useUserRole();
+
+  const userRoles = session?.role ?? [];
+  const canSeeConversations = PERMISSIONS.CONVERSATIONS.some((role) =>
+    userRoles.includes(role),
+  );
+  useConversationNotifications({
+    enabled: canSeeConversations,
+    notify: true,
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") {
