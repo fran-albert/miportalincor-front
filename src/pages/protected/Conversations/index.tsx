@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { MessageCircle, RefreshCcw } from "lucide-react";
+import {
+  conversationKeys,
+  markConversationRead,
+} from "@/api/Conversations/conversations.api";
 import {
   ConversationDetailView,
   ConversationsInbox,
@@ -41,8 +46,25 @@ export default function ConversationsPage({
   }, [conversationsQuery.data?.items]);
   const detailQuery = useConversationDetail(selectedId);
   const mutations = useConversationMutations(selectedId);
+  const queryClient = useQueryClient();
 
   useConversationSocket(selectedId);
+
+  const isUnread = detailQuery.data?.unread ?? false;
+  useEffect(() => {
+    if (!selectedId || !isUnread) return;
+    let cancelled = false;
+    markConversationRead(selectedId)
+      .then(() => {
+        if (!cancelled) {
+          queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, isUnread, queryClient]);
 
   useEffect(() => {
     if (conversations.length === 0) {
