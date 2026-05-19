@@ -64,6 +64,17 @@ export async function getMessages(
   return data;
 }
 
+export async function getMessageMedia(
+  conversationId: string,
+  messageId: string,
+): Promise<Blob> {
+  const { data } = await apiConversations.get<Blob>(
+    `/conversations/${conversationId}/messages/${messageId}/media`,
+    { responseType: "blob" },
+  );
+  return data;
+}
+
 export async function sendMessage(
   id: string,
   input: SendConversationMessageInput,

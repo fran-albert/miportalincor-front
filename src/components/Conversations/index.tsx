@@ -77,6 +77,7 @@ import {
 } from "@/types/Conversations";
 import { useConversationMutations } from "@/hooks/Conversations/useConversationMutations";
 import { useConversationTabCounts } from "@/hooks/Conversations/useConversationTabCounts";
+import { getMessageMedia } from "@/api/Conversations/conversations.api";
 
 /* -------------------------------------------------------------------------- */
 /*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
@@ -799,6 +800,89 @@ interface MessageBubbleProps {
   lastOfGroup?: boolean;
 }
 
+function isMediaPlaceholder(message: ConversationMessage): boolean {
+  return (
+    !!message.mediaUrl &&
+    /^\[(image|document|audio|video|sticker)\]$/i.test(
+      message.content.trim(),
+    )
+  );
+}
+
+function MediaAttachment({ message }: { message: ConversationMessage }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const type = (message.mediaType ?? "").toLowerCase();
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    setUrl(null);
+    setFailed(false);
+    getMessageMedia(message.conversationId, message.id)
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [message.conversationId, message.id]);
+
+  if (failed) {
+    return (
+      <div className="mb-1 rounded-lg bg-black/5 px-3 py-2 text-[12px] text-gray-500">
+        No se pudo cargar el adjunto
+      </div>
+    );
+  }
+  if (!url) {
+    return (
+      <div className="mb-1 h-40 w-56 max-w-full animate-pulse rounded-lg bg-black/5" />
+    );
+  }
+  if (type === "image" || type === "sticker") {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="block">
+        <img
+          src={url}
+          alt="Adjunto"
+          className="mb-1 max-h-72 w-auto max-w-full rounded-lg object-cover"
+        />
+      </a>
+    );
+  }
+  if (type === "audio") {
+    return <audio controls src={url} className="mb-1 w-60 max-w-full" />;
+  }
+  if (type === "video") {
+    return (
+      <video
+        controls
+        src={url}
+        className="mb-1 max-h-72 w-auto max-w-full rounded-lg"
+      />
+    );
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      download
+      className="mb-1 inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 text-[13px] font-medium text-greenSecondary hover:bg-black/10"
+    >
+      <FileText className="h-4 w-4" />
+      Abrir adjunto
+    </a>
+  );
+}
+
 export function MessageBubble({
   message,
   firstOfGroup = true,
@@ -848,9 +932,12 @@ export function MessageBubble({
             {senderLabel}
           </div>
         )}
-        <p className="whitespace-pre-wrap break-words text-[14px] leading-[19px]">
-          {message.content}
-        </p>
+        {message.mediaUrl && <MediaAttachment message={message} />}
+        {!isMediaPlaceholder(message) && (
+          <p className="whitespace-pre-wrap break-words text-[14px] leading-[19px]">
+            {message.content}
+          </p>
+        )}
         <div className="float-right ml-2 mt-1 flex translate-y-0.5 items-center gap-1 text-[10px] text-gray-400">
           <span>{formatTime(message.createdAt)}</span>
           {!inbound && <DeliveryStatus status={message.status} />}

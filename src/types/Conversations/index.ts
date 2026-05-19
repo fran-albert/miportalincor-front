@@ -28,6 +28,7 @@ export interface ConversationMessage {
   senderName: string | null;
   content: string;
   mediaUrl: string | null;
+  mediaType?: string | null;
   status: MessageStatus;
   createdAt: string;
 }
