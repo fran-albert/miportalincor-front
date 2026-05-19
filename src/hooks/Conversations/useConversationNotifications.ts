@@ -31,6 +31,8 @@ interface UseConversationNotificationsOptions {
 interface IncomingInfo {
   name?: string;
   preview?: string;
+  conversationId?: string;
+  messageId?: string;
 }
 
 function extractInfo(payload: unknown): IncomingInfo | undefined {
@@ -50,6 +52,18 @@ function extractInfo(payload: unknown): IncomingInfo | undefined {
     (typeof root.patientName === "string" ? root.patientName : undefined);
 
   const message = (root.message ?? root) as Record<string, unknown>;
+  const conversationId =
+    typeof conversation?.id === "string"
+      ? conversation.id
+      : typeof root.conversationId === "string"
+        ? root.conversationId
+        : undefined;
+  const messageId =
+    typeof message.id === "string"
+      ? message.id
+      : typeof root.messageId === "string"
+        ? root.messageId
+        : undefined;
   const preview =
     typeof message.content === "string"
       ? message.content
@@ -57,7 +71,63 @@ function extractInfo(payload: unknown): IncomingInfo | undefined {
         ? root.lastMessagePreview
         : undefined;
 
-  return { name: name || undefined, preview: preview || undefined };
+  return {
+    name: name || undefined,
+    preview: preview || undefined,
+    conversationId,
+    messageId,
+  };
+}
+
+interface NotificationBatchState {
+  items: Map<string, IncomingInfo>;
+  last?: IncomingInfo;
+  unknownSequence: number;
+}
+
+export function createNotificationBatchState(): NotificationBatchState {
+  return {
+    items: new Map(),
+    unknownSequence: 0,
+  };
+}
+
+export function addIncomingNotificationToBatch(
+  batch: NotificationBatchState,
+  event: ConversationSocketEvents,
+  info?: IncomingInfo,
+): void {
+  const conversationKey = info?.conversationId
+    ? `conversation:${info.conversationId}`
+    : undefined;
+  const messageKey = info?.messageId ? `message:${info.messageId}` : undefined;
+  const hasMessageForConversation =
+    !!info?.conversationId &&
+    Array.from(batch.items.values()).some(
+      (item) => item.conversationId === info.conversationId && item.messageId,
+    );
+
+  if (event === ConversationSocketEvents.MESSAGE_RECEIVED) {
+    if (conversationKey) batch.items.delete(conversationKey);
+    const key =
+      messageKey ??
+      conversationKey ??
+      `unknown:${batch.unknownSequence += 1}`;
+    batch.items.set(key, info ?? {});
+    if (info) batch.last = info;
+    return;
+  }
+
+  if (conversationKey) {
+    if (!hasMessageForConversation) {
+      batch.items.set(conversationKey, info ?? {});
+      if (info) batch.last = info;
+    }
+    return;
+  }
+
+  batch.items.set(`unknown:${batch.unknownSequence += 1}`, info ?? {});
+  if (info) batch.last = info;
 }
 
 let sharedAudioCtx: AudioContext | null = null;
@@ -147,9 +217,9 @@ export function useConversationNotifications(
 
   const pendingCount = data?.total ?? 0;
 
-  const batchRef = useRef<{ count: number; last?: IncomingInfo }>({
-    count: 0,
-  });
+  const batchRef = useRef<NotificationBatchState>(
+    createNotificationBatchState(),
+  );
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const goToConversations = useCallback(() => {
@@ -158,8 +228,9 @@ export function useConversationNotifications(
   }, [navigate]);
 
   const flush = useCallback(() => {
-    const { count, last } = batchRef.current;
-    batchRef.current = { count: 0 };
+    const { items, last } = batchRef.current;
+    const count = items.size;
+    batchRef.current = createNotificationBatchState();
     timerRef.current = null;
     if (count <= 0) return;
 
@@ -205,11 +276,10 @@ export function useConversationNotifications(
   }, [queryClient, goToConversations]);
 
   const handleIncoming = useCallback(
-    (payload?: unknown) => {
+    (event: ConversationSocketEvents, payload?: unknown) => {
       queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       const info = extractInfo(payload);
-      batchRef.current.count += 1;
-      if (info) batchRef.current.last = info;
+      addIncomingNotificationToBatch(batchRef.current, event, info);
       if (!timerRef.current) {
         timerRef.current = setTimeout(flush, BATCH_WINDOW);
       }
@@ -236,14 +306,21 @@ export function useConversationNotifications(
     if (!socketEnabled) return undefined;
 
     const socket = connectConversationsSocket();
-    socket.on(ConversationSocketEvents.MESSAGE_RECEIVED, handleIncoming);
-    socket.on(ConversationSocketEvents.CREATED, handleIncoming);
-    socket.on(ConversationSocketEvents.ESCALATED, handleIncoming);
+    const handleMessageReceived = (payload?: unknown) =>
+      handleIncoming(ConversationSocketEvents.MESSAGE_RECEIVED, payload);
+    const handleCreated = (payload?: unknown) =>
+      handleIncoming(ConversationSocketEvents.CREATED, payload);
+    const handleEscalated = (payload?: unknown) =>
+      handleIncoming(ConversationSocketEvents.ESCALATED, payload);
+
+    socket.on(ConversationSocketEvents.MESSAGE_RECEIVED, handleMessageReceived);
+    socket.on(ConversationSocketEvents.CREATED, handleCreated);
+    socket.on(ConversationSocketEvents.ESCALATED, handleEscalated);
 
     return () => {
-      socket.off(ConversationSocketEvents.MESSAGE_RECEIVED, handleIncoming);
-      socket.off(ConversationSocketEvents.CREATED, handleIncoming);
-      socket.off(ConversationSocketEvents.ESCALATED, handleIncoming);
+      socket.off(ConversationSocketEvents.MESSAGE_RECEIVED, handleMessageReceived);
+      socket.off(ConversationSocketEvents.CREATED, handleCreated);
+      socket.off(ConversationSocketEvents.ESCALATED, handleEscalated);
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
