@@ -7,31 +7,53 @@ import { ConversationListItem } from ".";
 import { getConversationDisplayIdentity } from "./conversation-identity";
 
 describe("conversation identity display", () => {
-  it("prioritizes the WhatsApp profile name and keeps clinical context", () => {
+  it("prioritizes the identified patient name and keeps WhatsApp context", () => {
     const identity = getConversationDisplayIdentity(conversation);
 
-    expect(identity.displayName).toBe("Marta WhatsApp");
-    expect(identity.listContext).toBe("Marta Benitez · DNI 24111222");
-    expect(identity.headerContext).toBe("Marta Benitez · DNI 24111222");
+    expect(identity.displayName).toBe("Marta Benitez");
+    expect(identity.listContext).toBe(
+      "WhatsApp: Marta WhatsApp · DNI 24111222 · +5493515550101",
+    );
+    expect(identity.headerContext).toBe(
+      "WhatsApp: Marta WhatsApp · DNI 24111222 · +5493515550101",
+    );
   });
 
   it("renders the WhatsApp avatar image when the API provides one", () => {
     render(
       <ConversationListItem
-        conversation={{
-          ...conversation,
-          profileImageUrl: "https://example.com/marta.jpg",
-        }}
+        conversation={withAvatar}
         selected={false}
         onSelect={vi.fn()}
       />,
     );
 
     expect(
-      screen.getByRole("img", { name: "Marta WhatsApp" }),
+      screen.getByRole("img", { name: "Marta Benitez" }),
     ).toHaveAttribute("src", "https://example.com/marta.jpg");
-    expect(screen.getByText("Marta WhatsApp")).toBeInTheDocument();
-    expect(screen.getByText("Marta Benitez · DNI 24111222")).toBeInTheDocument();
+    expect(screen.getByText("Marta Benitez")).toBeInTheDocument();
+    expect(
+      screen.getByText("WhatsApp: Marta WhatsApp · DNI 24111222 · +5493515550101"),
+    ).toBeInTheDocument();
+  });
+
+  it("falls back to a visible phone when WhatsApp sends an invisible profile name", () => {
+    const identity = getConversationDisplayIdentity({
+      ...conversation,
+      profileName: "‎",
+      patient: {
+        ...conversation.patient,
+        patientId: null,
+        dni: null,
+        firstName: null,
+        lastName: null,
+        phone: "5493416113746",
+      },
+    });
+
+    expect(identity.displayName).toBe("+5493416113746");
+    expect(identity.whatsappName).toBeNull();
+    expect(identity.headerContext).toBe("Sin paciente identificado");
   });
 });
 
@@ -61,4 +83,9 @@ const conversation: Conversation = {
   unread: true,
   zammadTicketId: null,
   createdAt: "2026-05-22T14:45:00.000Z",
+};
+
+const withAvatar: Conversation = {
+  ...conversation,
+  profileImageUrl: "https://example.com/marta.jpg",
 };
