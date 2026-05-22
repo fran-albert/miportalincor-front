@@ -84,6 +84,7 @@ import { useConversationMutations } from "@/hooks/Conversations/useConversationM
 import { useConversationTabCounts } from "@/hooks/Conversations/useConversationTabCounts";
 import { getMessageMedia } from "@/api/Conversations/conversations.api";
 import { toast } from "sonner";
+import { getConversationDisplayIdentity } from "./conversation-identity";
 
 /* -------------------------------------------------------------------------- */
 /*  Estilo base tipo WhatsApp Web con marca INCOR (#187B80)                    */
@@ -116,17 +117,40 @@ function avatarColor(seed: string): string {
 
 function Avatar({
   name,
+  imageUrl,
   size = "md",
 }: {
   name: string;
+  imageUrl?: string | null;
   size?: "sm" | "md" | "lg";
 }) {
+  const [imageFailed, setImageFailed] = useState(false);
   const dims =
     size === "lg"
       ? "h-16 w-16 text-xl"
       : size === "sm"
         ? "h-9 w-9 text-xs"
         : "h-12 w-12 text-sm";
+  const imageSrc = imageUrl?.trim();
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageSrc]);
+
+  if (imageSrc && !imageFailed) {
+    return (
+      <img
+        src={imageSrc}
+        alt={name}
+        onError={() => setImageFailed(true)}
+        className={cn(
+          "shrink-0 select-none rounded-full object-cover ring-1 ring-black/5",
+          dims,
+        )}
+      />
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -320,7 +344,7 @@ export function ConversationListItem({
   selected,
   onSelect,
 }: ConversationListItemProps) {
-  const name = getPatientName(conversation);
+  const identity = getConversationDisplayIdentity(conversation);
   const urgent =
     conversation.priority === "urgent" ||
     (conversation.status === "awaiting_human" &&
@@ -340,7 +364,10 @@ export function ConversationListItem({
         <span className="absolute inset-y-0 left-0 w-[3px] rounded-r bg-greenPrimary" />
       )}
       <div className="relative">
-        <Avatar name={name} />
+        <Avatar
+          name={identity.avatarName}
+          imageUrl={identity.profileImageUrl}
+        />
         {conversation.unread && (
           <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-greenPrimary" />
         )}
@@ -353,7 +380,7 @@ export function ConversationListItem({
               conversation.unread ? "font-semibold" : "font-medium",
             )}
           >
-            {name}
+            {identity.displayName}
           </p>
           <span
             className={cn(
@@ -368,6 +395,11 @@ export function ConversationListItem({
             )}
           </span>
         </div>
+        {identity.listContext && (
+          <p className="mt-0.5 truncate text-[11px] leading-4 text-gray-400">
+            {identity.listContext}
+          </p>
+        )}
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <p
             className={cn(
@@ -561,7 +593,7 @@ function ConversationHeader({
   onReroute,
   onOpenPatient,
 }: ConversationHeaderProps) {
-  const name = getPatientName(conversation);
+  const identity = getConversationDisplayIdentity(conversation);
 
   return (
     <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2.5">
@@ -570,15 +602,19 @@ function ConversationHeader({
         onClick={onOpenPatient}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1 pr-2 text-left transition-colors hover:bg-gray-50"
       >
-        <Avatar name={name} size="sm" />
+        <Avatar
+          name={identity.avatarName}
+          imageUrl={identity.profileImageUrl}
+          size="sm"
+        />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-gray-900">
-            {name}
+            {identity.displayName}
           </p>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <StatusDot status={conversation.status} />
             <span className="truncate">
-              {QUEUE_LABELS[conversation.queue]} ·{" "}
+              {identity.headerContext} · {QUEUE_LABELS[conversation.queue]} ·{" "}
               {STATUS_LABELS[conversation.status]}
               {conversation.assignedToName
                 ? ` · ${conversation.assignedToName}`
@@ -1233,7 +1269,7 @@ export function PatientPanel({
   const [note, setNote] = useState("");
   const conversationTags = conversation.tags.join(", ");
   const [tags, setTags] = useState(conversationTags);
-  const name = getPatientName(conversation);
+  const identity = getConversationDisplayIdentity(conversation);
   const parsedTags = useMemo(
     () =>
       tags
@@ -1250,9 +1286,20 @@ export function PatientPanel({
   return (
     <aside className="min-h-0 bg-white">
       <div className="flex flex-col items-center gap-3 border-b border-gray-100 px-5 py-6 text-center">
-        <Avatar name={name} size="lg" />
+        <Avatar
+          name={identity.avatarName}
+          imageUrl={identity.profileImageUrl}
+          size="lg"
+        />
         <div>
-          <p className="text-base font-semibold text-gray-900">{name}</p>
+          <p className="text-base font-semibold text-gray-900">
+            {identity.displayName}
+          </p>
+          {identity.panelContext && (
+            <p className="mt-0.5 text-xs text-gray-500">
+              {identity.panelContext}
+            </p>
+          )}
           <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-gray-500">
             <Phone className="h-3.5 w-3.5" />
             {conversation.patient.phone}
@@ -1266,6 +1313,13 @@ export function PatientPanel({
             Datos
           </h3>
           <div className="space-y-2 text-sm">
+            {identity.whatsappName && (
+              <InfoRow label="WhatsApp" value={identity.whatsappName} />
+            )}
+            {identity.patientName &&
+              identity.patientName !== identity.displayName && (
+                <InfoRow label="Paciente" value={identity.patientName} />
+              )}
             <InfoRow label="DNI" value={conversation.patient.dni ?? "Sin DNI"} />
             <InfoRow
               label="Obra social"
@@ -1478,14 +1532,6 @@ function formatDateTime(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function getPatientName(conversation: Conversation): string {
-  const name = [conversation.patient.firstName, conversation.patient.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  return name || conversation.patient.phone;
 }
 
 function initials(value: string): string {
