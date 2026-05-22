@@ -5,6 +5,7 @@ export interface ConversationDisplayIdentity {
   avatarName: string;
   profileImageUrl: string | null;
   whatsappName: string | null;
+  declaredContactName: string | null;
   patientName: string | null;
   listContext: string | null;
   headerContext: string;
@@ -15,27 +16,32 @@ export function getConversationDisplayIdentity(
   conversation: Conversation,
 ): ConversationDisplayIdentity {
   const whatsappName = normalizeText(conversation.profileName);
+  const declaredContactName = normalizeText(conversation.contactDisplayName);
   const patientName = normalizeText(
     [conversation.patient.firstName, conversation.patient.lastName]
       .filter(Boolean)
       .join(" "),
   );
   const phone = formatPhoneDisplay(conversation.patient.phone);
-  const displayName = patientName ?? whatsappName ?? phone;
-  const sameVisibleName =
-    !!whatsappName &&
-    !!patientName &&
-    whatsappName.toLocaleLowerCase("es-AR") ===
-      patientName.toLocaleLowerCase("es-AR");
+  const displayName = patientName ?? declaredContactName ?? whatsappName ?? phone;
 
   const contextParts = [
-    patientName && whatsappName && !sameVisibleName
+    shouldShowSecondaryName(patientName, declaredContactName)
+      ? `Declarado: ${declaredContactName}`
+      : null,
+    patientName && whatsappName && !sameVisibleName(patientName, whatsappName)
       ? `WhatsApp: ${whatsappName}`
       : null,
-    patientName && conversation.patient.dni
+    !patientName &&
+    declaredContactName &&
+    whatsappName &&
+    !sameVisibleName(declaredContactName, whatsappName)
+      ? `WhatsApp: ${whatsappName}`
+      : null,
+    (patientName || declaredContactName) && conversation.patient.dni
       ? `DNI ${conversation.patient.dni}`
       : null,
-    patientName || whatsappName ? phone : null,
+    displayName !== phone ? phone : null,
   ].filter(Boolean) as string[];
   const visibleContext = contextParts.join(" · ");
   const fallbackContext =
@@ -46,11 +52,34 @@ export function getConversationDisplayIdentity(
     avatarName: displayName,
     profileImageUrl: normalizeText(conversation.profileImageUrl),
     whatsappName,
+    declaredContactName,
     patientName,
     listContext: visibleContext || null,
     headerContext: visibleContext || fallbackContext,
     panelContext: visibleContext || null,
   };
+}
+
+function sameVisibleName(
+  first: string | null | undefined,
+  second: string | null | undefined,
+): boolean {
+  return (
+    !!first &&
+    !!second &&
+    first.toLocaleLowerCase("es-AR") === second.toLocaleLowerCase("es-AR")
+  );
+}
+
+function shouldShowSecondaryName(
+  patientName: string | null,
+  declaredContactName: string | null,
+): boolean {
+  return (
+    !!patientName &&
+    !!declaredContactName &&
+    !sameVisibleName(patientName, declaredContactName)
+  );
 }
 
 function normalizeText(value: string | null | undefined): string | null {
