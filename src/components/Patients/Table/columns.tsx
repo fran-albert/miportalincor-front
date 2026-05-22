@@ -5,10 +5,11 @@ import { ViewButton } from "@/components/Button/View/button";
 import { Link } from "react-router-dom";
 import DeletePatientDialog from "../Delete/DeletePatientDialog";
 
-export const getColumns = (
-  prefetchPatients: (id: string) => void,
-  roles: { isSecretary: boolean; isDoctor: boolean; isAdmin: boolean }
-): ColumnDef<Patient>[] => {
+export const getColumns = (roles: {
+  isSecretary: boolean;
+  isDoctor: boolean;
+  isAdmin: boolean;
+}): ColumnDef<Patient>[] => {
   const columns: ColumnDef<Patient>[] = [
     {
       accessorKey: "#",
@@ -25,9 +26,6 @@ export const getColumns = (
         <Link
           to={`/pacientes/${row.original.slug}`}
           className="flex items-center cursor-pointer"
-          onMouseEnter={() =>
-            prefetchPatients && row.original.userId && prefetchPatients(String(row.original.userId))
-          }
         >
           <div className="flex flex-col ml-2">
             <p className="text-sm font-medium">

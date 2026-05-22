@@ -1,4 +1,3 @@
-import { usePrefetchPatient } from "@/hooks/Patient/usePrefetchPatient";
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { PatientsTable } from "@/components/Patients/Table/table";
 import { Helmet } from "react-helmet-async";
@@ -18,8 +17,6 @@ const PatientsComponent = () => {
     initialLimit: 10,
   });
 
-  const prefetchPatients = usePrefetchPatient();
-
   return (
     <>
       <Helmet>
@@ -28,7 +25,6 @@ const PatientsComponent = () => {
       {error && <div>Hubo un error al cargar los pacientes.</div>}
       <PatientsTable
         patients={patients}
-        prefetchPatients={prefetchPatients}
         isFetching={isFetching}
         searchQuery={search}
         setSearch={setSearch}
