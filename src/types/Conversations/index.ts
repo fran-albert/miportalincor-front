@@ -61,6 +61,8 @@ export interface ConversationInternalNote {
 
 export interface Conversation {
   id: string;
+  profileName?: string | null;
+  profileImageUrl?: string | null;
   patient: ConversationPatientCard;
   status: ConversationStatus;
   queue: ConversationQueue;

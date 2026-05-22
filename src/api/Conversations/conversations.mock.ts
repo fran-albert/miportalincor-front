@@ -11,6 +11,8 @@ const now = Date.now();
 const mockConversations: ConversationDetail[] = [
   {
     id: "mock-1",
+    profileName: "Marta WhatsApp",
+    profileImageUrl: null,
     patient: {
       patientId: 1482,
       dni: "24111222",
@@ -62,6 +64,8 @@ const mockConversations: ConversationDetail[] = [
   },
   {
     id: "mock-2",
+    profileName: "Roberto S.",
+    profileImageUrl: null,
     patient: {
       patientId: 2105,
       dni: "18666777",
@@ -109,6 +113,8 @@ const mockConversations: ConversationDetail[] = [
   },
   {
     id: "mock-3",
+    profileName: "Consulta turnos",
+    profileImageUrl: null,
     patient: {
       patientId: null,
       dni: null,
