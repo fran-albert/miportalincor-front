@@ -7,7 +7,6 @@ import { Users } from "lucide-react";
 
 interface PatientTableProps {
   patients: Patient[];
-  prefetchPatients: (id: string) => void;
   isFetching?: boolean;
   searchQuery: string;
   setSearch: (query: string) => void;
@@ -20,7 +19,6 @@ interface PatientTableProps {
 export const PatientsTable: React.FC<PatientTableProps> = ({
   patients,
   isFetching,
-  prefetchPatients,
   searchQuery,
   setSearch,
   currentPage,
@@ -30,7 +28,7 @@ export const PatientsTable: React.FC<PatientTableProps> = ({
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
 
-  const patientColumns = getColumns(prefetchPatients, {
+  const patientColumns = getColumns({
     isSecretary,
     isDoctor,
     isAdmin,
