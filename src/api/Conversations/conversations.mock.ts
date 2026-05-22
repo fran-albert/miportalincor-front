@@ -12,6 +12,7 @@ const mockConversations: ConversationDetail[] = [
   {
     id: "mock-1",
     profileName: "Marta WhatsApp",
+    contactDisplayName: null,
     profileImageUrl: null,
     patient: {
       patientId: 1482,
@@ -65,6 +66,7 @@ const mockConversations: ConversationDetail[] = [
   {
     id: "mock-2",
     profileName: "Roberto S.",
+    contactDisplayName: null,
     profileImageUrl: null,
     patient: {
       patientId: 2105,
@@ -113,11 +115,12 @@ const mockConversations: ConversationDetail[] = [
   },
   {
     id: "mock-3",
-    profileName: "Consulta turnos",
+    profileName: null,
+    contactDisplayName: "Marcos Pereira",
     profileImageUrl: null,
     patient: {
       patientId: null,
-      dni: null,
+      dni: "30111222",
       firstName: null,
       lastName: null,
       birthDate: null,

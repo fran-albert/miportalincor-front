@@ -1316,6 +1316,10 @@ export function PatientPanel({
             {identity.whatsappName && (
               <InfoRow label="WhatsApp" value={identity.whatsappName} />
             )}
+            {identity.declaredContactName &&
+              identity.declaredContactName !== identity.displayName && (
+                <InfoRow label="Declarado" value={identity.declaredContactName} />
+              )}
             {identity.patientName &&
               identity.patientName !== identity.displayName && (
                 <InfoRow label="Paciente" value={identity.patientName} />

@@ -41,6 +41,7 @@ describe("conversation identity display", () => {
     const identity = getConversationDisplayIdentity({
       ...conversation,
       profileName: "‎",
+      contactDisplayName: null,
       patient: {
         ...conversation.patient,
         patientId: null,
@@ -55,11 +56,45 @@ describe("conversation identity display", () => {
     expect(identity.whatsappName).toBeNull();
     expect(identity.headerContext).toBe("Sin paciente identificado");
   });
+
+  it("uses the declared contact name before WhatsApp and phone when there is no linked patient", () => {
+    const identity = getConversationDisplayIdentity({
+      ...conversation,
+      profileName: "‎",
+      contactDisplayName: "Martin Javier Vidal",
+      patient: {
+        ...conversation.patient,
+        patientId: null,
+        dni: "39121005",
+        firstName: null,
+        lastName: null,
+        phone: "5493416113746",
+      },
+    });
+
+    expect(identity.displayName).toBe("Martin Javier Vidal");
+    expect(identity.declaredContactName).toBe("Martin Javier Vidal");
+    expect(identity.listContext).toBe("DNI 39121005 · +5493416113746");
+    expect(identity.headerContext).toBe("DNI 39121005 · +5493416113746");
+  });
+
+  it("keeps the linked clinical patient as primary and shows the declared name as context", () => {
+    const identity = getConversationDisplayIdentity({
+      ...conversation,
+      contactDisplayName: "Marta B.",
+    });
+
+    expect(identity.displayName).toBe("Marta Benitez");
+    expect(identity.listContext).toBe(
+      "Declarado: Marta B. · WhatsApp: Marta WhatsApp · DNI 24111222 · +5493515550101",
+    );
+  });
 });
 
 const conversation: Conversation = {
   id: "conv-1",
   profileName: "Marta WhatsApp",
+  contactDisplayName: null,
   profileImageUrl: null,
   patient: {
     patientId: 1482,
