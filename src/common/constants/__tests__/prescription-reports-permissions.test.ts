@@ -75,9 +75,16 @@ describe("PRESCRIPTION_REPORTS vs otros permisos de reportes", () => {
     expect(PERMISSIONS.PRESCRIPTION_REPORTS).not.toContain(Role.MEDICO);
   });
 
-  it("STATISTICS y PRESCRIPTION_REPORTS son ambos solo ADMINISTRADOR", () => {
+  it("STATISTICS permite reportes de turnos a SECRETARIA y ADMINISTRADOR", () => {
     expect(PERMISSIONS.STATISTICS).toContain(Role.ADMINISTRADOR);
+    expect(PERMISSIONS.STATISTICS).toContain(Role.SECRETARIA);
+    expect(PERMISSIONS.STATISTICS).not.toContain(Role.MEDICO);
+    expect(PERMISSIONS.STATISTICS).not.toContain(Role.PACIENTE);
+  });
+
+  it("PRESCRIPTION_REPORTS sigue siendo solo ADMINISTRADOR", () => {
     expect(PERMISSIONS.PRESCRIPTION_REPORTS).toContain(Role.ADMINISTRADOR);
+    expect(PERMISSIONS.PRESCRIPTION_REPORTS).not.toContain(Role.SECRETARIA);
   });
 
   it("PRESCRIPTION_REPORTS es más restrictivo que OPERATOR_PRESCRIPTION_REQUESTS", () => {
