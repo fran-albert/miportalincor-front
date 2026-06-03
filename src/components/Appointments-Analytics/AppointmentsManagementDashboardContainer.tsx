@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, subMonths } from "date-fns";
-import { BarChart3, FilterX } from "lucide-react";
+import { BarChart3, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { DoctorSelect } from "@/components/Appointments/Select/DoctorSelect";
 import { ConsultationTypeSelect } from "@/components/Appointments/Select/ConsultationTypeSelect";
@@ -11,6 +11,7 @@ import { ConsultationTypeVolumeChart } from "./ConsultationTypeVolumeChart";
 import { OriginMixChart } from "./OriginMixChart";
 import { DoctorOriginChart } from "./DoctorOriginChart";
 import { CancellationTrendChart } from "./CancellationTrendChart";
+import { formatNumber } from "./chartTheme";
 import {
   useAppointmentsAnalyticsByConsultationType,
   useAppointmentsAnalyticsByDoctor,
@@ -19,13 +20,60 @@ import {
   useAppointmentsAnalyticsOverview,
   useOverturnAnalyticsOverview,
 } from "@/hooks/Appointments-Analytics";
-import { AppointmentOrigin } from "@/types/Appointment/Appointment";
+import { useDoctors } from "@/hooks/Doctor/useDoctors";
+import { useConsultationTypes } from "@/hooks/ConsultationType";
+import { formatDoctorName } from "@/common/helpers/helpers";
+import {
+  AppointmentOrigin,
+  AppointmentOriginLabels,
+} from "@/types/Appointment/Appointment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 interface AppointmentsManagementDashboardContainerProps {
   showHeader?: boolean;
+}
+
+function FilterField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function ActiveFilterChip({
+  label,
+  value,
+  onRemove,
+}: {
+  label: string;
+  value: string;
+  onRemove: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border bg-background py-1 pl-3 pr-1.5 text-sm">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-medium text-foreground">{value}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Quitar filtro ${label}`}
+        className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </span>
+  );
 }
 
 export function AppointmentsManagementDashboardContainer({
@@ -36,7 +84,9 @@ export function AppointmentsManagementDashboardContainer({
   );
   const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [doctorId, setDoctorId] = useState<number | undefined>(undefined);
-  const [consultationTypeId, setConsultationTypeId] = useState<number | undefined>(undefined);
+  const [consultationTypeId, setConsultationTypeId] = useState<
+    number | undefined
+  >(undefined);
   const [origin, setOrigin] = useState<AppointmentOrigin | undefined>(undefined);
 
   const filters = {
@@ -54,7 +104,20 @@ export function AppointmentsManagementDashboardContainer({
   const cancellationsQuery = useAppointmentsAnalyticsCancellations(filters);
   const overturnOverviewQuery = useOverturnAnalyticsOverview(filters);
 
-  const isSummaryLoading = overviewQuery.isLoading || overturnOverviewQuery.isLoading;
+  const { doctors } = useDoctors({ auth: true, fetchDoctors: true });
+  const { consultationTypes } = useConsultationTypes(
+    doctorId ? { doctorId } : undefined
+  );
+
+  const selectedDoctor = doctorId
+    ? doctors.find((d) => Number(d.userId) === doctorId)
+    : undefined;
+  const selectedType = consultationTypeId
+    ? consultationTypes.find((t) => t.id === consultationTypeId)
+    : undefined;
+
+  const isSummaryLoading =
+    overviewQuery.isLoading || overturnOverviewQuery.isLoading;
   const hasActiveFilters = !!doctorId || !!consultationTypeId || !!origin;
 
   const clearNonDateFilters = () => {
@@ -63,8 +126,14 @@ export function AppointmentsManagementDashboardContainer({
     setOrigin(undefined);
   };
 
+  const overturnByDoctor = overturnOverviewQuery.data?.byDoctor ?? [];
+  const maxOverturn = overturnByDoctor.reduce(
+    (max, item) => Math.max(max, item.total),
+    0
+  );
+
   return (
-    <div className={`space-y-8 ${showHeader ? "p-6" : ""}`}>
+    <div className={`space-y-7 ${showHeader ? "p-6" : ""}`}>
       {showHeader && (
         <PageHeader
           breadcrumbItems={[
@@ -77,14 +146,8 @@ export function AppointmentsManagementDashboardContainer({
         />
       )}
 
-      <div className="flex flex-col gap-5 rounded-2xl border bg-card p-5 md:p-6">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Filtros</h2>
-            <p className="text-sm text-muted-foreground">
-              Acotá el análisis por período, médico, tipo de turno y origen.
-            </p>
-          </div>
+      <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
+        <FilterField label="Período">
           <DateRangeFilter
             from={dateFrom}
             to={dateTo}
@@ -93,46 +156,68 @@ export function AppointmentsManagementDashboardContainer({
               setDateTo(nextTo);
             }}
           />
-        </div>
+        </FilterField>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <DoctorSelect
-            value={doctorId}
-            onValueChange={setDoctorId}
-            placeholder="Todos los médicos"
-            allowClear
-          />
-          <ConsultationTypeSelect
-            value={consultationTypeId}
-            onValueChange={setConsultationTypeId}
-            placeholder="Todos los tipos"
-          />
-          <OriginSelect value={origin} onValueChange={setOrigin} />
+          <FilterField label="Médico">
+            <DoctorSelect
+              value={doctorId}
+              onValueChange={setDoctorId}
+              placeholder="Todos los médicos"
+              allowClear
+            />
+          </FilterField>
+          <FilterField label="Tipo de turno">
+            <ConsultationTypeSelect
+              value={consultationTypeId}
+              onValueChange={setConsultationTypeId}
+              placeholder="Todos los tipos"
+            />
+          </FilterField>
+          <FilterField label="Origen">
+            <OriginSelect value={origin} onValueChange={setOrigin} />
+          </FilterField>
         </div>
 
-        <div className="flex flex-col gap-3 border-t pt-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {doctorId && <Badge variant="secondary">Médico filtrado</Badge>}
-            {consultationTypeId && <Badge variant="secondary">Tipo filtrado</Badge>}
-            {origin && <Badge variant="secondary">Origen filtrado</Badge>}
-            {!hasActiveFilters && (
-              <span className="text-sm text-muted-foreground">
-                Sin filtros adicionales activos.
-              </span>
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+            <span className="text-xs font-medium text-muted-foreground">
+              Filtros activos:
+            </span>
+            {doctorId && (
+              <ActiveFilterChip
+                label="Médico"
+                value={
+                  selectedDoctor ? formatDoctorName(selectedDoctor) : "Seleccionado"
+                }
+                onRemove={() => setDoctorId(undefined)}
+              />
             )}
+            {consultationTypeId && (
+              <ActiveFilterChip
+                label="Tipo"
+                value={selectedType ? selectedType.name : "Seleccionado"}
+                onRemove={() => setConsultationTypeId(undefined)}
+              />
+            )}
+            {origin && (
+              <ActiveFilterChip
+                label="Origen"
+                value={AppointmentOriginLabels[origin]}
+                onRemove={() => setOrigin(undefined)}
+              />
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearNonDateFilters}
+              className="ml-auto h-8 text-muted-foreground hover:text-foreground"
+            >
+              Limpiar todo
+            </Button>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={clearNonDateFilters}
-            disabled={!hasActiveFilters}
-            className="w-full md:w-auto"
-          >
-            <FilterX className="mr-2 h-4 w-4" />
-            Limpiar filtros
-          </Button>
-        </div>
+        )}
       </div>
 
       <ManagementSummaryCards
@@ -141,7 +226,7 @@ export function AppointmentsManagementDashboardContainer({
         isLoading={isSummaryLoading}
       />
 
-      <div className="grid gap-7 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <ConsultationTypeVolumeChart
           data={byTypeQuery.data}
           isLoading={byTypeQuery.isLoading}
@@ -152,7 +237,7 @@ export function AppointmentsManagementDashboardContainer({
         />
       </div>
 
-      <div className="grid gap-7 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <CancellationTrendChart
           data={cancellationsQuery.data?.trend}
           isLoading={cancellationsQuery.isLoading}
@@ -163,21 +248,35 @@ export function AppointmentsManagementDashboardContainer({
         />
       </div>
 
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Sobreturnos por médico</CardTitle>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Sobreturnos por médico</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          {!overturnOverviewQuery.data?.byDoctor?.length ? (
-            <div className="text-sm text-muted-foreground">
+        <CardContent>
+          {!overturnByDoctor.length ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
               Sin sobreturnos para el período seleccionado.
             </div>
           ) : (
             <div className="space-y-3">
-              {overturnOverviewQuery.data.byDoctor.slice(0, 8).map((item) => (
-                <div key={item.id ?? item.label} className="flex items-center justify-between rounded-lg border px-4 py-3">
-                  <span className="text-sm font-medium">{item.label}</span>
-                  <span className="text-sm text-muted-foreground">{item.total}</span>
+              {overturnByDoctor.slice(0, 8).map((item) => (
+                <div key={item.id ?? item.label} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{item.label}</span>
+                    <span className="tabular-nums text-muted-foreground">
+                      {formatNumber(item.total)}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-purple-500"
+                      style={{
+                        width: `${
+                          maxOverturn ? (item.total / maxOverturn) * 100 : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
