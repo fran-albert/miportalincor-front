@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AppointmentsAnalyticsOverview,
@@ -14,16 +14,15 @@ interface Props {
   isLoading: boolean;
 }
 
-type StepTone = "neutral" | "blue" | "green" | "red";
+type BreakdownTone = "green" | "red" | "slate";
 
-const TONE_STYLES: Record<StepTone, { value: string; share: string }> = {
-  neutral: { value: "text-slate-900", share: "text-slate-500" },
-  blue: { value: "text-blue-700", share: "text-blue-600" },
-  green: { value: "text-green-700", share: "text-green-600" },
-  red: { value: "text-red-700", share: "text-red-600" },
+const TONE_STYLES: Record<BreakdownTone, { dot: string; value: string }> = {
+  green: { dot: "bg-green-500", value: "text-green-700" },
+  red: { dot: "bg-red-500", value: "text-red-700" },
+  slate: { dot: "bg-slate-400", value: "text-slate-700" },
 };
 
-function FunnelStep({
+function BreakdownRow({
   label,
   value,
   share,
@@ -33,35 +32,59 @@ function FunnelStep({
   label: string;
   value: number;
   share?: string;
-  tone: StepTone;
+  tone: BreakdownTone;
   isLoading: boolean;
 }) {
   const styles = TONE_STYLES[tone];
-
   return (
-    <div className="min-w-[120px] flex-1 px-2 py-1">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className={cn("h-2.5 w-2.5 rounded-full", styles.dot)} />
         {label}
-      </p>
+      </span>
       {isLoading ? (
-        <Skeleton className="mt-1 h-8 w-16" />
+        <Skeleton className="h-5 w-16" />
       ) : (
-        <div className="mt-0.5 flex items-baseline gap-2">
-          <span className={cn("text-3xl font-bold leading-none", styles.value)}>
+        <span className="flex items-baseline gap-1.5 tabular-nums">
+          <span className={cn("text-lg font-semibold", styles.value)}>
             {formatNumber(value)}
           </span>
           {share && (
-            <span className={cn("text-sm font-medium", styles.share)}>{share}</span>
+            <span className="text-xs text-muted-foreground">{share}</span>
           )}
-        </div>
+        </span>
       )}
     </div>
   );
 }
 
-function StepArrow() {
+function ContextStat({
+  icon,
+  label,
+  value,
+  isLoading,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  isLoading: boolean;
+}) {
   return (
-    <ChevronRight className="hidden h-5 w-5 shrink-0 self-center text-muted-foreground/40 md:block" />
+    <div className="flex items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3">
+      <div className="rounded-lg bg-background p-2 text-muted-foreground">
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        {isLoading ? (
+          <Skeleton className="mt-1 h-7 w-14" />
+        ) : (
+          <p className="text-2xl font-bold leading-none">{formatNumber(value)}</p>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -70,71 +93,79 @@ export function ManagementSummaryCards({
   overturnOverview,
   isLoading,
 }: Props) {
-  const created = overview?.totalCreated ?? 0;
   const scheduled = overview?.totalScheduled ?? 0;
   const completed = overview?.totalCompleted ?? 0;
   const cancelled = overview?.totalCancelled ?? 0;
-  const cancellationRate = overview?.cancellationRate ?? 0;
+  const created = overview?.totalCreated ?? 0;
   const overturns = overturnOverview?.totalCreated ?? 0;
+  const pending = Math.max(0, scheduled - completed - cancelled);
 
   const share = (value: number): string | undefined => {
-    if (!created) return undefined;
-    return `${Math.round((value / created) * 100)}%`;
+    if (!scheduled) return undefined;
+    return `${Math.round((value / scheduled) * 100)}%`;
   };
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Recorrido de los turnos</CardTitle>
+        <CardTitle className="text-base">Turnos del período</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
-          <div className="flex flex-1 flex-col gap-2 rounded-xl border bg-muted/30 p-3 md:flex-row md:items-center md:gap-1">
-            <FunnelStep
-              label="Creados"
-              value={created}
-              tone="neutral"
-              isLoading={isLoading}
-            />
-            <StepArrow />
-            <FunnelStep
-              label="Agendados"
-              value={scheduled}
-              share={share(scheduled)}
-              tone="blue"
-              isLoading={isLoading}
-            />
-            <StepArrow />
-            <FunnelStep
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 rounded-xl border bg-muted/30 p-4 md:grid-cols-[auto,1fr] md:items-center md:gap-6">
+          <div className="md:border-r md:pr-6">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Agendados en el período
+            </p>
+            {isLoading ? (
+              <Skeleton className="mt-1 h-10 w-24" />
+            ) : (
+              <p className="mt-0.5 text-4xl font-bold leading-none">
+                {formatNumber(scheduled)}
+              </p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Turnos cuya fecha cae en el período
+            </p>
+          </div>
+
+          <div className="divide-y">
+            <BreakdownRow
               label="Completados"
               value={completed}
               share={share(completed)}
               tone="green"
               isLoading={isLoading}
             />
-            <div className="hidden w-px self-stretch bg-border md:block" />
-            <FunnelStep
+            <BreakdownRow
               label="Cancelados"
               value={cancelled}
-              share={`${formatNumber(cancellationRate)}%`}
+              share={share(cancelled)}
               tone="red"
               isLoading={isLoading}
             />
+            <BreakdownRow
+              label="Pendientes"
+              value={pending}
+              share={share(pending)}
+              tone="slate"
+              isLoading={isLoading}
+            />
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 rounded-xl border border-purple-100 bg-purple-50/60 px-4 py-3 lg:w-48 lg:flex-col lg:items-start lg:justify-center">
-            <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-purple-700">
-              <Plus className="h-3.5 w-3.5" />
-              Sobreturnos
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <span className="text-3xl font-bold leading-none text-purple-700">
-                {formatNumber(overturns)}
-              </span>
-            )}
-          </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ContextStat
+            icon={<Upload className="h-4 w-4" />}
+            label="Cargados en el período"
+            value={created}
+            isLoading={isLoading}
+          />
+          <ContextStat
+            icon={<Plus className="h-4 w-4" />}
+            label="Sobreturnos"
+            value={overturns}
+            isLoading={isLoading}
+          />
         </div>
       </CardContent>
     </Card>
