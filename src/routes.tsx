@@ -236,7 +236,7 @@ function App() {
           <Route
             path="/admin/reportes-turnos"
             element={
-              <Private_Routes allowedRoles={["Administrador"]}>
+              <Private_Routes allowedRoles={["Administrador", "Secretaria"]}>
                 <AppointmentsReportsPage />
               </Private_Routes>
             }

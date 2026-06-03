@@ -22,7 +22,7 @@ export const PERMISSIONS = {
 
   // Reportes y Análisis
   REPORTS: [Role.MEDICO, Role.ADMINISTRADOR],
-  STATISTICS: [Role.ADMINISTRADOR],
+  STATISTICS: [Role.SECRETARIA, Role.ADMINISTRADOR],
   ACTIVITY: [Role.ADMINISTRADOR],
 
   // Administración del Sistema
