@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Database, Download, Ticket } from "lucide-react";
+import { Database, Download, Info, Ticket } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { DateRangeFilter } from "@/components/Appointments-Analytics/DateRangeFilter";
 import {
@@ -35,6 +35,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   CartesianGrid,
   Legend,
@@ -85,6 +91,22 @@ const maxDateString = (first: string, second: string) =>
 
 const escapeCsvValue = (value: string | number) =>
   `"${String(value).replace(/"/g, '""')}"`;
+
+function ColumnHint({ label, hint }: { label: string; hint: string }) {
+  return (
+    <UITooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex cursor-help items-center justify-end gap-1 underline decoration-dotted decoration-muted-foreground/40 underline-offset-4">
+          {label}
+          <Info className="h-3.5 w-3.5 text-muted-foreground/70" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-[260px] text-xs leading-relaxed">
+        {hint}
+      </TooltipContent>
+    </UITooltip>
+  );
+}
 
 export function TotemReportDashboardContainer({
   showHeader = true,
@@ -593,6 +615,7 @@ export function TotemReportDashboardContainer({
               Sin tickets del tótem para el período seleccionado.
             </div>
           ) : (
+            <TooltipProvider delayDuration={150}>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -602,11 +625,36 @@ export function TotemReportDashboardContainer({
                     <TableHead className="text-right">Con turno</TableHead>
                     <TableHead className="text-right">Invitados</TableHead>
                     <TableHead className="text-right">Administrativo</TableHead>
-                    <TableHead className="text-right">DNI no encontrado</TableHead>
-                    <TableHead className="text-right">Resueltos</TableHead>
-                    <TableHead className="text-right">Altas sistema</TableHead>
-                    <TableHead className="text-right">Trazadas Totem</TableHead>
-                    <TableHead className="text-right">Vinculados Totem</TableHead>
+                    <TableHead className="text-right">
+                      <ColumnHint
+                        label="DNI no encontrado"
+                        hint="Tickets en los que el tótem no encontró el DNI en el sistema."
+                      />
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <ColumnHint
+                        label="Resueltos"
+                        hint="De los DNI no encontrado, cuántos quedaron resueltos ese día (alta de paciente nuevo o vinculación a uno existente)."
+                      />
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <ColumnHint
+                        label="Altas sistema"
+                        hint="Pacientes nuevos dados de alta en el sistema ese día (fuente Historia Clínica)."
+                      />
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <ColumnHint
+                        label="Trazadas Totem"
+                        hint="Pacientes nuevos creados a través del tótem ese día."
+                      />
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <ColumnHint
+                        label="Vinculados Totem"
+                        hint="Tickets del tótem que ese día se asociaron a un paciente que YA existía en el sistema, en lugar de crear uno nuevo."
+                      />
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -654,6 +702,22 @@ export function TotemReportDashboardContainer({
                 </TableBody>
               </Table>
             </div>
+            <div className="mt-4 space-y-1 border-t pt-3 text-xs text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">
+                  Trazadas Totem:
+                </span>{" "}
+                pacientes nuevos creados desde el tótem.
+              </p>
+              <p>
+                <span className="font-medium text-foreground">
+                  Vinculados Totem:
+                </span>{" "}
+                el tótem reconoció a un paciente que ya estaba cargado (no se creó
+                uno nuevo).
+              </p>
+            </div>
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>
