@@ -8,6 +8,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { AppointmentsAnalyticsOriginItem } from "@/types/Appointments-Analytics/AppointmentsAnalytics";
+import {
+  AppointmentOrigin,
+  AppointmentOriginLabels,
+} from "@/types/Appointment/Appointment";
 import { CHART_PALETTE, formatNumber } from "./chartTheme";
 import { ChartTooltip } from "./ChartTooltip";
 
@@ -16,9 +20,20 @@ interface Props {
   isLoading: boolean;
 }
 
+function resolveOriginName(item: AppointmentsAnalyticsOriginItem): string {
+  if (item.origin && AppointmentOriginLabels[item.origin]) {
+    return AppointmentOriginLabels[item.origin];
+  }
+  const fromLabel = AppointmentOriginLabels[item.label as AppointmentOrigin];
+  if (fromLabel) {
+    return fromLabel;
+  }
+  return item.label || "Sin origen";
+}
+
 export function OriginMixChart({ data, isLoading }: Props) {
   const chartData = (data ?? []).map((item, index) => ({
-    name: item.label,
+    name: resolveOriginName(item),
     value: item.total,
     color: CHART_PALETTE[index % CHART_PALETTE.length],
   }));
