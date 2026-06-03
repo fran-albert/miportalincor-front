@@ -123,18 +123,30 @@ export function DateRangeFilter({
     return `${format(fromDate, "d MMM yyyy", { locale: es })} – ${format(toDate, "d MMM yyyy", { locale: es })}`;
   };
 
+  const isPresetActive = (preset: Preset) => {
+    const { from: presetFrom, to: presetTo } = preset.getValue();
+    return (
+      format(presetFrom, "yyyy-MM-dd") === from &&
+      format(presetTo, "yyyy-MM-dd") === to
+    );
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {presets.map((preset) => (
-        <Button
-          key={preset.label}
-          variant="outline"
-          size="sm"
-          onClick={() => handlePreset(preset)}
-        >
-          {preset.label}
-        </Button>
-      ))}
+      {presets.map((preset) => {
+        const active = isPresetActive(preset);
+        return (
+          <Button
+            key={preset.label}
+            variant={active ? "default" : "outline"}
+            size="sm"
+            aria-pressed={active}
+            onClick={() => handlePreset(preset)}
+          >
+            {preset.label}
+          </Button>
+        );
+      })}
 
       <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
         <PopoverTrigger asChild>
