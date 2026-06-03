@@ -1,4 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Bar,
@@ -11,7 +17,12 @@ import {
   YAxis,
 } from "recharts";
 import { AppointmentsAnalyticsDoctorItem } from "@/types/Appointments-Analytics/AppointmentsAnalytics";
-import { AppointmentOrigin, AppointmentOriginLabels } from "@/types/Appointment/Appointment";
+import {
+  AppointmentOrigin,
+  AppointmentOriginLabels,
+} from "@/types/Appointment/Appointment";
+import { CHART_AXIS_COLOR, CHART_COLORS, CHART_GRID_COLOR } from "./chartTheme";
+import { ChartTooltip } from "./ChartTooltip";
 
 const ORIGINS = [
   AppointmentOrigin.SECRETARY,
@@ -21,10 +32,10 @@ const ORIGINS = [
 ];
 
 const ORIGIN_COLORS: Record<AppointmentOrigin, string> = {
-  [AppointmentOrigin.SECRETARY]: "#2563EB",
-  [AppointmentOrigin.WEB_PATIENT]: "#16A34A",
-  [AppointmentOrigin.WEB_GUEST]: "#EA580C",
-  [AppointmentOrigin.DOCTOR]: "#7C3AED",
+  [AppointmentOrigin.SECRETARY]: CHART_COLORS.blue,
+  [AppointmentOrigin.WEB_PATIENT]: CHART_COLORS.green,
+  [AppointmentOrigin.WEB_GUEST]: CHART_COLORS.orange,
+  [AppointmentOrigin.DOCTOR]: CHART_COLORS.purple,
 };
 
 interface Props {
@@ -49,8 +60,9 @@ export function DoctorOriginChart({ data, isLoading }: Props) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Origen por médico</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Origen por médico</CardTitle>
+        <CardDescription>Cómo se reparten los turnos de cada médico según su origen.</CardDescription>
       </CardHeader>
       <CardContent className="h-[360px]">
         {isLoading ? (
@@ -62,11 +74,25 @@ export function DoctorOriginChart({ data, isLoading }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 16, left: -16, bottom: 48 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" angle={-20} textAnchor="end" interval={0} height={86} />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID_COLOR} />
+              <XAxis
+                dataKey="name"
+                angle={-20}
+                textAnchor="end"
+                interval={0}
+                height={86}
+                tick={{ fontSize: 12, fill: CHART_AXIS_COLOR }}
+                tickLine={false}
+                axisLine={{ stroke: CHART_GRID_COLOR }}
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12, fill: CHART_AXIS_COLOR }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip cursor={{ fill: "rgba(100, 116, 139, 0.06)" }} content={<ChartTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               {ORIGINS.map((origin) => (
                 <Bar
                   key={origin}
@@ -74,6 +100,7 @@ export function DoctorOriginChart({ data, isLoading }: Props) {
                   stackId="origin"
                   fill={ORIGIN_COLORS[origin]}
                   name={AppointmentOriginLabels[origin]}
+                  maxBarSize={48}
                 />
               ))}
             </BarChart>

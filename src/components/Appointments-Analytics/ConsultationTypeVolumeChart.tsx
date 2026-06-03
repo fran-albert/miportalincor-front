@@ -1,4 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Bar,
@@ -10,6 +16,8 @@ import {
   YAxis,
 } from "recharts";
 import { AppointmentsAnalyticsGroupedItem } from "@/types/Appointments-Analytics/AppointmentsAnalytics";
+import { CHART_AXIS_COLOR, CHART_COLORS, CHART_GRID_COLOR } from "./chartTheme";
+import { ChartTooltip } from "./ChartTooltip";
 
 interface Props {
   data?: AppointmentsAnalyticsGroupedItem[];
@@ -24,8 +32,9 @@ export function ConsultationTypeVolumeChart({ data, isLoading }: Props) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Mix por tipo de turno</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Mix por tipo de turno</CardTitle>
+        <CardDescription>Volumen de turnos por cada tipo de consulta.</CardDescription>
       </CardHeader>
       <CardContent className="h-[320px]">
         {isLoading ? (
@@ -37,11 +46,25 @@ export function ConsultationTypeVolumeChart({ data, isLoading }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 16, left: -16, bottom: 32 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" angle={-20} textAnchor="end" interval={0} height={72} />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="total" fill="#2563EB" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={CHART_GRID_COLOR} />
+              <XAxis
+                dataKey="name"
+                angle={-20}
+                textAnchor="end"
+                interval={0}
+                height={72}
+                tick={{ fontSize: 12, fill: CHART_AXIS_COLOR }}
+                tickLine={false}
+                axisLine={{ stroke: CHART_GRID_COLOR }}
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12, fill: CHART_AXIS_COLOR }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip cursor={{ fill: "rgba(37, 99, 235, 0.06)" }} content={<ChartTooltip />} />
+              <Bar dataKey="total" name="Turnos" fill={CHART_COLORS.blue} radius={[6, 6, 0, 0]} maxBarSize={48} />
             </BarChart>
           </ResponsiveContainer>
         )}
