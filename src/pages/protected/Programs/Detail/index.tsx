@@ -18,6 +18,7 @@ const ProgramDetailPage = () => {
     isLoading: isLoadingMembership,
     isAdmin,
     isProgramMember,
+    isCoordinator,
   } = useProgramMembership(programId!);
 
   if (isLoading || isLoadingMembership) {
@@ -54,15 +55,22 @@ const ProgramDetailPage = () => {
           description={program.description}
           icon={<GraduationCap className="h-6 w-6" />}
           actions={
-            <Badge
-              className={
-                program.isActive
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-              }
-            >
-              {program.isActive ? "Activo" : "Inactivo"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isProgramMember && (
+                <Badge variant="outline" className="border-blue-300 text-blue-800">
+                  {isCoordinator ? "Sos coordinador" : "Sos profesional"}
+                </Badge>
+              )}
+              <Badge
+                className={
+                  program.isActive
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }
+              >
+                {program.isActive ? "Activo" : "Inactivo"}
+              </Badge>
+            </div>
           }
         />
 

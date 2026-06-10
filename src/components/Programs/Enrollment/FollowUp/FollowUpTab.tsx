@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import useRoles from "@/hooks/useRoles";
@@ -320,42 +319,12 @@ export default function FollowUpTab({
 
   return (
     <>
-      <Tabs defaultValue="summaries" className="space-y-5">
-        <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1">
-          <TabsTrigger className="h-10 text-sm" value="summaries">
-            Resúmenes
-          </TabsTrigger>
-          <TabsTrigger className="h-10 text-sm" value="notes">
-            Observaciones
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="summaries" className="mt-0">
-          <MonthlySummaryList
-            items={summaryEntries}
-            selectedValue={previewMonth}
-            onSelect={openPreview}
-            title="Resúmenes cargados"
-            emptyMessage="Todavía no hay resúmenes cargados."
-            headerAction={
-              canManageMonthlySummary ? (
-                <Button
-                  type="button"
-                  className="h-10 px-4 text-sm font-semibold"
-                  onClick={openCreateSummary}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nuevo resumen
-                </Button>
-              ) : null
-            }
-          />
-        </TabsContent>
-
-        <TabsContent value="notes" className="mt-0 space-y-5">
+      <div className="space-y-5">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-slate-900">Notas</CardTitle>
+              <CardTitle className="text-xl text-slate-900">
+                {editingNoteId ? "Editar observación" : "Nueva observación"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
@@ -446,8 +415,28 @@ export default function FollowUpTab({
               }
             />
           )}
-        </TabsContent>
-      </Tabs>
+
+          <MonthlySummaryList
+            items={summaryEntries}
+            selectedValue={previewMonth}
+            onSelect={openPreview}
+            title="Resúmenes mensuales"
+            emptyMessage="Todavía no hay resúmenes cargados."
+            headerAction={
+              canManageMonthlySummary ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 px-4 text-sm font-semibold"
+                  onClick={openCreateSummary}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nuevo resumen
+                </Button>
+              ) : null
+            }
+          />
+      </div>
 
       <MonthlySummaryDetailDialog
         open={isPreviewOpen}

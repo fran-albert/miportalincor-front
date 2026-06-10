@@ -26,6 +26,7 @@ interface ManualAttendanceDialogProps {
   activities: ProgramActivity[];
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  patientName?: string;
 }
 
 export default function ManualAttendanceDialog({
@@ -34,6 +35,7 @@ export default function ManualAttendanceDialog({
   activities,
   isOpen,
   setIsOpen,
+  patientName,
 }: ManualAttendanceDialogProps) {
   const { registerManualMutation } = useAttendanceMutations();
   const { promiseToast } = useToastContext();
@@ -76,7 +78,9 @@ export default function ManualAttendanceDialog({
         <DialogHeader>
           <DialogTitle>Registrar Asistencia Manual</DialogTitle>
           <DialogDescription>
-            Seleccioná la actividad para registrar asistencia.
+            {patientName
+              ? `${patientName} — seleccioná la actividad.`
+              : "Seleccioná la actividad para registrar asistencia."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

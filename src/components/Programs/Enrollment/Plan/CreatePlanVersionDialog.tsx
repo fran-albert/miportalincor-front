@@ -1,5 +1,4 @@
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
 import { usePlanMutations } from "@/hooks/Program/usePlanMutations";
+import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
 import {
@@ -27,10 +27,6 @@ import {
   FrequencyPeriodLabels,
   CreatePlanVersionDto,
 } from "@/types/Program/ProgramPlan";
-import {
-  CreatePlanVersionSchema,
-  CreatePlanVersionFormValues,
-} from "@/validators/Program/plan.schema";
 
 interface CreatePlanVersionDialogProps {
   enrollmentId: string;
@@ -39,6 +35,20 @@ interface CreatePlanVersionDialogProps {
   setIsOpen: (open: boolean) => void;
 }
 
+interface PlanRowState {
+  included: boolean;
+  frequencyCount: number;
+  frequencyPeriod: FrequencyPeriod;
+  notes: string;
+}
+
+const defaultRow: PlanRowState = {
+  included: false,
+  frequencyCount: 3,
+  frequencyPeriod: FrequencyPeriod.WEEKLY,
+  notes: "",
+};
+
 export default function CreatePlanVersionDialog({
   enrollmentId,
   activities,
@@ -46,44 +56,85 @@ export default function CreatePlanVersionDialog({
   setIsOpen,
 }: CreatePlanVersionDialogProps) {
   const { createPlanVersionMutation } = usePlanMutations(enrollmentId);
+  const { currentPlan } = useCurrentPlan(enrollmentId);
   const { promiseToast } = useToastContext();
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<CreatePlanVersionFormValues>({
-    resolver: zodResolver(CreatePlanVersionSchema),
-    defaultValues: {
-      validFrom: new Date().toISOString().split("T")[0],
-      activities: [
-        {
-          activityId: "",
-          frequencyCount: 3,
-          frequencyPeriod: "WEEKLY",
-          notes: "",
-        },
-      ],
-    },
-  });
+  const activeActivities = activities.filter((a) => a.isActive);
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "activities",
-  });
+  const [validFrom, setValidFrom] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [rows, setRows] = useState<Record<string, PlanRowState>>({});
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = async (data: CreatePlanVersionFormValues) => {
+  // Prefill from the current plan each time the dialog opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setValidFrom(new Date().toISOString().split("T")[0]);
+    setError(null);
+
+    const nextRows: Record<string, PlanRowState> = {};
+    for (const activity of activities.filter((a) => a.isActive)) {
+      const planned = currentPlan?.activities.find(
+        (pa) => pa.activityId === activity.id
+      );
+      nextRows[activity.id] = planned
+        ? {
+            included: true,
+            frequencyCount: planned.frequencyCount,
+            frequencyPeriod: planned.frequencyPeriod,
+            notes: planned.notes ?? "",
+          }
+        : { ...defaultRow };
+    }
+    setRows(nextRows);
+  }, [isOpen, activities, currentPlan]);
+
+  const updateRow = (activityId: string, patch: Partial<PlanRowState>) => {
+    setRows((prev) => ({
+      ...prev,
+      [activityId]: { ...(prev[activityId] ?? defaultRow), ...patch },
+    }));
+  };
+
+  const includedCount = Object.values(rows).filter((r) => r.included).length;
+
+  const handleSubmit = async () => {
+    const included = activeActivities.filter(
+      (activity) => rows[activity.id]?.included
+    );
+
+    if (included.length === 0) {
+      setError("Marcá al menos una actividad para el plan.");
+      return;
+    }
+    if (
+      included.some(
+        (activity) =>
+          !rows[activity.id].frequencyCount ||
+          rows[activity.id].frequencyCount < 1
+      )
+    ) {
+      setError("La frecuencia debe ser al menos 1.");
+      return;
+    }
+    setError(null);
+
+    const dto: CreatePlanVersionDto = {
+      validFrom,
+      activities: included.map((activity) => {
+        const row = rows[activity.id];
+        return {
+          activityId: activity.id,
+          frequencyCount: row.frequencyCount,
+          frequencyPeriod: row.frequencyPeriod,
+          ...(row.notes.trim() && { notes: row.notes.trim() }),
+        };
+      }),
+    };
+
     try {
-      const dto: CreatePlanVersionDto = {
-        validFrom: data.validFrom,
-        activities: data.activities.map((a) => ({
-          ...a,
-          frequencyPeriod: a.frequencyPeriod as FrequencyPeriod,
-        })),
-      };
       const promise = createPlanVersionMutation.mutateAsync(dto);
       await promiseToast(promise, {
         loading: {
@@ -99,7 +150,6 @@ export default function CreatePlanVersionDialog({
           description: "No se pudo crear el plan.",
         }),
       });
-      reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Error creating plan:", error);
@@ -108,161 +158,138 @@ export default function CreatePlanVersionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Crear Plan</DialogTitle>
+          <DialogTitle>
+            {currentPlan ? "Nueva versión del plan" : "Crear Plan"}
+          </DialogTitle>
           <DialogDescription>
-            Definí las actividades y frecuencias del plan.
+            {currentPlan
+              ? "Las actividades del plan vigente ya vienen marcadas. Ajustá lo que cambió."
+              : "Marcá las actividades del plan y su frecuencia."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="validFrom">Válido desde</Label>
-            <Input id="validFrom" type="date" {...register("validFrom")} />
-            {errors.validFrom && (
-              <p className="text-sm text-red-500">
-                {errors.validFrom.message}
-              </p>
-            )}
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Label htmlFor="validFrom" className="shrink-0">
+              Válido desde
+            </Label>
+            <Input
+              id="validFrom"
+              type="date"
+              value={validFrom}
+              onChange={(e) => setValidFrom(e.target.value)}
+              className="w-44"
+            />
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Actividades del plan</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    activityId: "",
-                    frequencyCount: 3,
-                    frequencyPeriod: "WEEKLY",
-                    notes: "",
-                  })
-                }
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Agregar
-              </Button>
+          {activeActivities.length === 0 ? (
+            <p className="py-4 text-sm text-gray-500">
+              El programa no tiene actividades activas. Creá actividades antes
+              de armar el plan.
+            </p>
+          ) : (
+            <div className="divide-y rounded-lg border">
+              {activeActivities.map((activity) => {
+                const row = rows[activity.id] ?? defaultRow;
+                return (
+                  <div key={activity.id} className="space-y-3 p-3">
+                    <label className="flex cursor-pointer items-center gap-3">
+                      <Checkbox
+                        checked={row.included}
+                        onCheckedChange={(checked) =>
+                          updateRow(activity.id, {
+                            included: checked === true,
+                          })
+                        }
+                      />
+                      <span className="font-medium">{activity.name}</span>
+                    </label>
+
+                    {row.included && (
+                      <div className="grid grid-cols-2 gap-2 pl-8 sm:grid-cols-[90px_1fr_1fr]">
+                        <div>
+                          <Label className="text-xs">Frecuencia</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={row.frequencyCount}
+                            onChange={(e) =>
+                              updateRow(activity.id, {
+                                frequencyCount: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Período</Label>
+                          <Select
+                            value={row.frequencyPeriod}
+                            onValueChange={(value) =>
+                              updateRow(activity.id, {
+                                frequencyPeriod: value as FrequencyPeriod,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(FrequencyPeriodLabels).map(
+                                ([key, label]) => (
+                                  <SelectItem key={key} value={key}>
+                                    {label}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2 sm:col-span-1">
+                          <Label className="text-xs">Notas (opcional)</Label>
+                          <Input
+                            placeholder="Notas"
+                            value={row.notes}
+                            onChange={(e) =>
+                              updateRow(activity.id, {
+                                notes: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            {errors.activities?.root && (
-              <p className="text-sm text-red-500">
-                {errors.activities.root.message}
-              </p>
-            )}
+          )}
 
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="rounded-lg border p-3 space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    Actividad {index + 1}
-                  </span>
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  )}
-                </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+        </div>
 
-                <Select
-                  onValueChange={(v) =>
-                    setValue(`activities.${index}.activityId`, v)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar actividad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activities
-                      .filter((a) => a.isActive)
-                      .map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                {errors.activities?.[index]?.activityId && (
-                  <p className="text-sm text-red-500">
-                    {errors.activities[index]?.activityId?.message}
-                  </p>
-                )}
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Frecuencia</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      {...register(
-                        `activities.${index}.frequencyCount` as const,
-                        { valueAsNumber: true }
-                      )}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs">Período</Label>
-                    <Select
-                      defaultValue="WEEKLY"
-                      onValueChange={(v) =>
-                        setValue(
-                          `activities.${index}.frequencyPeriod`,
-                          v as FrequencyPeriod
-                        )
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(FrequencyPeriodLabels).map(
-                          ([key, label]) => (
-                            <SelectItem key={key} value={key}>
-                              {label}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-xs">Notas (opcional)</Label>
-                  <Input
-                    placeholder="Notas adicionales"
-                    {...register(`activities.${index}.notes` as const)}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={createPlanVersionMutation.isPending}
-            >
-              Crear Plan
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsOpen(false)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={
+              createPlanVersionMutation.isPending ||
+              activeActivities.length === 0
+            }
+          >
+            {includedCount > 0
+              ? `Guardar plan (${includedCount})`
+              : "Guardar plan"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -7,14 +7,16 @@ import {
 } from "@/types/Program/ProgramEnrollment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Settings } from "lucide-react";
+import { Eye, Settings, CalendarPlus, MessageSquarePlus } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export const getEnrollmentColumns = (
   programId: string,
   canManageEnrollments: boolean,
-  onChangeStatus: (enrollment: ProgramEnrollment) => void
+  onChangeStatus: (enrollment: ProgramEnrollment) => void,
+  onRegisterAttendance: (enrollment: ProgramEnrollment) => void,
+  onNewNote: (enrollment: ProgramEnrollment) => void
 ): ColumnDef<ProgramEnrollment>[] => [
   {
     accessorKey: "#",
@@ -65,6 +67,22 @@ export const getEnrollmentColumns = (
     header: " ",
     cell: ({ row }) => (
       <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onRegisterAttendance(row.original)}
+        >
+          <CalendarPlus className="h-4 w-4 mr-1" />
+          Asistencia
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onNewNote(row.original)}
+        >
+          <MessageSquarePlus className="h-4 w-4 mr-1" />
+          Nota
+        </Button>
         <Link
           to={`/programas/${programId}/inscripciones/${row.original.id}`}
         >
