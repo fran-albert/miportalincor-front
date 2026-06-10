@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,32 +10,67 @@ interface ComplianceTabProps {
   enrollmentId: string;
 }
 
+const RANGE_PRESETS = [
+  { key: "30", label: "Último mes", days: 30 },
+  { key: "90", label: "Últimos 3 meses", days: 90 },
+  { key: "365", label: "Último año", days: 365 },
+] as const;
+
 export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
   const today = new Date();
+  const [preset, setPreset] = useState<string | null>("30");
   const [from, setFrom] = useState(
     format(subDays(today, 30), "yyyy-MM-dd")
   );
   const [to, setTo] = useState(format(today, "yyyy-MM-dd"));
   const { compliance, isLoading } = useCompliance(enrollmentId, from, to);
 
+  const applyPreset = (key: string, days: number) => {
+    const now = new Date();
+    setPreset(key);
+    setFrom(format(subDays(now, days), "yyyy-MM-dd"));
+    setTo(format(now, "yyyy-MM-dd"));
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-end gap-4">
-        <div className="space-y-1">
-          <Label className="text-sm">Desde</Label>
-          <Input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="flex gap-2">
+          {RANGE_PRESETS.map((range) => (
+            <Button
+              key={range.key}
+              type="button"
+              size="sm"
+              variant={preset === range.key ? "default" : "outline"}
+              onClick={() => applyPreset(range.key, range.days)}
+            >
+              {range.label}
+            </Button>
+          ))}
         </div>
-        <div className="space-y-1">
-          <Label className="text-sm">Hasta</Label>
-          <Input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
+        <div className="flex items-end gap-4">
+          <div className="space-y-1">
+            <Label className="text-sm">Desde</Label>
+            <Input
+              type="date"
+              value={from}
+              onChange={(e) => {
+                setPreset(null);
+                setFrom(e.target.value);
+              }}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm">Hasta</Label>
+            <Input
+              type="date"
+              value={to}
+              onChange={(e) => {
+                setPreset(null);
+                setTo(e.target.value);
+              }}
+            />
+          </div>
         </div>
       </div>
 

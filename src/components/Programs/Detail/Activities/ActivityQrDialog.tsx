@@ -68,7 +68,15 @@ export default function ActivityQrDialog({
           ) : qrData ? (
             <>
               <div ref={qrRef} className="rounded-lg border p-4 bg-white">
-                <QRCodeCanvas value={`${environment.BASE_URL.replace(/\/$/, '')}${qrData.qrUrl}`} size={250} level="H" />
+                <QRCodeCanvas
+                  value={`${environment.BASE_URL.replace(/\/$/, "")}${
+                    qrData.qrUrl
+                  }?actividad=${encodeURIComponent(
+                    activityName
+                  )}&programa=${encodeURIComponent(qrData.programName)}`}
+                  size={250}
+                  level="H"
+                />
               </div>
               <p className="text-sm text-gray-600 text-center">
                 Los pacientes pueden escanear este código para registrar su

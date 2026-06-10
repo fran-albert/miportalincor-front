@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { useAttendanceMutations } from "@/hooks/Program/useAttendanceMutations";
 
 const QrAttendancePage = () => {
   const { qrToken } = useParams<{ qrToken: string }>();
+  const [searchParams] = useSearchParams();
+  const activityName = searchParams.get("actividad");
+  const programName = searchParams.get("programa");
   const navigate = useNavigate();
   const { registerQrMutation } = useAttendanceMutations();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
@@ -43,12 +46,22 @@ const QrAttendancePage = () => {
           <CardContent className="text-center space-y-6">
             {status === "idle" && (
               <>
-                <p className="text-gray-600">
+                {activityName && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
+                    <p className="text-xl font-bold text-gray-900">
+                      {activityName}
+                    </p>
+                    {programName && (
+                      <p className="text-base text-gray-600">{programName}</p>
+                    )}
+                  </div>
+                )}
+                <p className="text-base text-gray-600">
                   Tocá el botón para registrar tu asistencia.
                 </p>
                 <Button
                   size="lg"
-                  className="w-full"
+                  className="h-14 w-full text-lg font-semibold"
                   onClick={handleRegister}
                 >
                   Confirmar Asistencia
@@ -66,14 +79,17 @@ const QrAttendancePage = () => {
             {status === "success" && (
               <div className="flex flex-col items-center gap-4">
                 <CheckCircle className="h-16 w-16 text-green-500" />
-                <p className="text-lg font-semibold text-green-700">
+                <p className="text-xl font-semibold text-green-700">
                   ¡Asistencia registrada!
                 </p>
-                <p className="text-gray-600">
-                  Tu asistencia fue registrada correctamente.
+                <p className="text-base text-gray-600">
+                  {activityName
+                    ? `Registramos tu asistencia a ${activityName}.`
+                    : "Tu asistencia fue registrada correctamente."}
                 </p>
                 <Button
                   variant="outline"
+                  className="h-12 text-base"
                   onClick={() => navigate("/mis-programas")}
                 >
                   Ir a Mis Programas

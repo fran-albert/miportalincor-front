@@ -75,23 +75,22 @@ const ProgramDetailPage = () => {
         />
 
         {isAdmin ? (
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full grid-cols-1">
-              <TabsTrigger value="members" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Miembros
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="members" className="mt-6">
-              <MembersTab programId={programId!} />
-            </TabsContent>
-          </Tabs>
+          <div className="space-y-4">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <Users className="h-5 w-5" />
+              Miembros del programa
+            </h2>
+            <MembersTab programId={programId!} />
+          </div>
         ) : isProgramMember ? (
-          <Tabs defaultValue="members" className="w-full">
+          <Tabs defaultValue="enrollments" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="members" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Miembros
+              <TabsTrigger
+                value="enrollments"
+                className="flex items-center gap-2"
+              >
+                <ClipboardList className="h-4 w-4" />
+                Pacientes
               </TabsTrigger>
               <TabsTrigger
                 value="activities"
@@ -100,22 +99,19 @@ const ProgramDetailPage = () => {
                 <Activity className="h-4 w-4" />
                 Actividades
               </TabsTrigger>
-              <TabsTrigger
-                value="enrollments"
-                className="flex items-center gap-2"
-              >
-                <ClipboardList className="h-4 w-4" />
-                Inscripciones
+              <TabsTrigger value="members" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Miembros
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="members" className="mt-6">
-              <MembersTab programId={programId!} />
+            <TabsContent value="enrollments" className="mt-6">
+              <EnrollmentsTab programId={programId!} />
             </TabsContent>
             <TabsContent value="activities" className="mt-6">
               <ActivitiesTab programId={programId!} />
             </TabsContent>
-            <TabsContent value="enrollments" className="mt-6">
-              <EnrollmentsTab programId={programId!} />
+            <TabsContent value="members" className="mt-6">
+              <MembersTab programId={programId!} />
             </TabsContent>
           </Tabs>
         ) : (

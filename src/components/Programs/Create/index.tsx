@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -12,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { useProgramMutations } from "@/hooks/Program/useProgramMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
@@ -28,8 +31,12 @@ export default function CreateProgramDialog({
   isOpen,
   setIsOpen,
 }: CreateProgramDialogProps) {
+  const navigate = useNavigate();
   const { createProgramMutation } = useProgramMutations();
   const { promiseToast } = useToastContext();
+  const [createdProgramId, setCreatedProgramId] = useState<string | null>(
+    null
+  );
 
   const {
     register,
@@ -40,6 +47,14 @@ export default function CreateProgramDialog({
     resolver: zodResolver(CreateProgramSchema),
     defaultValues: { name: "", description: "" },
   });
+
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      reset();
+      setCreatedProgramId(null);
+    }
+    setIsOpen(open);
+  };
 
   const onSubmit = async (data: CreateProgramFormValues) => {
     try {
@@ -58,15 +73,54 @@ export default function CreateProgramDialog({
           description: "No se pudo crear el programa.",
         }),
       });
+      const program = await promise;
       reset();
-      setIsOpen(false);
+      setCreatedProgramId(program.id);
     } catch (error) {
       console.error("Error creating program:", error);
     }
   };
 
+  if (createdProgramId) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              Programa creado
+            </DialogTitle>
+            <DialogDescription>
+              El siguiente paso es agregar al equipo del programa.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleClose(false)}
+            >
+              Listo
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                const programId = createdProgramId;
+                handleClose(false);
+                navigate(`/programas/${programId}`);
+              }}
+            >
+              Agregar miembros
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Crear Programa</DialogTitle>

@@ -89,10 +89,10 @@ export function MonthlySummaryDetailDialog({
                       index === 0 ? "bg-slate-50" : "bg-white"
                     )}
                   >
-                    <p className="mb-2 text-sm font-medium text-slate-500">
+                    <p className="mb-2 text-base font-semibold text-slate-700">
                       {section.title}
                     </p>
-                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                    <p className="whitespace-pre-wrap text-base leading-7 text-slate-700">
                       {section.content}
                     </p>
                   </section>

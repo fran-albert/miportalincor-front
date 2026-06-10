@@ -63,17 +63,17 @@ export function NotesList({
             <div key={entry.id} className="space-y-3 py-4 first:pt-0 last:pb-0">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  <span className="text-sm font-medium text-slate-500">
                     {getEntryDate(entry)}
                   </span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-slate-900">
                   {entry.title || "Nota del equipo"}
                 </h3>
                 <p className="text-sm text-slate-500">{getAuthorName(entry)}</p>
               </div>
 
-              <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">
+              <p className="whitespace-pre-wrap text-base leading-7 text-slate-700">
                 {entry.content || "Sin contenido."}
               </p>
             </div>
@@ -99,7 +99,7 @@ export function NotesList({
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    <span className="text-sm font-medium text-slate-500">
                       {getEntryDate(entry)}
                     </span>
                     {variant === "staff" && (

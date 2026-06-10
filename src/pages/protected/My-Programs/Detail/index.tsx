@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import useRoles from "@/hooks/useRoles";
 import { useMyEnrollments } from "@/hooks/Program/useMyEnrollments";
@@ -36,18 +35,17 @@ const getComplianceTone = (value: number) => {
     };
   }
 
-  if (value >= 50) {
-    return {
-      barClassName: "bg-amber-400",
-      badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
-    };
-  }
-
   return {
-    barClassName: "bg-rose-500",
-    badgeClassName: "border-rose-200 bg-rose-50 text-rose-700",
+    barClassName: "bg-amber-400",
+    badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
   };
 };
+
+const RANGE_PRESETS = [
+  { key: "30", label: "Último mes", days: 30 },
+  { key: "90", label: "Últimos 3 meses", days: 90 },
+  { key: "365", label: "Último año", days: 365 },
+] as const;
 
 const formatSelectedDate = (value: string) =>
   format(parse(value, "yyyy-MM-dd", new Date()), "dd/MM/yyyy", {
@@ -101,9 +99,19 @@ const MyEnrollmentDetailPage = () => {
   const { records } = useAttendanceRecords(enrollmentId!);
 
   const today = new Date();
+  const [rangeKey, setRangeKey] = useState<string>("30");
   const [from, setFrom] = useState(format(subDays(today, 30), "yyyy-MM-dd"));
   const [to, setTo] = useState(format(today, "yyyy-MM-dd"));
   const { compliance } = useCompliance(enrollmentId!, from, to);
+
+  const applyRange = (key: string, days: number) => {
+    const now = new Date();
+    setRangeKey(key);
+    setFrom(format(subDays(now, days), "yyyy-MM-dd"));
+    setTo(format(now, "yyyy-MM-dd"));
+  };
+
+  const [showAllRecords, setShowAllRecords] = useState(false);
 
   const sortedRecords = useMemo(
     () =>
@@ -114,6 +122,10 @@ const MyEnrollmentDetailPage = () => {
       ),
     [records]
   );
+
+  const visibleRecords = showAllRecords
+    ? sortedRecords
+    : sortedRecords.slice(0, 5);
 
   if (isLoading) {
     return (
@@ -227,26 +239,18 @@ const MyEnrollmentDetailPage = () => {
           icon={<TrendingUp className="h-5 w-5" />}
         >
           <div className="space-y-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-700">Desde</Label>
-                  <Input
-                    type="date"
-                    value={from}
-                    onChange={(event) => setFrom(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-700">Hasta</Label>
-                  <Input
-                    type="date"
-                    value={to}
-                    onChange={(event) => setTo(event.target.value)}
-                  />
-                </div>
-              </div>
-
+            <div className="flex flex-wrap gap-2">
+              {RANGE_PRESETS.map((range) => (
+                <Button
+                  key={range.key}
+                  type="button"
+                  variant={rangeKey === range.key ? "default" : "outline"}
+                  className="h-11 rounded-full px-5 text-base"
+                  onClick={() => applyRange(range.key, range.days)}
+                >
+                  {range.label}
+                </Button>
+              ))}
             </div>
 
             {compliance ? (
@@ -254,8 +258,8 @@ const MyEnrollmentDetailPage = () => {
                 <div className="space-y-3 rounded-3xl bg-slate-50 px-4 py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-slate-700">
-                        Cumplimiento general
+                      <p className="text-base font-medium text-slate-700">
+                        Tus actividades realizadas
                       </p>
                       <p className="text-sm text-slate-500">
                         Del {formatSelectedDate(from)} al {formatSelectedDate(to)}
@@ -294,8 +298,9 @@ const MyEnrollmentDetailPage = () => {
                               <h3 className="text-base font-semibold text-slate-900">
                                 {activity.activityName}
                               </h3>
-                              <p className="text-sm text-slate-500">
-                                {activity.attended} realizadas de {activity.expected}
+                              <p className="text-base text-slate-600">
+                                Hiciste {activity.attended} de{" "}
+                                {activity.expected}
                               </p>
                             </div>
                             <Badge
@@ -339,7 +344,7 @@ const MyEnrollmentDetailPage = () => {
         >
           {sortedRecords.length > 0 ? (
             <div className="divide-y divide-slate-100">
-              {sortedRecords.map((record) => (
+              {visibleRecords.map((record) => (
                 <div
                   key={record.id}
                   className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
@@ -367,6 +372,20 @@ const MyEnrollmentDetailPage = () => {
                   </Badge>
                 </div>
               ))}
+              {sortedRecords.length > 5 && (
+                <div className="pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full text-base sm:w-auto"
+                    onClick={() => setShowAllRecords(!showAllRecords)}
+                  >
+                    {showAllRecords
+                      ? "Ver menos"
+                      : `Ver todas (${sortedRecords.length})`}
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-4 text-sm text-slate-500">
