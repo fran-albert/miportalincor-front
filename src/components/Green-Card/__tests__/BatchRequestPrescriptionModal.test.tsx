@@ -246,11 +246,9 @@ function renderBatchModal(
 
 /** Helper to get the submit button by its role */
 function getSubmitButton() {
-  // The submit button contains text "Enviar solicitud de recetas" and is a button
+  // The submit button contains text "Enviar pedido" and is a button
   const buttons = screen.getAllByRole("button");
-  return buttons.find((btn) =>
-    btn.textContent?.includes("Enviar solicitud de recetas (")
-  );
+  return buttons.find((btn) => btn.textContent?.includes("Enviar pedido ("));
 }
 
 // --- Tests ---
@@ -269,15 +267,13 @@ describe("BatchRequestPrescriptionModal", () => {
   describe("Renderizado básico", () => {
     it("debe mostrar el título del modal", () => {
       renderBatchModal();
-      expect(
-        screen.getByText("Solicitar Recetas en Lote")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Pedir recetas")).toBeInTheDocument();
     });
 
     it("debe mostrar el selector de médico", () => {
       renderBatchModal();
       expect(
-        screen.getByText("Médico que recibe las solicitudes")
+        screen.getByText("Médico que hace la receta")
       ).toBeInTheDocument();
       expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
@@ -288,20 +284,18 @@ describe("BatchRequestPrescriptionModal", () => {
       expect(screen.getByText("Metformina 850mg")).toBeInTheDocument();
     });
 
-    it("debe mostrar el aviso del viernes", () => {
+    it("no debe repetir el aviso del viernes (ya está en la página)", () => {
       renderBatchModal();
       expect(
-        screen.getByText(/próximo viernes a partir de las 14:00 hs/)
-      ).toBeInTheDocument();
+        screen.queryByText(/próximo viernes a partir de las 14:00 hs/)
+      ).not.toBeInTheDocument();
     });
 
     it("debe mostrar el botón de submit con la cantidad de items", () => {
       renderBatchModal();
       const submitBtn = getSubmitButton();
       expect(submitBtn).toBeDefined();
-      expect(submitBtn?.textContent).toContain(
-        "Enviar solicitud de recetas (2)"
-      );
+      expect(submitBtn?.textContent).toContain("Enviar pedido (2)");
     });
   });
 
@@ -352,7 +346,7 @@ describe("BatchRequestPrescriptionModal", () => {
     it("debe marcar items inactivos como omitidos", () => {
       renderBatchModal({ selectedItemIds: ["item-1", "item-3"] });
       expect(screen.getByText("Medicamento suspendido")).toBeInTheDocument();
-      expect(screen.getByText("No se solicitaran (1)")).toBeInTheDocument();
+      expect(screen.getByText("No se incluyen (1)")).toBeInTheDocument();
     });
 
     it("debe marcar items con solicitud pendiente como omitidos", () => {
@@ -364,11 +358,7 @@ describe("BatchRequestPrescriptionModal", () => {
 
     it("debe mostrar la cantidad correcta de medicamentos enviables en la descripción", () => {
       renderBatchModal({ selectedItemIds: ["item-1", "item-2"] });
-      expect(
-        screen.getByText(
-          "2 receta(s) listas para enviar al médico que elijas."
-        )
-      ).toBeInTheDocument();
+      expect(screen.getByText("Vas a pedir 2 recetas.")).toBeInTheDocument();
     });
   });
 
@@ -386,7 +376,7 @@ describe("BatchRequestPrescriptionModal", () => {
       // El botón muestra "(0)" items
       const buttons = screen.getAllByRole("button");
       const submitBtn = buttons.find((btn) =>
-        btn.textContent?.includes("Enviar solicitud de recetas (0)")
+        btn.textContent?.includes("Enviar pedido (0)")
       );
       expect(submitBtn).toBeDefined();
       expect(submitBtn).toBeDisabled();
@@ -568,9 +558,6 @@ describe("BatchRequestPrescriptionModal", () => {
         expect(submitBtn).toBeDefined();
         expect(submitBtn).not.toBeDisabled();
       });
-      expect(
-        screen.getByText(/Preseleccionamos el médico asociado/)
-      ).toBeInTheDocument();
     });
   });
 });

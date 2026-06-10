@@ -26,13 +26,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { PhysicalGreenCard } from "@/components/Green-Card/PhysicalGreenCard";
-import { RequestPrescriptionModal } from "@/components/Green-Card/RequestPrescriptionModal";
 import { BatchRequestPrescriptionModal } from "@/components/Green-Card/BatchRequestPrescriptionModal";
 import { useMyGreenCard } from "@/hooks/Green-Card/useGreenCard";
 import { useGreenCardPDF } from "@/hooks/Green-Card/useGreenCardPDF";
 import { useMyPrescriptionRequests } from "@/hooks/Prescription-Request/usePrescriptionRequest";
 import { useMyCheckupSchedules } from "@/hooks/Periodic-Checkup";
-import { GreenCardItem } from "@/types/Green-Card/GreenCard";
 import {
   PrescriptionRequest,
   PrescriptionRequestStatus,
@@ -40,14 +38,9 @@ import {
 import { buildPrescriptionHistoryEntries } from "./history";
 
 const MyPrescriptionRequestsPage = () => {
-  // State for prescription request modal
-  const [selectedItemForPrescription, setSelectedItemForPrescription] =
-    useState<GreenCardItem | null>(null);
-  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
-  // State for batch selection
-  const [selectionMode, setSelectionMode] = useState(false);
+  // Medication selection for prescription requests
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
@@ -80,23 +73,6 @@ const MyPrescriptionRequestsPage = () => {
     }
   };
 
-  const handleRequestPrescription = (item: GreenCardItem) => {
-    setSelectedItemForPrescription(item);
-    setIsPrescriptionModalOpen(true);
-  };
-
-  const handleClosePrescriptionModal = () => {
-    setIsPrescriptionModalOpen(false);
-    setSelectedItemForPrescription(null);
-  };
-
-  const handleToggleSelectionMode = () => {
-    if (selectionMode) {
-      setSelectedItemIds([]);
-    }
-    setSelectionMode(!selectionMode);
-  };
-
   const handleToggleItemSelection = (itemId: string) => {
     setSelectedItemIds((prev) =>
       prev.includes(itemId)
@@ -117,7 +93,6 @@ const MyPrescriptionRequestsPage = () => {
   };
 
   const handleBatchSuccess = () => {
-    setSelectionMode(false);
     setSelectedItemIds([]);
   };
 
@@ -198,7 +173,7 @@ const MyPrescriptionRequestsPage = () => {
       r.status === PrescriptionRequestStatus.IN_PROGRESS
   ).length;
 
-  const hasMobileBatchCta = selectionMode && selectedItemIds.length > 0;
+  const hasMobileBatchCta = selectedItemIds.length > 0;
   const openResource = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -238,38 +213,18 @@ const MyPrescriptionRequestsPage = () => {
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {greenCard && greenCard.items.length > 0 && (
               <>
-                <div className="flex flex-col gap-1">
-                  <Button
-                    variant={selectionMode ? "outline" : "default"}
-                    size="lg"
-                    onClick={handleToggleSelectionMode}
-                    className={
-                      selectionMode
-                        ? "h-12 justify-center border-red-200 text-base font-semibold text-red-700 hover:bg-red-50 sm:min-w-[210px]"
-                        : "h-14 justify-center bg-blue-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-blue-700 sm:min-w-[310px]"
-                    }
-                  >
-                    <ListChecks className="h-5 w-5 mr-2" />
-                    {selectionMode
-                      ? "Cancelar selección"
-                      : "Seleccionar medicamentos para pedir recetas"}
-                  </Button>
-                  {!selectionMode && (
-                    <span className="text-center text-sm text-gray-500 sm:text-left">
-                      Podés pedir varios medicamentos juntos.
-                    </span>
-                  )}
-                </div>
-                {selectionMode && selectedItemIds.length > 0 && (
-                  <Button
-                    size="lg"
-                    onClick={() => setIsBatchModalOpen(true)}
-                    className="hidden h-12 bg-blue-600 px-5 text-base font-semibold hover:bg-blue-700 md:inline-flex"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Pedir recetas ({selectedItemIds.length})
-                  </Button>
-                )}
+                <Button
+                  size="lg"
+                  onClick={() => setIsBatchModalOpen(true)}
+                  disabled={selectedItemIds.length === 0}
+                  className="h-12 justify-center bg-blue-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-blue-700"
+                >
+                  <FileText className="h-5 w-5 mr-2" />
+                  Pedir recetas
+                  {selectedItemIds.length > 0
+                    ? ` (${selectedItemIds.length})`
+                    : ""}
+                </Button>
                 <Button
                   variant="default"
                   size="lg"
@@ -285,6 +240,13 @@ const MyPrescriptionRequestsPage = () => {
           </div>
         </div>
 
+        {greenCard && greenCard.items.length > 0 && (
+          <p className="text-base text-gray-600">
+            Marcá los medicamentos que necesitás y tocá{" "}
+            <strong>Pedir recetas</strong>.
+          </p>
+        )}
+
         {/* Content */}
         {isLoadingCard ? (
           <Card>
@@ -296,9 +258,7 @@ const MyPrescriptionRequestsPage = () => {
         ) : greenCard && greenCard.items.length > 0 ? (
           <PhysicalGreenCard
             greenCard={greenCard}
-            onRequestPrescription={handleRequestPrescription}
             checkupSchedules={cardiovascularCheckups}
-            selectionMode={selectionMode}
             selectedItemIds={selectedItemIds}
             onToggleItemSelection={handleToggleItemSelection}
             onSelectAll={handleSelectAll}
@@ -324,22 +284,12 @@ const MyPrescriptionRequestsPage = () => {
       {hasMobileBatchCta && (
         <div className="fixed inset-x-4 bottom-4 z-40 md:hidden">
           <div className="rounded-2xl border border-blue-200 bg-white/95 p-3 shadow-xl backdrop-blur">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-gray-900">
-                {selectedItemIds.length} medicamento
-                {selectedItemIds.length !== 1 ? "s" : ""} seleccionado
-                {selectedItemIds.length !== 1 ? "s" : ""}
-              </p>
-              <p className="text-xs text-gray-500">
-                Cuando quieras, enviá la solicitud en lote.
-              </p>
-            </div>
             <Button
               size="lg"
               onClick={() => setIsBatchModalOpen(true)}
-              className="h-12 w-full bg-blue-600 text-base font-semibold hover:bg-blue-700"
+              className="h-14 w-full bg-blue-600 text-base font-semibold hover:bg-blue-700"
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-5 w-5 mr-2" />
               Pedir recetas ({selectedItemIds.length})
             </Button>
           </div>
@@ -531,16 +481,6 @@ const MyPrescriptionRequestsPage = () => {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-
-      {/* Request Prescription Modal */}
-      {greenCard && selectedItemForPrescription && (
-        <RequestPrescriptionModal
-          isOpen={isPrescriptionModalOpen}
-          onClose={handleClosePrescriptionModal}
-          greenCardId={greenCard.id}
-          item={selectedItemForPrescription}
-        />
-      )}
 
       {/* Batch Request Prescription Modal */}
       {greenCard && (
