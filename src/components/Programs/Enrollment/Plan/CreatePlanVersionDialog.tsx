@@ -74,9 +74,12 @@ export default function CreatePlanVersionDialog({
     setValidFrom(new Date().toISOString().split("T")[0]);
     setError(null);
 
+    const plannedActivities = Array.isArray(currentPlan?.activities)
+      ? currentPlan.activities
+      : [];
     const nextRows: Record<string, PlanRowState> = {};
     for (const activity of activities.filter((a) => a.isActive)) {
-      const planned = currentPlan?.activities.find(
+      const planned = plannedActivities.find(
         (pa) => pa.activityId === activity.id
       );
       nextRows[activity.id] = planned

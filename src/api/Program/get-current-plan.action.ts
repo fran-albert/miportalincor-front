@@ -9,7 +9,8 @@ export const getCurrentPlan = async (
     const { data } = await apiIncorHC.get<PlanVersionResponse>(
       `/enrollments/${enrollmentId}/plans/current`
     );
-    return data;
+    // El endpoint puede responder 200 con body vacío cuando no hay plan
+    return data || null;
   } catch (error) {
     if (error instanceof AxiosError && error.response?.status === 404) {
       return null;
