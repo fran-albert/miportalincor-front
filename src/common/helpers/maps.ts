@@ -92,7 +92,7 @@ export interface ExamenFisicoItem {
 
 
 interface MedicalEvaluation {
-    aspectoGeneral: "Bueno" | "Regular" | "Malo",
+    aspectoGeneral: "" | "Bueno" | "Regular" | "Malo",
     tiempoLibre: string,
 }
 
@@ -513,8 +513,10 @@ export function mapRespiratorio(dataValues: DataValue[]): Respiratorio {
 }
 
 export function aspectoGeneralyTiempolibre(dataValues: DataValue[]): MedicalEvaluation {
+    // Sin dato cargado, aspecto general queda vacio (no se inventa "Bueno"):
+    // asi la seccion/pagina clinica no aparece si el medico no lo evaluo.
     const data: MedicalEvaluation = {
-        aspectoGeneral: "Bueno",
+        aspectoGeneral: "",
         tiempoLibre: "",
 
     };

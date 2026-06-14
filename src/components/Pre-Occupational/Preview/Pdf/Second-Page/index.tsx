@@ -24,7 +24,7 @@ interface Props {
   medicalEvaluationType: string;
   antecedentes: DataValue[] | undefined;
   doctorData: DoctorSignatures;
-  aspectoGeneral: "Bueno" | "Regular" | "Malo";
+  aspectoGeneral: "" | "Bueno" | "Regular" | "Malo";
   data: IMedicalEvaluation;
   brandingConfig?: LaborReportBrandingConfig;
   pageNumber?: number;
