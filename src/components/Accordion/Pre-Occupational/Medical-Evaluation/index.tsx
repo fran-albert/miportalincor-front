@@ -347,7 +347,7 @@ export default function MedicalEvaluationAccordion({
     right: medicalEvaluation.agudezaCc?.right ?? "",
     left: medicalEvaluation.agudezaCc?.left ?? "",
   };
-  const chromatic = medicalEvaluation.visionCromatica ?? "normal";
+  const chromatic = medicalEvaluation.visionCromatica;
   const notes = medicalEvaluation.notasVision ?? "";
 
   const handleChromaticChange = (val: "normal" | "anormal") => {

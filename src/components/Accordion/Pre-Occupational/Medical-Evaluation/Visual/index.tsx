@@ -16,7 +16,7 @@ interface VisualAcuityProps {
   isEditing: boolean;
   withoutCorrection: { right: string; left: string };
   withCorrection:  { right: string; left: string };
-  chromaticVision: "normal" | "anormal";
+  chromaticVision?: "normal" | "anormal";
   notes: string;
   onScChange: (eye: "right" | "left", value: string) => void;
   onCcChange: (eye: "right" | "left", value: string) => void;
@@ -93,7 +93,13 @@ export function VisualAcuityCard({
         <BooleanChoiceField
           idPrefix="vision-cromatica"
           label="Resultado"
-          value={chromaticVision === "normal"}
+          value={
+            chromaticVision === "normal"
+              ? true
+              : chromaticVision === "anormal"
+              ? false
+              : undefined
+          }
           disabled={!isEditing}
           positiveLabel="Normal"
           negativeLabel="Anormal"
