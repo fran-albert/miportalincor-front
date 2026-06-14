@@ -2,10 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import { pdfColors } from "../../shared";
-import {
-  emptyExamResultsMessage,
-  getVisibleExamResultRows,
-} from "../../../exam-results-visibility";
+import { getVisibleExamResultRows } from "../../../exam-results-visibility";
 
 interface ExamResultsPdfProps {
   examResults: ExamResults;
@@ -62,15 +59,13 @@ const styles = StyleSheet.create({
     lineHeight: 1.22,
     flexShrink: 1,
   },
-  emptyMessage: {
-    fontSize: 8,
-    color: pdfColors.muted,
-    lineHeight: 1.22,
-  },
 });
 
 const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
   const rows = getVisibleExamResultRows(examResults);
+
+  // Regla de visibilidad: si no hay resultados cargados, la seccion no aparece.
+  if (rows.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -78,9 +73,7 @@ const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
         <Text style={styles.headerText}>Resultados del examen</Text>
       </View>
       <View style={styles.body}>
-        {rows.length === 0 ? (
-          <Text style={styles.emptyMessage}>{emptyExamResultsMessage}</Text>
-        ) : rows.map((row, index) => (
+        {rows.map((row, index) => (
           <View
             key={row.valueKey}
             style={

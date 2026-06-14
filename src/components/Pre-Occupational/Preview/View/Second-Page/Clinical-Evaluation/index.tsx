@@ -17,6 +17,16 @@ const ClinicalEvaluationHtml: React.FC<ClinicalEvaluationHtmlProps> = ({
   imc,
   aspectoGeneral,
 }) => {
+  const hasAspecto = Boolean(aspectoGeneral?.trim());
+  const mediciones = [
+    { label: "Peso (kg)", value: peso },
+    { label: "Talla (cm)", value: talla },
+    { label: "IMC", value: imc },
+  ].filter((m) => m.value?.trim());
+
+  // Regla de visibilidad: sin aspecto ni mediciones cargadas, la seccion no aparece.
+  if (!hasAspecto && mediciones.length === 0) return null;
+
   return (
     <div
       className="mb-2.5 overflow-hidden rounded-[8px] border"
@@ -52,37 +62,35 @@ const ClinicalEvaluationHtml: React.FC<ClinicalEvaluationHtmlProps> = ({
           </div>
         )}
 
-        <div className="space-y-1">
-          <p
-            className="text-[8px] uppercase tracking-[0.08em]"
-            style={{ color: pdfColors.muted }}
-          >
-            Mediciones
-          </p>
-          <div className="grid grid-cols-3 gap-[10px]">
-            {[
-              { label: "Peso (kg)", value: peso },
-              { label: "Talla (cm)", value: talla },
-              { label: "IMC", value: imc },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[6px] border bg-white px-[10px] py-[8px]"
-                style={{ borderColor: pdfColors.line }}
-              >
-                <p
-                  className="mb-1 text-[8px] uppercase tracking-[0.08em]"
-                  style={{ color: pdfColors.muted }}
+        {mediciones.length > 0 && (
+          <div className="space-y-1">
+            <p
+              className="text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              Mediciones
+            </p>
+            <div className="grid grid-cols-3 gap-[10px]">
+              {mediciones.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+                  style={{ borderColor: pdfColors.line }}
                 >
-                  {item.label}
-                </p>
-                <p className="text-[10px] font-semibold text-slate-900">
-                  {item.value || "—"}
-                </p>
-              </div>
-            ))}
+                  <p
+                    className="mb-1 text-[8px] uppercase tracking-[0.08em]"
+                    style={{ color: pdfColors.muted }}
+                  >
+                    {item.label}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-900">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

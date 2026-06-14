@@ -115,23 +115,25 @@ describe("labor report content visibility", () => {
     expect(screen.queryByText("Sin dato registrado")).not.toBeInTheDocument();
   });
 
-  it("uses the same empty result message in HTML preview and PDF", () => {
+  it("oculta la seccion de resultados cuando no hay datos (HTML y PDF)", () => {
     const emptyResults = {} as ExamResults;
 
-    const { unmount } = render(<ExamResultsHtml examResults={emptyResults} />);
+    const { container, unmount } = render(
+      <ExamResultsHtml examResults={emptyResults} />
+    );
 
+    // Regla de visibilidad: sin resultados, la seccion no se renderiza.
+    expect(container).toBeEmptyDOMElement();
     expect(
-      screen.getByText("No se registraron resultados de estudios")
-    ).toBeInTheDocument();
+      screen.queryByText("Resultados del examen")
+    ).not.toBeInTheDocument();
 
     unmount();
 
-    render(<ExamResultsPdf examResults={emptyResults} />);
-
-    expect(
-      screen.getByText("No se registraron resultados de estudios")
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Sin dato registrado")).not.toBeInTheDocument();
+    const { container: pdfContainer } = render(
+      <ExamResultsPdf examResults={emptyResults} />
+    );
+    expect(pdfContainer).toBeEmptyDOMElement();
   });
 
   it("ignores old gineco-obstetric force_hide overrides in HTML preview", () => {

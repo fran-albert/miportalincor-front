@@ -88,41 +88,58 @@ const AspectoGeneralValue = ({ value }: { value?: string }) => {
   );
 };
 
-const InfoField = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.infoField}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    <Text style={styles.infoValue}>{value || "—"}</Text>
-  </View>
-);
+const InfoField = ({ label, value }: { label: string; value: string }) => {
+  if (!value?.trim()) return null;
+  return (
+    <View style={styles.infoField}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+};
 
 const ClinicalEvaluationPdf: React.FC<ClinicalEvaluationPdfProps> = ({
   aspectoGeneral,
   peso,
   talla,
   imc,
-}) => (
-  <View style={styles.container}>
-    <View style={styles.headerWrap}>
-      <Text style={styles.header}>Examen clinico</Text>
-    </View>
-    <View style={styles.body}>
-      {aspectoGeneral?.trim() && (
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionLabel}>Aspecto general</Text>
-          <AspectoGeneralValue value={aspectoGeneral} />
-        </View>
-      )}
+}) => {
+  const hasAspecto = Boolean(aspectoGeneral?.trim());
+  const mediciones = [
+    { label: "Peso (kg)", value: peso },
+    { label: "Talla (cm)", value: talla },
+    { label: "IMC", value: imc },
+  ].filter((m) => m.value?.trim());
 
-      <View style={styles.sectionRow}>
-        <Text style={styles.sectionLabel}>Mediciones</Text>
-        <View style={styles.valueRow}>
-          <InfoField label="Peso (kg)" value={peso} />
-          <InfoField label="Talla (cm)" value={talla} />
-          <InfoField label="IMC" value={imc} />
-        </View>
+  // Regla de visibilidad: sin aspecto ni mediciones cargadas, la seccion no aparece.
+  if (!hasAspecto && mediciones.length === 0) return null;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerWrap}>
+        <Text style={styles.header}>Examen clinico</Text>
+      </View>
+      <View style={styles.body}>
+        {hasAspecto && (
+          <View style={styles.sectionRow}>
+            <Text style={styles.sectionLabel}>Aspecto general</Text>
+            <AspectoGeneralValue value={aspectoGeneral} />
+          </View>
+        )}
+
+        {mediciones.length > 0 && (
+          <View style={styles.sectionRow}>
+            <Text style={styles.sectionLabel}>Mediciones</Text>
+            <View style={styles.valueRow}>
+              {mediciones.map((m) => (
+                <InfoField key={m.label} label={m.label} value={m.value} />
+              ))}
+            </View>
+          </View>
+        )}
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 export default ClinicalEvaluationPdf;

@@ -5,7 +5,7 @@ import { pdfColors } from "../../shared";
 interface VisualAcuityPdfProps {
   withoutCorrection: { right: string; left: string };
   withCorrection?: { right?: string; left?: string };
-  chromaticVision: "normal" | "anormal";
+  chromaticVision?: "normal" | "anormal";
   notes?: string;
 }
 
@@ -106,12 +106,23 @@ const styles = StyleSheet.create({
 
 export default function VisualAcuityPdf({
   withoutCorrection,
-  withCorrection = { right: "—", left: "—" },
+  withCorrection = {},
   chromaticVision,
   notes = "",
 }: VisualAcuityPdfProps) {
   const chromaColor = chromaticVision === "normal" ? "#006400" : "#8B0000";
   const chromaText = chromaticVision === "normal" ? "Normal" : "Anormal";
+
+  // Regla de visibilidad: la seccion aparece solo si hay agudeza, vision cromatica o notas.
+  const hasAcuity = Boolean(
+    withoutCorrection.right?.trim() ||
+      withoutCorrection.left?.trim() ||
+      withCorrection.right?.trim() ||
+      withCorrection.left?.trim()
+  );
+  const hasChroma = chromaticVision === "normal" || chromaticVision === "anormal";
+  const hasNotes = notes.trim() !== "";
+  if (!hasAcuity && !hasChroma && !hasNotes) return null;
 
   return (
     <View style={styles.container}>
@@ -119,6 +130,7 @@ export default function VisualAcuityPdf({
         <Text style={styles.title}>Agudeza visual</Text>
       </View>
       <View style={styles.body}>
+        {hasAcuity && (
         <View style={styles.table}>
           <View style={styles.row}>
             <View style={[styles.cell, styles.firstCol]}>
@@ -136,10 +148,10 @@ export default function VisualAcuityPdf({
               <Text style={styles.bodyCell}>Ojo derecho</Text>
             </View>
             <View style={styles.cell}>
-              <Text style={styles.bodyCell}>{withoutCorrection.right}</Text>
+              <Text style={styles.bodyCell}>{withoutCorrection.right || "—"}</Text>
             </View>
             <View style={[styles.cell, { borderRightWidth: 0 }]}>
-              <Text style={styles.bodyCell}>{withCorrection.right}</Text>
+              <Text style={styles.bodyCell}>{withCorrection.right || "—"}</Text>
             </View>
           </View>
           <View style={styles.row}>
@@ -147,7 +159,7 @@ export default function VisualAcuityPdf({
               <Text style={styles.bodyCell}>Ojo izquierdo</Text>
             </View>
             <View style={[styles.cell, { borderBottomWidth: 0 }]}>
-              <Text style={styles.bodyCell}>{withoutCorrection.left}</Text>
+              <Text style={styles.bodyCell}>{withoutCorrection.left || "—"}</Text>
             </View>
             <View
               style={[
@@ -155,17 +167,20 @@ export default function VisualAcuityPdf({
                 { borderRightWidth: 0, borderBottomWidth: 0 },
               ]}
             >
-              <Text style={styles.bodyCell}>{withCorrection.left}</Text>
+              <Text style={styles.bodyCell}>{withCorrection.left || "—"}</Text>
             </View>
           </View>
         </View>
+        )}
 
+        {hasChroma && (
         <View style={styles.chromaRow}>
           <Text style={styles.chromaLabel}>Vision cromatica</Text>
           <Text style={[styles.chromaValue, { color: chromaColor }]}>
             {chromaText}
           </Text>
         </View>
+        )}
 
         {notes.trim() !== "" && (
           <View style={styles.notesContainer}>

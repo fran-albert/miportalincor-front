@@ -29,7 +29,7 @@ interface Props {
   antecedentes: DataValue[];
   visualWithout: { right: string; left: string };
   visualWith?: { right?: string; left?: string };
-  visualChromatic: "normal" | "anormal";
+  visualChromatic?: "normal" | "anormal";
   visualNotes?: string;
   doctorData: DoctorSignatures;
   brandingConfig?: LaborReportBrandingConfig;

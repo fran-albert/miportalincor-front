@@ -10,9 +10,6 @@ export const examResultRows = [
   { label: "Electroencefalograma", valueKey: "electroencefalograma" },
 ] as const;
 
-export const emptyExamResultsMessage =
-  "No se registraron resultados de estudios";
-
 export const normalizeResultValue = (value?: string): string | null => {
   const text = String(value ?? "").trim();
 
