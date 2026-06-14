@@ -18,38 +18,44 @@ interface CollaboratorInformationHtmlProps {
   compactWorkerOnly?: boolean;
 }
 
-const normalizeDisplayValue = (value: unknown) => {
+const cleanFieldValue = (value: unknown): string => {
   if (value === null || value === undefined) {
-    return "-";
+    return "";
   }
 
   const text = String(value).trim();
   if (!text || text.toLowerCase() === "null" || text.toLowerCase() === "undefined") {
-    return "-";
+    return "";
   }
 
   return text;
 };
 
+// Regla de visibilidad: el campo solo aparece si tiene dato cargado.
 const Field = ({
   label,
   value,
 }: {
   label: string;
-  value: string;
-}) => (
-  <div>
-    <p
-      className="mb-0.5 text-[7px] uppercase tracking-[0.1em]"
-      style={{ color: pdfColors.muted }}
-    >
-      {label}
-    </p>
-    <p className="text-[9px] leading-[1.25]" style={{ color: pdfColors.ink }}>
-      {value || "-"}
-    </p>
-  </div>
-);
+  value: unknown;
+}) => {
+  const text = cleanFieldValue(value);
+  if (!text) return null;
+
+  return (
+    <div>
+      <p
+        className="mb-0.5 text-[7px] uppercase tracking-[0.1em]"
+        style={{ color: pdfColors.muted }}
+      >
+        {label}
+      </p>
+      <p className="text-[9px] leading-[1.25]" style={{ color: pdfColors.ink }}>
+        {text}
+      </p>
+    </div>
+  );
+};
 
 const CardSection = ({
   title,
@@ -96,22 +102,11 @@ const CollaboratorInformationHtml: React.FC<
           <div className="grid grid-cols-4 gap-x-3 gap-y-1.5">
             <Field
               label="Apellido y nombre"
-              value={normalizeDisplayValue(
-                `${collaborator.lastName} ${collaborator.firstName}`
-              )}
+              value={`${collaborator.lastName} ${collaborator.firstName}`}
             />
-            <Field
-              label="DNI"
-              value={normalizeDisplayValue(formatDni(collaborator.userName))}
-            />
-            <Field
-              label="Puesto de trabajo"
-              value={normalizeDisplayValue(collaborator.positionJob)}
-            />
-            <Field
-              label="Fecha de nacimiento"
-              value={normalizeDisplayValue(collaborator.birthDate)}
-            />
+            <Field label="DNI" value={formatDni(collaborator.userName)} />
+            <Field label="Puesto de trabajo" value={collaborator.positionJob} />
+            <Field label="Fecha de nacimiento" value={collaborator.birthDate} />
           </div>
         </CardSection>
       </div>
@@ -123,23 +118,12 @@ const CollaboratorInformationHtml: React.FC<
       <div className="grid grid-cols-2 gap-2.5">
         <CardSection title="Empresa">
           <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-            <Field
-              label="Nombre"
-              value={normalizeDisplayValue(companyData.name)}
-            />
-            <Field
-              label="Telefono"
-              value={normalizeDisplayValue(companyData.phone)}
-            />
-            <Field
-              label="CUIT"
-              value={normalizeDisplayValue(formatCuilCuit(companyData.taxId))}
-            />
+            <Field label="Nombre" value={companyData.name} />
+            <Field label="Telefono" value={companyData.phone} />
+            <Field label="CUIT" value={formatCuilCuit(companyData.taxId)} />
             <Field
               label="Domicilio"
-              value={normalizeDisplayValue(
-                formatAddress(companyData.addressData)
-              )}
+              value={formatAddress(companyData.addressData)}
             />
           </div>
         </CardSection>
@@ -148,45 +132,25 @@ const CollaboratorInformationHtml: React.FC<
           <div className="grid grid-cols-[1.25fr_1fr] gap-x-3 gap-y-1.5">
             <Field
               label="Apellido y nombre"
-              value={normalizeDisplayValue(
-                `${collaborator.lastName} ${collaborator.firstName}`
-              )}
+              value={`${collaborator.lastName} ${collaborator.firstName}`}
             />
-            <Field
-              label="DNI"
-              value={normalizeDisplayValue(formatDni(collaborator.userName))}
-            />
-            <Field
-              label="Fecha de nacimiento"
-              value={normalizeDisplayValue(collaborator.birthDate)}
-            />
-            <Field
-              label="Telefono"
-              value={normalizeDisplayValue(collaborator.phone)}
-            />
-            <Field
-              label="Puesto de trabajo"
-              value={normalizeDisplayValue(collaborator.positionJob)}
-            />
+            <Field label="DNI" value={formatDni(collaborator.userName)} />
+            <Field label="Fecha de nacimiento" value={collaborator.birthDate} />
+            <Field label="Telefono" value={collaborator.phone} />
+            <Field label="Puesto de trabajo" value={collaborator.positionJob} />
             <Field
               label="Localidad"
-              value={normalizeDisplayValue(collaborator.addressData?.city.name)}
+              value={collaborator.addressData?.city.name}
             />
           </div>
         </CardSection>
       </div>
 
-      {showAntecedentes ? (
+      {showAntecedentes && antecedentes.length > 0 ? (
         <CardSection title="Antecedentes">
-          {antecedentes.length > 0 ? (
-            <div className="text-[9px] leading-[1.25]">
-              <AntecedentesList dataValues={antecedentes} />
-            </div>
-          ) : (
-            <p className="text-[9px]" style={{ color: pdfColors.muted }}>
-              Sin antecedentes ocupacionales registrados.
-            </p>
-          )}
+          <div className="text-[9px] leading-[1.25]">
+            <AntecedentesList dataValues={antecedentes} />
+          </div>
         </CardSection>
       ) : null}
     </div>

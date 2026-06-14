@@ -103,24 +103,30 @@ const styles = StyleSheet.create({
   },
 });
 
-const InfoField = ({ label, value }: { label: string; value: string }) => (
-  <View>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value || "-"}</Text>
-  </View>
-);
-
-const normalizeDisplayValue = (value: unknown) => {
+const cleanFieldValue = (value: unknown): string => {
   if (value === null || value === undefined) {
-    return "-";
+    return "";
   }
 
   const text = String(value).trim();
   if (!text || text.toLowerCase() === "null" || text.toLowerCase() === "undefined") {
-    return "-";
+    return "";
   }
 
   return text;
+};
+
+// Regla de visibilidad: el campo solo aparece si tiene dato cargado.
+const InfoField = ({ label, value }: { label: string; value: unknown }) => {
+  const text = cleanFieldValue(value);
+  if (!text) return null;
+
+  return (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{text}</Text>
+    </View>
+  );
 };
 
 const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
@@ -142,27 +148,25 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
               <View style={styles.compactField}>
                 <InfoField
                   label="Apellido y nombre"
-                  value={normalizeDisplayValue(
-                    `${collaborator.lastName}, ${collaborator.firstName}`
-                  )}
+                  value={`${collaborator.lastName}, ${collaborator.firstName}`}
                 />
               </View>
               <View style={styles.compactField}>
                 <InfoField
                   label="DNI"
-                  value={normalizeDisplayValue(formatDni(collaborator.userName))}
+                  value={formatDni(collaborator.userName)}
                 />
               </View>
               <View style={styles.compactField}>
                 <InfoField
                   label="Puesto de trabajo"
-                  value={normalizeDisplayValue(collaborator.positionJob)}
+                  value={collaborator.positionJob}
                 />
               </View>
               <View style={[styles.compactField, { marginRight: 0 }]}>
                 <InfoField
                   label="Fecha de nacimiento"
-                  value={normalizeDisplayValue(collaborator.birthDate)}
+                  value={collaborator.birthDate}
                 />
               </View>
             </View>
@@ -182,31 +186,23 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
           <View style={styles.sectionBody}>
             <View style={styles.row}>
               <View style={styles.field}>
-                <InfoField
-                  label="Nombre"
-                  value={normalizeDisplayValue(companyData.name)}
-                />
+                <InfoField label="Nombre" value={companyData.name} />
               </View>
               <View style={[styles.field, { marginRight: 0 }]}>
-                <InfoField
-                  label="Telefono"
-                  value={normalizeDisplayValue(companyData.phone)}
-                />
+                <InfoField label="Telefono" value={companyData.phone} />
               </View>
             </View>
             <View style={[styles.row, styles.rowLast]}>
               <View style={styles.field}>
                 <InfoField
                   label="CUIT"
-                  value={normalizeDisplayValue(formatCuilCuit(companyData.taxId))}
+                  value={formatCuilCuit(companyData.taxId)}
                 />
               </View>
               <View style={[styles.field, { marginRight: 0 }]}>
                 <InfoField
                   label="Domicilio"
-                  value={normalizeDisplayValue(
-                    formatAddress(companyData.addressData)
-                  )}
+                  value={formatAddress(companyData.addressData)}
                 />
               </View>
             </View>
@@ -222,15 +218,13 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
               <View style={styles.field}>
                 <InfoField
                   label="Apellido y nombre"
-                  value={normalizeDisplayValue(
-                    `${collaborator.lastName}, ${collaborator.firstName}`
-                  )}
+                  value={`${collaborator.lastName}, ${collaborator.firstName}`}
                 />
               </View>
               <View style={[styles.field, { marginRight: 0 }]}>
                 <InfoField
                   label="DNI"
-                  value={normalizeDisplayValue(formatDni(collaborator.userName))}
+                  value={formatDni(collaborator.userName)}
                 />
               </View>
             </View>
@@ -238,29 +232,24 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
               <View style={styles.field}>
                 <InfoField
                   label="Fecha de nacimiento"
-                  value={normalizeDisplayValue(collaborator.birthDate)}
+                  value={collaborator.birthDate}
                 />
               </View>
               <View style={[styles.field, { marginRight: 0 }]}>
-                <InfoField
-                  label="Telefono"
-                  value={normalizeDisplayValue(collaborator.phone)}
-                />
+                <InfoField label="Telefono" value={collaborator.phone} />
               </View>
             </View>
             <View style={[styles.row, styles.rowLast]}>
               <View style={styles.field}>
                 <InfoField
                   label="Puesto de trabajo"
-                  value={normalizeDisplayValue(collaborator.positionJob)}
+                  value={collaborator.positionJob}
                 />
               </View>
               <View style={[styles.field, { marginRight: 0 }]}>
                 <InfoField
                   label="Localidad"
-                  value={normalizeDisplayValue(
-                    collaborator.addressData?.city.name
-                  )}
+                  value={collaborator.addressData?.city.name}
                 />
               </View>
             </View>
@@ -268,24 +257,18 @@ const CollaboratorInformationPdf: React.FC<CollaboratorInformationPdfProps> = ({
         </View>
       </View>
 
-      {showAntecedentes ? (
+      {showAntecedentes && antecedentes && antecedentes.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Antecedentes</Text>
           </View>
           <View style={styles.sectionBody}>
             <View style={styles.antecedentesBlock}>
-              {antecedentes && antecedentes.length > 0 ? (
-                antecedentes.map((antecedente, index) => (
-                  <Text key={antecedente.id} style={styles.antecedentesItem}>
-                    {index + 1}. {String(antecedente.value)}
-                  </Text>
-                ))
-              ) : (
-                <Text style={styles.emptyText}>
-                  Sin antecedentes ocupacionales registrados.
+              {antecedentes.map((antecedente, index) => (
+                <Text key={antecedente.id} style={styles.antecedentesItem}>
+                  {index + 1}. {String(antecedente.value)}
                 </Text>
-              )}
+              ))}
             </View>
           </View>
         </View>

@@ -25,6 +25,7 @@ import {
   resolveReportVisibility,
 } from "@/common/helpers/report-visibility";
 import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
+import { hasClinicalPageData } from "../../page-visibility";
 
 interface Props {
   collaborator: Collaborator;
@@ -87,7 +88,17 @@ const PDFDocument = ({
     hasSectionData(medicalEvaluation.gastrointestinal) ||
     hasSectionData(medicalEvaluation.osteoarticular) ||
     hasVisibleGenitourinario;
-  const thirdPageNumber = 3;
+  const hasSecondPage = hasClinicalPageData({
+    aspectoGeneral: infoGeneral.aspectoGeneral,
+    peso: clinicalEvaluation.peso,
+    talla: clinicalEvaluation.talla,
+    imc: clinicalEvaluation.imc,
+    agudezaSc: medicalEvaluation.agudezaSc,
+    agudezaCc: medicalEvaluation.agudezaCc,
+    visionCromatica: medicalEvaluation.visionCromatica,
+    notasVision: medicalEvaluation.notasVision,
+  });
+  const thirdPageNumber = 2 + (hasSecondPage ? 1 : 0);
   const fourthPageNumber = thirdPageNumber + (hasThirdPage ? 1 : 0);
   const fifthPageNumber = fourthPageNumber + (hasFourthPage ? 1 : 0);
   const firstStudyPageNumber = fifthPageNumber + (hasFifthPage ? 1 : 0);
@@ -104,19 +115,21 @@ const PDFDocument = ({
         brandingConfig={brandingConfig}
         pageNumber={1}
       />
-      <SecondPagePdfDocument
-        collaborator={collaborator}
-        talla={clinicalEvaluation.talla}
-        peso={clinicalEvaluation.peso}
-        imc={clinicalEvaluation.imc}
-        medicalEvaluationType={medicalEvaluationType}
-        antecedentes={antecedentes}
-        doctorData={doctorData}
-        data={medicalEvaluation}
-        aspectoGeneral={infoGeneral.aspectoGeneral}
-        brandingConfig={brandingConfig}
-        pageNumber={2}
-      />
+      {hasSecondPage ? (
+        <SecondPagePdfDocument
+          collaborator={collaborator}
+          talla={clinicalEvaluation.talla}
+          peso={clinicalEvaluation.peso}
+          imc={clinicalEvaluation.imc}
+          medicalEvaluationType={medicalEvaluationType}
+          antecedentes={antecedentes}
+          doctorData={doctorData}
+          data={medicalEvaluation}
+          aspectoGeneral={infoGeneral.aspectoGeneral}
+          brandingConfig={brandingConfig}
+          pageNumber={2}
+        />
+      ) : null}
       <ThirdPagePdfDocument
         data={medicalEvaluation}
         doctorData={doctorData}

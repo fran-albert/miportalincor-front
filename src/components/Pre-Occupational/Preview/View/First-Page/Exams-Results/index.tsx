@@ -1,10 +1,7 @@
 import { ExamResults } from "@/common/helpers/examsResults.maps";
 import React from "react";
 import { pdfColors } from "../../../Pdf/shared";
-import {
-  emptyExamResultsMessage,
-  getVisibleExamResultRows,
-} from "../../../exam-results-visibility";
+import { getVisibleExamResultRows } from "../../../exam-results-visibility";
 
 
 interface ExamResultsHtmlProps {
@@ -13,6 +10,9 @@ interface ExamResultsHtmlProps {
 
 const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
   const rows = getVisibleExamResultRows(examResults);
+
+  // Regla de visibilidad: si no hay resultados cargados, la seccion no aparece.
+  if (rows.length === 0) return null;
 
   return (
     <div
@@ -34,14 +34,7 @@ const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
         </p>
       </div>
       <div className="space-y-1 px-[10px] py-[8px]">
-        {rows.length === 0 ? (
-          <p
-            className="text-[8px] leading-[1.22]"
-            style={{ color: pdfColors.muted }}
-          >
-            {emptyExamResultsMessage}
-          </p>
-        ) : rows.map((row, index) => (
+        {rows.map((row, index) => (
           <div
             key={row.valueKey}
             className={`grid grid-cols-[124px_1fr] gap-[8px] pb-[4px] ${
@@ -67,6 +60,7 @@ const ExamResultsHtml: React.FC<ExamResultsHtmlProps> = ({ examResults }) => {
           </div>
         ))}
       </div>
+
     </div>
   );
 };

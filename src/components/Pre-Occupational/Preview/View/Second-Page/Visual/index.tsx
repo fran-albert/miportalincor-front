@@ -11,16 +11,27 @@ import { pdfColors } from "../../../Pdf/shared";
 interface VisualAcuityHtmlProps {
   withoutCorrection: { right: string; left: string };
   withCorrection?: { right?: string; left?: string };
-  chromaticVision: "normal" | "anormal";
+  chromaticVision?: "normal" | "anormal";
   notes?: string;
 }
 
 export default function VisualAcuityHtml({
   withoutCorrection,
-  withCorrection = { right: "-", left: "-" },
+  withCorrection = {},
   chromaticVision,
   notes = "",
 }: VisualAcuityHtmlProps) {
+  // Regla de visibilidad: la seccion aparece solo si hay agudeza, vision cromatica o notas.
+  const hasAcuity = Boolean(
+    withoutCorrection.right?.trim() ||
+      withoutCorrection.left?.trim() ||
+      withCorrection.right?.trim() ||
+      withCorrection.left?.trim()
+  );
+  const hasChroma = chromaticVision === "normal" || chromaticVision === "anormal";
+  const hasNotes = Boolean(notes && notes.trim() !== "");
+  if (!hasAcuity && !hasChroma && !hasNotes) return null;
+
   return (
     <div
       className="mb-2.5 overflow-hidden rounded-[8px] border"
@@ -42,6 +53,7 @@ export default function VisualAcuityHtml({
       </div>
 
       <div className="space-y-2.5 px-3 py-[9px]">
+        {hasAcuity && (
         <div
           className="overflow-hidden rounded-[6px] border"
           style={{ borderColor: pdfColors.line }}
@@ -69,25 +81,27 @@ export default function VisualAcuityHtml({
               <TableRow>
                 <TableCell>Ojo derecho</TableCell>
                 <TableCell className="text-center">
-                  {withoutCorrection.right}
+                  {withoutCorrection.right || "—"}
                 </TableCell>
                 <TableCell className="text-center">
-                  {withCorrection.right}
+                  {withCorrection.right || "—"}
                 </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Ojo izquierdo</TableCell>
                 <TableCell className="text-center">
-                  {withoutCorrection.left}
+                  {withoutCorrection.left || "—"}
                 </TableCell>
                 <TableCell className="text-center">
-                  {withCorrection.left}
+                  {withCorrection.left || "—"}
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
+        )}
 
+        {hasChroma && (
         <div className="flex items-center gap-2">
           <p
             className="text-[8px] uppercase tracking-[0.08em]"
@@ -105,6 +119,7 @@ export default function VisualAcuityHtml({
             {chromaticVision === "normal" ? "Normal" : "Anormal"}
           </span>
         </div>
+        )}
 
         {notes && (
           <div className="space-y-1">

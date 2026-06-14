@@ -27,6 +27,7 @@ import {
   resolveReportVisibility,
 } from "@/common/helpers/report-visibility";
 import { LaborReportBrandingConfig } from "@/types/Labor-Report-Branding-Config/LaborReportBrandingConfig";
+import { hasClinicalPageData } from "../page-visibility";
 
 interface Props {
   collaborator: Collaborator;
@@ -90,7 +91,17 @@ const View: React.FC<Props> = ({
     hasSectionData(medicalEvaluation.gastrointestinal) ||
     hasSectionData(medicalEvaluation.osteoarticular) ||
     hasVisibleGenitourinario;
-  const thirdPageNumber = 3;
+  const hasSecondPage = hasClinicalPageData({
+    aspectoGeneral: infoGeneral.aspectoGeneral,
+    peso: clinicalEvaluation.peso,
+    talla: clinicalEvaluation.talla,
+    imc: clinicalEvaluation.imc,
+    agudezaSc: medicalEvaluation.agudezaSc,
+    agudezaCc: medicalEvaluation.agudezaCc,
+    visionCromatica: medicalEvaluation.visionCromatica,
+    notasVision: medicalEvaluation.notasVision,
+  });
+  const thirdPageNumber = 2 + (hasSecondPage ? 1 : 0);
   const fourthPageNumber = thirdPageNumber + (hasThirdPage ? 1 : 0);
   const fifthPageNumber = fourthPageNumber + (hasFourthPage ? 1 : 0);
   const firstStudyPageNumber = fifthPageNumber + (hasFifthPage ? 1 : 0);
@@ -107,29 +118,31 @@ const View: React.FC<Props> = ({
         brandingConfig={brandingConfig}
         pageNumber={1}
       />
-      <SecondPageHTML
-        collaborator={collaborator}
-        talla={clinicalEvaluation.talla}
-        peso={clinicalEvaluation.peso}
-        imc={clinicalEvaluation.imc}
-        medicalEvaluationType={medicalEvaluationType}
-        antecedentes={antecedentes}
-        examenFisico={physicalEvaluation}
-        aspectoGeneral={infoGeneral.aspectoGeneral}
-        tiempoLibre={infoGeneral.tiempoLibre}
-        frecuenciaCardiaca={clinicalEvaluation.frecuenciaCardiaca}
-        frecuenciaRespiratoria={clinicalEvaluation.frecuenciaRespiratoria}
-        perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
-        presionDiastolica={clinicalEvaluation.presionDiastolica}
-        presionSistolica={clinicalEvaluation.presionSistolica}
-        visualChromatic={medicalEvaluation.visionCromatica!}
-        visualWithout={medicalEvaluation.agudezaSc}
-        visualWith={medicalEvaluation.agudezaCc}
-        visualNotes={medicalEvaluation.notasVision}
-        doctorData={doctorData}
-        brandingConfig={brandingConfig}
-        pageNumber={2}
-      />
+      {hasSecondPage && (
+        <SecondPageHTML
+          collaborator={collaborator}
+          talla={clinicalEvaluation.talla}
+          peso={clinicalEvaluation.peso}
+          imc={clinicalEvaluation.imc}
+          medicalEvaluationType={medicalEvaluationType}
+          antecedentes={antecedentes}
+          examenFisico={physicalEvaluation}
+          aspectoGeneral={infoGeneral.aspectoGeneral}
+          tiempoLibre={infoGeneral.tiempoLibre}
+          frecuenciaCardiaca={clinicalEvaluation.frecuenciaCardiaca}
+          frecuenciaRespiratoria={clinicalEvaluation.frecuenciaRespiratoria}
+          perimetroAbdominal={clinicalEvaluation.perimetroAbdominal}
+          presionDiastolica={clinicalEvaluation.presionDiastolica}
+          presionSistolica={clinicalEvaluation.presionSistolica}
+          visualChromatic={medicalEvaluation.visionCromatica}
+          visualWithout={medicalEvaluation.agudezaSc}
+          visualWith={medicalEvaluation.agudezaCc}
+          visualNotes={medicalEvaluation.notasVision}
+          doctorData={doctorData}
+          brandingConfig={brandingConfig}
+          pageNumber={2}
+        />
+      )}
       <ThirdPageHTML
         pielData={medicalEvaluation.piel!}
         cabezaCuello={medicalEvaluation.cabezaCuello!}

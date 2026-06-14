@@ -101,7 +101,7 @@ const SecondPagePdfDocument = ({
         <View style={styles.sectionWrapper}>
           <VisualAcuityPdf
             withCorrection={data.agudezaCc}
-            chromaticVision={data.visionCromatica!}
+            chromaticVision={data.visionCromatica}
             withoutCorrection={data.agudezaSc}
             notes={data.notasVision}
           />
