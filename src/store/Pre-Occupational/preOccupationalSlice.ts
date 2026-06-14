@@ -281,7 +281,7 @@ const initialState: PreOccupationalState = {
       },
       agudezaSc: { right: "", left: "" },
       agudezaCc: { right: "", left: "" },
-      visionCromatica: "normal",
+      visionCromatica: undefined,
       notasVision: "",
       circulatorio: {
         frecuenciaCardiaca: "",
