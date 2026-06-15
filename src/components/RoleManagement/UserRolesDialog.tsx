@@ -21,10 +21,9 @@ import { Settings, Loader2 } from "lucide-react";
 
 interface Props {
   user: StaffUser;
-  onSuccess: () => void;
 }
 
-export default function UserRolesDialog({ user, onSuccess }: Props) {
+export default function UserRolesDialog({ user }: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { showSuccess, showError } = useToastContext();
   const { roles, isLoading: rolesLoading } = useRoles();
@@ -32,16 +31,19 @@ export default function UserRolesDialog({ user, onSuccess }: Props) {
 
   const isLoading = rolesLoading || userRolesLoading;
 
-  const handleRoleToggle = async (roleId: number, roleName: string, isCurrentlyAssigned: boolean) => {
+  const handleRoleToggle = async (
+    role: { id: number; name: string },
+    isCurrentlyAssigned: boolean
+  ) => {
     try {
       if (isCurrentlyAssigned) {
-        await removeRole.mutateAsync(roleId);
-        showSuccess("Rol removido", `Se quitó el rol "${roleName}" de ${user.firstName} ${user.lastName}`);
+        // La cache se actualiza al instante (optimistic), sin refetch ni recarga.
+        await removeRole.mutateAsync(role);
+        showSuccess("Rol removido", `Se quitó el rol "${role.name}" de ${user.firstName} ${user.lastName}`);
       } else {
-        await assignRole.mutateAsync(roleId);
-        showSuccess("Rol asignado", `Se asignó el rol "${roleName}" a ${user.firstName} ${user.lastName}`);
+        await assignRole.mutateAsync(role);
+        showSuccess("Rol asignado", `Se asignó el rol "${role.name}" a ${user.firstName} ${user.lastName}`);
       }
-      onSuccess();
     } catch (error) {
       const apiError = error as ApiError;
       showError(
@@ -112,7 +114,7 @@ export default function UserRolesDialog({ user, onSuccess }: Props) {
                         id={`role-${role.id}`}
                         checked={isAssigned}
                         disabled={isPending}
-                        onCheckedChange={() => handleRoleToggle(role.id, role.name, isAssigned)}
+                        onCheckedChange={() => handleRoleToggle(role, isAssigned)}
                       />
                       <Label
                         htmlFor={`role-${role.id}`}
