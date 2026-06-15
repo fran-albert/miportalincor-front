@@ -35,6 +35,7 @@ import { ClinicalBlock } from "./FormPrimitives";
 interface Props {
   isEditing: boolean;
   standalone?: boolean;
+  collaboratorGender?: string;
 }
 
 interface EvaluationSectionProps {
@@ -66,6 +67,7 @@ function EvaluationSection({
 export default function MedicalEvaluationAccordion({
   isEditing,
   standalone = false,
+  collaboratorGender,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
@@ -814,6 +816,7 @@ const handleNeuChange = (
           data={genito}
           onChange={handleGenitoChange}
           onBatchChange={handleGenitoBatchChange}
+          collaboratorGender={collaboratorGender}
         />
       </EvaluationSection>
 

@@ -774,6 +774,7 @@ export default function MedicalHistoryTab({
   setIsEditing,
   medicalEvaluationId,
   dataValues,
+  collaboratorGender,
   standalone = false,
   showEditToggle = true,
   includeOccupationalHistory = true,
@@ -789,6 +790,7 @@ export default function MedicalHistoryTab({
   setIsEditing: (value: boolean) => void;
   medicalEvaluationId: number;
   dataValues: DataValue[] | undefined;
+  collaboratorGender?: string;
   standalone?: boolean;
   showEditToggle?: boolean;
   includeOccupationalHistory?: boolean;
@@ -1024,6 +1026,7 @@ export default function MedicalHistoryTab({
         {includeMedicalEvaluation && (
           <MedicalEvaluationAccordion
             isEditing={isEditing}
+            collaboratorGender={collaboratorGender}
           />
         )}
       </Accordion>
