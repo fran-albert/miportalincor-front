@@ -32,13 +32,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   brandBlock: {
-    width: 110,
-    alignItems: "flex-start",
+    width: 120,
+    alignItems: "center",
     justifyContent: "center",
   },
   logo: {
-    width: 78,
-    height: 42,
+    width: 104,
+    height: 52,
     objectFit: "contain",
   },
   divider: {
