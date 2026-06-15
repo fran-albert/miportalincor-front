@@ -9,11 +9,16 @@ import UserRolesDialog from "./UserRolesDialog";
 
 interface StaffUsersTableProps {
   users: StaffUser[];
+  total: number;
+  page: number;
+  limit: number;
   isFetching?: boolean;
-  onRefetch: () => void;
+  search: string;
+  onSearchChange: (query: string) => void;
+  onPageChange: (page: number) => void;
 }
 
-const getColumns = (onRefetch: () => void): ColumnDef<StaffUser>[] => [
+const columns: ColumnDef<StaffUser>[] = [
   {
     accessorKey: "#",
     header: "#",
@@ -35,7 +40,9 @@ const getColumns = (onRefetch: () => void): ColumnDef<StaffUser>[] => [
     accessorKey: "userName",
     header: "D.N.I.",
     cell: ({ row }) => (
-      <div className="text-sm font-medium">{formatDni(String(row.original.userName))}</div>
+      <div className="text-sm font-medium">
+        {formatDni(String(row.original.userName))}
+      </div>
     ),
   },
   {
@@ -52,7 +59,9 @@ const getColumns = (onRefetch: () => void): ColumnDef<StaffUser>[] => [
               </Badge>
             ))
           ) : (
-            <span className="text-xs text-muted-foreground italic">Sin roles</span>
+            <span className="text-xs text-muted-foreground italic">
+              Sin roles
+            </span>
           )}
         </div>
       );
@@ -71,7 +80,7 @@ const getColumns = (onRefetch: () => void): ColumnDef<StaffUser>[] => [
     header: "Acciones",
     cell: ({ row }) => (
       <div className="flex items-center justify-end">
-        <UserRolesDialog user={row.original} onSuccess={onRefetch} />
+        <UserRolesDialog user={row.original} />
       </div>
     ),
   },
@@ -79,27 +88,20 @@ const getColumns = (onRefetch: () => void): ColumnDef<StaffUser>[] => [
 
 export const StaffUsersTable: React.FC<StaffUsersTableProps> = ({
   users,
+  total,
+  page,
+  limit,
   isFetching,
-  onRefetch,
+  search,
+  onSearchChange,
+  onPageChange,
 }) => {
-  const columns = getColumns(onRefetch);
-
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
     { label: "Asignar Roles" },
   ];
 
-  const customFilter = (user: StaffUser, query: string): boolean => {
-    const searchLower = query.toLowerCase();
-    return (
-      user.firstName?.toLowerCase().includes(searchLower) ||
-      user.lastName?.toLowerCase().includes(searchLower) ||
-      user.userName?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      `${user.lastName} ${user.firstName}`.toLowerCase().includes(searchLower) ||
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
-    );
-  };
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div className="space-y-6 p-6">
@@ -108,7 +110,7 @@ export const StaffUsersTable: React.FC<StaffUsersTableProps> = ({
         title="Asignar Roles a Usuarios"
         description="Asigna o quita roles al personal del sistema"
         icon={<UserCog className="h-6 w-6" />}
-        badge={users.length}
+        badge={total}
       />
       <div className="overflow-hidden sm:rounded-lg">
         <DataTable
@@ -116,11 +118,21 @@ export const StaffUsersTable: React.FC<StaffUsersTableProps> = ({
           data={users}
           searchPlaceholder="Buscar por nombre, apellido o DNI..."
           showSearch={true}
-          useServerSideSearch={false}
-          customFilter={customFilter}
-          searchQuery=" "
+          useServerSideSearch={true}
+          setSearch={onSearchChange}
+          searchQuery={search}
+          showDataOnEmptySearch={true}
           isFetching={isFetching}
           canAddUser={false}
+          clientPageSize={limit}
+          currentPage={page}
+          totalPages={totalPages}
+          onNextPage={() => {
+            if (page < totalPages) onPageChange(page + 1);
+          }}
+          onPrevPage={() => {
+            if (page > 1) onPageChange(page - 1);
+          }}
         />
       </div>
     </div>
