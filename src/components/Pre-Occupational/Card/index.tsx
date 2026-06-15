@@ -646,6 +646,7 @@ export default function PreOccupationalCards({
                   showEditToggle={false}
                   isEditing={isEditing}
                   dataValues={dataValues}
+                  collaboratorGender={collaborator.gender}
                   medicalEvaluationId={medicalEvaluation.id}
                   setIsEditing={setIsEditing}
                   includeOccupationalHistory

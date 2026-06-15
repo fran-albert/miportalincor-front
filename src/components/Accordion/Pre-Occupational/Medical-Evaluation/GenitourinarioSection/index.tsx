@@ -7,6 +7,7 @@ import {
   ClinicalBlock,
   NotesField,
 } from "../FormPrimitives";
+import { isGynObApplicable } from "@/common/helpers/report-visibility";
 
 interface GenitourinarioSectionProps {
   isEditing: boolean;
@@ -16,6 +17,7 @@ interface GenitourinarioSectionProps {
     value: boolean | string | undefined
   ) => void;
   onBatchChange?: (updates: Partial<Genitourinario>) => void;
+  collaboratorGender?: string;
 }
 
 export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
@@ -23,7 +25,10 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   data,
   onChange,
   onBatchChange,
+  collaboratorGender,
 }) => {
+  // Los datos gineco-obstétricos no aplican a colaboradores de sexo masculino.
+  const gynObApplicable = isGynObApplicable(collaboratorGender);
   const handleSinAlteracionesChange = (checked: boolean) => {
     if (checked && onBatchChange) {
       onBatchChange({
@@ -46,7 +51,10 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleChange = (value: boolean | undefined) => {
-    if (value === true && data.sinAlteraciones && onBatchChange) {
+    // "No" (ausente) => no hay nada que describir: limpiar la observación.
+    if (value === false && onBatchChange) {
+      onBatchChange({ varicocele: false, varicoceleObs: "" });
+    } else if (value === true && data.sinAlteraciones && onBatchChange) {
       onBatchChange({ sinAlteraciones: false, varicocele: true });
     } else {
       onChange("varicocele", value);
@@ -54,15 +62,13 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleObsChange = (value: string) => {
-    if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicoceleObs: value });
-    } else {
-      onChange("varicoceleObs", value);
-    }
+    onChange("varicoceleObs", value);
   };
 
-  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  // Observaciones del estado general: se bloquean con "Sin alteraciones".
   const obsDisabled = !isEditing || data.sinAlteraciones;
+  // Observaciones de varicocele: solo si hay varicocele presente ("Si").
+  const varicoceleObsDisabled = !isEditing || data.varicocele !== true;
   const sinAlteracionesValue =
     data.sinAlteraciones === true ? "si" : data.sinAlteraciones === false ? "no" : "";
   const varicoceleValue =
@@ -121,66 +127,77 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
           id="gen-varicocele-obs"
           label="Observaciones"
           value={data.varicoceleObs}
-          disabled={obsDisabled}
+          disabled={varicoceleObsDisabled}
           onChange={handleVaricoceleObsChange}
-          placeholder="Detalle clínico o aclaraciones"
+          placeholder={
+            varicoceleObsDisabled
+              ? "Sin observaciones"
+              : "Detalle clínico o aclaraciones"
+          }
         />
       </ClinicalBlock>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="gen-fum" className="text-sm font-medium text-slate-700">
-            F.U.M
-          </Label>
-          <Input
-            id="gen-fum"
-            type="date"
-            className="w-full bg-white"
-            value={data.fum}
-            disabled={!isEditing}
-            onChange={(e) => onChange("fum", e.currentTarget.value)}
-          />
+      {gynObApplicable ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="gen-fum" className="text-sm font-medium text-slate-700">
+              F.U.M
+            </Label>
+            <Input
+              id="gen-fum"
+              type="date"
+              className="w-full bg-white"
+              value={data.fum}
+              disabled={!isEditing}
+              onChange={(e) => onChange("fum", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-partos" className="text-sm font-medium text-slate-700">
+              Partos
+            </Label>
+            <Input
+              id="gen-partos"
+              type="text"
+              className="w-full bg-white"
+              value={data.partos}
+              disabled={!isEditing}
+              onChange={(e) => onChange("partos", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-embarazos" className="text-sm font-medium text-slate-700">
+              Embarazos
+            </Label>
+            <Input
+              id="gen-embarazos"
+              type="text"
+              className="w-full bg-white"
+              value={data.embarazos}
+              disabled={!isEditing}
+              onChange={(e) => onChange("embarazos", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-cesarea" className="text-sm font-medium text-slate-700">
+              Cesárea
+            </Label>
+            <Input
+              id="gen-cesarea"
+              type="text"
+              className="w-full bg-white"
+              value={data.cesarea}
+              disabled={!isEditing}
+              onChange={(e) => onChange("cesarea", e.currentTarget.value)}
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="gen-partos" className="text-sm font-medium text-slate-700">
-            Partos
-          </Label>
-          <Input
-            id="gen-partos"
-            type="text"
-            className="w-full bg-white"
-            value={data.partos}
-            disabled={!isEditing}
-            onChange={(e) => onChange("partos", e.currentTarget.value)}
-          />
+      ) : (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-sm text-slate-500">
+          Datos gineco-obstétricos (F.U.M, embarazos, partos, cesárea) no
+          aplican para colaboradores de sexo masculino.
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="gen-embarazos" className="text-sm font-medium text-slate-700">
-            Embarazos
-          </Label>
-          <Input
-            id="gen-embarazos"
-            type="text"
-            className="w-full bg-white"
-            value={data.embarazos}
-            disabled={!isEditing}
-            onChange={(e) => onChange("embarazos", e.currentTarget.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="gen-cesarea" className="text-sm font-medium text-slate-700">
-            Cesárea
-          </Label>
-          <Input
-            id="gen-cesarea"
-            type="text"
-            className="w-full bg-white"
-            value={data.cesarea}
-            disabled={!isEditing}
-            onChange={(e) => onChange("cesarea", e.currentTarget.value)}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

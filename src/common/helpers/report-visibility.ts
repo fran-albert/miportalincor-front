@@ -49,11 +49,16 @@ export function normalizeReportVisibilityOverrides(
   }, {});
 }
 
-const normalizeGender = (gender?: string | null): string => {
+export const normalizeGender = (gender?: string | null): string => {
   if (!gender) return "";
 
   return gender.trim().toLowerCase();
 };
+
+// Los datos gineco-obstétricos (FUM, partos, cesárea, embarazos) no aplican a
+// colaboradores de sexo masculino. Mismo criterio que usa el informe/PDF.
+export const isGynObApplicable = (gender?: string | null): boolean =>
+  normalizeGender(gender) !== "masculino";
 
 export function resolveReportVisibility({
   sectionKey,
