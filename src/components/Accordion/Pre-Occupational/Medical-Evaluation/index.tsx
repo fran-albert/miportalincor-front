@@ -166,6 +166,16 @@ export default function MedicalEvaluationAccordion({
       })
     );
   };
+  const handleToraxBatchChange = (updates: Partial<Torax>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          torax: { ...toraxData, ...updates },
+        },
+      })
+    );
+  };
 
   const resp: Respiratorio = medicalEvaluation.respiratorio ?? {
     sinAlteraciones: undefined,
@@ -236,6 +246,16 @@ export default function MedicalEvaluationAccordion({
             ...osteo,
             [field]: value,
           },
+        },
+      })
+    );
+  };
+  const handleOsteoBatchChange = (updates: Partial<Osteoarticular>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          osteoarticular: { ...osteo, ...updates },
         },
       })
     );
@@ -748,6 +768,7 @@ const handleNeuChange = (
           isEditing={isEditing}
           data={toraxData}
           onChange={handleToraxChange}
+          onBatchChange={handleToraxBatchChange}
         />
       </EvaluationSection>
 
@@ -801,6 +822,7 @@ const handleNeuChange = (
           isEditing={isEditing}
           data={osteo}
           onChange={handleOsteoChange}
+          onBatchChange={handleOsteoBatchChange}
         />
       </EvaluationSection>
     </div>

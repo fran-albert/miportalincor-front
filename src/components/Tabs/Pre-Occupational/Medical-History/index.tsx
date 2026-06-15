@@ -618,6 +618,80 @@ export const buildMedicalEvaluationPayload = (
   return payloadItems;
 };
 
+// Detecta campos del examen físico/clínico que el usuario cargó pero cuyo
+// data_type NO existe en el catálogo: el guardado los descartaría en silencio.
+// Mantener sincronizado con buildMedicalEvaluationPayload.
+export const getMissingMedicalEvaluationFields = (
+  fields: DataType[],
+  me: IMedicalEvaluation
+): string[] => {
+  const ec = me.examenClinico;
+  const hasText = (v?: string | number | null) =>
+    v != null && String(v).trim() !== "";
+  const hasBool = (v: unknown) =>
+    v === true || v === false || v === "si" || v === "no";
+
+  const expected: { name: string; category: string; loaded: boolean }[] = [
+    { name: "Aspecto general", category: "HISTORIA_MEDICA", loaded: hasText(me.aspectoGeneral) },
+    { name: "Tiempo libre", category: "HISTORIA_MEDICA", loaded: hasText(me.tiempoLibre) },
+    { name: "Talla", category: "EXAMEN_CLINICO", loaded: hasText(ec.talla) },
+    { name: "Peso", category: "EXAMEN_CLINICO", loaded: hasText(ec.peso) },
+    { name: "IMC", category: "EXAMEN_CLINICO", loaded: hasText(ec.imc) },
+    { name: "Perimetro Abdominal", category: "EXAMEN_CLINICO", loaded: hasText(ec.perimetroAbdominal) },
+    { name: "Presión Sistólica", category: "EXAMEN_CLINICO", loaded: hasText(ec.presionSistolica) },
+    { name: "Presión Diastólica", category: "EXAMEN_CLINICO", loaded: hasText(ec.presionDiastolica) },
+    { name: "Frecuencia Cardíaca", category: "EXAMEN_CLINICO", loaded: hasText(ec.frecuenciaCardiaca) },
+    { name: "Frecuencia Respiratoria", category: "EXAMEN_CLINICO", loaded: hasText(ec.frecuenciaRespiratoria) },
+    { name: "Oximetria", category: "EXAMEN_CLINICO", loaded: hasText(me.respiratorio?.oximetria) },
+    { name: "TA", category: "EXAMEN_CLINICO", loaded: hasText(me.circulatorio?.presion) },
+    { name: "Agudeza S/C Derecho", category: "EXAMEN_CLINICO", loaded: hasText(me.agudezaSc?.right) },
+    { name: "Agudeza S/C Izquierdo", category: "EXAMEN_CLINICO", loaded: hasText(me.agudezaSc?.left) },
+    { name: "Agudeza C/C Derecho", category: "EXAMEN_CLINICO", loaded: hasText(me.agudezaCc?.right) },
+    { name: "Agudeza C/C Izquierdo", category: "EXAMEN_CLINICO", loaded: hasText(me.agudezaCc?.left) },
+    { name: "Visión Cromática", category: "EXAMEN_CLINICO", loaded: hasText(me.visionCromatica) },
+    { name: "FUM", category: "EXAMEN_FISICO", loaded: hasText(me.genitourinario?.fum) },
+    { name: "Partos", category: "EXAMEN_FISICO", loaded: hasText(me.genitourinario?.partos) },
+    { name: "Cesárea", category: "EXAMEN_FISICO", loaded: hasText(me.genitourinario?.cesarea) },
+    { name: "Embarazos", category: "EXAMEN_FISICO", loaded: hasText(me.genitourinario?.embarazos) },
+    { name: "Observaciones Cabeza y Cuello", category: "EXAMEN_FISICO", loaded: hasText(me.cabezaCuello?.observaciones) },
+    { name: "Bucodental – Observaciones", category: "EXAMEN_FISICO", loaded: hasText(me.bucodental?.observaciones) },
+    { name: "Normocoloreada", category: "EXAMEN_FISICO", loaded: hasBool(me.piel?.normocoloreada) },
+    { name: "Tatuajes", category: "EXAMEN_FISICO", loaded: hasBool(me.piel?.tatuajes) },
+    { name: "Cabeza y Cuello", category: "EXAMEN_FISICO", loaded: hasBool(me.cabezaCuello?.sinAlteraciones) },
+    { name: "Bucodental – Sin alteraciones", category: "EXAMEN_FISICO", loaded: hasBool(me.bucodental?.sinAlteraciones) },
+    { name: "Bucodental – Caries", category: "EXAMEN_FISICO", loaded: hasBool(me.bucodental?.caries) },
+    { name: "Bucodental – Faltan piezas", category: "EXAMEN_FISICO", loaded: hasBool(me.bucodental?.faltanPiezas) },
+    { name: "Torax Deformaciones", category: "EXAMEN_FISICO", loaded: hasBool(me.torax?.deformaciones) },
+    { name: "Torax Cicatrices", category: "EXAMEN_FISICO", loaded: hasBool(me.torax?.cicatrices) },
+    { name: "Aparato Respiratorio", category: "EXAMEN_FISICO", loaded: hasBool(me.respiratorio?.sinAlteraciones) },
+    { name: "Aparato Circulatorio", category: "EXAMEN_FISICO", loaded: hasBool(me.circulatorio?.sinAlteraciones) },
+    { name: "Várices", category: "EXAMEN_FISICO", loaded: hasBool(me.circulatorio?.varices) },
+    { name: "Aparato Gastrointestinal", category: "EXAMEN_FISICO", loaded: hasBool(me.gastrointestinal?.sinAlteraciones) },
+    { name: "Cicatrices", category: "EXAMEN_FISICO", loaded: hasBool(me.gastrointestinal?.cicatrices) },
+    { name: "Hernias", category: "EXAMEN_FISICO", loaded: hasBool(me.gastrointestinal?.hernias) },
+    { name: "Eventraciones", category: "EXAMEN_FISICO", loaded: hasBool(me.gastrointestinal?.eventraciones) },
+    { name: "Hemorroides", category: "EXAMEN_FISICO", loaded: hasBool(me.gastrointestinal?.hemorroides) },
+    { name: "Aparato Neurológico", category: "EXAMEN_FISICO", loaded: hasBool(me.neurologico?.sinAlteraciones) },
+    { name: "Aparato Genitourinario", category: "EXAMEN_FISICO", loaded: hasBool(me.genitourinario?.sinAlteraciones) },
+    { name: "Varicocele", category: "EXAMEN_FISICO", loaded: hasBool(me.genitourinario?.varicocele) },
+    { name: "MMSS Sin Alteraciones", category: "EXAMEN_FISICO", loaded: hasBool(me.osteoarticular?.mmssSin) },
+    { name: "MMII Sin Alteraciones", category: "EXAMEN_FISICO", loaded: hasBool(me.osteoarticular?.mmiiSin) },
+    { name: "Columna Sin Alteraciones", category: "EXAMEN_FISICO", loaded: hasBool(me.osteoarticular?.columnaSin) },
+    { name: "Amputaciones", category: "EXAMEN_FISICO", loaded: hasBool(me.osteoarticular?.amputaciones) },
+  ];
+
+  const norm = (s: string) => s.normalize("NFC").trim().toLowerCase();
+  return expected
+    .filter((e) => e.loaded)
+    .filter(
+      (e) =>
+        !(fields ?? []).some(
+          (f) => f.category === e.category && norm(f.name) === norm(e.name)
+        )
+    )
+    .map((e) => e.name);
+};
+
 const CLEARABLE_MEDICAL_EVALUATION_FIELD_NAMES = new Set([
   "Aspecto general",
   "Tiempo libre",
@@ -740,7 +814,7 @@ export default function MedicalHistoryTab({
   });
   const { createDataValuesMutation, deleteDataValuesMutation } =
     useDataValuesMutations();
-  const { promiseToast } = useToastContext();
+  const { promiseToast, showError } = useToastContext();
   const formData = useSelector(
     (state: RootState) => state.preOccupational.formData
   );
@@ -838,6 +912,9 @@ export default function MedicalHistoryTab({
   };
 
   const handleSave = async () => {
+    const missingFields = includeMedicalEvaluation
+      ? getMissingMedicalEvaluationFields(fields, medicalEvaluation)
+      : [];
     const savePromise = (async () => {
       if (deletedOccupationalHistoryIds.length > 0) {
         await Promise.all(
@@ -866,16 +943,31 @@ export default function MedicalHistoryTab({
         title: "Guardando datos",
         description: "Por favor espera mientras procesamos tu solicitud",
       },
-      success: {
-        title: "Datos guardados",
-        description: "Los datos se guardaron exitosamente",
-      },
+      success:
+        missingFields.length > 0
+          ? {
+              title: "Guardado parcial",
+              description:
+                "Algunos campos no se pudieron guardar (ver el aviso).",
+            }
+          : {
+              title: "Datos guardados",
+              description: "Los datos se guardaron exitosamente",
+            },
       error: (error: unknown) => ({
         title: "Error al guardar los datos",
         description:
           (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
       }),
     });
+    if (missingFields.length > 0) {
+      showError(
+        "Hay campos que no se guardaron",
+        `No se pudieron guardar por falta de configuración en el catálogo: ${missingFields.join(
+          ", "
+        )}. Avisá a sistemas para que los habilite.`
+      );
+    }
     // Invalidar queries para forzar recarga de datos frescos
     queryClient.invalidateQueries({ queryKey: ["collaborator-medical-evaluation"] });
     queryClient.invalidateQueries({ queryKey: ["data-values"] });

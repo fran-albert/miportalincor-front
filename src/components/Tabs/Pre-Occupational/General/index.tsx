@@ -119,6 +119,7 @@ export default function GeneralTab({
   const handleSave = async () => {
     let resolvedFields = fields;
     let resolvedMappedExams = mappedExams;
+    const missingFields: string[] = [];
 
     const ensureAllFields = async () => {
       if (resolvedFields.length > 0) return resolvedFields;
@@ -179,13 +180,7 @@ export default function GeneralTab({
           value: formData.conclusion,
         });
       } else {
-        console.warn("[GeneralTab] conclusion field not resolved", {
-          availableFields: fields.map((field) => ({
-            id: field.id,
-            name: field.name,
-            category: field.category,
-          })),
-        });
+        missingFields.push("Conclusión");
       }
     }
 
@@ -216,27 +211,25 @@ export default function GeneralTab({
           value: formData.recomendaciones,
         });
       } else {
-        console.warn("[GeneralTab] recomendaciones field not resolved", {
-          availableFields: fields.map((field) => ({
-            id: field.id,
-            name: field.name,
-            category: field.category,
-          })),
-        });
+        missingFields.push("Recomendaciones");
       }
     }
 
-    console.log("[GeneralTab] save payload", {
-      medicalEvaluationId,
-      payloadItems,
-      conclusionField,
-      recomendacionesField,
+    // Resultados de estudios cargados cuyo data_type no existe en el catálogo
+    examFilter.forEach((exam) => {
+      const loaded = (formData.examResults[exam.id] || "").trim() !== "";
+      const resolved = resolvedMappedExams.some((m) => m.id === exam.id);
+      if (loaded && !resolved) missingFields.push(exam.name);
     });
 
     if (payloadItems.length === 0) {
       showError(
         "No se pudo guardar",
-        "No encontramos campos configurados para guardar los cambios de esta etapa."
+        missingFields.length > 0
+          ? `Faltan tipos de dato en el catálogo para: ${missingFields.join(
+              ", "
+            )}. Avisá a sistemas para que los habilite.`
+          : "No encontramos campos configurados para guardar los cambios de esta etapa."
       );
       return;
     }
@@ -251,10 +244,17 @@ export default function GeneralTab({
           title: "Guardando datos",
           description: "Por favor espera mientras procesamos tu solicitud",
         },
-        success: {
-          title: "Datos guardados",
-          description: "Los datos se guardaron exitosamente",
-        },
+        success:
+          missingFields.length > 0
+            ? {
+                title: "Guardado parcial",
+                description:
+                  "Algunos campos no se pudieron guardar (ver el aviso).",
+              }
+            : {
+                title: "Datos guardados",
+                description: "Los datos se guardaron exitosamente",
+              },
         error: (error: unknown) => ({
           title: "Error al guardar los datos",
           description:
@@ -263,6 +263,15 @@ export default function GeneralTab({
         }),
       }
     );
+
+    if (missingFields.length > 0) {
+      showError(
+        "Hay campos que no se guardaron",
+        `No se pudieron guardar por falta de configuración en el catálogo: ${missingFields.join(
+          ", "
+        )}. Avisá a sistemas para que los habilite.`
+      );
+    }
 
     setSavedFormData(formData);
   };

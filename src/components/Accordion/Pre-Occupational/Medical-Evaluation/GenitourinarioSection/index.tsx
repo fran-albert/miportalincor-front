@@ -46,7 +46,10 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleChange = (value: boolean | undefined) => {
-    if (value === true && data.sinAlteraciones && onBatchChange) {
+    // "No" (ausente) => no hay nada que describir: limpiar la observación.
+    if (value === false && onBatchChange) {
+      onBatchChange({ varicocele: false, varicoceleObs: "" });
+    } else if (value === true && data.sinAlteraciones && onBatchChange) {
       onBatchChange({ sinAlteraciones: false, varicocele: true });
     } else {
       onChange("varicocele", value);
@@ -54,15 +57,13 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleObsChange = (value: string) => {
-    if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicoceleObs: value });
-    } else {
-      onChange("varicoceleObs", value);
-    }
+    onChange("varicoceleObs", value);
   };
 
-  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  // Observaciones del estado general: se bloquean con "Sin alteraciones".
   const obsDisabled = !isEditing || data.sinAlteraciones;
+  // Observaciones de varicocele: solo si hay varicocele presente ("Si").
+  const varicoceleObsDisabled = !isEditing || data.varicocele !== true;
   const sinAlteracionesValue =
     data.sinAlteraciones === true ? "si" : data.sinAlteraciones === false ? "no" : "";
   const varicoceleValue =
@@ -121,9 +122,13 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
           id="gen-varicocele-obs"
           label="Observaciones"
           value={data.varicoceleObs}
-          disabled={obsDisabled}
+          disabled={varicoceleObsDisabled}
           onChange={handleVaricoceleObsChange}
-          placeholder="Detalle clínico o aclaraciones"
+          placeholder={
+            varicoceleObsDisabled
+              ? "Sin observaciones"
+              : "Detalle clínico o aclaraciones"
+          }
         />
       </ClinicalBlock>
 

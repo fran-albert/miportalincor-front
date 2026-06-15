@@ -45,7 +45,10 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
   };
 
   const handleVaricesChange = (value: boolean | undefined) => {
-    if (value === true && data.sinAlteraciones && onBatchChange) {
+    // "No" (ausente) => no hay nada que describir: limpiar la observación.
+    if (value === false && onBatchChange) {
+      onBatchChange({ varices: false, varicesObs: "" });
+    } else if (value === true && data.sinAlteraciones && onBatchChange) {
       onBatchChange({ sinAlteraciones: false, varices: true });
     } else {
       onChange("varices", value);
@@ -53,15 +56,13 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
   };
 
   const handleVaricesObsChange = (value: string) => {
-    if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicesObs: value });
-    } else {
-      onChange("varicesObs", value);
-    }
+    onChange("varicesObs", value);
   };
 
-  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  // Observaciones del estado general: se bloquean con "Sin alteraciones".
   const obsDisabled = !isEditing || data.sinAlteraciones;
+  // Observaciones de várices: solo si hay várices presentes ("Si").
+  const varicesObsDisabled = !isEditing || data.varices !== true;
   const sinAlteracionesValue =
     data.sinAlteraciones === true ? "si" : data.sinAlteraciones === false ? "no" : "";
   const varicesValue =
@@ -162,9 +163,13 @@ export const CirculatorioSection: React.FC<CirculatorioSectionProps> = ({
           id="circ-varices-obs"
           label="Observaciones"
           value={data.varicesObs || ""}
-          disabled={obsDisabled}
+          disabled={varicesObsDisabled}
           onChange={handleVaricesObsChange}
-          placeholder="Detalle clínico o aclaraciones"
+          placeholder={
+            varicesObsDisabled
+              ? "Sin observaciones"
+              : "Detalle clínico o aclaraciones"
+          }
         />
       </ClinicalBlock>
     </div>
