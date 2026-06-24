@@ -16,7 +16,29 @@ export interface StaffUser {
   roles: StaffUserRole[];
 }
 
-export const getStaffUsers = async (): Promise<StaffUser[]> => {
-  const response = await apiIncorHC.get<StaffUser[]>("/users/staff");
+export interface PaginatedStaffUsers {
+  data: StaffUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface GetStaffUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export const getStaffUsers = async (
+  params: GetStaffUsersParams = {}
+): Promise<PaginatedStaffUsers> => {
+  const { page = 1, limit = 20, search } = params;
+  const response = await apiIncorHC.get<PaginatedStaffUsers>("/users/staff", {
+    params: {
+      page,
+      limit,
+      ...(search && search.trim() ? { search: search.trim() } : {}),
+    },
+  });
   return response.data;
 };

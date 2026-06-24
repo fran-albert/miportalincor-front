@@ -1,8 +1,13 @@
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Genitourinario } from "@/store/Pre-Occupational/preOccupationalSlice";
+import {
+  BooleanChoiceField,
+  ClinicalBlock,
+  NotesField,
+} from "../FormPrimitives";
+import { isGynObApplicable } from "@/common/helpers/report-visibility";
 
 interface GenitourinarioSectionProps {
   isEditing: boolean;
@@ -12,6 +17,7 @@ interface GenitourinarioSectionProps {
     value: boolean | string | undefined
   ) => void;
   onBatchChange?: (updates: Partial<Genitourinario>) => void;
+  collaboratorGender?: string;
 }
 
 export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
@@ -19,7 +25,10 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   data,
   onChange,
   onBatchChange,
+  collaboratorGender,
 }) => {
+  // Los datos gineco-obstétricos no aplican a colaboradores de sexo masculino.
+  const gynObApplicable = isGynObApplicable(collaboratorGender);
   const handleSinAlteracionesChange = (checked: boolean) => {
     if (checked && onBatchChange) {
       onBatchChange({
@@ -42,7 +51,10 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleChange = (value: boolean | undefined) => {
-    if (value === true && data.sinAlteraciones && onBatchChange) {
+    // "No" (ausente) => no hay nada que describir: limpiar la observación.
+    if (value === false && onBatchChange) {
+      onBatchChange({ varicocele: false, varicoceleObs: "" });
+    } else if (value === true && data.sinAlteraciones && onBatchChange) {
       onBatchChange({ sinAlteraciones: false, varicocele: true });
     } else {
       onChange("varicocele", value);
@@ -50,126 +62,142 @@ export const GenitourinarioSection: React.FC<GenitourinarioSectionProps> = ({
   };
 
   const handleVaricoceleObsChange = (value: string) => {
-    if (value.trim() && data.sinAlteraciones && onBatchChange) {
-      onBatchChange({ sinAlteraciones: false, varicoceleObs: value });
-    } else {
-      onChange("varicoceleObs", value);
-    }
+    onChange("varicoceleObs", value);
   };
 
-  // Solo las observaciones se deshabilitan, los checkboxes Sí/No siempre habilitados
+  // Observaciones del estado general: se bloquean con "Sin alteraciones".
   const obsDisabled = !isEditing || data.sinAlteraciones;
+  // Observaciones de varicocele: solo si hay varicocele presente ("Si").
+  const varicoceleObsDisabled = !isEditing || data.varicocele !== true;
+  const sinAlteracionesValue =
+    data.sinAlteraciones === true ? "si" : data.sinAlteraciones === false ? "no" : "";
+  const varicoceleValue =
+    data.varicocele === true ? "si" : data.varicocele === false ? "no" : "";
 
   return (
     <div className="space-y-4">
-      <h4 className="font-bold text-base text-greenPrimary">
-        Aparato Genitourinario
-      </h4>
-
-      {/* Sin alteraciones */}
-      <div className="flex items-center space-x-2 text-black">
-        <Checkbox
-          id="gen-sin"
-          checked={data.sinAlteraciones === true}
+      <ClinicalBlock
+        title="Estado general"
+        description="Marcá si el sistema está sin alteraciones o si hay hallazgos para describir."
+      >
+        <BooleanChoiceField
+          idPrefix="gen-sin"
+          label="Resultado"
+          value={
+            sinAlteracionesValue === "si"
+              ? true
+              : sinAlteracionesValue === "no"
+                ? false
+                : undefined
+          }
           disabled={!isEditing}
-          onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
+          positiveLabel="Sin alteraciones"
+          negativeLabel="Con hallazgos"
+          onChange={(value) => handleSinAlteracionesChange(value === true)}
         />
-        <Label htmlFor="gen-sin">Sin alteraciones</Label>
-      </div>
-
-      {/* Observaciones generales */}
-      <Input
-        id="gen-obs"
-        className="w-full text-black"
-        value={data.observaciones}
-        disabled={obsDisabled}
-        onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
-        placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
-      />
-
-      {/* Varicocele - checkboxes siempre habilitados */}
-      <div className="flex items-center space-x-2 text-black">
-        <Label>Varicocele:</Label>
-        <Checkbox
-          id="gen-varicocele-si"
-          checked={data.varicocele === true}
-          disabled={!isEditing}
-          onCheckedChange={(chk) => handleVaricoceleChange(chk ? true : undefined)}
-        />
-        <Label htmlFor="gen-varicocele-si">Sí</Label>
-        <Checkbox
-          id="gen-varicocele-no"
-          checked={data.varicocele === false}
-          disabled={!isEditing}
-          onCheckedChange={(chk) => onChange("varicocele", chk ? false : undefined)}
-        />
-        <Label htmlFor="gen-varicocele-no">No</Label>
-
-        {/* Observaciones varicocele */}
-        <Input
-          id="gen-varicocele-obs"
-          className="flex-1 ml-4"
-          value={data.varicoceleObs}
+        <NotesField
+          id="gen-obs"
+          label="Observaciones generales"
+          value={data.observaciones}
           disabled={obsDisabled}
-          onChange={(e) => handleVaricoceleObsChange(e.currentTarget.value)}
-          placeholder={data.sinAlteraciones ? "Sin observaciones" : "Observaciones…"}
+          onChange={handleObservacionesChange}
+          placeholder={
+            data.sinAlteraciones
+              ? "Sin observaciones"
+              : "Describí los hallazgos observados"
+          }
         />
-      </div>
+      </ClinicalBlock>
 
-      {/* F.U.M | Partos */}
-      {/* Embarazos | Cesárea */}
-      <div className="grid grid-cols-[max-content,1fr,max-content,1fr] gap-x-6 gap-y-4 items-center text-black">
-        {/* Row 1 */}
-        <Label htmlFor="gen-fum" className="text-right">
-          F.U.M
-        </Label>
-        <Input
-          id="gen-fum"
-          type="date"
-          className="w-full"
-          value={data.fum}
+      <ClinicalBlock title="Varicocele">
+        <BooleanChoiceField
+          idPrefix="gen-varicocele"
+          label="Presencia"
+          value={
+            varicoceleValue === "si"
+              ? true
+              : varicoceleValue === "no"
+                ? false
+                : undefined
+          }
           disabled={!isEditing}
-          onChange={(e) => onChange("fum", e.currentTarget.value)}
+          onChange={handleVaricoceleChange}
         />
-        <Label htmlFor="gen-partos" className="text-right">
-          Partos
-        </Label>
-        <Input
-          id="gen-partos"
-          type="text"
-          className="w-full"
-          value={data.partos}
-          disabled={!isEditing}
-          onChange={(e) => onChange("partos", e.currentTarget.value)}
-          placeholder="Observaciones..."
+        <NotesField
+          id="gen-varicocele-obs"
+          label="Observaciones"
+          value={data.varicoceleObs}
+          disabled={varicoceleObsDisabled}
+          onChange={handleVaricoceleObsChange}
+          placeholder={
+            varicoceleObsDisabled
+              ? "Sin observaciones"
+              : "Detalle clínico o aclaraciones"
+          }
         />
+      </ClinicalBlock>
 
-        {/* Row 2 */}
-        <Label htmlFor="gen-embarazos" className="text-right">
-          Embarazos
-        </Label>
-        <Input
-          id="gen-embarazos"
-          type="text"
-          className="w-full"
-          value={data.embarazos}
-          disabled={!isEditing}
-          onChange={(e) => onChange("embarazos", e.currentTarget.value)}
-          placeholder="Observaciones..."
-        />
-        <Label htmlFor="gen-cesarea" className="text-right">
-          Cesárea
-        </Label>
-        <Input
-          id="gen-cesarea"
-          type="text"
-          className="w-full"
-          value={data.cesarea}
-          disabled={!isEditing}
-          onChange={(e) => onChange("cesarea", e.currentTarget.value)}
-          placeholder="Observaciones..."
-        />
-      </div>
+      {gynObApplicable ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="gen-fum" className="text-sm font-medium text-slate-700">
+              F.U.M
+            </Label>
+            <Input
+              id="gen-fum"
+              type="date"
+              className="w-full bg-white"
+              value={data.fum}
+              disabled={!isEditing}
+              onChange={(e) => onChange("fum", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-partos" className="text-sm font-medium text-slate-700">
+              Partos
+            </Label>
+            <Input
+              id="gen-partos"
+              type="text"
+              className="w-full bg-white"
+              value={data.partos}
+              disabled={!isEditing}
+              onChange={(e) => onChange("partos", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-embarazos" className="text-sm font-medium text-slate-700">
+              Embarazos
+            </Label>
+            <Input
+              id="gen-embarazos"
+              type="text"
+              className="w-full bg-white"
+              value={data.embarazos}
+              disabled={!isEditing}
+              onChange={(e) => onChange("embarazos", e.currentTarget.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gen-cesarea" className="text-sm font-medium text-slate-700">
+              Cesárea
+            </Label>
+            <Input
+              id="gen-cesarea"
+              type="text"
+              className="w-full bg-white"
+              value={data.cesarea}
+              disabled={!isEditing}
+              onChange={(e) => onChange("cesarea", e.currentTarget.value)}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-sm text-slate-500">
+          Datos gineco-obstétricos (F.U.M, embarazos, partos, cesárea) no
+          aplican para colaboradores de sexo masculino.
+        </div>
+      )}
     </div>
   );
 };

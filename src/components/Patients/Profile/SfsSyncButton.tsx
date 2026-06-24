@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useSfsSync } from "@/hooks/Patient/useSfsSync";
 import { useToastContext } from "@/hooks/Toast/toast-context";
+import useUserRole from "@/hooks/useRoles";
 import { Download, CheckCircle } from "lucide-react";
 
 interface SfsSyncButtonProps {
@@ -19,8 +20,14 @@ interface SfsSyncButtonProps {
 
 export default function SfsSyncButton({ patientId }: SfsSyncButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isDoctor } = useUserRole();
   const { sfsStatus, isLoadingStatus, syncMutation } = useSfsSync(patientId);
   const { promiseToast } = useToastContext();
+
+  // Las evoluciones SFS importadas solo las ve/gestiona el medico.
+  if (!isDoctor) {
+    return null;
+  }
 
   if (isLoadingStatus || !sfsStatus?.hasData) {
     return null;

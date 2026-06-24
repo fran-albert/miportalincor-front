@@ -1,7 +1,6 @@
 import React from "react";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Company } from "@/types/Company/Company";
-import CollaboratorAvatarHtml from "./Collaborator-Avatar";
 import AntecedentesList from "../View/Antecedentes";
 import { DataValue } from "@/types/Data-Value/Data-Value";
 import {
@@ -9,83 +8,151 @@ import {
   formatCuilCuit,
   formatDni,
 } from "@/common/helpers/helpers";
+import { pdfColors } from "../Pdf/shared";
 
 interface CollaboratorInformationHtmlProps {
   collaborator: Collaborator;
   companyData: Company;
   antecedentes: DataValue[];
+  showAntecedentes?: boolean;
+  compactWorkerOnly?: boolean;
 }
+
+const cleanFieldValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  const text = String(value).trim();
+  if (!text || text.toLowerCase() === "null" || text.toLowerCase() === "undefined") {
+    return "";
+  }
+
+  return text;
+};
+
+// Regla de visibilidad: el campo solo aparece si tiene dato cargado.
+const Field = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: unknown;
+}) => {
+  const text = cleanFieldValue(value);
+  if (!text) return null;
+
+  return (
+    <div>
+      <p
+        className="mb-0.5 text-[7px] uppercase tracking-[0.1em]"
+        style={{ color: pdfColors.muted }}
+      >
+        {label}
+      </p>
+      <p className="text-[9px] leading-[1.25]" style={{ color: pdfColors.ink }}>
+        {text}
+      </p>
+    </div>
+  );
+};
+
+const CardSection = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div
+    className="overflow-hidden rounded-[8px] border"
+    style={{ borderColor: pdfColors.line }}
+  >
+    <div
+      className="border-b px-[10px] py-[6px]"
+      style={{
+        backgroundColor: pdfColors.surface,
+        borderBottomColor: pdfColors.line,
+      }}
+    >
+      <h2
+        className="text-[9px] font-semibold uppercase tracking-[0.14em]"
+        style={{ color: pdfColors.accentText }}
+      >
+        {title}
+      </h2>
+    </div>
+    <div className="px-[10px] py-[8px]">{children}</div>
+  </div>
+);
 
 const CollaboratorInformationHtml: React.FC<
   CollaboratorInformationHtmlProps
-> = ({ collaborator, companyData, antecedentes }) => {
-  return (
-    <div className="p-[10px]">
-      {/* Sección Empresa */}
-      <div className="mb-[8px]">
-        <h2 className="font-bold mb-[4px]">Empresa</h2>
-        <div className="flex flex-row justify-between">
-          <div className="flex-1 pr-[4px]">
-            <p className="mb-[2px]">Nombre: {companyData.name}</p>
-            <p className="mb-[2px]">
-              Cuit: {formatCuilCuit(companyData.taxId)}
-            </p>
+> = ({
+  collaborator,
+  companyData,
+  antecedentes,
+  showAntecedentes = true,
+  compactWorkerOnly = false,
+}) => {
+  if (compactWorkerOnly) {
+    return (
+      <div className="mb-2.5">
+        <CardSection title="Trabajador">
+          <div className="grid grid-cols-4 gap-x-3 gap-y-1.5">
+            <Field
+              label="Apellido y nombre"
+              value={`${collaborator.lastName} ${collaborator.firstName}`}
+            />
+            <Field label="DNI" value={formatDni(collaborator.userName)} />
+            <Field label="Puesto de trabajo" value={collaborator.positionJob} />
+            <Field label="Fecha de nacimiento" value={collaborator.birthDate} />
           </div>
-          <div className="flex-1 pl-[4px]">
-            <p className="mb-[2px]">Teléfono: {companyData.phone}</p>
-            <p className="mb-[2px]">
-              Domicilio: {formatAddress(companyData.addressData)}
-            </p>
-          </div>
-        </div>
+        </CardSection>
       </div>
+    );
+  }
 
-      {/* Sección Trabajador */}
-      <div className="mb-[8px]">
-        <h2 className="font-bold mb-[4px]">Trabajador</h2>
-        <div className="flex flex-row justify-between">
-          {/* Información del colaborador */}
-          <div className="flex-[2] pr-[4px]">
-            <div className="flex flex-row">
-              <div className="flex-1 pr-[4px]">
-                <p className=" mb-[2px]">
-                  Apellido y Nombre: {collaborator.lastName}{" "}
-                  {collaborator.firstName}
-                </p>
-                <p className="mb-[2px]">
-                  Fecha Nacimiento: {String(collaborator.birthDate)}
-                </p>
-                <p className="mb-[2px]">
-                  Puesto de Trabajo: {collaborator.positionJob}
-                </p>
-              </div>
-              <div className="flex-1 pl-[4px]">
-                <p className="mb-[2px]">
-                  D.N.I.: {formatDni(collaborator.userName)}
-                </p>
-                {/* <p className="mb-[2px]">
-                  Domicilio: {collaborator.addressData?.city.name}
-                </p> */}
-                <p className="mb-[2px]">Teléfono: {collaborator.phone}</p>
-                <p className="mb-[2px]">
-                  Localidad: {collaborator.addressData?.city.name}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <AntecedentesList dataValues={antecedentes} />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center flex-1">
-            <CollaboratorAvatarHtml
-              alt={collaborator.firstName}
-              src={collaborator.photoUrl}
-              photoDataUrl={collaborator.photoDataUrl}
+  return (
+    <div className="mb-2.5 space-y-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
+        <CardSection title="Empresa">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            <Field label="Nombre" value={companyData.name} />
+            <Field label="Telefono" value={companyData.phone} />
+            <Field label="CUIT" value={formatCuilCuit(companyData.taxId)} />
+            <Field
+              label="Domicilio"
+              value={formatAddress(companyData.addressData)}
             />
           </div>
-        </div>
+        </CardSection>
+
+        <CardSection title="Trabajador">
+          <div className="grid grid-cols-[1.25fr_1fr] gap-x-3 gap-y-1.5">
+            <Field
+              label="Apellido y nombre"
+              value={`${collaborator.lastName} ${collaborator.firstName}`}
+            />
+            <Field label="DNI" value={formatDni(collaborator.userName)} />
+            <Field label="Fecha de nacimiento" value={collaborator.birthDate} />
+            <Field label="Telefono" value={collaborator.phone} />
+            <Field label="Puesto de trabajo" value={collaborator.positionJob} />
+            <Field
+              label="Localidad"
+              value={collaborator.addressData?.city.name}
+            />
+          </div>
+        </CardSection>
       </div>
+
+      {showAntecedentes && antecedentes.length > 0 ? (
+        <CardSection title="Antecedentes">
+          <div className="text-[9px] leading-[1.25]">
+            <AntecedentesList dataValues={antecedentes} />
+          </div>
+        </CardSection>
+      ) : null}
     </div>
   );
 };

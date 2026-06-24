@@ -86,6 +86,7 @@ export interface RequestPrescriptionDto {
 
 export interface BatchRequestPrescriptionDto {
   itemIds: string[];
+  doctorUserId?: string;
 }
 
 export interface BatchRequestResult {

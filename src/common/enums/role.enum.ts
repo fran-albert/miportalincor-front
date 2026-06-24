@@ -3,6 +3,7 @@ export enum Role {
   MEDICO = 'Medico',
   SECRETARIA = 'Secretaria',
   ADMINISTRADOR = 'Administrador',
+  PROFESOR = 'Profesor',
 }
 
 export const ROLES = {
@@ -10,5 +11,6 @@ export const ROLES = {
   DOCTOR: Role.MEDICO,
   SECRETARY: Role.SECRETARIA,
   ADMIN: Role.ADMINISTRADOR,
+  PROFESSOR: Role.PROFESOR,
 } as const;
   

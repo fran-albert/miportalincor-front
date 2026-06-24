@@ -1,71 +1,111 @@
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Torax } from '@/store/Pre-Occupational/preOccupationalSlice';
+import {
+  BooleanChoiceField,
+  ClinicalBlock,
+  NotesField,
+} from '../FormPrimitives';
 
 interface ToraxSectionProps {
   isEditing: boolean;
   data: Torax;
   onChange: (field: keyof Torax, value: "si" | "no" | string | undefined) => void;
+  onBatchChange?: (updates: Partial<Torax>) => void;
 }
 
-export const ToraxSection: React.FC<ToraxSectionProps> = ({ isEditing, data, onChange }) => (
-  <div className="space-y-4">
-    <h4 className="font-bold text-base text-greenPrimary">Tórax</h4>
+export const ToraxSection: React.FC<ToraxSectionProps> = ({
+  isEditing,
+  data,
+  onChange,
+  onBatchChange,
+}) => {
+  // Las observaciones solo tienen sentido cuando el hallazgo está presente ("Si").
+  // Si se marca "No" (ausente), se bloquea y se limpia la observación.
+  const handlePresenciaChange = (
+    field: "deformaciones" | "cicatrices",
+    obsField: "deformacionesObs" | "cicatricesObs",
+    value: boolean | undefined
+  ) => {
+    const next = value === true ? "si" : value === false ? "no" : undefined;
+    if (value !== true && onBatchChange) {
+      onBatchChange({ [field]: next, [obsField]: "" } as Partial<Torax>);
+    } else {
+      onChange(field, next);
+    }
+  };
 
-    {/* Deformaciones */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Deformaciones:</Label>
-      <Checkbox
-        id="torax-def-si"
-        checked={data.deformaciones === 'si'}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'si' : (data.deformaciones === 'si' ? undefined : data.deformaciones))}
-      />
-      <Label htmlFor="torax-def-si">Sí</Label>
-      <Checkbox
-        id="torax-def-no"
-        checked={data.deformaciones === 'no'}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('deformaciones', chk ? 'no' : (data.deformaciones === 'no' ? undefined : data.deformaciones))}
-      />
-      <Label htmlFor="torax-def-no">No</Label>
-      <Input
-        id="torax-def-obs"
-        className="flex-1 ml-4"
-        value={data.deformacionesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange('deformacionesObs', e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
-    </div>
+  const deformacionesObsDisabled = !isEditing || data.deformaciones !== "si";
+  const cicatricesObsDisabled = !isEditing || data.cicatrices !== "si";
 
-    {/* Cicatrices */}
-    <div className="flex items-center space-x-2 text-black">
-      <Label>Cicatrices:</Label>
-      <Checkbox
-        id="torax-cic-si"
-        checked={data.cicatrices === 'si'}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'si' : (data.cicatrices === 'si' ? undefined : data.cicatrices))}
-      />
-      <Label htmlFor="torax-cic-si">Sí</Label>
-      <Checkbox
-        id="torax-cic-no"
-        checked={data.cicatrices === 'no'}
-        disabled={!isEditing}
-        onCheckedChange={(chk) => onChange('cicatrices', chk ? 'no' : (data.cicatrices === 'no' ? undefined : data.cicatrices))}
-      />
-      <Label htmlFor="torax-cic-no">No</Label>
-      <Input
-        id="torax-cic-obs"
-        className="flex-1 ml-4"
-        value={data.cicatricesObs}
-        disabled={!isEditing}
-        onChange={(e) => onChange('cicatricesObs', e.currentTarget.value)}
-        placeholder="Observaciones…"
-      />
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 xl:grid-cols-2">
+        <ClinicalBlock
+          title="Deformaciones"
+          description="Indicá si hay deformaciones torácicas y agregá observaciones si corresponde."
+        >
+          <BooleanChoiceField
+            idPrefix="torax-def"
+            label="Presencia"
+            value={
+              data.deformaciones === "si"
+                ? true
+                : data.deformaciones === "no"
+                  ? false
+                  : undefined
+            }
+            disabled={!isEditing}
+            onChange={(value) =>
+              handlePresenciaChange("deformaciones", "deformacionesObs", value)
+            }
+          />
+          <NotesField
+            id="torax-def-obs"
+            label="Observaciones"
+            value={data.deformacionesObs}
+            disabled={deformacionesObsDisabled}
+            onChange={(value) => onChange('deformacionesObs', value)}
+            placeholder={
+              deformacionesObsDisabled
+                ? "Sin observaciones"
+                : "Detalle clínico o aclaraciones"
+            }
+          />
+        </ClinicalBlock>
+
+        <ClinicalBlock
+          title="Cicatrices"
+          description="Indicá si hay cicatrices y agregá observaciones si hace falta."
+        >
+          <BooleanChoiceField
+            idPrefix="torax-cic"
+            label="Presencia"
+            value={
+              data.cicatrices === "si"
+                ? true
+                : data.cicatrices === "no"
+                  ? false
+                  : undefined
+            }
+            disabled={!isEditing}
+            onChange={(value) =>
+              handlePresenciaChange("cicatrices", "cicatricesObs", value)
+            }
+          />
+          <NotesField
+            id="torax-cic-obs"
+            label="Observaciones"
+            value={data.cicatricesObs}
+            disabled={cicatricesObsDisabled}
+            onChange={(value) => onChange('cicatricesObs', value)}
+            placeholder={
+              cicatricesObsDisabled
+                ? "Sin observaciones"
+                : "Detalle clínico o aclaraciones"
+            }
+          />
+        </ClinicalBlock>
+      </div>
     </div>
-  </div>
-);
+  );
+};

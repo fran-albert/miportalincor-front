@@ -35,9 +35,7 @@ import {
   FileText,
   Pill,
   CreditCard,
-  Briefcase,
   Syringe,
-  MessageCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -51,10 +49,10 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { environment } from "@/config/environment";
+import { Briefcase } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
-import { useConversationNotifications } from "@/hooks/Conversations/useConversationNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
+import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
 const navigationItems = [
   {
@@ -100,10 +98,10 @@ const navigationItems = [
     allowedRoles: PERMISSIONS.APPOINTMENTS,
   },
   {
-    title: "Conversaciones",
-    url: "/conversaciones",
-    icon: MessageCircle,
-    allowedRoles: PERMISSIONS.CONVERSATIONS,
+    title: "Programas",
+    url: "/programas",
+    icon: Activity,
+    allowedRoles: PERMISSIONS.PROGRAMS,
   },
   {
     title: "Mi Sala de Espera",
@@ -155,17 +153,18 @@ const navigationItems = [
     strictRoles: true,
   },
   {
+    title: "Mis Programas",
+    url: "/mis-programas",
+    icon: ClipboardList,
+    allowedRoles: PERMISSIONS.MY_PROGRAMS,
+    strictRoles: true,
+  },
+  {
     title: "Solicitudes de Recetas",
     url: "/solicitudes-recetas",
     icon: FileText,
     allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
     strictRoles: true,
-  },
-  {
-    title: "Incor Laboral",
-    url: "/incor-laboral",
-    icon: Briefcase,
-    allowedRoles: PERMISSIONS.INCOR_LABORAL,
   },
 ];
 
@@ -240,6 +239,7 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { handleLogout } = useLogout();
   const { session } = useUserRole();
+  const { canAccessLaboral } = useLaboralPermissions();
 
   const userName = session?.firstName || "Usuario";
   const userRoles = session?.role || [];
@@ -254,29 +254,19 @@ export function AppSidebar() {
     showToasts: false, // Toasts are handled in DashboardLayout
   });
 
-  // Pendientes de conversaciones (toasts manejados en DashboardLayout)
-  const canSeeConversations = PERMISSIONS.CONVERSATIONS.some((role) =>
-    userRoles.includes(role),
-  );
-  const { pendingCount: conversationsPendingCount } =
-    useConversationNotifications({
-      enabled: canSeeConversations,
-      notify: false,
-    });
-
   // Filtrar items del menú según roles del usuario
   let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
 
-  if (!environment.CONVERSATIONS_ENABLED || !environment.CONVERSATIONS_NAV_VISIBLE) {
-    filteredNavigationItems = filteredNavigationItems.filter(
-      (item) => item.url !== "/conversaciones"
-    );
-  }
-
-  if (!environment.PATIENT_VACCINATION_ENABLED) {
-    filteredNavigationItems = filteredNavigationItems.filter(
-      (item) => item.url !== "/mis-vacunas"
-    );
+  if (canAccessLaboral) {
+    filteredNavigationItems = [
+      ...filteredNavigationItems,
+      {
+        title: "Incor Laboral",
+        url: "/incor-laboral",
+        icon: Briefcase,
+        allowedRoles: PERMISSIONS.APPOINTMENTS,
+      },
+    ];
   }
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
@@ -342,13 +332,9 @@ export function AppSidebar() {
                   // Check if this is the prescription requests item for doctors
                   const isPrescriptionRequestsItem =
                     item.url === "/solicitudes-recetas" && isDoctor;
-                  const isConversationsItem =
-                    item.url === "/conversaciones";
                   const badgeCount = isPrescriptionRequestsItem
                     ? pendingCount
-                    : isConversationsItem
-                      ? conversationsPendingCount
-                      : 0;
+                    : 0;
                   const showBadge = badgeCount > 0;
 
                   return (

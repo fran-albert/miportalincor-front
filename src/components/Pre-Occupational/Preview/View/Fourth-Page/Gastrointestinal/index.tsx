@@ -1,7 +1,6 @@
 // src/components/GastrointestinalHtml.tsx
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Gastrointestinal } from "@/store/Pre-Occupational/preOccupationalSlice";
+import { pdfColors } from "../../../Pdf/shared";
 
 interface Props {
   data: Gastrointestinal;
@@ -19,75 +18,92 @@ export default function GastrointestinalHtml({ data }: Props) {
 
   if (!hasData) return null;
 
+  const items = [
+    data.sinAlteraciones !== undefined
+      ? { label: "Sin alteraciones", value: data.sinAlteraciones ? "Sí" : "No" }
+      : null,
+    data.cicatrices !== undefined
+      ? {
+          label: "Cicatrices",
+          value: `${data.cicatrices ? "Sí" : "No"}${data.cicatricesObs?.trim() ? ` · ${data.cicatricesObs}` : ""}`,
+        }
+      : null,
+    data.hernias !== undefined
+      ? {
+          label: "Hernias",
+          value: `${data.hernias ? "Sí" : "No"}${data.herniasObs?.trim() ? ` · ${data.herniasObs}` : ""}`,
+        }
+      : null,
+    data.eventraciones !== undefined
+      ? {
+          label: "Eventraciones",
+          value: `${data.eventraciones ? "Sí" : "No"}${data.eventracionesObs?.trim() ? ` · ${data.eventracionesObs}` : ""}`,
+        }
+      : null,
+    data.hemorroides !== undefined
+      ? {
+          label: "Hemorroides",
+          value: `${data.hemorroides ? "Sí" : "No"}${data.hemorroidesObs?.trim() ? ` · ${data.hemorroidesObs}` : ""}`,
+        }
+      : null,
+  ].filter(Boolean);
+
   return (
-    <div className="space-y-4 mt-6">
-      <h4 className="font-bold text-base text-greenPrimary">
-        Aparato Gastrointestinal
-      </h4>
+    <div
+      className="mb-3 overflow-hidden rounded-[8px] border"
+      style={{ borderColor: pdfColors.line }}
+    >
+      <div
+        className="border-b px-3 py-2"
+        style={{
+          backgroundColor: pdfColors.surface,
+          borderBottomColor: pdfColors.line,
+        }}
+      >
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.08em]"
+          style={{ color: pdfColors.accentText }}
+        >
+          Aparato gastrointestinal
+        </p>
+      </div>
 
-      {/* Sin alteraciones - solo mostrar si fue seleccionado */}
-      {data.sinAlteraciones !== undefined && (
-        <div className="flex items-center space-x-2 text-black">
-          <Checkbox id="gi-sin" checked={data.sinAlteraciones === true} disabled />
-          <Label htmlFor="gi-sin">Sin alteraciones</Label>
-        </div>
-      )}
+      <div className="space-y-3 px-3 py-[10px]">
+        {items.map((item) => (
+          <div
+            key={item!.label}
+            className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+            style={{ borderColor: pdfColors.line }}
+          >
+            <p
+              className="mb-1 text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              {item!.label}
+            </p>
+            <p className="text-[10px] font-semibold text-slate-900">
+              {item!.value}
+            </p>
+          </div>
+        ))}
 
-      {/* Observaciones generales - solo si tiene contenido */}
-      {data.observaciones?.trim() && (
-        <div>
-          <Label className="mb-1">Observaciones:</Label>
-          <p className="text-black">{data.observaciones}</p>
-        </div>
-      )}
-
-      {/* Cicatrices - solo mostrar si fue seleccionado */}
-      {data.cicatrices !== undefined && (
-        <div className="flex items-center space-x-2 text-black">
-          <Label>Cicatrices:</Label>
-          <Checkbox id="gi-cic-si" checked={data.cicatrices === true} disabled />
-          <Label htmlFor="gi-cic-si">Sí</Label>
-          <Checkbox id="gi-cic-no" checked={data.cicatrices === false} disabled />
-          <Label htmlFor="gi-cic-no">No</Label>
-          {data.cicatricesObs?.trim() && <span className="ml-4">{data.cicatricesObs}</span>}
-        </div>
-      )}
-
-      {/* Hernias - solo mostrar si fue seleccionado */}
-      {data.hernias !== undefined && (
-        <div className="flex items-center space-x-2 text-black">
-          <Label>Hernias:</Label>
-          <Checkbox id="gi-her-si" checked={data.hernias === true} disabled />
-          <Label htmlFor="gi-her-si">Sí</Label>
-          <Checkbox id="gi-her-no" checked={data.hernias === false} disabled />
-          <Label htmlFor="gi-her-no">No</Label>
-          {data.herniasObs?.trim() && <span className="ml-4">{data.herniasObs}</span>}
-        </div>
-      )}
-
-      {/* Eventraciones - solo mostrar si fue seleccionado */}
-      {data.eventraciones !== undefined && (
-        <div className="flex items-center space-x-2 text-black">
-          <Label>Eventraciones:</Label>
-          <Checkbox id="gi-event-si" checked={data.eventraciones === true} disabled />
-          <Label htmlFor="gi-event-si">Sí</Label>
-          <Checkbox id="gi-event-no" checked={data.eventraciones === false} disabled />
-          <Label htmlFor="gi-event-no">No</Label>
-          {data.eventracionesObs?.trim() && <span className="ml-4">{data.eventracionesObs}</span>}
-        </div>
-      )}
-
-      {/* Hemorroides - solo mostrar si fue seleccionado */}
-      {data.hemorroides !== undefined && (
-        <div className="flex items-center space-x-2 text-black">
-          <Label>Hemorroides:</Label>
-          <Checkbox id="gi-hemo-si" checked={data.hemorroides === true} disabled />
-          <Label htmlFor="gi-hemo-si">Sí</Label>
-          <Checkbox id="gi-hemo-no" checked={data.hemorroides === false} disabled />
-          <Label htmlFor="gi-hemo-no">No</Label>
-          {data.hemorroidesObs?.trim() && <span className="ml-4">{data.hemorroidesObs}</span>}
-        </div>
-      )}
+        {data.observaciones?.trim() && (
+          <div className="space-y-1">
+            <p
+              className="text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              Observaciones
+            </p>
+            <div
+              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+              style={{ borderColor: pdfColors.line }}
+            >
+              <p className="text-[10px] text-slate-900">{data.observaciones}</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

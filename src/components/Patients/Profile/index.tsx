@@ -363,9 +363,7 @@ function PatientProfileComponent({
                   </Button>
                 </>
               ))}
-            {(isSecretary || isAdmin || isDoctor) && (
-              <SfsSyncButton patientId={patient.id} />
-            )}
+            {isDoctor && <SfsSyncButton patientId={patient.id} />}
           </div>
         }
       />

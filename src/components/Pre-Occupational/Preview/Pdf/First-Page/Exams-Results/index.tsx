@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 import { ExamResults } from "@/common/helpers/examsResults.maps";
+import { pdfColors } from "../../shared";
+import { getVisibleExamResultRows } from "../../../exam-results-visibility";
 
 interface ExamResultsPdfProps {
   examResults: ExamResults;
@@ -8,89 +10,82 @@ interface ExamResultsPdfProps {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8,
+    borderWidth: 1,
+    borderColor: pdfColors.line,
+    borderRadius: 8,
+    overflow: "hidden",
   },
-  headerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  headerBox: {
-    position: "relative",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  header: {
+    backgroundColor: pdfColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: pdfColors.line,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   headerText: {
-    fontSize: 12,
+    fontSize: 9.4,
     fontWeight: "bold",
-    textAlign: "center",
+    color: pdfColors.accentText,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
-  examContainer: {
-    marginBottom: 8,
+  body: {
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    gap: 4,
   },
-  examTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
+  row: {
+    flexDirection: "row",
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef2f7",
+    paddingBottom: 3,
   },
-  examResult: {
-    fontSize: 10,
-    marginLeft: 16,
+  rowLast: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+  },
+  label: {
+    width: 122,
+    fontSize: 6.9,
+    color: pdfColors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+  },
+  value: {
+    flex: 1,
+    fontSize: 8,
+    color: pdfColors.ink,
+    lineHeight: 1.22,
+    flexShrink: 1,
   },
 });
 
 const ExamResultsPdf: React.FC<ExamResultsPdfProps> = ({ examResults }) => {
+  const rows = getVisibleExamResultRows(examResults);
+
+  // Regla de visibilidad: si no hay resultados cargados, la seccion no aparece.
+  if (rows.length === 0) return null;
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <View style={styles.headerBox}>
-          <Text style={styles.headerText}>Resultados del Examen</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Resultados del examen</Text>
       </View>
-
-      <View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>CLÍNICO</Text>
-          <Text style={styles.examResult}>
-            {examResults?.clinico || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>AUDIOMETRÍA</Text>
-          <Text style={styles.examResult}>
-            {examResults?.audiometria || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>PSICOTECNICO</Text>
-          <Text style={styles.examResult}>
-            {examResults?.psicotecnico || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>RX TÓRAX FRENTE</Text>
-          <Text style={styles.examResult}>
-            {examResults?.["rx-torax"] || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>ELECTROCARDIOGRAMA</Text>
-          <Text style={styles.examResult}>
-            {examResults?.["electrocardiograma-result"] || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>LABORATORIO BÁSICO LEY (RUTINA)</Text>
-          <Text style={styles.examResult}>
-            {examResults?.laboratorio || "No definido"}
-          </Text>
-        </View>
-        <View style={styles.examContainer}>
-          <Text style={styles.examTitle}>ELECTROENCEFALOGRAMA</Text>
-          <Text style={styles.examResult}>
-            {examResults?.electroencefalograma || "No definido"}
-          </Text>
-        </View>
+      <View style={styles.body}>
+        {rows.map((row, index) => (
+          <View
+            key={row.valueKey}
+            style={
+              index === rows.length - 1
+                ? [styles.row, styles.rowLast]
+                : styles.row
+            }
+          >
+            <Text style={styles.label}>{row.label}</Text>
+            <Text style={styles.value}>{row.value}</Text>
+          </View>
+        ))}
       </View>
     </View>
   );

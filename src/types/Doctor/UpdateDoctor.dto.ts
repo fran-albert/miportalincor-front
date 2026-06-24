@@ -23,6 +23,7 @@ export interface UpdateDoctorDto {
 
   // Doctor-specific fields
   matricula?: string;
+  stampText?: string;
   firma?: string; // base64 image
   sello?: string; // base64 image
   specialities?: Array<{ id: number; name: string }>;

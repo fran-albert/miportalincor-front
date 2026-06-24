@@ -1,6 +1,5 @@
 // src/components/BucodentalHtml.tsx
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { pdfColors } from "../../../Pdf/shared";
 
 export interface Bucodental {
   sinAlteraciones?: boolean;
@@ -24,38 +23,75 @@ export default function BucodentalHtml({ data }: Props) {
   if (!hasData) return null;
 
   return (
-    <div className="space-y-4 mt-6">
-      <h4 className="font-bold text-base text-greenPrimary">Examen Bucodental</h4>
+    <div
+      className="mb-3 overflow-hidden rounded-[8px] border"
+      style={{ borderColor: pdfColors.line }}
+    >
+      <div
+        className="border-b px-3 py-2"
+        style={{
+          backgroundColor: pdfColors.surface,
+          borderBottomColor: pdfColors.line,
+        }}
+      >
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.08em]"
+          style={{ color: pdfColors.accentText }}
+        >
+          Examen bucodental
+        </p>
+      </div>
 
-      <div className="flex flex-wrap gap-6 text-black">
-        {data.sinAlteraciones !== undefined && (
-          <div className="flex items-center space-x-2">
-            <Checkbox id="buc-sin" checked={data.sinAlteraciones === true} disabled />
-            <Label htmlFor="buc-sin">Sin alteraciones</Label>
-          </div>
-        )}
+      <div className="space-y-3 px-3 py-[10px]">
+        <div className="grid grid-cols-2 gap-[8px]">
+          {[
+            data.sinAlteraciones !== undefined
+              ? { label: "Sin alteraciones", value: data.sinAlteraciones }
+              : null,
+            data.caries !== undefined
+              ? { label: "Caries", value: data.caries }
+              : null,
+            data.faltanPiezas !== undefined
+              ? { label: "Faltan piezas", value: data.faltanPiezas }
+              : null,
+          ]
+            .filter(Boolean)
+            .map((item) => (
+              <div
+                key={item!.label}
+                className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+                style={{ borderColor: pdfColors.line }}
+              >
+                <p
+                  className="mb-1 text-[8px] uppercase tracking-[0.08em]"
+                  style={{ color: pdfColors.muted }}
+                >
+                  {item!.label}
+                </p>
+                <p className="text-[10px] font-semibold text-slate-900">
+                  {item!.value ? "Sí" : "No"}
+                </p>
+              </div>
+            ))}
+        </div>
 
-        {data.caries !== undefined && (
-          <div className="flex items-center space-x-2">
-            <Checkbox id="buc-caries" checked={data.caries === true} disabled />
-            <Label htmlFor="buc-caries">Caries</Label>
-          </div>
-        )}
-
-        {data.faltanPiezas !== undefined && (
-          <div className="flex items-center space-x-2">
-            <Checkbox id="buc-faltan" checked={data.faltanPiezas === true} disabled />
-            <Label htmlFor="buc-faltan">Faltan piezas</Label>
+        {data.observaciones?.trim() && (
+          <div className="space-y-1">
+            <p
+              className="text-[8px] uppercase tracking-[0.08em]"
+              style={{ color: pdfColors.muted }}
+            >
+              Observaciones
+            </p>
+            <div
+              className="rounded-[6px] border bg-white px-[10px] py-[8px]"
+              style={{ borderColor: pdfColors.line }}
+            >
+              <p className="text-[10px] text-slate-900">{data.observaciones}</p>
+            </div>
           </div>
         )}
       </div>
-
-      {data.observaciones?.trim() && (
-        <div>
-          <Label className="mb-1">Observaciones:</Label>
-          <p className="text-black">{data.observaciones}</p>
-        </div>
-      )}
     </div>
   );
 }

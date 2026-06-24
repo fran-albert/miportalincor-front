@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
+import type { ReactNode } from "react";
 import { RootState, AppDispatch } from "@/store/store";
 import {
   Circulatorio,
@@ -17,7 +18,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { DataValue } from "@/types/Data-Value/Data-Value";
 import AspectoGeneralCheckboxes from "./AspectoGeneralCheckbox";
 import { VisualAcuityCard } from "./Visual";
 import { OsteoarticularSection } from "./OsteoArticularSection";
@@ -30,25 +30,49 @@ import { ToraxSection } from "./ToraxSection";
 import { Bucodental, BucodentalSection } from "./BucodentalSection";
 import { CabezaCuello, CabezaCuelloSection } from "./CabellaCuelloSection";
 import { PielSection, Piel } from "./PielSection";
-import { useEffect, useRef } from "react";
-import { mapMedicalEvaluation } from "@/common/helpers/maps";
+import { ClinicalBlock } from "./FormPrimitives";
 
 interface Props {
   isEditing: boolean;
-  dataValues?: DataValue[];
+  standalone?: boolean;
+  collaboratorGender?: string;
+}
+
+interface EvaluationSectionProps {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}
+
+function EvaluationSection({
+  title,
+  description,
+  children,
+}: EvaluationSectionProps) {
+  return (
+    <section className="space-y-3 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0">
+      <div className="space-y-1">
+        <h4 className="text-sm font-semibold uppercase tracking-[0.08em] text-greenPrimary">
+          {title}
+        </h4>
+        {description ? (
+          <p className="text-xs leading-5 text-slate-500">{description}</p>
+        ) : null}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
 }
 
 export default function MedicalEvaluationAccordion({
   isEditing,
-  dataValues,
+  standalone = false,
+  collaboratorGender,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const medicalEvaluation = useSelector(
     (state: RootState) => state.preOccupational.formData.medicalEvaluation
   );
-
-  // Ref para evitar que el useEffect se ejecute múltiples veces con los mismos datos
-  const dataValuesLoadedRef = useRef<string | null>(null);
 
   // Función para calcular el IMC a partir de la talla y el peso
   const computeImc = () => {
@@ -61,24 +85,6 @@ export default function MedicalEvaluationAccordion({
     }
     return "";
   };
-
-  useEffect(() => {
-    if (dataValues && dataValues.length > 0) {
-      // Crear un hash simple de los dataValues para comparar si realmente cambiaron
-      const dataHash = dataValues.map(dv => `${dv.id}-${dv.value}`).join("|");
-
-      // Solo cargar si los datos son diferentes a los ya cargados
-      if (dataValuesLoadedRef.current !== dataHash) {
-        dataValuesLoadedRef.current = dataHash;
-        const me = mapMedicalEvaluation(dataValues);
-        dispatch(
-          setFormData({
-            medicalEvaluation: me,
-          })
-        );
-      }
-    }
-  }, [dataValues, dispatch]);
 
   // Actualizar "aspecto general"
   const handleAspectoGeneralChange = (value: string) => {
@@ -102,24 +108,47 @@ export default function MedicalEvaluationAccordion({
     field: keyof Circulatorio,
     value: boolean | string | undefined
   ) => {
+    const nextCirculatorio = {
+      ...circulatorio,
+      [field]: value,
+    };
+    const nextExam =
+      field === "frecuenciaCardiaca"
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaCardiaca: value == null ? "" : String(value),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          circulatorio: {
-            ...circulatorio,
-            [field]: value,
-          },
+          examenClinico: nextExam,
+          circulatorio: nextCirculatorio,
         },
       })
     );
   };
   const handleCirculatorioBatchChange = (updates: Partial<Circulatorio>) => {
+    const nextCirculatorio = { ...circulatorio, ...updates };
+    const nextExam =
+      updates.frecuenciaCardiaca !== undefined
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaCardiaca:
+              updates.frecuenciaCardiaca == null
+                ? ""
+                : String(updates.frecuenciaCardiaca),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          circulatorio: { ...circulatorio, ...updates },
+          examenClinico: nextExam,
+          circulatorio: nextCirculatorio,
         },
       })
     );
@@ -139,6 +168,16 @@ export default function MedicalEvaluationAccordion({
       })
     );
   };
+  const handleToraxBatchChange = (updates: Partial<Torax>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          torax: { ...toraxData, ...updates },
+        },
+      })
+    );
+  };
 
   const resp: Respiratorio = medicalEvaluation.respiratorio ?? {
     sinAlteraciones: undefined,
@@ -147,21 +186,44 @@ export default function MedicalEvaluationAccordion({
     field: keyof Respiratorio,
     value: boolean | string | undefined
   ) => {
+    const nextResp = { ...resp, [field]: value };
+    const nextExam =
+      field === "frecuenciaRespiratoria"
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaRespiratoria: value == null ? "" : String(value),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          respiratorio: { ...resp, [field]: value },
+          examenClinico: nextExam,
+          respiratorio: nextResp,
         },
       })
     );
   };
   const handleRespBatchChange = (updates: Partial<Respiratorio>) => {
+    const nextResp = { ...resp, ...updates };
+    const nextExam =
+      updates.frecuenciaRespiratoria !== undefined
+        ? {
+            ...medicalEvaluation.examenClinico,
+            frecuenciaRespiratoria:
+              updates.frecuenciaRespiratoria == null
+                ? ""
+                : String(updates.frecuenciaRespiratoria),
+          }
+        : medicalEvaluation.examenClinico;
+
     dispatch(
       setFormData({
         medicalEvaluation: {
           ...medicalEvaluation,
-          respiratorio: { ...resp, ...updates },
+          examenClinico: nextExam,
+          respiratorio: nextResp,
         },
       })
     );
@@ -186,6 +248,16 @@ export default function MedicalEvaluationAccordion({
             ...osteo,
             [field]: value,
           },
+        },
+      })
+    );
+  };
+  const handleOsteoBatchChange = (updates: Partial<Osteoarticular>) => {
+    dispatch(
+      setFormData({
+        medicalEvaluation: {
+          ...medicalEvaluation,
+          osteoarticular: { ...osteo, ...updates },
         },
       })
     );
@@ -258,6 +330,14 @@ export default function MedicalEvaluationAccordion({
     value: string
   ) => {
     const updatedExam = { ...medicalEvaluation.examenClinico, [field]: value };
+    const updatedResp =
+      field === "frecuenciaRespiratoria"
+        ? { ...resp, frecuenciaRespiratoria: value }
+        : resp;
+    const updatedCirculatorio =
+      field === "frecuenciaCardiaca"
+        ? { ...circulatorio, frecuenciaCardiaca: value }
+        : circulatorio;
 
     if (field === "talla" || field === "peso") {
       const heightInCm = parseFloat(updatedExam.talla);
@@ -275,6 +355,8 @@ export default function MedicalEvaluationAccordion({
         medicalEvaluation: {
           ...medicalEvaluation,
           examenClinico: updatedExam,
+          respiratorio: updatedResp,
+          circulatorio: updatedCirculatorio,
         },
       })
     );
@@ -287,7 +369,7 @@ export default function MedicalEvaluationAccordion({
     right: medicalEvaluation.agudezaCc?.right ?? "",
     left: medicalEvaluation.agudezaCc?.left ?? "",
   };
-  const chromatic = medicalEvaluation.visionCromatica ?? "normal";
+  const chromatic = medicalEvaluation.visionCromatica;
   const notes = medicalEvaluation.notasVision ?? "";
 
   const handleChromaticChange = (val: "normal" | "anormal") => {
@@ -445,148 +527,327 @@ const handleNeuChange = (
     );
   };
 
-  return (
-    <AccordionItem value="medical-evaluation" className="border rounded-lg">
-      <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
-        Evaluación Médica
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4">
-        <div className="space-y-6">
-          {/* Aspecto general */}
-          <AspectoGeneralCheckboxes
-            isEditing={isEditing}
-            medicalEvaluation={medicalEvaluation}
-            handleAspectoGeneralChange={handleAspectoGeneralChange}
-          />
-          {/* Examen Clínico */}
-          <div className="space-y-4">
-            <h4 className="font-bold text-base text-greenPrimary">
-              Examen Clínico
-            </h4>
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Talla */}
+  const content = (
+    <div className="space-y-6">
+      <EvaluationSection
+        title="Examen clínico"
+        description="Aspecto general, mediciones y signos vitales principales."
+      >
+        <div className="grid gap-4">
+          <ClinicalBlock
+            title="Aspecto general"
+            description="Elegí una valoración general rápida del colaborador."
+          >
+            <AspectoGeneralCheckboxes
+              isEditing={isEditing}
+              medicalEvaluation={medicalEvaluation}
+              handleAspectoGeneralChange={handleAspectoGeneralChange}
+            />
+          </ClinicalBlock>
+          <ClinicalBlock
+            title="Mediciones clínicas"
+            description="Cargá las medidas básicas que después también se reflejan en el informe."
+          >
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="talla">Talla</Label>
-                {isEditing ? (
+                <Label htmlFor="talla" className="text-sm font-medium text-slate-700">
+                  Talla
+                </Label>
+                <div className="flex items-center gap-2">
                   <Input
                     id="talla"
                     value={medicalEvaluation.examenClinico.talla || ""}
                     onChange={(e) =>
                       handleExamenClinicoChange("talla", e.target.value)
                     }
+                    disabled={!isEditing}
+                    className="bg-white"
                   />
-                ) : (
-                  <Input
-                    id="talla"
-                    value={medicalEvaluation.examenClinico.talla || ""}
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
+                  <span className="text-sm text-slate-500">cm</span>
+                </div>
               </div>
-              {/* Peso */}
               <div className="space-y-2">
-                <Label htmlFor="peso">Peso</Label>
-                {isEditing ? (
+                <Label htmlFor="peso" className="text-sm font-medium text-slate-700">
+                  Peso
+                </Label>
+                <div className="flex items-center gap-2">
                   <Input
                     id="peso"
                     value={medicalEvaluation.examenClinico.peso || ""}
                     onChange={(e) =>
                       handleExamenClinicoChange("peso", e.target.value)
                     }
+                    disabled={!isEditing}
+                    className="bg-white"
                   />
-                ) : (
-                  <Input
-                    id="peso"
-                    value={medicalEvaluation.examenClinico.peso || ""}
-                    disabled
-                    className="disabled:opacity-50"
-                  />
-                )}
+                  <span className="text-sm text-slate-500">kg</span>
+                </div>
               </div>
-              {/* IMC calculado */}
               <div className="space-y-2">
-                <Label htmlFor="imc">IMC</Label>
-                <div className="p-2 border rounded bg-gray-50" id="imc">
+                <Label htmlFor="imc" className="text-sm font-medium text-slate-700">
+                  IMC
+                </Label>
+                <div
+                  className="rounded-md border border-greenPrimary/12 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                  id="imc"
+                >
                   {computeImc()}
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="perimetro-abdominal"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Perímetro abdominal
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="perimetro-abdominal"
+                    value={
+                      medicalEvaluation.examenClinico.perimetroAbdominal || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "perimetroAbdominal",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className="bg-white"
+                  />
+                  <span className="text-sm text-slate-500">cm</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="frecuencia-cardiaca-clinica"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Frecuencia cardíaca
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="frecuencia-cardiaca-clinica"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaCardiaca || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "frecuenciaCardiaca",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className="bg-white"
+                  />
+                  <span className="text-sm text-slate-500">x min</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="frecuencia-respiratoria-clinica"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Frecuencia respiratoria
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="frecuencia-respiratoria-clinica"
+                    value={
+                      medicalEvaluation.examenClinico.frecuenciaRespiratoria ||
+                      ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "frecuenciaRespiratoria",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className="bg-white"
+                  />
+                  <span className="text-sm text-slate-500">x min</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="presion-sistolica"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Presión sistólica
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="presion-sistolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionSistolica || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "presionSistolica",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className="bg-white"
+                  />
+                  <span className="text-sm text-slate-500">mmHg</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="presion-diastolica"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Presión diastólica
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="presion-diastolica"
+                    value={
+                      medicalEvaluation.examenClinico.presionDiastolica || ""
+                    }
+                    onChange={(e) =>
+                      handleExamenClinicoChange(
+                        "presionDiastolica",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className="bg-white"
+                  />
+                  <span className="text-sm text-slate-500">mmHg</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <VisualAcuityCard
-            withoutCorrection={withoutCorr}
-            withCorrection={withCorr}
-            chromaticVision={chromatic}
-            isEditing={isEditing}
-            onScChange={handleScChange} 
-            onCcChange={handleCcChange} 
-            onChromaticVisionChange={handleChromaticChange}
-            notes={notes}
-            onNotesChange={handleNotesChange}
-          />
-          <div className="space-y-4">
-            <PielSection
-              isEditing={isEditing}
-              data={pielData}
-              onChange={handlePielChange}
-            />
-          </div>
-          <div className="space-y-6">
-            <CabezaCuelloSection
-              isEditing={isEditing}
-              data={cabezaData}
-              onChange={handleCabezaChange}
-              onBatchChange={handleCabezaBatchChange}
-            />
-            <BucodentalSection
-              isEditing={isEditing}
-              data={bucodental}
-              onChange={handleBucodentalChange}
-              onBatchChange={handleBucodentalBatchChange}
-            />
-            <ToraxSection
-              isEditing={isEditing}
-              data={toraxData}
-              onChange={handleToraxChange}
-            />
-          </div>
-          <RespiratorioSection
-            isEditing={isEditing}
-            data={resp}
-            onChange={handleRespChange}
-            onBatchChange={handleRespBatchChange}
-          />
-          <CirculatorioSection
-            isEditing={isEditing}
-            data={circulatorio}
-            onChange={handleCirculatorioChange}
-            onBatchChange={handleCirculatorioBatchChange}
-          />
-          <NeurologicoSection
-            isEditing={isEditing}
-            data={neu}
-            onChange={handleNeuChange}
-            onBatchChange={handleNeuBatchChange}
-          />
-          <GastrointestinalSection
-            isEditing={isEditing}
-            data={gi}
-            onChange={handleGIChange}
-            onBatchChange={handleGIBatchChange}
-          />
-          <GenitourinarioSection
-            isEditing={isEditing}
-            data={genito}
-            onChange={handleGenitoChange}
-            onBatchChange={handleGenitoBatchChange}
-          />
-          <OsteoarticularSection
-            isEditing={isEditing}
-            data={osteo}
-            onChange={handleOsteoChange}
-          />
+          </ClinicalBlock>
         </div>
-      </AccordionContent>
+      </EvaluationSection>
+
+      <EvaluationSection title="Evaluación visual">
+        <VisualAcuityCard
+          withoutCorrection={withoutCorr}
+          withCorrection={withCorr}
+          chromaticVision={chromatic}
+          isEditing={isEditing}
+          onScChange={handleScChange}
+          onCcChange={handleCcChange}
+          onChromaticVisionChange={handleChromaticChange}
+          notes={notes}
+          onNotesChange={handleNotesChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Piel">
+        <PielSection
+          isEditing={isEditing}
+          data={pielData}
+          onChange={handlePielChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Cabeza y cuello">
+        <CabezaCuelloSection
+          isEditing={isEditing}
+          data={cabezaData}
+          onChange={handleCabezaChange}
+          onBatchChange={handleCabezaBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Bucodental">
+        <BucodentalSection
+          isEditing={isEditing}
+          data={bucodental}
+          onChange={handleBucodentalChange}
+          onBatchChange={handleBucodentalBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Tórax">
+        <ToraxSection
+          isEditing={isEditing}
+          data={toraxData}
+          onChange={handleToraxChange}
+          onBatchChange={handleToraxBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Aparato respiratorio">
+        <RespiratorioSection
+          isEditing={isEditing}
+          data={resp}
+          onChange={handleRespChange}
+          onBatchChange={handleRespBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Aparato circulatorio">
+        <CirculatorioSection
+          isEditing={isEditing}
+          data={circulatorio}
+          onChange={handleCirculatorioChange}
+          onBatchChange={handleCirculatorioBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Aparato neurológico">
+        <NeurologicoSection
+          isEditing={isEditing}
+          data={neu}
+          onChange={handleNeuChange}
+          onBatchChange={handleNeuBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Aparato gastrointestinal">
+        <GastrointestinalSection
+          isEditing={isEditing}
+          data={gi}
+          onChange={handleGIChange}
+          onBatchChange={handleGIBatchChange}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Aparato genitourinario">
+        <GenitourinarioSection
+          isEditing={isEditing}
+          data={genito}
+          onChange={handleGenitoChange}
+          onBatchChange={handleGenitoBatchChange}
+          collaboratorGender={collaboratorGender}
+        />
+      </EvaluationSection>
+
+      <EvaluationSection title="Sistema osteoarticular">
+        <OsteoarticularSection
+          isEditing={isEditing}
+          data={osteo}
+          onChange={handleOsteoChange}
+          onBatchChange={handleOsteoBatchChange}
+        />
+      </EvaluationSection>
+    </div>
+  );
+
+  if (standalone) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <AccordionItem
+      value="medical-evaluation"
+      className="border-slate-200 bg-white last:border-b-0"
+    >
+      <AccordionTrigger className="px-4 text-base font-semibold text-greenPrimary">
+        Evaluación médica
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4">{content}</AccordionContent>
     </AccordionItem>
   );
 }
