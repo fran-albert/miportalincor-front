@@ -76,7 +76,6 @@ function DoctorProfileComponent({
       email: doctor?.email || "",
       userName: doctor?.dni ? formatDni(String(doctor.dni)) : "",
       matricula: doctor?.matricula || "",
-      stampText: doctor?.stampText || "",
       birthDate: doctor?.birthDate
         ? typeof doctor.birthDate === "string" ||
           doctor.birthDate instanceof Date
@@ -127,7 +126,6 @@ function DoctorProfileComponent({
       setValue("email", doctor.email);
       setValue("userName", formatDni(String(doctor.dni)));
       setValue("matricula", doctor.matricula || "");
-      setValue("stampText", doctor.stampText || "");
       if (doctor?.birthDate) {
         setStartDate(new Date(doctor.birthDate.toString()));
         setValue("birthDate", doctor.birthDate.toString());
@@ -193,7 +191,6 @@ function DoctorProfileComponent({
 
       // Datos profesionales
       matricula: formData.matricula,
-      stampText: formData.stampText || "",
       specialities: specialitiesToSend,
       healthInsurances: healthInsurancesToSend,
 
@@ -549,28 +546,6 @@ function DoctorProfileComponent({
                             disabled={!isEditing}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={control}
-                    name="stampText"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Texto profesional impreso</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value ?? ""}
-                            placeholder={"Dra. Nombre Apellido\nEspecialidad\nM.P. 12345"}
-                            disabled={!isEditing}
-                            rows={4}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground">
-                          Se usa debajo de la firma en informes y documentos.
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

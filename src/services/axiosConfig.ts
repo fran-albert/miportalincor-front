@@ -40,6 +40,14 @@ const apiIncorHC = axios.create({
   },
 });
 
+const apiConversations = axios.create({
+  baseURL: environment.API_CONVERSATIONS_URL,
+  timeout: currentConfig.apiTimeout,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -80,15 +88,37 @@ const getAxiosInstance = (config: InternalAxiosRequestConfig) => {
   const url = config.baseURL || config.url || '';
   if (url.includes(environment.API_INCOR_LABORAL_URL)) return apiLaboral;
   if (url.includes(environment.API_TURNOS_URL)) return apiTurnos;
+  if (url.includes(environment.API_CONVERSATIONS_URL)) return apiConversations;
   return apiIncorHC;
 };
 
 const addAuthToken = (config: InternalAxiosRequestConfig) => {
+  stripJsonContentTypeForFormData(config);
   const token = authStorage.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+};
+
+const stripJsonContentTypeForFormData = (config: InternalAxiosRequestConfig) => {
+  if (typeof FormData === "undefined" || !(config.data instanceof FormData)) {
+    return;
+  }
+
+  const headers = config.headers as InternalAxiosRequestConfig["headers"] & {
+    delete?: (name: string) => boolean;
+  };
+
+  if (typeof headers.delete === "function") {
+    headers.delete("Content-Type");
+    headers.delete("content-type");
+    return;
+  }
+
+  const mutableHeaders = headers as unknown as Record<string, unknown>;
+  delete mutableHeaders["Content-Type"];
+  delete mutableHeaders["content-type"];
 };
 
 const handleAuthError = async (error: AxiosError) => {
@@ -212,10 +242,12 @@ const handleAuthError = async (error: AxiosError) => {
 apiLaboral.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiIncorHC.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 apiTurnos.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+apiConversations.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 
 // Response interceptors for auto-refresh
 apiLaboral.interceptors.response.use((response) => response, handleAuthError);
 apiIncorHC.interceptors.response.use((response) => response, handleAuthError);
 apiTurnos.interceptors.response.use((response) => response, handleAuthError);
+apiConversations.interceptors.response.use((response) => response, handleAuthError);
 
-export { apiLaboral, apiIncorHC, apiTurnos };
+export { apiLaboral, apiIncorHC, apiTurnos, apiConversations };

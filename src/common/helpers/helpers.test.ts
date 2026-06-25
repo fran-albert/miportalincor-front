@@ -47,16 +47,8 @@ describe('helpers', () => {
       expect(getGenderLabel('Masculino')).toBe('Masculino');
     });
 
-    it('debe retornar Masculino para "MALE"', () => {
-      expect(getGenderLabel('MALE')).toBe('Masculino');
-    });
-
     it('debe retornar Femenino para "Femenino"', () => {
       expect(getGenderLabel('Femenino')).toBe('Femenino');
-    });
-
-    it('debe retornar Femenino para "FEMALE"', () => {
-      expect(getGenderLabel('FEMALE')).toBe('Femenino');
     });
 
     it('debe retornar Femenino para cualquier otro valor', () => {

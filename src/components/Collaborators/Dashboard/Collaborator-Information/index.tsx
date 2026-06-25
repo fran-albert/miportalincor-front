@@ -11,11 +11,7 @@ import {
   Building2,
   Edit2,
 } from "lucide-react";
-import {
-  calculateAgeCollaborator,
-  formatDni,
-  getGenderLabel,
-} from "@/common/helpers/helpers";
+import { calculateAgeCollaborator, formatDni } from "@/common/helpers/helpers";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -76,7 +72,7 @@ const CollaboratorInformation: React.FC<Props> = ({ collaborator }) => {
                   {/* Badges de Género, Edad y Puesto */}
                   <div className="flex gap-2 flex-wrap">
                     <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">
-                      {getGenderLabel(collaborator.gender)}
+                      {collaborator.gender}
                     </Badge>
                     {collaborator.birthDate && (
                       <Badge className="bg-greenPrimary/10 text-greenPrimary border-greenPrimary/20">

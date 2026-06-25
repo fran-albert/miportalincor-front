@@ -47,7 +47,6 @@ import { ImageUploadBox } from "@/components/Doctors/Signature-Boxs";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { PageHeader } from "@/components/PageHeader";
 import { motion } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
 type FormValues = z.infer<typeof UpdateDoctorProfileSchema>;
 export default function ProfileDoctorCardComponent({
   data,
@@ -94,7 +93,6 @@ export default function ProfileDoctorCardComponent({
       setValue("phoneNumber2", data.phoneNumber2 || "");
       setValue("bloodType", String(data.bloodType) || "");
       setValue("matricula", data.matricula || "");
-      setValue("stampText", data.stampText || "");
       setValue("rhFactor", String(data.rhFactor) || "");
       setValue("gender", String(data.gender) || "");
       setValue("maritalStatus", String(data.maritalStatus) || "");
@@ -145,7 +143,6 @@ export default function ProfileDoctorCardComponent({
 
       // Datos profesionales
       matricula: formValues.matricula,
-      stampText: formValues.stampText || "",
       specialities: specialitiesToSend,
       healthInsurances: healthInsurancesToSend,
 
@@ -481,28 +478,6 @@ export default function ProfileDoctorCardComponent({
                             disabled={!isEditing}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={control}
-                    name="stampText"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Texto profesional impreso</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value ?? ""}
-                            disabled={!isEditing}
-                            rows={4}
-                            placeholder={"Dra. Nombre Apellido\nEspecialidad\nM.P. 12345"}
-                          />
-                        </FormControl>
-                        <p className="text-sm text-muted-foreground">
-                          Se usa debajo de la firma en informes y documentos.
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

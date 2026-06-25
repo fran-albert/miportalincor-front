@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 const ALREADY_REGISTERED_QUEUE_MESSAGE =
   'Esta fila no requiere alta administrativa adicional.';
 
+// Query keys
 export const queueKeys = {
   all: ['queue'] as const,
   waiting: () => [...queueKeys.all, 'waiting'] as const,
@@ -67,14 +68,16 @@ const invalidateMedicalFlowQueries = (queryClient: QueryClient) => {
   queryClient.invalidateQueries({ queryKey: ['doctorWaitingQueue'] });
 };
 
+// Hook para obtener cola de espera
 export const useWaitingQueue = () => {
   return useQuery({
     queryKey: queueKeys.waiting(),
     queryFn: getWaitingQueue,
-    refetchInterval: 10000,
+    refetchInterval: 10000, // Refrescar cada 10 segundos
   });
 };
 
+// Hook para obtener pacientes activos (llamados/atendiendo)
 export const useActiveQueue = () => {
   return useQuery({
     queryKey: queueKeys.active(),
@@ -83,14 +86,16 @@ export const useActiveQueue = () => {
   });
 };
 
+// Hook para estadisticas
 export const useQueueStats = () => {
   return useQuery({
     queryKey: queueKeys.stats(),
     queryFn: getQueueStats,
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Refrescar cada 30 segundos
   });
 };
 
+// Hook para llamar al siguiente paciente
 export const useCallNextPatient = () => {
   const queryClient = useQueryClient();
 
@@ -112,6 +117,7 @@ export const useCallNextPatient = () => {
   });
 };
 
+// Hook para llamar a un paciente especifico
 export const useCallSpecificPatient = () => {
   const queryClient = useQueryClient();
 
@@ -133,6 +139,7 @@ export const useCallSpecificPatient = () => {
   });
 };
 
+// Hook para re-llamar paciente
 export const useRecallPatient = () => {
   const queryClient = useQueryClient();
 
@@ -201,6 +208,7 @@ export const useMarkAsAttending = () => {
         upsertActiveQueueEntry(current, data),
       );
       toast.success(`Atendiendo a ${data.patientName}`);
+      // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
     onError: (error: Error) => {
@@ -209,6 +217,7 @@ export const useMarkAsAttending = () => {
   });
 };
 
+// Hook para marcar como completado
 export const useMarkAsCompleted = () => {
   const queryClient = useQueryClient();
 
@@ -219,6 +228,7 @@ export const useMarkAsCompleted = () => {
         removeQueueEntry(current, data.id),
       );
       toast.success('Gestión completada');
+      // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
     onError: (error: Error) => {
@@ -227,6 +237,7 @@ export const useMarkAsCompleted = () => {
   });
 };
 
+// Hook para marcar como no-show
 export const useMarkAsNoShow = () => {
   const queryClient = useQueryClient();
 
@@ -237,6 +248,7 @@ export const useMarkAsNoShow = () => {
         removeQueueEntry(current, data.id),
       );
       toast.warning('Paciente marcado como ausente');
+      // Refetch inmediato para actualizar la UI rápidamente
       queryClient.refetchQueries({ queryKey: queueKeys.all });
     },
     onError: (error: Error) => {

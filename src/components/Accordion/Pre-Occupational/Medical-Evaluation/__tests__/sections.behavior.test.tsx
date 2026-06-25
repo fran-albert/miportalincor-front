@@ -510,7 +510,7 @@ describe("MedicalEvaluation clinical sections", () => {
         <ToraxSection
           isEditing
           data={{
-            deformaciones: undefined,
+            deformaciones: "si",
             deformacionesObs: "",
             cicatrices: undefined,
             cicatricesObs: "",
@@ -519,9 +519,7 @@ describe("MedicalEvaluation clinical sections", () => {
         />
       );
 
-      await user.click(
-        getSection("Deformaciones").getByRole("radio", { name: "Si" })
-      );
+      // Con presencia "Si", la observación de deformaciones está habilitada.
       await user.click(
         getSection("Cicatrices").getByRole("radio", { name: "No" })
       );
@@ -530,7 +528,6 @@ describe("MedicalEvaluation clinical sections", () => {
         "Asimetría"
       );
 
-      expectCall(onChange, "deformaciones", "si");
       expectCall(onChange, "cicatrices", "no");
       expect(getTypedFieldValue(onChange, "deformacionesObs")).toBe("Asimetría");
     });

@@ -1,6 +1,6 @@
 import path from "path";
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv, normalizePath } from "vite";
+import { defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { createRequire } from "module";
 
@@ -9,8 +9,6 @@ const pdfjsDistPath = path.dirname(require.resolve("pdfjs-dist/package.json"));
 const cMapsDir = normalizePath(path.join(pdfjsDistPath, "cmaps"));
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-
   // Determinar configuración específica del entorno
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
@@ -58,40 +56,6 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       host: true,
       open: isDevelopment,
-      proxy: isDevelopment
-        ? {
-            "/proxy/hc": {
-              target: env.VITE_LOCAL_PROXY_HC_TARGET,
-              changeOrigin: true,
-              secure: true,
-              rewrite: (requestPath) =>
-                requestPath.replace(/^\/proxy\/hc/, ""),
-            },
-            "/proxy/laboral/labor-report-branding-config": {
-              target:
-                env.VITE_LOCAL_PROXY_LABORAL_BRANDING_TARGET ||
-                env.VITE_LOCAL_PROXY_LABORAL_TARGET,
-              changeOrigin: true,
-              secure: false,
-              rewrite: (requestPath) =>
-                requestPath.replace(/^\/proxy\/laboral/, "/api/v1"),
-            },
-            "/proxy/laboral": {
-              target: env.VITE_LOCAL_PROXY_LABORAL_TARGET,
-              changeOrigin: true,
-              secure: true,
-              rewrite: (requestPath) =>
-                requestPath.replace(/^\/proxy\/laboral/, "/api/v1"),
-            },
-            "/proxy/turnos": {
-              target: env.VITE_LOCAL_PROXY_TURNOS_TARGET,
-              changeOrigin: true,
-              secure: true,
-              rewrite: (requestPath) =>
-                requestPath.replace(/^\/proxy\/turnos/, "/api"),
-            },
-          }
-        : undefined,
     },
     preview: {
       port: 4173,

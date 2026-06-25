@@ -15,16 +15,11 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
   const { settings, allowOnlineBooking, isLoading } = useDoctorBookingSettings({ doctorId });
   const { updateSettings, isUpdating } = useDoctorBookingSettingsMutation();
 
-  const canSelfManage = settings?.canSelfManageSchedule ?? false;
-
   const handleToggleOnlineBooking = async (checked: boolean) => {
     try {
       await updateSettings.mutateAsync({
         doctorId,
-        dto: {
-          allowOnlineBooking: checked,
-          canSelfManageSchedule: canSelfManage,
-        }
+        dto: { allowOnlineBooking: checked }
       });
       toast({
         title: checked ? "Turnos online habilitados" : "Turnos online deshabilitados",
@@ -44,10 +39,7 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
     try {
       await updateSettings.mutateAsync({
         doctorId,
-        dto: {
-          canSelfManageSchedule: checked,
-          allowOnlineBooking: allowOnlineBooking,
-        }
+        dto: { canSelfManageSchedule: checked }
       });
       toast({
         title: checked ? "Autogestión habilitada" : "Autogestión deshabilitada",
@@ -106,7 +98,7 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
               Autogestión de Agenda
             </Label>
             <p className="text-sm text-muted-foreground">
-              {canSelfManage
+              {settings?.canSelfManageSchedule
                 ? "El médico puede gestionar sus turnos, horarios y ausencias"
                 : "Solo la secretaría/administrador puede gestionar la agenda"}
             </p>
@@ -114,7 +106,7 @@ export const BookingSettingsToggle = ({ doctorId }: BookingSettingsToggleProps) 
         </div>
         <Switch
           id="can-self-manage"
-          checked={canSelfManage}
+          checked={settings?.canSelfManageSchedule ?? false}
           onCheckedChange={handleToggleSelfManage}
           disabled={isUpdating}
         />
