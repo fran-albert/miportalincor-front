@@ -6,49 +6,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import {
   setFormData,
   OccupationalHistoryItem,
 } from "@/store/Pre-Occupational/preOccupationalSlice";
-import { Input } from "@/components/ui/input";
-import { DataValue } from "@/types/Data-Value/Data-Value";
-import { useEffect, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { RootState } from "@/store/store";
 
 interface Props {
   isEditing: boolean;
-  dataValues?: DataValue[];
+  standalone?: boolean;
 }
 
 export default function OccupationalHistoryAccordion({
   isEditing,
-  dataValues,
+  standalone = false,
 }: Props) {
   const dispatch = useDispatch<AppDispatch>();
-  const [historyItems, setHistoryItems] = useState<OccupationalHistoryItem[]>(
-    []
+  const historyItems = useSelector(
+    (state: RootState) => state.preOccupational.formData.occupationalHistory
   );
-
-  useEffect(() => {
-    if (dataValues && dataValues.length > 0) {
-      const antecedentes = dataValues.filter(
-        (item) =>
-          item.dataType.name === "Antecedentes ocupacionales" &&
-          item.dataType.category === "ANTECEDENTES"
-      );
-
-      const mappedItems = antecedentes.map((item) => ({
-        id: item.id.toString(),
-        description: String(item.value ?? ""),
-      }));
-
-      setHistoryItems(mappedItems);
-      dispatch(setFormData({ occupationalHistory: mappedItems }));
-    } else {
-      setHistoryItems([]);
-      dispatch(setFormData({ occupationalHistory: [] }));
-    }
-  }, [dataValues, dispatch]);
 
   const generateTempId = (): string => {
     return `temp-${Date.now()}`;
@@ -61,7 +40,6 @@ export default function OccupationalHistoryAccordion({
     };
 
     const updatedItems = [...historyItems, newItem];
-    setHistoryItems(updatedItems);
     dispatch(setFormData({ occupationalHistory: updatedItems }));
   };
 
@@ -69,74 +47,97 @@ export default function OccupationalHistoryAccordion({
     const updatedItems = historyItems.map((item) =>
       item.id === id ? { ...item, description: value } : item
     );
-    setHistoryItems(updatedItems);
     dispatch(setFormData({ occupationalHistory: updatedItems }));
   };
 
   const handleRemoveItem = (id: string) => {
     const filteredItems = historyItems.filter((item) => item.id !== id);
-    setHistoryItems(filteredItems);
     dispatch(setFormData({ occupationalHistory: filteredItems }));
   };
 
-  return (
-    <AccordionItem value="occupational-history" className="border rounded-lg">
-      <AccordionTrigger className="px-4 font-bold text-greenPrimary text-lg">
-        Antecedentes Ocupacionales
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isEditing}
-              onClick={handleAddNew}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo antecedente
-            </Button>
-          </div>
+  const content = (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!isEditing}
+          onClick={handleAddNew}
+          className="flex items-center gap-2 border-greenPrimary/20 bg-white/80 text-greenSecondary hover:border-greenPrimary/35 hover:bg-greenPrimary/5"
+        >
+          <Plus className="h-4 w-4" />
+          Nuevo antecedente
+        </Button>
+      </div>
 
-          {historyItems.length > 0 ? (
-            <div className="space-y-2">
-              {historyItems.map((item) => (
-                <div key={item.id} className="p-2 border rounded flex gap-2">
-                  <div className="flex-grow">
-                    {isEditing ? (
-                      <Input
-                        value={item.description}
-                        placeholder="Ingrese descripción del antecedente..."
-                        onChange={(e) => {
-                          const newValue = e.currentTarget.value;
-                          handleUpdateDescription(item.id, newValue);
-                        }}
-                      />
-                    ) : (
-                      <span>{item.description || "Sin descripción"}</span>
-                    )}
-                  </div>
-                  {isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="h-8 w-8 text-red-500"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 italic">
-              No hay antecedentes ocupacionales registrados.
-            </p>
-          )}
+      {historyItems.length > 0 ? (
+        <div className="space-y-5">
+          {historyItems.map((item, index) => (
+            <section
+              key={item.id}
+              className="space-y-3 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="text-sm font-semibold text-slate-800">
+                  Antecedente {index + 1}
+                </h4>
+                {isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="h-8 w-8 text-red-500 hover:bg-red-50"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              {isEditing ? (
+                <Textarea
+                  rows={4}
+                  value={item.description}
+                  aria-label={`Antecedente ${index + 1}`}
+                  placeholder="Describí tareas previas, exposición o dato ocupacional relevante..."
+                  onChange={(e) => {
+                    const newValue = e.currentTarget.value;
+                    handleUpdateDescription(item.id, newValue);
+                  }}
+                  className="resize-none bg-white text-slate-900"
+                />
+              ) : (
+                <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                  {item.description || "Sin descripción"}
+                </p>
+              )}
+            </section>
+          ))}
         </div>
-      </AccordionContent>
+      ) : (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-sm text-slate-500">
+          No hay antecedentes ocupacionales registrados.
+        </div>
+      )}
+    </div>
+  );
+
+  if (standalone) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <AccordionItem
+      value="occupational-history"
+      className="border-slate-200 bg-white last:border-b-0"
+    >
+      <AccordionTrigger className="px-4 text-base font-semibold text-greenPrimary">
+        Antecedentes
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pb-4">{content}</AccordionContent>
     </AccordionItem>
   );
 }

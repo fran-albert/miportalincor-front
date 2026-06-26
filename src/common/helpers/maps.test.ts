@@ -32,10 +32,10 @@ describe('mapVisual', () => {
       expect(result.agudezaCc).toEqual({ right: '', left: '' });
     });
 
-    it('debe retornar "normal" como default para visión cromática', () => {
+    it('debe retornar undefined para visión cromática sin dato', () => {
       const result = mapVisual([]);
 
-      expect(result.visionCromatica).toBe('normal');
+      expect(result.visionCromatica).toBeUndefined();
     });
 
     it('debe retornar string vacío para notas', () => {
@@ -152,14 +152,14 @@ describe('mapVisual', () => {
       expect(result.visionCromatica).toBe('normal');
     });
 
-    it('debe defaultear a "normal" si el valor es inválido', () => {
+    it('debe retornar undefined si el valor es inválido', () => {
       const dataValues: DataValue[] = [
         createDataValue('Visión Cromática', 'EXAMEN_CLINICO', 'otro_valor'),
       ];
 
       const result = mapVisual(dataValues);
 
-      expect(result.visionCromatica).toBe('normal');
+      expect(result.visionCromatica).toBeUndefined();
     });
 
     it('debe mapear observaciones a notasVision', () => {

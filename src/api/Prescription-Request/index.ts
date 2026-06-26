@@ -13,3 +13,6 @@ export * from "./upload-doctor-prescription.action";
 export * from "./get-doctor-pending-paginated.action";
 export * from "./get-doctor-history-paginated.action";
 export * from "./complete-batch.action";
+export * from "./get-operator-pending-paginated.action";
+export * from "./get-operator-history-paginated.action";
+export * from "./get-operator-pending-count.action";

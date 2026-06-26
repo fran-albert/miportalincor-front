@@ -1,7 +1,9 @@
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  BooleanChoiceField,
+  ClinicalBlock,
+  NotesField,
+} from '../FormPrimitives';
 
 export interface Bucodental {
   sinAlteraciones?: boolean;
@@ -63,52 +65,52 @@ export const BucodentalSection: React.FC<BucodentalSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <h4 className="font-bold text-base text-greenPrimary">Examen Bucodental</h4>
+      <ClinicalBlock
+        title="Examen bucodental"
+        description="Definí si el examen está sin alteraciones y marcá hallazgos específicos cuando corresponda."
+      >
+        <BooleanChoiceField
+          idPrefix="buc-sin"
+          label="Estado general"
+          value={data.sinAlteraciones}
+          disabled={!isEditing}
+          positiveLabel="Sin alteraciones"
+          negativeLabel="Con hallazgos"
+          onChange={(value) => handleSinAlteracionesChange(value === true)}
+        />
 
-      {/* Checkboxes alineados - siempre habilitados para permitir desmarcar sin alteraciones */}
-      <div className="flex flex-wrap gap-6 text-black">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="buc-sin"
-            checked={data.sinAlteraciones}
+        <div className="grid gap-3 md:grid-cols-2">
+          <BooleanChoiceField
+            idPrefix="buc-caries"
+            label="Caries"
+            value={data.caries}
             disabled={!isEditing}
-            onCheckedChange={(chk) => handleSinAlteracionesChange(chk === true)}
+            onChange={(value) => handleAlteracionChange('caries', value === true)}
           />
-          <Label htmlFor="buc-sin">Sin alteraciones</Label>
+          <BooleanChoiceField
+            idPrefix="buc-faltan"
+            label="Faltan piezas"
+            value={data.faltanPiezas}
+            disabled={!isEditing}
+            onChange={(value) =>
+              handleAlteracionChange('faltanPiezas', value === true)
+            }
+          />
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="buc-caries"
-            checked={data.caries}
-            disabled={!isEditing}
-            onCheckedChange={(chk) => handleAlteracionChange('caries', chk === true)}
-          />
-          <Label htmlFor="buc-caries">Caries</Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="buc-faltan"
-            checked={data.faltanPiezas}
-            disabled={!isEditing}
-            onCheckedChange={(chk) => handleAlteracionChange('faltanPiezas', chk === true)}
-          />
-          <Label htmlFor="buc-faltan">Faltan piezas</Label>
-        </div>
-      </div>
-
-      {/* Observaciones abajo - se deshabilita solo cuando sin alteraciones está marcado */}
-      <div className="space-y-1 text-black">
-        <Input
+        <NotesField
           id="buc-obs"
-          className="w-full"
+          label="Observaciones"
           value={data.observaciones}
           disabled={obsDisabled}
-          onChange={(e) => handleObservacionesChange(e.currentTarget.value)}
-          placeholder={data.sinAlteraciones ? "Sin observaciones (sin alteraciones)" : "Observaciones…"}
+          onChange={handleObservacionesChange}
+          placeholder={
+            data.sinAlteraciones
+              ? "Sin observaciones"
+              : "Describí los hallazgos observados"
+          }
         />
-      </div>
+      </ClinicalBlock>
     </div>
   );
 };

@@ -1,9 +1,24 @@
+import { useState } from "react";
 import { useStaffUsers } from "@/hooks/Role/useStaffUsers";
 import { StaffUsersTable } from "@/components/RoleManagement/StaffUsersTable";
 import { Helmet } from "react-helmet-async";
 
+const PAGE_SIZE = 20;
+
 const AssignRolesPage = () => {
-  const { staffUsers, isFetching, error, refetch } = useStaffUsers();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  const { staffUsers, total, isFetching, error } = useStaffUsers({
+    page,
+    limit: PAGE_SIZE,
+    search,
+  });
+
+  const handleSearchChange = (query: string) => {
+    setSearch(query);
+    setPage(1); // al buscar, volver a la primera pagina
+  };
 
   return (
     <>
@@ -19,8 +34,13 @@ const AssignRolesPage = () => {
       )}
       <StaffUsersTable
         users={staffUsers}
+        total={total}
+        page={page}
+        limit={PAGE_SIZE}
         isFetching={isFetching}
-        onRefetch={refetch}
+        search={search}
+        onSearchChange={handleSearchChange}
+        onPageChange={setPage}
       />
     </>
   );

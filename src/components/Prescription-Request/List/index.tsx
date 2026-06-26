@@ -4,7 +4,7 @@ import { FileText } from "lucide-react";
 
 interface PrescriptionRequestListProps {
   requests: PrescriptionRequest[];
-  userRole: "patient" | "doctor";
+  userRole: "patient" | "doctor" | "operator";
   onView?: (request: PrescriptionRequest) => void;
   onCancel?: (request: PrescriptionRequest) => void;
   onTake?: (request: PrescriptionRequest) => void;

@@ -40,28 +40,32 @@ export default function TestsPreview({ isForPdf = false }: TestsPreviewProps) {
     { id: "psicotecnico", label: "Psicotécnico" },
     { id: "otros", label: "Otros" },
   ];
+  const selectedTests = allTests.filter((test) =>
+    Boolean(tests?.[test.id as keyof typeof tests])
+  );
+  const hasOtrasPruebas = Boolean(otrasPruebas?.trim());
 
   return (
     <div className="border rounded-lg p-4">
       <h3 className="mb-4 font-bold text-greenPrimary text-lg">
         Pruebas realizadas
       </h3>
-      <div className="grid grid-cols-2 gap-6">
-        {allTests.map((test) => {
-          const isChecked = tests
-            ? tests[test.id as keyof typeof tests]
-            : false;
-
-          return (
+      {selectedTests.length === 0 && !hasOtrasPruebas ? (
+        <p className="text-sm text-muted-foreground">
+          No se registraron pruebas realizadas
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-6">
+          {selectedTests.map((test) => (
             <div key={test.id} className="flex items-center space-x-2">
-              <Checkbox checked={isChecked} className="w-4 h-4" />
+              <Checkbox checked className="w-4 h-4" />
               <Label>{test.label}</Label>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {otrasPruebas && otrasPruebas.trim() !== "" && (
+      {hasOtrasPruebas && (
         <div className="space-y-2 mt-4">
           <Label>Otras pruebas realizadas</Label>
           {isForPdf ? (

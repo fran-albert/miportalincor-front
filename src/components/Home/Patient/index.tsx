@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import {
+  Activity,
   ArrowRight,
   Calendar,
   CalendarCheck,
@@ -15,7 +16,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { environment } from "@/config/environment";
 
 export default function PatientHomePage({ name }: { name: string }) {
   const [showSurveyBanner, setShowSurveyBanner] = useState(false);
@@ -83,18 +83,22 @@ export default function PatientHomePage({ name }: { name: string }) {
       gradient: "from-orange-500 to-orange-600",
       comingSoon: false,
     },
-    ...(environment.PATIENT_VACCINATION_ENABLED
-      ? [
-          {
-            title: "Mis Vacunas",
-            description: "Consulta tu carnet y vacunas pendientes",
-            icon: Syringe,
-            href: "/mis-vacunas",
-            gradient: "from-sky-500 to-cyan-600",
-            comingSoon: false,
-          },
-        ]
-      : []),
+    {
+      title: "Mis Vacunas",
+      description: "Consulta tu carnet y vacunas pendientes",
+      icon: Syringe,
+      href: "/mis-vacunas",
+      gradient: "from-sky-500 to-cyan-600",
+      comingSoon: false,
+    },
+    {
+      title: "Mis Programas",
+      description: "Consultá los programas de salud en los que estás inscripto",
+      icon: Activity,
+      href: "/mis-programas",
+      gradient: "from-rose-500 to-rose-600",
+      comingSoon: false,
+    },
   ];
 
   return (

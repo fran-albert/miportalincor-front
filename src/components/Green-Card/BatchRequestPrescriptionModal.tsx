@@ -17,13 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Loader2,
-  FileText,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Loader2, FileText, CheckCircle, XCircle } from "lucide-react";
 import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { useGreenCardMutations } from "@/hooks/Green-Card/useGreenCardMutation";
 import { useAvailableDoctorsForPrescriptions } from "@/hooks/Doctor-Settings/useDoctorSettings";
@@ -56,7 +50,6 @@ export function BatchRequestPrescriptionModal({
 
   const [selectedDoctorUserId, setSelectedDoctorUserId] = useState<string>("");
   const [patientMessage, setPatientMessage] = useState<string>("");
-  const [isDoctorAutoSelected, setIsDoctorAutoSelected] = useState(false);
 
   const { sendableItems, skippedItems } = useMemo(() => {
     const selectedItems = greenCard.items.filter((item) =>
@@ -97,7 +90,6 @@ export function BatchRequestPrescriptionModal({
     if (!isOpen) {
       setSelectedDoctorUserId("");
       setPatientMessage("");
-      setIsDoctorAutoSelected(false);
     }
   }, [isOpen]);
 
@@ -119,7 +111,6 @@ export function BatchRequestPrescriptionModal({
     }
 
     setSelectedDoctorUserId(uniqueDoctorUserIds[0]);
-    setIsDoctorAutoSelected(true);
   }, [
     isOpen,
     availableDoctors,
@@ -127,10 +118,6 @@ export function BatchRequestPrescriptionModal({
     sendableItems,
     selectedDoctorUserId,
   ]);
-
-  const selectedDoctor = availableDoctors?.find(
-    (doctor) => doctor.userId === selectedDoctorUserId
-  );
 
   const handleBatchRequest = async () => {
     try {
@@ -170,27 +157,47 @@ export function BatchRequestPrescriptionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-blue-700 text-xl">
             <FileText className="h-5 w-5" />
-            Solicitar Recetas en Lote
+            Pedir recetas
           </DialogTitle>
           <DialogDescription className="text-base">
             {sendableItems.length > 0
-              ? `${sendableItems.length} receta(s) listas para enviar al médico que elijas.`
+              ? `Vas a pedir ${sendableItems.length} receta${
+                  sendableItems.length !== 1 ? "s" : ""
+                }.`
               : "No hay medicamentos disponibles para solicitar"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          {/* Sendable items list */}
+          {sendableItems.length > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="space-y-1.5">
+                {sendableItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between text-base"
+                  >
+                    <span className="text-gray-900 font-medium flex items-center gap-1.5">
+                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      {item.medicationName}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {item.dosage}
+                      {item.quantity ? ` - Cant: ${item.quantity}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Doctor Selector */}
           {sendableItems.length > 0 && (
-            <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/70 p-4">
-              <div className="space-y-1">
-                <Label className="text-base font-semibold text-slate-900">
-                  Médico que recibe las solicitudes
-                </Label>
-                <p className="text-sm leading-5 text-slate-600">
-                  Este médico recibirá todas las recetas seleccionadas.
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-base font-semibold text-slate-900">
+                Médico que hace la receta
+              </Label>
               {isLoadingDoctors ? (
                 <div className="flex items-center gap-2 text-base text-gray-500">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,79 +208,36 @@ export function BatchRequestPrescriptionModal({
                   No hay médicos disponibles para recetas
                 </div>
               ) : (
-                <>
-                  <Select
-                    value={selectedDoctorUserId}
-                    onValueChange={(value) => {
-                      setSelectedDoctorUserId(value);
-                      setIsDoctorAutoSelected(false);
-                    }}
-                  >
-                    <SelectTrigger className="h-12 w-full bg-white text-base">
-                      <SelectValue placeholder="Elegí el médico que debe hacer las recetas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDoctors.map((doctor) => {
-                        const prefix =
-                          doctor.gender === "Femenino" ? "Dra." : "Dr.";
-                        return (
-                          <SelectItem key={doctor.userId} value={doctor.userId}>
-                            {prefix} {doctor.firstName} {doctor.lastName}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {selectedDoctor && isDoctorAutoSelected && (
-                    <div className="flex gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm leading-5 text-green-800">
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>
-                        Preseleccionamos el médico asociado a los medicamentos.
-                        Podés cambiarlo si corresponde.
-                      </span>
-                    </div>
-                  )}
-                </>
+                <Select
+                  value={selectedDoctorUserId}
+                  onValueChange={setSelectedDoctorUserId}
+                >
+                  <SelectTrigger className="h-12 w-full bg-white text-base">
+                    <SelectValue placeholder="Elegí el médico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDoctors.map((doctor) => {
+                      const prefix =
+                        doctor.gender === "Femenino" ? "Dra." : "Dr.";
+                      return (
+                        <SelectItem key={doctor.userId} value={doctor.userId}>
+                          {prefix} {doctor.firstName} {doctor.lastName}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               )}
             </div>
           )}
 
-          {/* Sendable items list */}
           {sendableItems.length > 0 && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <div className="font-medium text-blue-800 mb-2">
-                Medicamentos a solicitar{" "}
-                <span className="text-sm font-normal text-blue-600">
-                  ({sendableItems.length})
-                </span>
-              </div>
-              <div className="space-y-1">
-                {sendableItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span className="text-gray-900 font-medium flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                      {item.medicationName}
-                    </span>
-                    <span className="text-gray-600">
-                      {item.dosage}
-                      {item.quantity ? ` - Cant: ${item.quantity}` : ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {sendableItems.length > 0 && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2">
+            <div className="space-y-2">
               <Label
                 htmlFor="green-card-batch-prescription-message"
-                className="text-sm font-semibold text-slate-700"
+                className="text-base font-semibold text-slate-900"
               >
-                Mensaje opcional
+                Mensaje para el médico (opcional)
               </Label>
               <Textarea
                 id="green-card-batch-prescription-message"
@@ -283,16 +247,14 @@ export function BatchRequestPrescriptionModal({
                 maxLength={500}
                 className="min-h-[96px] resize-none bg-white"
               />
-              <p className="text-xs text-slate-500">Opcional.</p>
             </div>
           )}
 
           {/* Skipped items with reasons */}
           {skippedItems.length > 0 && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <div className="font-medium text-amber-800 mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                No se solicitaran ({skippedItems.length})
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="font-medium text-slate-700 mb-2">
+                No se incluyen ({skippedItems.length})
               </div>
               <div className="space-y-1.5">
                 {skippedItems.map((skipped) => (
@@ -300,23 +262,16 @@ export function BatchRequestPrescriptionModal({
                     key={skipped.item.id}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="text-amber-900 flex items-center gap-1.5">
-                      <XCircle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                    <span className="text-slate-700 flex items-center gap-1.5">
+                      <XCircle className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                       {skipped.item.medicationName}
                     </span>
-                    <span className="text-amber-600 text-xs">
+                    <span className="text-slate-500 text-sm">
                       {skipped.reason}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {sendableItems.length > 0 && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-800">
-              Si el médico aprueba la solicitud, las recetas estarán disponibles
-              el próximo viernes a partir de las 14:00 hs.
             </div>
           )}
         </div>
@@ -337,7 +292,7 @@ export function BatchRequestPrescriptionModal({
             className="h-12 bg-blue-600 px-5 text-base font-semibold hover:bg-blue-700"
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enviar solicitud de recetas ({sendableItems.length})
+            Enviar pedido ({sendableItems.length})
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,9 +1,7 @@
 import { GreenCard, GreenCardItem } from "@/types/Green-Card/GreenCard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { FileText, CalendarClock } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -11,13 +9,10 @@ import { compareGreenCardItems } from "@/common/helpers/greenCardSchedule";
 
 interface PhysicalGreenCardProps {
   greenCard: GreenCard;
-  onRequestPrescription?: (item: GreenCardItem) => void;
   checkupSchedules?: PatientCheckupSchedule[];
-  /** Enable checkbox selection mode for batch requests */
-  selectionMode?: boolean;
-  /** Currently selected item IDs (for batch mode) */
+  /** Currently selected item IDs */
   selectedItemIds?: string[];
-  /** Toggle selection of an item (for batch mode) */
+  /** Toggle selection of an item */
   onToggleItemSelection?: (itemId: string) => void;
   /** Select all eligible items at once */
   onSelectAll?: () => void;
@@ -32,11 +27,18 @@ const formatMonthYear = (dateStr: string) => {
   }
 };
 
+const PendingBadge = () => (
+  <Badge
+    variant="secondary"
+    className="bg-amber-100 px-2.5 py-1 text-sm font-medium text-amber-800 border border-amber-400"
+  >
+    Ya pedida
+  </Badge>
+);
+
 export function PhysicalGreenCard({
   greenCard,
-  onRequestPrescription,
   checkupSchedules = [],
-  selectionMode = false,
   selectedItemIds = [],
   onToggleItemSelection,
   onSelectAll,
@@ -50,14 +52,25 @@ export function PhysicalGreenCard({
   // Filter active checkup schedules
   const activeCheckups = checkupSchedules.filter((s) => s.isActive);
 
-  // Items eligible for batch selection (active + no pending prescription)
-  const eligibleItems = activeItems.filter((item) => !item.hasPendingPrescription);
-  const allEligibleSelected = eligibleItems.length > 0 &&
+  // Items eligible for selection (active + no pending prescription)
+  const eligibleItems = activeItems.filter(
+    (item) => !item.hasPendingPrescription
+  );
+  const allEligibleSelected =
+    eligibleItems.length > 0 &&
     eligibleItems.every((item) => selectedItemIds.includes(item.id));
 
-  // Calculate empty rows to fill the table
+  // Calculate empty rows to fill the table (desktop only)
   const minRows = 6;
   const emptyRowsCount = Math.max(0, minRows - activeItems.length);
+
+  const isSelectable = (item: GreenCardItem) =>
+    item.isActive && !item.hasPendingPrescription;
+
+  const handleRowToggle = (item: GreenCardItem) => {
+    if (!isSelectable(item)) return;
+    onToggleItemSelection?.(item.id);
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -79,7 +92,7 @@ export function PhysicalGreenCard({
           />
 
           {/* Card Content */}
-          <div className="relative p-6 text-gray-900">
+          <div className="relative p-4 sm:p-6 text-gray-900">
             {/* Header - Centered Logo */}
             <div className="flex flex-col items-center mb-6 pb-4 border-b-2 border-gray-700">
               <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center p-1.5 mb-2">
@@ -97,212 +110,252 @@ export function PhysicalGreenCard({
               </div>
             </div>
 
-            {/* Medications Table */}
-            <div className="mb-4">
-              {/* Table Container - Hand-drawn style */}
-              <ScrollArea className="border-2 border-gray-700 rounded bg-white/20">
-                  <div className="min-w-[600px]">
-                    <table className="w-full">
-                      {/* Table Header */}
-                      <thead>
-                        <tr className="bg-white/30 border-b-2 border-gray-700">
-                          {selectionMode && (
-                            <th className="px-2 py-2.5 text-center border-r border-gray-600 w-[40px]">
-                              <Checkbox
-                                checked={allEligibleSelected}
-                                onCheckedChange={() => onSelectAll?.()}
-                                disabled={eligibleItems.length === 0}
-                                className="border-gray-600"
-                              />
-                            </th>
-                          )}
-                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[100px]">
-                            <span className="font-bold text-sm text-gray-800 uppercase">Hora</span>
-                          </th>
-                          <th className="px-3 py-2.5 text-left border-r border-gray-600">
-                            <span className="font-bold text-sm text-gray-800 uppercase">Medicamento</span>
-                          </th>
-                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[120px]">
-                            <span className="font-bold text-sm text-gray-800 uppercase">Dosis</span>
-                          </th>
-                          <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[70px]">
-                            <span className="font-bold text-sm text-gray-800 uppercase">Cant.</span>
-                          </th>
-                          <th className="px-3 py-2.5 text-center w-[110px]">
-                            <span className="font-bold text-sm text-gray-800 uppercase">Solicitud</span>
-                          </th>
-                        </tr>
-                      </thead>
+            {/* Medications - mobile stacked list */}
+            <div className="mb-4 md:hidden">
+              {activeItems.length === 0 ? (
+                <div className="rounded border-2 border-gray-700 bg-white/20 py-8 text-center text-gray-600 italic">
+                  No hay medicamentos registrados
+                </div>
+              ) : (
+                <div className="rounded border-2 border-gray-700 bg-white/20 divide-y divide-gray-500">
+                  {activeItems.map((item) => {
+                    const selectable = isSelectable(item);
+                    const isSelected = selectedItemIds.includes(item.id);
 
-                      {/* Table Body */}
-                      <tbody>
-                        {activeItems.length === 0 && emptyRowsCount === 0 ? (
-                          <tr>
-                            <td colSpan={selectionMode ? 6 : 5} className="text-center py-8 text-gray-600 italic">
-                              No hay medicamentos registrados
-                            </td>
-                          </tr>
-                        ) : (
-                          <>
-                            {/* Active medications */}
-                            {activeItems.map((item) => {
-                              const isSelectable = item.isActive && !item.hasPendingPrescription;
-                              const isSelected = selectedItemIds.includes(item.id);
-
-                              return (
-                                <tr
-                                  key={item.id}
-                                  className={`border-b border-gray-500 hover:bg-white/20 transition-colors ${
-                                    selectionMode && isSelected ? "bg-white/30" : ""
-                                  }`}
-                                >
-                                  {/* Checkbox */}
-                                  {selectionMode && (
-                                    <td className="px-2 py-3 text-center border-r border-gray-500">
-                                      <Checkbox
-                                        checked={isSelected}
-                                        onCheckedChange={() => onToggleItemSelection?.(item.id)}
-                                        disabled={!isSelectable}
-                                        className="border-gray-600"
-                                      />
-                                    </td>
-                                  )}
-                                  {/* Hora */}
-                                  <td className="px-3 py-3 text-center border-r border-gray-500">
-                                    <span className="text-sm font-medium text-gray-800">
-                                      {item.schedule}
-                                    </span>
-                                  </td>
-                                  {/* Medicamento */}
-                                  <td className="px-3 py-3 border-r border-gray-500">
-                                    <span className="text-sm font-semibold text-gray-900 uppercase">
-                                      {item.medicationName}
-                                    </span>
-                                  </td>
-                                  {/* Dosis */}
-                                  <td className="px-3 py-3 text-center border-r border-gray-500">
-                                    <span className="text-sm text-gray-800">
-                                      {item.dosage}
-                                    </span>
-                                  </td>
-                                  {/* Cantidad */}
-                                  <td className="px-3 py-3 text-center border-r border-gray-500">
-                                    <span className="text-sm text-gray-800">
-                                      {item.quantity || "-"}
-                                    </span>
-                                  </td>
-                                  {/* Solicitud */}
-                                  <td className="px-2 py-2 text-center">
-                                    {(() => {
-                                      const canRequest = onRequestPrescription &&
-                                        !item.hasPendingPrescription;
-
-                                      if (canRequest && !selectionMode) {
-                                        return (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => onRequestPrescription(item)}
-                                            className="h-7 px-2 text-xs bg-white/70 hover:bg-white text-gray-800 border border-gray-500 font-medium"
-                                          >
-                                            <FileText className="h-3 w-3 mr-1" />
-                                            Pedir
-                                          </Button>
-                                        );
-                                      }
-                                      if (item.hasPendingPrescription) {
-                                        return (
-                                          <Badge
-                                            variant="secondary"
-                                            className="text-[10px] bg-amber-100 text-amber-800 border border-amber-400"
-                                          >
-                                            Pendiente
-                                          </Badge>
-                                        );
-                                      }
-                                      return <span className="text-gray-400">-</span>;
-                                    })()}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-
-                            {/* Empty rows to fill the table */}
-                            {Array.from({ length: emptyRowsCount }).map((_, i) => (
-                              <tr
-                                key={`empty-${i}`}
-                                className="border-b border-gray-500 opacity-40"
-                              >
-                                {selectionMode && (
-                                  <td className="px-2 py-3 border-r border-gray-500">&nbsp;</td>
-                                )}
-                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                                <td className="px-3 py-3 border-r border-gray-500">&nbsp;</td>
-                                <td className="px-3 py-3">&nbsp;</td>
-                              </tr>
-                            ))}
-                          </>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-
-              {/* Suspended medications */}
-              {suspendedItems.length > 0 && (
-                <div className="mt-4 pt-3 border-t-2 border-gray-600">
-                  <div className="text-sm text-gray-700 mb-2 font-bold uppercase tracking-wide">
-                    Suspendidos:
-                  </div>
-                  <div className="space-y-1">
-                    {suspendedItems.map((item) => (
+                    return (
                       <div
                         key={item.id}
-                        className="text-sm text-gray-600 line-through opacity-70"
+                        role={selectable ? "button" : undefined}
+                        onClick={() => handleRowToggle(item)}
+                        className={`flex min-h-[56px] items-center gap-3 px-3 py-3 ${
+                          selectable ? "cursor-pointer" : ""
+                        } ${isSelected ? "bg-white/40" : ""}`}
                       >
-                        {item.medicationName} - {item.dosage}
+                        {selectable ? (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() =>
+                              onToggleItemSelection?.(item.id)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-6 w-6 shrink-0 border-gray-700 bg-white/70"
+                            aria-label={`Pedir receta de ${item.medicationName}`}
+                          />
+                        ) : (
+                          <span className="w-6 shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-base font-semibold uppercase text-gray-900">
+                            {item.medicationName}
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            {item.schedule} · {item.dosage}
+                            {item.quantity ? ` · Cant: ${item.quantity}` : ""}
+                          </div>
+                        </div>
+                        {item.hasPendingPrescription && <PendingBadge />}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Checkup Schedules Section */}
-              {activeCheckups.length > 0 && (
-                <div className="mt-4 pt-3 border-t-2 border-gray-600">
-                  <div className="text-sm text-gray-700 mb-3 font-bold uppercase tracking-wide flex items-center gap-2">
-                    <CalendarClock className="h-4 w-4" />
-                    Próximos Chequeos
-                  </div>
-                  <div className="space-y-2">
-                    {activeCheckups.map((schedule) => (
-                      <div
-                        key={schedule.id}
-                        className="flex items-center justify-between bg-white/30 rounded px-3 py-2"
-                      >
-                        <span className="text-sm font-medium text-gray-800">
-                          {schedule.checkupType?.name || "Chequeo"}
-                        </span>
-                        <span className="text-sm text-gray-700 capitalize">
-                          {formatMonthYear(schedule.nextDueDate)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
+            {/* Medications Table - desktop */}
+            <div className="mb-4 hidden md:block">
+              <div className="border-2 border-gray-700 rounded bg-white/20 overflow-hidden">
+                <table className="w-full">
+                  {/* Table Header */}
+                  <thead>
+                    <tr className="bg-white/30 border-b-2 border-gray-700">
+                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[80px]">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="font-bold text-sm text-gray-800 uppercase">
+                            Pedir
+                          </span>
+                          <Checkbox
+                            checked={allEligibleSelected}
+                            onCheckedChange={() => onSelectAll?.()}
+                            disabled={eligibleItems.length === 0}
+                            className="h-5 w-5 border-gray-600 bg-white/70"
+                            aria-label="Seleccionar todos los medicamentos"
+                          />
+                        </div>
+                      </th>
+                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[100px]">
+                        <span className="font-bold text-sm text-gray-800 uppercase">
+                          Hora
+                        </span>
+                      </th>
+                      <th className="px-3 py-2.5 text-left border-r border-gray-600">
+                        <span className="font-bold text-sm text-gray-800 uppercase">
+                          Medicamento
+                        </span>
+                      </th>
+                      <th className="px-3 py-2.5 text-center border-r border-gray-600 w-[120px]">
+                        <span className="font-bold text-sm text-gray-800 uppercase">
+                          Dosis
+                        </span>
+                      </th>
+                      <th className="px-3 py-2.5 text-center w-[80px]">
+                        <span className="font-bold text-sm text-gray-800 uppercase">
+                          Cant.
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+
+                  {/* Table Body */}
+                  <tbody>
+                    {activeItems.length === 0 && emptyRowsCount === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="text-center py-8 text-gray-600 italic"
+                        >
+                          No hay medicamentos registrados
+                        </td>
+                      </tr>
+                    ) : (
+                      <>
+                        {/* Active medications */}
+                        {activeItems.map((item) => {
+                          const selectable = isSelectable(item);
+                          const isSelected = selectedItemIds.includes(item.id);
+
+                          return (
+                            <tr
+                              key={item.id}
+                              onClick={() => handleRowToggle(item)}
+                              className={`border-b border-gray-500 transition-colors ${
+                                selectable
+                                  ? "cursor-pointer hover:bg-white/20"
+                                  : ""
+                              } ${isSelected ? "bg-white/30" : ""}`}
+                            >
+                              {/* Pedir (checkbox / estado) */}
+                              <td className="px-2 py-3 text-center border-r border-gray-500">
+                                {selectable ? (
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() =>
+                                      onToggleItemSelection?.(item.id)
+                                    }
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-5 w-5 border-gray-600 bg-white/70"
+                                    aria-label={`Pedir receta de ${item.medicationName}`}
+                                  />
+                                ) : (
+                                  <PendingBadge />
+                                )}
+                              </td>
+                              {/* Hora */}
+                              <td className="px-3 py-3 text-center border-r border-gray-500">
+                                <span className="text-sm font-medium text-gray-800">
+                                  {item.schedule}
+                                </span>
+                              </td>
+                              {/* Medicamento */}
+                              <td className="px-3 py-3 border-r border-gray-500">
+                                <span className="text-sm font-semibold text-gray-900 uppercase">
+                                  {item.medicationName}
+                                </span>
+                              </td>
+                              {/* Dosis */}
+                              <td className="px-3 py-3 text-center border-r border-gray-500">
+                                <span className="text-sm text-gray-800">
+                                  {item.dosage}
+                                </span>
+                              </td>
+                              {/* Cantidad */}
+                              <td className="px-3 py-3 text-center">
+                                <span className="text-sm text-gray-800">
+                                  {item.quantity || "-"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* Empty rows to fill the table */}
+                        {Array.from({ length: emptyRowsCount }).map((_, i) => (
+                          <tr
+                            key={`empty-${i}`}
+                            className="border-b border-gray-500 opacity-40"
+                          >
+                            <td className="px-2 py-3 border-r border-gray-500">
+                              &nbsp;
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-500">
+                              &nbsp;
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-500">
+                              &nbsp;
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-500">
+                              &nbsp;
+                            </td>
+                            <td className="px-3 py-3">&nbsp;</td>
+                          </tr>
+                        ))}
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Suspended medications */}
+            {suspendedItems.length > 0 && (
+              <div className="mt-4 pt-3 border-t-2 border-gray-600">
+                <div className="text-sm text-gray-700 mb-2 font-bold uppercase tracking-wide">
+                  Suspendidos:
+                </div>
+                <div className="space-y-1">
+                  {suspendedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="text-sm text-gray-600 line-through opacity-70"
+                    >
+                      {item.medicationName} - {item.dosage}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Checkup Schedules Section */}
+            {activeCheckups.length > 0 && (
+              <div className="mt-4 pt-3 border-t-2 border-gray-600">
+                <div className="text-sm text-gray-700 mb-3 font-bold uppercase tracking-wide flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4" />
+                  Próximos Chequeos
+                </div>
+                <div className="space-y-2">
+                  {activeCheckups.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="flex items-center justify-between bg-white/30 rounded px-3 py-2"
+                    >
+                      <span className="text-sm font-medium text-gray-800">
+                        {schedule.checkupType?.name || "Chequeo"}
+                      </span>
+                      <span className="text-sm text-gray-700 capitalize">
+                        {formatMonthYear(schedule.nextDueDate)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Corner fold effect */}
           <div
             className="absolute top-0 right-0 w-10 h-10"
             style={{
-              background: "linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%)",
+              background:
+                "linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%)",
             }}
           />
         </div>
@@ -311,13 +364,17 @@ export function PhysicalGreenCard({
       {/* Stats below the card */}
       <div className="mt-5 flex items-center gap-6 text-base text-gray-600">
         <div>
-          <span className="font-semibold text-green-700">{activeItems.length}</span>{" "}
+          <span className="font-semibold text-green-700">
+            {activeItems.length}
+          </span>{" "}
           medicamento{activeItems.length !== 1 ? "s" : ""} activo
           {activeItems.length !== 1 ? "s" : ""}
         </div>
         {suspendedItems.length > 0 && (
           <div>
-            <span className="font-semibold text-amber-600">{suspendedItems.length}</span>{" "}
+            <span className="font-semibold text-amber-600">
+              {suspendedItems.length}
+            </span>{" "}
             suspendido{suspendedItems.length !== 1 ? "s" : ""}
           </div>
         )}
