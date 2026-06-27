@@ -49,7 +49,7 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Inbox } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
@@ -96,6 +96,12 @@ const navigationItems = [
     url: "/turnos",
     icon: Calendar,
     allowedRoles: PERMISSIONS.APPOINTMENTS,
+  },
+  {
+    title: "Estudios recibidos",
+    url: "/estudios-recibidos",
+    icon: Inbox,
+    allowedRoles: PERMISSIONS.STUDY_INBOX,
   },
   {
     title: "Programas",
