@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   APPOINTMENTS: [Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
   LABORATORIES: [Role.PACIENTE], // Solo para pacientes ver sus propios estudios
   STUDIES: [Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
+  STUDY_INBOX: [Role.SECRETARIA, Role.ADMINISTRADOR],
 
   // Incor Laboral
   INCOR_LABORAL: [Role.MEDICO, Role.SECRETARIA, Role.ADMINISTRADOR],
