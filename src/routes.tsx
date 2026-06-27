@@ -32,6 +32,7 @@ import EnrollmentDetailPage from "./pages/protected/Programs/Enrollment";
 import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
+import StudyInboxPage from "./pages/protected/StudyInbox";
 import CompaniesPage from "./pages/protected/Companies";
 import CompanyPage from "./pages/protected/Company";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
@@ -136,6 +137,16 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <MySettingsPage />
+              </Private_Routes>
+            }
+          />
+
+          {/* Estudios recibidos por email */}
+          <Route
+            path="/estudios-recibidos"
+            element={
+              <Private_Routes allowedRoles={["Secretaria", "Administrador"]}>
+                <StudyInboxPage />
               </Private_Routes>
             }
           />
