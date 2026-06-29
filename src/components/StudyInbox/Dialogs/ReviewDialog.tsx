@@ -44,7 +44,7 @@ interface SelectedPatient {
 
 export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   const id = item?.id ?? null;
-  const { confirm, discard } = useStudyInboxMutations();
+  const { confirm, discard, hold, release } = useStudyInboxMutations();
 
   const { data: detail, isLoading } = useQuery({
     queryKey: ["study-inbox-detail", id],
@@ -62,6 +62,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   const [selected, setSelected] = useState<SelectedPatient | null>(null);
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
+  const [holdInput, setHoldInput] = useState("");
 
   const confirmable =
     item?.status === "LISTO_PARA_CONFIRMAR" ||
@@ -72,6 +73,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
     if (!open || !item) return;
     setSelected(null);
     setReason("");
+    setHoldInput("");
     setDate(item.detectedStudyDate ? item.detectedStudyDate.slice(0, 10) : "");
     if (item.detectedPatientName) setSearch(item.detectedPatientName);
   }, [open, item, setSearch]);
@@ -92,8 +94,13 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   const statusMeta = item ? STATUS_META[item.status] : null;
 
   const canConfirm = useMemo(
-    () => confirmable && !!selected && !!date && !confirm.isPending,
-    [confirmable, selected, date, confirm.isPending]
+    () =>
+      confirmable &&
+      !!selected &&
+      !!date &&
+      !confirm.isPending &&
+      !item?.onHold,
+    [confirmable, selected, date, confirm.isPending, item?.onHold]
   );
 
   const handleConfirm = () => {
@@ -113,6 +120,19 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
       { id, reason: reason.trim() || "Sin motivo" },
       { onSuccess: onClose }
     );
+  };
+
+  const handleHold = () => {
+    if (!id) return;
+    hold.mutate(
+      { id, reason: holdInput.trim() || "Pendiente de pago" },
+      { onSuccess: onClose }
+    );
+  };
+
+  const handleRelease = () => {
+    if (!id) return;
+    release.mutate(id, { onSuccess: onClose });
   };
 
   return (
@@ -169,6 +189,28 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
               </div>
             )}
 
+            {item?.onHold && (
+              <div className="flex items-start justify-between gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>
+                    <span className="font-semibold">Retenido.</span>{" "}
+                    {item.holdReason || "Pendiente de pago / orden."} No se puede
+                    cargar hasta marcarlo como saldado.
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-shrink-0 border-red-300 text-red-700 hover:bg-red-100"
+                  disabled={release.isPending}
+                  onClick={handleRelease}
+                >
+                  {release.isPending ? "..." : "Marcar como saldado"}
+                </Button>
+              </div>
+            )}
+
             <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-sm">
               <p className="mb-2 font-semibold text-gray-700">Datos detectados</p>
               <dl className="grid grid-cols-2 gap-y-1 text-gray-600">
@@ -182,6 +224,12 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                 <dd className="text-right">{item?.detectedLabIngreso || "—"}</dd>
                 <dt>Institución</dt>
                 <dd className="text-right">{item?.detectedInstitution || "—"}</dd>
+                {item?.emailSubject && (
+                  <>
+                    <dt>Asunto del correo</dt>
+                    <dd className="text-right">{item.emailSubject}</dd>
+                  </>
+                )}
               </dl>
             </div>
 
@@ -259,36 +307,74 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" className="text-red-600 hover:bg-red-50">
-                        Descartar
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Descartar estudio</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          El estudio no se cargará a ninguna historia clínica.
-                          Indicá el motivo.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <Textarea
-                        placeholder="Motivo del descarte"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                      />
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-red-600 hover:bg-red-700"
-                          onClick={handleDiscard}
-                        >
+                  <div className="flex items-center gap-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" className="text-red-600 hover:bg-red-50">
                           Descartar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Descartar estudio</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            El estudio no se cargará a ninguna historia clínica.
+                            Indicá el motivo.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Textarea
+                          placeholder="Motivo del descarte"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                        />
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={handleDiscard}
+                          >
+                            Descartar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    {!item?.onHold && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="text-amber-700 hover:bg-amber-50"
+                          >
+                            Retener
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Retener estudio</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              No se podrá cargar hasta marcarlo como saldado.
+                              Indicá el motivo (ej. deuda, falta de orden).
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <Textarea
+                            placeholder="Motivo de la retención"
+                            value={holdInput}
+                            onChange={(e) => setHoldInput(e.target.value)}
+                          />
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-amber-600 hover:bg-amber-700"
+                              onClick={handleHold}
+                            >
+                              Retener
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
 
                   <Button
                     className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white"

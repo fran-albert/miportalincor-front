@@ -29,6 +29,12 @@ export interface StudyInboxItem {
   reviewedBy: string | null;
   reviewedAt: string | null;
   rejectionReason: string | null;
+  emailSubject: string | null;
+  onHold: boolean;
+  holdReason: string | null;
+  heldAutomatically: boolean;
+  releasedBy: string | null;
+  releasedAt: string | null;
   createdAt: string;
 }
 

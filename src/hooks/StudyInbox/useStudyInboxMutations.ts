@@ -3,6 +3,8 @@ import { confirmStudyInbox } from "@/api/StudyInbox/confirm-study-inbox.action";
 import { discardStudyInbox } from "@/api/StudyInbox/discard-study-inbox.action";
 import { reprocessStudyInbox } from "@/api/StudyInbox/reprocess-study-inbox.action";
 import { ingestStudyInbox } from "@/api/StudyInbox/ingest-study-inbox.action";
+import { holdStudyInbox } from "@/api/StudyInbox/hold-study-inbox.action";
+import { releaseStudyInbox } from "@/api/StudyInbox/release-study-inbox.action";
 import { ConfirmStudyInboxPayload } from "@/types/StudyInbox/StudyInbox.types";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 
@@ -58,5 +60,24 @@ export const useStudyInboxMutations = () => {
       showError("No se pudo subir el PDF", "Verificá que sea un archivo PDF."),
   });
 
-  return { confirm, discard, reprocess, ingest };
+  const hold = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      holdStudyInbox(id, reason),
+    onSuccess: () => {
+      showSuccess("Estudio retenido", "No se podrá cargar hasta liberarlo.");
+      invalidate();
+    },
+    onError: () => showError("No se pudo retener"),
+  });
+
+  const release = useMutation({
+    mutationFn: (id: string) => releaseStudyInbox(id),
+    onSuccess: () => {
+      showSuccess("Estudio liberado", "Ya se puede cargar.");
+      invalidate();
+    },
+    onError: () => showError("No se pudo liberar"),
+  });
+
+  return { confirm, discard, reprocess, ingest, hold, release };
 };
