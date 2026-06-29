@@ -12,6 +12,7 @@ import { UploadPdfButton } from "../UploadPdfButton";
 const TABS: { value: StudyInboxStatus; label: string }[] = [
   { value: "LISTO_PARA_CONFIRMAR", label: "Para confirmar" },
   { value: "REQUIERE_REVISION", label: "Para revisar" },
+  { value: "DUPLICADO", label: "Duplicados" },
   { value: "CARGADO", label: "Cargados" },
   { value: "DESCARTADO", label: "Descartados" },
 ];

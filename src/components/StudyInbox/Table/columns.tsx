@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/common/helpers/helpers";
+import { formatDateAR } from "@/common/helpers/timezone";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
 import { STATUS_META } from "../status";
 
@@ -35,9 +35,12 @@ export const getColumns = ({
   {
     accessorKey: "detectedStudyDate",
     header: "Fecha",
+    // La fecha del estudio es una fecha "pelada" (sin hora). Tomamos los
+    // primeros 10 caracteres (YYYY-MM-DD) para que formatDateAR la trate como
+    // date-only y no le reste un día por la conversión de zona horaria.
     cell: ({ row }) =>
       row.original.detectedStudyDate
-        ? formatDate(row.original.detectedStudyDate)
+        ? formatDateAR(row.original.detectedStudyDate.slice(0, 10))
         : "—",
   },
   {
