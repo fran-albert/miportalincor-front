@@ -48,7 +48,14 @@ export const getColumns = ({
     header: "Estado",
     cell: ({ row }) => {
       const meta = STATUS_META[row.original.status];
-      return <Badge variant={meta.variant}>{meta.label}</Badge>;
+      return (
+        <div className="flex flex-wrap items-center gap-1">
+          <Badge variant={meta.variant}>{meta.label}</Badge>
+          {row.original.onHold && (
+            <Badge variant="destructive">Retenido</Badge>
+          )}
+        </div>
+      );
     },
   },
   {
