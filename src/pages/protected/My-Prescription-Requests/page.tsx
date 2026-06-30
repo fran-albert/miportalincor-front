@@ -173,13 +173,12 @@ const MyPrescriptionRequestsPage = () => {
       r.status === PrescriptionRequestStatus.IN_PROGRESS
   ).length;
 
-  const hasMobileBatchCta = selectedItemIds.length > 0;
   const openResource = (url: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className={`space-y-6 p-6 ${hasMobileBatchCta ? "pb-28 md:pb-6" : ""}`}>
+    <div className="space-y-6 p-6">
       <Helmet>
         <title>Medicación y Recetas</title>
         <meta
@@ -191,61 +190,23 @@ const MyPrescriptionRequestsPage = () => {
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         title="Medicación y Recetas"
-        description="Consultá tu medicación habitual y solicitá recetas a tus médicos"
         icon={<Pill className="h-6 w-6" />}
       />
 
-      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <CalendarDays className="h-4 w-4 shrink-0 text-amber-600" />
-        <span>
+      <div className="flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-5 py-4 text-base font-semibold text-amber-900 shadow-sm sm:text-lg">
+        <CalendarDays className="h-6 w-6 shrink-0 text-amber-600" />
+        <span className="leading-snug">
           <strong>Recetas disponibles:</strong> viernes desde las 14:00 hs.
         </span>
       </div>
 
       {/* Green Card Section */}
       <div className="space-y-4">
-        {/* Actions Bar */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Pill className="h-5 w-5 text-green-600" />
-            Mi Cartón Verde
-          </h2>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            {greenCard && greenCard.items.length > 0 && (
-              <>
-                <Button
-                  size="lg"
-                  onClick={() => setIsBatchModalOpen(true)}
-                  disabled={selectedItemIds.length === 0}
-                  className="h-12 justify-center bg-blue-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-blue-700"
-                >
-                  <FileText className="h-5 w-5 mr-2" />
-                  Pedir recetas
-                  {selectedItemIds.length > 0
-                    ? ` (${selectedItemIds.length})`
-                    : ""}
-                </Button>
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={handleDownloadPDF}
-                  disabled={isGenerating}
-                  className="h-12 bg-green-700 text-base font-semibold hover:bg-green-800"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {isGenerating ? "Generando..." : "Descargar PDF"}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {greenCard && greenCard.items.length > 0 && (
-          <p className="text-base text-gray-600">
-            Marcá los medicamentos que necesitás y tocá{" "}
-            <strong>Pedir recetas</strong>.
-          </p>
-        )}
+        {/* Title */}
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Pill className="h-5 w-5 text-green-600" />
+          Mi Cartón Verde
+        </h2>
 
         {/* Content */}
         {isLoadingCard ? (
@@ -279,22 +240,33 @@ const MyPrescriptionRequestsPage = () => {
             </CardContent>
           </Card>
         )}
-      </div>
 
-      {hasMobileBatchCta && (
-        <div className="fixed inset-x-4 bottom-4 z-40 md:hidden">
-          <div className="rounded-2xl border border-blue-200 bg-white/95 p-3 shadow-xl backdrop-blur">
+        {/* Actions (below the card) */}
+        {greenCard && greenCard.items.length > 0 && (
+          <div className="flex w-full flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
             <Button
               size="lg"
               onClick={() => setIsBatchModalOpen(true)}
-              className="h-14 w-full bg-blue-600 text-base font-semibold hover:bg-blue-700"
+              disabled={selectedItemIds.length === 0}
+              className="h-12 justify-center bg-blue-600 px-5 text-base font-semibold text-white shadow-sm hover:bg-blue-700"
             >
               <FileText className="h-5 w-5 mr-2" />
-              Pedir recetas ({selectedItemIds.length})
+              Pedir recetas
+              {selectedItemIds.length > 0 ? ` (${selectedItemIds.length})` : ""}
+            </Button>
+            <Button
+              variant="default"
+              size="lg"
+              onClick={handleDownloadPDF}
+              disabled={isGenerating}
+              className="h-12 justify-center bg-green-700 px-5 text-base font-semibold hover:bg-green-800"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isGenerating ? "Generando..." : "Descargar PDF"}
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Prescription Requests History */}
       <Collapsible open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
