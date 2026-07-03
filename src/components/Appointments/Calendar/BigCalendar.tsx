@@ -63,7 +63,7 @@ import {
   getSpecialConsultationTypeFromNames,
   getSpecialConsultationTypeInfo,
 } from "@/common/helpers/special-consultation-types";
-import { AlertCircle, CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, FileText, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap } from "lucide-react";
+import { AlertCircle, CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, FileText, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, Tag, User, UserPlus, XCircle, Zap } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
 import { BlockSlotDialog } from "../Dialogs/BlockSlotDialog";
@@ -72,6 +72,7 @@ import { RegisterGuestModal } from "../Modals/RegisterGuestModal";
 import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
 import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
+import { EditConsultationTypeDialog, EditConsultationTypeTarget } from "../Dialogs/EditConsultationTypeDialog";
 import { PrintAgendaView } from "./PrintAgendaView";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
@@ -341,6 +342,8 @@ export const BigCalendar = ({
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [rescheduleTargetAppointment, setRescheduleTargetAppointment] = useState<RescheduleCalendarTarget | null>(null);
+  const [isEditTypeDialogOpen, setIsEditTypeDialogOpen] = useState(false);
+  const [editTypeTargetAppointment, setEditTypeTargetAppointment] = useState<EditConsultationTypeTarget | null>(null);
   const [selectedAbsence, setSelectedAbsence] = useState<DoctorAbsenceResponseDto | null>(null);
   const [absenceDeleteDialogOpen, setAbsenceDeleteDialogOpen] = useState(false);
   const [monthOverflowDate, setMonthOverflowDate] = useState<Date | null>(null);
@@ -777,7 +780,7 @@ export const BigCalendar = ({
     return WorkWeekView;
   }, [includeSaturdayInWorkWeek]);
 
-  const { changeStatus: changeAppointmentStatus, rescheduleAppointment: rescheduleAppointmentMutation, isRescheduling } = useAppointmentMutations();
+  const { changeStatus: changeAppointmentStatus, rescheduleAppointment: rescheduleAppointmentMutation, isRescheduling, updateAppointment: updateAppointmentMutation, isUpdating: isUpdatingAppointment } = useAppointmentMutations();
   const { changeStatus: changeOverturnStatus, updateOverturn: updateOverturnMutation, isUpdating: isUpdatingOverturn } = useOverturnMutations();
   const { deleteAbsence, isDeleting: isDeletingAbsence } = useDoctorAbsenceMutations();
 
@@ -2166,6 +2169,37 @@ export const BigCalendar = ({
                 )}
 
               {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
+                selectedEvent.resource.status === AppointmentStatus.WAITING) &&
+                selectedEvent.resource.type === "appointment" &&
+                !readOnly && (
+                  <Button
+                    variant="outline"
+                    className="google-calendar-action-button justify-start border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800"
+                    onClick={() => {
+                      const appt = selectedEvent.resource.data as AppointmentFullResponseDto;
+                      setEditTypeTargetAppointment({
+                        id: appt.id,
+                        doctorId: appt.doctorId,
+                        date: appt.date,
+                        hour: appt.hour,
+                        consultationTypeIds:
+                          appt.consultationTypeIds ??
+                          getAppointmentConsultationTypes(appt).map(
+                            (type) => type.id
+                          ),
+                        doctor: appt.doctor ?? null,
+                        patient: appt.patient ?? null,
+                      });
+                      setIsEventDialogOpen(false);
+                      setIsEditTypeDialogOpen(true);
+                    }}
+                  >
+                    <Tag className="mr-2 h-4 w-4" />
+                    Editar tipo
+                  </Button>
+                )}
+
+              {(selectedEvent.resource.status === AppointmentStatus.PENDING ||
                 selectedEvent.resource.status === AppointmentStatus.WAITING) && (
                 <Button
                   variant="outline"
@@ -2528,6 +2562,22 @@ export const BigCalendar = ({
           setRescheduleTargetAppointment(null);
         }}
         isRescheduling={isRescheduling || isUpdatingOverturn}
+      />
+
+      {/* Edit Consultation Type Dialog */}
+      <EditConsultationTypeDialog
+        open={isEditTypeDialogOpen}
+        onOpenChange={setIsEditTypeDialogOpen}
+        appointment={editTypeTargetAppointment}
+        onSave={async (id, consultationTypeIds) => {
+          await updateAppointmentMutation.mutateAsync({
+            id,
+            dto: { consultationTypeIds },
+          });
+          showSuccess("Tipo de turno actualizado exitosamente");
+          setEditTypeTargetAppointment(null);
+        }}
+        isSaving={isUpdatingAppointment}
       />
 
       {/* Print Agenda Dialog */}
