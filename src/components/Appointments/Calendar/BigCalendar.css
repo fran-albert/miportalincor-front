@@ -474,6 +474,29 @@
   border-color: #bfdbfe;
 }
 
+.google-calendar-origin-pill.is-special-mapa,
+.calendar-event-marker-badge.is-special-mapa,
+.google-calendar-legend-marker-badge.is-special-mapa {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border: 1px solid #2563eb;
+  font-weight: 800;
+}
+
+.google-calendar-origin-pill.is-special-holter,
+.calendar-event-marker-badge.is-special-holter,
+.google-calendar-legend-marker-badge.is-special-holter {
+  background: #ede9fe;
+  color: #4c1d95;
+  border: 1px solid #7c3aed;
+  font-weight: 800;
+}
+
+.google-calendar-event.is-special-mapa,
+.google-calendar-event.is-special-holter {
+  outline: 1px solid rgba(15, 23, 42, 0.08);
+}
+
 .google-calendar-health-insurance {
   margin: 0;
   color: #475569;
