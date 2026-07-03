@@ -59,6 +59,10 @@ import {
   getAppointmentConsultationTypeSummary,
   getAppointmentConsultationTypes,
 } from "@/common/helpers/appointment-consultation-types";
+import {
+  getSpecialConsultationTypeFromNames,
+  getSpecialConsultationTypeInfo,
+} from "@/common/helpers/special-consultation-types";
 import { AlertCircle, CalendarDays, ChevronLeft, ChevronRight, CheckCircle, Clock, CreditCard, FileText, MapPin, Monitor, Phone, PlayCircle, Printer, Shield, Stethoscope, User, UserPlus, XCircle, Zap } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { CreateAppointmentDialog } from "../Dialogs/CreateAppointmentDialog";
@@ -361,10 +365,14 @@ export const BigCalendar = ({
   // Custom Event component - view-aware
   const CustomEvent = useMemo(() => {
     const EventComponent = ({ event }: EventProps<CalendarEvent>) => {
-      const { type, patientDni, healthInsurance, affiliationNumber, consultationType } = event.resource;
+      const { type, patientDni, healthInsurance, affiliationNumber, consultationType, consultationTypes } = event.resource;
       const appointmentData = event.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
       const eventOrigin =
         type === "appointment" ? (appointmentData as AppointmentFullResponseDto | undefined)?.origin : undefined;
+      const specialConsultationType = getSpecialConsultationTypeFromNames([
+        consultationType,
+        ...(consultationTypes?.map((typeItem) => typeItem.name) ?? []),
+      ]);
       const showRemoteMarker = isRemoteConsultation(consultationType);
       const showInPersonMarker = !!consultationType && !showRemoteMarker;
       const showNewMarker =
@@ -409,6 +417,14 @@ export const BigCalendar = ({
               </p>
             )}
             <div className="calendar-event-markers">
+              {specialConsultationType && (
+                <span
+                  className={`calendar-event-marker-badge ${specialConsultationType.markerClassName}`}
+                  title={`Turno ${specialConsultationType.label}`}
+                >
+                  {specialConsultationType.label}
+                </span>
+              )}
               {showNewMarker && <span className="calendar-event-marker-badge is-highlight">NEW</span>}
               {showOverturnMarker && (
                 <span className="calendar-event-marker-icon is-highlight" title="Sobreturno">
@@ -438,6 +454,13 @@ export const BigCalendar = ({
               <span className="calendar-event-time">{hourMonth}</span>
               <span className="calendar-event-meta-separator">·</span>
               <span>{event.title}</span>
+              {specialConsultationType && (
+                <span
+                  className={`calendar-event-marker-badge ${specialConsultationType.markerClassName} ml-1 align-middle`}
+                >
+                  {specialConsultationType.label}
+                </span>
+              )}
             </p>
           </div>
         );
@@ -454,6 +477,14 @@ export const BigCalendar = ({
             <span>{endHour}</span>
           </p>
           <div className="calendar-event-markers">
+            {specialConsultationType && (
+              <span
+                className={`calendar-event-marker-badge ${specialConsultationType.markerClassName}`}
+                title={`Turno ${specialConsultationType.label}`}
+              >
+                {specialConsultationType.label}
+              </span>
+            )}
             {showNewMarker && <span className="calendar-event-marker-badge is-highlight">NEW</span>}
             {showOverturnMarker && (
               <span className="calendar-event-marker-icon is-highlight" title="Sobreturno">
@@ -1195,6 +1226,10 @@ export const BigCalendar = ({
 
     const status = event.resource.status;
     const isOverturn = event.resource.type === "overturn";
+    const specialConsultationType = getSpecialConsultationTypeFromNames([
+      event.resource.consultationType,
+      ...(event.resource.consultationTypes?.map((typeItem) => typeItem.name) ?? []),
+    ]);
 
     let backgroundColor = "#fef3c7";
     let textColor = "#92400e";
@@ -1237,8 +1272,18 @@ export const BigCalendar = ({
       }
     }
 
+    if (specialConsultationType && !isOverturn) {
+      backgroundColor = specialConsultationType.eventBackgroundColor;
+      textColor = specialConsultationType.eventTextColor;
+      borderColor = specialConsultationType.eventBorderColor;
+    }
+
     return {
-      className: "google-calendar-event",
+      className: `google-calendar-event ${
+        specialConsultationType
+          ? `is-special-${specialConsultationType.kind.toLowerCase()}`
+          : ""
+      }`,
       style: {
         backgroundColor,
         borderLeft: `5px solid ${borderColor}`,
@@ -1247,7 +1292,9 @@ export const BigCalendar = ({
           status === AppointmentStatus.CANCELLED_BY_PATIENT ||
           status === AppointmentStatus.CANCELLED_BY_SECRETARY ? 0.6 : 1,
         color: textColor,
-        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
+        boxShadow: specialConsultationType
+          ? "0 2px 6px rgba(15, 23, 42, 0.16)"
+          : "0 1px 2px rgba(15, 23, 42, 0.08)",
       },
     };
   }, [readOnly, blockOnly]);
@@ -1522,6 +1569,10 @@ export const BigCalendar = ({
   const selectedConsultationTypes = getAppointmentConsultationTypes(
     selectedAppointmentData
   );
+  const selectedSpecialConsultationType = getSpecialConsultationTypeFromNames([
+    selectedEvent?.resource.consultationType,
+    ...selectedConsultationTypes.map((type) => type.name),
+  ]);
   const selectedOrigin = selectedEvent?.resource.type === "overturn"
     ? "Sobreturno"
     : selectedAppointmentData?.origin
@@ -1811,6 +1862,14 @@ export const BigCalendar = ({
                   </span>
                   <span>Sobreturno</span>
                 </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-badge is-special-mapa">MAPA</span>
+                  <span>MAPA</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-badge is-special-holter">HOLTER</span>
+                  <span>Holter</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1860,11 +1919,18 @@ export const BigCalendar = ({
                   <Badge variant="outline" className="google-calendar-origin-pill">
                     {selectedOrigin}
                   </Badge>
-                  {selectedConsultationTypeBadge && (
+                  {selectedSpecialConsultationType ? (
+                    <Badge
+                      variant="outline"
+                      className={`google-calendar-origin-pill ${selectedSpecialConsultationType.markerClassName}`}
+                    >
+                      {selectedSpecialConsultationType.label}
+                    </Badge>
+                  ) : selectedConsultationTypeBadge ? (
                     <Badge variant="outline" className="google-calendar-origin-pill consultation-type">
                       {selectedConsultationTypeBadge}
                     </Badge>
-                  )}
+                  ) : null}
                   {selectedTreatAsGuest && (
                     <Badge variant="outline" className="google-calendar-origin-pill guest">Invitado</Badge>
                   )}
@@ -1888,22 +1954,34 @@ export const BigCalendar = ({
                   <div>
                     <p className="google-calendar-detail-primary">Estudios / tipos</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedConsultationTypes.map((consultationType) => (
-                        <Badge
-                          key={consultationType.id}
-                          variant="outline"
-                          className="google-calendar-origin-pill consultation-type"
-                          style={{
-                            borderColor: consultationType.color || undefined,
-                            color: consultationType.color || undefined,
-                            backgroundColor: consultationType.color
-                              ? `${consultationType.color}12`
-                              : undefined,
-                          }}
-                        >
-                          {consultationType.name}
-                        </Badge>
-                      ))}
+                      {selectedConsultationTypes.map((consultationType) => {
+                        const specialType = getSpecialConsultationTypeInfo(
+                          consultationType.name,
+                        );
+
+                        return (
+                          <Badge
+                            key={consultationType.id}
+                            variant="outline"
+                            className={`google-calendar-origin-pill consultation-type ${
+                              specialType?.markerClassName ?? ""
+                            }`}
+                            style={
+                              specialType
+                                ? undefined
+                                : {
+                                    borderColor: consultationType.color || undefined,
+                                    color: consultationType.color || undefined,
+                                    backgroundColor: consultationType.color
+                                      ? `${consultationType.color}12`
+                                      : undefined,
+                                  }
+                            }
+                          >
+                            {specialType?.label ?? consultationType.name}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2214,11 +2292,32 @@ export const BigCalendar = ({
                                 Sobreturno
                               </Badge>
                             )}
-                            {getConsultationTypeBadgeLabel(event.resource.consultationType) && (
-                              <Badge variant="outline" className="google-calendar-origin-pill consultation-type">
-                                {getConsultationTypeBadgeLabel(event.resource.consultationType)}
-                              </Badge>
-                            )}
+                            {(() => {
+                              const specialType = getSpecialConsultationTypeFromNames([
+                                event.resource.consultationType,
+                                ...(event.resource.consultationTypes?.map((typeItem) => typeItem.name) ?? []),
+                              ]);
+                              const consultationBadge = getConsultationTypeBadgeLabel(
+                                event.resource.consultationType,
+                              );
+
+                              if (specialType) {
+                                return (
+                                  <Badge
+                                    variant="outline"
+                                    className={`google-calendar-origin-pill ${specialType.markerClassName}`}
+                                  >
+                                    {specialType.label}
+                                  </Badge>
+                                );
+                              }
+
+                              return consultationBadge ? (
+                                <Badge variant="outline" className="google-calendar-origin-pill consultation-type">
+                                  {consultationBadge}
+                                </Badge>
+                              ) : null;
+                            })()}
                           </>
                         )}
                       </div>
