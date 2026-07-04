@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { getStudyInbox } from "@/api/StudyInbox/get-study-inbox.action";
+import { INBOX_REFRESH_INTERVAL_MS } from "@/hooks/StudyInbox/useStudyInboxCounts";
 import { StudyInboxStatus } from "@/types/StudyInbox/StudyInbox.types";
 
 interface UseStudyInboxOptions {
@@ -30,7 +31,9 @@ export const useStudyInbox = (options: UseStudyInboxOptions = {}) => {
     queryKey: ["study-inbox", status, debouncedSearch, page, initialLimit],
     queryFn: () =>
       getStudyInbox({ status, search: debouncedSearch, page, limit: initialLimit }),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 15,
+    // La lista visible se refresca sola junto con los conteos de las pestañas.
+    refetchInterval: INBOX_REFRESH_INTERVAL_MS,
   });
 
   const nextPage = () => {

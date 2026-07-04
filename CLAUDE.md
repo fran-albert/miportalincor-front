@@ -255,6 +255,8 @@ Funcionalidades:
 - **Ausencias en calendario**: Muestra ausencias del medico como eventos (naranja), dias completos con fondo `#fff7ed`
 - **Bloqueo de slots**: Dialog para crear turno, bloquear horario, o bloquear dia completo
 - **Validacion WAITING**: Boton "Marcar en Espera" deshabilitado si la fecha del turno no es hoy
+- **Resaltado MAPA/HOLTER**: los turnos MAPA (azul) y HOLTER (violeta) se pintan distinto al resto, con badge y leyenda. Deteccion por nombre del tipo de consulta en `src/common/helpers/special-consultation-types.ts` (tolerante a variantes tipo "M.A.P.A", "MAPA 24hs"); estilos `.is-special-mapa` / `.is-special-holter` en `BigCalendar.css`
+- **Panel de detalle del turno**: al clickear un evento se abre un `Sheet` lateral definido inline en `BigCalendar.tsx` (no hay un dialog separado de detalle). Acciones segun estado: Marcar en Espera, Atender, Completar, Reprogramar, Editar tipo, Cancelar, Registrar paciente (invitados)
 
 ### Dialogs (`components/Appointments/Dialogs/`)
 | Componente | Descripcion |
@@ -262,7 +264,13 @@ Funcionalidades:
 | `SlotActionDialog.tsx` | Menu de acciones al clickear slot disponible: crear turno, bloquear horario, bloquear dia completo |
 | `CreateAbsenceDialog.tsx` | Dialog para crear ausencia de dia completo con selector de tipo (Vacaciones, Licencia, Otro) |
 | `CreateAppointmentDialog.tsx` | Dialog para crear turno nuevo |
-| `AppointmentDetailDialog.tsx` | Detalle de un turno existente |
+| `CreateOverturnDialog.tsx` | Dialog para crear sobreturno |
+| `BlockSlotDialog.tsx` | Dialog para bloquear/desbloquear horarios |
+| `RescheduleAppointmentDialog.tsx` | Reprogramar turno o sobreturno (solo fecha/hora; sugiere fechas con disponibilidad real) |
+| `EditConsultationTypeDialog.tsx` | Editar el tipo de consulta de un turno existente (multi-select filtrado por medico; usa `updateAppointment` de `useAppointmentMutations`) |
+| `DeleteConfirmDialog.tsx` | Confirmacion generica de borrado |
+
+El detalle de un turno NO es un dialog: es el `Sheet` lateral inline en `BigCalendar.tsx`.
 
 ### Hooks usados en Turnos
 | Hook | Uso |
