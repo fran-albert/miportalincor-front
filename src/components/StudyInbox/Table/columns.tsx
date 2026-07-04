@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatDateAR } from "@/common/helpers/timezone";
+import { formatDateAR, formatTimeFromDateAR } from "@/common/helpers/timezone";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
 import { STATUS_META } from "../status";
 
@@ -16,11 +16,24 @@ export const getColumns = ({
   {
     accessorKey: "detectedPatientName",
     header: "Paciente detectado",
-    cell: ({ row }) => (
-      <span className="font-medium text-gray-900">
-        {row.original.detectedPatientName || "—"}
-      </span>
-    ),
+    // Si el PDF no se pudo parsear, el asunto del correo es la unica forma de
+    // saber de quien es el estudio: se muestra como linea secundaria.
+    cell: ({ row }) => {
+      const { detectedPatientName, detectedDni, emailSubject } = row.original;
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">
+            {detectedPatientName || emailSubject || "—"}
+          </span>
+          {detectedPatientName && detectedDni && (
+            <span className="text-xs text-gray-500">DNI {detectedDni}</span>
+          )}
+          {!detectedPatientName && emailSubject && (
+            <span className="text-xs text-gray-500">Asunto del correo</span>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "detectedLabFicha",
@@ -33,8 +46,23 @@ export const getColumns = ({
     ),
   },
   {
+    accessorKey: "createdAt",
+    header: "Recibido",
+    cell: ({ row }) =>
+      row.original.createdAt ? (
+        <span className="text-gray-600">
+          {formatDateAR(row.original.createdAt)}{" "}
+          <span className="text-xs text-gray-400">
+            {formatTimeFromDateAR(row.original.createdAt)}
+          </span>
+        </span>
+      ) : (
+        "—"
+      ),
+  },
+  {
     accessorKey: "detectedStudyDate",
-    header: "Fecha",
+    header: "Fecha estudio",
     // La fecha del estudio es una fecha "pelada" (sin hora). Tomamos los
     // primeros 10 caracteres (YYYY-MM-DD) para que formatDateAR la trate como
     // date-only y no le reste un día por la conversión de zona horaria.

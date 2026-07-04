@@ -3,18 +3,22 @@ import { Inbox } from "lucide-react";
 import { DataTable } from "@/components/Table/table";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useStudyInbox } from "@/hooks/StudyInbox/useStudyInbox";
+import { useStudyInboxCounts } from "@/hooks/StudyInbox/useStudyInboxCounts";
 import { StudyInboxItem, StudyInboxStatus } from "@/types/StudyInbox/StudyInbox.types";
 import { getColumns } from "./columns";
 import { ReviewDialog } from "../Dialogs/ReviewDialog";
 import { UploadPdfButton } from "../UploadPdfButton";
 
-const TABS: { value: StudyInboxStatus; label: string }[] = [
-  { value: "LISTO_PARA_CONFIRMAR", label: "Para confirmar" },
-  { value: "REQUIERE_REVISION", label: "Para revisar" },
-  { value: "DUPLICADO", label: "Duplicados" },
-  { value: "CARGADO", label: "Cargados" },
-  { value: "DESCARTADO", label: "Descartados" },
+// showCount: solo las pestañas que piden trabajo muestran cuantos hay
+// pendientes; cargados/descartados son archivo y el numero no decide nada.
+const TABS: { value: StudyInboxStatus; label: string; showCount: boolean }[] = [
+  { value: "LISTO_PARA_CONFIRMAR", label: "Para confirmar", showCount: true },
+  { value: "REQUIERE_REVISION", label: "Para revisar", showCount: true },
+  { value: "DUPLICADO", label: "Duplicados", showCount: true },
+  { value: "CARGADO", label: "Cargados", showCount: false },
+  { value: "DESCARTADO", label: "Descartados", showCount: false },
 ];
 
 export const StudyInboxScreen = () => {
@@ -24,6 +28,7 @@ export const StudyInboxScreen = () => {
 
   const { items, isFetching, search, setSearch, page, totalPages, nextPage, prevPage } =
     useStudyInbox({ status, initialLimit: 10 });
+  const { counts } = useStudyInboxCounts();
 
   const columns = getColumns({
     onReview: (item) => {
@@ -49,11 +54,22 @@ export const StudyInboxScreen = () => {
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as StudyInboxStatus)}>
         <TabsList>
-          {TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
-              {t.label}
-            </TabsTrigger>
-          ))}
+          {TABS.map((t) => {
+            const count = t.showCount ? counts?.[t.value] ?? 0 : 0;
+            return (
+              <TabsTrigger key={t.value} value={t.value} className="gap-1.5">
+                {t.label}
+                {count > 0 && (
+                  <Badge
+                    variant={t.value === "LISTO_PARA_CONFIRMAR" ? "default" : "secondary"}
+                    className="h-5 min-w-5 justify-center rounded-full px-1.5 text-xs"
+                  >
+                    {count}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
 
