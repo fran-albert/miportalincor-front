@@ -53,17 +53,18 @@ export const StudyInboxScreen = () => {
       />
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as StudyInboxStatus)}>
-        <TabsList>
+        <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
           {TABS.map((t) => {
             const count = t.showCount ? counts?.[t.value] ?? 0 : 0;
             return (
-              <TabsTrigger key={t.value} value={t.value} className="gap-1.5">
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="group gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:border-greenPrimary/40 hover:text-greenPrimary data-[state=active]:border-greenPrimary data-[state=active]:bg-greenPrimary data-[state=active]:text-white data-[state=active]:shadow"
+              >
                 {t.label}
                 {count > 0 && (
-                  <Badge
-                    variant={t.value === "LISTO_PARA_CONFIRMAR" ? "default" : "secondary"}
-                    className="h-5 min-w-5 justify-center rounded-full px-1.5 text-xs"
-                  >
+                  <Badge className="h-5 min-w-5 justify-center rounded-full bg-gray-100 px-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 group-data-[state=active]:bg-white group-data-[state=active]:text-greenPrimary">
                     {count}
                   </Badge>
                 )}
