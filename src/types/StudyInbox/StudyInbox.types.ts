@@ -38,6 +38,12 @@ export interface StudyInboxItem {
   createdAt: string;
 }
 
+export type StudyInboxCounts = Record<StudyInboxStatus, number>;
+
+export interface StudyInboxCountsResponse {
+  counts: StudyInboxCounts;
+}
+
 export interface PaginatedStudyInboxResponse {
   data: StudyInboxItem[];
   total: number;
