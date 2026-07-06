@@ -28,7 +28,7 @@ import { getStudyInboxDetail } from "@/api/StudyInbox/get-study-inbox-detail.act
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { useStudyInboxMutations } from "@/hooks/StudyInbox/useStudyInboxMutations";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
-import { STATUS_META } from "../status";
+import { STATUS_META, studyTypeLabel } from "../status";
 
 interface ReviewDialogProps {
   item: StudyInboxItem | null;
@@ -218,12 +218,33 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                 <dd className="text-right font-medium text-gray-900">
                   {item?.detectedPatientName || "—"}
                 </dd>
-                <dt>Ficha</dt>
-                <dd className="text-right">{item?.detectedLabFicha || "—"}</dd>
-                <dt>Ingreso</dt>
-                <dd className="text-right">{item?.detectedLabIngreso || "—"}</dd>
-                <dt>Institución</dt>
-                <dd className="text-right">{item?.detectedInstitution || "—"}</dd>
+                <dt>Tipo</dt>
+                <dd className="text-right">
+                  {studyTypeLabel(item?.suggestedStudyTypeId)}
+                  {item?.detectedStudySubtype
+                    ? ` · ${item.detectedStudySubtype}`
+                    : ""}
+                </dd>
+                {/* Ficha / Ingreso / Institución son datos de laboratorio: en
+                    un item de ecografía no existen y no se muestran vacíos. */}
+                {item?.detectedLabFicha && (
+                  <>
+                    <dt>Ficha</dt>
+                    <dd className="text-right">{item.detectedLabFicha}</dd>
+                  </>
+                )}
+                {item?.detectedLabIngreso && (
+                  <>
+                    <dt>Ingreso</dt>
+                    <dd className="text-right">{item.detectedLabIngreso}</dd>
+                  </>
+                )}
+                {item?.detectedInstitution && (
+                  <>
+                    <dt>Institución</dt>
+                    <dd className="text-right">{item.detectedInstitution}</dd>
+                  </>
+                )}
                 {item?.emailSubject && (
                   <>
                     <dt>Asunto del correo</dt>

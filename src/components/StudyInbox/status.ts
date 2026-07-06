@@ -17,3 +17,17 @@ export const STATUS_META: Record<StudyInboxStatus, StatusMeta> = {
   DESCARTADO: { label: "Descartado", variant: "destructive" },
   ERROR: { label: "Error", variant: "destructive" },
 };
+
+// La bandeja recibe mas de un tipo de estudio (por ahora laboratorio y
+// ecografia); la secretaria tiene que ver que esta confirmando.
+const STUDY_TYPE_LABELS: Record<number, string> = {
+  1: "Laboratorio",
+  2: "Ecografía",
+};
+
+export const studyTypeLabel = (
+  suggestedStudyTypeId: number | null | undefined,
+): string =>
+  (suggestedStudyTypeId != null &&
+    STUDY_TYPE_LABELS[suggestedStudyTypeId]) ||
+  "Estudio";
