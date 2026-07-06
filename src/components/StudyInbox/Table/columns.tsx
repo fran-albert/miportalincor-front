@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDateAR, formatTimeFromDateAR } from "@/common/helpers/timezone";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
-import { STATUS_META } from "../status";
+import { STATUS_META, studyTypeLabel } from "../status";
 
 interface GetColumnsArgs {
   onReview: (item: StudyInboxItem) => void;
@@ -34,6 +34,24 @@ export const getColumns = ({
         </div>
       );
     },
+  },
+  {
+    accessorKey: "suggestedStudyTypeId",
+    header: "Tipo",
+    // El subtipo (ej. "ECO ABDOMINAL") viene del nombre del archivo y es lo
+    // que la secretaria necesita leer para saber que esta confirmando.
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <Badge variant="outline" className="w-fit font-normal">
+          {studyTypeLabel(row.original.suggestedStudyTypeId)}
+        </Badge>
+        {row.original.detectedStudySubtype && (
+          <span className="mt-1 text-xs text-gray-500">
+            {row.original.detectedStudySubtype}
+          </span>
+        )}
+      </div>
+    ),
   },
   {
     accessorKey: "detectedLabFicha",
