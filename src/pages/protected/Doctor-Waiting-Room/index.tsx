@@ -60,6 +60,7 @@ import {
 } from '@/hooks/Doctor/useDoctorDayAgenda';
 import { useDoctorWaitingQueue, doctorWaitingQueueKeys } from '@/hooks/Doctor/useDoctorWaitingQueue';
 import { useDoctorWorkingToday } from '@/hooks/Doctor/useDoctorWorkingToday';
+import { resolveWaitingRoomRestriction } from '@/hooks/Doctor/useDoctorWorkingToday.helpers';
 import {
   doctorWaitingRoomHistoryKeys,
   useDoctorWaitingRoomHistory,
@@ -245,6 +246,11 @@ const DoctorWaitingRoomPage = () => {
   });
 
   const isLoading = isAgendaLoading || isQueueLoading || isWorkingTodayLoading;
+  const restrictWaitingRoom = resolveWaitingRoomRestriction({
+    restrictedBySchedule: shouldRestrictWaitingRoom,
+    hasActivityToday: agenda.length > 0 || waitingQueue.length > 0,
+    isActivityLoading: isAgendaLoading || isQueueLoading,
+  });
   const isFetching = isAgendaFetching || isQueueFetching;
 
   // Filtrar por estados específicos (usando agenda para attending/history)
@@ -781,7 +787,7 @@ const DoctorWaitingRoomPage = () => {
         }
       />
 
-      {shouldRestrictWaitingRoom ? (
+      {restrictWaitingRoom ? (
         <Card className="border-dashed border-slate-300 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <CalendarOff className="h-12 w-12 text-slate-400" />

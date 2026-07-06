@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Clock, ArrowRight, UserCheck, AlertTriangle } from 'lucide-react';
 import { useDoctorWaitingQueue } from '@/hooks/Doctor/useDoctorWaitingQueue';
 import { useDoctorWorkingToday } from '@/hooks/Doctor/useDoctorWorkingToday';
+import { resolveWaitingRoomRestriction } from '@/hooks/Doctor/useDoctorWorkingToday.helpers';
 import { formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 
 /**
@@ -23,7 +24,13 @@ export const DoctorQueueWidget = () => {
 
   const nextPatient = waitingQueue[0];
 
-  if (shouldRestrictWaitingRoom) {
+  const restrictWaitingRoom = resolveWaitingRoomRestriction({
+    restrictedBySchedule: shouldRestrictWaitingRoom,
+    hasActivityToday: waitingQueue.length > 0,
+    isActivityLoading: isLoading,
+  });
+
+  if (restrictWaitingRoom) {
     return null;
   }
 
