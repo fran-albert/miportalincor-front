@@ -1,4 +1,5 @@
 import HomeComponent from "@/components/Home";
+import { DoctorHomePage } from "@/components/Home/Doctor";
 import PatientHomePage from "@/components/Home/Patient";
 import { RoleViewSelector } from "@/components/Home/RoleViewSelector";
 import useUserRole from "@/hooks/useRoles";
@@ -7,16 +8,25 @@ import { Helmet } from "react-helmet-async";
 import { AnimatePresence, motion } from "framer-motion";
 
 const HomePage = () => {
-  const { session } = useUserRole();
+  const { session, isDoctor, isSecretary, isAdmin } = useUserRole();
   const { activeView, switchView, config } = useActiveHomeView();
 
   const userName = session?.firstName || session?.email || "Usuario";
+
+  // El lado profesional de un médico sin roles de gestión es su propio home;
+  // admin y secretaria (aunque también sean médicos) conservan el operativo.
+  const professionalHome =
+    isDoctor && !isSecretary && !isAdmin ? (
+      <DoctorHomePage name={userName} />
+    ) : (
+      <HomeComponent name={userName} />
+    );
 
   const renderDashboard = () => {
     // Usuario con un solo rol
     if (!config.hasDualRole) {
       if (config.hasProfessionalRole) {
-        return <HomeComponent name={userName} />;
+        return professionalHome;
       }
       return <PatientHomePage name={userName} />;
     }
@@ -32,7 +42,7 @@ const HomePage = () => {
           transition={{ duration: 0.2 }}
         >
           {activeView === "professional" ? (
-            <HomeComponent name={userName} />
+            professionalHome
           ) : (
             <PatientHomePage name={userName} />
           )}
