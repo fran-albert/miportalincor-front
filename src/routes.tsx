@@ -95,6 +95,9 @@ function App() {
         <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
         <Route path="/reset-password" element={<ResetPaswordPage />} />
         <Route path="/acceso-denegado" element={<AccessDeniedPage />} />
+        {/* Asistencia por QR: pública a propósito, el paciente se identifica
+            con su DNI sin loguearse (los QR están pegados en los consultorios) */}
+        <Route path="/asistencia/qr/:qrToken" element={<QrAttendancePage />} />
         {enableConversationsPreview && (
           <Route
             path="/conversaciones-preview"
@@ -730,15 +733,6 @@ function App() {
               </Private_Routes>
             }
           />
-          <Route
-            path="/asistencia/qr/:qrToken"
-            element={
-              <Private_Routes allowedRoles={["Paciente"]}>
-                <QrAttendancePage />
-              </Private_Routes>
-            }
-          />
-
           {/* Obras Sociales */}
           <Route
             path="/obras-sociales"
