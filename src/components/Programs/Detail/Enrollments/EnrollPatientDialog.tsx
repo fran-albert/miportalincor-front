@@ -120,7 +120,8 @@ export default function EnrollPatientDialog({
                 <PatientSelect
                   value={selectedPatientId}
                   onValueChange={setSelectedPatientId}
-                  placeholder="Buscar por DNI..."
+                  placeholder="Buscar por nombre o DNI..."
+                  searchMode="dni-name"
                 />
               </div>
               <DialogFooter>

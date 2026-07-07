@@ -31,6 +31,12 @@ interface PatientSelectProps {
     lastName: string;
     userName?: string;
   };
+  /**
+   * "dni" (default): comportamiento histórico, solo acepta dígitos.
+   * "dni-name": además permite buscar por nombre y apellido (el backend ya
+   * soporta ambos). Opt-in a propósito: turnos sigue usando solo DNI.
+   */
+  searchMode?: "dni" | "dni-name";
 }
 
 export const PatientSelect = ({
@@ -39,14 +45,17 @@ export const PatientSelect = ({
   placeholder = "Seleccionar paciente",
   disabled = false,
   className,
-  defaultPatient
+  defaultPatient,
+  searchMode = "dni"
 }: PatientSelectProps) => {
   const [open, setOpen] = useState(false);
+  const allowNameSearch = searchMode === "dni-name";
+  const minSearchLength = allowNameSearch ? 3 : 6;
 
   const { patients, isLoading, isFetching, search, setSearch } = useSearchPatients({
     enabled: true,
     debounceMs: 300,
-    minSearchLength: 6,
+    minSearchLength,
   });
 
   // Memoize selected patient
@@ -91,9 +100,13 @@ export const PatientSelect = ({
       <PopoverContent className="w-[400px] p-0">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Buscar por DNI..."
+            placeholder={
+              allowNameSearch ? "Buscar por nombre o DNI..." : "Buscar por DNI..."
+            }
             value={search}
-            onValueChange={(value) => setSearch(value.replace(/\D/g, ""))}
+            onValueChange={(value) =>
+              setSearch(allowNameSearch ? value : value.replace(/\D/g, ""))
+            }
           />
           <CommandList>
             {isLoading || isFetching ? (
@@ -102,9 +115,11 @@ export const PatientSelect = ({
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
               </div>
-            ) : search.length < 6 ? (
+            ) : search.trim().length < minSearchLength ? (
               <CommandEmpty>
-                Ingrese al menos 6 dígitos del DNI
+                {allowNameSearch
+                  ? "Ingrese al menos 3 letras del nombre o el DNI"
+                  : "Ingrese al menos 6 dígitos del DNI"}
               </CommandEmpty>
             ) : patients?.length === 0 ? (
               <CommandEmpty>No se encontraron pacientes</CommandEmpty>
