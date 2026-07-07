@@ -25,7 +25,7 @@ import {
   EnrollmentStatusLabels,
 } from "@/types/Program/ProgramEnrollment";
 import { AttendanceMethodLabels } from "@/types/Program/Attendance";
-import { FrequencyPeriodLabels } from "@/types/Program/ProgramPlan";
+import { formatScheduleLong } from "@/common/helpers/plan-schedule.helpers";
 
 const getComplianceTone = (value: number) => {
   if (value >= 80) {
@@ -51,23 +51,6 @@ const formatSelectedDate = (value: string) =>
   format(parse(value, "yyyy-MM-dd", new Date()), "dd/MM/yyyy", {
     locale: es,
   });
-
-const formatFrequencyText = (
-  count: number,
-  period: keyof typeof FrequencyPeriodLabels
-) => {
-  const times = `${count} ${count === 1 ? "vez" : "veces"}`;
-
-  if (period === "WEEKLY") {
-    return `${times} por semana`;
-  }
-
-  if (period === "BIWEEKLY") {
-    return `${times} cada 2 semanas`;
-  }
-
-  return `${times} por mes`;
-};
 
 interface ProgramSectionProps {
   title: string;
@@ -218,10 +201,7 @@ const MyEnrollmentDetailPage = () => {
                       variant="outline"
                       className="w-fit border-greenPrimary/20 bg-greenPrimary/5 text-greenPrimary"
                     >
-                      {formatFrequencyText(
-                        activity.frequencyCount,
-                        activity.frequencyPeriod
-                      )}
+                      {formatScheduleLong(activity)}
                     </Badge>
                   </div>
                 ))}
