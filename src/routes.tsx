@@ -696,7 +696,14 @@ function App() {
           <Route
             path="/programas"
             element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
+              <Private_Routes
+                allowedRoles={[
+                  "Administrador",
+                  "Medico",
+                  "Profesor",
+                  "Secretaria",
+                ]}
+              >
                 <ProgramsPage />
               </Private_Routes>
             }
@@ -704,7 +711,14 @@ function App() {
           <Route
             path="/programas/:programId"
             element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
+              <Private_Routes
+                allowedRoles={[
+                  "Administrador",
+                  "Medico",
+                  "Profesor",
+                  "Secretaria",
+                ]}
+              >
                 <ProgramDetailPage />
               </Private_Routes>
             }

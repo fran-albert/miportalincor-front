@@ -61,7 +61,7 @@ export const PERMISSIONS = {
   MY_VACCINATION: [Role.PACIENTE],
 
   // Programas
-  PROGRAMS: [Role.ADMINISTRADOR, Role.MEDICO, Role.PROFESOR],
+  PROGRAMS: [Role.ADMINISTRADOR, Role.MEDICO, Role.PROFESOR, Role.SECRETARIA],
   MY_PROGRAMS: [Role.PACIENTE],
 } as const;
 
