@@ -51,13 +51,13 @@ export const getActivityColumns = (
     header: " ",
     cell: ({ row }) => (
       <div className="flex items-center justify-end gap-1">
-        {canManageActivities && (
-          <ActivityQrDialog
-            programId={programId}
-            activityId={row.original.id}
-            activityName={row.original.name}
-          />
-        )}
+        {/* El QR lo ve cualquiera con acceso a la pantalla: secretaría/admin
+            lo usan para imprimir los pósters de los consultorios */}
+        <ActivityQrDialog
+          programId={programId}
+          activityId={row.original.id}
+          activityName={row.original.name}
+        />
         {canManageActivities && (
           <Button
             variant="ghost"
