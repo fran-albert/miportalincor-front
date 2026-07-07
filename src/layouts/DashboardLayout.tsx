@@ -21,7 +21,7 @@ import useUserRole from "@/hooks/useRoles";
 
 export function DashboardLayout() {
   const { handleLogout } = useLogout();
-  const { session, isPatient, isDoctor } = useUserRole();
+  const { session, isPatient, isDoctor, isAdmin } = useUserRole();
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") {
@@ -97,7 +97,15 @@ export function DashboardLayout() {
                     <DropdownMenuItem asChild>
                       <Link to="/mi-perfil">Perfil</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>Configuración</DropdownMenuItem>
+                    {isAdmin ? (
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracion">Configuración</Link>
+                      </DropdownMenuItem>
+                    ) : isDoctor ? (
+                      <DropdownMenuItem asChild>
+                        <Link to="/mi-configuracion">Mi Configuración</Link>
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       Cerrar Sesión

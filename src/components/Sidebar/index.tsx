@@ -12,31 +12,40 @@ import {
   SidebarMenuItem,
 } from "../ui/sidebar";
 import {
-  User,
-  ChevronDown,
-  TestTube,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Activity,
+  Briefcase,
   Calendar,
   CalendarCheck,
   CalendarClock,
   CalendarDays,
-  Shield,
-  UserCircle,
-  Stethoscope,
-  UserCheck,
-  Users,
-  Home,
+  ChevronDown,
   ClipboardList,
-  Settings,
-  Activity,
-  TrendingUp,
-  ShieldCheck,
-  UserCog,
   Clock,
-  FileText,
-  Pill,
   CreditCard,
+  FileText,
+  Home,
+  Inbox,
+  KeyRound,
+  Pill,
+  ScrollText,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Stethoscope,
   Syringe,
+  TestTube,
+  TrendingUp,
+  User,
+  UserCheck,
+  UserCog,
+  Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -49,23 +58,39 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import useUserRole from "@/hooks/useRoles";
 import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
-import { Briefcase, Inbox } from "lucide-react";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
 
-const navigationItems = [
+interface SidebarNavItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  allowedRoles: readonly string[];
+  strictRoles?: boolean;
+}
+
+// Los permisos (allowedRoles/strictRoles) de cada ítem son exactamente los
+// mismos que antes del rediseño; acá solo cambia el agrupado y el estilo.
+const operacionItems: SidebarNavItem[] = [
   {
-    title: "Dashboard",
+    title: "Inicio",
     url: "/inicio",
     icon: Home,
     allowedRoles: PERMISSIONS.DASHBOARD,
   },
   {
-    title: "Mi Perfil",
-    url: "/mi-perfil",
-    icon: UserCircle,
-    allowedRoles: PERMISSIONS.MY_PROFILE,
+    title: "Mi Sala de Espera",
+    url: "/mi-sala-de-espera",
+    icon: Clock,
+    allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
+    strictRoles: true,
+  },
+  {
+    title: "Turnos",
+    url: "/turnos",
+    icon: Calendar,
+    allowedRoles: PERMISSIONS.APPOINTMENTS,
   },
   {
     title: "Pacientes",
@@ -73,6 +98,22 @@ const navigationItems = [
     icon: Users,
     allowedRoles: PERMISSIONS.PATIENTS,
   },
+  {
+    title: "Estudios recibidos",
+    url: "/estudios-recibidos",
+    icon: Inbox,
+    allowedRoles: PERMISSIONS.STUDY_INBOX,
+  },
+  {
+    title: "Solicitudes de Recetas",
+    url: "/solicitudes-recetas",
+    icon: FileText,
+    allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
+    strictRoles: true,
+  },
+];
+
+const catalogoItems: SidebarNavItem[] = [
   {
     title: "Médicos",
     url: "/medicos",
@@ -92,37 +133,74 @@ const navigationItems = [
     allowedRoles: PERMISSIONS.HEALTH_INSURANCE,
   },
   {
-    title: "Turnos",
-    url: "/turnos",
-    icon: Calendar,
-    allowedRoles: PERMISSIONS.APPOINTMENTS,
-  },
-  {
-    title: "Estudios recibidos",
-    url: "/estudios-recibidos",
-    icon: Inbox,
-    allowedRoles: PERMISSIONS.STUDY_INBOX,
-  },
-  {
     title: "Programas",
     url: "/programas",
     icon: Activity,
     allowedRoles: PERMISSIONS.PROGRAMS,
   },
   {
-    title: "Mi Sala de Espera",
-    url: "/mi-sala-de-espera",
-    icon: Clock,
-    allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
-    strictRoles: true,
+    title: "Servicios Médicos",
+    url: "/admin/servicios-medicos",
+    icon: CreditCard,
+    allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
   },
   {
-    title: "Mi Configuración",
-    url: "/mi-configuracion",
-    icon: Settings,
-    allowedRoles: PERMISSIONS.MY_SETTINGS,
-    strictRoles: true,
+    title: "Feriados",
+    url: "/admin/feriados",
+    icon: CalendarDays,
+    allowedRoles: PERMISSIONS.HOLIDAYS,
   },
+];
+
+const reportesItems: SidebarNavItem[] = [
+  {
+    title: "Reportes de Turnos",
+    url: "/admin/reportes-turnos",
+    icon: TrendingUp,
+    allowedRoles: PERMISSIONS.STATISTICS,
+  },
+  {
+    title: "Auditoría",
+    url: "/auditoria",
+    icon: ScrollText,
+    allowedRoles: PERMISSIONS.AUDIT,
+  },
+];
+
+const sistemaItems: SidebarNavItem[] = [
+  {
+    title: "Usuarios del Sistema",
+    url: "/usuarios",
+    icon: User,
+    allowedRoles: PERMISSIONS.SYSTEM_USERS,
+  },
+  {
+    title: "Secretarias",
+    url: "/secretarias",
+    icon: UserCog,
+    allowedRoles: PERMISSIONS.SECRETARIES,
+  },
+  {
+    title: "Gestión de Roles",
+    url: "/gestion-roles",
+    icon: ShieldCheck,
+    allowedRoles: PERMISSIONS.ROLE_MANAGEMENT,
+  },
+  {
+    title: "Asignar Roles",
+    url: "/asignar-roles",
+    icon: KeyRound,
+    allowedRoles: PERMISSIONS.ASSIGN_ROLES,
+  },
+  {
+    title: "Configuración",
+    url: "/configuracion",
+    icon: Settings,
+    allowedRoles: PERMISSIONS.SETTINGS,
+  },
+];
+
+const miSaludItems: SidebarNavItem[] = [
   {
     title: "Mis Estudios",
     url: "/mis-estudios",
@@ -165,91 +243,96 @@ const navigationItems = [
     allowedRoles: PERMISSIONS.MY_PROGRAMS,
     strictRoles: true,
   },
-  {
-    title: "Solicitudes de Recetas",
-    url: "/solicitudes-recetas",
-    icon: FileText,
-    allowedRoles: PERMISSIONS.DOCTOR_PRESCRIPTION_REQUESTS,
-    strictRoles: true,
-  },
 ];
 
-const reportsItems = [
-  {
-    title: "Reportes de Turnos",
-    url: "/admin/reportes-turnos",
-    icon: TrendingUp,
-    allowedRoles: PERMISSIONS.STATISTICS,
-  },
-  {
-    title: "Actividad",
-    url: "#",
-    icon: Activity,
-    allowedRoles: PERMISSIONS.ACTIVITY,
-    comingSoon: true,
-  },
-];
+const incorLaboralItem: SidebarNavItem = {
+  title: "Incor Laboral",
+  url: "/incor-laboral",
+  icon: Briefcase,
+  allowedRoles: PERMISSIONS.APPOINTMENTS,
+};
 
-const systemItems = [
-  {
-    title: "Configuración",
-    url: "/configuracion",
-    icon: Settings,
-    allowedRoles: PERMISSIONS.SETTINGS,
-  },
-  {
-    title: "Usuarios del Sistema",
-    url: "/usuarios",
-    icon: User,
-    allowedRoles: PERMISSIONS.SYSTEM_USERS,
-  },
-  {
-    title: "Secretarias",
-    url: "/secretarias",
-    icon: UserCog,
-    allowedRoles: PERMISSIONS.SECRETARIES,
-  },
-  {
-    title: "Gestión de Roles",
-    url: "/gestion-roles",
-    icon: ShieldCheck,
-    allowedRoles: PERMISSIONS.ROLE_MANAGEMENT,
-  },
-  {
-    title: "Asignar Roles",
-    url: "/asignar-roles",
-    icon: Users,
-    allowedRoles: PERMISSIONS.ASSIGN_ROLES,
-  },
-  {
-    title: "Auditoría",
-    url: "/auditoria",
-    icon: ClipboardList,
-    allowedRoles: PERMISSIONS.AUDIT,
-  },
-  {
-    title: "Servicios Médicos",
-    url: "/admin/servicios-medicos",
-    icon: CreditCard,
-    allowedRoles: PERMISSIONS.DOCTOR_SERVICES,
-  },
-  {
-    title: "Feriados",
-    url: "/admin/feriados",
-    icon: CalendarDays,
-    allowedRoles: PERMISSIONS.HOLIDAYS,
-  },
-];
+// Íconos apagados por defecto; el color de marca queda reservado para el ítem
+// activo. El peso tipográfico es constante para que nada "salte" al navegar.
+const menuButtonClassName =
+  "font-medium text-gray-600 hover:bg-gray-100/70 hover:text-gray-900 [&>svg]:text-gray-400 data-[active=true]:bg-greenPrimary/10 data-[active=true]:text-greenPrimary data-[active=true]:[&>svg]:text-greenPrimary";
+
+interface SidebarNavMenuProps {
+  items: SidebarNavItem[];
+  pathname: string;
+  getBadgeCount?: (item: SidebarNavItem) => number;
+}
+
+const SidebarNavMenu = ({ items, pathname, getBadgeCount }: SidebarNavMenuProps) => {
+  return (
+    <SidebarGroupContent>
+      <SidebarMenu>
+        {items.map((item) => {
+          const active = pathname === item.url;
+          const badgeCount = getBadgeCount ? getBadgeCount(item) : 0;
+
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={active}
+                tooltip={item.title}
+                className={menuButtonClassName}
+              >
+                <Link to={item.url}>
+                  <item.icon />
+                  <span className="flex-1">{item.title}</span>
+                  {badgeCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
+                    >
+                      {badgeCount > 9 ? "9+" : badgeCount}
+                    </Badge>
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
+      </SidebarMenu>
+    </SidebarGroupContent>
+  );
+};
+
+interface SidebarNavGroupProps extends SidebarNavMenuProps {
+  label?: string;
+}
+
+const SidebarNavGroup = ({ label, items, pathname, getBadgeCount }: SidebarNavGroupProps) => {
+  if (items.length === 0) return null;
+
+  return (
+    <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarNavMenu items={items} pathname={pathname} getBadgeCount={getBadgeCount} />
+    </SidebarGroup>
+  );
+};
 
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { handleLogout } = useLogout();
-  const { session } = useUserRole();
+  const { session, isDoctor, isSecretary, isAdmin, isPatient } = useUserRole();
   const { canAccessLaboral } = useLaboralPermissions();
 
-  const userName = session?.firstName || "Usuario";
+  const firstName = session?.firstName || "Usuario";
+  const lastName = session?.lastName || "";
   const userRoles = session?.role || [];
-  const isDoctor = userRoles.includes("Medico");
+  const userInitials =
+    `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
+  const roleLabel = isAdmin
+    ? "Administrador"
+    : isDoctor
+      ? "Médico"
+      : isSecretary
+        ? "Secretaria"
+        : "Paciente";
 
   // Check if doctor has GREEN_CARD service enabled
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
@@ -261,28 +344,41 @@ export function AppSidebar() {
   });
 
   // Filtrar items del menú según roles del usuario
-  let filteredNavigationItems = filterMenuItems(navigationItems, userRoles);
-
-  if (canAccessLaboral) {
-    filteredNavigationItems = [
-      ...filteredNavigationItems,
-      {
-        title: "Incor Laboral",
-        url: "/incor-laboral",
-        icon: Briefcase,
-        allowedRoles: PERMISSIONS.APPOINTMENTS,
-      },
-    ];
-  }
+  let filteredOperacion = filterMenuItems(operacionItems, userRoles);
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {
-    filteredNavigationItems = filteredNavigationItems.filter(
+    filteredOperacion = filteredOperacion.filter(
       (item) => item.url !== "/solicitudes-recetas"
     );
   }
-  const filteredReportsItems = filterMenuItems(reportsItems, userRoles);
-  const filteredSystemItems = filterMenuItems(systemItems, userRoles);
+
+  const filteredMiSalud = filterMenuItems(miSaludItems, userRoles);
+  const filteredCatalogo = filterMenuItems(catalogoItems, userRoles);
+  const filteredReportes = filterMenuItems(reportesItems, userRoles);
+  const filteredSistema = filterMenuItems(sistemaItems, userRoles);
+  const laboralItems = canAccessLaboral ? [incorLaboralItem] : [];
+
+  const isPureDoctor = isDoctor && !isAdmin && !isSecretary;
+  const isPurePatient = isPatient && !isDoctor && !isAdmin && !isSecretary;
+  const operacionLabel = isPurePatient
+    ? undefined
+    : isPureDoctor
+      ? "Mi consultorio"
+      : "Operación";
+
+  // Si el usuario está parado en una pantalla de Sistema, el grupo arranca abierto
+  const sistemaOpenByDefault = filteredSistema.some((item) => item.url === pathname);
+
+  const configUrl = isAdmin
+    ? "/configuracion"
+    : isDoctor
+      ? "/mi-configuracion"
+      : null;
+  const configLabel = isAdmin ? "Configuración" : "Mi Configuración";
+
+  const getOperacionBadgeCount = (item: SidebarNavItem) =>
+    item.url === "/solicitudes-recetas" && isDoctor ? pendingCount : 0;
 
   return (
     <Sidebar collapsible="icon">
@@ -308,159 +404,34 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {filteredNavigationItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Gestión Principal</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredNavigationItems.map((item) => {
-                  const active = pathname === item.url;
-                  const isComingSoon = "comingSoon" in item && item.comingSoon;
+        <SidebarNavGroup
+          label={operacionLabel}
+          items={filteredOperacion}
+          pathname={pathname}
+          getBadgeCount={getOperacionBadgeCount}
+        />
+        <SidebarNavGroup label="Mi salud" items={filteredMiSalud} pathname={pathname} />
+        <SidebarNavGroup label="Catálogo" items={filteredCatalogo} pathname={pathname} />
+        <SidebarNavGroup label="Laboral" items={laboralItems} pathname={pathname} />
+        <SidebarNavGroup label="Reportes" items={filteredReportes} pathname={pathname} />
 
-                  if (isComingSoon) {
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          disabled
-                          className="opacity-60 cursor-not-allowed"
-                          tooltip={item.title}
-                        >
-                          <item.icon className="text-gray-400" />
-                          <span className="text-gray-400 flex-1">{item.title}</span>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-50 text-amber-600 border-amber-200">
-                            Próximamente
-                          </Badge>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  }
-
-                  // Check if this is the prescription requests item for doctors
-                  const isPrescriptionRequestsItem =
-                    item.url === "/solicitudes-recetas" && isDoctor;
-                  const badgeCount = isPrescriptionRequestsItem
-                    ? pendingCount
-                    : 0;
-                  const showBadge = badgeCount > 0;
-
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.title}
-                      >
-                        <Link
-                          to={item.url}
-                          className={`flex items-center gap-2 px-2 py-1 rounded ${
-                            active
-                              ? "font-bold bg-gray-100 text-greenPrimary"
-                              : "font-normal text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          <item.icon className="text-greenPrimary" />
-                          <span className="flex-1">{item.title}</span>
-                          {showBadge && (
-                            <Badge
-                              variant="destructive"
-                              className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold"
-                            >
-                              {badgeCount > 9 ? "9+" : badgeCount}
-                            </Badge>
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {filteredReportsItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Reportes y Análisis</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredReportsItems.map((item) => {
-                  const isComingSoon = "comingSoon" in item && item.comingSoon;
-
-                  if (isComingSoon) {
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          disabled
-                          className="opacity-60 cursor-not-allowed"
-                          tooltip={item.title}
-                        >
-                          <item.icon className="text-gray-400" />
-                          <span className="text-gray-400">{item.title}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  }
-
-                  const active = pathname === item.url;
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.title}
-                      >
-                        <Link
-                          to={item.url}
-                          className={`flex items-center gap-2 px-2 py-1 rounded ${
-                            active
-                              ? "font-bold bg-gray-100 text-greenPrimary"
-                              : "font-normal text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          <item.icon className="text-greenPrimary" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {filteredSystemItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administración</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredSystemItems.map((item) => {
-                  const active = pathname === item.url;
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.title}
-                      >
-                        <Link
-                          to={item.url}
-                          className={`flex items-center gap-2 px-2 py-1 rounded ${
-                            active
-                              ? "font-bold bg-gray-100 text-greenPrimary"
-                              : "font-normal text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          <item.icon className="text-greenPrimary" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+        {filteredSistema.length > 0 && (
+          <Collapsible
+            defaultOpen={sistemaOpenByDefault}
+            className="group/collapsible"
+          >
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="w-full cursor-pointer">
+                  Sistema
+                  <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarNavMenu items={filteredSistema} pathname={pathname} />
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
         )}
       </SidebarContent>
 
@@ -469,9 +440,18 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton tooltip={userName}>
-                  <User />
-                  <span>{userName}</span>
+                <SidebarMenuButton size="lg" tooltip={firstName}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-greenPrimary/10 text-xs font-semibold text-greenPrimary">
+                    {userInitials}
+                  </div>
+                  <div className="grid flex-1 text-left leading-tight">
+                    <span className="truncate text-sm font-semibold">
+                      {`${firstName} ${lastName}`.trim()}
+                    </span>
+                    <span className="truncate text-xs text-gray-500">
+                      {roleLabel}
+                    </span>
+                  </div>
                   <ChevronDown className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -482,11 +462,13 @@ export function AppSidebar() {
                 <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/mi-perfil">Perfil</Link>
+                  <Link to="/mi-perfil">Mi Perfil</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Configuración</span>
-                </DropdownMenuItem>
+                {configUrl && (
+                  <DropdownMenuItem asChild>
+                    <Link to={configUrl}>{configLabel}</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <span>Cerrar Sesión</span>

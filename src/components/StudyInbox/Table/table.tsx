@@ -47,7 +47,7 @@ export const StudyInboxScreen = () => {
       <PageHeader
         breadcrumbItems={breadcrumbItems}
         title="Estudios recibidos"
-        description="Revisá los laboratorios recibidos por email y confirmá la carga al paciente."
+        description="Revisá los estudios recibidos por email y confirmá la carga al paciente."
         icon={<Inbox className="h-6 w-6" />}
         actions={<UploadPdfButton />}
       />

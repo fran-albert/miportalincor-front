@@ -22,6 +22,8 @@ export interface StudyInboxItem {
   detectedLabIngreso: string | null;
   detectedStudyDate: string | null;
   detectedInstitution: string | null;
+  detectedStudySubtype: string | null;
+  suggestedStudyTypeId: number | null;
   suggestedPatientUserId: string | null;
   matchConfidence: MatchConfidence | null;
   status: StudyInboxStatus;
