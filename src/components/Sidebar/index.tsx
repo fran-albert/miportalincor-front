@@ -113,13 +113,16 @@ const operacionItems: SidebarNavItem[] = [
   },
 ];
 
+// "Médicos" es operación diaria para admin/secretaría, pero catálogo de
+// consulta para el médico: se ubica según el rol al armar los grupos.
+const medicosItem: SidebarNavItem = {
+  title: "Médicos",
+  url: "/medicos",
+  icon: UserCheck,
+  allowedRoles: PERMISSIONS.DOCTORS,
+};
+
 const catalogoItems: SidebarNavItem[] = [
-  {
-    title: "Médicos",
-    url: "/medicos",
-    icon: UserCheck,
-    allowedRoles: PERMISSIONS.DOCTORS,
-  },
   {
     title: "Especialidades",
     url: "/especialidades",
@@ -343,8 +346,26 @@ export function AppSidebar() {
     showToasts: false, // Toasts are handled in DashboardLayout
   });
 
+  const isPureDoctor = isDoctor && !isAdmin && !isSecretary;
+  const isPurePatient = isPatient && !isDoctor && !isAdmin && !isSecretary;
+
+  // "Médicos" va en Operación para admin/secretaría y en Catálogo para el médico
+  const pacientesIndex = operacionItems.findIndex(
+    (item) => item.url === "/pacientes"
+  );
+  const operacionSource = isPureDoctor
+    ? operacionItems
+    : [
+        ...operacionItems.slice(0, pacientesIndex + 1),
+        medicosItem,
+        ...operacionItems.slice(pacientesIndex + 1),
+      ];
+  const catalogoSource = isPureDoctor
+    ? [medicosItem, ...catalogoItems]
+    : catalogoItems;
+
   // Filtrar items del menú según roles del usuario
-  let filteredOperacion = filterMenuItems(operacionItems, userRoles);
+  let filteredOperacion = filterMenuItems(operacionSource, userRoles);
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {
@@ -354,13 +375,10 @@ export function AppSidebar() {
   }
 
   const filteredMiSalud = filterMenuItems(miSaludItems, userRoles);
-  const filteredCatalogo = filterMenuItems(catalogoItems, userRoles);
+  const filteredCatalogo = filterMenuItems(catalogoSource, userRoles);
   const filteredReportes = filterMenuItems(reportesItems, userRoles);
   const filteredSistema = filterMenuItems(sistemaItems, userRoles);
   const laboralItems = canAccessLaboral ? [incorLaboralItem] : [];
-
-  const isPureDoctor = isDoctor && !isAdmin && !isSecretary;
-  const isPurePatient = isPatient && !isDoctor && !isAdmin && !isSecretary;
   const operacionLabel = isPurePatient
     ? undefined
     : isPureDoctor
@@ -410,9 +428,9 @@ export function AppSidebar() {
           pathname={pathname}
           getBadgeCount={getOperacionBadgeCount}
         />
+        <SidebarNavGroup label="Laboral" items={laboralItems} pathname={pathname} />
         <SidebarNavGroup label="Mi salud" items={filteredMiSalud} pathname={pathname} />
         <SidebarNavGroup label="Catálogo" items={filteredCatalogo} pathname={pathname} />
-        <SidebarNavGroup label="Laboral" items={laboralItems} pathname={pathname} />
         <SidebarNavGroup label="Reportes" items={filteredReportes} pathname={pathname} />
 
         {filteredSistema.length > 0 && (
