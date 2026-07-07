@@ -15,8 +15,16 @@ import {
 const QrAttendancePage = () => {
   const { qrToken } = useParams<{ qrToken: string }>();
   const [searchParams] = useSearchParams();
-  const activityName = searchParams.get("actividad");
-  const programName = searchParams.get("programa");
+  // Hay QRs impresos cuya URL codifica el texto literal "undefined" (la API
+  // no devolvía programName cuando se generaron): esos valores no se muestran.
+  const cleanParam = (value: string | null): string | null => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "undefined" || trimmed === "null") return null;
+    return trimmed;
+  };
+  const activityName = cleanParam(searchParams.get("actividad"));
+  const programName = cleanParam(searchParams.get("programa"));
   const [dni, setDni] = useState("");
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
