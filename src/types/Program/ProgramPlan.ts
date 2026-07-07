@@ -10,11 +10,28 @@ export const FrequencyPeriodLabels: Record<FrequencyPeriod, string> = {
   [FrequencyPeriod.MONTHLY]: "Mensual",
 };
 
+export enum ScheduleType {
+  FREQUENCY = "FREQUENCY",
+  DAYS_OF_WEEK = "DAYS_OF_WEEK",
+  SPECIFIC_DATES = "SPECIFIC_DATES",
+}
+
+export const ScheduleTypeLabels: Record<ScheduleType, string> = {
+  [ScheduleType.FREQUENCY]: "Frecuencia",
+  [ScheduleType.DAYS_OF_WEEK]: "Días de la semana",
+  [ScheduleType.SPECIFIC_DATES]: "Fechas específicas",
+};
+
 export interface PlanActivityItem {
   activityId: string;
   assignedProfessionalUserId?: string;
-  frequencyCount: number;
-  frequencyPeriod: FrequencyPeriod;
+  scheduleType?: ScheduleType;
+  frequencyCount?: number;
+  frequencyPeriod?: FrequencyPeriod;
+  /** Días de la semana (0=domingo … 6=sábado), para DAYS_OF_WEEK */
+  daysOfWeek?: number[];
+  /** Fechas YYYY-MM-DD, para SPECIFIC_DATES */
+  specificDates?: string[];
   notes?: string;
 }
 
@@ -28,8 +45,11 @@ export interface PlanActivityResponse {
   activityId: string;
   activityName: string;
   assignedProfessionalUserId?: string;
-  frequencyCount: number;
-  frequencyPeriod: FrequencyPeriod;
+  scheduleType?: ScheduleType;
+  frequencyCount?: number;
+  frequencyPeriod?: FrequencyPeriod;
+  daysOfWeek?: number[];
+  specificDates?: string[];
   notes?: string;
 }
 

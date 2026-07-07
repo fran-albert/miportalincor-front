@@ -1,12 +1,35 @@
+import { useState } from "react";
 import { useUsers } from "@/hooks/User/useUsers";
+import { UserStatusFilter } from "@/api/User/get-all-users.action";
 import { UsersTable } from "@/components/User/Table/table";
 import { Helmet } from "react-helmet-async";
 import useUserRole from "@/hooks/useRoles";
 
+const PAGE_SIZE = 20;
+
 const UsersComponent = () => {
-  const { users, isFetching, error, refetch } = useUsers();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<UserStatusFilter>("active");
+
+  const { users, total, isFetching, error, refetch } = useUsers({
+    page,
+    limit: PAGE_SIZE,
+    search,
+    status,
+  });
   const { session } = useUserRole();
   const currentUserId = Number(session?.id);
+
+  const handleSearchChange = (query: string) => {
+    setSearch(query);
+    setPage(1);
+  };
+
+  const handleStatusChange = (newStatus: UserStatusFilter) => {
+    setStatus(newStatus);
+    setPage(1);
+  };
 
   return (
     <>
@@ -22,7 +45,15 @@ const UsersComponent = () => {
       )}
       <UsersTable
         users={users}
+        total={total}
+        page={page}
+        limit={PAGE_SIZE}
+        search={search}
+        status={status}
         isFetching={isFetching}
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onPageChange={setPage}
         onRefetch={refetch}
         currentUserId={currentUserId}
       />

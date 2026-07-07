@@ -7,7 +7,7 @@ import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
 import { usePlanVersions } from "@/hooks/Program/usePlanVersions";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
-import { FrequencyPeriodLabels } from "@/types/Program/ProgramPlan";
+import { formatScheduleShort } from "@/common/helpers/plan-schedule.helpers";
 import CreatePlanVersionDialog from "./CreatePlanVersionDialog";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -77,10 +77,7 @@ export default function PlanTab({
                       <div className="text-sm text-gray-500">{pa.notes}</div>
                     )}
                   </div>
-                  <Badge variant="secondary">
-                    {pa.frequencyCount}x{" "}
-                    {FrequencyPeriodLabels[pa.frequencyPeriod]}
-                  </Badge>
+                  <Badge variant="secondary">{formatScheduleShort(pa)}</Badge>
                 </div>
               ))}
             </div>
