@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
+import { pdf } from "@react-pdf/renderer";
 import { environment } from "@/config/environment";
 import {
   Dialog,
@@ -9,8 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QrCode } from "lucide-react";
+import { Download, Loader2, QrCode } from "lucide-react";
 import { useActivityQr } from "@/hooks/Program/useActivityQr";
+import { ActivityQrPosterPdf } from "./ActivityQrPosterPdf";
+
+// Mismo logo que usan los otros PDFs del portal (resumen mensual de programas)
+const INCOR_LOGO_URL =
+  "https://res.cloudinary.com/dfoqki8kt/image/upload/v1747930109/sxbdhyslwep6ezukcbr2.png";
 
 interface ActivityQrDialogProps {
   programId: string;
@@ -24,30 +30,44 @@ export default function ActivityQrDialog({
   activityName,
 }: ActivityQrDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { qrData, isLoading } = useActivityQr(
-    programId,
-    activityId,
-    isOpen
-  );
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { qrData, isLoading } = useActivityQr(programId, activityId, isOpen);
   const qrRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
+  const handleDownloadPoster = async () => {
     const canvas = qrRef.current?.querySelector("canvas");
     if (!canvas || !qrData) return;
-    const dataUrl = canvas.toDataURL("image/png");
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(`
-        <html><head><title>QR - ${activityName}</title></head>
-        <body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-          <h2>${qrData.programName}</h2>
-          <h3>${activityName}</h3>
-          <img src="${dataUrl}" width="400" height="400" />
-          <p>Escaneá este QR para registrar tu asistencia</p>
-        </body></html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
+    setIsGenerating(true);
+    try {
+      const qrDataUrl = canvas.toDataURL("image/png");
+      const doc = (
+        <ActivityQrPosterPdf
+          programName={qrData.programName}
+          activityName={activityName}
+          qrDataUrl={qrDataUrl}
+          logoSrc={INCOR_LOGO_URL}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const sanitizedActivity = activityName
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "_")
+        .toLowerCase();
+      const fileName = `qr_asistencia_${sanitizedActivity}.pdf`;
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al generar el póster QR:", error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -80,10 +100,25 @@ export default function ActivityQrDialog({
               </div>
               <p className="text-sm text-gray-600 text-center">
                 Los pacientes pueden escanear este código para registrar su
-                asistencia a <strong>{activityName}</strong>.
+                asistencia a <strong>{activityName}</strong> ingresando su DNI,
+                sin iniciar sesión.
               </p>
-              <Button variant="outline" onClick={handlePrint}>
-                Imprimir QR
+              <Button
+                onClick={handleDownloadPoster}
+                disabled={isGenerating}
+                className="bg-greenPrimary hover:bg-teal-700 text-white"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generando PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Descargar PDF para imprimir
+                  </>
+                )}
               </Button>
             </>
           ) : (
