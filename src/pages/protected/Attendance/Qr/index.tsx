@@ -1,35 +1,55 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { useAttendanceMutations } from "@/hooks/Program/useAttendanceMutations";
+import {
+  registerPublicQrAttendance,
+  PublicQrAttendanceResponse,
+} from "@/api/Program/register-public-qr-attendance.action";
 
+// Página PÚBLICA (sin login): el paciente escanea el QR pegado en el
+// consultorio, ingresa su DNI y confirma. Pensada para gente mayor:
+// una sola acción por pantalla, texto grande y sin navegación del portal.
 const QrAttendancePage = () => {
   const { qrToken } = useParams<{ qrToken: string }>();
   const [searchParams] = useSearchParams();
   const activityName = searchParams.get("actividad");
   const programName = searchParams.get("programa");
-  const navigate = useNavigate();
-  const { registerQrMutation } = useAttendanceMutations();
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
-    "idle"
+  const [dni, setDni] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [result, setResult] = useState<PublicQrAttendanceResponse | null>(
+    null
   );
   const [errorMessage, setErrorMessage] = useState("");
 
+  const canSubmit = dni.length >= 6 && status !== "loading";
+
   const handleRegister = async () => {
-    if (!qrToken) return;
+    if (!qrToken || !canSubmit) return;
     setStatus("loading");
     try {
-      await registerQrMutation.mutateAsync(qrToken);
+      const response = await registerPublicQrAttendance(qrToken, dni);
+      setResult(response);
       setStatus("success");
     } catch (error: unknown) {
       setStatus("error");
-      const err = error as { response?: { data?: { message?: string } } };
-      setErrorMessage(
-        err?.response?.data?.message || "No se pudo registrar la asistencia."
-      );
+      const err = error as {
+        response?: { status?: number; data?: { message?: string } };
+      };
+      if (err?.response?.status === 429) {
+        setErrorMessage(
+          "Hiciste demasiados intentos. Esperá un minuto y volvé a probar."
+        );
+      } else {
+        setErrorMessage(
+          err?.response?.data?.message ||
+            "No pudimos registrar tu asistencia. Acercate a recepción."
+        );
+      }
     }
   };
 
@@ -38,85 +58,113 @@ const QrAttendancePage = () => {
       <Helmet>
         <title>Registrar Asistencia</title>
       </Helmet>
-      <div className="flex items-center justify-center min-h-[60vh] p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Registrar Asistencia</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-6">
-            {status === "idle" && (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="bg-greenPrimary px-6 py-4 text-center">
+            <p className="text-white text-lg font-bold">INCOR Centro Médico</p>
+          </div>
+          <div className="p-6 text-center space-y-6">
+            {(status === "idle" || status === "loading") && (
               <>
-                {activityName && (
-                  <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
-                    <p className="text-xl font-bold text-gray-900">
-                      {activityName}
-                    </p>
-                    {programName && (
-                      <p className="text-base text-gray-600">{programName}</p>
-                    )}
-                  </div>
-                )}
-                <p className="text-base text-gray-600">
-                  Tocá el botón para registrar tu asistencia.
-                </p>
+                <div className="space-y-1">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Registrar asistencia
+                  </h1>
+                  {activityName && (
+                    <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 mt-3">
+                      <p className="text-xl font-bold text-gray-900">
+                        {activityName}
+                      </p>
+                      {programName && (
+                        <p className="text-base text-gray-600">{programName}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <label
+                    htmlFor="dni"
+                    className="block text-lg font-semibold text-gray-800"
+                  >
+                    Ingresá tu DNI
+                  </label>
+                  <Input
+                    id="dni"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Ej: 12345678"
+                    maxLength={9}
+                    className="h-16 text-center text-3xl font-bold tracking-widest"
+                    value={dni}
+                    onChange={(e) =>
+                      setDni(e.target.value.replace(/\D/g, ""))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRegister();
+                    }}
+                    disabled={status === "loading"}
+                  />
+                  <p className="text-sm text-gray-500">
+                    Solo números, sin puntos.
+                  </p>
+                </div>
+
                 <Button
                   size="lg"
-                  className="h-14 w-full text-lg font-semibold"
+                  className="h-16 w-full text-xl font-semibold"
                   onClick={handleRegister}
+                  disabled={!canSubmit}
                 >
-                  Confirmar Asistencia
+                  {status === "loading" ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      Registrando...
+                    </span>
+                  ) : (
+                    "Confirmar asistencia"
+                  )}
                 </Button>
               </>
             )}
 
-            {status === "loading" && (
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-12 w-12 animate-spin text-greenPrimary" />
-                <p className="text-gray-600">Registrando asistencia...</p>
-              </div>
-            )}
-
-            {status === "success" && (
-              <div className="flex flex-col items-center gap-4">
-                <CheckCircle className="h-16 w-16 text-green-500" />
-                <p className="text-xl font-semibold text-green-700">
-                  ¡Asistencia registrada!
+            {status === "success" && result && (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <CheckCircle className="h-20 w-20 text-green-500" />
+                <p className="text-2xl font-bold text-green-700">
+                  ¡Listo, {result.firstName}!
                 </p>
-                <p className="text-base text-gray-600">
-                  {activityName
-                    ? `Registramos tu asistencia a ${activityName}.`
-                    : "Tu asistencia fue registrada correctamente."}
+                <p className="text-lg text-gray-700">
+                  {result.alreadyRegistered
+                    ? `Tu asistencia de hoy a ${result.activityName} ya estaba registrada.`
+                    : `Tu asistencia a ${result.activityName} quedó registrada.`}
                 </p>
-                <Button
-                  variant="outline"
-                  className="h-12 text-base"
-                  onClick={() => navigate("/mis-programas")}
-                >
-                  Ir a Mis Programas
-                </Button>
+                <p className="text-base text-gray-500">
+                  Ya podés cerrar esta pantalla.
+                </p>
               </div>
             )}
 
             {status === "error" && (
-              <div className="flex flex-col items-center gap-4">
-                <XCircle className="h-16 w-16 text-red-500" />
-                <p className="text-lg font-semibold text-red-700">Error</p>
-                <p className="text-gray-600">{errorMessage}</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStatus("idle")}>
-                    Reintentar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/mis-programas")}
-                  >
-                    Ir a Mis Programas
-                  </Button>
-                </div>
+              <div className="flex flex-col items-center gap-4 py-4">
+                <XCircle className="h-20 w-20 text-red-500" />
+                <p className="text-lg text-gray-700">{errorMessage}</p>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 w-full text-lg"
+                  onClick={() => {
+                    setStatus("idle");
+                    setDni("");
+                  }}
+                >
+                  Volver a intentar
+                </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </>
   );
