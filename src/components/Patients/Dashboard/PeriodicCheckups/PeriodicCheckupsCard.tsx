@@ -2,7 +2,14 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Plus, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarCheck,
+  Plus,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { usePatientSchedules } from "@/hooks/Periodic-Checkup";
 import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
 import { AssignCheckupDialog } from "./AssignCheckupDialog";
@@ -25,6 +32,16 @@ export function PeriodicCheckupsCard({ patientId, patientName }: PeriodicCheckup
     const dueDate = parseISO(schedule.nextDueDate);
     const daysUntilDue = differenceInDays(dueDate, today);
 
+    // Ya hay turno de la especialidad cerca del control: el sistema deja de
+    // recordarle al paciente hasta que ese turno se cancele
+    if (schedule.hasUpcomingAppointment) {
+      return (
+        <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-300">
+          <CalendarCheck className="h-3 w-3" />
+          Turno programado
+        </Badge>
+      );
+    }
     if (daysUntilDue < 0) {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
