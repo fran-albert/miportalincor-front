@@ -21,6 +21,8 @@ export interface PatientCheckupSchedule {
   notes?: string;
   isActive: boolean;
   checkupType?: CheckupType;
+  /** true si ya hay un turno de la especialidad cerca de la fecha del control */
+  hasUpcomingAppointment?: boolean;
 }
 
 export interface CreateCheckupTypeDto {
