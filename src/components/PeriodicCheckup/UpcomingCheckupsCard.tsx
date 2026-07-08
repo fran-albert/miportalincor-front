@@ -1,20 +1,30 @@
 import { useMemo } from "react";
 import { format, isPast, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarClock, AlertCircle, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarCheck,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMyCheckupSchedules } from "@/hooks/Periodic-Checkup/useMyCheckupSchedules";
 import { PatientCheckupSchedule } from "@/types/Periodic-Checkup/PeriodicCheckup";
 
-type CheckupStatus = "overdue" | "upcoming" | "ontrack";
+type CheckupStatus = "scheduled" | "overdue" | "upcoming" | "ontrack";
 
 interface CheckupWithStatus extends PatientCheckupSchedule {
   status: CheckupStatus;
   daysUntilDue: number;
 }
 
-const getCheckupStatus = (nextDueDate: string): { status: CheckupStatus; daysUntilDue: number } => {
+const getCheckupStatus = (
+  nextDueDate: string,
+  hasUpcomingAppointment?: boolean
+): { status: CheckupStatus; daysUntilDue: number } => {
   const dueDate = new Date(nextDueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -22,6 +32,9 @@ const getCheckupStatus = (nextDueDate: string): { status: CheckupStatus; daysUnt
 
   const daysUntilDue = differenceInDays(dueDate, today);
 
+  if (hasUpcomingAppointment) {
+    return { status: "scheduled", daysUntilDue };
+  }
   if (isPast(dueDate) && daysUntilDue < 0) {
     return { status: "overdue", daysUntilDue };
   }
@@ -33,6 +46,13 @@ const getCheckupStatus = (nextDueDate: string): { status: CheckupStatus; daysUnt
 
 const getStatusBadge = (status: CheckupStatus) => {
   switch (status) {
+    case "scheduled":
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+          <CalendarCheck className="h-3 w-3 mr-1" />
+          Turno programado
+        </Badge>
+      );
     case "overdue":
       return (
         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
@@ -73,12 +93,15 @@ export function UpcomingCheckupsCard() {
     return schedules
       .filter((s) => s.isActive)
       .map((schedule) => {
-        const { status, daysUntilDue } = getCheckupStatus(schedule.nextDueDate);
+        const { status, daysUntilDue } = getCheckupStatus(
+          schedule.nextDueDate,
+          schedule.hasUpcomingAppointment
+        );
         return { ...schedule, status, daysUntilDue };
       })
       .sort((a, b) => {
-        // Sort by urgency: overdue first, then upcoming, then ontrack
-        const statusOrder = { overdue: 0, upcoming: 1, ontrack: 2 };
+        // Sort by urgency: overdue first, then upcoming, then scheduled/ontrack
+        const statusOrder = { overdue: 0, upcoming: 1, scheduled: 2, ontrack: 3 };
         const statusDiff = statusOrder[a.status] - statusOrder[b.status];
         if (statusDiff !== 0) return statusDiff;
         // Within same status, sort by days until due
