@@ -24,6 +24,8 @@ export interface Study {
   externalInstitution?: string;
   signedDoctorId?: string;
   isManualLaboratory?: boolean;
+  /** UID de las imágenes DICOM en el PACS: habilita el visor. */
+  studyInstanceUID?: string | null;
   parsingResult?: ParsingResult;
 }
 
@@ -56,4 +58,6 @@ export interface StudiesWithURL {
   externalInstitution?: string;
   signedDoctorId?: string;
   isManualLaboratory?: boolean;
+  /** UID de las imágenes DICOM en el PACS: habilita el visor. */
+  studyInstanceUID?: string | null;
 }

@@ -159,6 +159,7 @@ const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
       isExternal: study.isExternal || false,
       externalInstitution: study.externalInstitution,
       signedDoctorId: study.signedDoctorId,
+      studyInstanceUID: study.studyInstanceUID,
     }));
 };
 
