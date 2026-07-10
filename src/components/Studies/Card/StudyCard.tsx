@@ -16,6 +16,7 @@ import {
   FileEdit,
 } from "lucide-react";
 import DeleteStudyDialog from "../Delete/dialog";
+import { PacsViewerButton } from "../PacsViewerButton";
 
 export interface StudyCardProps {
   id: number;
@@ -38,6 +39,7 @@ export interface StudyCardProps {
   externalInstitution?: string;
   signedDoctorId?: string;
   currentDoctorId?: string;
+  studyInstanceUID?: string | null;
 }
 
 const getCategoryIcon = (categoria: string) => {
@@ -108,6 +110,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   externalInstitution,
   signedDoctorId,
   currentDoctorId,
+  studyInstanceUID,
 }) => {
   // Doctor can delete if it's an external study they created
   const canDeleteAsDoctor = isExternal && signedDoctorId && currentDoctorId && signedDoctorId === currentDoctorId;
@@ -229,6 +232,10 @@ export const StudyCard: React.FC<StudyCardProps> = ({
                 <Download className="h-4 w-4 mr-2" />
                 Descargar
               </Button>
+              <PacsViewerButton
+                studyId={id}
+                studyInstanceUID={studyInstanceUID}
+              />
             </>
           ) : isExternal ? (
             // Estudio externo sin documento: solo mostrar badge informativo
