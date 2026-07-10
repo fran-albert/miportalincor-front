@@ -3,6 +3,7 @@ import {
   getActiveConsultationTypes,
   getAllowedConsultationTypesByDoctor,
   getAllConsultationTypes,
+  getEcoSubtypes,
   getOwnConsultationTypesByDoctor,
 } from "@/api/ConsultationType";
 
@@ -14,6 +15,26 @@ export const consultationTypeKeys = {
     [...consultationTypeKeys.all, 'allowed-for-doctor', doctorId] as const,
   ownByDoctor: (doctorId: number) =>
     [...consultationTypeKeys.all, 'own-by-doctor', doctorId] as const,
+  ecoSubtypes: () => [...consultationTypeKeys.all, 'eco-subtypes'] as const,
+};
+
+/**
+ * Subtipos de ecografía del catálogo, para el selector obligatorio de la
+ * cola (turnos de eco sin subtipo definido).
+ */
+export const useEcoSubtypes = (options?: { enabled?: boolean }) => {
+  const query = useQuery({
+    queryKey: consultationTypeKeys.ecoSubtypes(),
+    queryFn: getEcoSubtypes,
+    staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled ?? true,
+  });
+
+  return {
+    ecoSubtypes: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
 };
 
 export const useAllConsultationTypes = () => {

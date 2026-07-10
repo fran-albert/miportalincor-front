@@ -56,6 +56,8 @@ import {
   useRegisterQueuePatient,
 } from '@/hooks/Queue';
 import { queueKeys } from '@/hooks/Queue';
+import { useAppointmentMutations } from '@/hooks/Appointments/useAppointmentMutations';
+import { EcoSubtypeDialog } from './EcoSubtypeDialog';
 import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
 import {
   formatDni,
@@ -264,7 +266,7 @@ const getQueueContextLabel = (entry: QueueEntry): string | null => {
 const ConsultationTypeBadges = ({ entry }: { entry: QueueEntry }) => {
   const labels = getConsultationTypeLabels(entry);
 
-  if (labels.length === 0) {
+  if (labels.length === 0 && !entry.necesitaSubtipoEco) {
     return null;
   }
 
@@ -279,6 +281,14 @@ const ConsultationTypeBadges = ({ entry }: { entry: QueueEntry }) => {
           {label}
         </Badge>
       ))}
+      {entry.necesitaSubtipoEco && (
+        <Badge
+          variant="outline"
+          className="rounded-full border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900"
+        >
+          Definir tipo de eco
+        </Badge>
+      )}
     </div>
   );
 };
@@ -850,6 +860,59 @@ export const QueuePanel = () => {
   const { data: activeQueue } = useActiveQueue();
 
   const callSpecificMutation = useCallSpecificPatient();
+  const { updateAppointment: updateAppointmentMutation } =
+    useAppointmentMutations();
+
+  // Acción retenida mientras la secretaria elige el subtipo de eco: la
+  // llamada / el pase a espera médica recién se ejecuta al confirmar.
+  type PendingEcoAction =
+    | { kind: 'call'; entry: QueueEntry; servicePoint: QueueCallDestination }
+    | { kind: 'confirmArrival'; entry: QueueEntry };
+  const [pendingEcoAction, setPendingEcoAction] =
+    useState<PendingEcoAction | null>(null);
+
+  const requiresEcoSubtype = (entry: QueueEntry): boolean =>
+    Boolean(
+      entry.necesitaSubtipoEco &&
+        entry.appointmentId &&
+        entry.appointmentType === 'SCHEDULED_APPOINTMENT',
+    );
+
+  const runEcoPendingAction = (action: PendingEcoAction) => {
+    if (action.kind === 'call') {
+      callSpecificMutation.mutate({
+        queueEntryId: action.entry.id,
+        servicePoint: action.servicePoint,
+      });
+    } else {
+      confirmArrivalMutation.mutate(action.entry.id);
+    }
+  };
+
+  const handleEcoSubtypeConfirm = async (consultationTypeId: number) => {
+    if (!pendingEcoAction?.entry.appointmentId) return;
+    try {
+      await updateAppointmentMutation.mutateAsync({
+        id: pendingEcoAction.entry.appointmentId,
+        dto: { consultationTypeId },
+      });
+      // useAppointmentMutations no invalida la cola: el flag y los badges
+      // salen de /queue/waiting|today, hay que refrescarla a mano.
+      void queryClient.invalidateQueries({ queryKey: queueKeys.all });
+      const action = pendingEcoAction;
+      setPendingEcoAction(null);
+      runEcoPendingAction(action);
+    } catch {
+      // El hook ya muestra el error; el diálogo queda abierto para reintentar.
+    }
+  };
+
+  const handleEcoSubtypeSkip = () => {
+    if (!pendingEcoAction) return;
+    const action = pendingEcoAction;
+    setPendingEcoAction(null);
+    runEcoPendingAction(action);
+  };
   const recallMutation = useRecallPatient();
   const confirmArrivalMutation = useConfirmArrival();
   const correctQueueDocumentMutation = useCorrectQueueDocument();
@@ -930,6 +993,10 @@ export const QueuePanel = () => {
     entry: QueueEntry,
     servicePoint: QueueCallDestination,
   ) => {
+    if (requiresEcoSubtype(entry)) {
+      setPendingEcoAction({ kind: 'call', entry, servicePoint });
+      return;
+    }
     callSpecificMutation.mutate({ queueEntryId: entry.id, servicePoint });
   };
 
@@ -1038,7 +1105,13 @@ export const QueuePanel = () => {
       actions.push({
         icon: ArrowRightCircle,
         label: 'Pasar a espera médica',
-        onClick: () => confirmArrivalMutation.mutate(entry.id),
+        onClick: () => {
+          if (requiresEcoSubtype(entry)) {
+            setPendingEcoAction({ kind: 'confirmArrival', entry });
+            return;
+          }
+          confirmArrivalMutation.mutate(entry.id);
+        },
         disabled: confirmArrivalMutation.isPending,
         className:
           'border-amber-500 bg-amber-500 text-white hover:border-amber-600 hover:bg-amber-600 shadow-amber-950/15',
@@ -1320,6 +1393,21 @@ export const QueuePanel = () => {
             setRegistrationEntry(null);
           }
         }}
+      />
+
+      <EcoSubtypeDialog
+        entry={pendingEcoAction?.entry ?? null}
+        confirmLabel={
+          pendingEcoAction?.kind === 'confirmArrival'
+            ? 'Guardar y pasar a espera médica'
+            : 'Guardar y llamar'
+        }
+        onCancel={() => setPendingEcoAction(null)}
+        onConfirm={(consultationTypeId) =>
+          void handleEcoSubtypeConfirm(consultationTypeId)
+        }
+        onSkip={handleEcoSubtypeSkip}
+        isSaving={updateAppointmentMutation.isPending}
       />
     </div>
   );
