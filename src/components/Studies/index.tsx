@@ -54,6 +54,7 @@ interface Study {
   isExternal?: boolean;
   externalInstitution?: string;
   signedDoctorId?: string;
+  studyInstanceUID?: string | null;
 }
 
 interface Laboratory {
@@ -440,6 +441,7 @@ export default function PatientStudies({
                         externalInstitution={study.externalInstitution}
                         signedDoctorId={study.signedDoctorId}
                         currentDoctorId={currentDoctorId}
+                        studyInstanceUID={study.studyInstanceUID}
                       />
                     ))
                   ) : (

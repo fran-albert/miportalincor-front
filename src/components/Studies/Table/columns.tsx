@@ -15,6 +15,7 @@ import {
   FileEdit,
 } from "lucide-react";
 import DeleteStudyDialog from "../Delete/dialog";
+import { PacsViewerButton } from "../PacsViewerButton";
 
 export interface Study {
   id: number;
@@ -34,6 +35,7 @@ export interface Study {
   isExternal?: boolean;
   externalInstitution?: string;
   signedDoctorId?: string;
+  studyInstanceUID?: string | null;
 }
 
 export interface Laboratory {
@@ -201,6 +203,10 @@ export const createStudiesColumns = (
               Manual
             </Badge>
           )}
+          <PacsViewerButton
+            studyId={study.id}
+            studyInstanceUID={study.studyInstanceUID}
+          />
           {((canDelete && !isManualLaboratory) || canDeleteManualLaboratory || canDeleteAsDoctor) && (
             <DeleteStudyDialog
               idStudy={study.id}
