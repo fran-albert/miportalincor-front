@@ -29,6 +29,12 @@ export interface QueueEntry {
   consultationTypeNames?: string[];
   consultationTypes?: Array<QueueConsultationType | string>;
   consultationType?: QueueConsultationType | null;
+  consultationTypeIds?: number[];
+  /**
+   * Turno de ecografía sin subtipo definido: la secretaria debe elegir el
+   * tipo de eco antes de llamar (para que llegue al ecógrafo vía worklist).
+   */
+  necesitaSubtipoEco?: boolean;
   scheduledTime: string;
   status: QueueStatus;
   displayNumber: string;
