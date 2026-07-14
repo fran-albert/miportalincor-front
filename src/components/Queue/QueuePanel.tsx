@@ -994,10 +994,9 @@ export const QueuePanel = () => {
     entry: QueueEntry,
     servicePoint: QueueCallDestination,
   ) => {
-    if (requiresEcoSubtype(entry)) {
-      setPendingEcoAction({ kind: 'call', entry, servicePoint });
-      return;
-    }
+    // El tipo de eco NO se pide al llamar: primero la secretaria llama al
+    // paciente por ventanilla/recepcion, y recien al pasar a espera medica
+    // (confirmArrival) se interpone el selector de subtipo.
     callSpecificMutation.mutate({ queueEntryId: entry.id, servicePoint });
   };
 
