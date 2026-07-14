@@ -54,7 +54,7 @@ describe("EcoSubtypeDialog", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  it("al elegir un subtipo habilita y confirma con su id", () => {
+  it("al elegir un subtipo habilita y confirma con su id en un array", () => {
     mockUseEcoSubtypes.mockReturnValue({
       ecoSubtypes: subtypes,
       isLoading: false,
@@ -81,7 +81,66 @@ describe("EcoSubtypeDialog", () => {
     expect(confirmButton).toBeEnabled();
 
     fireEvent.click(confirmButton);
-    expect(onConfirm).toHaveBeenCalledWith(25);
+    expect(onConfirm).toHaveBeenCalledWith([25]);
+  });
+
+  it("permite elegir varios subtipos y confirma con todos los ids", () => {
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: subtypes,
+      isLoading: false,
+    });
+    const onConfirm = vi.fn();
+
+    render(
+      <EcoSubtypeDialog
+        entry={entry}
+        confirmLabel="Guardar y llamar"
+        onCancel={vi.fn()}
+        onConfirm={onConfirm}
+        onSkip={vi.fn()}
+        isSaving={false}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /ecografia abdomen/i }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /ecografia mamaria/i }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /guardar y llamar/i }),
+    );
+
+    expect(onConfirm).toHaveBeenCalledWith([20, 25]);
+  });
+
+  it("al tocar dos veces un subtipo lo deselecciona", () => {
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: subtypes,
+      isLoading: false,
+    });
+    const onConfirm = vi.fn();
+
+    render(
+      <EcoSubtypeDialog
+        entry={entry}
+        confirmLabel="Guardar y llamar"
+        onCancel={vi.fn()}
+        onConfirm={onConfirm}
+        onSkip={vi.fn()}
+        isSaving={false}
+      />,
+    );
+
+    const mamaria = screen.getByRole("button", { name: /ecografia mamaria/i });
+    fireEvent.click(mamaria);
+    fireEvent.click(mamaria);
+
+    expect(
+      screen.getByRole("button", { name: /guardar y llamar/i }),
+    ).toBeDisabled();
+    expect(onConfirm).not.toHaveBeenCalled();
   });
 
   it("cancelar no confirma nada", () => {
