@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEcoSubtypes } from "@/hooks/ConsultationType";
@@ -24,13 +32,19 @@ interface EcoSubtypeDialogProps {
   isSaving: boolean;
 }
 
+const normalize = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+
 /**
  * Selector obligatorio del tipo de ecografía: se interpone cuando la
  * secretaria llama (o pasa a espera médica) un turno de eco sin subtipo.
- * Permite elegir uno o varios tipos (un paciente puede hacerse más de una
- * eco en el mismo turno). Sin al menos un tipo elegido la acción no se
- * completa — los tipos viajan por la worklist al ecógrafo y definen qué
- * examen se hace.
+ * La secretaria escribe para buscar y elige uno o varios tipos (un paciente
+ * puede hacerse más de una eco en el mismo turno); los elegidos quedan como
+ * chips. Sin al menos un tipo elegido la acción no se completa — los tipos
+ * viajan por la worklist al ecógrafo y definen qué examen se hace.
  */
 export function EcoSubtypeDialog({
   entry,
@@ -43,10 +57,12 @@ export function EcoSubtypeDialog({
   const open = entry !== null;
   const { ecoSubtypes, isLoading } = useEcoSubtypes({ enabled: open });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (open) {
       setSelectedIds([]);
+      setSearch("");
     }
   }, [open, entry?.id]);
 
@@ -55,6 +71,19 @@ export function EcoSubtypeDialog({
       prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
     );
   };
+
+  const selectedSubtypes = useMemo(
+    () => ecoSubtypes.filter((s) => selectedIds.includes(s.id)),
+    [ecoSubtypes, selectedIds],
+  );
+
+  const filtered = useMemo(() => {
+    const term = normalize(search).trim();
+    if (!term) return ecoSubtypes;
+    return ecoSubtypes.filter((s) => normalize(s.name).includes(term));
+  }, [ecoSubtypes, search]);
+
+  const catalogEmpty = !isLoading && ecoSubtypes.length === 0;
 
   return (
     <Dialog
@@ -71,43 +100,81 @@ export function EcoSubtypeDialog({
           <DialogDescription>
             El turno de <span className="font-semibold">{entry?.patientName}</span>{" "}
             con {entry?.doctorName} no tiene el tipo de ecografía definido.
-            Elegí uno o más (si el paciente se hace varias) para que el estudio
-            llegue al ecógrafo con los datos del paciente.
+            Buscá y elegí uno o más (si el paciente se hace varias) para que el
+            estudio llegue al ecógrafo con los datos del paciente.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-2 py-1">
-          {isLoading && (
-            <p className="text-sm text-muted-foreground">Cargando tipos…</p>
-          )}
-          {!isLoading && ecoSubtypes.length === 0 && (
-            <p className="text-sm text-rose-700">
-              No hay subtipos de ecografía configurados. Avisale al
-              administrador; mientras tanto se puede continuar y corregir el
-              tipo desde el calendario.
-            </p>
-          )}
-          {ecoSubtypes.map((subtype) => {
-            const selected = selectedIds.includes(subtype.id);
-            return (
-              <Button
-                key={subtype.id}
-                type="button"
-                variant="outline"
-                aria-pressed={selected}
-                onClick={() => toggleSubtype(subtype.id)}
-                className={cn(
-                  "h-auto justify-start whitespace-normal py-2.5 text-left text-sm font-medium",
-                  selected
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600"
-                    : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+        {catalogEmpty ? (
+          <p className="py-1 text-sm text-rose-700">
+            No hay subtipos de ecografía configurados. Avisale al administrador;
+            mientras tanto se puede continuar y corregir el tipo desde el
+            calendario.
+          </p>
+        ) : (
+          <div className="grid gap-2 py-1">
+            {selectedSubtypes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedSubtypes.map((s) => (
+                  <span
+                    key={s.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-emerald-600 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900"
+                  >
+                    {s.name}
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${s.name}`}
+                      onClick={() => toggleSubtype(s.id)}
+                      className="rounded-full text-emerald-700 hover:text-emerald-900"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <Command shouldFilter={false} className="rounded-md border">
+              <CommandInput
+                placeholder="Escribí el tipo (abdominal, doppler, mama…)"
+                value={search}
+                onValueChange={setSearch}
+              />
+              <CommandList>
+                {isLoading ? (
+                  <p className="p-3 text-sm text-muted-foreground">
+                    Cargando tipos…
+                  </p>
+                ) : (
+                  <>
+                    <CommandEmpty>Sin coincidencias.</CommandEmpty>
+                    {filtered.map((s) => {
+                      const isSelected = selectedIds.includes(s.id);
+                      return (
+                        <CommandItem
+                          key={s.id}
+                          value={s.name}
+                          onSelect={() => {
+                            toggleSubtype(s.id);
+                            setSearch("");
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 text-emerald-600",
+                              isSelected ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          {s.name}
+                        </CommandItem>
+                      );
+                    })}
+                  </>
                 )}
-              >
-                {subtype.name}
-              </Button>
-            );
-          })}
-        </div>
+              </CommandList>
+            </Command>
+          </div>
+        )}
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
@@ -118,7 +185,7 @@ export function EcoSubtypeDialog({
           >
             Cancelar
           </Button>
-          {!isLoading && ecoSubtypes.length === 0 ? (
+          {catalogEmpty ? (
             <Button type="button" variant="outline" onClick={onSkip}>
               Continuar sin definir
             </Button>
