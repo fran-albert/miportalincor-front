@@ -889,12 +889,13 @@ export const QueuePanel = () => {
     }
   };
 
-  const handleEcoSubtypeConfirm = async (consultationTypeId: number) => {
+  const handleEcoSubtypeConfirm = async (consultationTypeIds: number[]) => {
     if (!pendingEcoAction?.entry.appointmentId) return;
+    if (consultationTypeIds.length === 0) return;
     try {
       await updateAppointmentMutation.mutateAsync({
         id: pendingEcoAction.entry.appointmentId,
-        dto: { consultationTypeId },
+        dto: { consultationTypeIds },
       });
       // useAppointmentMutations no invalida la cola: el flag y los badges
       // salen de /queue/waiting|today, hay que refrescarla a mano.
@@ -1403,8 +1404,8 @@ export const QueuePanel = () => {
             : 'Guardar y llamar'
         }
         onCancel={() => setPendingEcoAction(null)}
-        onConfirm={(consultationTypeId) =>
-          void handleEcoSubtypeConfirm(consultationTypeId)
+        onConfirm={(consultationTypeIds) =>
+          void handleEcoSubtypeConfirm(consultationTypeIds)
         }
         onSkip={handleEcoSubtypeSkip}
         isSaving={updateAppointmentMutation.isPending}
