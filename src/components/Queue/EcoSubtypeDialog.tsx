@@ -18,7 +18,7 @@ interface EcoSubtypeDialogProps {
   /** Texto del botón de confirmar según la acción que sigue (llamar / pasar). */
   confirmLabel: string;
   onCancel: () => void;
-  onConfirm: (consultationTypeId: number) => void;
+  onConfirm: (consultationTypeIds: number[]) => void;
   /** Continuar sin definir subtipo (solo si el catálogo está vacío/mal configurado). */
   onSkip: () => void;
   isSaving: boolean;
@@ -27,8 +27,10 @@ interface EcoSubtypeDialogProps {
 /**
  * Selector obligatorio del tipo de ecografía: se interpone cuando la
  * secretaria llama (o pasa a espera médica) un turno de eco sin subtipo.
- * Sin subtipo elegido la acción no se completa — el tipo viaja por la
- * worklist al ecógrafo y define qué examen se hace.
+ * Permite elegir uno o varios tipos (un paciente puede hacerse más de una
+ * eco en el mismo turno). Sin al menos un tipo elegido la acción no se
+ * completa — los tipos viajan por la worklist al ecógrafo y definen qué
+ * examen se hace.
  */
 export function EcoSubtypeDialog({
   entry,
@@ -40,13 +42,19 @@ export function EcoSubtypeDialog({
 }: EcoSubtypeDialogProps) {
   const open = entry !== null;
   const { ecoSubtypes, isLoading } = useEcoSubtypes({ enabled: open });
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (open) {
-      setSelectedId(null);
+      setSelectedIds([]);
     }
   }, [open, entry?.id]);
+
+  const toggleSubtype = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    );
+  };
 
   return (
     <Dialog
@@ -63,8 +71,8 @@ export function EcoSubtypeDialog({
           <DialogDescription>
             El turno de <span className="font-semibold">{entry?.patientName}</span>{" "}
             con {entry?.doctorName} no tiene el tipo de ecografía definido.
-            Elegilo para que el estudio llegue al ecógrafo con los datos del
-            paciente.
+            Elegí uno o más (si el paciente se hace varias) para que el estudio
+            llegue al ecógrafo con los datos del paciente.
           </DialogDescription>
         </DialogHeader>
 
@@ -79,22 +87,26 @@ export function EcoSubtypeDialog({
               tipo desde el calendario.
             </p>
           )}
-          {ecoSubtypes.map((subtype) => (
-            <Button
-              key={subtype.id}
-              type="button"
-              variant="outline"
-              onClick={() => setSelectedId(subtype.id)}
-              className={cn(
-                "h-auto justify-start whitespace-normal py-2.5 text-left text-sm font-medium",
-                selectedId === subtype.id
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600"
-                  : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
-              )}
-            >
-              {subtype.name}
-            </Button>
-          ))}
+          {ecoSubtypes.map((subtype) => {
+            const selected = selectedIds.includes(subtype.id);
+            return (
+              <Button
+                key={subtype.id}
+                type="button"
+                variant="outline"
+                aria-pressed={selected}
+                onClick={() => toggleSubtype(subtype.id)}
+                className={cn(
+                  "h-auto justify-start whitespace-normal py-2.5 text-left text-sm font-medium",
+                  selected
+                    ? "border-emerald-600 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600"
+                    : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+                )}
+              >
+                {subtype.name}
+              </Button>
+            );
+          })}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
@@ -113,8 +125,8 @@ export function EcoSubtypeDialog({
           ) : (
             <Button
               type="button"
-              onClick={() => selectedId !== null && onConfirm(selectedId)}
-              disabled={selectedId === null || isSaving}
+              onClick={() => selectedIds.length > 0 && onConfirm(selectedIds)}
+              disabled={selectedIds.length === 0 || isSaving}
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               {isSaving ? "Guardando…" : confirmLabel}
