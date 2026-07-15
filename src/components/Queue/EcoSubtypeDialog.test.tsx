@@ -135,6 +135,40 @@ describe("EcoSubtypeDialog", () => {
     expect(onSkip).toHaveBeenCalled();
   });
 
+  it("si falla la carga del catálogo NO ofrece continuar sin definir", () => {
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: [],
+      isLoading: false,
+      error: new Error("Network Error"),
+      refetch: vi.fn(),
+    });
+
+    renderDialog({});
+
+    expect(
+      screen.queryByRole("button", { name: /continuar sin definir/i }),
+    ).toBeNull();
+    expect(screen.queryByText(/no hay subtipos de ecografía configurados/i)).toBeNull();
+    expect(
+      screen.getByText(/no se pudieron cargar los tipos/i),
+    ).toBeInTheDocument();
+  });
+
+  it("si falla la carga del catálogo permite reintentar", () => {
+    const refetch = vi.fn();
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: [],
+      isLoading: false,
+      error: new Error("Network Error"),
+      refetch,
+    });
+
+    renderDialog({});
+
+    fireEvent.click(screen.getByRole("button", { name: /reintentar/i }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
   it("muestra el nombre del paciente y de la médica", () => {
     mockUseEcoSubtypes.mockReturnValue({ ecoSubtypes: subtypes, isLoading: false });
 

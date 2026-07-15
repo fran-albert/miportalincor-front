@@ -55,7 +55,8 @@ export function EcoSubtypeDialog({
   isSaving,
 }: EcoSubtypeDialogProps) {
   const open = entry !== null;
-  const { ecoSubtypes, isLoading } = useEcoSubtypes({ enabled: open });
+  const { ecoSubtypes, isLoading, isFetching, error, refetch } =
+    useEcoSubtypes({ enabled: open });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [search, setSearch] = useState("");
 
@@ -83,7 +84,11 @@ export function EcoSubtypeDialog({
     return ecoSubtypes.filter((s) => normalize(s.name).includes(term));
   }, [ecoSubtypes, search]);
 
-  const catalogEmpty = !isLoading && ecoSubtypes.length === 0;
+  // Falla de red/servidor al cargar el catálogo: NO habilitar el fallback de
+  // "continuar sin definir" (es para catálogo genuinamente vacío) — se ofrece
+  // reintentar. Si hay datos cacheados de una carga previa, se opera con ellos.
+  const loadFailed = !isLoading && error != null && ecoSubtypes.length === 0;
+  const catalogEmpty = !isLoading && !loadFailed && ecoSubtypes.length === 0;
 
   return (
     <Dialog
@@ -105,7 +110,13 @@ export function EcoSubtypeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {catalogEmpty ? (
+        {loadFailed ? (
+          <p className="py-1 text-sm text-rose-700">
+            No se pudieron cargar los tipos de ecografía (problema de conexión
+            o del servidor). Reintentá; si sigue fallando, avisale al
+            administrador.
+          </p>
+        ) : catalogEmpty ? (
           <p className="py-1 text-sm text-rose-700">
             No hay subtipos de ecografía configurados. Avisale al administrador;
             mientras tanto se puede continuar y corregir el tipo desde el
@@ -185,7 +196,16 @@ export function EcoSubtypeDialog({
           >
             Cancelar
           </Button>
-          {catalogEmpty ? (
+          {loadFailed ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+            >
+              {isFetching ? "Reintentando…" : "Reintentar"}
+            </Button>
+          ) : catalogEmpty ? (
             <Button type="button" variant="outline" onClick={onSkip}>
               Continuar sin definir
             </Button>
