@@ -33,7 +33,9 @@ export const useEcoSubtypes = (options?: { enabled?: boolean }) => {
   return {
     ecoSubtypes: query.data ?? [],
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     error: query.error,
+    refetch: query.refetch,
   };
 };
 
