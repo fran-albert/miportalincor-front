@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,7 +38,9 @@ import { Loader2, UserPlus } from 'lucide-react';
 import { ApiError } from '@/types/Error/ApiError';
 import {
   findExactPatientByDocument,
+  getApiErrorMessage,
   normalizeDocument,
+  QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE,
 } from './patient-registration.helpers';
 
 const QueueRegistrationSchema = z.object({
@@ -85,8 +87,6 @@ interface QueuePatientRegistrationModalProps {
 }
 
 const EMPTY_PATIENT_LABEL = 'Registro pendiente';
-const ALREADY_REGISTERED_QUEUE_MESSAGE =
-  'Esta fila no requiere alta administrativa adicional.';
 
 const parseInitialNames = (patientName?: string) => {
   if (!patientName || patientName === EMPTY_PATIENT_LABEL) {
@@ -128,6 +128,9 @@ export const QueuePatientRegistrationModal = ({
   const [selectedPlan, setSelectedPlan] = useState<HealthPlans | null>(null);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Guard síncrono contra doble click: el estado tarda un render en
+  // deshabilitar el botón y deja una ventana para un segundo submit.
+  const submittingRef = useRef(false);
 
   const initialNames = useMemo(
     () => parseInitialNames(entry?.patientName),
@@ -188,7 +191,7 @@ export const QueuePatientRegistrationModal = ({
   const onSubmit = async (data: FormValues) => {
     if (
       !entry ||
-      isSubmitting ||
+      submittingRef.current ||
       addPatientMutation.isPending ||
       registerQueuePatient.isPending
     ) {
@@ -196,6 +199,7 @@ export const QueuePatientRegistrationModal = ({
     }
 
     const queueEntryId = entry.id;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -266,10 +270,12 @@ export const QueuePatientRegistrationModal = ({
       const apiError = error as ApiError;
       const apiMessage = apiError.response?.data?.message;
 
-      if (apiMessage === ALREADY_REGISTERED_QUEUE_MESSAGE) {
-        showSuccess(
-          'Paciente registrado',
-          'La fila ya había quedado vinculada y no requiere repetir el alta.',
+      if (apiMessage === QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE) {
+        // Otra secretaría/proceso vinculó la fila a un paciente distinto
+        // mientras se completaba el alta: repetirla no lo resuelve.
+        showError(
+          'Fila ya vinculada a otro paciente',
+          'La fila fue vinculada desde otro puesto. Revisá la cola actualizada.',
         );
         onOpenChange(false);
       } else if (apiError.response?.status === 409) {
@@ -296,10 +302,21 @@ export const QueuePatientRegistrationModal = ({
           }
         } catch (linkError) {
           console.error('Error auto-linking existing patient', linkError);
-          showError(
-            'No se pudo vincular automáticamente',
-            'El DNI ya existe, pero el sistema no logró asociar la fila. Revise el paciente en padrón.',
-          );
+
+          if (
+            getApiErrorMessage(linkError) === QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE
+          ) {
+            showError(
+              'Fila ya vinculada a otro paciente',
+              'La fila fue vinculada desde otro puesto. Revisá la cola actualizada.',
+            );
+            onOpenChange(false);
+          } else {
+            showError(
+              'No se pudo vincular automáticamente',
+              'El DNI ya existe, pero el sistema no logró asociar la fila. Revise el paciente en padrón.',
+            );
+          }
         }
       } else {
         showError(
@@ -308,6 +325,7 @@ export const QueuePatientRegistrationModal = ({
         );
       }
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

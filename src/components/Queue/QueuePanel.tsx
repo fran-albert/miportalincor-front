@@ -70,7 +70,9 @@ import { useToastContext } from '@/hooks/Toast/toast-context';
 import { QueuePatientRegistrationModal } from './QueuePatientRegistrationModal';
 import {
   findExactPatientByDocument,
+  getApiErrorMessage,
   normalizeDocument,
+  QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE,
 } from './patient-registration.helpers';
 
 type QueueCallDestination = 'RECEPCION' | 'VENTANILLA';
@@ -1029,6 +1031,18 @@ export const QueuePanel = () => {
       setRegistrationEntry(entry);
     } catch (error) {
       console.error('Error resolving queue patient registration', error);
+
+      if (getApiErrorMessage(error) === QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE) {
+        // Otra secretaría/proceso ya la vinculó a un paciente distinto:
+        // el alta manual no lo resuelve, solo hay que refrescar.
+        showError(
+          'Fila ya vinculada a otro paciente',
+          'La fila fue vinculada desde otro puesto. Actualizamos la cola.',
+        );
+        queryClient.invalidateQueries({ queryKey: queueKeys.all });
+        return;
+      }
+
       showError(
         'No se pudo vincular automáticamente',
         'Abrimos el alta manual para completar o revisar el caso.',
