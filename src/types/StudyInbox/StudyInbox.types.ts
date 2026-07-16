@@ -67,8 +67,18 @@ export interface StudyInboxDetail {
   nameMismatch: boolean;
 }
 
+/** Un grupo del split manual: las imágenes que van a UN estudio, con su nota. */
+export interface ConfirmStudyInboxGroup {
+  instanceIds: string[];
+  note: string;
+  /** Este grupo se lleva el informe PDF del item (solo uno puede). */
+  includeReport?: boolean;
+}
+
 export interface ConfirmStudyInboxPayload {
   userId: string;
   date: string;
   note?: string;
+  /** Split manual: reparte las imágenes del estudio DICOM en N estudios. */
+  groups?: ConfirmStudyInboxGroup[];
 }
