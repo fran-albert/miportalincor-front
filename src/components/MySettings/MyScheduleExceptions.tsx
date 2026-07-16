@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useDoctorScheduleExceptions } from "@/hooks/DoctorScheduleException";
-import { CalendarRange } from "lucide-react";
+import { AlertTriangle, CalendarRange } from "lucide-react";
 import { formatDateAR } from "@/common/helpers/timezone";
 import { motion } from "framer-motion";
 
@@ -19,10 +20,11 @@ interface MyScheduleExceptionsProps {
 }
 
 export const MyScheduleExceptions = ({ doctorId }: MyScheduleExceptionsProps) => {
-  const { exceptions, isLoading } = useDoctorScheduleExceptions({
-    doctorId,
-    enabled: doctorId > 0,
-  });
+  const { exceptions, isLoading, isError, refetch } =
+    useDoctorScheduleExceptions({
+      doctorId,
+      enabled: doctorId > 0,
+    });
 
   if (isLoading) {
     return (
@@ -31,6 +33,27 @@ export const MyScheduleExceptions = ({ doctorId }: MyScheduleExceptionsProps) =>
         {[...Array(3)].map((_, i) => (
           <Skeleton key={i} className="h-16 w-full" />
         ))}
+      </div>
+    );
+  }
+
+  // Un error de carga NO es "no hay excepciones": mostrarlo como error con
+  // reintento, para no ocultar una falla como un estado vacío (falso negativo).
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <AlertTriangle className="h-16 w-16 mx-auto mb-4 text-rose-400" />
+        <p className="text-lg text-muted-foreground">
+          No se pudieron cargar tus excepciones por fecha
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={() => void refetch()}
+        >
+          Reintentar
+        </Button>
       </div>
     );
   }
