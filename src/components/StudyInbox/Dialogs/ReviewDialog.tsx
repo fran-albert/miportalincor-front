@@ -27,6 +27,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getStudyInboxDetail } from "@/api/StudyInbox/get-study-inbox-detail.action";
 import { PacsImagesGrid } from "./PacsImagesGrid";
 import { EcoTypeNoteField } from "./EcoTypeNoteField";
+import { SplitStudyPanel } from "./SplitStudyPanel";
+import { ConfirmStudyInboxGroup } from "@/types/StudyInbox/StudyInbox.types";
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { useStudyInboxMutations } from "@/hooks/StudyInbox/useStudyInboxMutations";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
@@ -67,6 +69,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [holdInput, setHoldInput] = useState("");
+  const [splitMode, setSplitMode] = useState(false);
 
   const confirmable =
     item?.status === "LISTO_PARA_CONFIRMAR" ||
@@ -81,6 +84,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
     setReason("");
     setHoldInput("");
     setNote("");
+    setSplitMode(false);
     setDate(item.detectedStudyDate ? item.detectedStudyDate.slice(0, 10) : "");
     if (item.detectedPatientName) setSearch(item.detectedPatientName);
   }, [open, item, setSearch]);
@@ -123,6 +127,21 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
           userId: selected.id,
           date: calendarDateToPayloadAR(date),
           note: note.trim() || undefined,
+        },
+      },
+      { onSuccess: onClose }
+    );
+  };
+
+  const handleSplitConfirm = (groups: ConfirmStudyInboxGroup[]) => {
+    if (!id || !selected || !date) return;
+    confirm.mutate(
+      {
+        id,
+        payload: {
+          userId: selected.id,
+          date: calendarDateToPayloadAR(date),
+          groups,
         },
       },
       { onSuccess: onClose }
@@ -206,12 +225,39 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                 {hasPacsImages && item && (
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-gray-700">
-                      Imágenes del estudio
-                      {item.pacsInstanceCount
+                      {splitMode
+                        ? "Dividir el estudio en 2"
+                        : "Imágenes del estudio"}
+                      {!splitMode && item.pacsInstanceCount
                         ? ` (${item.pacsInstanceCount})`
                         : ""}
                     </p>
-                    <PacsImagesGrid itemId={item.id} />
+                    {splitMode ? (
+                      <SplitStudyPanel
+                        itemId={item.id}
+                        hasReport={!!item.attachmentId}
+                        detectedSubtype={item.detectedStudySubtype ?? null}
+                        isPending={confirm.isPending}
+                        onConfirm={handleSplitConfirm}
+                        onCancel={() => setSplitMode(false)}
+                      />
+                    ) : (
+                      <>
+                        <PacsImagesGrid itemId={item.id} />
+                        {isEco && confirmable && !item.onHold && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            disabled={!selected || !date}
+                            onClick={() => setSplitMode(true)}
+                          >
+                            Dividir en 2 estudios (1 examen con 2 ecos)
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
               </>
@@ -368,7 +414,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                   />
                 </div>
 
-                {isEco && (
+                {isEco && !splitMode && (
                   <EcoTypeNoteField
                     value={note}
                     onChange={setNote}
@@ -446,13 +492,19 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                     )}
                   </div>
 
-                  <Button
-                    className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white"
-                    disabled={!canConfirm}
-                    onClick={handleConfirm}
-                  >
-                    {confirm.isPending ? "Cargando..." : "Confirmar carga"}
-                  </Button>
+                  {splitMode ? (
+                    <span className="text-xs text-gray-500">
+                      Confirmá desde el panel de división ↖
+                    </span>
+                  ) : (
+                    <Button
+                      className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white"
+                      disabled={!canConfirm}
+                      onClick={handleConfirm}
+                    >
+                      {confirm.isPending ? "Cargando..." : "Confirmar carga"}
+                    </Button>
+                  )}
                 </div>
               </>
             ) : (
