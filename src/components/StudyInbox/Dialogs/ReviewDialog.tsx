@@ -81,10 +81,14 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   // Preseleccionar el paciente sugerido cuando aparece en los resultados
   useEffect(() => {
     if (selected || !item?.suggestedPatientUserId) return;
-    const match = patients.find((p) => p.id === item.suggestedPatientUserId);
+    // userId (ID de Healthcare.Api): es lo que sugiere el matching y lo que
+    // espera el confirm; /patient/search devuelve `id` siempre vacío.
+    const match = patients.find(
+      (p) => String(p.userId) === item.suggestedPatientUserId
+    );
     if (match) {
       setSelected({
-        id: match.id,
+        id: String(match.userId),
         name: `${match.lastName} ${match.firstName}`,
         dni: match.userName,
       });
@@ -296,7 +300,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                             className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50"
                             onClick={() =>
                               setSelected({
-                                id: p.id,
+                                id: String(p.userId),
                                 name: `${p.lastName} ${p.firstName}`,
                                 dni: p.userName,
                               })
