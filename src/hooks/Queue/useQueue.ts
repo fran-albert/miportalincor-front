@@ -28,9 +28,6 @@ import type {
 import type { ApiError } from '@/types/Error/ApiError';
 import { toast } from 'sonner';
 
-const ALREADY_REGISTERED_QUEUE_MESSAGE =
-  'Esta fila no requiere alta administrativa adicional.';
-
 // Query keys
 export const queueKeys = {
   all: ['queue'] as const,
@@ -263,19 +260,10 @@ export const useRegisterQueuePatient = () => {
   return useMutation({
     mutationFn: (dto: RegisterQueuePatientDto) => registerQueuePatient(dto),
     onSuccess: () => {
-      toast.success('Paciente dado de alta y fila actualizada');
       queryClient.refetchQueries({ queryKey: queueKeys.all });
       invalidateMedicalFlowQueries(queryClient);
     },
-    onError: (error: Error) => {
-      const apiError = error as ApiError;
-      const apiMessage = apiError.response?.data?.message || error.message;
-
-      if (apiMessage === ALREADY_REGISTERED_QUEUE_MESSAGE) {
-        return;
-      }
-
-      toast.error(apiMessage || 'Error al vincular el paciente a la fila');
-    },
+    // Sin onError global: los flujos de alta reintentan o abren el alta manual
+    // por su cuenta, y son ellos los que saben si el error es terminal.
   });
 };

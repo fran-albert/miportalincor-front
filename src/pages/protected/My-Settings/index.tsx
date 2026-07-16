@@ -6,12 +6,14 @@ import {
   MyAbsences,
   MyPrescriptionSettings,
   MyAvailabilitiesEditable,
-  MyAbsencesEditable
+  MyAbsencesEditable,
+  MyScheduleExceptions
 } from "@/components/MySettings";
 import {
   DoctorOwnConsultationTypesCard,
 } from "@/components/DoctorConsultationTypeSettings";
-import { Settings, Calendar, CalendarOff, FileText, Stethoscope } from "lucide-react";
+import { DoctorScheduleExceptionSection } from "@/components/DoctorScheduleException/DoctorScheduleExceptionSection";
+import { Settings, Calendar, CalendarOff, CalendarRange, FileText, Stethoscope } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
@@ -50,6 +52,10 @@ export default function MySettingsPage() {
             <CalendarOff className="h-4 w-4" />
             Mis Ausencias
           </TabsTrigger>
+          <TabsTrigger value="exceptions" className="flex items-center gap-2">
+            <CalendarRange className="h-4 w-4" />
+            Excepciones
+          </TabsTrigger>
           <TabsTrigger value="durations" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
             Tipos de turno
@@ -75,6 +81,14 @@ export default function MySettingsPage() {
             <MyAbsencesEditable doctorId={doctorId} />
           ) : (
             <MyAbsences doctorId={doctorId} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="exceptions" className="mt-6">
+          {canSelfManage ? (
+            <DoctorScheduleExceptionSection doctorId={doctorId} />
+          ) : (
+            <MyScheduleExceptions doctorId={doctorId} />
           )}
         </TabsContent>
 

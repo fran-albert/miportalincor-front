@@ -54,6 +54,23 @@ export const getCurrentTimeAR = (): string => {
 };
 
 /**
+ * Convierte una fecha calendario (YYYY-MM-DD, ej. la del input de un estudio)
+ * al valor ISO que espera el backend, anclada al MEDIODÍA de Argentina. Evita
+ * el corrimiento de un día: antes se mandaba `new Date(date).toISOString()`,
+ * que interpreta la fecha como medianoche UTC y al persistirse en hora
+ * argentina caía el día anterior (subías 8/7 y quedaba 7/7).
+ */
+export const calendarDateToPayloadAR = (date: string): string => {
+  return moment
+    .tz(date, "YYYY-MM-DD", ARGENTINA_TZ)
+    .hour(12)
+    .minute(0)
+    .second(0)
+    .millisecond(0)
+    .toISOString();
+};
+
+/**
  * Formatea una fecha al formato argentino (DD/MM/YYYY)
  */
 export const formatDateAR = (date: string | Date): string => {
