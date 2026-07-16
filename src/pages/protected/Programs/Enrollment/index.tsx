@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useEnrollment } from "@/hooks/Program/useEnrollment";
 import { useProgram } from "@/hooks/Program/useProgram";
 import { useProgramActivities } from "@/hooks/Program/useProgramActivities";
+import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const EnrollmentDetailPage = () => {
   const { program } = useProgram(programId!);
   const { enrollment, isLoading } = useEnrollment(programId!, enrollmentId!);
   const { activities } = useProgramActivities(programId!);
+  const { isProgramOperator } = useProgramMembership(programId!);
 
   if (isLoading) {
     return (
@@ -81,12 +83,19 @@ const EnrollmentDetailPage = () => {
           }
         />
 
-        <Tabs defaultValue="plan" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="plan" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Plan
-            </TabsTrigger>
+        <Tabs
+          defaultValue={isProgramOperator ? "attendance" : "plan"}
+          className="w-full"
+        >
+          <TabsList
+            className={`grid w-full ${isProgramOperator ? "grid-cols-2" : "grid-cols-4"}`}
+          >
+            {isProgramOperator ? null : (
+              <TabsTrigger value="plan" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Plan
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="attendance"
               className="flex items-center gap-2"
@@ -101,18 +110,25 @@ const EnrollmentDetailPage = () => {
               <TrendingUp className="h-4 w-4" />
               Cumplimiento
             </TabsTrigger>
-            <TabsTrigger value="follow-up" className="flex items-center gap-2">
-              <MessageSquareText className="h-4 w-4" />
-              Seguimiento
-            </TabsTrigger>
+            {isProgramOperator ? null : (
+              <TabsTrigger
+                value="follow-up"
+                className="flex items-center gap-2"
+              >
+                <MessageSquareText className="h-4 w-4" />
+                Seguimiento
+              </TabsTrigger>
+            )}
           </TabsList>
-          <TabsContent value="plan" className="mt-6">
-            <PlanTab
-              programId={programId!}
-              enrollmentId={enrollmentId!}
-              activities={activities}
-            />
-          </TabsContent>
+          {isProgramOperator ? null : (
+            <TabsContent value="plan" className="mt-6">
+              <PlanTab
+                programId={programId!}
+                enrollmentId={enrollmentId!}
+                activities={activities}
+              />
+            </TabsContent>
+          )}
           <TabsContent value="attendance" className="mt-6">
             <AttendanceTab
               programId={programId!}
@@ -124,14 +140,16 @@ const EnrollmentDetailPage = () => {
           <TabsContent value="compliance" className="mt-6">
             <ComplianceTab enrollmentId={enrollmentId!} />
           </TabsContent>
-          <TabsContent value="follow-up" className="mt-6">
-            <FollowUpTab
-              programId={programId!}
-              enrollmentId={enrollmentId!}
-              patientName={patientName}
-              programName={program?.name ?? "Programa"}
-            />
-          </TabsContent>
+          {isProgramOperator ? null : (
+            <TabsContent value="follow-up" className="mt-6">
+              <FollowUpTab
+                programId={programId!}
+                enrollmentId={enrollmentId!}
+                patientName={patientName}
+                programName={program?.name ?? "Programa"}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </>

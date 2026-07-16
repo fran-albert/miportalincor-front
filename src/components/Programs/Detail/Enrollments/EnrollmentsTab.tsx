@@ -20,7 +20,8 @@ const getPatientName = (enrollment: ProgramEnrollment) =>
     : enrollment.patientUserId;
 
 export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
-  const { isCoordinator } = useProgramMembership(programId);
+  const { canManageEnrollments, canCreateNotes } =
+    useProgramMembership(programId);
   const { enrollments, isFetching } = useProgramEnrollments(programId);
   const { activities } = useProgramActivities(programId);
   const [isEnrollOpen, setIsEnrollOpen] = useState(false);
@@ -51,7 +52,8 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
 
   const columns = getEnrollmentColumns(
     programId,
-    isCoordinator,
+    canManageEnrollments,
+    canCreateNotes,
     handleChangeStatus,
     handleRegisterAttendance,
     handleNewNote
@@ -63,17 +65,19 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
         columns={columns}
         data={enrollments}
         showSearch
-        canAddUser={isCoordinator}
+        canAddUser={canManageEnrollments}
         onAddClick={() => setIsEnrollOpen(true)}
         addLinkPath=""
         addLinkText="Inscribir Paciente"
         isFetching={isFetching}
       />
-      <EnrollPatientDialog
-        programId={programId}
-        isOpen={isEnrollOpen}
-        setIsOpen={setIsEnrollOpen}
-      />
+      {canManageEnrollments ? (
+        <EnrollPatientDialog
+          programId={programId}
+          isOpen={isEnrollOpen}
+          setIsOpen={setIsEnrollOpen}
+        />
+      ) : null}
       {isStatusOpen && statusEnrollment && (
         <UpdateEnrollmentStatusDialog
           programId={programId}
@@ -92,14 +96,14 @@ export default function EnrollmentsTab({ programId }: EnrollmentsTabProps) {
           patientName={getPatientName(attendanceEnrollment)}
         />
       )}
-      {isNoteOpen && noteEnrollment && (
+      {canCreateNotes && isNoteOpen && noteEnrollment ? (
         <QuickNoteDialog
           enrollmentId={noteEnrollment.id}
           patientName={getPatientName(noteEnrollment)}
           isOpen={isNoteOpen}
           setIsOpen={setIsNoteOpen}
         />
-      )}
+      ) : null}
     </div>
   );
 }

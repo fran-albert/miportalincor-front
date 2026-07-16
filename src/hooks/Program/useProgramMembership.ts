@@ -2,9 +2,10 @@ import { useMemo } from "react";
 import useRoles from "@/hooks/useRoles";
 import { useProgramMembers } from "@/hooks/Program/useProgramMembers";
 import { MemberRole } from "@/types/Program/ProgramMember";
+import { getProgramAccessCapabilities } from "@/common/helpers/programAccess";
 
 export const useProgramMembership = (programId: string) => {
-  const { session, isAdmin } = useRoles();
+  const { session, isAdmin, isSecretary } = useRoles();
   const membersState = useProgramMembers(programId);
 
   const currentMember = useMemo(
@@ -13,11 +14,22 @@ export const useProgramMembership = (programId: string) => {
     [membersState.members, session?.id]
   );
 
+  const isProgramMember = Boolean(currentMember);
+  const isCoordinator = currentMember?.role === MemberRole.COORDINATOR;
+  const capabilities = getProgramAccessCapabilities({
+    isAdmin,
+    isSecretary,
+    isProgramMember,
+    isCoordinator,
+  });
+
   return {
     ...membersState,
     currentMember,
     isAdmin,
-    isProgramMember: Boolean(currentMember),
-    isCoordinator: currentMember?.role === MemberRole.COORDINATOR,
+    isSecretary,
+    isProgramMember,
+    isCoordinator,
+    ...capabilities,
   };
 };
