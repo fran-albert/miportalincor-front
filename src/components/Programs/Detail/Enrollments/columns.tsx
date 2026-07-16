@@ -14,6 +14,7 @@ import { es } from "date-fns/locale";
 export const getEnrollmentColumns = (
   programId: string,
   canManageEnrollments: boolean,
+  canCreateNotes: boolean,
   onChangeStatus: (enrollment: ProgramEnrollment) => void,
   onRegisterAttendance: (enrollment: ProgramEnrollment) => void,
   onNewNote: (enrollment: ProgramEnrollment) => void
@@ -75,14 +76,16 @@ export const getEnrollmentColumns = (
           <CalendarPlus className="h-4 w-4 mr-1" />
           Asistencia
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNewNote(row.original)}
-        >
-          <MessageSquarePlus className="h-4 w-4 mr-1" />
-          Nota
-        </Button>
+        {canCreateNotes ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNewNote(row.original)}
+          >
+            <MessageSquarePlus className="h-4 w-4 mr-1" />
+            Nota
+          </Button>
+        ) : null}
         <Link
           to={`/programas/${programId}/inscripciones/${row.original.id}`}
         >

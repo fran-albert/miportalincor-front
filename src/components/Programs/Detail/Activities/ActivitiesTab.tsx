@@ -12,7 +12,7 @@ interface ActivitiesTabProps {
 }
 
 export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
-  const { isCoordinator } = useProgramMembership(programId);
+  const { canManageActivities } = useProgramMembership(programId);
   const { activities, isFetching } = useProgramActivities(programId);
   const { deleteActivityMutation } = useActivityMutations(programId);
   const { promiseToast } = useToastContext();
@@ -37,7 +37,11 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
     }
   };
 
-  const columns = getActivityColumns(programId, isCoordinator, handleDelete);
+  const columns = getActivityColumns(
+    programId,
+    canManageActivities,
+    handleDelete
+  );
 
   return (
     <div className="space-y-4">
@@ -45,7 +49,7 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
         columns={columns}
         data={activities}
         showSearch
-        canAddUser={isCoordinator}
+        canAddUser={canManageActivities}
         onAddClick={() => setIsCreateOpen(true)}
         addLinkPath=""
         addLinkText="Crear Actividad"

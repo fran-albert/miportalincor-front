@@ -726,7 +726,14 @@ function App() {
           <Route
             path="/programas/:programId/inscripciones/:enrollmentId"
             element={
-              <Private_Routes allowedRoles={["Administrador", "Medico", "Profesor"]}>
+              <Private_Routes
+                allowedRoles={[
+                  "Administrador",
+                  "Medico",
+                  "Profesor",
+                  "Secretaria",
+                ]}
+              >
                 <EnrollmentDetailPage />
               </Private_Routes>
             }

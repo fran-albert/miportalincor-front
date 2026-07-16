@@ -19,10 +19,9 @@ export default function AttendanceTab({
   patientUserId,
   activities,
 }: AttendanceTabProps) {
-  const { isProgramMember } = useProgramMembership(programId);
+  const { canRegisterAttendance } = useProgramMembership(programId);
   const { records, isFetching } = useAttendanceRecords(enrollmentId);
   const [isManualOpen, setIsManualOpen] = useState(false);
-  const canRegister = isProgramMember;
 
   const columns = getAttendanceColumns();
 
@@ -32,7 +31,7 @@ export default function AttendanceTab({
         columns={columns}
         data={records}
         showSearch
-        canAddUser={canRegister}
+        canAddUser={canRegisterAttendance}
         onAddClick={() => setIsManualOpen(true)}
         addLinkPath=""
         addLinkText="Registrar Asistencia"

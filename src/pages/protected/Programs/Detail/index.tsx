@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useProgram } from "@/hooks/Program/useProgram";
 import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
-import useUserRole from "@/hooks/useRoles";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +19,9 @@ const ProgramDetailPage = () => {
     isAdmin,
     isProgramMember,
     isCoordinator,
+    isProgramOperator,
+    hasClinicalProgramAccess,
   } = useProgramMembership(programId!);
-  const { isSecretary } = useUserRole();
 
   if (isLoading || isLoadingMembership) {
     return (
@@ -76,12 +76,17 @@ const ProgramDetailPage = () => {
           }
         />
 
-        {isAdmin ? (
-          <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="members" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Miembros
+        {isProgramOperator ? (
+          <Tabs defaultValue="enrollments" className="w-full">
+            <TabsList
+              className={`grid w-full ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}
+            >
+              <TabsTrigger
+                value="enrollments"
+                className="flex items-center gap-2"
+              >
+                <ClipboardList className="h-4 w-4" />
+                Pacientes
               </TabsTrigger>
               <TabsTrigger
                 value="activities"
@@ -90,15 +95,29 @@ const ProgramDetailPage = () => {
                 <Activity className="h-4 w-4" />
                 Actividades
               </TabsTrigger>
+              {isAdmin ? (
+                <TabsTrigger
+                  value="members"
+                  className="flex items-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Miembros
+                </TabsTrigger>
+              ) : null}
             </TabsList>
-            <TabsContent value="members" className="mt-6">
-              <MembersTab programId={programId!} />
+            <TabsContent value="enrollments" className="mt-6">
+              <EnrollmentsTab programId={programId!} />
             </TabsContent>
             <TabsContent value="activities" className="mt-6">
               <ActivitiesTab programId={programId!} />
             </TabsContent>
+            {isAdmin ? (
+              <TabsContent value="members" className="mt-6">
+                <MembersTab programId={programId!} />
+              </TabsContent>
+            ) : null}
           </Tabs>
-        ) : isProgramMember ? (
+        ) : hasClinicalProgramAccess ? (
           <Tabs defaultValue="enrollments" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger
@@ -130,14 +149,6 @@ const ProgramDetailPage = () => {
               <MembersTab programId={programId!} />
             </TabsContent>
           </Tabs>
-        ) : isSecretary ? (
-          <div className="space-y-4">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-              <Activity className="h-5 w-5" />
-              Actividades y códigos QR
-            </h2>
-            <ActivitiesTab programId={programId!} />
-          </div>
         ) : (
           <Card className="border-slate-200 shadow-sm">
             <CardContent className="space-y-2 p-6 text-sm text-slate-600">
