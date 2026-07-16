@@ -28,6 +28,7 @@ import { getStudyInboxDetail } from "@/api/StudyInbox/get-study-inbox-detail.act
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { useStudyInboxMutations } from "@/hooks/StudyInbox/useStudyInboxMutations";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
+import { calendarDateToPayloadAR } from "@/common/helpers/timezone";
 import { STATUS_META, studyTypeLabel } from "../status";
 
 interface ReviewDialogProps {
@@ -112,7 +113,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
     confirm.mutate(
       {
         id,
-        payload: { userId: selected.id, date: new Date(date).toISOString() },
+        payload: { userId: selected.id, date: calendarDateToPayloadAR(date) },
       },
       { onSuccess: onClose }
     );
