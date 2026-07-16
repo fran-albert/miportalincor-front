@@ -25,8 +25,15 @@ import {
   AppointmentFullResponseDto,
   AppointmentStatus
 } from "@/types/Appointment/Appointment";
-import { formatDateAR, formatTimeAR, isPastDateAR, isPastTimeAR } from "@/common/helpers/timezone";
+import {
+  formatDateAR,
+  formatTimeAR,
+  getMinutesUntilAppointment,
+  isPastDateAR,
+  isPastTimeAR
+} from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
+import type { ApiError } from "@/types/Error/ApiError";
 import { getAppointmentConsultationTypes } from "@/common/helpers/appointment-consultation-types";
 import {
   Calendar,
@@ -44,6 +51,8 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
+
+const CANCELLATION_WINDOW_HOURS = 24;
 
 const MyAppointmentsPage = () => {
   const { toast } = useToast();
@@ -99,6 +108,12 @@ const MyAppointmentsPage = () => {
     );
   };
 
+  // Misma regla que el backend: el paciente no puede cancelar con menos
+  // de 24 hs de anticipación (secretaría sí puede).
+  const isWithinCancellationWindow = (apt: AppointmentFullResponseDto) => {
+    return getMinutesUntilAppointment(apt.date, apt.hour) < CANCELLATION_WINDOW_HOURS * 60;
+  };
+
   const canReschedule = (apt: AppointmentFullResponseDto) => {
     return !isAppointmentExpired(apt) && apt.status === AppointmentStatus.PENDING;
   };
@@ -122,10 +137,13 @@ const MyAppointmentsPage = () => {
       });
       setCancelDialogOpen(false);
       setSelectedAppointment(null);
-    } catch {
+    } catch (error) {
+      const apiError = error as ApiError;
       toast({
         title: "Error",
-        description: "No se pudo cancelar el turno. Por favor intenta nuevamente.",
+        description:
+          apiError.response?.data?.message ||
+          "No se pudo cancelar el turno. Por favor intenta nuevamente.",
       });
     }
   };
@@ -228,17 +246,33 @@ const MyAppointmentsPage = () => {
                     Reprogramar
                   </Button>
                 )}
-                {canCancel(appointment) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCancelClick(appointment)}
-                    className="h-10 w-full justify-center text-red-600 hover:bg-red-50 hover:text-red-700"
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Cancelar
-                  </Button>
-                )}
+                {canCancel(appointment) &&
+                  (isWithinCancellationWindow(appointment) ? (
+                    <div className="space-y-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className="h-10 w-full justify-center text-red-600"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Cancelar
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Para cancelar con menos de 24 hs comunicate con la clínica.
+                      </p>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCancelClick(appointment)}
+                      className="h-10 w-full justify-center text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancelar
+                    </Button>
+                  ))}
               </div>
             )}
           </div>
