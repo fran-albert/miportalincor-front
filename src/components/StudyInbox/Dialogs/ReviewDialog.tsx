@@ -25,6 +25,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getStudyInboxDetail } from "@/api/StudyInbox/get-study-inbox-detail.action";
+import { PacsImagesGrid } from "./PacsImagesGrid";
+import { EcoTypeNoteField } from "./EcoTypeNoteField";
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { useStudyInboxMutations } from "@/hooks/StudyInbox/useStudyInboxMutations";
 import { StudyInboxItem } from "@/types/StudyInbox/StudyInbox.types";
@@ -62,12 +64,15 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
 
   const [selected, setSelected] = useState<SelectedPatient | null>(null);
   const [date, setDate] = useState("");
+  const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [holdInput, setHoldInput] = useState("");
 
   const confirmable =
     item?.status === "LISTO_PARA_CONFIRMAR" ||
     item?.status === "REQUIERE_REVISION";
+  const isEco = item?.suggestedStudyTypeId === 2;
+  const hasPacsImages = !!item?.pacsStudyInstanceUID;
 
   // Precargar fecha detectada y buscar por el nombre detectado al abrir
   useEffect(() => {
@@ -75,6 +80,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
     setSelected(null);
     setReason("");
     setHoldInput("");
+    setNote("");
     setDate(item.detectedStudyDate ? item.detectedStudyDate.slice(0, 10) : "");
     if (item.detectedPatientName) setSearch(item.detectedPatientName);
   }, [open, item, setSearch]);
@@ -113,7 +119,11 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
     confirm.mutate(
       {
         id,
-        payload: { userId: selected.id, date: calendarDateToPayloadAR(date) },
+        payload: {
+          userId: selected.id,
+          date: calendarDateToPayloadAR(date),
+          note: note.trim() || undefined,
+        },
       },
       { onSuccess: onClose }
     );
@@ -154,31 +164,57 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* PDF */}
-          <div className="space-y-2">
+          {/* Informe (PDF) + imagenes del PACS */}
+          <div className="space-y-3">
             {isLoading ? (
               <Skeleton className="h-[60vh] w-full" />
-            ) : detail?.signedUrl ? (
-              <>
-                <iframe
-                  src={detail.signedUrl}
-                  title="PDF del estudio"
-                  className="h-[60vh] w-full rounded-lg border border-gray-200"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => window.open(detail.signedUrl as string, "_blank")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Abrir PDF en otra pestaña
-                </Button>
-              </>
             ) : (
-              <div className="flex h-[60vh] items-center justify-center rounded-lg border border-dashed text-gray-500">
-                No se pudo cargar el PDF
-              </div>
+              <>
+                {detail?.signedUrl ? (
+                  <div className="space-y-2">
+                    <iframe
+                      src={detail.signedUrl}
+                      title="PDF del estudio"
+                      className={`${hasPacsImages ? "h-[38vh]" : "h-[60vh]"} w-full rounded-lg border border-gray-200`}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() =>
+                        window.open(detail.signedUrl as string, "_blank")
+                      }
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Abrir PDF en otra pestaña
+                    </Button>
+                  </div>
+                ) : item?.attachmentId ? (
+                  // Hay informe pero la URL firmada no vino: es un ERROR,
+                  // distinto de "todavia no hay informe".
+                  <div className="flex h-[20vh] items-center justify-center rounded-lg border border-dashed border-rose-200 text-rose-700">
+                    No se pudo cargar el PDF del informe. Cerrá y volvé a
+                    abrir el item.
+                  </div>
+                ) : (
+                  <div className="flex h-[10vh] items-center justify-center rounded-lg border border-dashed text-sm text-gray-500">
+                    Sin informe todavía — se puede confirmar solo con las
+                    imágenes.
+                  </div>
+                )}
+
+                {hasPacsImages && item && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-gray-700">
+                      Imágenes del estudio
+                      {item.pacsInstanceCount
+                        ? ` (${item.pacsInstanceCount})`
+                        : ""}
+                    </p>
+                    <PacsImagesGrid itemId={item.id} />
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -331,6 +367,14 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                     onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
+
+                {isEco && (
+                  <EcoTypeNoteField
+                    value={note}
+                    onChange={setNote}
+                    detectedSubtype={item?.detectedStudySubtype ?? null}
+                  />
+                )}
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <div className="flex items-center gap-1">

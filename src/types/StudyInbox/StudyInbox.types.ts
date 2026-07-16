@@ -16,6 +16,11 @@ export type MatchConfidence =
 
 export interface StudyInboxItem {
   id: string;
+  attachmentId: string | null;
+  pacsStudyInstanceUID: string | null;
+  pacsAccessionNumber: string | null;
+  pacsSeriesCount: number | null;
+  pacsInstanceCount: number | null;
   detectedPatientName: string | null;
   detectedDni: string | null;
   detectedLabFicha: string | null;
