@@ -31,6 +31,7 @@ function Editor({ item, templates, onClose }: { item: StudyReportListItem; templ
   const template = useMemo(() => templates.find((candidate) => candidate.key === templateKey), [templates, templateKey]);
   const save = useMutation({ mutationFn: () => saveStudyReportDraft(item.sourceInboxItemId, templateKey, content), onSuccess: (next) => { setReport(next); client.invalidateQueries({ queryKey: key }); }, onError: () => toast.error("No se pudo guardar el borrador") });
   const viewer = useQuery({ queryKey: ["study-reports", "viewer", report?.id], queryFn: () => getStudyReportViewer(report!.id), enabled: Boolean(report?.id) });
+  useEffect(() => { if (!report && templateKey && !save.isPending) void save.mutateAsync(); }, [report, save, templateKey]);
   const preview = async () => { if (!report) return; const url = URL.createObjectURL(await previewStudyReport(report.id)); setPdfUrl(url); };
   const sign = async () => { if (!report) return; const next = await signStudyReport(report.id); setReport(next); client.invalidateQueries({ queryKey: key }); toast.success("Informe firmado"); };
   useEffect(() => { if (!report || report.status === "FIRMADO") return; const timer = window.setTimeout(() => { void save.mutateAsync(); }, 900); return () => window.clearTimeout(timer); }, [content, report, save, templateKey]);
