@@ -28,6 +28,7 @@ import {
   Clock,
   CreditCard,
   FileText,
+  FilePenLine,
   Home,
   Inbox,
   KeyRound,
@@ -84,6 +85,13 @@ const operacionItems: SidebarNavItem[] = [
     url: "/mi-sala-de-espera",
     icon: Clock,
     allowedRoles: PERMISSIONS.DOCTOR_WAITING_ROOM,
+    strictRoles: true,
+  },
+  {
+    title: "Mis estudios por informar",
+    url: "/mis-estudios-por-informar",
+    icon: FilePenLine,
+    allowedRoles: PERMISSIONS.STUDY_REPORTS,
     strictRoles: true,
   },
   {
