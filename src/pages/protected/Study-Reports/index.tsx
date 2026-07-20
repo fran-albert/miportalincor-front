@@ -137,7 +137,13 @@ function Editor({ item, templates, onClose }: EditorProps) {
 
   useEffect(() => {
     if (!reportId && templateKey && !saveRef.current.isPending) {
-      void saveRef.current.mutateAsync();
+      // El backend elige la plantilla por el subtipo del turno y prellena el
+      // content con el texto normal: hidratamos el estado local con lo que
+      // devuelve para que la médica vea el informe-normal (no campos vacíos).
+      void saveRef.current.mutateAsync().then((created) => {
+        setTemplateKey(created.templateKey);
+        setContent(created.content);
+      });
     }
   }, [reportId, templateKey]);
 
