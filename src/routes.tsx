@@ -33,6 +33,7 @@ import MyProgramsPage from "./pages/protected/My-Programs";
 import MyEnrollmentDetailPage from "./pages/protected/My-Programs/Detail";
 import QrAttendancePage from "./pages/protected/Attendance/Qr";
 import StudyInboxPage from "./pages/protected/StudyInbox";
+import StudyReportsPage from "./pages/protected/Study-Reports";
 import CompaniesPage from "./pages/protected/Companies";
 import CompanyPage from "./pages/protected/Company";
 import CollaboratorEditPage from "./pages/protected/Collaborator/Edit";
@@ -130,6 +131,14 @@ function App() {
             element={
               <Private_Routes allowedRoles={["Medico"]}>
                 <DoctorWaitingRoomPage />
+              </Private_Routes>
+            }
+          />
+          <Route
+            path="/mis-estudios-por-informar"
+            element={
+              <Private_Routes allowedRoles={["Medico"]}>
+                <StudyReportsPage />
               </Private_Routes>
             }
           />

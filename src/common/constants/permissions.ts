@@ -44,6 +44,7 @@ export const PERMISSIONS = {
 
   // Sala de Espera del Médico
   DOCTOR_WAITING_ROOM: [Role.MEDICO],
+  STUDY_REPORTS: [Role.MEDICO],
 
   // Configuración del Médico
   MY_SETTINGS: [Role.MEDICO],
@@ -71,6 +72,7 @@ export const PERMISSIONS = {
  */
 export const STRICT_PERMISSIONS = [
   'DOCTOR_WAITING_ROOM',
+  'STUDY_REPORTS',
   'MY_SETTINGS',
   'MY_STUDIES',
   'MY_APPOINTMENTS',
