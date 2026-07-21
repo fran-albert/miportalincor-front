@@ -132,7 +132,7 @@ function Editor({ item, templates, onClose }: EditorProps) {
   const viewerUrl = viewer.data?.viewerPath.startsWith("http")
     ? viewer.data.viewerPath
     : viewer.data?.viewerPath
-      ? `${environment.API_INCOR_HC_URL.replace(/\/$/, "")}${viewer.data.viewerPath}`
+      ? `${environment.API_INCOR_HC_URL.replace(/\/$/, "")}/${viewer.data.viewerPath.replace(/^\//, "")}`
       : undefined;
 
   useEffect(() => {

@@ -85,5 +85,13 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
     await waitFor(() =>
       expect(saveStudyReportDraft).toHaveBeenCalledWith("item-1", expect.any(String), expect.any(Object)),
     );
+
+    // El visor arma la URL con la barra entre el origen y el viewerPath relativo.
+    await waitFor(() =>
+      expect(screen.getByTitle("Visor de imágenes DICOM")).toHaveAttribute(
+        "src",
+        "https://api.test/pacs-viewer/tok/stone-webviewer/index.html?study=1.2.3",
+      ),
+    );
   });
 });
