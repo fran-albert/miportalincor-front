@@ -2,23 +2,31 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import StudyReportsPage from "./index";
 
 const getMyStudyReports = vi.fn();
 const getStudyReportTemplates = vi.fn();
 const saveStudyReportDraft = vi.fn();
-const getStudyReportViewer = vi.fn();
+const getStudyReportImages = vi.fn();
+const getStudyReportImagePreview = vi.fn();
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getMyStudyReports: () => getMyStudyReports() as unknown,
   getStudyReportTemplates: () => getStudyReportTemplates() as unknown,
   saveStudyReportDraft: (id: string, key: string, content: unknown) =>
     saveStudyReportDraft(id, key, content) as unknown,
-  getStudyReportViewer: (id: string) => getStudyReportViewer(id) as unknown,
+  getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
+  getStudyReportImagePreview: (id: string, instanceId: string) =>
+    getStudyReportImagePreview(id, instanceId) as unknown,
   previewStudyReport: vi.fn(),
   signStudyReport: vi.fn(),
   addStudyReportAddendum: vi.fn(),
+}));
+vi.mock("@/api/StudyReport/study-report-images.actions", () => ({
+  getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
+  getStudyReportImagePreview: (id: string, instanceId: string) =>
+    getStudyReportImagePreview(id, instanceId) as unknown,
 }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("react-helmet-async", () => ({ Helmet: () => null }));
@@ -36,6 +44,11 @@ const renderPage = () => {
 };
 
 afterEach(() => vi.clearAllMocks());
+
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => "blob:study-report-image");
+  URL.revokeObjectURL = vi.fn();
+});
 
 describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
   it("hidrata la plantilla y los defaults que devuelve el backend al crear el borrador", async () => {
@@ -70,10 +83,10 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
       content: { rinon_der: "En posición normal y de forma conservada." },
       status: "BORRADOR",
     });
-    getStudyReportViewer.mockResolvedValue({
-      viewerPath: "pacs-viewer/tok/stone-webviewer/index.html?study=1.2.3",
-      expiresInSeconds: 1800,
-    });
+    getStudyReportImages.mockResolvedValue(["instance-1"]);
+    getStudyReportImagePreview.mockResolvedValue(
+      new Blob(["jpg"], { type: "image/jpeg" }),
+    );
 
     renderPage();
     await userEvent.click(await screen.findByRole("button", { name: /Informar/i }));
@@ -86,11 +99,11 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
       expect(saveStudyReportDraft).toHaveBeenCalledWith("item-1", expect.any(String), expect.any(Object)),
     );
 
-    // El visor arma la URL con la barra entre el origen y el viewerPath relativo.
+    // La galería usa el endpoint autenticado de previews del informe.
     await waitFor(() =>
-      expect(screen.getByTitle("Visor de imágenes DICOM")).toHaveAttribute(
+      expect(screen.getByRole("img", { name: "Imagen 1 del estudio" })).toHaveAttribute(
         "src",
-        "https://api.test/pacs-viewer/tok/stone-webviewer/index.html?study=1.2.3",
+        "blob:study-report-image",
       ),
     );
   });
