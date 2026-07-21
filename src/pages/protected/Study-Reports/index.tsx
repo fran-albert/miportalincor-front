@@ -7,7 +7,6 @@ import {
   addStudyReportAddendum,
   getMyStudyReports,
   getStudyReportTemplates,
-  getStudyReportViewer,
   previewStudyReport,
   saveStudyReportDraft,
   signStudyReport,
@@ -17,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { environment } from "@/config/environment";
+import { StudyReportImagesGallery } from "@/components/StudyReport/StudyReportImagesGallery";
 import type {
   StudyReportField,
   StudyReportListItem,
@@ -124,17 +123,6 @@ function Editor({ item, templates, onClose }: EditorProps) {
     saveRef.current = save;
   }, [save]);
 
-  const viewer = useQuery({
-    queryKey: ["study-reports", "viewer", reportId],
-    queryFn: () => getStudyReportViewer(reportId!),
-    enabled: Boolean(reportId),
-  });
-  const viewerUrl = viewer.data?.viewerPath.startsWith("http")
-    ? viewer.data.viewerPath
-    : viewer.data?.viewerPath
-      ? `${environment.API_INCOR_HC_URL.replace(/\/$/, "")}/${viewer.data.viewerPath.replace(/^\//, "")}`
-      : undefined;
-
   useEffect(() => {
     if (!reportId && templateKey && !saveRef.current.isPending) {
       // El backend elige la plantilla por el subtipo del turno y prellena el
@@ -221,11 +209,13 @@ function Editor({ item, templates, onClose }: EditorProps) {
 
       <div className="grid h-[calc(100vh-4rem)] lg:grid-cols-2">
         <section className="min-h-0 border-r bg-muted/20">
-          <iframe
-            className="h-full w-full border-0"
-            src={viewerUrl}
-            title="Visor de imágenes DICOM"
-          />
+          {reportId ? (
+            <StudyReportImagesGallery reportId={reportId} />
+          ) : (
+            <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+              Preparando el informe y sus imágenes…
+            </div>
+          )}
         </section>
 
         <section className="min-h-0 overflow-y-auto p-5">
