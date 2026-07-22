@@ -62,6 +62,8 @@ import { PERMISSIONS, filterMenuItems } from "@/common/constants/permissions";
 import { usePrescriptionNotifications } from "@/hooks/Prescription-Request/usePrescriptionNotifications";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import useLaboralPermissions from "@/hooks/Laboral/useLaboralPermissions";
+import { useStudyReportAccess } from "@/hooks/StudyReport/useStudyReportAccess";
+import { filterStudyReportSidebarItems } from "./studyReportSidebarAccess";
 
 interface SidebarNavItem {
   title: string;
@@ -330,6 +332,10 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { handleLogout } = useLogout();
   const { session, isDoctor, isSecretary, isAdmin, isPatient } = useUserRole();
+  const { data: studyReportAccess } = useStudyReportAccess({
+    doctorUserId: session?.id,
+    enabled: isDoctor,
+  });
   const { canAccessLaboral } = useLaboralPermissions();
 
   const firstName = session?.firstName || "Usuario";
@@ -374,6 +380,10 @@ export function AppSidebar() {
 
   // Filtrar items del menú según roles del usuario
   let filteredOperacion = filterMenuItems(operacionSource, userRoles);
+  filteredOperacion = filterStudyReportSidebarItems(
+    filteredOperacion,
+    studyReportAccess?.enabled === true,
+  );
 
   // Si es médico y no tiene GREEN_CARD, ocultar "Solicitudes de Recetas"
   if (isDoctor && !hasGreenCardService) {
