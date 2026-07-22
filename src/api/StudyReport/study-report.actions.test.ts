@@ -15,11 +15,14 @@ import {
   addStudyReportAddendum,
   getMyStudyReports,
   getStudyReportAccess,
+  getStudyReportInboxImagePreview,
+  getStudyReportInboxImages,
   getStudyReportTemplates,
   getStudyReportViewer,
   previewStudyReport,
   saveStudyReportDraft,
   signStudyReport,
+  splitStudyReport,
 } from "./study-report.actions";
 
 describe("study report actions", () => {
@@ -55,6 +58,69 @@ describe("study report actions", () => {
     expect(mockPost).toHaveBeenCalledWith("/study-reports/drafts/inbox-1", {
       templateKey: "abdomen",
       content: { conclusion: "Normal" },
+    });
+  });
+
+  it("loads item images and posts an exact split payload", async () => {
+    mockGet.mockResolvedValue({ data: ["instance-1", "instance-2"] });
+    mockPost.mockResolvedValue({ data: [] });
+    const blob = new Blob(["jpg"], { type: "image/jpeg" });
+
+    await expect(getStudyReportInboxImages("item-1")).resolves.toEqual([
+      "instance-1",
+      "instance-2",
+    ]);
+    mockGet.mockResolvedValue({ data: blob });
+    await expect(
+      getStudyReportInboxImagePreview("item-1", "instance-2"),
+    ).resolves.toBe(blob);
+    await splitStudyReport("item-1", [
+      {
+        assignedInstanceIds: ["instance-1"],
+        templateKey: "abdomen",
+        label: "Abdominal",
+      },
+      {
+        assignedInstanceIds: ["instance-2"],
+        templateKey: "mamaria",
+        label: "Mamaria",
+      },
+    ]);
+
+    expect(mockGet).toHaveBeenNthCalledWith(
+      1,
+      "/study-reports/inbox/item-1/images",
+    );
+    expect(mockGet).toHaveBeenNthCalledWith(
+      2,
+      "/study-reports/inbox/item-1/images/instance-2",
+      { responseType: "blob" },
+    );
+    expect(mockPost).toHaveBeenCalledWith("/study-reports/split/item-1", {
+      groups: [
+        {
+          assignedInstanceIds: ["instance-1"],
+          templateKey: "abdomen",
+          label: "Abdominal",
+        },
+        {
+          assignedInstanceIds: ["instance-2"],
+          templateKey: "mamaria",
+          label: "Mamaria",
+        },
+      ],
+    });
+  });
+
+  it("includes the report id when saving a sibling draft", async () => {
+    mockPost.mockResolvedValue({ data: { id: "report-2" } });
+
+    await saveStudyReportDraft("item-1", "mamaria", {}, "report-2");
+
+    expect(mockPost).toHaveBeenCalledWith("/study-reports/drafts/item-1", {
+      reportId: "report-2",
+      templateKey: "mamaria",
+      content: {},
     });
   });
 

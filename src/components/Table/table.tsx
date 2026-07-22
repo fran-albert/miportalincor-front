@@ -31,6 +31,7 @@ interface ColumnMeta {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  getRowId?: (row: TData, index: number) => string;
   showSearch?: boolean;
   searchPlaceholder?: string;
   addLinkPath?: string;
@@ -59,6 +60,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
+  getRowId,
   showSearch = false,
   searchPlaceholder = "",
   addLinkPath = "/",
@@ -134,10 +136,10 @@ export function DataTable<TData, TValue>({
       columnFilters,
       pagination,
     },
-    getRowId: (row: TData, index: number) => {
+    getRowId: getRowId ?? ((row: TData, index: number) => {
       const rowWithId = row as { id?: string | number };
       return rowWithId.id ? `row-${rowWithId.id}` : `row-index-${index}`;
-    },
+    }),
   });
 
   const handleSearchSubmit = () => {
