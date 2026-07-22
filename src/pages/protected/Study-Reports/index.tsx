@@ -11,6 +11,7 @@ import {
   previewStudyReport,
   saveStudyReportDraft,
   signStudyReport,
+  splitStudyReport,
 } from "@/api/StudyReport/study-report.actions";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/Table/table";
@@ -23,8 +24,10 @@ import { StudyReportImagesGallery } from "@/components/StudyReport/StudyReportIm
 import type {
   StudyReportField,
   StudyReportListItem,
+  StudyReportSplitGroup,
   StudyReportTemplate,
 } from "@/types/StudyReport/StudyReport.types";
+import { StudyReportSplitPanel } from "@/components/StudyReport/StudyReportSplitPanel";
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
 
@@ -33,17 +36,22 @@ const formatDate = (value: string | null) =>
 
 interface StudyReportColumnsProps {
   onOpen: (item: StudyReportListItem) => void;
+  onSplit: (item: StudyReportListItem) => void;
 }
 
 const getStudyReportColumns = ({
   onOpen,
+  onSplit,
 }: StudyReportColumnsProps): ColumnDef<StudyReportListItem>[] => [
   {
     accessorKey: "patientName",
     header: "Paciente",
     cell: ({ row }) => (
       <div>
-        <p className="font-medium">{row.original.patientName ?? "Sin nombre"}</p>
+        <p className="font-medium">
+          {row.original.patientName ?? "Sin nombre"}
+          {row.original.splitLabel ? ` · ${row.original.splitLabel}` : ""}
+        </p>
         <p className="text-muted-foreground">DNI {row.original.patientDni ?? "—"}</p>
       </div>
     ),
@@ -69,10 +77,21 @@ const getStudyReportColumns = ({
     header: "",
     meta: { headerClassName: "text-right", cellClassName: "text-right" },
     cell: ({ row }) => (
-      <Button size="sm" onClick={() => onOpen(row.original)}>
-        <FilePenLine className="mr-2 h-4 w-4" />
-        {row.original.state === "SIN_EMPEZAR" ? "Informar" : "Continuar"}
-      </Button>
+      <div className="flex justify-end gap-2">
+        {row.original.state === "SIN_EMPEZAR" && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onSplit(row.original)}
+          >
+            Dividir
+          </Button>
+        )}
+        <Button size="sm" onClick={() => onOpen(row.original)}>
+          <FilePenLine className="mr-2 h-4 w-4" />
+          {row.original.state === "SIN_EMPEZAR" ? "Informar" : "Continuar"}
+        </Button>
+      </div>
     ),
   },
 ];
@@ -159,7 +178,8 @@ function Editor({ item, templates, onClose }: EditorProps) {
   const signed = report?.status === "FIRMADO";
 
   const save = useMutation({
-    mutationFn: () => saveStudyReportDraft(item.sourceInboxItemId, templateKey, content),
+    mutationFn: () =>
+      saveStudyReportDraft(item.sourceInboxItemId, templateKey, content, reportId),
     onSuccess: (next) => {
       setReport(next);
       queryClient.invalidateQueries({ queryKey: reportsQueryKey });
@@ -358,6 +378,8 @@ function Editor({ item, templates, onClose }: EditorProps) {
 
 export default function StudyReportsPage() {
   const [active, setActive] = useState<StudyReportListItem | null>(null);
+  const [splitItem, setSplitItem] = useState<StudyReportListItem | null>(null);
+  const queryClient = useQueryClient();
   const reports = useQuery({
     queryKey: reportsQueryKey,
     queryFn: getMyStudyReports,
@@ -367,8 +389,20 @@ export default function StudyReportsPage() {
     queryFn: getStudyReportTemplates,
     staleTime: Infinity,
   });
+  const splitMutation = useMutation({
+    mutationFn: (groups: StudyReportSplitGroup[]) => {
+      if (!splitItem) throw new Error("No hay un item seleccionado");
+      return splitStudyReport(splitItem.sourceInboxItemId, groups);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsQueryKey });
+      setSplitItem(null);
+      toast.success("Estudio dividido en dos informes");
+    },
+    onError: () => toast.error("No se pudo dividir el estudio"),
+  });
   const columns = useMemo(
-    () => getStudyReportColumns({ onOpen: setActive }),
+    () => getStudyReportColumns({ onOpen: setActive, onSplit: setSplitItem }),
     [],
   );
 
@@ -411,6 +445,9 @@ export default function StudyReportsPage() {
             <DataTable
               columns={columns}
               data={reports.data ?? []}
+              getRowId={(row) =>
+                `${row.sourceInboxItemId}-${row.report?.id ?? "new"}`
+              }
               canAddUser={false}
               isLoading={reports.isLoading}
               isFetching={reports.isFetching}
@@ -419,6 +456,27 @@ export default function StudyReportsPage() {
           </div>
         )}
       </main>
+      <Dialog
+        open={Boolean(splitItem)}
+        onOpenChange={(open) => {
+          if (!open && !splitMutation.isPending) setSplitItem(null);
+        }}
+      >
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>Dividir estudio en dos informes</DialogTitle>
+          </DialogHeader>
+          {splitItem && templates.data && (
+            <StudyReportSplitPanel
+              itemId={splitItem.sourceInboxItemId}
+              templates={templates.data}
+              isPending={splitMutation.isPending}
+              onConfirm={(groups) => splitMutation.mutate(groups)}
+              onCancel={() => setSplitItem(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

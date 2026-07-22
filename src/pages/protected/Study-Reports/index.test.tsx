@@ -11,6 +11,7 @@ const getStudyReportTemplates = vi.fn();
 const saveStudyReportDraft = vi.fn();
 const getStudyReportImages = vi.fn();
 const getStudyReportImagePreview = vi.fn();
+const splitStudyReport = vi.fn();
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getMyStudyReports: () => getMyStudyReports() as unknown,
@@ -23,6 +24,9 @@ vi.mock("@/api/StudyReport/study-report.actions", () => ({
   previewStudyReport: vi.fn(),
   signStudyReport: vi.fn(),
   addStudyReportAddendum: vi.fn(),
+  getStudyReportInboxImages: (id: string) => getStudyReportImages(id) as unknown,
+  getStudyReportInboxImagePreview: (id: string, instanceId: string) => getStudyReportImagePreview(id, instanceId) as unknown,
+  splitStudyReport: (id: string, groups: unknown) => splitStudyReport(id, groups) as unknown,
 }));
 vi.mock("@/api/StudyReport/study-report-images.actions", () => ({
   getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
@@ -79,6 +83,7 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
         patientDni: "30111222",
         studyDate: "2026-07-20",
         studyType: "Ecografia Renal",
+        splitLabel: null,
       },
     ]);
     // La 1ra plantilla (templates[0]) es la genérica: si el front no hidrata,
@@ -124,6 +129,53 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
         "blob:study-report-image",
       ),
     );
+  });
+
+  it("muestra la etiqueta de los informes hermanos y el botón dividir sólo en sin empezar", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-20",
+        studyType: "Ecografía combinada",
+        splitLabel: null,
+      },
+      {
+        sourceInboxItemId: "item-2",
+        report: { id: "report-a", templateKey: "gineco", content: {}, status: "BORRADOR" },
+        state: "BORRADOR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-20",
+        studyType: "Ecografía combinada",
+        splitLabel: "Gineco",
+      },
+      {
+        sourceInboxItemId: "item-2",
+        report: { id: "report-b", templateKey: "mamaria", content: {}, status: "BORRADOR" },
+        state: "BORRADOR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-20",
+        studyType: "Ecografía combinada",
+        splitLabel: "Mama",
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([
+      { key: "gineco", label: "Ginecológica", subtypeAliases: [], fields: [] },
+    ]);
+    getStudyReportImages.mockResolvedValue([]);
+    splitStudyReport.mockResolvedValue([]);
+
+    renderPage();
+
+    expect(await screen.findByText("PACIENTE PRUEBA · Gineco")).toBeInTheDocument();
+    expect(screen.getByText("PACIENTE PRUEBA · Mama")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dividir" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Continuar" })).toHaveLength(2);
   });
 });
 
