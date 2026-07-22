@@ -14,6 +14,7 @@ vi.mock("@/services/axiosConfig", () => ({
 import {
   addStudyReportAddendum,
   getMyStudyReports,
+  getStudyReportAccess,
   getStudyReportTemplates,
   getStudyReportViewer,
   previewStudyReport,
@@ -36,6 +37,13 @@ describe("study report actions", () => {
 
     expect(mockGet).toHaveBeenNthCalledWith(1, "/study-reports/mine");
     expect(mockGet).toHaveBeenNthCalledWith(2, "/study-reports/templates");
+  });
+
+  it("loads the pilot access flag", async () => {
+    mockGet.mockResolvedValue({ data: { enabled: false } });
+
+    await expect(getStudyReportAccess()).resolves.toEqual({ enabled: false });
+    expect(mockGet).toHaveBeenCalledWith("/study-reports/access");
   });
 
   it("creates the first draft only through the draft endpoint", async () => {
