@@ -28,6 +28,6 @@ export const getProgramAccessCapabilities = ({
     canManageEnrollments: isProgramOperator || isCoordinator,
     canRegisterAttendance: isProgramOperator || isProgramMember,
     canCreateNotes: isProgramMember && !isProgramOperator,
-    canManageActivities: isCoordinator && !isProgramOperator,
+    canManageActivities: isAdmin || (isCoordinator && !isProgramOperator),
   };
 };
