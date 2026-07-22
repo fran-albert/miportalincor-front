@@ -2,6 +2,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import StudyReportsPage from "./index";
 
@@ -30,6 +31,23 @@ vi.mock("@/api/StudyReport/study-report-images.actions", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock("react-helmet-async", () => ({ Helmet: () => null }));
+vi.mock("@/components/PageHeader", () => ({
+  PageHeader: ({
+    breadcrumbItems,
+    title,
+    actions,
+  }: {
+    breadcrumbItems: Array<{ label: string }>;
+    title: string;
+    actions?: ReactNode;
+  }) => (
+    <div data-testid="study-report-page-header">
+      <span>{breadcrumbItems.map((item) => item.label).join(" / ")}</span>
+      <h1>{title}</h1>
+      {actions}
+    </div>
+  ),
+}));
 vi.mock("@/config/environment", () => ({
   environment: { API_INCOR_HC_URL: "https://api.test" },
 }));
@@ -106,5 +124,20 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
         "blob:study-report-image",
       ),
     );
+  });
+});
+
+describe("StudyReportsPage — jerarquía del portal", () => {
+  it("muestra PageHeader, breadcrumb, actualizar y DataTable compartido", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+
+    renderPage();
+
+    expect(await screen.findByTestId("study-report-page-header")).toHaveTextContent(
+      "Inicio / Mis estudios por informar",
+    );
+    expect(screen.getByRole("heading", { name: "Mis estudios por informar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Actualizar" })).toBeInTheDocument();
+    expect(await screen.findByRole("table")).toBeInTheDocument();
   });
 });

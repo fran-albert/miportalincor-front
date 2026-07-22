@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, FilePenLine, PenLine, Save, X } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Eye, FilePenLine, PenLine, RefreshCw, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   addStudyReportAddendum,
@@ -12,6 +13,8 @@ import {
   signStudyReport,
 } from "@/api/StudyReport/study-report.actions";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/Table/table";
+import { PageHeader } from "@/components/PageHeader";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +30,52 @@ const reportsQueryKey = ["study-reports", "mine"] as const;
 
 const formatDate = (value: string | null) =>
   value ? new Date(value).toLocaleDateString("es-AR") : "Sin fecha";
+
+interface StudyReportColumnsProps {
+  onOpen: (item: StudyReportListItem) => void;
+}
+
+const getStudyReportColumns = ({
+  onOpen,
+}: StudyReportColumnsProps): ColumnDef<StudyReportListItem>[] => [
+  {
+    accessorKey: "patientName",
+    header: "Paciente",
+    cell: ({ row }) => (
+      <div>
+        <p className="font-medium">{row.original.patientName ?? "Sin nombre"}</p>
+        <p className="text-muted-foreground">DNI {row.original.patientDni ?? "—"}</p>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "studyDate",
+    header: "Fecha",
+    cell: ({ row }) => formatDate(row.original.studyDate),
+  },
+  {
+    accessorKey: "studyType",
+    header: "Tipo",
+    cell: ({ row }) => row.original.studyType ?? "Ecografía",
+  },
+  {
+    accessorKey: "state",
+    header: "Estado",
+    cell: ({ row }) =>
+      row.original.state === "SIN_EMPEZAR" ? "Sin empezar" : "Borrador",
+  },
+  {
+    id: "actions",
+    header: "",
+    meta: { headerClassName: "text-right", cellClassName: "text-right" },
+    cell: ({ row }) => (
+      <Button size="sm" onClick={() => onOpen(row.original)}>
+        <FilePenLine className="mr-2 h-4 w-4" />
+        {row.original.state === "SIN_EMPEZAR" ? "Informar" : "Continuar"}
+      </Button>
+    ),
+  },
+];
 
 interface FieldProps {
   field: StudyReportField;
@@ -318,6 +367,10 @@ export default function StudyReportsPage() {
     queryFn: getStudyReportTemplates,
     staleTime: Infinity,
   });
+  const columns = useMemo(
+    () => getStudyReportColumns({ onOpen: setActive }),
+    [],
+  );
 
   if (active && templates.data) {
     return <Editor item={active} templates={templates.data} onClose={() => setActive(null)} />;
@@ -329,55 +382,40 @@ export default function StudyReportsPage() {
         <title>Mis estudios por informar</title>
       </Helmet>
       <main className="space-y-5 p-4 md:p-6">
-        <header>
-          <h1 className="text-2xl font-semibold">Mis estudios por informar</h1>
-          <p className="text-sm text-muted-foreground">
-            Ecografías con imágenes listas para informar.
-          </p>
-        </header>
+        <PageHeader
+          breadcrumbItems={[
+            { label: "Inicio", href: "/inicio" },
+            { label: "Mis estudios por informar" },
+          ]}
+          title="Mis estudios por informar"
+          description="Ecografías con imágenes listas para informar."
+          icon={<FilePenLine className="h-6 w-6" />}
+          actions={
+            <Button
+              variant="outline"
+              disabled={reports.isFetching}
+              onClick={() => void reports.refetch()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Actualizar
+            </Button>
+          }
+        />
 
         {reports.isError ? (
           <p className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
             El editor no está habilitado para esta médica o no se pudo cargar la cola.
           </p>
-        ) : reports.data?.length === 0 ? (
-          <p className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-            No hay estudios por informar.
-          </p>
         ) : (
-          <div className="overflow-hidden rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="p-3">Paciente</th>
-                  <th className="p-3">Fecha</th>
-                  <th className="p-3">Tipo</th>
-                  <th className="p-3">Estado</th>
-                  <th className="p-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {reports.data?.map((item) => (
-                  <tr key={item.sourceInboxItemId} className="border-t">
-                    <td className="p-3">
-                      <p className="font-medium">{item.patientName ?? "Sin nombre"}</p>
-                      <p className="text-muted-foreground">DNI {item.patientDni ?? "—"}</p>
-                    </td>
-                    <td className="p-3">{formatDate(item.studyDate)}</td>
-                    <td className="p-3">{item.studyType ?? "Ecografía"}</td>
-                    <td className="p-3">
-                      {item.state === "SIN_EMPEZAR" ? "Sin empezar" : "Borrador"}
-                    </td>
-                    <td className="p-3 text-right">
-                      <Button size="sm" onClick={() => setActive(item)}>
-                        <FilePenLine className="mr-2 h-4 w-4" />
-                        {item.state === "SIN_EMPEZAR" ? "Informar" : "Continuar"}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-hidden sm:rounded-lg">
+            <DataTable
+              columns={columns}
+              data={reports.data ?? []}
+              canAddUser={false}
+              isLoading={reports.isLoading}
+              isFetching={reports.isFetching}
+              showDataOnEmptySearch={true}
+            />
           </div>
         )}
       </main>
