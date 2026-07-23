@@ -415,11 +415,17 @@ function Editor({ item, templates, onClose }: EditorProps) {
           }
         }}
       >
-        <DialogContent className="h-[92vh] max-w-5xl">
+        <DialogContent className="h-[95vh] max-w-[95vw] grid-rows-[auto_1fr] gap-3">
           <DialogHeader>
             <DialogTitle>Previsualización del informe final</DialogTitle>
           </DialogHeader>
-          {pdfUrl && <iframe className="h-full w-full" src={pdfUrl} title="Previsualización PDF" />}
+          {pdfUrl && (
+            <iframe
+              className="h-full w-full rounded-md border"
+              src={pdfUrl}
+              title="Previsualización PDF"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
