@@ -31,7 +31,8 @@ const EnrollmentDetailPage = () => {
   const { program } = useProgram(programId!);
   const { enrollment, isLoading } = useEnrollment(programId!, enrollmentId!);
   const { activities } = useProgramActivities(programId!);
-  const { isProgramOperator } = useProgramMembership(programId!);
+  const { isProgramMember } = useProgramMembership(programId!);
+  const showClinicalTabs = isProgramMember;
 
   if (isLoading) {
     return (
@@ -84,13 +85,13 @@ const EnrollmentDetailPage = () => {
         />
 
         <Tabs
-          defaultValue={isProgramOperator ? "attendance" : "plan"}
+          defaultValue={showClinicalTabs ? "plan" : "attendance"}
           className="w-full"
         >
           <TabsList
-            className={`grid w-full ${isProgramOperator ? "grid-cols-2" : "grid-cols-4"}`}
+            className={`grid w-full ${showClinicalTabs ? "grid-cols-4" : "grid-cols-2"}`}
           >
-            {isProgramOperator ? null : (
+            {!showClinicalTabs ? null : (
               <TabsTrigger value="plan" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Plan
@@ -110,7 +111,7 @@ const EnrollmentDetailPage = () => {
               <TrendingUp className="h-4 w-4" />
               Cumplimiento
             </TabsTrigger>
-            {isProgramOperator ? null : (
+            {!showClinicalTabs ? null : (
               <TabsTrigger
                 value="follow-up"
                 className="flex items-center gap-2"
@@ -120,7 +121,7 @@ const EnrollmentDetailPage = () => {
               </TabsTrigger>
             )}
           </TabsList>
-          {isProgramOperator ? null : (
+          {!showClinicalTabs ? null : (
             <TabsContent value="plan" className="mt-6">
               <PlanTab
                 programId={programId!}
@@ -140,7 +141,7 @@ const EnrollmentDetailPage = () => {
           <TabsContent value="compliance" className="mt-6">
             <ComplianceTab enrollmentId={enrollmentId!} />
           </TabsContent>
-          {isProgramOperator ? null : (
+          {!showClinicalTabs ? null : (
             <TabsContent value="follow-up" className="mt-6">
               <FollowUpTab
                 programId={programId!}

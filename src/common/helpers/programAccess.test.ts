@@ -5,11 +5,11 @@ import { getProgramAccessCapabilities } from "./programAccess";
 
 describe("getProgramAccessCapabilities", () => {
   it.each([
-    ["Secretaria", false, true],
-    ["Administrador", true, false],
+    ["Secretaria", false, true, false],
+    ["Administrador", true, false, true],
   ])(
     "da acceso operativo sin acceso clínico a %s",
-    (_role, isAdmin, isSecretary) => {
+    (_role, isAdmin, isSecretary, expectedCanManageActivities) => {
       const capabilities = getProgramAccessCapabilities({
         isAdmin,
         isSecretary,
@@ -23,10 +23,21 @@ describe("getProgramAccessCapabilities", () => {
         canManageEnrollments: true,
         canRegisterAttendance: true,
         canCreateNotes: false,
-        canManageActivities: false,
+        canManageActivities: expectedCanManageActivities,
       });
     }
   );
+
+  it("permite al Administrador gestionar actividades aunque también sea coordinador", () => {
+    const capabilities = getProgramAccessCapabilities({
+      isAdmin: true,
+      isSecretary: false,
+      isProgramMember: true,
+      isCoordinator: true,
+    });
+
+    expect(capabilities.canManageActivities).toBe(true);
+  });
 
   it("mantiene el límite no clínico aunque el operador figure como miembro", () => {
     const capabilities = getProgramAccessCapabilities({
