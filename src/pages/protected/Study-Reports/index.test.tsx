@@ -172,10 +172,17 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
 
     renderPage();
 
-    expect(await screen.findByText("PACIENTE PRUEBA · Gineco")).toBeInTheDocument();
-    expect(screen.getByText("PACIENTE PRUEBA · Mama")).toBeInTheDocument();
+    // el nombre de cada informe hermano se muestra en la columna Tipo
+    expect(await screen.findByText("Gineco")).toBeInTheDocument();
+    expect(screen.getByText("Mama")).toBeInTheDocument();
+    // el paciente ya no repite el label
+    expect(screen.getAllByText("PACIENTE PRUEBA")).toHaveLength(3);
     expect(screen.getByRole("button", { name: "Dividir" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Continuar" })).toHaveLength(2);
+    // cada borrador puede descartarse
+    expect(
+      screen.getAllByRole("button", { name: "Descartar borrador" }),
+    ).toHaveLength(2);
   });
 });
 

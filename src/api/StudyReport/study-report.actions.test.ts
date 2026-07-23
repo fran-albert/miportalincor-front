@@ -3,16 +3,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockGet = vi.hoisted(() => vi.fn());
 const mockPost = vi.hoisted(() => vi.fn());
+const mockDelete = vi.hoisted(() => vi.fn());
 
 vi.mock("@/services/axiosConfig", () => ({
   apiIncorHC: {
     get: mockGet,
     post: mockPost,
+    delete: mockDelete,
   },
 }));
 
 import {
   addStudyReportAddendum,
+  discardStudyReport,
   getMyStudyReports,
   getStudyReportAccess,
   getStudyReportInboxImagePreview,
@@ -149,5 +152,12 @@ describe("study report actions", () => {
 
     expect(mockPost).toHaveBeenNthCalledWith(1, "/study-reports/report-1/sign");
     expect(mockPost).toHaveBeenNthCalledWith(2, "/study-reports/report-1/addendums", { text: "Medida corregida" });
+  });
+
+  it("discards a draft report", async () => {
+    mockDelete.mockResolvedValue({ data: undefined });
+
+    await expect(discardStudyReport("report-1")).resolves.toBeUndefined();
+    expect(mockDelete).toHaveBeenCalledWith("/study-reports/report-1");
   });
 });
