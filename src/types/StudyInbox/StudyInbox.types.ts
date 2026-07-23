@@ -83,6 +83,8 @@ export interface ConfirmStudyInboxPayload {
   userId: string;
   date: string;
   note?: string;
+  /** Confirmación 1:1: adjunta el informe de otro item (PDF por mail). */
+  reportAttachmentItemId?: string;
   /** Split manual: reparte las imágenes del estudio DICOM en N estudios. */
   groups?: ConfirmStudyInboxGroup[];
 }
