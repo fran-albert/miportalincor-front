@@ -17,6 +17,8 @@ export type MatchConfidence =
 export interface StudyInboxItem {
   id: string;
   attachmentId: string | null;
+  /** Nombre del archivo del PDF adjunto (para identificar el informe). */
+  attachmentFileName: string | null;
   pacsStudyInstanceUID: string | null;
   pacsAccessionNumber: string | null;
   pacsSeriesCount: number | null;
@@ -71,8 +73,10 @@ export interface StudyInboxDetail {
 export interface ConfirmStudyInboxGroup {
   instanceIds: string[];
   note: string;
-  /** Este grupo se lleva el informe PDF del item (solo uno puede). */
+  /** Este grupo se lleva el informe PDF propio del item (solo uno puede). */
   includeReport?: boolean;
+  /** Este grupo se lleva el informe PDF de otro item de "Para revisar". */
+  reportAttachmentItemId?: string;
 }
 
 export interface ConfirmStudyInboxPayload {
