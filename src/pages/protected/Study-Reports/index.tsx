@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, FilePenLine, PenLine, RefreshCw, Save, X } from "lucide-react";
+import { Eye, FilePenLine, PenLine, RefreshCw, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   addStudyReportAddendum,
+  discardStudyReport,
   getMyStudyReports,
   getStudyReportTemplates,
   previewStudyReport,
@@ -37,21 +38,20 @@ const formatDate = (value: string | null) =>
 interface StudyReportColumnsProps {
   onOpen: (item: StudyReportListItem) => void;
   onSplit: (item: StudyReportListItem) => void;
+  onDiscard: (item: StudyReportListItem) => void;
 }
 
 const getStudyReportColumns = ({
   onOpen,
   onSplit,
+  onDiscard,
 }: StudyReportColumnsProps): ColumnDef<StudyReportListItem>[] => [
   {
     accessorKey: "patientName",
     header: "Paciente",
     cell: ({ row }) => (
       <div>
-        <p className="font-medium">
-          {row.original.patientName ?? "Sin nombre"}
-          {row.original.splitLabel ? ` · ${row.original.splitLabel}` : ""}
-        </p>
+        <p className="font-medium">{row.original.patientName ?? "Sin nombre"}</p>
         <p className="text-muted-foreground">DNI {row.original.patientDni ?? "—"}</p>
       </div>
     ),
@@ -64,7 +64,10 @@ const getStudyReportColumns = ({
   {
     accessorKey: "studyType",
     header: "Tipo",
-    cell: ({ row }) => row.original.studyType ?? "Ecografía",
+    // Para un informe dividido, el "tipo" es el nombre que le puso la médica
+    // (splitLabel); si no está dividido, el subtipo del turno.
+    cell: ({ row }) =>
+      row.original.splitLabel ?? row.original.studyType ?? "Ecografía",
   },
   {
     accessorKey: "state",
@@ -85,6 +88,16 @@ const getStudyReportColumns = ({
             onClick={() => onSplit(row.original)}
           >
             Dividir
+          </Button>
+        )}
+        {row.original.state === "BORRADOR" && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDiscard(row.original)}
+            title="Descartar borrador"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
         <Button size="sm" onClick={() => onOpen(row.original)}>
@@ -176,6 +189,30 @@ function Editor({ item, templates, onClose }: EditorProps) {
   );
   const reportId = report?.id;
   const signed = report?.status === "FIRMADO";
+
+  const discard = useMutation({
+    mutationFn: () => {
+      if (!reportId) throw new Error("Sin informe para descartar");
+      return discardStudyReport(reportId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsQueryKey });
+      toast.success("Borrador descartado");
+      onClose();
+    },
+    onError: () => toast.error("No se pudo descartar el borrador"),
+  });
+
+  const handleDiscard = () => {
+    if (!reportId) return;
+    if (
+      window.confirm(
+        "¿Descartar este borrador? Se pierde lo escrito y el estudio vuelve a estar sin empezar.",
+      )
+    ) {
+      discard.mutate();
+    }
+  };
 
   const save = useMutation({
     mutationFn: () =>
@@ -270,10 +307,23 @@ function Editor({ item, templates, onClose }: EditorProps) {
             {item.studyType ?? "Ecografía"}
           </p>
         </div>
-        <Button variant="ghost" onClick={onClose}>
-          <X className="mr-2 h-4 w-4" />
-          Cerrar
-        </Button>
+        <div className="flex gap-2">
+          {reportId && !signed && (
+            <Button
+              variant="ghost"
+              className="text-rose-700 hover:text-rose-800"
+              disabled={discard.isPending}
+              onClick={handleDiscard}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Descartar borrador
+            </Button>
+          )}
+          <Button variant="ghost" onClick={onClose}>
+            <X className="mr-2 h-4 w-4" />
+            Cerrar
+          </Button>
+        </div>
       </div>
 
       <div className="grid h-[calc(100vh-4rem)] lg:grid-cols-2">
@@ -397,13 +447,35 @@ export default function StudyReportsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reportsQueryKey });
       setSplitItem(null);
-      toast.success("Estudio dividido en dos informes");
+      toast.success("Estudio dividido en informes");
     },
     onError: () => toast.error("No se pudo dividir el estudio"),
   });
+  const discardMutation = useMutation({
+    mutationFn: (reportId: string) => discardStudyReport(reportId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsQueryKey });
+      toast.success("Borrador descartado");
+    },
+    onError: () => toast.error("No se pudo descartar el borrador"),
+  });
   const columns = useMemo(
-    () => getStudyReportColumns({ onOpen: setActive, onSplit: setSplitItem }),
-    [],
+    () =>
+      getStudyReportColumns({
+        onOpen: setActive,
+        onSplit: setSplitItem,
+        onDiscard: (item) => {
+          if (!item.report?.id) return;
+          if (
+            window.confirm(
+              "¿Descartar este borrador? Se pierde lo escrito y el estudio vuelve a estar sin empezar.",
+            )
+          ) {
+            discardMutation.mutate(item.report.id);
+          }
+        },
+      }),
+    [discardMutation],
   );
 
   if (active && templates.data) {
@@ -464,7 +536,7 @@ export default function StudyReportsPage() {
       >
         <DialogContent className="max-w-5xl">
           <DialogHeader>
-            <DialogTitle>Dividir estudio en dos informes</DialogTitle>
+            <DialogTitle>Dividir estudio en informes</DialogTitle>
           </DialogHeader>
           {splitItem && templates.data && (
             <StudyReportSplitPanel
