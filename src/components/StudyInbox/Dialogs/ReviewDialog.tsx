@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getStudyInboxDetail } from "@/api/StudyInbox/get-study-inbox-detail.action";
+import { getStudyInbox } from "@/api/StudyInbox/get-study-inbox.action";
 import { PacsImagesGrid } from "./PacsImagesGrid";
 import { EcoTypeNoteField } from "./EcoTypeNoteField";
 import { SplitStudyPanel } from "./SplitStudyPanel";
@@ -70,12 +71,25 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
   const [reason, setReason] = useState("");
   const [holdInput, setHoldInput] = useState("");
   const [splitMode, setSplitMode] = useState(false);
+  // Informe (de "Para revisar") a adjuntar en el confirm 1:1 sin dividir.
+  const [reportItemId, setReportItemId] = useState("");
 
   const confirmable =
     item?.status === "LISTO_PARA_CONFIRMAR" ||
     item?.status === "REQUIERE_REVISION";
   const isEco = item?.suggestedStudyTypeId === 2;
   const hasPacsImages = !!item?.pacsStudyInstanceUID;
+
+  // Informes que Andrea mandó por mail (para adjuntar a un estudio de imágenes).
+  const { data: reviewData } = useQuery({
+    queryKey: ["study-inbox", "REQUIERE_REVISION", "para-adjuntar"],
+    queryFn: () => getStudyInbox({ status: "REQUIERE_REVISION", limit: 100 }),
+    enabled: open && isEco && hasPacsImages,
+    staleTime: 1000 * 30,
+  });
+  const availableReports = (reviewData?.data ?? []).filter(
+    (report) => report.attachmentId && report.id !== item?.id,
+  );
 
   // Precargar fecha detectada y buscar por el nombre detectado al abrir
   useEffect(() => {
@@ -127,6 +141,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
           userId: selected.id,
           date: calendarDateToPayloadAR(date),
           note: note.trim() || undefined,
+          reportAttachmentItemId: reportItemId || undefined,
         },
       },
       { onSuccess: onClose }
@@ -244,6 +259,25 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                     ) : (
                       <>
                         <PacsImagesGrid itemId={item.id} />
+                        {isEco && confirmable && !item.onHold && (
+                          <label className="grid gap-1 text-sm font-medium text-gray-700">
+                            <span>Adjuntar informe (opcional)</span>
+                            <select
+                              className="h-10 rounded-md border bg-background px-3"
+                              value={reportItemId}
+                              onChange={(e) => setReportItemId(e.target.value)}
+                            >
+                              <option value="">Sin informe / lo cargo aparte</option>
+                              {availableReports.map((report) => (
+                                <option key={report.id} value={report.id}>
+                                  {report.attachmentFileName ??
+                                    report.detectedPatientName ??
+                                    report.id}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
                         {isEco && confirmable && !item.onHold && (
                           <Button
                             type="button"
