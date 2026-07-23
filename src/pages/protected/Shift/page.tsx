@@ -19,7 +19,9 @@ import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
   const queryClient = useQueryClient();
-  const { isDoctor } = useUserRole();
+  const { isDoctor, isAdmin, isSecretary } = useUserRole();
+  // Un médico que además es admin/secretaria opera la agenda completa, no solo la suya
+  const isPureDoctor = isDoctor && !isAdmin && !isSecretary;
   const { canSelfManage, doctorId } = useCanSelfManageSchedule();
   const [isQuickBookOpen, setIsQuickBookOpen] = useState(false);
 
@@ -35,12 +37,12 @@ const ShiftsPage = () => {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: isDoctor && canSelfManage ? "Gestión de Turnos" : isDoctor ? "Mis Turnos" : "Turnos" },
+    { label: isPureDoctor && canSelfManage ? "Gestión de Turnos" : isPureDoctor ? "Mis Turnos" : "Turnos" },
   ];
 
   const headerActions = (
     <div className="flex items-center gap-2 flex-wrap">
-      {(!isDoctor || canSelfManage) && (
+      {(!isPureDoctor || canSelfManage) && (
         <>
           <Button
             variant="outline"
@@ -50,8 +52,8 @@ const ShiftsPage = () => {
             <Calendar className="mr-2 h-4 w-4" />
             Buscar turno libre
           </Button>
-          <CreateAppointmentDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
-          <CreateOverturnDialog fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isDoctor || canSelfManage} />
+          <CreateAppointmentDialog fixedDoctorId={isPureDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isPureDoctor || canSelfManage} />
+          <CreateOverturnDialog fixedDoctorId={isPureDoctor && canSelfManage ? doctorId : undefined} allowGuestCreation={!isPureDoctor || canSelfManage} />
         </>
       )}
       <Button
@@ -68,16 +70,16 @@ const ShiftsPage = () => {
   return (
     <div className="min-w-0 space-y-6 overflow-x-hidden p-6">
       <Helmet>
-        <title>{isDoctor ? "Mis Turnos" : "Gestión de Turnos"}</title>
+        <title>{isPureDoctor ? "Mis Turnos" : "Gestión de Turnos"}</title>
       </Helmet>
 
       <PageHeader
         breadcrumbItems={breadcrumbItems}
-        title={isDoctor && canSelfManage ? "Gestión de Turnos" : isDoctor ? "Mis Turnos" : "Gestión de Turnos"}
+        title={isPureDoctor && canSelfManage ? "Gestión de Turnos" : isPureDoctor ? "Mis Turnos" : "Gestión de Turnos"}
         description={
-          isDoctor && canSelfManage
+          isPureDoctor && canSelfManage
             ? "Gestioná tus turnos, crea citas y sobreturnos"
-            : isDoctor
+            : isPureDoctor
             ? "Visualización de tus turnos y sobreturnos"
             : "Administración de citas médicas y sobreturnos"
         }
@@ -86,7 +88,7 @@ const ShiftsPage = () => {
       />
 
       {/* Content: diferentes vistas según rol */}
-      {isDoctor ? (
+      {isPureDoctor ? (
         <BigCalendar autoFilterForDoctor={true} blockOnly={!canSelfManage} fixedDoctorId={canSelfManage ? doctorId : undefined} allowGuestCreation={canSelfManage} />
       ) : (
         <Tabs defaultValue="calendar" className="min-w-0 flex-1 overflow-x-hidden">
@@ -120,8 +122,8 @@ const ShiftsPage = () => {
       <QuickBookAppointmentSheet
         open={isQuickBookOpen}
         onOpenChange={setIsQuickBookOpen}
-        fixedDoctorId={isDoctor && canSelfManage ? doctorId : undefined}
-        allowGuestCreation={!isDoctor || canSelfManage}
+        fixedDoctorId={isPureDoctor && canSelfManage ? doctorId : undefined}
+        allowGuestCreation={!isPureDoctor || canSelfManage}
       />
     </div>
   );

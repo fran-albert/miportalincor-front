@@ -23,11 +23,11 @@ export default function PlanTab({
   enrollmentId,
   activities,
 }: PlanTabProps) {
-  const { isCoordinator } = useProgramMembership(programId);
+  const { isCoordinator, isAdmin } = useProgramMembership(programId);
   const { currentPlan, isLoading } = useCurrentPlan(enrollmentId);
   const { planVersions } = usePlanVersions(enrollmentId);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const canCreate = isCoordinator;
+  const canCreate = isCoordinator || isAdmin;
 
   if (isLoading) {
     return <div className="text-gray-500">Cargando plan...</div>;

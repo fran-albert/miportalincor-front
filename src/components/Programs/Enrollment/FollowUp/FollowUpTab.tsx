@@ -68,7 +68,7 @@ export default function FollowUpTab({
 }: FollowUpTabProps) {
   const { toast } = useToast();
   const { session } = useRoles();
-  const { isCoordinator } = useProgramMembership(programId);
+  const { isCoordinator, isAdmin } = useProgramMembership(programId);
   const { entries, isLoading: isLoadingEntries } = useFollowUpEntries(enrollmentId);
   const {
     createNoteMutation,
@@ -127,7 +127,7 @@ export default function FollowUpTab({
     [entries]
   );
   const canManageMonthlySummary =
-    isCoordinator;
+    isCoordinator || isAdmin;
 
   const activeSummaryMonth =
     (isFormOpen ? formMonth : previewMonth) ?? currentMonth;
