@@ -253,7 +253,7 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                             disabled={!selected || !date}
                             onClick={() => setSplitMode(true)}
                           >
-                            Dividir en 2 estudios (1 examen con 2 ecos)
+                            Dividir en varios estudios (y adjuntar informes)
                           </Button>
                         )}
                       </>
@@ -336,6 +336,14 @@ export const ReviewDialog = ({ item, open, onClose }: ReviewDialogProps) => {
                   <>
                     <dt>Asunto del correo</dt>
                     <dd className="text-right">{item.emailSubject}</dd>
+                  </>
+                )}
+                {item?.attachmentFileName && (
+                  <>
+                    <dt>Archivo del informe</dt>
+                    <dd className="text-right break-all">
+                      {item.attachmentFileName}
+                    </dd>
                   </>
                 )}
               </dl>

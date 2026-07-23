@@ -19,7 +19,8 @@ export const getColumns = ({
     // Si el PDF no se pudo parsear, el asunto del correo es la unica forma de
     // saber de quien es el estudio: se muestra como linea secundaria.
     cell: ({ row }) => {
-      const { detectedPatientName, detectedDni, emailSubject } = row.original;
+      const { detectedPatientName, detectedDni, emailSubject, attachmentFileName } =
+        row.original;
       return (
         <div className="flex flex-col">
           <span className="font-medium text-gray-900">
@@ -30,6 +31,11 @@ export const getColumns = ({
           )}
           {!detectedPatientName && emailSubject && (
             <span className="text-xs text-gray-500">Asunto del correo</span>
+          )}
+          {attachmentFileName && (
+            <span className="text-xs text-gray-400 break-all">
+              {attachmentFileName}
+            </span>
           )}
         </div>
       );
