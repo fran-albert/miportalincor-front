@@ -16,3 +16,4 @@ export const getStudyReportViewer = async (reportId: string): Promise<StudyRepor
 export const previewStudyReport = async (reportId: string): Promise<Blob> => (await apiIncorHC.post(`/study-reports/${reportId}/preview`, undefined, { responseType: "blob" })).data;
 export const signStudyReport = async (reportId: string): Promise<StudyReport> => (await apiIncorHC.post(`/study-reports/${reportId}/sign`)).data;
 export const addStudyReportAddendum = async (reportId: string, text: string): Promise<void> => { await apiIncorHC.post(`/study-reports/${reportId}/addendums`, { text }); };
+export const discardStudyReport = async (reportId: string): Promise<void> => { await apiIncorHC.delete(`/study-reports/${reportId}`); };
