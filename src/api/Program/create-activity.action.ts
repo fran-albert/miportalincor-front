@@ -3,6 +3,7 @@ import {
   CreateActivityDto,
   ProgramActivity,
 } from "@/types/Program/ProgramActivity";
+import { validateOptionalActivityPrice } from "@/common/helpers/programMoney";
 
 export const createProgramActivity = async (
   programId: string,
@@ -12,5 +13,5 @@ export const createProgramActivity = async (
     `/programs/${programId}/activities`,
     dto
   );
-  return data;
+  return validateOptionalActivityPrice(data);
 };

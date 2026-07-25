@@ -1,5 +1,6 @@
 import { apiIncorHC } from "@/services/axiosConfig";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
+import { validateOptionalActivityPrice } from "@/common/helpers/programMoney";
 
 export const getProgramActivities = async (
   programId: string
@@ -7,5 +8,5 @@ export const getProgramActivities = async (
   const { data } = await apiIncorHC.get<ProgramActivity[]>(
     `/programs/${programId}/activities`
   );
-  return data;
+  return data.map(validateOptionalActivityPrice);
 };
