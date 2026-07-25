@@ -13,6 +13,7 @@ import {
   Calendar,
   TrendingUp,
   MessageSquareText,
+  Banknote,
 } from "lucide-react";
 import {
   EnrollmentStatusLabels,
@@ -22,6 +23,7 @@ import PlanTab from "@/components/Programs/Enrollment/Plan/PlanTab";
 import AttendanceTab from "@/components/Programs/Enrollment/Attendance/AttendanceTab";
 import ComplianceTab from "@/components/Programs/Enrollment/Compliance/ComplianceTab";
 import FollowUpTab from "@/components/Programs/Enrollment/FollowUp/FollowUpTab";
+import MonthlyPricingTab from "@/components/Programs/Enrollment/MonthlyPricing/MonthlyPricingTab";
 
 const EnrollmentDetailPage = () => {
   const { programId, enrollmentId } = useParams<{
@@ -31,8 +33,10 @@ const EnrollmentDetailPage = () => {
   const { program } = useProgram(programId!);
   const { enrollment, isLoading } = useEnrollment(programId!, enrollmentId!);
   const { activities } = useProgramActivities(programId!);
-  const { isProgramMember } = useProgramMembership(programId!);
+  const { isProgramMember, hasClinicalProgramAccess } =
+    useProgramMembership(programId!);
   const showClinicalTabs = isProgramMember;
+  const showMonthlyPricing = hasClinicalProgramAccess;
 
   if (isLoading) {
     return (
@@ -89,12 +93,21 @@ const EnrollmentDetailPage = () => {
           className="w-full"
         >
           <TabsList
-            className={`grid w-full ${showClinicalTabs ? "grid-cols-4" : "grid-cols-2"}`}
+            className={`grid w-full ${showClinicalTabs ? (showMonthlyPricing ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-4") : "grid-cols-2"}`}
           >
             {!showClinicalTabs ? null : (
               <TabsTrigger value="plan" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Plan
+              </TabsTrigger>
+            )}
+            {!showMonthlyPricing ? null : (
+              <TabsTrigger
+                value="monthly-pricing"
+                className="flex items-center gap-2"
+              >
+                <Banknote className="h-4 w-4" />
+                Arancel mensual
               </TabsTrigger>
             )}
             <TabsTrigger
@@ -128,6 +141,11 @@ const EnrollmentDetailPage = () => {
                 enrollmentId={enrollmentId!}
                 activities={activities}
               />
+            </TabsContent>
+          )}
+          {!showMonthlyPricing ? null : (
+            <TabsContent value="monthly-pricing" className="mt-6">
+              <MonthlyPricingTab enrollmentId={enrollmentId!} />
             </TabsContent>
           )}
           <TabsContent value="attendance" className="mt-6">

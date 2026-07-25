@@ -6,6 +6,9 @@ import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { getActivityColumns } from "./columns";
 import CreateActivityDialog from "./CreateActivityDialog";
+import EditActivityDialog from "./EditActivityDialog";
+import ProgramPricingSettings from "./ProgramPricingSettings";
+import { ProgramActivity } from "@/types/Program/ProgramActivity";
 
 interface ActivitiesTabProps {
   programId: string;
@@ -17,6 +20,9 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
   const { deleteActivityMutation } = useActivityMutations(programId);
   const { promiseToast } = useToastContext();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<ProgramActivity | null>(
+    null
+  );
 
   const handleDelete = async (activityId: string) => {
     try {
@@ -40,11 +46,16 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
   const columns = getActivityColumns(
     programId,
     canManageActivities,
-    handleDelete
+    handleDelete,
+    setEditingActivity
   );
 
   return (
     <div className="space-y-4">
+      <ProgramPricingSettings
+        programId={programId}
+        canManage={canManageActivities}
+      />
       <DataTable
         columns={columns}
         data={activities}
@@ -60,6 +71,14 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
         isOpen={isCreateOpen}
         setIsOpen={setIsCreateOpen}
       />
+      {editingActivity ? (
+        <EditActivityDialog
+          key={editingActivity.id}
+          programId={programId}
+          activity={editingActivity}
+          onClose={() => setEditingActivity(null)}
+        />
+      ) : null}
     </div>
   );
 }
