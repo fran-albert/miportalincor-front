@@ -14,6 +14,7 @@ import useUserRole from "@/hooks/useRoles";
 import { useDoctor } from "@/hooks/Doctor/useDoctor";
 import { CreateAntecedenteDialog } from "../Create";
 import { ViewAntecedenteDialog } from "../View";
+import { orderAntecedentesCategories } from "../categoryOrder";
 
 type UserData = Patient | Doctor;
 
@@ -114,7 +115,12 @@ const AntecedentesSection: React.FC<Props> = ({
       {} as Record<string, Antecedente[]>
     );
 
-    return Object.entries(antecedentesPorCategoria).map(
+    const categoriasOrdenadas = orderAntecedentesCategories(
+      Object.entries(antecedentesPorCategoria),
+      ([categoria]) => categoria
+    );
+
+    return categoriasOrdenadas.map(
       ([categoria, antecedentesCategoria]) => (
         <div key={categoria} className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
