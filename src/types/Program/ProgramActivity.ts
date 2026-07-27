@@ -13,7 +13,7 @@ export interface ProgramActivity {
   programId: string;
   name: string;
   description?: string;
-  assignedProfessionalUserId?: string;
+  assignedProfessionalUserId?: string | null;
   assignedProfessional?: {
     firstName: string;
     lastName: string;

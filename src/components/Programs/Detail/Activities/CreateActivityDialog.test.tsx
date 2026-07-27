@@ -19,6 +19,7 @@ vi.mock("@/hooks/Program/useActivityMutations", () => ({
 vi.mock("@/hooks/Toast/toast-context", () => ({
   useToastContext: () => ({
     promiseToast: <T,>(promise: Promise<T>) => promise,
+    showError: vi.fn(),
   }),
 }));
 
