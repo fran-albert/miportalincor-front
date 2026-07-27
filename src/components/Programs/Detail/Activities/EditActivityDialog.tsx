@@ -47,7 +47,7 @@ export default function EditActivityDialog({
   onClose,
 }: EditActivityDialogProps) {
   const { updateActivityMutation } = useActivityMutations(programId);
-  const { promiseToast } = useToastContext();
+  const { promiseToast, showError } = useToastContext();
   const {
     register,
     control,
@@ -58,7 +58,8 @@ export default function EditActivityDialog({
     defaultValues: {
       name: activity.name,
       description: activity.description ?? "",
-      assignedProfessionalUserId: activity.assignedProfessionalUserId,
+      assignedProfessionalUserId:
+        activity.assignedProfessionalUserId ?? undefined,
       tariffType: activity.tariffType ?? ProgramTariffType.PER_SESSION,
       unitPricePesos:
         activity.unitPriceCents === undefined
@@ -69,11 +70,13 @@ export default function EditActivityDialog({
 
   const onSubmit = async (data: UpdateActivityFormValues) => {
     try {
-      const { unitPricePesos, ...update } = data;
+      const { unitPricePesos, assignedProfessionalUserId, ...update } = data;
       const promise = updateActivityMutation.mutateAsync({
         activityId: activity.id,
         dto: {
           ...update,
+          assignedProfessionalUserId:
+            assignedProfessionalUserId ?? undefined,
           unitPriceCents: pesosInputToCents(unitPricePesos),
         },
       });
@@ -94,6 +97,10 @@ export default function EditActivityDialog({
     }
   };
 
+  const onInvalid = () => {
+    showError("Revisá los campos marcados");
+  };
+
   return (
     <Dialog open onOpenChange={(open) => (open ? undefined : onClose())}>
       <DialogContent className="sm:max-w-[560px]">
@@ -104,7 +111,10 @@ export default function EditActivityDialog({
             cambio.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="edit-activity-name">Nombre</Label>
             <Input id="edit-activity-name" {...register("name")} />
@@ -140,6 +150,11 @@ export default function EditActivityDialog({
                   </Select>
                 )}
               />
+              {errors.tariffType ? (
+                <p className="text-sm text-red-500">
+                  {errors.tariffType.message}
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-unit-price">Precio lista en pesos</Label>

@@ -43,7 +43,7 @@ export default function CreateActivityDialog({
   setIsOpen,
 }: CreateActivityDialogProps) {
   const { createActivityMutation } = useActivityMutations(programId);
-  const { promiseToast } = useToastContext();
+  const { promiseToast, showError } = useToastContext();
 
   const {
     register,
@@ -56,6 +56,7 @@ export default function CreateActivityDialog({
     defaultValues: {
       name: "",
       description: "",
+      assignedProfessionalUserId: undefined,
       tariffType: ProgramTariffType.PER_SESSION,
       unitPricePesos: "",
     },
@@ -63,9 +64,10 @@ export default function CreateActivityDialog({
 
   const onSubmit = async (data: CreateActivityFormValues) => {
     try {
-      const { unitPricePesos, ...activity } = data;
+      const { unitPricePesos, assignedProfessionalUserId, ...activity } = data;
       const promise = createActivityMutation.mutateAsync({
         ...activity,
+        assignedProfessionalUserId: assignedProfessionalUserId ?? undefined,
         unitPriceCents: pesosInputToCents(unitPricePesos),
       });
       await promiseToast(promise, {
@@ -89,6 +91,10 @@ export default function CreateActivityDialog({
     }
   };
 
+  const onInvalid = () => {
+    showError("Revisá los campos marcados");
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[425px]">
@@ -98,7 +104,10 @@ export default function CreateActivityDialog({
             Ingresá los datos de la nueva actividad.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="name">Nombre</Label>
             <Input
