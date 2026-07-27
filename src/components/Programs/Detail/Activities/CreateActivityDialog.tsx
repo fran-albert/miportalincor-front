@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
@@ -12,12 +12,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useActivityMutations } from "@/hooks/Program/useActivityMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import {
   CreateActivitySchema,
   CreateActivityFormValues,
 } from "@/validators/Program/activity.schema";
+import {
+  ProgramTariffType,
+  ProgramTariffTypeLabels,
+} from "@/types/Program/ProgramActivity";
+import { pesosInputToCents } from "@/common/helpers/programMoney";
 
 interface CreateActivityDialogProps {
   programId: string;
@@ -35,17 +47,27 @@ export default function CreateActivityDialog({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<CreateActivityFormValues>({
     resolver: zodResolver(CreateActivitySchema),
-    defaultValues: { name: "", description: "" },
+    defaultValues: {
+      name: "",
+      description: "",
+      tariffType: ProgramTariffType.PER_SESSION,
+      unitPricePesos: "",
+    },
   });
 
   const onSubmit = async (data: CreateActivityFormValues) => {
     try {
-      const promise = createActivityMutation.mutateAsync(data);
+      const { unitPricePesos, ...activity } = data;
+      const promise = createActivityMutation.mutateAsync({
+        ...activity,
+        unitPriceCents: pesosInputToCents(unitPricePesos),
+      });
       await promiseToast(promise, {
         loading: {
           title: "Creando actividad...",
@@ -87,6 +109,48 @@ export default function CreateActivityDialog({
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
             )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Tipo de arancel</Label>
+              <Controller
+                control={control}
+                name="tariffType"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger aria-label="Tipo de arancel">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(ProgramTariffType).map((tariffType) => (
+                        <SelectItem key={tariffType} value={tariffType}>
+                          {ProgramTariffTypeLabels[tariffType]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.tariffType ? (
+                <p className="text-sm text-red-500">
+                  {errors.tariffType.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unitPricePesos">Precio lista en pesos</Label>
+              <Input
+                id="unitPricePesos"
+                inputMode="decimal"
+                placeholder="Ej: 30000"
+                {...register("unitPricePesos")}
+              />
+              {errors.unitPricePesos ? (
+                <p className="text-sm text-red-500">
+                  {errors.unitPricePesos.message}
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>

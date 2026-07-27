@@ -60,6 +60,10 @@ vi.mock("@/components/Programs/Enrollment/FollowUp/FollowUpTab", () => ({
   default: () => <div>Contenido clínico de seguimiento</div>,
 }));
 
+vi.mock("@/components/Programs/Enrollment/MonthlyPricing/MonthlyPricingTab", () => ({
+  default: () => <div>Contenido de arancel mensual</div>,
+}));
+
 const renderRoute = (path: string, element: React.ReactElement) =>
   render(
     <HelmetProvider>
@@ -150,12 +154,13 @@ describe("acceso operativo no clínico a Programas", () => {
       screen.getByRole("tab", { name: "Cumplimiento" })
     ).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Plan" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Arancel mensual" })).toBeNull();
     expect(screen.queryByRole("tab", { name: "Seguimiento" })).toBeNull();
     expect(screen.queryByText("Contenido clínico del plan")).toBeNull();
     expect(screen.queryByText("Contenido clínico de seguimiento")).toBeNull();
   });
 
-  it("conserva Plan y Seguimiento para un miembro clínico", () => {
+  it("conserva Plan y Seguimiento y agrega Arancel mensual al miembro clínico", () => {
     mockUseProgramMembership.mockReturnValue({
       ...operatorMembership,
       isProgramMember: true,
@@ -171,6 +176,9 @@ describe("acceso operativo no clínico a Programas", () => {
     expect(screen.getByRole("tab", { name: "Plan" })).toBeInTheDocument();
     expect(
       screen.getByRole("tab", { name: "Seguimiento" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Arancel mensual" })
     ).toBeInTheDocument();
   });
 });

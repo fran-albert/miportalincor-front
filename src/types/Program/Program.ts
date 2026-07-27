@@ -3,8 +3,19 @@ export interface Program {
   name: string;
   description?: string;
   isActive: boolean;
+  discountPercent: number;
+  discountBasisPoints: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProgramPricing {
+  discountPercent: number;
+  discountBasisPoints: number;
+}
+
+export interface UpdateProgramPricingDto {
+  discountPercent: number;
 }
 
 export interface CreateProgramDto {

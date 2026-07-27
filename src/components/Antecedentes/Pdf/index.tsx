@@ -3,6 +3,7 @@ import { styles } from "./styles";
 import { Antecedente } from "@/types/Antecedentes/Antecedentes";
 import { Patient } from "@/types/Patient/Patient";
 import { formatDate, formatDni, calculateAge, formatDoctorName } from "@/common/helpers/helpers";
+import { orderAntecedentesCategories } from "../categoryOrder";
 
 interface AntecedentesPdfDocumentProps {
   patient: Patient;
@@ -39,9 +40,14 @@ const groupAntecedentesByCategory = (
   });
 
   // Convertir a array y ordenar categorías alfabéticamente
-  return Object.entries(grouped)
+  const alphabeticalGroups = Object.entries(grouped)
     .map(([category, items]) => ({ category, items }))
     .sort((a, b) => a.category.localeCompare(b.category));
+
+  return orderAntecedentesCategories(
+    alphabeticalGroups,
+    ({ category }) => category
+  );
 };
 
 // Capitalizar texto
