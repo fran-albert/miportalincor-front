@@ -186,6 +186,31 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
   });
 });
 
+describe("StudyReportsPage — fecha del estudio", () => {
+  it("muestra la fecha UTC del estudio sin correrse un día en zona argentina", async () => {
+    // Bug 2026-07-28: un estudio del 28/07 (medianoche UTC) se mostraba
+    // como 27/7/2026 en UTC-3.
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-fecha",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-28T00:00:00.000Z",
+        studyType: "Ecografia Abdominal",
+        splitLabel: null,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+
+    renderPage();
+
+    expect(await screen.findByText("28/7/2026")).toBeInTheDocument();
+    expect(screen.queryByText("27/7/2026")).not.toBeInTheDocument();
+  });
+});
+
 describe("StudyReportsPage — jerarquía del portal", () => {
   it("muestra PageHeader, breadcrumb, actualizar y DataTable compartido", async () => {
     getMyStudyReports.mockResolvedValue([]);

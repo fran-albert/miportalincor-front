@@ -32,8 +32,12 @@ import { StudyReportSplitPanel } from "@/components/StudyReport/StudyReportSplit
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
 
+// timeZone UTC: la fecha llega como medianoche UTC; sin esto, en UTC-3 se
+// muestra el día anterior.
 const formatDate = (value: string | null) =>
-  value ? new Date(value).toLocaleDateString("es-AR") : "Sin fecha";
+  value
+    ? new Date(value).toLocaleDateString("es-AR", { timeZone: "UTC" })
+    : "Sin fecha";
 
 interface StudyReportColumnsProps {
   onOpen: (item: StudyReportListItem) => void;
