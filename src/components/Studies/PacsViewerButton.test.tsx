@@ -1,23 +1,28 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {
+  getStudyPacsImages,
+  getStudyPacsImagePreview,
+} from "@/api/Study/Pacs-Images/study-pacs-images.actions";
 import { PacsViewerButton } from "./PacsViewerButton";
 
-const mockCreateSession = vi.fn();
-vi.mock("@/api/Study/Pacs-Viewer/create-viewer-session.action", () => ({
-  createPacsViewerSession: (studyId: number | string) =>
-    mockCreateSession(studyId) as unknown,
+vi.mock("@/api/Study/Pacs-Images/study-pacs-images.actions", () => ({
+  getStudyPacsImages: vi.fn(),
+  getStudyPacsImagePreview: vi.fn(),
 }));
-vi.mock("sonner", () => ({
-  toast: { error: vi.fn() },
-}));
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
 
 describe("PacsViewerButton", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    let urlNumber = 0;
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => `blob:study-image-${++urlNumber}`),
+      revokeObjectURL: vi.fn(),
+    });
+  });
+
   it("no se muestra si el estudio no tiene imágenes DICOM", () => {
     const { container } = render(
       <PacsViewerButton studyId={1} studyInstanceUID={null} />,
@@ -30,48 +35,35 @@ describe("PacsViewerButton", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("abre el visor en una pestaña nueva con la URL de la sesión", async () => {
-    mockCreateSession.mockResolvedValue({
-      viewerUrl:
-        "https://api.test/pacs-viewer/tok/stone-webviewer/index.html?study=2.25.1",
-      expiresInSeconds: 1800,
-    });
-    const fakeWindow = { location: { href: "" }, close: vi.fn() };
-    const openSpy = vi
-      .spyOn(window, "open")
-      .mockReturnValue(fakeWindow as unknown as Window);
+  it("abre la galería en un modal con las imágenes del estudio", async () => {
+    vi.mocked(getStudyPacsImages).mockResolvedValue(["inst-1", "inst-2"]);
+    vi.mocked(getStudyPacsImagePreview).mockResolvedValue(
+      new Blob(["jpg"], { type: "image/jpeg" }),
+    );
 
     render(<PacsViewerButton studyId={42} studyInstanceUID="2.25.1" />);
-    fireEvent.click(
+    await userEvent.click(
       screen.getByRole("button", { name: /ver imágenes/i }),
     );
 
-    // La pestaña se abre ANTES de resolver la sesión (popup blocker).
-    expect(openSpy).toHaveBeenCalledWith("", "_blank");
-
-    await waitFor(() => {
-      expect(mockCreateSession).toHaveBeenCalledWith(42);
-      expect(fakeWindow.location.href).toContain(
-        "stone-webviewer/index.html?study=2.25.1",
-      );
-    });
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(
+      screen.getByText("Imágenes de la ecografía"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(2));
+    expect(getStudyPacsImages).toHaveBeenCalledWith(42);
   });
 
-  it("si la sesión falla, cierra la pestaña y avisa", async () => {
-    mockCreateSession.mockRejectedValue(new Error("403"));
-    const fakeWindow = { location: { href: "" }, close: vi.fn() };
-    vi.spyOn(window, "open").mockReturnValue(
-      fakeWindow as unknown as Window,
-    );
+  it("muestra el estado vacío cuando el PACS no devuelve imágenes", async () => {
+    vi.mocked(getStudyPacsImages).mockResolvedValue([]);
 
     render(<PacsViewerButton studyId={42} studyInstanceUID="2.25.1" />);
-    fireEvent.click(
+    await userEvent.click(
       screen.getByRole("button", { name: /ver imágenes/i }),
     );
 
-    await waitFor(() => {
-      expect(fakeWindow.close).toHaveBeenCalled();
-    });
-    expect(fakeWindow.location.href).toBe("");
+    await waitFor(() =>
+      expect(screen.getByText(/sin imágenes/i)).toBeInTheDocument(),
+    );
   });
 });
