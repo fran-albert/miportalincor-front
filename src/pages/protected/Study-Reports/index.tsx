@@ -17,7 +17,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/Table/table";
 import { PageHeader } from "@/components/PageHeader";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -187,6 +193,10 @@ function Editor({ item, templates, onClose }: EditorProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [addendum, setAddendum] = useState("");
+  // Lo que se firma es siempre algo que la médica vio: el preview habilita la
+  // firma y cualquier edición posterior vuelve a pedirlo.
+  const [hasPreviewedLatest, setHasPreviewedLatest] = useState(false);
+  const [confirmSignOpen, setConfirmSignOpen] = useState(false);
   const template = useMemo(
     () => templates.find((candidate) => candidate.key === templateKey),
     [templates, templateKey],
@@ -263,12 +273,14 @@ function Editor({ item, templates, onClose }: EditorProps) {
       [fieldKey]: Number.isNaN(value) ? "" : value,
     }));
     setHasUnsavedChanges(true);
+    setHasPreviewedLatest(false);
   };
 
   const handleTemplateChange = (nextTemplateKey: string) => {
     setTemplateKey(nextTemplateKey);
     setContent({});
     setHasUnsavedChanges(true);
+    setHasPreviewedLatest(false);
   };
 
   const preview = async () => {
@@ -278,6 +290,7 @@ function Editor({ item, templates, onClose }: EditorProps) {
 
     const url = URL.createObjectURL(await previewStudyReport(reportId));
     setPdfUrl(url);
+    setHasPreviewedLatest(true);
   };
 
   const sign = async () => {
@@ -394,21 +407,64 @@ function Editor({ item, templates, onClose }: EditorProps) {
                   />
                 ))}
 
-                <div className="flex flex-wrap gap-2 border-t pt-5">
-                  <Button variant="outline" disabled={!reportId} onClick={() => void preview()}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Previsualizar PDF
-                  </Button>
-                  <Button disabled={!reportId} onClick={() => void sign()}>
-                    <PenLine className="mr-2 h-4 w-4" />
-                    Firmar informe
-                  </Button>
+                <div className="space-y-2 border-t pt-5">
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" disabled={!reportId} onClick={() => void preview()}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Previsualizar PDF
+                    </Button>
+                    <Button
+                      disabled={!reportId || !hasPreviewedLatest}
+                      title={
+                        !hasPreviewedLatest
+                          ? "Previsualizá el PDF antes de firmar"
+                          : undefined
+                      }
+                      onClick={() => setConfirmSignOpen(true)}
+                    >
+                      <PenLine className="mr-2 h-4 w-4" />
+                      Firmar informe
+                    </Button>
+                  </div>
+                  {reportId && !hasPreviewedLatest && (
+                    <p className="text-xs text-muted-foreground">
+                      Previsualizá el PDF para habilitar la firma: lo que
+                      firmás es exactamente lo que viste.
+                    </p>
+                  )}
                 </div>
               </>
             )}
           </div>
         </section>
       </div>
+
+      <Dialog open={confirmSignOpen} onOpenChange={setConfirmSignOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Firmar el informe?</DialogTitle>
+            <DialogDescription>
+              Se publica firmado en la historia clínica de{" "}
+              {item.patientName ?? "el paciente"} y no se puede deshacer. Las
+              correcciones posteriores se agregan como adenda.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirmSignOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                setConfirmSignOpen(false);
+                void sign();
+              }}
+            >
+              <PenLine className="mr-2 h-4 w-4" />
+              Firmar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(pdfUrl)}

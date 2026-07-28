@@ -12,6 +12,8 @@ const saveStudyReportDraft = vi.fn();
 const getStudyReportImages = vi.fn();
 const getStudyReportImagePreview = vi.fn();
 const splitStudyReport = vi.fn();
+const previewStudyReport = vi.fn();
+const signStudyReport = vi.fn();
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getMyStudyReports: () => getMyStudyReports() as unknown,
@@ -21,8 +23,8 @@ vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
   getStudyReportImagePreview: (id: string, instanceId: string) =>
     getStudyReportImagePreview(id, instanceId) as unknown,
-  previewStudyReport: vi.fn(),
-  signStudyReport: vi.fn(),
+  previewStudyReport: (id: string) => previewStudyReport(id) as unknown,
+  signStudyReport: (id: string) => signStudyReport(id) as unknown,
   addStudyReportAddendum: vi.fn(),
   getStudyReportInboxImages: (id: string) => getStudyReportImages(id) as unknown,
   getStudyReportInboxImagePreview: (id: string, instanceId: string) => getStudyReportImagePreview(id, instanceId) as unknown,
@@ -183,6 +185,79 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
     expect(
       screen.getAllByRole("button", { name: "Descartar borrador" }),
     ).toHaveLength(2);
+  });
+});
+
+describe("StudyReportsPage — flujo de firma seguro", () => {
+  it("exige previsualizar antes de firmar y pide confirmación en un modal", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-28",
+        studyType: "Ecografia Renal",
+        splitLabel: null,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([
+      {
+        key: "renal",
+        label: "Ecografía renal bilateral",
+        subtypeAliases: ["Ecografia Renal"],
+        fields: [
+          { key: "rinon_der", label: "Riñón derecho", type: "text", required: false },
+        ],
+      },
+    ]);
+    saveStudyReportDraft.mockResolvedValue({
+      id: "report-1",
+      templateKey: "renal",
+      content: { rinon_der: "En posición normal." },
+      status: "BORRADOR",
+    });
+    getStudyReportImages.mockResolvedValue([]);
+    previewStudyReport.mockResolvedValue(
+      new Blob(["pdf"], { type: "application/pdf" }),
+    );
+    signStudyReport.mockResolvedValue({
+      id: "report-1",
+      templateKey: "renal",
+      content: {},
+      status: "FIRMADO",
+    });
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Informar/i }));
+
+    // Sin preview, la firma está bloqueada.
+    const firmarBtn = await screen.findByRole("button", { name: /Firmar informe/i });
+    expect(firmarBtn).toBeDisabled();
+
+    // Previsualizar habilita la firma.
+    await userEvent.click(screen.getByRole("button", { name: /Previsualizar PDF/i }));
+    await waitFor(() => expect(previewStudyReport).toHaveBeenCalledWith("report-1"));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(firmarBtn).toBeEnabled());
+
+    // Editar después del preview vuelve a bloquear la firma.
+    const textarea = await screen.findByDisplayValue("En posición normal.");
+    await userEvent.type(textarea, " X");
+    expect(firmarBtn).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: /Previsualizar PDF/i }));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(firmarBtn).toBeEnabled());
+
+    // Firmar abre el modal de confirmación; recién ahí se firma.
+    await userEvent.click(firmarBtn);
+    expect(await screen.findByText("¿Firmar el informe?")).toBeInTheDocument();
+    expect(signStudyReport).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: /^Firmar$/ }));
+    await waitFor(() => expect(signStudyReport).toHaveBeenCalledWith("report-1"));
   });
 });
 
