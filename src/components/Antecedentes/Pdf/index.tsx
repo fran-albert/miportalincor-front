@@ -39,13 +39,8 @@ const groupAntecedentesByCategory = (
     );
   });
 
-  // Convertir a array y ordenar categorías alfabéticamente
-  const alphabeticalGroups = Object.entries(grouped)
-    .map(([category, items]) => ({ category, items }))
-    .sort((a, b) => a.category.localeCompare(b.category));
-
   return orderAntecedentesCategories(
-    alphabeticalGroups,
+    Object.entries(grouped).map(([category, items]) => ({ category, items })),
     ({ category }) => category
   );
 };
