@@ -5,17 +5,23 @@ const order = (categories: string[]) =>
   orderAntecedentesCategories(categories, (category) => category);
 
 describe("orderAntecedentesCategories", () => {
-  it("prioriza Factores de Riesgo y Cardiovasculares en ese orden", () => {
+  it("prioriza FR, CV, Endocrinos y Gineco-obstétricos en ese orden", () => {
     expect(
       order([
         "Renales",
+        "Gineco-obstétricos",
         "Cardiovasculares",
+        "Endocrinológicos",
         "Gastrointestinales",
+        "Endocrino/Metabólicos",
         "Factores de Riesgo",
       ])
     ).toEqual([
       "Factores de Riesgo",
       "Cardiovasculares",
+      "Endocrino/Metabólicos",
+      "Endocrinológicos",
+      "Gineco-obstétricos",
       "Gastrointestinales",
       "Renales",
     ]);

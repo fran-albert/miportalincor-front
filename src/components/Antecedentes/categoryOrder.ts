@@ -1,6 +1,9 @@
 const ANTECEDENTES_CATEGORY_PRIORITY = [
   "Factores de Riesgo",
   "Cardiovasculares",
+  "Endocrino/Metabólicos",
+  "Endocrinológicos",
+  "Gineco-obstétricos",
 ] as const;
 
 const ANTECEDENTES_CATEGORY_LAST = ["Otros", "Sin categoría"] as const;
