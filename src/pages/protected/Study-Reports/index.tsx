@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StudyReportImagesGallery } from "@/components/StudyReport/StudyReportImagesGallery";
+import { buildTemplateDefaults } from "./template-defaults.helpers";
 import type {
   StudyReportField,
   StudyReportListItem,
@@ -193,9 +194,6 @@ function Editor({ item, templates, onClose }: EditorProps) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [addendum, setAddendum] = useState("");
-  // Lo que se firma es siempre algo que la médica vio: el preview habilita la
-  // firma y cualquier edición posterior vuelve a pedirlo.
-  const [hasPreviewedLatest, setHasPreviewedLatest] = useState(false);
   const [confirmSignOpen, setConfirmSignOpen] = useState(false);
   const template = useMemo(
     () => templates.find((candidate) => candidate.key === templateKey),
@@ -273,14 +271,18 @@ function Editor({ item, templates, onClose }: EditorProps) {
       [fieldKey]: Number.isNaN(value) ? "" : value,
     }));
     setHasUnsavedChanges(true);
-    setHasPreviewedLatest(false);
   };
 
+  // Cambiar de plantilla trae los textos normales de la nueva, no campos
+  // vacíos: la médica edita sólo lo patológico (caso multi-tipo, donde elige
+  // la plantilla a mano).
   const handleTemplateChange = (nextTemplateKey: string) => {
+    const nextTemplate = templates.find(
+      (candidate) => candidate.key === nextTemplateKey,
+    );
     setTemplateKey(nextTemplateKey);
-    setContent({});
+    setContent(buildTemplateDefaults(nextTemplate));
     setHasUnsavedChanges(true);
-    setHasPreviewedLatest(false);
   };
 
   const preview = async () => {
@@ -290,7 +292,6 @@ function Editor({ item, templates, onClose }: EditorProps) {
 
     const url = URL.createObjectURL(await previewStudyReport(reportId));
     setPdfUrl(url);
-    setHasPreviewedLatest(true);
   };
 
   const sign = async () => {
@@ -414,24 +415,13 @@ function Editor({ item, templates, onClose }: EditorProps) {
                       Previsualizar PDF
                     </Button>
                     <Button
-                      disabled={!reportId || !hasPreviewedLatest}
-                      title={
-                        !hasPreviewedLatest
-                          ? "Previsualizá el PDF antes de firmar"
-                          : undefined
-                      }
+                      disabled={!reportId}
                       onClick={() => setConfirmSignOpen(true)}
                     >
                       <PenLine className="mr-2 h-4 w-4" />
                       Firmar informe
                     </Button>
                   </div>
-                  {reportId && !hasPreviewedLatest && (
-                    <p className="text-xs text-muted-foreground">
-                      Previsualizá el PDF para habilitar la firma: lo que
-                      firmás es exactamente lo que viste.
-                    </p>
-                  )}
                 </div>
               </>
             )}

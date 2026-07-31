@@ -189,7 +189,7 @@ describe("StudyReportsPage — prellenado del informe-normal al abrir", () => {
 });
 
 describe("StudyReportsPage — flujo de firma seguro", () => {
-  it("exige previsualizar antes de firmar y pide confirmación en un modal", async () => {
+  it("firma sin exigir preview, pero siempre con el modal de confirmación", async () => {
     getMyStudyReports.mockResolvedValue([
       {
         sourceInboxItemId: "item-1",
@@ -232,32 +232,139 @@ describe("StudyReportsPage — flujo de firma seguro", () => {
     renderPage();
     await userEvent.click(await screen.findByRole("button", { name: /Informar/i }));
 
-    // Sin preview, la firma está bloqueada.
+    // Decisión 2026-07-31 (pedido de Andrea): el preview es opcional, no traba
+    // la firma. Atiende cada 10 minutos y previsualizar siempre la atrasaba.
     const firmarBtn = await screen.findByRole("button", { name: /Firmar informe/i });
-    expect(firmarBtn).toBeDisabled();
-
-    // Previsualizar habilita la firma.
-    await userEvent.click(screen.getByRole("button", { name: /Previsualizar PDF/i }));
-    await waitFor(() => expect(previewStudyReport).toHaveBeenCalledWith("report-1"));
-    await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(firmarBtn).toBeEnabled());
 
-    // Editar después del preview vuelve a bloquear la firma.
+    // Editar tampoco bloquea la firma.
     const textarea = await screen.findByDisplayValue("En posición normal.");
     await userEvent.type(textarea, " X");
-    expect(firmarBtn).toBeDisabled();
+    expect(firmarBtn).toBeEnabled();
 
-    await userEvent.click(screen.getByRole("button", { name: /Previsualizar PDF/i }));
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(firmarBtn).toBeEnabled());
-
-    // Firmar abre el modal de confirmación; recién ahí se firma.
+    // El modal de confirmación SÍ sigue siendo obligatorio: firmar es
+    // irreversible, se publica en la historia clínica.
     await userEvent.click(firmarBtn);
     expect(await screen.findByText("¿Firmar el informe?")).toBeInTheDocument();
     expect(signStudyReport).not.toHaveBeenCalled();
 
     await userEvent.click(screen.getByRole("button", { name: /^Firmar$/ }));
     await waitFor(() => expect(signStudyReport).toHaveBeenCalledWith("report-1"));
+  });
+
+  it("previsualizar sigue disponible para quien quiera revisar antes", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-28",
+        studyType: "Ecografia Renal",
+        splitLabel: null,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([
+      {
+        key: "renal",
+        label: "Ecografía renal bilateral",
+        subtypeAliases: ["Ecografia Renal"],
+        fields: [
+          { key: "rinon_der", label: "Riñón derecho", type: "text", required: false },
+        ],
+      },
+    ]);
+    saveStudyReportDraft.mockResolvedValue({
+      id: "report-1",
+      templateKey: "renal",
+      content: { rinon_der: "En posición normal." },
+      status: "BORRADOR",
+    });
+    getStudyReportImages.mockResolvedValue([]);
+    previewStudyReport.mockResolvedValue(
+      new Blob(["pdf"], { type: "application/pdf" }),
+    );
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Informar/i }));
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: /Previsualizar PDF/i }),
+    );
+    await waitFor(() => expect(previewStudyReport).toHaveBeenCalledWith("report-1"));
+  });
+});
+
+describe("StudyReportsPage — cambio de plantilla", () => {
+  it("carga los textos normales de la plantilla nueva en vez de vaciar los campos", async () => {
+    // Bug reportado por Andrea (2026-07-31): al elegir otra plantilla a mano
+    // (caso multi-tipo) los campos quedaban vacíos y perdía el informe-normal.
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-31",
+        studyType: "Ecografia Renal",
+        splitLabel: null,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([
+      {
+        key: "renal",
+        label: "Ecografía renal bilateral",
+        subtypeAliases: ["Ecografia Renal"],
+        fields: [
+          {
+            key: "rinon_der",
+            label: "Riñón derecho",
+            type: "text",
+            required: false,
+            default: "En posición normal y de forma conservada.",
+          },
+        ],
+      },
+      {
+        key: "mama",
+        label: "Ecografía mamaria bilateral",
+        subtypeAliases: [],
+        fields: [
+          {
+            key: "mama_der",
+            label: "Mama derecha",
+            type: "text",
+            required: false,
+            default: "No se observan lesiones quísticas.",
+          },
+          { key: "obs", label: "Observaciones", type: "text", required: false },
+        ],
+      },
+    ]);
+    saveStudyReportDraft.mockResolvedValue({
+      id: "report-1",
+      templateKey: "renal",
+      content: { rinon_der: "En posición normal y de forma conservada." },
+      status: "BORRADOR",
+    });
+    getStudyReportImages.mockResolvedValue([]);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /Informar/i }));
+    await screen.findByDisplayValue("En posición normal y de forma conservada.");
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox"),
+      "mama",
+    );
+
+    // El campo con default trae su texto normal; el que no tiene, queda vacío.
+    expect(
+      await screen.findByDisplayValue("No se observan lesiones quísticas."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Observaciones")).toHaveValue("");
   });
 });
 
