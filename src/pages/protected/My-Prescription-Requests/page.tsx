@@ -193,11 +193,17 @@ const MyPrescriptionRequestsPage = () => {
         icon={<Pill className="h-6 w-6" />}
       />
 
-      <div className="flex items-center gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-5 py-4 text-base font-semibold text-amber-900 shadow-sm sm:text-lg">
-        <CalendarDays className="h-6 w-6 shrink-0 text-amber-600" />
-        <span className="leading-snug">
-          <strong>Recetas disponibles:</strong> viernes desde las 14:00 hs.
-        </span>
+      <div className="flex items-start gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 px-5 py-4 text-amber-900 shadow-sm">
+        <CalendarDays className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold leading-snug sm:text-lg">
+            <strong>Recetas disponibles:</strong> viernes desde las 14:00 hs.
+          </p>
+          <p className="text-sm leading-snug text-amber-800">
+            Para la confección de recetas se requerirá la orden de consulta, ya
+            que constituye un acto médico.
+          </p>
+        </div>
       </div>
 
       {/* Green Card Section */}
