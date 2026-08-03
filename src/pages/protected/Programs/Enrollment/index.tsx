@@ -33,10 +33,10 @@ const EnrollmentDetailPage = () => {
   const { program } = useProgram(programId!);
   const { enrollment, isLoading } = useEnrollment(programId!, enrollmentId!);
   const { activities } = useProgramActivities(programId!);
-  const { isProgramMember, hasClinicalProgramAccess } =
+  const { isProgramMember, canManageMonthlyPricing } =
     useProgramMembership(programId!);
   const showClinicalTabs = isProgramMember;
-  const showMonthlyPricing = hasClinicalProgramAccess;
+  const showMonthlyPricing = canManageMonthlyPricing;
 
   if (isLoading) {
     return (
