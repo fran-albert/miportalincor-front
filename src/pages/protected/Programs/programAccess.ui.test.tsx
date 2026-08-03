@@ -86,6 +86,7 @@ const operatorMembership = {
   isCoordinator: false,
   isProgramOperator: true,
   hasClinicalProgramAccess: false,
+  canManageMonthlyPricing: false,
 };
 
 describe("acceso operativo no clínico a Programas", () => {
@@ -154,10 +155,36 @@ describe("acceso operativo no clínico a Programas", () => {
       screen.getByRole("tab", { name: "Cumplimiento" })
     ).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Plan" })).toBeNull();
-    expect(screen.queryByRole("tab", { name: "Arancel mensual" })).toBeNull();
     expect(screen.queryByRole("tab", { name: "Seguimiento" })).toBeNull();
+    // El operador que NO es miembro del programa sigue sin ver el arancel.
+    expect(screen.queryByRole("tab", { name: "Arancel mensual" })).toBeNull();
     expect(screen.queryByText("Contenido clínico del plan")).toBeNull();
     expect(screen.queryByText("Contenido clínico de seguimiento")).toBeNull();
+  });
+
+  it("le muestra Arancel mensual al operador que es miembro del programa", () => {
+    // Caso Vanesa (2026-08-02): Administrador + Secretaria y coordinadora del
+    // programa. Ya veía Plan/Asistencia/Cumplimiento/Seguimiento por ser
+    // miembro, pero NO "Arancel mensual" — aunque el backend la autorizaba
+    // (sólo exige rol médico + ser miembro). Lo único que cambia es que ahora
+    // la pestaña aparece.
+    mockUseProgramMembership.mockReturnValue({
+      ...operatorMembership,
+      isAdmin: true,
+      isProgramMember: true,
+      isProgramOperator: true,
+      hasClinicalProgramAccess: false,
+      canManageMonthlyPricing: true,
+    });
+
+    renderRoute(
+      "/programas/program-1/inscripciones/enrollment-1",
+      <EnrollmentDetailPage />
+    );
+
+    expect(
+      screen.getByRole("tab", { name: "Arancel mensual" })
+    ).toBeInTheDocument();
   });
 
   it("conserva Plan y Seguimiento y agrega Arancel mensual al miembro clínico", () => {
@@ -166,6 +193,7 @@ describe("acceso operativo no clínico a Programas", () => {
       isProgramMember: true,
       isProgramOperator: false,
       hasClinicalProgramAccess: true,
+      canManageMonthlyPricing: true,
     });
 
     renderRoute(

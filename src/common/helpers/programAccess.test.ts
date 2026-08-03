@@ -24,6 +24,8 @@ describe("getProgramAccessCapabilities", () => {
         canRegisterAttendance: true,
         canCreateNotes: false,
         canManageActivities: expectedCanManageActivities,
+        // No es miembro del programa: el arancel mensual no le corresponde.
+        canManageMonthlyPricing: false,
       });
     }
   );
@@ -85,5 +87,44 @@ describe("getProgramAccessCapabilities", () => {
   it("incluye a Secretaría y Administrador en la navegación de Programas", () => {
     expect(PERMISSIONS.PROGRAMS).toContain(Role.SECRETARIA);
     expect(PERMISSIONS.PROGRAMS).toContain(Role.ADMINISTRADOR);
+  });
+
+  it("le muestra el arancel mensual al admin que además es miembro del programa", () => {
+    // Caso Vanesa (2026-08-02): Administrador + Secretaria + Médico y
+    // coordinadora del programa. El backend ya la autorizaba (exige rol médico
+    // + ser miembro); era el front el que le escondía la pestaña.
+    const capabilities = getProgramAccessCapabilities({
+      isAdmin: true,
+      isSecretary: true,
+      isProgramMember: true,
+      isCoordinator: true,
+    });
+
+    expect(capabilities.canManageMonthlyPricing).toBe(true);
+    // Sigue SIN acceso clínico: el arancel es económico, no clínico.
+    expect(capabilities.hasClinicalProgramAccess).toBe(false);
+    expect(capabilities.canCreateNotes).toBe(false);
+  });
+
+  it("le muestra el arancel mensual al miembro clínico de siempre", () => {
+    const capabilities = getProgramAccessCapabilities({
+      isAdmin: false,
+      isSecretary: false,
+      isProgramMember: true,
+      isCoordinator: false,
+    });
+
+    expect(capabilities.canManageMonthlyPricing).toBe(true);
+  });
+
+  it("no le muestra el arancel mensual a quien no es miembro del programa", () => {
+    const capabilities = getProgramAccessCapabilities({
+      isAdmin: true,
+      isSecretary: false,
+      isProgramMember: false,
+      isCoordinator: false,
+    });
+
+    expect(capabilities.canManageMonthlyPricing).toBe(false);
   });
 });
