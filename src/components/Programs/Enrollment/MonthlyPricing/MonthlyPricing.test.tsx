@@ -6,6 +6,8 @@ import { ProgramTariffType } from "@/types/Program/ProgramActivity";
 import {
   ProgramMonthlyPlan,
   ProgramMonthlyWhatsappStatus,
+  ProgramPlanPeriodStatus,
+  ProgramQuantitySource,
 } from "@/types/Program/ProgramMonthlyPlan";
 import MonthlyPlanEditor from "./MonthlyPlanEditor";
 import MonthlyPlanHistory from "./MonthlyPlanHistory";
@@ -151,8 +153,34 @@ describe("MonthlyPlanEditor", () => {
     expect(screen.getAllByText("$ 35.000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("$ 0").length).toBeGreaterThan(0);
 
-    await user.clear(screen.getByLabelText("Cantidad de Gimnasio"));
-    await user.type(screen.getByLabelText("Cantidad de Gimnasio"), "9");
+    // El fijo no se edita como si fuera por sesión: solo se cobra o no.
+    expect(screen.queryByLabelText("Cantidad de Gimnasio")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
+    expect(onSave).toHaveBeenCalledWith({
+      activities: [
+        { activityId: "nutrition", quantity: 3 },
+        { activityId: "psychology", quantity: 0 },
+        { activityId: "gym", quantity: 4 },
+      ],
+    });
+  });
+
+  it("el arancel mensual fijo se cobra o no se cobra, sin cantidad por sesión", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor plan={realCasePlan()} isSaving={false} onSave={onSave} />
+    );
+
+    const gymCheckbox = screen.getByLabelText("Cobrar Gimnasio este mes");
+    expect(gymCheckbox).toBeChecked();
+
+    await user.click(gymCheckbox);
+    expect(screen.getAllByText("$ 81.000").length).toBeGreaterThan(1);
+
+    await user.click(gymCheckbox);
     expect(screen.getByText("$ 116.000")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
@@ -160,7 +188,7 @@ describe("MonthlyPlanEditor", () => {
       activities: [
         { activityId: "nutrition", quantity: 3 },
         { activityId: "psychology", quantity: 0 },
-        { activityId: "gym", quantity: 9 },
+        { activityId: "gym", quantity: 1 },
       ],
     });
   });
@@ -316,6 +344,238 @@ describe("MonthlyPlanEditor con cobertura de obra social", () => {
     expect(
       screen.getByText("El paciente no tiene obra social cargada")
     ).toBeInTheDocument();
+  });
+});
+
+const preloadedPlan = (): ProgramMonthlyPlan => ({
+  persisted: false,
+  enrollmentId: "enrollment-1",
+  periodYear: 2026,
+  periodMonth: 8,
+  programMonthNumber: 8,
+  programName: "Programa de obesidad",
+  hasHealthInsurance: false,
+  discountBasisPoints: 1000,
+  discountPercent: 10,
+  listTotalCents: "22500000",
+  discountAmountCents: "1900000",
+  discountedTotalCents: "20600000",
+  revision: 0,
+  whatsappStatus: ProgramMonthlyWhatsappStatus.DISABLED,
+  planStatus: ProgramPlanPeriodStatus.ACTIVE,
+  planStatusMessage:
+    "Cantidades sugeridas a partir de la versión 1 del plan del paciente.",
+  planVersion: 1,
+  planQuantitiesOutdated: false,
+  activities: [
+    {
+      activityId: "nutrition",
+      activityName: "Nutrición",
+      tariffType: ProgramTariffType.PER_SESSION,
+      unitPriceCents: "3000000",
+      quantity: 4,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
+      listSubtotalCents: "12000000",
+      discountBasisPoints: 1000,
+      discountAmountCents: "1200000",
+      discountedSubtotalCents: "10800000",
+      pricingConfigured: true,
+      quantitySource: ProgramQuantitySource.PLAN,
+      planSuggestedQuantity: 4,
+    },
+    {
+      activityId: "kinesiology",
+      activityName: "Kinesiología",
+      tariffType: ProgramTariffType.PER_SESSION,
+      unitPriceCents: "1000000",
+      quantity: 0,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
+      listSubtotalCents: "0",
+      discountBasisPoints: 1000,
+      discountAmountCents: "0",
+      discountedSubtotalCents: "0",
+      pricingConfigured: true,
+      quantitySource: ProgramQuantitySource.NONE,
+      planSuggestedQuantity: 0,
+    },
+  ],
+});
+
+const outdatedPlan = (
+  whatsappStatus = ProgramMonthlyWhatsappStatus.NOT_REQUESTED
+): ProgramMonthlyPlan => ({
+  ...preloadedPlan(),
+  id: "monthly-plan-outdated",
+  persisted: true,
+  revision: 1,
+  whatsappStatus,
+  planVersion: 2,
+  sourcePlanVersion: 1,
+  planQuantitiesOutdated: true,
+  activities: preloadedPlan().activities.map((activity) =>
+    activity.activityId === "nutrition"
+      ? { ...activity, quantity: 3, planSuggestedQuantity: 8 }
+      : activity
+  ),
+});
+
+describe("MonthlyPlanEditor con precarga desde el plan", () => {
+  it("abre el mes nuevo con las cantidades del plan y avisa que son sugeridas", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={preloadedPlan()}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("Cantidades sugeridas a partir del plan del paciente")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Cantidad de Nutrición")).toHaveValue("4");
+    expect(screen.getByLabelText("Cantidad de Kinesiología")).toHaveValue("0");
+    expect(screen.getAllByText("$ 108.000").length).toBeGreaterThan(0);
+  });
+
+  it("dice por qué las cantidades vienen en cero cuando el plan no cubre el mes", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={{
+          ...preloadedPlan(),
+          planStatus: ProgramPlanPeriodStatus.NOT_YET_VALID,
+          planStatusMessage:
+            "El plan del paciente empieza el 01/09/2026: para agosto de 2026 todavía no hay plan vigente.",
+          planVersion: undefined,
+          activities: preloadedPlan().activities.map((activity) => ({
+            ...activity,
+            quantity: 0,
+            planSuggestedQuantity: undefined,
+          })),
+        }}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("El plan del paciente todavía no empezó")
+    ).toBeInTheDocument();
+    expect(screen.getByText(/01\/09\/2026/)).toBeInTheDocument();
+    expect(
+      screen.queryByText("Cantidades sugeridas a partir del plan del paciente")
+    ).toBeNull();
+  });
+
+  it("no muestra el cartel de sugerencia en un mes ya guardado", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={{ ...preloadedPlan(), persisted: true, revision: 1 }}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByText("Cantidades sugeridas a partir del plan del paciente")
+    ).toBeNull();
+  });
+});
+
+describe("MonthlyPlanEditor con desfasaje del plan", () => {
+  it("compara lo guardado contra el plan sin pisar los valores", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={outdatedPlan()}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("El plan del paciente cambió después de guardar este mes")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Nutrición: 3 guardadas, 8 según el plan actual")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Cantidad de Nutrición")).toHaveValue("3");
+  });
+
+  it("actualizar desde el plan rellena el formulario y no guarda", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor plan={outdatedPlan()} isSaving={false} onSave={onSave} />
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Actualizar cantidades desde el plan" })
+    );
+
+    expect(screen.getByLabelText("Cantidad de Nutrición")).toHaveValue("8");
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getAllByText("$ 216.000").length).toBeGreaterThan(0);
+  });
+
+  it("advierte que al paciente ya se le informó otro total", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={outdatedPlan(ProgramMonthlyWhatsappStatus.SENT)}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText(/ya se le informó el total de este mes/)
+    ).toBeInTheDocument();
+  });
+
+  it("no muestra cartel en un mes guardado cuyo plan no cambió", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={{
+          ...outdatedPlan(),
+          planQuantitiesOutdated: false,
+        }}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByText(
+        "El plan del paciente cambió después de guardar este mes"
+      )
+    ).toBeNull();
+  });
+
+  it("no muestra cartel en un mes viejo sin versión de origen", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={{
+          ...preloadedPlan(),
+          persisted: true,
+          revision: 1,
+          planStatus: undefined,
+          planStatusMessage: undefined,
+          sourcePlanVersion: undefined,
+          planQuantitiesOutdated: undefined,
+        }}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", {
+        name: "Actualizar cantidades desde el plan",
+      })
+    ).toBeNull();
   });
 });
 

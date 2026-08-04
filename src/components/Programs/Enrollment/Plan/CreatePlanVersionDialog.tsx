@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ import {
   PlanActivityItem,
 } from "@/types/Program/ProgramPlan";
 import { DAY_OF_WEEK_OPTIONS } from "@/common/helpers/plan-schedule.helpers";
+import { getArgentinaTodayDate } from "@/common/helpers/argentinaDate";
 
 interface CreatePlanVersionDialogProps {
   enrollmentId: string;
@@ -74,9 +76,7 @@ export default function CreatePlanVersionDialog({
 
   const activeActivities = activities.filter((a) => a.isActive);
 
-  const [validFrom, setValidFrom] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [validFrom, setValidFrom] = useState(getArgentinaTodayDate);
   const [rows, setRows] = useState<Record<string, PlanRowState>>({});
   const [dateDrafts, setDateDrafts] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export default function CreatePlanVersionDialog({
   useEffect(() => {
     if (!isOpen) return;
 
-    setValidFrom(new Date().toISOString().split("T")[0]);
+    setValidFrom(getArgentinaTodayDate());
     setError(null);
     setDateDrafts({});
 
@@ -148,6 +148,9 @@ export default function CreatePlanVersionDialog({
   };
 
   const includedCount = Object.values(rows).filter((r) => r.included).length;
+  // Programar a futuro es legítimo, pero deja al paciente sin plan vigente
+  // hasta esa fecha: el arancel mensual de los meses de por medio arranca en 0.
+  const startsInFuture = validFrom > getArgentinaTodayDate();
 
   const handleSubmit = async () => {
     const included = activeActivities.filter(
@@ -254,6 +257,18 @@ export default function CreatePlanVersionDialog({
               className="w-44"
             />
           </div>
+
+          {startsInFuture && (
+            <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Este plan empieza en el futuro</AlertTitle>
+              <AlertDescription>
+                Hasta el {validFrom.split("-").reverse().join("/")} el paciente
+                queda sin plan vigente, y el arancel de esos meses arranca en
+                cero.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {activeActivities.length === 0 ? (
             <p className="py-4 text-sm text-gray-500">

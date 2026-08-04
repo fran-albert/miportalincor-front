@@ -1,7 +1,15 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Info, Send, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  ClipboardList,
+  Info,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -24,6 +32,9 @@ import {
 import {
   canSendWhatsappNotice,
   ProgramMonthlyPlan,
+  ProgramMonthlyWhatsappStatus,
+  ProgramPlanPeriodStatus,
+  ProgramPlanPeriodStatusTitles,
   UpsertProgramMonthlyPlanDto,
 } from "@/types/Program/ProgramMonthlyPlan";
 import { WhatsappStatusBadge } from "./WhatsappStatusBadge";
@@ -102,6 +113,46 @@ export default function MonthlyPlanEditor({
     const raw = quantities[quantityKey(activityId, index)] ?? "";
     return isValidQuantity(raw) ? Number(raw) : 0;
   };
+
+  // "Actualizar cantidades desde el plan" solo rellena el formulario: guardar
+  // sigue siendo un acto aparte, y es lo único que puede mover la plata.
+  const applyPlanSuggestion = () => {
+    const suggested = plan.activities.map((activity, index) => {
+      const key = quantityKey(activity.activityId, index);
+      const quantity = activity.planSuggestedQuantity ?? 0;
+      return { key, activity, quantity };
+    });
+    setQuantities((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        suggested.map(({ key, quantity }) => [key, quantity.toString()])
+      ),
+    }));
+    setCoveredQuantities((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        suggested.map(({ key, activity, quantity }) => [
+          key,
+          activity.coverageAvailable
+            ? Math.min(
+                quantity,
+                activity.coveredSessionsPerMonth ?? quantity
+              ).toString()
+            : "0",
+        ])
+      ),
+    }));
+  };
+
+  const outdatedActivities = plan.activities.filter(
+    (activity) =>
+      activity.planSuggestedQuantity !== undefined &&
+      activity.planSuggestedQuantity !== activity.quantity
+  );
+  const showPlanMismatch =
+    plan.persisted && plan.planQuantitiesOutdated === true;
+  const alreadyNotified =
+    plan.whatsappStatus === ProgramMonthlyWhatsappStatus.SENT;
 
   const hasInvalidCoveredQuantity = plan.activities.some((activity, index) => {
     if (!activity.coverageAvailable) return false;
@@ -184,6 +235,72 @@ export default function MonthlyPlanEditor({
           </div>
         ) : null}
       </div>
+
+      {!plan.persisted &&
+      plan.planStatus === ProgramPlanPeriodStatus.ACTIVE ? (
+        <Alert className="m-4 border-sky-200 bg-sky-50 text-sky-900 sm:m-5">
+          <ClipboardList className="h-4 w-4" />
+          <AlertTitle>
+            {ProgramPlanPeriodStatusTitles[ProgramPlanPeriodStatus.ACTIVE]}
+          </AlertTitle>
+          <AlertDescription>
+            Revisalas antes de guardar: son una sugerencia y se pueden corregir.
+            Guardar es lo que habilita avisarle al paciente.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {plan.planStatus && plan.planStatus !== ProgramPlanPeriodStatus.ACTIVE ? (
+        <Alert className="m-4 border-amber-200 bg-amber-50 text-amber-900 sm:m-5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>
+            {ProgramPlanPeriodStatusTitles[plan.planStatus]}
+          </AlertTitle>
+          <AlertDescription>
+            {plan.planStatusMessage} Las cantidades arrancan en cero hasta que el
+            plan cubra este mes.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {showPlanMismatch ? (
+        <Alert className="m-4 border-amber-200 bg-amber-50 text-amber-900 sm:m-5">
+          <RefreshCw className="h-4 w-4" />
+          <AlertTitle>
+            El plan del paciente cambió después de guardar este mes
+          </AlertTitle>
+          <AlertDescription>
+            <div className="space-y-2">
+              {outdatedActivities.length > 0 ? (
+                <ul className="list-disc pl-4">
+                  {outdatedActivities.map((activity) => (
+                    <li key={activity.id ?? activity.activityId}>
+                      {activity.activityName}: {activity.quantity} guardadas,{" "}
+                      {activity.planSuggestedQuantity} según el plan actual
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {alreadyNotified ? (
+                <p className="font-medium">
+                  Al paciente ya se le informó el total de este mes. Si
+                  actualizás las cantidades, hay que volver a avisarle.
+                </p>
+              ) : null}
+              <p>
+                Los valores guardados quedan como están hasta que actualices y
+                guardes.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={applyPlanSuggestion}
+              >
+                Actualizar cantidades desde el plan
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {plan.hasHealthInsurance ? (
         <Alert className="m-4 border-emerald-200 bg-emerald-50 text-emerald-900 sm:m-5">
@@ -271,6 +388,8 @@ export default function MonthlyPlanEditor({
               activity.pricingConfigured &&
               activity.tariffType !== undefined &&
               activity.unitPriceCents !== undefined;
+            const isMonthlyFixed =
+              activity.tariffType === ProgramTariffType.MONTHLY_FIXED;
 
             return (
               <TableRow key={activity.id ?? key} className={cn(isZero && "text-slate-400")}>
@@ -281,29 +400,52 @@ export default function MonthlyPlanEditor({
                   {activity.tariffType
                     ? ProgramTariffTypeLabels[activity.tariffType]
                     : "Sin arancel"}
-                  {activity.tariffType === ProgramTariffType.MONTHLY_FIXED ? (
+                  {isMonthlyFixed ? (
                     <span className="mt-0.5 block max-w-44 text-xs text-slate-500">
-                      Una cantidad positiva cobra un único fijo.
+                      Se cobra un único fijo, no por sesión.
                     </span>
                   ) : null}
                 </TableCell>
                 <TableCell>
-                  <Input
-                    aria-label={`Cantidad de ${activity.activityName}`}
-                    value={quantityValue}
-                    onChange={(event) =>
-                      setQuantities((current) => ({
-                        ...current,
-                        [key]: event.target.value,
-                      }))
-                    }
-                    inputMode="numeric"
-                    min={0}
-                    step={1}
-                    disabled={hasDeletedSnapshot}
-                    aria-invalid={!isValidQuantity(quantityValue)}
-                    className="w-24 tabular-nums"
-                  />
+                  {isMonthlyFixed ? (
+                    <label className="flex items-center gap-2 text-xs text-slate-600">
+                      <Checkbox
+                        aria-label={`Cobrar ${activity.activityName} este mes`}
+                        checked={quantityOf(activity.activityId, index) > 0}
+                        disabled={hasDeletedSnapshot}
+                        onCheckedChange={(checked) =>
+                          setQuantities((current) => ({
+                            ...current,
+                            [key]:
+                              checked === true
+                                ? isValidQuantity(quantityValue) &&
+                                  Number(quantityValue) > 0
+                                  ? quantityValue
+                                  : "1"
+                                : "0",
+                          }))
+                        }
+                      />
+                      Se cobra este mes
+                    </label>
+                  ) : (
+                    <Input
+                      aria-label={`Cantidad de ${activity.activityName}`}
+                      value={quantityValue}
+                      onChange={(event) =>
+                        setQuantities((current) => ({
+                          ...current,
+                          [key]: event.target.value,
+                        }))
+                      }
+                      inputMode="numeric"
+                      min={0}
+                      step={1}
+                      disabled={hasDeletedSnapshot}
+                      aria-invalid={!isValidQuantity(quantityValue)}
+                      className="w-24 tabular-nums"
+                    />
+                  )}
                 </TableCell>
                 <TableCell>
                   {activity.coverageAvailable ? (
