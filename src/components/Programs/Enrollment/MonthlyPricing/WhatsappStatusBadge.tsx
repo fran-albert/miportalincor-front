@@ -8,6 +8,8 @@ import {
 const statusClasses: Record<ProgramMonthlyWhatsappStatus, string> = {
   [ProgramMonthlyWhatsappStatus.SENT]:
     "border-emerald-200 bg-emerald-50 text-emerald-700",
+  [ProgramMonthlyWhatsappStatus.NOT_REQUESTED]:
+    "border-sky-200 bg-sky-50 text-sky-700",
   [ProgramMonthlyWhatsappStatus.PENDING]:
     "border-amber-200 bg-amber-50 text-amber-700",
   [ProgramMonthlyWhatsappStatus.FAILED]:

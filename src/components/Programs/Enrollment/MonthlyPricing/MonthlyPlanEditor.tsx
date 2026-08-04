@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Send } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   ProgramTariffTypeLabels,
 } from "@/types/Program/ProgramActivity";
 import {
+  canSendWhatsappNotice,
   ProgramMonthlyPlan,
   UpsertProgramMonthlyPlanDto,
 } from "@/types/Program/ProgramMonthlyPlan";
@@ -32,7 +33,9 @@ const MAX_QUANTITY = 4_294_967_295;
 interface MonthlyPlanEditorProps {
   plan: ProgramMonthlyPlan;
   isSaving: boolean;
+  isSendingWhatsapp?: boolean;
   onSave: (dto: UpsertProgramMonthlyPlanDto) => Promise<void>;
+  onSendWhatsapp?: (plan: ProgramMonthlyPlan) => void;
 }
 
 const quantityKey = (activityId: string | undefined, index: number) =>
@@ -47,7 +50,9 @@ const isValidQuantity = (value: string) => {
 export default function MonthlyPlanEditor({
   plan,
   isSaving,
+  isSendingWhatsapp = false,
   onSave,
+  onSendWhatsapp,
 }: MonthlyPlanEditorProps) {
   const [quantities, setQuantities] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -258,20 +263,36 @@ export default function MonthlyPlanEditor({
 
       <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <p className="text-xs text-slate-500">
-          Los precios y el descuento quedarán congelados para este mes.
+          Los precios y el descuento quedarán congelados para este mes. Guardar
+          no le avisa nada al paciente.
         </p>
-        <Button
-          type="button"
-          onClick={submit}
-          disabled={
-            hasDeletedSnapshot ||
-            hasMissingPricing ||
-            hasInvalidQuantity ||
-            isSaving
-          }
-        >
-          {isSaving ? "Guardando..." : "Guardar plan del mes"}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {plan.persisted &&
+          onSendWhatsapp &&
+          canSendWhatsappNotice(plan.whatsappStatus) ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSendWhatsapp(plan)}
+              disabled={isSendingWhatsapp}
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {isSendingWhatsapp ? "Enviando..." : "Enviar aviso al paciente"}
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={
+              hasDeletedSnapshot ||
+              hasMissingPricing ||
+              hasInvalidQuantity ||
+              isSaving
+            }
+          >
+            {isSaving ? "Guardando..." : "Guardar plan del mes"}
+          </Button>
+        </div>
       </div>
     </section>
   );

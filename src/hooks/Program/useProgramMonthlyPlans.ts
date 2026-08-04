@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getProgramMonthlyPlan,
   getProgramMonthlyPlans,
-  retryProgramMonthlyPlanWhatsapp,
+  sendProgramMonthlyPlanWhatsapp,
   upsertProgramMonthlyPlan,
 } from "@/api/Program/program-monthly-plans.actions";
 import { UpsertProgramMonthlyPlanDto } from "@/types/Program/ProgramMonthlyPlan";
@@ -70,13 +70,13 @@ export const useProgramMonthlyPlanMutations = (enrollmentId: string) => {
     },
   });
 
-  const retryWhatsappMutation = useMutation({
+  const sendWhatsappMutation = useMutation({
     mutationFn: ({ year, month }: { year: number; month: number }) =>
-      retryProgramMonthlyPlanWhatsapp(enrollmentId, year, month),
+      sendProgramMonthlyPlanWhatsapp(enrollmentId, year, month),
     onSuccess: (response) => {
       syncResponse(response.periodYear, response.periodMonth, response);
     },
   });
 
-  return { saveMutation, retryWhatsappMutation };
+  return { saveMutation, sendWhatsappMutation };
 };

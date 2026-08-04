@@ -145,7 +145,10 @@ const EnrollmentDetailPage = () => {
           )}
           {!showMonthlyPricing ? null : (
             <TabsContent value="monthly-pricing" className="mt-6">
-              <MonthlyPricingTab enrollmentId={enrollmentId!} />
+              <MonthlyPricingTab
+                enrollmentId={enrollmentId!}
+                patientName={patientName}
+              />
             </TabsContent>
           )}
           <TabsContent value="attendance" className="mt-6">

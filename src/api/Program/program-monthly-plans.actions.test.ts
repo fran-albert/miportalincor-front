@@ -14,7 +14,7 @@ vi.mock("@/services/axiosConfig", () => ({
 
 import {
   getProgramMonthlyPlan,
-  retryProgramMonthlyPlanWhatsapp,
+  sendProgramMonthlyPlanWhatsapp,
   upsertProgramMonthlyPlan,
 } from "./program-monthly-plans.actions";
 import { ProgramMonthlyWhatsappStatus } from "@/types/Program/ProgramMonthlyPlan";
@@ -50,14 +50,14 @@ describe("program monthly plan actions", () => {
     await upsertProgramMonthlyPlan("enrollment-1", 2026, 7, {
       activities: [{ activityId: "nutrition", quantity: 3 }],
     });
-    await retryProgramMonthlyPlanWhatsapp("enrollment-1", 2026, 7);
+    await sendProgramMonthlyPlanWhatsapp("enrollment-1", 2026, 7);
 
     const base = "/enrollments/enrollment-1/monthly-plans/2026/7";
     expect(mockGet).toHaveBeenCalledWith(base);
     expect(mockPut).toHaveBeenCalledWith(base, {
       activities: [{ activityId: "nutrition", quantity: 3 }],
     });
-    expect(mockPost).toHaveBeenCalledWith(`${base}/whatsapp/retry`);
+    expect(mockPost).toHaveBeenCalledWith(`${base}/whatsapp`);
   });
 
   it("rechaza importes que no sean strings decimales exactos", async () => {
