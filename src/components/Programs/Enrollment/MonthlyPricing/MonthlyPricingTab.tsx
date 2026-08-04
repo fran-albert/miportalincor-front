@@ -17,9 +17,11 @@ import {
 } from "@/types/Program/ProgramMonthlyPlan";
 import MonthlyPlanEditor from "./MonthlyPlanEditor";
 import MonthlyPlanHistory from "./MonthlyPlanHistory";
+import SendWhatsappDialog from "./SendWhatsappDialog";
 
 interface MonthlyPricingTabProps {
   enrollmentId: string;
+  patientName: string;
 }
 
 const currentPeriod = () => getArgentinaTodayDate().slice(0, 7);
@@ -29,30 +31,37 @@ const parsePeriod = (period: string) => {
   return { year, month };
 };
 
+const periodKeyOf = (plan: ProgramMonthlyPlan) =>
+  `${plan.periodYear}-${plan.periodMonth}`;
+
 const saveNotice = (status: ProgramMonthlyWhatsappStatus) => {
   switch (status) {
+    case ProgramMonthlyWhatsappStatus.NOT_REQUESTED:
+      return "Plan guardado. El paciente todavía no fue avisado.";
     case ProgramMonthlyWhatsappStatus.SENT:
-      return "El aviso por WhatsApp fue enviado.";
+      return "El aviso por WhatsApp ya había sido enviado para esta revisión.";
     case ProgramMonthlyWhatsappStatus.PENDING:
-      return "El aviso por WhatsApp quedó pendiente.";
+      return "Plan guardado. El aviso quedó en curso.";
     case ProgramMonthlyWhatsappStatus.FAILED:
-      return "El plan quedó guardado. El aviso no pudo enviarse y podrá reintentarse.";
+      return "Plan guardado. El último aviso no pudo enviarse y puede reintentarse.";
     case ProgramMonthlyWhatsappStatus.SKIPPED_NO_PHONE:
-      return "El plan quedó guardado. El paciente no tiene un teléfono disponible.";
+      return "Plan guardado. El paciente no tiene un teléfono disponible.";
     case ProgramMonthlyWhatsappStatus.DISABLED:
-      return "El plan quedó guardado. El aviso por WhatsApp está desactivado.";
+      return "Plan guardado. El aviso por WhatsApp está desactivado.";
   }
 };
 
 export default function MonthlyPricingTab({
   enrollmentId,
+  patientName,
 }: MonthlyPricingTabProps) {
   const [period, setPeriod] = useState(currentPeriod);
-  const [retryingPeriod, setRetryingPeriod] = useState<string>();
+  const [planToNotify, setPlanToNotify] = useState<ProgramMonthlyPlan>();
+  const [sendingPeriod, setSendingPeriod] = useState<string>();
   const { year, month } = parsePeriod(period);
   const monthlyPlan = useProgramMonthlyPlan(enrollmentId, year, month);
   const history = useProgramMonthlyPlans(enrollmentId);
-  const { saveMutation, retryWhatsappMutation } =
+  const { saveMutation, sendWhatsappMutation } =
     useProgramMonthlyPlanMutations(enrollmentId);
   const { showError, showSuccess } = useToastContext();
 
@@ -68,29 +77,36 @@ export default function MonthlyPricingTab({
     }
   };
 
-  const retry = async (plan: ProgramMonthlyPlan) => {
-    const periodKey = `${plan.periodYear}-${plan.periodMonth}`;
-    setRetryingPeriod(periodKey);
+  const confirmSend = async () => {
+    if (!planToNotify) return;
+    const plan = planToNotify;
+    setSendingPeriod(periodKeyOf(plan));
     try {
-      const updated = await retryWhatsappMutation.mutateAsync({
+      const updated = await sendWhatsappMutation.mutateAsync({
         year: plan.periodYear,
         month: plan.periodMonth,
       });
+      setPlanToNotify(undefined);
       if (updated.whatsappStatus === ProgramMonthlyWhatsappStatus.SENT) {
-        showSuccess("Aviso enviado", "El WhatsApp fue entregado al canal de envío.");
+        showSuccess(
+          "Aviso enviado",
+          "El WhatsApp fue entregado al canal de envío."
+        );
       } else {
         showError(
-          "El aviso todavía no pudo enviarse",
-          "El plan económico sigue guardado sin cambios."
+          "El aviso no pudo enviarse",
+          updated.whatsappLastError ??
+            "El plan económico sigue guardado sin cambios."
         );
       }
     } catch {
+      setPlanToNotify(undefined);
       showError(
-        "No se pudo reintentar el aviso",
+        "No se pudo enviar el aviso",
         "El plan económico sigue guardado sin cambios."
       );
     } finally {
-      setRetryingPeriod(undefined);
+      setSendingPeriod(undefined);
     }
   };
 
@@ -135,7 +151,11 @@ export default function MonthlyPricingTab({
           key={`${monthlyPlan.data.id ?? "draft"}-${monthlyPlan.data.revision}-${period}`}
           plan={monthlyPlan.data}
           isSaving={saveMutation.isPending}
+          isSendingWhatsapp={
+            sendingPeriod === periodKeyOf(monthlyPlan.data)
+          }
           onSave={save}
+          onSendWhatsapp={setPlanToNotify}
         />
       )}
 
@@ -149,10 +169,18 @@ export default function MonthlyPricingTab({
         <MonthlyPlanHistory
           plans={history.data ?? []}
           isLoading={history.isLoading}
-          retryingPeriod={retryingPeriod}
-          onRetry={retry}
+          sendingPeriod={sendingPeriod}
+          onSendWhatsapp={setPlanToNotify}
         />
       )}
+
+      <SendWhatsappDialog
+        plan={planToNotify}
+        patientName={patientName}
+        isSending={sendWhatsappMutation.isPending}
+        onConfirm={confirmSend}
+        onCancel={() => setPlanToNotify(undefined)}
+      />
     </div>
   );
 }

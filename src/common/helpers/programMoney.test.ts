@@ -69,9 +69,88 @@ describe("programMoney", () => {
     });
     expect(result.items[2]).toMatchObject({
       listSubtotalCents: "3500000",
-      discountedSubtotalCents: "3150000",
+      discountAmountCents: "0",
+      discountedSubtotalCents: "3500000",
     });
-    expect(result.discountedTotalCents).toBe("11250000");
+    expect(result.discountedTotalCents).toBe("11600000");
+  });
+
+  it("reproduce el presupuesto de agosto de Paolini: $207.000", () => {
+    const result = calculateProgramPricing(
+      [
+        {
+          activityId: "nutricion",
+          activityName: "Nutrición",
+          tariffType: ProgramTariffType.PER_SESSION,
+          unitPriceCents: "3000000",
+          quantity: 4,
+          coveredQuantity: 2,
+          coveredUnitPriceCents: "1500000",
+        },
+        {
+          activityId: "psicologia",
+          activityName: "Psicología",
+          tariffType: ProgramTariffType.PER_SESSION,
+          unitPriceCents: "3500000",
+          quantity: 4,
+        },
+      ],
+      1000
+    );
+
+    expect(result.items[0]).toMatchObject({
+      coveredQuantity: 2,
+      privateQuantity: 2,
+      listSubtotalCents: "9000000",
+      discountedSubtotalCents: "8100000",
+    });
+    expect(result.items[1].discountedSubtotalCents).toBe("12600000");
+    expect(result.discountedTotalCents).toBe("20700000");
+  });
+
+  it("reproduce el presupuesto de agosto de Mancinelli: $144.000", () => {
+    const result = calculateProgramPricing(
+      [
+        {
+          activityId: "nutricion",
+          activityName: "Nutrición",
+          tariffType: ProgramTariffType.PER_SESSION,
+          unitPriceCents: "3000000",
+          quantity: 4,
+          coveredQuantity: 2,
+          coveredUnitPriceCents: "1500000",
+        },
+        {
+          activityId: "psicologia",
+          activityName: "Psicología",
+          tariffType: ProgramTariffType.PER_SESSION,
+          unitPriceCents: "3500000",
+          quantity: 2,
+        },
+      ],
+      1000
+    );
+
+    expect(result.discountedTotalCents).toBe("14400000");
+  });
+
+  it("rechaza más sesiones con cobertura que sesiones del mes", () => {
+    expect(() =>
+      calculateProgramPricing(
+        [
+          {
+            activityId: "nutricion",
+            activityName: "Nutrición",
+            tariffType: ProgramTariffType.PER_SESSION,
+            unitPriceCents: "3000000",
+            quantity: 2,
+            coveredQuantity: 3,
+            coveredUnitPriceCents: "1500000",
+          },
+        ],
+        1000
+      )
+    ).toThrow("no pueden superar las sesiones del mes");
   });
 
   it("redondea half-up a centavo igual que el backend", () => {

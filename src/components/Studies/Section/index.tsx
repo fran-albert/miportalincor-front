@@ -17,7 +17,11 @@ import {
   Download,
   X,
   FlaskConical,
+  FileEdit,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { formatStudyCount, groupByMonthDesc } from "../studyGrouping";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Patient } from "@/types/Patient/Patient";
@@ -53,6 +57,7 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
   const [selectedStudy, setSelectedStudy] = useState<StudiesWithURL | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [labsDialogOpen, setLabsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch studies with signed URLs
   const { data: studiesByUserId = [], isLoading } = useQuery({
@@ -101,11 +106,27 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
     });
   };
 
-  // Get the most recent 5 studies (ordenados del más viejo al más nuevo)
-  const recentStudies = studiesByUserId
-    .slice()
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const matchesSearch = (study: StudiesWithURL) => {
+    if (!normalizedSearch) return true;
+
+    return (
+      (study.studyType?.name || "").toLowerCase().includes(normalizedSearch) ||
+      (study.note || "").toLowerCase().includes(normalizedSearch) ||
+      (study.externalInstitution || "")
+        .toLowerCase()
+        .includes(normalizedSearch)
+    );
+  };
+
+  // Historial completo, del más nuevo al más viejo, agrupado por mes/año.
+  const studyGroups = groupByMonthDesc(
+    studiesByUserId.filter(matchesSearch),
+    (study) => study.date
+  );
+
+  const showSearch = studiesByUserId.length > 5;
 
   const renderStudies = () => {
     if (isLoading) {
@@ -134,65 +155,124 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
       );
     }
 
-    return (
-      <div className="space-y-3">
-        {recentStudies.map((study) => (
-          <div
-            key={study.id}
-            className={`border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md hover:border-greenPrimary/50 transition-all duration-200 bg-white ${
-              study.isExternal
-                ? "border-l-4 border-l-orange-500"
-                : "border-l-4 border-l-greenPrimary"
-            }`}
-            onClick={() => handleViewStudy(study)}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {study.studyType?.name || "Estudio"}
-                  </p>
-                  {study.isExternal && (
-                    <Badge
-                      variant="outline"
-                      className="bg-orange-50 text-orange-700 border-orange-200 text-xs"
-                    >
-                      <Building2 className="h-3 w-3 mr-1" />
-                      Externo
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                  <Calendar className="h-3 w-3" />
-                  <span>{formatDate(study.date)}</span>
-                </div>
-                {study.isExternal && study.externalInstitution && (
-                  <p className="text-xs text-orange-600 mt-1 truncate">
-                    {study.externalInstitution}
-                  </p>
-                )}
-                {study.note && (
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-1">
-                    {study.note}
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 flex-shrink-0 hover:bg-greenPrimary/10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewStudy(study);
-                }}
-              >
-                <Eye className="h-4 w-4 text-greenPrimary" />
-              </Button>
-            </div>
+    if (studyGroups.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Search className="h-8 w-8 text-gray-400" />
           </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Sin resultados
+          </h3>
+          <p className="text-sm text-gray-500">
+            Ningún estudio coincide con «{searchTerm}»
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-5">
+        {studyGroups.map((group) => (
+          <section key={group.key} className="w-full space-y-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-gray-200 pb-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-greenPrimary">
+                {group.label}
+              </h3>
+              <span className="text-xs text-gray-500">
+                {formatStudyCount(group.items.length)}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {group.items.map((study) => {
+                const hasFile = !!study.signedUrl;
+                const isManualLaboratory = !hasFile && !study.isExternal;
+
+                return (
+                  <div
+                    key={study.id}
+                    className={`border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md hover:border-greenPrimary/50 transition-all duration-200 bg-white ${
+                      study.isExternal
+                        ? "border-l-4 border-l-orange-500"
+                        : "border-l-4 border-l-greenPrimary"
+                    }`}
+                    onClick={() => handleViewStudy(study)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 break-words">
+                          {study.studyType?.name || "Estudio"}
+                        </p>
+
+                        {study.isExternal && study.externalInstitution && (
+                          <p className="text-xs text-orange-600 mt-1 break-words">
+                            {study.externalInstitution}
+                          </p>
+                        )}
+
+                        {study.note && (
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2 break-words">
+                            {study.note}
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                            {formatDate(study.date)}
+                          </span>
+
+                          {study.isExternal && (
+                            <Badge
+                              variant="outline"
+                              className="bg-orange-50 text-orange-700 border-orange-200 text-xs"
+                            >
+                              <Building2 className="h-3 w-3 mr-1" />
+                              Externo
+                            </Badge>
+                          )}
+
+                          {isManualLaboratory && (
+                            <Badge
+                              variant="outline"
+                              className="bg-purple-50 text-purple-700 border-purple-200 text-xs"
+                            >
+                              <FileEdit className="h-3 w-3 mr-1" />
+                              Manual
+                            </Badge>
+                          )}
+
+                          {!hasFile && (
+                            <Badge
+                              variant="outline"
+                              className="bg-gray-50 text-gray-600 border-gray-200 text-xs"
+                            >
+                              Sin documento
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-greenPrimary/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewStudy(study);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 text-greenPrimary" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         ))}
 
-        {/* Show "Ver más" link if there are more than 5 studies */}
         {studiesByUserId.length > 5 && (
           <Button
             variant="ghost"
@@ -211,20 +291,20 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
     <div>
       <Card className="lg:col-span-1 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-greenPrimary to-teal-600 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <FileText className="h-5 w-5 flex-shrink-0" />
               <CardTitle
-                className="cursor-pointer hover:opacity-80 transition-opacity underline decoration-white/40 decoration-2 underline-offset-4"
+                className="cursor-pointer break-words hover:opacity-80 transition-opacity underline decoration-white/40 decoration-2 underline-offset-4"
                 onClick={handleNavigateToStudies}
               >
                 Estudios Médicos
               </CardTitle>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {studiesByUserId && studiesByUserId.length > 0 && (
-                <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full whitespace-nowrap">
-                  {studiesByUserId.length} {studiesByUserId.length !== 1 ? "estudios" : "estudio"}
+                <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                  {formatStudyCount(studiesByUserId.length)}
                 </span>
               )}
               {/* Solo médicos pueden agregar estudios externos desde Historia Clínica */}
@@ -274,7 +354,18 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
+          {showSearch && !isLoading && (
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+              <Input
+                placeholder="Buscar estudio…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10"
+              />
+            </div>
+          )}
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
             {renderStudies()}
           </div>

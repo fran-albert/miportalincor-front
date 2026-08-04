@@ -10,7 +10,7 @@ const mockUpsert = vi.hoisted(() => vi.fn());
 vi.mock("@/api/Program/program-monthly-plans.actions", () => ({
   getProgramMonthlyPlan: vi.fn(),
   getProgramMonthlyPlans: vi.fn(),
-  retryProgramMonthlyPlanWhatsapp: vi.fn(),
+  sendProgramMonthlyPlanWhatsapp: vi.fn(),
   upsertProgramMonthlyPlan: mockUpsert,
 }));
 

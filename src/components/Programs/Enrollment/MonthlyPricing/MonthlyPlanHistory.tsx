@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { Send } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +19,7 @@ import {
   ProgramTariffTypeLabels,
 } from "@/types/Program/ProgramActivity";
 import {
+  canSendWhatsappNotice,
   ProgramMonthlyPlan,
   ProgramMonthlyWhatsappStatus,
 } from "@/types/Program/ProgramMonthlyPlan";
@@ -39,22 +40,18 @@ const savedAtFormatter = new Intl.DateTimeFormat("es-AR", {
 const formatPeriod = (year: number, month: number) =>
   periodFormatter.format(new Date(Date.UTC(year, month - 1, 1)));
 
-const canRetry = (status: ProgramMonthlyWhatsappStatus) =>
-  status === ProgramMonthlyWhatsappStatus.FAILED ||
-  status === ProgramMonthlyWhatsappStatus.SKIPPED_NO_PHONE;
-
 interface MonthlyPlanHistoryProps {
   plans: ProgramMonthlyPlan[];
   isLoading: boolean;
-  retryingPeriod?: string;
-  onRetry: (plan: ProgramMonthlyPlan) => Promise<void>;
+  sendingPeriod?: string;
+  onSendWhatsapp: (plan: ProgramMonthlyPlan) => void;
 }
 
 export default function MonthlyPlanHistory({
   plans,
   isLoading,
-  retryingPeriod,
-  onRetry,
+  sendingPeriod,
+  onSendWhatsapp,
 }: MonthlyPlanHistoryProps) {
   return (
     <section aria-labelledby="monthly-plan-history-title" className="space-y-3">
@@ -157,18 +154,21 @@ export default function MonthlyPlanHistory({
                       ) : (
                         <span />
                       )}
-                      {canRetry(plan.whatsappStatus) ? (
+                      {canSendWhatsappNotice(plan.whatsappStatus) ? (
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => onRetry(plan)}
-                          disabled={retryingPeriod === periodKey}
+                          onClick={() => onSendWhatsapp(plan)}
+                          disabled={sendingPeriod === periodKey}
                         >
-                          <RotateCcw className="mr-2 h-4 w-4" />
-                          {retryingPeriod === periodKey
-                            ? "Reintentando..."
-                            : "Reintentar aviso"}
+                          <Send className="mr-2 h-4 w-4" />
+                          {sendingPeriod === periodKey
+                            ? "Enviando..."
+                            : plan.whatsappStatus ===
+                                ProgramMonthlyWhatsappStatus.NOT_REQUESTED
+                              ? "Enviar aviso al paciente"
+                              : "Reintentar aviso"}
                         </Button>
                       ) : null}
                     </div>

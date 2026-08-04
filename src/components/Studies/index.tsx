@@ -4,6 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Search,
   FileImageIcon,
   Activity,
@@ -17,13 +24,10 @@ import React, { useState } from "react";
 import { StudiesWithURL } from "@/types/Study/Study";
 import PatientInformation from "@/components/Patients/Dashboard/Patient-Information";
 import { Patient } from "@/types/Patient/Patient";
-import { DataTable } from "@/components/Table/table";
-import { createStudiesColumns } from "./Table/columns";
 import StudyDialog from "./Upload/dialog";
 import ExternalStudyDialog from "./Upload/external-study-dialog";
-import { StudyCard } from "./Card/StudyCard";
-import { useIsMobile } from "@/hooks/use-mobile/use-mobile";
-import { MobilePagination } from "./Pagination/MobilePagination";
+import StudiesTimeline, { TimelineStudy } from "./Timeline";
+import { compareByDateDesc, parseStudyDate } from "./studyGrouping";
 
 interface PatientData {
   name: string;
@@ -113,52 +117,28 @@ const STUDY_CATEGORIES = [
   { key: "Otros", label: "Otros", icon: FileText, color: "gray" },
 ] as const;
 
-const parseDisplayDate = (date: string) => {
-  if (!date) return Number.MAX_SAFE_INTEGER;
+/** Valor centinela del filtro por tipo: Radix no admite `SelectItem` con value vacío. */
+const ALL_TYPES = "__todos__";
 
-  const trimmedDate = date.trim();
-  const separator = trimmedDate.includes("/") ? "/" : "-";
-  const parts = trimmedDate.split(separator).map(Number);
+const compareNewestFirst = (a: Study, b: Study) =>
+  compareByDateDesc(parseStudyDate(a.fecha), parseStudyDate(b.fecha));
 
-  if (parts.length === 3) {
-    const [first, second, third] = parts;
-    const [day, month, year] =
-      trimmedDate.split(separator)[0].length === 4
-        ? [third, second, first]
-        : [first, second, third];
-    const parsedDate = new Date(year, month - 1, day);
-
-    if (!Number.isNaN(parsedDate.getTime())) {
-      return parsedDate.getTime();
-    }
-  }
-
-  const fallbackDate = new Date(trimmedDate);
-  return Number.isNaN(fallbackDate.getTime())
-    ? Number.MAX_SAFE_INTEGER
-    : fallbackDate.getTime();
-};
-
-const compareNewestFirst = (a: Study, b: Study) => {
-  const dateA = parseDisplayDate(a.fecha);
-  const dateB = parseDisplayDate(b.fecha);
-  const aMissingDate = dateA === Number.MAX_SAFE_INTEGER;
-  const bMissingDate = dateB === Number.MAX_SAFE_INTEGER;
-
-  if (aMissingDate && bMissingDate) {
-    return 0;
-  }
-
-  if (aMissingDate) {
-    return 1;
-  }
-
-  if (bMissingDate) {
-    return -1;
-  }
-
-  return dateB - dateA;
-};
+const toTimelineStudy = (study: Study): TimelineStudy => ({
+  id: study.id,
+  title: study.tipo,
+  subtitle:
+    study.descripcion && study.descripcion !== "Sin descripción"
+      ? study.descripcion
+      : undefined,
+  category: study.categoria,
+  date: study.fecha,
+  dateLabel: study.fecha || "Sin fecha",
+  fileUrl: study.signedUrl || study.archivo?.url || undefined,
+  isExternal: study.isExternal,
+  externalInstitution: study.externalInstitution,
+  signedDoctorId: study.signedDoctorId,
+  studyInstanceUID: study.studyInstanceUID,
+});
 
 export default function PatientStudies({
   patientData,
@@ -171,11 +151,7 @@ export default function PatientStudies({
   currentDoctorId,
 }: PatientStudiesProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const isMobile = useIsMobile();
-
-  // Estado de paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = isMobile ? 6 : 10;
+  const [typeFilter, setTypeFilter] = useState<string>(ALL_TYPES);
 
   // Check if user is a doctor (can see external studies)
   const isDoctor = userRole.some((role) => role === "Medico");
@@ -200,11 +176,13 @@ export default function PatientStudies({
       estado: lab.estado as "Completado" | "Pendiente" | "En proceso",
     }));
 
-    const allStudies = [...initialStudies, ...labStudies].sort(compareNewestFirst);
+    const allStudies = [...initialStudies, ...labStudies].sort(
+      compareNewestFirst
+    );
 
     // Si no es médico, filtrar los estudios externos y los manuales (sin archivo)
     if (!isDoctor) {
-      return allStudies.filter(study => {
+      return allStudies.filter((study) => {
         // Ocultar estudios externos
         if (study.isExternal) return false;
         // Ocultar estudios manuales (sin archivo PDF)
@@ -238,46 +216,53 @@ export default function PatientStudies({
   // Tab inicial siempre será "Todos" (Estudios Médicos)
   const [activeTab, setActiveTab] = useState<string>("Todos");
 
-  // Filtrar estudios de la categoría activa por búsqueda
-  const filteredStudies = React.useMemo(() => {
-    const categoryStudies =
+  const categoryStudies = React.useMemo(
+    () =>
       activeTab === "tabla-laboratorios"
         ? []
-        : studiesByCategory[activeTab] || [];
+        : studiesByCategory[activeTab] || [],
+    [activeTab, studiesByCategory]
+  );
 
-    if (!searchTerm) return categoryStudies;
+  // Tipos disponibles dentro de la categoría activa, para el filtro por tipo
+  const availableTypes = React.useMemo(
+    () =>
+      Array.from(new Set(categoryStudies.map((study) => study.tipo)))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, "es")),
+    [categoryStudies]
+  );
 
-    return categoryStudies.filter(
-      (study) =>
-        study.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        study.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        study.medico.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [activeTab, studiesByCategory, searchTerm]);
+  // Filtrar por búsqueda y por tipo (se combinan)
+  const filteredStudies = React.useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
-  // Calcular datos paginados (solo para vista mobile)
-  const paginatedStudies = React.useMemo(() => {
-    if (!isMobile) return filteredStudies; // En desktop, DataTable maneja su propia paginación
+    return categoryStudies.filter((study) => {
+      if (typeFilter !== ALL_TYPES && study.tipo !== typeFilter) {
+        return false;
+      }
 
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredStudies.slice(startIndex, endIndex);
-  }, [filteredStudies, currentPage, pageSize, isMobile]);
+      if (!normalizedSearch) return true;
 
-  // Calcular total de páginas
-  const totalPages = Math.ceil(filteredStudies.length / pageSize);
+      return (
+        study.tipo.toLowerCase().includes(normalizedSearch) ||
+        study.descripcion.toLowerCase().includes(normalizedSearch) ||
+        study.medico.toLowerCase().includes(normalizedSearch)
+      );
+    });
+  }, [categoryStudies, searchTerm, typeFilter]);
 
-  // Reset a página 1 cuando cambia el filtro, búsqueda o tab
+  const timelineStudies = React.useMemo(
+    () => filteredStudies.map(toTimelineStudy),
+    [filteredStudies]
+  );
+
+  // Si el tipo elegido ya no existe en la categoría activa, volver a "Todos los tipos"
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, searchTerm]);
-
-  // Manejar cambio de página
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    // Scroll al inicio de la lista
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+    if (typeFilter !== ALL_TYPES && !availableTypes.includes(typeFilter)) {
+      setTypeFilter(ALL_TYPES);
+    }
+  }, [availableTypes, typeFilter]);
 
   // Check if user can delete studies
   const canDeleteStudies =
@@ -290,204 +275,147 @@ export default function PatientStudies({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {patient && <PatientInformation patient={patient} />}
 
-      {/* Tabs */}
+      {/* Filtros */}
       <Card>
-          <CardContent className="pt-4 sm:pt-6">
-            <div className="flex flex-col gap-4">
-              {/* Tabs Container - Optimizado para mobile */}
-              <div className="relative -mx-4 sm:mx-0">
-                {/* Scroll Container */}
-                <div
-                  className="flex gap-2 overflow-x-auto px-4 sm:px-0 pb-2 snap-x snap-mandatory scrollbar-hide"
-                  style={{
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    WebkitOverflowScrolling: "touch",
-                  }}
+        <CardContent className="pt-4 sm:pt-6">
+          {/* Chips de categoría con contador: envuelven, no scrollean de costado */}
+          <div className="flex flex-wrap gap-2">
+            {STUDY_CATEGORIES.map((category) => {
+              const count = studiesByCategory[category.key]?.length || 0;
+              const Icon = category.icon;
+
+              // Ocultar categorías con 0 estudios, excepto "Todos"
+              if (count === 0 && category.key !== "Todos") return null;
+
+              return (
+                <Button
+                  key={category.key}
+                  variant={activeTab === category.key ? "default" : "outline"}
+                  onClick={() => setActiveTab(category.key)}
+                  size="sm"
+                  className={`max-w-full ${
+                    activeTab === category.key ? "text-white" : ""
+                  }`}
+                  style={
+                    activeTab === category.key
+                      ? { backgroundColor: "#187B80" }
+                      : {}
+                  }
                 >
-                  {STUDY_CATEGORIES.map((category) => {
-                    const count = studiesByCategory[category.key]?.length || 0;
-                    const Icon = category.icon;
+                  <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{category.label}</span>
+                  <span className="ml-2 flex-shrink-0 text-xs opacity-80">
+                    {count}
+                  </span>
+                </Button>
+              );
+            })}
 
-                    // Ocultar categorías con 0 estudios, excepto "Todos"
-                    if (count === 0 && category.key !== "Todos") return null;
+            {/* Tabla de Laboratorios para Médicos */}
+            {labTableComponent && userRole.includes("Medico") && (
+              <Button
+                variant={
+                  activeTab === "tabla-laboratorios" ? "default" : "outline"
+                }
+                onClick={() => setActiveTab("tabla-laboratorios")}
+                size="sm"
+                className={`max-w-full ${
+                  activeTab === "tabla-laboratorios" ? "text-white" : ""
+                }`}
+                style={
+                  activeTab === "tabla-laboratorios"
+                    ? { backgroundColor: "#187B80" }
+                    : {}
+                }
+              >
+                <Activity className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Tabla de Laboratorios</span>
+              </Button>
+            )}
+          </div>
 
-                    return (
-                      <Button
-                        key={category.key}
-                        variant={
-                          activeTab === category.key ? "default" : "outline"
-                        }
-                        onClick={() => setActiveTab(category.key)}
-                        className={`whitespace-nowrap snap-start flex-shrink-0 ${
-                          activeTab === category.key ? "text-white" : ""
-                        } ${isMobile ? "min-w-[140px] justify-start" : ""}`}
-                        size={isMobile ? "sm" : "default"}
-                        style={
-                          activeTab === category.key
-                            ? { backgroundColor: "#187B80" }
-                            : {}
-                        }
-                      >
-                        <Icon className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} mr-2 flex-shrink-0`} />
-                        <span className="truncate">
-                          {isMobile
-                            ? category.label.length > 12
-                              ? category.label.substring(0, 10) + "..."
-                              : category.label
-                            : category.label}
-                        </span>
-                      </Button>
-                    );
-                  })}
-                  {/* Tabla de Laboratorios para Médicos */}
-                  {labTableComponent && userRole.includes("Medico") && (
-                    <Button
-                      variant={
-                        activeTab === "tabla-laboratorios"
-                          ? "default"
-                          : "outline"
-                      }
-                      onClick={() => setActiveTab("tabla-laboratorios")}
-                      className={`whitespace-nowrap snap-start flex-shrink-0 ${
-                        activeTab === "tabla-laboratorios" ? "text-white" : ""
-                      } ${isMobile ? "min-w-[140px] justify-start" : ""}`}
-                      size={isMobile ? "sm" : "default"}
-                      style={
-                        activeTab === "tabla-laboratorios"
-                          ? { backgroundColor: "#187B80" }
-                          : {}
-                      }
-                    >
-                      <Activity className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} mr-2 flex-shrink-0`} />
-                      <span className="truncate">
-                        {isMobile ? "Labs" : "Tabla de Laboratorios"}
-                      </span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Barra de búsqueda y botón de agregar estudio */}
-            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center mt-4">
-              {/* Barra de búsqueda - Solo mostrar si no es la tabla de laboratorios */}
-              {activeTab !== "tabla-laboratorios" && (
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 ${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                    <Input
-                      placeholder={isMobile ? "Buscar..." : "Buscar estudios..."}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`${isMobile ? "pl-11 h-11 text-base" : "pl-10"}`}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Add Study Buttons */}
-              {(canAddStudies || isDoctor) && patient && (
-                <div className={`flex gap-2 ${activeTab === "tabla-laboratorios" ? "ml-auto" : ""}`}>
-                  {/* Regular study dialog - Solo Admin y Secretaria */}
-                  {canAddStudies && <StudyDialog idUser={patient.userId} />}
-                  {/* External study dialog - Solo para Médicos */}
-                  {isDoctor && <ExternalStudyDialog idUser={patient.userId} />}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-      {/* Tabla de Estudios / Cards para Mobile */}
-      <Card>
-          <CardHeader>
-            <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-gray-800`}>
-              {activeTab === "tabla-laboratorios"
-                ? `Tabla de Laboratorios Completa`
-                : `${
-                    STUDY_CATEGORIES.find((c) => c.key === activeTab)?.label ||
-                    "Estudios"
-                  } (${filteredStudies.length})`}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {activeTab === "tabla-laboratorios" ? (
-              // Tabla de Laboratorios completa para médicos
-              <div className="mt-4">{labTableComponent}</div>
-            ) : isMobile ? (
-              // Vista de Cards para Mobile con Paginación
+          {/* Buscador, filtro por tipo y botones de carga */}
+          <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+            {activeTab !== "tabla-laboratorios" && (
               <>
-                <div className="space-y-4">
-                  {paginatedStudies.length > 0 ? (
-                    paginatedStudies.map((study) => (
-                      <StudyCard
-                        key={study.id}
-                        id={study.id}
-                        tipo={study.tipo}
-                        categoria={study.categoria}
-                        descripcion={study.descripcion}
-                        fecha={study.fecha}
-                        medico={study.medico}
-                        archivo={study.archivo}
-                        signedUrl={study.signedUrl}
-                        estado={study.estado}
-                        canDelete={canDeleteStudies}
-                        patientId={patientData.id}
-                        isExternal={study.isExternal}
-                        externalInstitution={study.externalInstitution}
-                        signedDoctorId={study.signedDoctorId}
-                        currentDoctorId={currentDoctorId}
-                        studyInstanceUID={study.studyInstanceUID}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <FileText className="h-16 w-16 text-gray-300 mb-4" />
-                      <p className="text-gray-500 text-base font-medium">
-                        No hay estudios disponibles
-                      </p>
-                      <p className="text-gray-400 text-sm mt-2">
-                        {searchTerm
-                          ? "Intenta con otros términos de búsqueda"
-                          : "Los estudios aparecerán aquí cuando estén disponibles"}
-                      </p>
-                    </div>
-                  )}
+                <div className="relative min-w-0 flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+                  <Input
+                    placeholder="Buscar estudio…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10"
+                  />
                 </div>
 
-                {/* Paginación Mobile */}
-                {filteredStudies.length > 0 && (
-                  <MobilePagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={filteredStudies.length}
-                    pageSize={pageSize}
-                    onPageChange={handlePageChange}
-                    isMobile={isMobile}
-                  />
-                )}
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger
+                    className="w-full lg:w-64"
+                    aria-label="Filtrar por tipo de estudio"
+                  >
+                    <SelectValue placeholder="Todos los tipos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_TYPES}>Todos los tipos</SelectItem>
+                    {availableTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </>
-            ) : (
-              // Vista de Tabla para Desktop
-              <div className="overflow-x-auto">
-                <DataTable
-                  columns={createStudiesColumns(
-                    canDeleteStudies,
-                    patientData.id,
-                    currentDoctorId
-                  )}
-                  data={filteredStudies}
-                  showSearch={false}
-                  canAddUser={false}
-                />
+            )}
+
+            {(canAddStudies || isDoctor) && patient && (
+              <div
+                className={`flex flex-wrap gap-2 ${
+                  activeTab === "tabla-laboratorios" ? "lg:ml-auto" : ""
+                }`}
+              >
+                {/* Regular study dialog - Solo Admin y Secretaria */}
+                {canAddStudies && <StudyDialog idUser={patient.userId} />}
+                {/* External study dialog - Solo para Médicos */}
+                {isDoctor && <ExternalStudyDialog idUser={patient.userId} />}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Listado de estudios */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="break-words text-lg font-bold text-gray-800 sm:text-xl">
+            {activeTab === "tabla-laboratorios"
+              ? "Tabla de Laboratorios Completa"
+              : `${
+                  STUDY_CATEGORIES.find((c) => c.key === activeTab)?.label ||
+                  "Estudios"
+                } (${filteredStudies.length})`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activeTab === "tabla-laboratorios" ? (
+            <div className="mt-4">{labTableComponent}</div>
+          ) : (
+            <StudiesTimeline
+              studies={timelineStudies}
+              canDelete={canDeleteStudies}
+              patientId={patientData.id}
+              currentDoctorId={currentDoctorId}
+              emptyDescription={
+                searchTerm || typeFilter !== ALL_TYPES
+                  ? "Probá con otros términos de búsqueda o cambiá el filtro"
+                  : "Los estudios aparecerán acá cuando estén disponibles"
+              }
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
