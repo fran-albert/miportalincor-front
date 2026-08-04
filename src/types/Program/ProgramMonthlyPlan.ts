@@ -28,6 +28,30 @@ export const canSendWhatsappNotice = (
   status === ProgramMonthlyWhatsappStatus.FAILED ||
   status === ProgramMonthlyWhatsappStatus.SKIPPED_NO_PHONE;
 
+export enum ProgramPlanPeriodStatus {
+  ACTIVE = "ACTIVE",
+  NO_PLAN = "NO_PLAN",
+  NOT_YET_VALID = "NOT_YET_VALID",
+  EXPIRED = "EXPIRED",
+}
+
+export enum ProgramQuantitySource {
+  PLAN = "PLAN",
+  NONE = "NONE",
+}
+
+export const ProgramPlanPeriodStatusTitles: Record<
+  ProgramPlanPeriodStatus,
+  string
+> = {
+  [ProgramPlanPeriodStatus.ACTIVE]:
+    "Cantidades sugeridas a partir del plan del paciente",
+  [ProgramPlanPeriodStatus.NO_PLAN]: "El paciente no tiene un plan cargado",
+  [ProgramPlanPeriodStatus.NOT_YET_VALID]:
+    "El plan del paciente todavía no empezó",
+  [ProgramPlanPeriodStatus.EXPIRED]: "El plan del paciente venció",
+};
+
 export interface ProgramMonthlyPlanItem {
   id?: string;
   activityId?: string;
@@ -45,6 +69,10 @@ export interface ProgramMonthlyPlanItem {
   discountAmountCents: string;
   discountedSubtotalCents: string;
   pricingConfigured: boolean;
+  /** De dónde salió la cantidad del mes todavía no guardado */
+  quantitySource?: ProgramQuantitySource;
+  /** Cantidad que daría hoy el plan del paciente para este período */
+  planSuggestedQuantity?: number;
 }
 
 export interface ProgramMonthlyPlan {
@@ -69,6 +97,16 @@ export interface ProgramMonthlyPlan {
   whatsappLastError?: string;
   createdAt?: string;
   updatedAt?: string;
+  /** Situación del plan clínico para este período. Solo viene al pedir un mes puntual. */
+  planStatus?: ProgramPlanPeriodStatus;
+  planStatusMessage?: string;
+  planVersion?: number;
+  planValidFrom?: string;
+  planValidTo?: string;
+  /** Versión del plan con la que se guardó el mes. NULL en los meses viejos. */
+  sourcePlanVersion?: number;
+  /** El plan cambió después de guardar el mes: se avisa, no se sincroniza solo. */
+  planQuantitiesOutdated?: boolean;
   activities: ProgramMonthlyPlanItem[];
 }
 
