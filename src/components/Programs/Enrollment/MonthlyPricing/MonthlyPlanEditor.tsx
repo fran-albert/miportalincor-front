@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Send } from "lucide-react";
+import { AlertTriangle, Info, Send, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,16 @@ export default function MonthlyPlanEditor({
       ])
     )
   );
+  const [coveredQuantities, setCoveredQuantities] = useState<
+    Record<string, string>
+  >(() =>
+    Object.fromEntries(
+      plan.activities.map((activity, index) => [
+        quantityKey(activity.activityId, index),
+        (activity.coveredQuantity ?? 0).toString(),
+      ])
+    )
+  );
   const hasDeletedSnapshot = plan.activities.some(
     (activity) => activity.activityId === undefined
   );
@@ -74,6 +84,31 @@ export default function MonthlyPlanEditor({
   const hasInvalidQuantity = plan.activities.some((activity, index) =>
     !isValidQuantity(quantities[quantityKey(activity.activityId, index)] ?? "")
   );
+  const hasAnyCoverage = plan.activities.some(
+    (activity) => activity.coverageAvailable
+  );
+
+  const coveredQuantityOf = (
+    activityId: string | undefined,
+    index: number
+  ): number => {
+    const activity = plan.activities[index];
+    if (!activity.coverageAvailable) return 0;
+    const raw = coveredQuantities[quantityKey(activityId, index)] ?? "";
+    return isValidQuantity(raw) ? Number(raw) : 0;
+  };
+
+  const quantityOf = (activityId: string | undefined, index: number): number => {
+    const raw = quantities[quantityKey(activityId, index)] ?? "";
+    return isValidQuantity(raw) ? Number(raw) : 0;
+  };
+
+  const hasInvalidCoveredQuantity = plan.activities.some((activity, index) => {
+    if (!activity.coverageAvailable) return false;
+    const raw = coveredQuantities[quantityKey(activity.activityId, index)] ?? "";
+    if (!isValidQuantity(raw)) return true;
+    return Number(raw) > quantityOf(activity.activityId, index);
+  });
 
   const calculation = useMemo(
     () =>
@@ -83,25 +118,42 @@ export default function MonthlyPlanEditor({
           activityName: activity.activityName,
           tariffType: activity.tariffType ?? ProgramTariffType.PER_SESSION,
           unitPriceCents: activity.unitPriceCents ?? "0",
-          quantity: isValidQuantity(
-            quantities[quantityKey(activity.activityId, index)] ?? ""
-          )
-            ? Number(quantities[quantityKey(activity.activityId, index)])
-            : 0,
+          quantity: quantityOf(activity.activityId, index),
+          coveredQuantity: hasInvalidCoveredQuantity
+            ? 0
+            : coveredQuantityOf(activity.activityId, index),
+          coveredUnitPriceCents: activity.coveredUnitPriceCents,
         })),
         plan.discountBasisPoints
       ),
-    [plan.activities, plan.discountBasisPoints, quantities]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      plan.activities,
+      plan.discountBasisPoints,
+      quantities,
+      coveredQuantities,
+      hasInvalidCoveredQuantity,
+    ]
   );
 
   const submit = async () => {
-    if (hasDeletedSnapshot || hasMissingPricing || hasInvalidQuantity) return;
+    if (
+      hasDeletedSnapshot ||
+      hasMissingPricing ||
+      hasInvalidQuantity ||
+      hasInvalidCoveredQuantity
+    ) {
+      return;
+    }
     await onSave({
       activities: plan.activities.map((activity, index) => ({
         activityId: activity.activityId!,
         quantity: Number(
           quantities[quantityKey(activity.activityId, index)]
         ),
+        ...(activity.coverageAvailable
+          ? { coveredQuantity: coveredQuantityOf(activity.activityId, index) }
+          : {}),
       })),
     });
   };
@@ -133,6 +185,35 @@ export default function MonthlyPlanEditor({
         ) : null}
       </div>
 
+      {plan.hasHealthInsurance ? (
+        <Alert className="m-4 border-emerald-200 bg-emerald-50 text-emerald-900 sm:m-5">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertTitle>Obra social: {plan.healthInsuranceName}</AlertTitle>
+          <AlertDescription>
+            {hasAnyCoverage
+              ? "Las sesiones dentro del cupo se facturan al precio con cobertura; el resto va particular."
+              : "Ninguna actividad de este programa tiene cobertura cargada para esta obra social: todo se cobra particular."}
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="m-4 border-amber-200 bg-amber-50 text-amber-900 sm:m-5">
+          <Info className="h-4 w-4" />
+          <AlertTitle>El paciente no tiene obra social cargada</AlertTitle>
+          <AlertDescription>
+            Todas las sesiones se cobran como particulares. Cargá la obra social
+            en la ficha del paciente para aplicar la cobertura.
+          </AlertDescription>
+        </Alert>
+      )}
+      {hasInvalidCoveredQuantity ? (
+        <Alert className="m-4 border-red-200 bg-red-50 text-red-900 sm:m-5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Revisá las sesiones con obra social</AlertTitle>
+          <AlertDescription>
+            No pueden ser más que las sesiones del mes.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {hasMissingPricing ? (
         <Alert className="m-4 border-amber-200 bg-amber-50 text-amber-900 sm:m-5">
           <AlertTriangle className="h-4 w-4" />
@@ -159,7 +240,8 @@ export default function MonthlyPlanEditor({
           <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
             <TableHead className="min-w-44 pl-4 sm:pl-5">Actividad</TableHead>
             <TableHead className="min-w-36">Modalidad</TableHead>
-            <TableHead className="w-32">Cantidad del mes</TableHead>
+            <TableHead className="w-32">Sesiones del mes</TableHead>
+            <TableHead className="w-36">De esas, con obra social</TableHead>
             <TableHead className="whitespace-nowrap text-right">Precio lista</TableHead>
             <TableHead className="whitespace-nowrap text-right">Subtotal lista</TableHead>
             <TableHead className="whitespace-nowrap text-right">Descuento</TableHead>
@@ -172,8 +254,19 @@ export default function MonthlyPlanEditor({
           {plan.activities.map((activity, index) => {
             const key = quantityKey(activity.activityId, index);
             const quantityValue = quantities[key] ?? "";
+            const coveredValue = coveredQuantities[key] ?? "";
             const calculated = calculation.items[index];
             const isZero = quantityValue === "0";
+            const coveredIsInvalid =
+              activity.coverageAvailable &&
+              (!isValidQuantity(coveredValue) ||
+                Number(coveredValue) >
+                  quantityOf(activity.activityId, index));
+            const quotaExceeded =
+              activity.coverageAvailable &&
+              !coveredIsInvalid &&
+              activity.coveredSessionsPerMonth !== undefined &&
+              Number(coveredValue) > activity.coveredSessionsPerMonth;
             const pricingReady =
               activity.pricingConfigured &&
               activity.tariffType !== undefined &&
@@ -212,21 +305,68 @@ export default function MonthlyPlanEditor({
                     className="w-24 tabular-nums"
                   />
                 </TableCell>
+                <TableCell>
+                  {activity.coverageAvailable ? (
+                    <>
+                      <Input
+                        aria-label={`Sesiones con obra social de ${activity.activityName}`}
+                        value={coveredValue}
+                        onChange={(event) =>
+                          setCoveredQuantities((current) => ({
+                            ...current,
+                            [key]: event.target.value,
+                          }))
+                        }
+                        inputMode="numeric"
+                        min={0}
+                        step={1}
+                        disabled={hasDeletedSnapshot}
+                        aria-invalid={coveredIsInvalid}
+                        className="w-24 tabular-nums"
+                      />
+                      {activity.coveredSessionsPerMonth !== undefined ? (
+                        <span className="mt-0.5 block text-xs text-slate-500">
+                          Cupo {activity.coveredSessionsPerMonth}/mes
+                        </span>
+                      ) : null}
+                      {quotaExceeded ? (
+                        <span className="mt-0.5 block text-xs font-medium text-amber-700">
+                          Supera el cupo
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-400">Sin cobertura</span>
+                  )}
+                </TableCell>
                 <TableCell className="whitespace-nowrap text-right tabular-nums">
                   {pricingReady
                     ? formatCentsToArs(activity.unitPriceCents!)
                     : "—"}
+                  {activity.coverageAvailable && activity.coveredUnitPriceCents ? (
+                    <span className="mt-0.5 block text-xs text-emerald-700">
+                      OS {formatCentsToArs(activity.coveredUnitPriceCents)}
+                    </span>
+                  ) : null}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-right tabular-nums">
                   {pricingReady
                     ? formatCentsToArs(calculated.listSubtotalCents)
                     : "—"}
+                  {pricingReady && calculated.coveredQuantity > 0 ? (
+                    <span className="mt-0.5 block whitespace-nowrap text-xs text-slate-500">
+                      {calculated.coveredQuantity} con obra social ×{" "}
+                      {formatCentsToArs(activity.coveredUnitPriceCents!)} +{" "}
+                      {calculated.privateQuantity} particulares ×{" "}
+                      {formatCentsToArs(activity.unitPriceCents!)}
+                    </span>
+                  ) : null}
                 </TableCell>
                 <TableCell className="whitespace-nowrap text-right tabular-nums">
                   {pricingReady ? (
                     <>
                       <span className="block text-xs text-slate-500">
-                        {plan.discountPercent}%
+                        {calculated.discountBasisPoints / 100}%
                       </span>
                       − {formatCentsToArs(calculated.discountAmountCents)}
                     </>
@@ -245,7 +385,7 @@ export default function MonthlyPlanEditor({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={4} className="pl-4 font-semibold sm:pl-5">
+            <TableCell colSpan={5} className="pl-4 font-semibold sm:pl-5">
               Total del mes
             </TableCell>
             <TableCell className="whitespace-nowrap text-right tabular-nums">
@@ -287,6 +427,7 @@ export default function MonthlyPlanEditor({
               hasDeletedSnapshot ||
               hasMissingPricing ||
               hasInvalidQuantity ||
+              hasInvalidCoveredQuantity ||
               isSaving
             }
           >

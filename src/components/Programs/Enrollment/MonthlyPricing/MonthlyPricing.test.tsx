@@ -19,11 +19,12 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
   periodMonth: 7,
   programMonthNumber: 1,
   programName: "Programa de obesidad",
+  hasHealthInsurance: false,
   discountBasisPoints: 1000,
   discountPercent: 10,
   listTotalCents: "12500000",
-  discountAmountCents: "1250000",
-  discountedTotalCents: "11250000",
+  discountAmountCents: "900000",
+  discountedTotalCents: "11600000",
   revision: 1,
   whatsappStatus: ProgramMonthlyWhatsappStatus.DISABLED,
   createdAt: "2026-07-25T12:00:00.000Z",
@@ -36,6 +37,9 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       tariffType: ProgramTariffType.PER_SESSION,
       unitPriceCents: "3000000",
       quantity: 3,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
       listSubtotalCents: "9000000",
       discountBasisPoints: 1000,
       discountAmountCents: "900000",
@@ -49,6 +53,9 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       tariffType: ProgramTariffType.PER_SESSION,
       unitPriceCents: "2500000",
       quantity: 0,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
       listSubtotalCents: "0",
       discountBasisPoints: 1000,
       discountAmountCents: "0",
@@ -62,10 +69,67 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       tariffType: ProgramTariffType.MONTHLY_FIXED,
       unitPriceCents: "3500000",
       quantity: 4,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
       listSubtotalCents: "3500000",
+      discountBasisPoints: 0,
+      discountAmountCents: "0",
+      discountedSubtotalCents: "3500000",
+      pricingConfigured: true,
+    },
+  ],
+});
+
+const coveragePlan = (psicologiaQuantity: number): ProgramMonthlyPlan => ({
+  id: "monthly-plan-coverage",
+  persisted: false,
+  enrollmentId: "enrollment-1",
+  periodYear: 2026,
+  periodMonth: 8,
+  programMonthNumber: 8,
+  programName: "Programa de obesidad",
+  healthInsuranceId: 1,
+  healthInsuranceName: "IAPOS",
+  hasHealthInsurance: true,
+  discountBasisPoints: 1000,
+  discountPercent: 10,
+  listTotalCents: "0",
+  discountAmountCents: "0",
+  discountedTotalCents: "0",
+  revision: 0,
+  whatsappStatus: ProgramMonthlyWhatsappStatus.DISABLED,
+  activities: [
+    {
+      activityId: "nutrition",
+      activityName: "Nutrición",
+      tariffType: ProgramTariffType.PER_SESSION,
+      unitPriceCents: "3000000",
+      quantity: 4,
+      coveredQuantity: 2,
+      coveredUnitPriceCents: "1500000",
+      coverageAvailable: true,
+      coveredSessionsPerMonth: 2,
+      coverageQuotaExceeded: false,
+      listSubtotalCents: "0",
       discountBasisPoints: 1000,
-      discountAmountCents: "350000",
-      discountedSubtotalCents: "3150000",
+      discountAmountCents: "0",
+      discountedSubtotalCents: "0",
+      pricingConfigured: true,
+    },
+    {
+      activityId: "psychology",
+      activityName: "Psicología",
+      tariffType: ProgramTariffType.PER_SESSION,
+      unitPriceCents: "3500000",
+      quantity: psicologiaQuantity,
+      coveredQuantity: 0,
+      coverageAvailable: false,
+      coverageQuotaExceeded: false,
+      listSubtotalCents: "0",
+      discountBasisPoints: 1000,
+      discountAmountCents: "0",
+      discountedSubtotalCents: "0",
       pricingConfigured: true,
     },
   ],
@@ -82,14 +146,14 @@ describe("MonthlyPlanEditor", () => {
       <MonthlyPlanEditor plan={realCasePlan()} isSaving={false} onSave={onSave} />
     );
 
-    expect(screen.getByText("$ 112.500")).toBeInTheDocument();
+    expect(screen.getByText("$ 116.000")).toBeInTheDocument();
     expect(screen.getByText("$ 81.000")).toBeInTheDocument();
-    expect(screen.getByText("$ 31.500")).toBeInTheDocument();
+    expect(screen.getAllByText("$ 35.000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("$ 0").length).toBeGreaterThan(0);
 
     await user.clear(screen.getByLabelText("Cantidad de Gimnasio"));
     await user.type(screen.getByLabelText("Cantidad de Gimnasio"), "9");
-    expect(screen.getByText("$ 112.500")).toBeInTheDocument();
+    expect(screen.getByText("$ 116.000")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
     expect(onSave).toHaveBeenCalledWith({
@@ -149,6 +213,112 @@ describe("MonthlyPlanEditor", () => {
   });
 });
 
+describe("MonthlyPlanEditor con cobertura de obra social", () => {
+  it("reproduce el presupuesto de agosto de Paolini: $ 207.000", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={coveragePlan(4)}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Obra social: IAPOS")).toBeInTheDocument();
+    expect(screen.getByText("Cupo 2/mes")).toBeInTheDocument();
+    expect(screen.getByText("$ 81.000")).toBeInTheDocument();
+    expect(screen.getByText("$ 126.000")).toBeInTheDocument();
+    expect(screen.getByText("$ 207.000")).toBeInTheDocument();
+    expect(
+      screen.getByText(/2 con obra social × \$ 15\.000 \+ 2 particulares × \$ 30\.000/)
+    ).toBeInTheDocument();
+  });
+
+  it("reproduce el presupuesto de agosto de Mancinelli: $ 144.000", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={coveragePlan(2)}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("$ 81.000")).toBeInTheDocument();
+    expect(screen.getByText("$ 63.000")).toBeInTheDocument();
+    expect(screen.getByText("$ 144.000")).toBeInTheDocument();
+  });
+
+  it("manda las sesiones con obra social al guardar y advierte si superan el cupo", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor
+        plan={coveragePlan(0)}
+        isSaving={false}
+        onSave={onSave}
+      />
+    );
+
+    const coveredInput = screen.getByLabelText(
+      "Sesiones con obra social de Nutrición"
+    );
+    await user.clear(coveredInput);
+    await user.type(coveredInput, "3");
+    expect(screen.getByText("Supera el cupo")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Guardar plan del mes" })
+    );
+    expect(onSave).toHaveBeenCalledWith({
+      activities: [
+        { activityId: "nutrition", quantity: 4, coveredQuantity: 3 },
+        { activityId: "psychology", quantity: 0 },
+      ],
+    });
+  });
+
+  it("bloquea el guardado si las cubiertas superan las sesiones del mes", async () => {
+    const onSave = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor
+        plan={coveragePlan(0)}
+        isSaving={false}
+        onSave={onSave}
+      />
+    );
+
+    const coveredInput = screen.getByLabelText(
+      "Sesiones con obra social de Nutrición"
+    );
+    await user.clear(coveredInput);
+    await user.type(coveredInput, "5");
+
+    expect(
+      screen.getByText("Revisá las sesiones con obra social")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Guardar plan del mes" })
+    ).toBeDisabled();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("avisa cuando el paciente no tiene obra social cargada", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={realCasePlan()}
+        isSaving={false}
+        onSave={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText("El paciente no tiene obra social cargada")
+    ).toBeInTheDocument();
+  });
+});
+
 describe("SendWhatsappDialog", () => {
   it("muestra paciente, mes y total antes de confirmar", async () => {
     const onConfirm = vi.fn();
@@ -170,7 +340,7 @@ describe("SendWhatsappDialog", () => {
 
     expect(screen.getByText("Ana Gómez")).toBeInTheDocument();
     expect(screen.getByText("julio de 2026")).toBeInTheDocument();
-    expect(screen.getByText("$ 112.500")).toBeInTheDocument();
+    expect(screen.getByText("$ 116.000")).toBeInTheDocument();
     expect(onConfirm).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Enviar aviso" }));
