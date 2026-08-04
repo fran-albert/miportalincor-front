@@ -2,6 +2,7 @@ import { ProgramTariffType } from "./ProgramActivity";
 
 export enum ProgramMonthlyWhatsappStatus {
   DISABLED = "DISABLED",
+  NOT_REQUESTED = "NOT_REQUESTED",
   PENDING = "PENDING",
   SENT = "SENT",
   FAILED = "FAILED",
@@ -13,11 +14,19 @@ export const ProgramMonthlyWhatsappStatusLabels: Record<
   string
 > = {
   [ProgramMonthlyWhatsappStatus.DISABLED]: "Desactivado",
+  [ProgramMonthlyWhatsappStatus.NOT_REQUESTED]: "Sin enviar",
   [ProgramMonthlyWhatsappStatus.PENDING]: "Pendiente",
   [ProgramMonthlyWhatsappStatus.SENT]: "Enviado",
   [ProgramMonthlyWhatsappStatus.FAILED]: "Falló",
   [ProgramMonthlyWhatsappStatus.SKIPPED_NO_PHONE]: "Sin teléfono",
 };
+
+export const canSendWhatsappNotice = (
+  status: ProgramMonthlyWhatsappStatus
+): boolean =>
+  status === ProgramMonthlyWhatsappStatus.NOT_REQUESTED ||
+  status === ProgramMonthlyWhatsappStatus.FAILED ||
+  status === ProgramMonthlyWhatsappStatus.SKIPPED_NO_PHONE;
 
 export interface ProgramMonthlyPlanItem {
   id?: string;

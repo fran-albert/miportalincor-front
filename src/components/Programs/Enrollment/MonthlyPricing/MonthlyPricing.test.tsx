@@ -9,6 +9,7 @@ import {
 } from "@/types/Program/ProgramMonthlyPlan";
 import MonthlyPlanEditor from "./MonthlyPlanEditor";
 import MonthlyPlanHistory from "./MonthlyPlanHistory";
+import SendWhatsappDialog from "./SendWhatsappDialog";
 
 const realCasePlan = (): ProgramMonthlyPlan => ({
   id: "monthly-plan-1",
@@ -99,10 +100,101 @@ describe("MonthlyPlanEditor", () => {
       ],
     });
   });
+
+  it("ofrece enviar el aviso cuando el plan quedó sin enviar y no lo dispara al guardar", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const onSendWhatsapp = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor
+        plan={{
+          ...realCasePlan(),
+          whatsappStatus: ProgramMonthlyWhatsappStatus.NOT_REQUESTED,
+        }}
+        isSaving={false}
+        onSave={onSave}
+        onSendWhatsapp={onSendWhatsapp}
+      />
+    );
+
+    expect(screen.getByText("Sin enviar")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSendWhatsapp).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: "Enviar aviso al paciente" })
+    );
+    expect(onSendWhatsapp).toHaveBeenCalledTimes(1);
+  });
+
+  it("no ofrece el envío cuando el aviso ya salió", () => {
+    render(
+      <MonthlyPlanEditor
+        plan={{
+          ...realCasePlan(),
+          whatsappStatus: ProgramMonthlyWhatsappStatus.SENT,
+        }}
+        isSaving={false}
+        onSave={vi.fn()}
+        onSendWhatsapp={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Enviar aviso al paciente" })
+    ).toBeNull();
+  });
+});
+
+describe("SendWhatsappDialog", () => {
+  it("muestra paciente, mes y total antes de confirmar", async () => {
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <SendWhatsappDialog
+        plan={{
+          ...realCasePlan(),
+          whatsappStatus: ProgramMonthlyWhatsappStatus.NOT_REQUESTED,
+        }}
+        patientName="Ana Gómez"
+        isSending={false}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+      />
+    );
+
+    expect(screen.getByText("Ana Gómez")).toBeInTheDocument();
+    expect(screen.getByText("julio de 2026")).toBeInTheDocument();
+    expect(screen.getByText("$ 112.500")).toBeInTheDocument();
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Enviar aviso" }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("no se muestra si no hay plan elegido", () => {
+    render(
+      <SendWhatsappDialog
+        patientName="Ana Gómez"
+        isSending={false}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Enviar aviso" })
+    ).toBeNull();
+  });
 });
 
 describe("MonthlyPlanHistory", () => {
-  it("muestra todos los estados y ofrece retry sólo cuando corresponde", async () => {
+  it("muestra todos los estados y ofrece el envío sólo cuando corresponde", async () => {
     const statuses = Object.values(ProgramMonthlyWhatsappStatus);
     const plans = statuses.map((status, index) => ({
       ...realCasePlan(),
@@ -110,32 +202,45 @@ describe("MonthlyPlanHistory", () => {
       periodMonth: index + 1,
       whatsappStatus: status,
     }));
-    const onRetry = vi.fn().mockResolvedValue(undefined);
+    const onSendWhatsapp = vi.fn();
     const user = userEvent.setup();
 
     render(
       <MonthlyPlanHistory
         plans={plans}
         isLoading={false}
-        onRetry={onRetry}
+        onSendWhatsapp={onSendWhatsapp}
       />
     );
 
+    expect(screen.getByText("Sin enviar")).toBeInTheDocument();
     expect(screen.getByText("Enviado")).toBeInTheDocument();
     expect(screen.getByText("Pendiente")).toBeInTheDocument();
     expect(screen.getByText("Falló")).toBeInTheDocument();
     expect(screen.getByText("Sin teléfono")).toBeInTheDocument();
     expect(screen.getByText("Desactivado")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /abril de 2026/i }));
+    await user.click(screen.getByRole("button", { name: /febrero de 2026/i }));
+    await user.click(
+      screen.getByRole("button", { name: "Enviar aviso al paciente" })
+    );
+    expect(onSendWhatsapp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whatsappStatus: ProgramMonthlyWhatsappStatus.NOT_REQUESTED,
+      })
+    );
+
+    await user.click(screen.getByRole("button", { name: /mayo de 2026/i }));
     await user.click(screen.getByRole("button", { name: "Reintentar aviso" }));
-    expect(onRetry).toHaveBeenCalledWith(
+    expect(onSendWhatsapp).toHaveBeenCalledWith(
       expect.objectContaining({
         whatsappStatus: ProgramMonthlyWhatsappStatus.FAILED,
       })
     );
 
-    await user.click(screen.getByRole("button", { name: /marzo de 2026/i }));
-    expect(screen.queryByRole("button", { name: "Reintentar aviso" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /abril de 2026/i }));
+    expect(
+      screen.queryByRole("button", { name: /aviso/i })
+    ).toBeNull();
   });
 });

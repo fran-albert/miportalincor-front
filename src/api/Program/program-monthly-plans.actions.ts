@@ -40,13 +40,13 @@ export const upsertProgramMonthlyPlan = async (
   return validateProgramMonthlyPlanMoney(data);
 };
 
-export const retryProgramMonthlyPlanWhatsapp = async (
+export const sendProgramMonthlyPlanWhatsapp = async (
   enrollmentId: string,
   year: number,
   month: number
 ): Promise<ProgramMonthlyPlan> => {
   const { data } = await apiIncorHC.post<ProgramMonthlyPlan>(
-    `/enrollments/${enrollmentId}/monthly-plans/${year}/${month}/whatsapp/retry`
+    `/enrollments/${enrollmentId}/monthly-plans/${year}/${month}/whatsapp`
   );
   return validateProgramMonthlyPlanMoney(data);
 };
