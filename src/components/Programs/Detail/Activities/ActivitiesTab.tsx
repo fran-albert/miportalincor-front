@@ -8,6 +8,7 @@ import { getActivityColumns } from "./columns";
 import CreateActivityDialog from "./CreateActivityDialog";
 import EditActivityDialog from "./EditActivityDialog";
 import ProgramPricingSettings from "./ProgramPricingSettings";
+import ProgramCoverageSettings from "./ProgramCoverageSettings";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
 
 interface ActivitiesTabProps {
@@ -53,6 +54,10 @@ export default function ActivitiesTab({ programId }: ActivitiesTabProps) {
   return (
     <div className="space-y-4">
       <ProgramPricingSettings
+        programId={programId}
+        canManage={canManageActivities}
+      />
+      <ProgramCoverageSettings
         programId={programId}
         canManage={canManageActivities}
       />

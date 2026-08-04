@@ -35,6 +35,11 @@ export interface ProgramMonthlyPlanItem {
   tariffType?: ProgramTariffType;
   unitPriceCents?: string;
   quantity: number;
+  coveredQuantity: number;
+  coveredUnitPriceCents?: string;
+  coverageAvailable: boolean;
+  coveredSessionsPerMonth?: number;
+  coverageQuotaExceeded: boolean;
   listSubtotalCents: string;
   discountBasisPoints: number;
   discountAmountCents: string;
@@ -50,6 +55,9 @@ export interface ProgramMonthlyPlan {
   periodMonth: number;
   programMonthNumber: number;
   programName: string;
+  healthInsuranceId?: number;
+  healthInsuranceName?: string;
+  hasHealthInsurance: boolean;
   discountBasisPoints: number;
   discountPercent: number;
   listTotalCents: string;
@@ -67,6 +75,7 @@ export interface ProgramMonthlyPlan {
 export interface MonthlyPlanActivityQuantity {
   activityId: string;
   quantity: number;
+  coveredQuantity?: number;
 }
 
 export interface UpsertProgramMonthlyPlanDto {

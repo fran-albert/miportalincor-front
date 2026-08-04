@@ -68,10 +68,14 @@ export interface ProgramPricingCalculationInput {
   tariffType: ProgramTariffType;
   unitPriceCents: string;
   quantity: number;
+  coveredQuantity?: number;
+  coveredUnitPriceCents?: string;
 }
 
 export interface ProgramPricingCalculatedItem
   extends ProgramPricingCalculationInput {
+  coveredQuantity: number;
+  privateQuantity: number;
   listSubtotalCents: string;
   discountBasisPoints: number;
   discountAmountCents: string;
@@ -84,6 +88,34 @@ export interface ProgramPricingCalculation {
   discountAmountCents: string;
   discountedTotalCents: string;
 }
+
+const resolveCoveredQuantity = (
+  input: ProgramPricingCalculationInput
+): number => {
+  const coveredQuantity = input.coveredQuantity ?? 0;
+  if (!Number.isInteger(coveredQuantity) || coveredQuantity < 0) {
+    throw new Error(
+      `Las sesiones con cobertura de ${input.activityName} no son válidas`
+    );
+  }
+  if (coveredQuantity > input.quantity) {
+    throw new Error(
+      `Las sesiones con cobertura de ${input.activityName} no pueden superar las sesiones del mes`
+    );
+  }
+  if (coveredQuantity === 0) return 0;
+  if (input.tariffType !== ProgramTariffType.PER_SESSION) {
+    throw new Error(
+      `${input.activityName} se cobra como mensualidad fija y no admite cobertura por sesión`
+    );
+  }
+  if (input.coveredUnitPriceCents === undefined) {
+    throw new Error(
+      `${input.activityName} no tiene un precio con cobertura configurado`
+    );
+  }
+  return coveredQuantity;
+};
 
 export const calculateProgramPricing = (
   inputs: ProgramPricingCalculationInput[],
@@ -105,22 +137,39 @@ export const calculateProgramPricing = (
       input.unitPriceCents,
       `Precio de ${input.activityName}`
     );
+    const coveredQuantity = resolveCoveredQuantity(input);
+    const privateQuantity = input.quantity - coveredQuantity;
+    const coveredUnitPriceCents =
+      input.coveredUnitPriceCents === undefined
+        ? 0n
+        : parseCents(
+            input.coveredUnitPriceCents,
+            `Precio con cobertura de ${input.activityName}`
+          );
     const listSubtotalCents =
       input.tariffType === ProgramTariffType.PER_SESSION
-        ? unitPriceCents * BigInt(input.quantity)
+        ? coveredUnitPriceCents * BigInt(coveredQuantity) +
+          unitPriceCents * BigInt(privateQuantity)
         : input.quantity === 0
           ? 0n
           : unitPriceCents;
     if (listSubtotalCents > MAX_UNSIGNED_BIGINT) {
       throw new Error(`El subtotal de ${input.activityName} excede el máximo admitido`);
     }
+    const effectiveDiscountBasisPoints =
+      input.tariffType === ProgramTariffType.MONTHLY_FIXED
+        ? 0
+        : discountBasisPoints;
     const discountAmountCents =
-      (listSubtotalCents * BigInt(discountBasisPoints) + 5_000n) / 10_000n;
+      (listSubtotalCents * BigInt(effectiveDiscountBasisPoints) + 5_000n) /
+      10_000n;
 
     return {
       ...input,
+      coveredQuantity,
+      privateQuantity,
       listSubtotalCents: listSubtotalCents.toString(),
-      discountBasisPoints,
+      discountBasisPoints: effectiveDiscountBasisPoints,
       discountAmountCents: discountAmountCents.toString(),
       discountedSubtotalCents: (
         listSubtotalCents - discountAmountCents
@@ -161,6 +210,12 @@ const validateMonthlyPlanItemMoney = (
 ): void => {
   if (item.unitPriceCents !== undefined) {
     parseCents(item.unitPriceCents, `Precio de ${item.activityName}`);
+  }
+  if (item.coveredUnitPriceCents !== undefined) {
+    parseCents(
+      item.coveredUnitPriceCents,
+      `Precio con cobertura de ${item.activityName}`
+    );
   }
   parseCents(item.listSubtotalCents, `Subtotal de ${item.activityName}`);
   parseCents(item.discountAmountCents, `Descuento de ${item.activityName}`);
