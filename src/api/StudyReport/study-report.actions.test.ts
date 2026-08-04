@@ -16,6 +16,8 @@ vi.mock("@/services/axiosConfig", () => ({
 import {
   addStudyReportAddendum,
   discardStudyReport,
+  getMyStudyReportTemplate,
+  getMyStudyReportTemplates,
   getMyStudyReports,
   getStudyReportAccess,
   getStudyReportInboxImagePreview,
@@ -159,5 +161,64 @@ describe("study report actions", () => {
 
     await expect(discardStudyReport("report-1")).resolves.toBeUndefined();
     expect(mockDelete).toHaveBeenCalledWith("/study-reports/report-1");
+  });
+
+  describe("mis plantillas (solo lectura)", () => {
+    it("pide el listado del profesional autenticado, sin doctorId", async () => {
+      const templates = [
+        {
+          templateKey: "abdominal-ultrasound",
+          label: "Ecografía de abdomen",
+          hasTemplate: true,
+        },
+      ];
+      mockGet.mockResolvedValue({ data: templates });
+
+      await expect(getMyStudyReportTemplates()).resolves.toEqual(templates);
+
+      expect(mockGet).toHaveBeenCalledWith("/study-reports/my-templates");
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      const [url, config] = mockGet.mock.calls[0];
+      expect(url).not.toContain("doctorId");
+      expect(config).toBeUndefined();
+    });
+
+    it("pide el detalle por templateKey escapando la clave", async () => {
+      const detail = {
+        templateKey: "abdominal-ultrasound",
+        label: "Ecografía de abdomen",
+        hasTemplate: true,
+        fields: [
+          {
+            key: "liver",
+            label: "Hígado",
+            type: "text",
+            text: "El hígado es de tamaño normal…",
+          },
+        ],
+      };
+      mockGet.mockResolvedValue({ data: detail });
+
+      await expect(
+        getMyStudyReportTemplate("abdominal ultrasound"),
+      ).resolves.toEqual(detail);
+
+      expect(mockGet).toHaveBeenCalledWith(
+        "/study-reports/my-templates/abdominal%20ultrasound",
+      );
+    });
+
+    it("no existe ninguna acción de escritura de plantillas", async () => {
+      const actions = await import("./study-report.actions");
+      const writeVerbs = Object.keys(actions).filter(
+        (name) =>
+          /template/i.test(name) &&
+          /^(create|update|save|delete|remove|upsert|patch|clone|restore|reset|hide)/i.test(
+            name,
+          ),
+      );
+
+      expect(writeVerbs).toEqual([]);
+    });
   });
 });

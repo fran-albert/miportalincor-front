@@ -7,22 +7,31 @@ import {
   MyPrescriptionSettings,
   MyAvailabilitiesEditable,
   MyAbsencesEditable,
-  MyScheduleExceptions
+  MyScheduleExceptions,
+  MyStudyReportTemplates
 } from "@/components/MySettings";
 import {
   DoctorOwnConsultationTypesCard,
 } from "@/components/DoctorConsultationTypeSettings";
 import { DoctorScheduleExceptionSection } from "@/components/DoctorScheduleException/DoctorScheduleExceptionSection";
-import { Settings, Calendar, CalendarOff, CalendarRange, FileText, Stethoscope } from "lucide-react";
+import { Settings, Calendar, CalendarOff, CalendarRange, FileText, Stethoscope, ClipboardList } from "lucide-react";
 import useUserRole from "@/hooks/useRoles";
 import { useMyGreenCardServiceEnabled } from "@/hooks/Doctor-Services/useDoctorServices";
 import { useCanSelfManageSchedule } from "@/hooks/DoctorBookingSettings";
+import { useStudyReportAccess } from "@/hooks/StudyReport/useStudyReportAccess";
 
 export default function MySettingsPage() {
-  const { session } = useUserRole();
+  const { session, isDoctor } = useUserRole();
   const doctorId = typeof session?.id === 'string' ? parseInt(session.id, 10) : (session?.id ?? 0);
   const { isServiceEnabled: hasGreenCardService } = useMyGreenCardServiceEnabled();
   const { canSelfManage } = useCanSelfManageSchedule();
+  // Mis plantillas se muestra a quienes informan estudios: mismo flag que habilita
+  // "Mis estudios por informar" en el sidebar.
+  const { data: studyReportAccess } = useStudyReportAccess({
+    doctorUserId: session?.id,
+    enabled: isDoctor,
+  });
+  const canSeeStudyReportTemplates = studyReportAccess?.enabled === true;
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
@@ -43,7 +52,9 @@ export default function MySettingsPage() {
       />
 
       <Tabs defaultValue="availabilities" className="w-full">
-        <TabsList>
+        {/* h-auto + flex-wrap: con 6 pestañas la lista no entra en un celular y
+            sin esto empujaría el ancho de la página (scroll lateral). */}
+        <TabsList className="h-auto max-w-full flex-wrap justify-start">
           <TabsTrigger value="availabilities" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Mis Horarios
@@ -60,6 +71,12 @@ export default function MySettingsPage() {
             <Stethoscope className="h-4 w-4" />
             Tipos de turno
           </TabsTrigger>
+          {canSeeStudyReportTemplates && (
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Mis plantillas
+            </TabsTrigger>
+          )}
           {hasGreenCardService && (
             <TabsTrigger value="prescriptions" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -98,6 +115,12 @@ export default function MySettingsPage() {
             readOnly={!canSelfManage}
           />
         </TabsContent>
+
+        {canSeeStudyReportTemplates && (
+          <TabsContent value="templates" className="mt-6">
+            <MyStudyReportTemplates />
+          </TabsContent>
+        )}
 
         {hasGreenCardService && (
           <TabsContent value="prescriptions" className="mt-6">
