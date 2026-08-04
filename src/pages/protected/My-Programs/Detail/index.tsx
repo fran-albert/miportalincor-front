@@ -24,7 +24,10 @@ import {
   EnrollmentStatusColors,
   EnrollmentStatusLabels,
 } from "@/types/Program/ProgramEnrollment";
-import { AttendanceMethodLabels } from "@/types/Program/Attendance";
+import {
+  AttendanceMethod,
+  AttendanceMethodLabels,
+} from "@/types/Program/Attendance";
 import { formatScheduleLong } from "@/common/helpers/plan-schedule.helpers";
 
 const getComplianceTone = (value: number) => {
@@ -343,7 +346,7 @@ const MyEnrollmentDetailPage = () => {
                   <Badge
                     variant="outline"
                     className={
-                      record.method === "QR"
+                      record.method === AttendanceMethod.QR_SCAN
                         ? "w-fit border-greenPrimary/20 bg-greenPrimary/5 text-greenPrimary"
                         : "w-fit border-slate-200 bg-slate-50 text-slate-700"
                     }
