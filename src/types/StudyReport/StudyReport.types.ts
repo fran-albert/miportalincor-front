@@ -9,3 +9,32 @@ export interface StudyReportListItem { sourceInboxItemId: string; report: StudyR
 
 export interface StudyReportSplitGroup { assignedInstanceIds: string[]; templateKey: string; label: string; }
 export interface StudyReportViewerSession { viewerPath: string; expiresInSeconds: number; }
+
+/**
+ * "Mis plantillas": las plantillas de informe del profesional autenticado.
+ *
+ * Toda plantilla tiene dueño: no existe "la plantilla del sistema". El backend
+ * resuelve el dueño desde el token, por eso ningún tipo de acá lleva `doctorId`.
+ * La v1 es de SOLO LECTURA: no hay tipos de creación/edición a propósito.
+ */
+export interface MyStudyReportTemplateSummary {
+  templateKey: string;
+  label: string;
+  /** `false` = el profesional no tiene textos propios para ese tipo de estudio. */
+  hasTemplate: boolean;
+}
+
+export interface MyStudyReportTemplateField {
+  key: string;
+  label: string;
+  type: StudyReportFieldType;
+  /** `null` = ese campo arranca vacío. */
+  text: string | null;
+}
+
+export interface MyStudyReportTemplateDetail {
+  templateKey: string;
+  label: string;
+  hasTemplate: boolean;
+  fields: MyStudyReportTemplateField[];
+}

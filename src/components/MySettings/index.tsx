@@ -4,3 +4,4 @@ export { MyPrescriptionSettings } from './MyPrescriptionSettings';
 export { MyAvailabilitiesEditable } from './MyAvailabilitiesEditable';
 export { MyAbsencesEditable } from './MyAbsencesEditable';
 export { MyScheduleExceptions } from './MyScheduleExceptions';
+export { MyStudyReportTemplates } from './MyStudyReportTemplates';
