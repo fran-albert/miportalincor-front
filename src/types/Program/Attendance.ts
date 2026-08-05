@@ -1,10 +1,10 @@
 export enum AttendanceMethod {
-  QR = "QR",
+  QR_SCAN = "QR_SCAN",
   MANUAL = "MANUAL",
 }
 
 export const AttendanceMethodLabels: Record<AttendanceMethod, string> = {
-  [AttendanceMethod.QR]: "QR",
+  [AttendanceMethod.QR_SCAN]: "QR",
   [AttendanceMethod.MANUAL]: "Manual",
 };
 

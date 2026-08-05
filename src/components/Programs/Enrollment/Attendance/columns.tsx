@@ -1,5 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { AttendanceRecord, AttendanceMethodLabels } from "@/types/Program/Attendance";
+import {
+  AttendanceRecord,
+  AttendanceMethod,
+  AttendanceMethodLabels,
+} from "@/types/Program/Attendance";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -39,7 +43,7 @@ export const getAttendanceColumns = (): ColumnDef<AttendanceRecord>[] => [
       <Badge
         variant="outline"
         className={
-          row.original.method === "QR"
+          row.original.method === AttendanceMethod.QR_SCAN
             ? "bg-blue-50 text-blue-700"
             : "bg-orange-50 text-orange-700"
         }
