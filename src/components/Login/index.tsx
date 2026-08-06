@@ -20,7 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess, setTwoFactorRequired } from "@/store/authSlice";
 import { RootState } from "@/store/store";
 import LoadingAnimation from "../Loading/loading";
-import { Mail, Lock, Stethoscope } from "lucide-react";
+import { IdCard, Lock, Stethoscope } from "lucide-react";
 import { apiIncorHC } from "@/services/axiosConfig";
 import TwoFactorForm from "./TwoFactorForm";
 import { authStorage } from "@/utils/authStorage";
@@ -164,15 +164,15 @@ const LoginComponent = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700 font-medium">
-                            Correo Electrónico o D.N.I.
+                            D.N.I. o correo electrónico
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                               <Input
                                 {...field}
                                 className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
-                                placeholder="ejemplo@correo.com o DNI"
+                                placeholder="Tu DNI sin puntos"
                               />
                             </div>
                           </FormControl>
