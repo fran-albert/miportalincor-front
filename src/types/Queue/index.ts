@@ -35,6 +35,11 @@ export interface QueueEntry {
    * tipo de eco antes de llamar (para que llegue al ecógrafo vía worklist).
    */
   necesitaSubtipoEco?: boolean;
+  /**
+   * El turno (o el sobreturno) es parte de un control ginecológico integral:
+   * la sala de espera lo distingue en fucsia de un turno común.
+   */
+  esControlIntegral?: boolean;
   scheduledTime: string;
   status: QueueStatus;
   displayNumber: string;
