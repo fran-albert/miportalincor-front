@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { focusDialogContainerOnOpen } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -121,7 +122,10 @@ export function RequestPrescriptionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent
+        className="sm:max-w-[500px]"
+        onOpenAutoFocus={focusDialogContainerOnOpen}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-blue-700 text-xl">
             <FileText className="h-5 w-5" />
