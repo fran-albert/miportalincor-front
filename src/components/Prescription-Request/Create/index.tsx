@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { focusDialogContainerOnOpen } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -219,7 +220,10 @@ export default function CreatePrescriptionRequestModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden p-0">
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] overflow-hidden p-0"
+        onOpenAutoFocus={focusDialogContainerOnOpen}
+      >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-greenPrimary to-teal-600 text-white p-6 rounded-t-lg">
           <div className="flex items-center gap-3">
