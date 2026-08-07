@@ -173,6 +173,11 @@ export interface IntegralCheckupLink {
   counterpartDate: string;
   counterpartHour: string;
   counterpartDescription: string;
+  /**
+   * El color del control, tal como lo define el catálogo. Viaja en el vínculo
+   * porque un sobreturno no puede tener tipo de consulta.
+   */
+  color?: string;
 }
 
 /** Un día con el control integral disponible. */

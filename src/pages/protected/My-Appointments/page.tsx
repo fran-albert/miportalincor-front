@@ -19,7 +19,11 @@ import { StatusBadge } from "@/components/Appointments/Select/StatusBadge";
 import { RequestAppointmentDialog } from "@/components/Appointments/RequestAppointmentDialog";
 import { RescheduleAppointmentDialog } from "@/components/Appointments/Dialogs/RescheduleAppointmentDialog";
 import { IntegralCheckupNotice } from "@/components/Appointments/IntegralCheckupNotice";
-import { INTEGRAL_CHECKUP_SHORT_LABEL } from "@/common/constants/integral-checkup";
+import {
+  INTEGRAL_CHECKUP_FALLBACK_COLOR,
+  INTEGRAL_CHECKUP_SHORT_LABEL,
+} from "@/common/constants/integral-checkup";
+import { eventColorsFromCatalogColor } from "@/common/helpers/integral-checkup-style";
 import { usePatientAppointments, useReschedulePatientAppointment } from "@/hooks/Appointments";
 import { useAppointmentMutations } from "@/hooks/Appointments";
 import useUserRole from "@/hooks/useRoles";
@@ -168,9 +172,18 @@ const MyAppointmentsPage = () => {
           isCancelled || isFinished
             ? "border-l-slate-300 bg-slate-50/70"
             : appointment.integralCheckup
-              ? "border-l-pink-500 bg-white"
+              ? "bg-white"
               : "border-l-greenPrimary bg-white",
         )}
+        style={
+          appointment.integralCheckup && !isCancelled && !isFinished
+            ? {
+                borderLeftColor:
+                  appointment.integralCheckup.color ||
+                  INTEGRAL_CHECKUP_FALLBACK_COLOR,
+              }
+            : undefined
+        }
       >
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -189,7 +202,19 @@ const MyAppointmentsPage = () => {
                 {appointment.integralCheckup && (
                   <Badge
                     variant="outline"
-                    className="border-pink-300 bg-pink-50 text-xs font-semibold text-pink-900"
+                    className="text-xs font-semibold"
+                    style={(() => {
+                      // El fucsia sale del catálogo, no de un hex escrito acá.
+                      const colors = eventColorsFromCatalogColor(
+                        appointment.integralCheckup.color ||
+                          INTEGRAL_CHECKUP_FALLBACK_COLOR,
+                      );
+                      return {
+                        backgroundColor: colors.backgroundColor,
+                        color: colors.textColor,
+                        borderColor: colors.borderColor,
+                      };
+                    })()}
                   >
                     {INTEGRAL_CHECKUP_SHORT_LABEL}
                   </Badge>

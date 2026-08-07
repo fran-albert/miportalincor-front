@@ -1308,6 +1308,7 @@ export const BigCalendar = ({
       resolveIntegralCheckupEventColors({
         isIntegralCheckup,
         isCancelled,
+        color: event.resource.integralCheckup?.color,
         fallback: { backgroundColor, textColor, borderColor },
       }));
 

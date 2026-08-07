@@ -40,6 +40,8 @@ export interface QueueEntry {
    * la sala de espera lo distingue en fucsia de un turno común.
    */
   esControlIntegral?: boolean;
+  /** El color del control, tomado del tipo de consulta del catálogo. */
+  colorControlIntegral?: string;
   scheduledTime: string;
   status: QueueStatus;
   displayNumber: string;
