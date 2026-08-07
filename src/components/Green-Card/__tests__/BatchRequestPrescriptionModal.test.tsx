@@ -512,6 +512,84 @@ describe("BatchRequestPrescriptionModal", () => {
     });
   });
 
+  describe("Foco al abrir (teclado mobile)", () => {
+    /**
+     * Caso real del bug: al abrir el modal por primera vez los médicos todavía
+     * se están cargando, así que el selector no está en el DOM y el textarea
+     * queda como primer elemento focuseable. Radix lo enfocaba y en mobile eso
+     * levantaba el teclado tapando el botón de enviar.
+     */
+    function renderWhileDoctorsAreLoading() {
+      (
+        useAvailableDoctorsForPrescriptions as ReturnType<typeof vi.fn>
+      ).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+      });
+      return renderBatchModal();
+    }
+
+    it("no debe enfocar el textarea del mensaje al abrirse", async () => {
+      renderWhileDoctorsAreLoading();
+
+      const textarea = screen.getByLabelText(
+        "Mensaje para el médico (opcional)"
+      );
+
+      await waitFor(() => {
+        expect(document.activeElement).not.toBe(textarea);
+      });
+      // Ningún campo de texto queda enfocado al abrir
+      expect(document.querySelector("textarea:focus")).toBeNull();
+      expect(document.querySelector("input:focus")).toBeNull();
+    });
+
+    it("debe dejar el foco dentro del diálogo (accesibilidad de teclado)", async () => {
+      renderWhileDoctorsAreLoading();
+
+      const dialog = screen.getByRole("dialog");
+
+      await waitFor(() => {
+        expect(dialog.contains(document.activeElement)).toBe(true);
+      });
+    });
+
+    it("debe permitir llegar a los botones del footer con Tab", async () => {
+      renderBatchModal();
+
+      const user = userEvent.setup();
+
+      // Con un médico elegido el botón de enviar queda habilitado
+      await user.click(screen.getByRole("option", { name: "Dr. Carlos Gomez" }));
+
+      const cancelBtn = screen
+        .getAllByRole("button")
+        .find((btn) => btn.textContent === "Cancelar")!;
+      const submitBtn = getSubmitButton()!;
+      expect(submitBtn).not.toBeDisabled();
+
+      const visited = new Set<Element>();
+      for (let i = 0; i < 12; i++) {
+        await user.tab();
+        if (document.activeElement) visited.add(document.activeElement);
+      }
+
+      expect(visited.has(cancelBtn)).toBe(true);
+      expect(visited.has(submitBtn)).toBe(true);
+    });
+
+    it("debe cerrarse con Escape", async () => {
+      const { onClose } = renderBatchModal();
+
+      const user = userEvent.setup();
+      await user.keyboard("{Escape}");
+
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("Reset al cerrar modal", () => {
     it("debe resetear y reaplicar la preselección automática al reabrir", async () => {
       const queryClient = new QueryClient({

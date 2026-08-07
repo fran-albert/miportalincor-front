@@ -133,6 +133,56 @@ describe("RequestPrescriptionModal", () => {
     });
   });
 
+  describe("Foco al abrir (teclado mobile)", () => {
+    /**
+     * Al abrir por primera vez los médicos todavía cargan: el selector no está
+     * en el DOM y el textarea del mensaje opcional queda como primer elemento
+     * focuseable. En mobile eso levantaba el teclado tapando el botón de enviar.
+     */
+    function renderWhileDoctorsAreLoading() {
+      (
+        useAvailableDoctorsForPrescriptions as ReturnType<typeof vi.fn>
+      ).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+      });
+      return renderModal();
+    }
+
+    it("no debe enfocar el textarea del mensaje al abrirse", async () => {
+      renderWhileDoctorsAreLoading();
+
+      const textarea = screen.getByLabelText("Mensaje opcional");
+
+      await waitFor(() => {
+        expect(document.activeElement).not.toBe(textarea);
+      });
+      expect(document.querySelector("textarea:focus")).toBeNull();
+      expect(document.querySelector("input:focus")).toBeNull();
+    });
+
+    it("debe dejar el foco dentro del diálogo (accesibilidad de teclado)", async () => {
+      renderWhileDoctorsAreLoading();
+
+      const dialog = screen.getByRole("dialog");
+
+      await waitFor(() => {
+        expect(dialog.contains(document.activeElement)).toBe(true);
+      });
+    });
+
+    it("debe cerrarse con Escape", async () => {
+      const { onClose } = renderModal();
+
+      const user = userEvent.setup();
+      await user.keyboard("{Escape}");
+
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+      });
+    });
+  });
+
   describe("Renderizado del selector de médico", () => {
     it("debe mostrar el título del modal", () => {
       renderModal();
