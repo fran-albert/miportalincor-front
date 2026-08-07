@@ -254,7 +254,14 @@ const MyAppointmentsPage = () => {
                 </div>
                 {/* Una sola reserva, dos momentos visibles. */}
                 {appointment.integralCheckup && !isCancelled && !isFinished && (
-                  <p className="mt-2 text-sm text-pink-900">
+                  <p
+                    className="mt-2 text-sm"
+                    style={{
+                      color:
+                        appointment.integralCheckup.color ||
+                        INTEGRAL_CHECKUP_FALLBACK_COLOR,
+                    }}
+                  >
                     Antes, a las{" "}
                     <span className="font-semibold">
                       {appointment.integralCheckup.counterpartHour} hs
