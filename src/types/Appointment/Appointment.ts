@@ -144,10 +144,59 @@ export interface AppointmentResponseDto {
   consultationTypes?: ConsultationTypeBasicDto[];
   // Duration
   durationMinutes?: number | null;
+  // Control ginecológico integral
+  linkedOverturnId?: number | null;
+  integralCheckup?: IntegralCheckupLink | null;
 }
 
 export interface AppointmentWithPatientDto extends AppointmentResponseDto {
   patient?: PatientBasicDto | null;
+}
+
+// ============================================
+// CONTROL GINECOLÓGICO INTEGRAL
+// ============================================
+
+/**
+ * La otra pata del control, vista desde un turno o desde un sobreturno.
+ *
+ * Su sola presencia es lo que marca un turno como parte de un control
+ * integral: el fucsia se pinta por esto y NO por `consultationType.color`.
+ */
+export interface IntegralCheckupLink {
+  role: "CONSULTATION" | "ULTRASOUND";
+  counterpartType: "APPOINTMENT" | "OVERTURN";
+  counterpartId: number;
+  counterpartDoctorId: number;
+  counterpartDoctorFirstName?: string;
+  counterpartDoctorLastName?: string;
+  counterpartDate: string;
+  counterpartHour: string;
+  counterpartDescription: string;
+  /**
+   * El color del control, tal como lo define el catálogo. Viaja en el vínculo
+   * porque un sobreturno no puede tener tipo de consulta.
+   */
+  color?: string;
+}
+
+/** Un día con el control integral disponible. */
+export interface IntegralCheckupSlot {
+  date: string;
+  consultationHour: string;
+  ultrasoundHour: string;
+}
+
+/** Una sola reserva, dos momentos. */
+export interface IntegralCheckupBooking {
+  consultation: AppointmentResponseDto;
+  ultrasound: {
+    id: number;
+    doctorId: number;
+    date: string;
+    hour: string;
+    reason: string;
+  };
 }
 
 export interface AppointmentDetailedDto {
@@ -161,6 +210,8 @@ export interface AppointmentDetailedDto {
   consultationTypeIds?: number[];
   consultationType?: ConsultationTypeBasicDto | null;
   consultationTypes?: ConsultationTypeBasicDto[];
+  linkedOverturnId?: number | null;
+  integralCheckup?: IntegralCheckupLink | null;
   patient?: PatientBasicDto | null;
   doctor?: DoctorBasicDto | null;
 }

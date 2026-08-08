@@ -28,3 +28,7 @@ export { useRequestAppointment } from './useRequestAppointment';
 export { useConvertGuest } from './useConvertGuest';
 export { useCreateGuestAppointment } from './useCreateGuestAppointment';
 export { useReschedulePatientAppointment } from './useReschedulePatientAppointment';
+export {
+  useIntegralAvailableDays,
+  useRequestIntegralAppointment,
+} from './useIntegralCheckup';

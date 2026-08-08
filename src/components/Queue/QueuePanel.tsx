@@ -3,6 +3,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  INTEGRAL_CHECKUP_FALLBACK_COLOR,
+  INTEGRAL_CHECKUP_SHORT_LABEL,
+} from '@/common/constants/integral-checkup';
+import { eventColorsFromCatalogColor } from '@/common/helpers/integral-checkup-style';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -265,15 +270,46 @@ const getQueueContextLabel = (entry: QueueEntry): string | null => {
   return parts.length > 0 ? parts.join(' · ') : null;
 };
 
+/**
+ * El fucsia sale del catálogo (del tipo de consulta del control), no de un hex
+ * escrito acá: el backend lo manda en `colorControlIntegral`.
+ */
+const integralCheckupBadgeStyle = (
+  color?: string,
+): { backgroundColor: string; color: string; borderColor: string } => {
+  const colors = eventColorsFromCatalogColor(
+    color || INTEGRAL_CHECKUP_FALLBACK_COLOR,
+  );
+  return {
+    backgroundColor: colors.backgroundColor,
+    color: colors.textColor,
+    borderColor: colors.borderColor,
+  };
+};
+
 const ConsultationTypeBadges = ({ entry }: { entry: QueueEntry }) => {
   const labels = getConsultationTypeLabels(entry);
 
-  if (labels.length === 0 && !entry.necesitaSubtipoEco) {
+  if (labels.length === 0 && !entry.necesitaSubtipoEco && !entry.esControlIntegral) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap gap-1.5">
+      {/*
+        El fucsia del control integral NO sale del color del tipo de consulta:
+        se pinta por estar vinculado, así que los turnos comunes de esos mismos
+        tipos siguen viéndose igual.
+      */}
+      {entry.esControlIntegral && (
+        <Badge
+          variant="outline"
+          className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+          style={integralCheckupBadgeStyle(entry.colorControlIntegral)}
+        >
+          {INTEGRAL_CHECKUP_SHORT_LABEL}
+        </Badge>
+      )}
       {labels.map((label) => (
         <Badge
           key={label}
@@ -782,7 +818,17 @@ const WaitingSection = ({
                     className={cn(
                       'border-slate-100 transition-colors',
                       appointmentTypeRowStyles[entry.appointmentType],
+                      entry.esControlIntegral && 'border-l-2',
                     )}
+                    style={
+                      entry.esControlIntegral
+                        ? {
+                            borderLeftColor:
+                              entry.colorControlIntegral ||
+                              INTEGRAL_CHECKUP_FALLBACK_COLOR,
+                          }
+                        : undefined
+                    }
                   >
                     <TableCell className="py-3 align-middle">
                       <span className="text-2xl font-semibold tracking-tight text-slate-900">

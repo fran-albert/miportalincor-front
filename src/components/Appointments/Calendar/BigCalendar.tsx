@@ -46,7 +46,10 @@ import {
   AppointmentOrigin,
   AppointmentOriginLabels,
   AppointmentStatusTransitionContext,
+  IntegralCheckupLink,
 } from "@/types/Appointment/Appointment";
+import { resolveIntegralCheckupEventColors } from "@/common/helpers/integral-checkup-style";
+import { IntegralCheckupNotice } from "../IntegralCheckupNotice";
 import {
   OverturnDetailedDto,
   OverturnStatus,
@@ -128,6 +131,13 @@ interface CalendarEvent {
     affiliationNumber?: string;
     consultationType?: string;
     consultationTypes?: AppointmentFullResponseDto["consultationTypes"];
+    /**
+     * La otra pata del control ginecológico integral. Su presencia es lo que
+     * pinta el turno en fucsia: el color se aplica por estar vinculado, con
+     * prioridad sobre el color del tipo de consulta, para que los turnos
+     * comunes de esos mismos tipos sigan viéndose como siempre.
+     */
+    integralCheckup?: IntegralCheckupLink | null;
   };
 }
 
@@ -140,6 +150,8 @@ interface RescheduleCalendarTarget {
   consultationTypeId?: number | null;
   doctor?: { firstName: string; lastName: string } | null;
   patient?: { firstName: string; lastName: string } | null;
+  /** Se arrastra al diálogo para que el vínculo siga a la vista. */
+  integralCheckup?: IntegralCheckupLink | null;
 }
 
 const splitCalendarGhostLabel = (
@@ -841,6 +853,7 @@ export const BigCalendar = ({
           affiliationNumber: apt.patient?.affiliationNumber,
           consultationType: getAppointmentConsultationTypeSummary(apt) ?? undefined,
           consultationTypes: getAppointmentConsultationTypes(apt),
+          integralCheckup: apt.integralCheckup ?? null,
         },
       };
     });
@@ -881,6 +894,7 @@ export const BigCalendar = ({
           patientDni,
           healthInsurance: ot.patient?.healthInsuranceName,
           affiliationNumber: ot.patient?.affiliationNumber,
+          integralCheckup: ot.integralCheckup ?? null,
         },
       };
     });
@@ -1281,8 +1295,27 @@ export const BigCalendar = ({
       borderColor = specialConsultationType.eventBorderColor;
     }
 
+    // El control ginecológico integral se pinta en fucsia, con prioridad sobre
+    // el color del tipo de consulta y también para la pata que es sobreturno
+    // (la ecografista tiene que reconocerlo en su agenda). Un turno cancelado
+    // conserva el rojo: que sea integral no puede tapar que ya no va.
+    const isIntegralCheckup = Boolean(event.resource.integralCheckup);
+    const isCancelled =
+      status === AppointmentStatus.CANCELLED_BY_PATIENT ||
+      status === AppointmentStatus.CANCELLED_BY_SECRETARY;
+
+    ({ backgroundColor, textColor, borderColor } =
+      resolveIntegralCheckupEventColors({
+        isIntegralCheckup,
+        isCancelled,
+        color: event.resource.integralCheckup?.color,
+        fallback: { backgroundColor, textColor, borderColor },
+      }));
+
     return {
       className: `google-calendar-event ${
+        isIntegralCheckup ? "is-integral-checkup " : ""
+      }${
         specialConsultationType
           ? `is-special-${specialConsultationType.kind.toLowerCase()}`
           : ""
@@ -1295,9 +1328,10 @@ export const BigCalendar = ({
           status === AppointmentStatus.CANCELLED_BY_PATIENT ||
           status === AppointmentStatus.CANCELLED_BY_SECRETARY ? 0.6 : 1,
         color: textColor,
-        boxShadow: specialConsultationType
-          ? "0 2px 6px rgba(15, 23, 42, 0.16)"
-          : "0 1px 2px rgba(15, 23, 42, 0.08)",
+        boxShadow:
+          specialConsultationType || (isIntegralCheckup && !isCancelled)
+            ? "0 2px 6px rgba(15, 23, 42, 0.16)"
+            : "0 1px 2px rgba(15, 23, 42, 0.08)",
       },
     };
   }, [readOnly, blockOnly]);
@@ -1903,6 +1937,14 @@ export const BigCalendar = ({
               </div>
             </SheetHeader>
 
+            {selectedEvent.resource.integralCheckup && (
+              <div className="google-calendar-side-panel-section">
+                <IntegralCheckupNotice
+                  link={selectedEvent.resource.integralCheckup}
+                />
+              </div>
+            )}
+
             <div className="google-calendar-side-panel-section">
               <p className="google-calendar-section-title">Resumen</p>
               <div className="google-calendar-summary-card">
@@ -2146,6 +2188,7 @@ export const BigCalendar = ({
                               : appt.consultationTypeId,
                           doctor: appt.doctor ?? null,
                           patient: appt.patient ?? null,
+                          integralCheckup: appt.integralCheckup ?? null,
                         });
                       } else {
                         const overturn = selectedEvent.resource.data as OverturnDetailedDto;
@@ -2157,6 +2200,7 @@ export const BigCalendar = ({
                           hour: overturn.hour,
                           doctor: overturn.doctor ?? null,
                           patient: overturn.patient ?? null,
+                          integralCheckup: overturn.integralCheckup ?? null,
                         });
                       }
                       setIsEventDialogOpen(false);
@@ -2472,6 +2516,13 @@ export const BigCalendar = ({
                     <p><strong>Hora:</strong> {formatTimeAR((selectedEvent.resource.data as AppointmentFullResponseDto | OverturnDetailedDto).hour)}</p>
                   </div>
                 )}
+                {selectedEvent?.resource.integralCheckup && (
+                  <IntegralCheckupNotice
+                    link={selectedEvent.resource.integralCheckup}
+                    action="cancel"
+                    compact
+                  />
+                )}
                 <p className="text-amber-600 font-medium">
                   Esta acción no se puede deshacer.
                 </p>
@@ -2551,6 +2602,7 @@ export const BigCalendar = ({
         open={isRescheduleDialogOpen}
         onOpenChange={setIsRescheduleDialogOpen}
         appointment={rescheduleTargetAppointment}
+        integralCheckup={rescheduleTargetAppointment?.integralCheckup}
         onReschedule={async (id, dto) => {
           if (rescheduleTargetAppointment?.type === "overturn") {
             await updateOverturnMutation.mutateAsync({ id, dto });

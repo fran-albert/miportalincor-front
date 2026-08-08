@@ -22,7 +22,11 @@ import {
 import { cn } from "@/lib/utils";
 import { TimeSlotSelect } from "../Select/TimeSlotSelect";
 import { formatTimeAR } from "@/common/helpers/timezone";
-import { RescheduleAppointmentDto } from "@/types/Appointment/Appointment";
+import {
+  IntegralCheckupLink,
+  RescheduleAppointmentDto,
+} from "@/types/Appointment/Appointment";
+import { IntegralCheckupNotice } from "../IntegralCheckupNotice";
 import { Input } from "@/components/ui/input";
 import { useAvailableSlotsRange } from "@/hooks/Appointments";
 
@@ -43,6 +47,8 @@ interface RescheduleAppointmentDialogProps {
   appointment: RescheduleAppointmentInfo | null;
   onReschedule: (id: number, dto: RescheduleAppointmentDto) => Promise<void>;
   isRescheduling: boolean;
+  /** Presente solo si el turno es parte de un control ginecológico integral. */
+  integralCheckup?: IntegralCheckupLink | null;
 }
 
 export function RescheduleAppointmentDialog({
@@ -51,6 +57,7 @@ export function RescheduleAppointmentDialog({
   appointment,
   onReschedule,
   isRescheduling,
+  integralCheckup,
 }: RescheduleAppointmentDialogProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedHour, setSelectedHour] = useState<string>("");
@@ -139,6 +146,14 @@ export function RescheduleAppointmentDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {integralCheckup && (
+            <IntegralCheckupNotice
+              link={integralCheckup}
+              action="reschedule"
+              compact
+            />
+          )}
+
           {/* Info actual read-only */}
           <div className="rounded-lg border bg-muted/50 p-3 space-y-2">
             {appointment.doctor && (

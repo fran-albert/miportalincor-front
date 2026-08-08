@@ -1,4 +1,8 @@
-import { DoctorBasicDto, PatientBasicDto } from '../Appointment/Appointment';
+import {
+  DoctorBasicDto,
+  IntegralCheckupLink,
+  PatientBasicDto,
+} from '../Appointment/Appointment';
 
 // ============================================
 // ENUMS
@@ -87,11 +91,14 @@ export interface OverturnResponseDto {
   guestPhone?: string;
   guestEmail?: string;
   reason?: string;
+  /** Turno de consulta del mismo control ginecológico integral. */
+  linkedAppointmentId?: number | null;
   createdBy: number;
   createdAt: string;
 }
 
 export interface OverturnDetailedDto extends OverturnResponseDto {
+  integralCheckup?: IntegralCheckupLink | null;
   patient?: PatientBasicDto;
   doctor?: DoctorBasicDto;
 }
