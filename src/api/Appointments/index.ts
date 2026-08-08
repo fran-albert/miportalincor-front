@@ -32,3 +32,7 @@ export { convertGuestToPatient, type ConvertGuestDto } from './convert-guest.act
 export { createGuestAppointment, type CreateGuestAppointmentDto } from './create-guest-appointment.action';
 export { rescheduleAppointment } from './reschedule.action';
 export { reschedulePatientAppointment } from './reschedule-patient.action';
+export {
+  getIntegralAvailableDays,
+  requestIntegralAppointment,
+} from './integral-checkup.action';

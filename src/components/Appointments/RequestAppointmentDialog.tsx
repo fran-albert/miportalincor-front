@@ -26,10 +26,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
+  useIntegralAvailableDays,
   usePublicAppointmentSpecialities,
   usePublicAvailableSlotsBySpeciality,
   usePublicDoctorsBySpeciality,
   useRequestAppointment,
+  useRequestIntegralAppointment,
 } from "@/hooks/Appointments";
 import { getAppointmentRequestErrorMessage } from "./requestAppointmentError";
 import type { PublicAppointmentDoctor, PublicAppointmentSlot } from "@/api/Appointments";
@@ -42,9 +44,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Sparkles,
   Stethoscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  INTEGRAL_CHECKUP_DOCTOR_ID,
+  INTEGRAL_CHECKUP_LABEL,
+} from "@/common/constants/integral-checkup";
 
 interface RequestAppointmentDialogProps {
   open: boolean;
@@ -52,6 +59,20 @@ interface RequestAppointmentDialogProps {
 }
 
 type Step = "selection" | "schedule" | "confirm";
+
+/**
+ * Con la ginecóloga que ofrece el control integral la paciente elige entre la
+ * consulta de siempre y el control completo (consulta + ecografía en un paso).
+ */
+type Modality = "standard" | "integral";
+
+const parseIsoDate = (date: string): Date | null => {
+  const parsedDate = parse(date, "yyyy-MM-dd", new Date());
+  return isValid(parsedDate) ? parsedDate : null;
+};
+
+const formatLongDate = (date: Date): string =>
+  format(date, "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
 
 const steps: Array<{ id: Step; label: string }> = [
   { id: "selection", label: "Especialidad" },
@@ -100,8 +121,11 @@ export function RequestAppointmentDialog({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [modality, setModality] = useState<Modality>("standard");
+  const [selectedIntegralDate, setSelectedIntegralDate] = useState<string | null>(null);
 
   const requestMutation = useRequestAppointment();
+  const integralMutation = useRequestIntegralAppointment();
 
   const minDate = useMemo(() => startOfDay(new Date()), []);
   const maxDate = useMemo(() => addDays(minDate, 90), [minDate]);
@@ -194,9 +218,24 @@ export function RequestAppointmentDialog({
     return Array.from(uniqueSlots.values()).sort((a, b) => a.time.localeCompare(b.time));
   }, [doctorSlots, formattedSelectedDate]);
 
+  const offersIntegralCheckup = selectedDoctorId === INTEGRAL_CHECKUP_DOCTOR_ID;
+  const isIntegral = offersIntegralCheckup && modality === "integral";
+
+  const {
+    days: integralDays,
+    isLoading: loadingIntegralDays,
+    isError: integralDaysError,
+  } = useIntegralAvailableDays({ enabled: open && isIntegral });
+
+  const selectedIntegralDay = useMemo(
+    () => integralDays.find((day) => day.date === selectedIntegralDate) ?? null,
+    [integralDays, selectedIntegralDate],
+  );
+
   const canContinue =
     (step === "selection" && !!selectedSpecialityId && !!selectedDoctorId) ||
-    (step === "schedule" && !!selectedDate && !!selectedTime);
+    (step === "schedule" &&
+      (isIntegral ? !!selectedIntegralDay : !!selectedDate && !!selectedTime));
 
   useEffect(() => {
     if (!open) {
@@ -207,12 +246,22 @@ export function RequestAppointmentDialog({
       setSelectedTime(null);
       setBookingError(null);
       setDatePickerOpen(false);
+      setModality("standard");
+      setSelectedIntegralDate(null);
     }
   }, [open]);
 
   useEffect(() => {
     setBookingError(null);
-  }, [step, selectedSpecialityId, selectedDoctorId, selectedDate, selectedTime]);
+  }, [
+    step,
+    selectedSpecialityId,
+    selectedDoctorId,
+    selectedDate,
+    selectedTime,
+    modality,
+    selectedIntegralDate,
+  ]);
 
   const handleSpecialityChange = (value: string) => {
     setSelectedSpecialityId(Number(value));
@@ -220,6 +269,8 @@ export function RequestAppointmentDialog({
     setSelectedDate(undefined);
     setSelectedTime(null);
     setDatePickerOpen(false);
+    setModality("standard");
+    setSelectedIntegralDate(null);
   };
 
   const handleDoctorChange = (value: string) => {
@@ -227,6 +278,15 @@ export function RequestAppointmentDialog({
     setSelectedDate(undefined);
     setSelectedTime(null);
     setDatePickerOpen(false);
+    setModality("standard");
+    setSelectedIntegralDate(null);
+  };
+
+  const handleModalityChange = (value: Modality) => {
+    setModality(value);
+    setSelectedDate(undefined);
+    setSelectedTime(null);
+    setSelectedIntegralDate(null);
   };
 
   const handleSelectDate = (date: Date | undefined) => {
@@ -258,6 +318,19 @@ export function RequestAppointmentDialog({
   };
 
   const handleConfirm = async () => {
+    if (isIntegral) {
+      if (!selectedIntegralDay) return;
+
+      try {
+        setBookingError(null);
+        await integralMutation.mutateAsync({ date: selectedIntegralDay.date });
+        onOpenChange(false);
+      } catch (error) {
+        setBookingError(getAppointmentRequestErrorMessage(error));
+      }
+      return;
+    }
+
     if (!selectedDoctor || !selectedDate || !selectedTime) return;
 
     try {
@@ -272,6 +345,8 @@ export function RequestAppointmentDialog({
       setBookingError(getAppointmentRequestErrorMessage(error));
     }
   };
+
+  const isConfirming = requestMutation.isPending || integralMutation.isPending;
 
   const isDateDisabled = (date: Date) => {
     const day = startOfDay(date);
@@ -410,6 +485,51 @@ export function RequestAppointmentDialog({
                   )}
                 </div>
 
+                {offersIntegralCheckup && (
+                  <div className="space-y-2">
+                    <Label>Tipo de turno</Label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        aria-pressed={modality === "standard"}
+                        onClick={() => handleModalityChange("standard")}
+                        className={cn(
+                          "rounded-lg border p-3 text-left transition-colors",
+                          modality === "standard"
+                            ? "border-greenPrimary bg-greenPrimary/5"
+                            : "hover:bg-muted/50",
+                        )}
+                      >
+                        <p className="text-sm font-medium">Consulta ginecológica</p>
+                        <p className="text-xs text-muted-foreground">
+                          El turno de siempre, con la ginecóloga.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-pressed={modality === "integral"}
+                        onClick={() => handleModalityChange("integral")}
+                        className={cn(
+                          "rounded-lg border p-3 text-left transition-colors",
+                          modality === "integral"
+                            ? "border-pink-500 bg-pink-50"
+                            : "hover:bg-muted/50",
+                        )}
+                      >
+                        <p className="flex items-center gap-1.5 text-sm font-medium">
+                          <Sparkles className="h-4 w-4 text-pink-600" />
+                          {INTEGRAL_CHECKUP_LABEL}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Consulta y ecografías en una sola visita, con dos
+                          profesionales.
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {specialitiesError && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
@@ -449,7 +569,69 @@ export function RequestAppointmentDialog({
                   )}
                 </div>
 
-                {loadingSlots ? (
+                {isIntegral ? (
+                  loadingIntegralDays ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((item) => (
+                        <Skeleton key={item} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : integralDaysError ? (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>No pudimos cargar los días disponibles</AlertTitle>
+                      <AlertDescription>
+                        Volvé a intentar en unos minutos.
+                      </AlertDescription>
+                    </Alert>
+                  ) : integralDays.length === 0 ? (
+                    <Alert>
+                      <CalendarIcon className="h-4 w-4" />
+                      <AlertTitle>Sin días disponibles</AlertTitle>
+                      <AlertDescription>
+                        Por ahora no hay fechas libres para el control integral.
+                        Podés sacar la consulta ginecológica sola.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Día</Label>
+                      <div className="grid gap-2">
+                        {integralDays.map((day) => {
+                          const parsedDay = parseIsoDate(day.date);
+                          const isSelected = selectedIntegralDate === day.date;
+
+                          return (
+                            <button
+                              key={day.date}
+                              type="button"
+                              aria-pressed={isSelected}
+                              onClick={() => setSelectedIntegralDate(day.date)}
+                              className={cn(
+                                "rounded-lg border p-3 text-left transition-colors",
+                                isSelected
+                                  ? "border-pink-500 bg-pink-50"
+                                  : "hover:bg-muted/50",
+                              )}
+                            >
+                              <p className="text-sm font-medium capitalize">
+                                {parsedDay ? formatLongDate(parsedDay) : day.date}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Ecografía {day.ultrasoundHour} hs · Consulta{" "}
+                                {day.consultationHour} hs
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        La ecografía es 15 minutos antes de la consulta: en una
+                        sola visita te hacés las dos cosas.
+                      </p>
+                    </div>
+                  )
+                ) : loadingSlots ? (
                   <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
                     <Skeleton className="h-[320px] w-full" />
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
@@ -555,27 +737,77 @@ export function RequestAppointmentDialog({
                       <dt className="text-muted-foreground">Especialidad</dt>
                       <dd className="text-right font-medium">{selectedSpeciality?.name}</dd>
                     </div>
+                    {isIntegral && (
+                      <div className="flex items-start justify-between gap-4">
+                        <dt className="text-muted-foreground">Tipo de turno</dt>
+                        <dd className="text-right font-medium text-pink-700">
+                          {INTEGRAL_CHECKUP_LABEL}
+                        </dd>
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-4">
                       <dt className="text-muted-foreground">Profesional</dt>
                       <dd className="text-right font-medium">{selectedDoctorLabel}</dd>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <dt className="text-muted-foreground">Fecha</dt>
-                      <dd className="text-right font-medium">
-                        {selectedDate
-                          ? format(selectedDate, "EEEE d 'de' MMMM 'de' yyyy", { locale: es })
-                          : "-"}
+                      <dd className="text-right font-medium capitalize">
+                        {isIntegral
+                          ? selectedIntegralDay
+                            ? (() => {
+                                const parsedDay = parseIsoDate(
+                                  selectedIntegralDay.date,
+                                );
+                                return parsedDay
+                                  ? formatLongDate(parsedDay)
+                                  : selectedIntegralDay.date;
+                              })()
+                            : "-"
+                          : selectedDate
+                            ? formatLongDate(selectedDate)
+                            : "-"}
                       </dd>
                     </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <dt className="text-muted-foreground">Hora</dt>
-                      <dd className="text-right font-medium">{selectedTime} hs</dd>
-                    </div>
+                    {!isIntegral && (
+                      <div className="flex items-start justify-between gap-4">
+                        <dt className="text-muted-foreground">Hora</dt>
+                        <dd className="text-right font-medium">{selectedTime} hs</dd>
+                      </div>
+                    )}
                   </dl>
                 </div>
 
+                {/* Una sola reserva, dos momentos visibles. */}
+                {isIntegral && selectedIntegralDay && (
+                  <div className="space-y-2 rounded-lg border border-pink-200 bg-pink-50 p-4">
+                    <p className="text-sm font-medium text-pink-900">
+                      Ese día tenés dos momentos
+                    </p>
+                    <ol className="space-y-1 text-sm text-pink-900">
+                      <li>
+                        <span className="font-semibold">
+                          {selectedIntegralDay.ultrasoundHour} hs
+                        </span>{" "}
+                        — Ecografía ginecológica y mamaria
+                      </li>
+                      <li>
+                        <span className="font-semibold">
+                          {selectedIntegralDay.consultationHour} hs
+                        </span>{" "}
+                        — Consulta con {selectedDoctorLabel}
+                      </li>
+                    </ol>
+                    <p className="text-xs text-pink-800">
+                      Si después cancelás o cambiás uno, se cancelan o se mueven
+                      los dos.
+                    </p>
+                  </div>
+                )}
+
                 <p className="text-center text-sm text-muted-foreground">
-                  El turno quedará asociado a tu cuenta del portal.
+                  {isIntegral
+                    ? "Los dos turnos quedarán asociados a tu cuenta del portal."
+                    : "El turno quedará asociado a tu cuenta del portal."}
                 </p>
 
                 {bookingError && (
@@ -604,15 +836,15 @@ export function RequestAppointmentDialog({
             <Button
               type="button"
               onClick={handleConfirm}
-              disabled={requestMutation.isPending}
+              disabled={isConfirming}
               className="bg-greenPrimary hover:bg-greenPrimary/90"
             >
-              {requestMutation.isPending ? (
+              {isConfirming ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <CheckCircle2 className="mr-2 h-4 w-4" />
               )}
-              Confirmar turno
+              {isIntegral ? "Confirmar control" : "Confirmar turno"}
             </Button>
           ) : (
             <Button

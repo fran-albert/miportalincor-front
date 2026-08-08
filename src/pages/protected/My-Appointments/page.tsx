@@ -18,6 +18,12 @@ import {
 import { StatusBadge } from "@/components/Appointments/Select/StatusBadge";
 import { RequestAppointmentDialog } from "@/components/Appointments/RequestAppointmentDialog";
 import { RescheduleAppointmentDialog } from "@/components/Appointments/Dialogs/RescheduleAppointmentDialog";
+import { IntegralCheckupNotice } from "@/components/Appointments/IntegralCheckupNotice";
+import {
+  INTEGRAL_CHECKUP_FALLBACK_COLOR,
+  INTEGRAL_CHECKUP_SHORT_LABEL,
+} from "@/common/constants/integral-checkup";
+import { eventColorsFromCatalogColor } from "@/common/helpers/integral-checkup-style";
 import { usePatientAppointments, useReschedulePatientAppointment } from "@/hooks/Appointments";
 import { useAppointmentMutations } from "@/hooks/Appointments";
 import useUserRole from "@/hooks/useRoles";
@@ -165,8 +171,19 @@ const MyAppointmentsPage = () => {
           "overflow-hidden border-l-4 transition-shadow hover:shadow-sm",
           isCancelled || isFinished
             ? "border-l-slate-300 bg-slate-50/70"
-            : "border-l-greenPrimary bg-white",
+            : appointment.integralCheckup
+              ? "bg-white"
+              : "border-l-greenPrimary bg-white",
         )}
+        style={
+          appointment.integralCheckup && !isCancelled && !isFinished
+            ? {
+                borderLeftColor:
+                  appointment.integralCheckup.color ||
+                  INTEGRAL_CHECKUP_FALLBACK_COLOR,
+              }
+            : undefined
+        }
       >
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -181,6 +198,26 @@ const MyAppointmentsPage = () => {
                   </Badge>
                 ) : (
                   <StatusBadge status={appointment.status} />
+                )}
+                {appointment.integralCheckup && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs font-semibold"
+                    style={(() => {
+                      // El fucsia sale del catálogo, no de un hex escrito acá.
+                      const colors = eventColorsFromCatalogColor(
+                        appointment.integralCheckup.color ||
+                          INTEGRAL_CHECKUP_FALLBACK_COLOR,
+                      );
+                      return {
+                        backgroundColor: colors.backgroundColor,
+                        color: colors.textColor,
+                        borderColor: colors.borderColor,
+                      };
+                    })()}
+                  >
+                    {INTEGRAL_CHECKUP_SHORT_LABEL}
+                  </Badge>
                 )}
                 {showConsultationTypes &&
                   consultationTypes.map((consultationType) => (
@@ -215,6 +252,23 @@ const MyAppointmentsPage = () => {
                     <span>{formatTimeAR(appointment.hour)} hs</span>
                   </div>
                 </div>
+                {/* Una sola reserva, dos momentos visibles. */}
+                {appointment.integralCheckup && !isCancelled && !isFinished && (
+                  <p
+                    className="mt-2 text-sm"
+                    style={{
+                      color:
+                        appointment.integralCheckup.color ||
+                        INTEGRAL_CHECKUP_FALLBACK_COLOR,
+                    }}
+                  >
+                    Antes, a las{" "}
+                    <span className="font-semibold">
+                      {appointment.integralCheckup.counterpartHour} hs
+                    </span>
+                    , {appointment.integralCheckup.counterpartDescription}.
+                  </p>
+                )}
               </div>
 
               <div className="flex items-start gap-2 text-sm">
@@ -407,6 +461,14 @@ const MyAppointmentsPage = () => {
                   </p>
                 </div>
               )}
+              {selectedAppointment?.integralCheckup && (
+                <IntegralCheckupNotice
+                  link={selectedAppointment.integralCheckup}
+                  action="cancel"
+                  className="mt-4"
+                  compact
+                />
+              )}
               <p className="mt-4 text-amber-600">
                 Esta acción no se puede deshacer. Si querés cambiar la fecha u hora, usá el botón "Reprogramar".
               </p>
@@ -439,6 +501,7 @@ const MyAppointmentsPage = () => {
         open={rescheduleDialogOpen}
         onOpenChange={setRescheduleDialogOpen}
         appointment={rescheduleAppointment}
+        integralCheckup={rescheduleAppointment?.integralCheckup}
         onReschedule={async (id, dto) => {
           await reschedulePatient.mutateAsync({ id, dto });
           toast({
