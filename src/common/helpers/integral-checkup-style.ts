@@ -20,16 +20,99 @@ interface ResolveParams {
   fallback: EventColors;
 }
 
+/** Cuánto del color del catálogo se ve en el fondo del bloque. */
+const BACKGROUND_STRENGTH = 0.3;
+
+/** Tinta oscura y tinta clara, para elegir la que contraste con el fondo. */
+const DARK_INK = "#1f2937";
+const LIGHT_INK = "#ffffff";
+
+const parseHex = (
+  color: string,
+): { red: number; green: number; blue: number } | null => {
+  const normalized = color.trim().replace(/^#/, "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : normalized;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(expanded)) {
+    return null;
+  }
+
+  return {
+    red: parseInt(expanded.slice(0, 2), 16),
+    green: parseInt(expanded.slice(2, 4), 16),
+    blue: parseInt(expanded.slice(4, 6), 16),
+  };
+};
+
+const toHex = (value: number): string =>
+  Math.round(Math.min(255, Math.max(0, value)))
+    .toString(16)
+    .padStart(2, "0");
+
+/** El color mezclado con blanco: un fondo tintado, sin depender de alpha. */
+const blendWithWhite = (
+  channels: { red: number; green: number; blue: number },
+  strength: number,
+): string => {
+  const mix = (channel: number): number => 255 - (255 - channel) * strength;
+  return `#${toHex(mix(channels.red))}${toHex(mix(channels.green))}${toHex(
+    mix(channels.blue),
+  )}`;
+};
+
+/** Luminancia relativa (WCAG), para decidir si el texto va oscuro o claro. */
+const relativeLuminance = (channels: {
+  red: number;
+  green: number;
+  blue: number;
+}): number => {
+  const channel = (value: number): number => {
+    const normalized = value / 255;
+    return normalized <= 0.03928
+      ? normalized / 12.92
+      : Math.pow((normalized + 0.055) / 1.055, 2.4);
+  };
+  return (
+    0.2126 * channel(channels.red) +
+    0.7152 * channel(channels.green) +
+    0.0722 * channel(channels.blue)
+  );
+};
+
 /**
- * Deriva el trío de colores de un evento a partir de un único hex del
- * catálogo, con el mismo criterio con el que la app ya pinta los tipos de
- * consulta: el color como borde y como texto, y un fondo con transparencia.
+ * Deriva el trío de colores de un evento a partir de un único hex del catálogo.
+ *
+ * 🔴 **El fondo del bloque lleva el color**, no solo el borde: es lo que hace
+ * que el control se reconozca de un vistazo en la grilla, que es donde se lo
+ * compara contra los demás turnos.
+ *
+ * El texto NO es el color del catálogo: se elige entre tinta oscura y clara
+ * según la luminancia del fondo, así el bloque sigue siendo legible con
+ * cualquier color que carguen en el catálogo mañana.
  */
-export const eventColorsFromCatalogColor = (color: string): EventColors => ({
-  backgroundColor: `${color}1F`,
-  textColor: color,
-  borderColor: color,
-});
+export const eventColorsFromCatalogColor = (color: string): EventColors => {
+  const channels = parseHex(color);
+  if (!channels) {
+    return {
+      backgroundColor: color,
+      textColor: DARK_INK,
+      borderColor: color,
+    };
+  }
+
+  const backgroundColor = blendWithWhite(channels, BACKGROUND_STRENGTH);
+  const backgroundChannels = parseHex(backgroundColor) ?? channels;
+  const textColor =
+    relativeLuminance(backgroundChannels) > 0.45 ? DARK_INK : LIGHT_INK;
+
+  return { backgroundColor, textColor, borderColor: color };
+};
 
 /**
  * Decide el color de un evento del turnero.
