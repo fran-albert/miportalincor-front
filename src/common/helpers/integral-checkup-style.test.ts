@@ -107,11 +107,67 @@ describe("el color del control ginecológico integral en el turnero", () => {
 });
 
 describe("eventColorsFromCatalogColor", () => {
-  it("usa el hex del catálogo como borde y texto, con fondo translúcido", () => {
-    expect(eventColorsFromCatalogColor("#D946EF")).toEqual({
-      backgroundColor: "#D946EF1F",
-      textColor: "#D946EF",
-      borderColor: "#D946EF",
+  it("🔴 tiñe el FONDO del bloque con el color del catálogo", () => {
+    const colors = eventColorsFromCatalogColor("#D946EF");
+
+    // No es blanco ni casi blanco: el bloque se reconoce por el fondo, no
+    // solo por el borde.
+    expect(colors.backgroundColor).toBe("#f4c8fa");
+    expect(colors.borderColor).toBe("#D946EF");
+  });
+
+  it("el fondo se ve más que los pasteles del resto del calendario", () => {
+    const integral = eventColorsFromCatalogColor("#D946EF");
+    // El ámbar del estado PENDING, que es lo que se veía cuando el dato no
+    // llegaba.
+    expect(integral.backgroundColor).not.toBe("#fef3c7");
+    expect(luminance(integral.backgroundColor)).toBeLessThan(
+      luminance("#fef3c7"),
+    );
+  });
+
+  it.each([
+    "#D946EF",
+    "#FDE047",
+    "#000000",
+    "#2196F3",
+    "#4CAF50",
+  ])("el texto sigue siendo legible con el color %s del catálogo", (color) => {
+    // La tinta no es el color del catálogo: se elige por contraste, así que
+    // el bloque se lee con cualquier color que carguen mañana.
+    const { backgroundColor, textColor } = eventColorsFromCatalogColor(color);
+    expect(contrastRatio(backgroundColor, textColor)).toBeGreaterThanOrEqual(
+      4.5,
+    );
+  });
+
+  it("acepta hex corto y tolera un valor inválido sin romper", () => {
+    expect(eventColorsFromCatalogColor("#D4E").backgroundColor).toBe(
+      eventColorsFromCatalogColor("#DD44EE").backgroundColor,
+    );
+    expect(eventColorsFromCatalogColor("no-es-un-color")).toEqual({
+      backgroundColor: "no-es-un-color",
+      textColor: "#1f2937",
+      borderColor: "no-es-un-color",
     });
   });
 });
+
+/** Contraste WCAG entre dos colores. 4.5 es el mínimo AA para texto normal. */
+const contrastRatio = (first: string, second: string): number => {
+  const lighter = Math.max(luminance(first), luminance(second));
+  const darker = Math.min(luminance(first), luminance(second));
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+/** Luminancia relativa, para comparar qué tan claro es un fondo. */
+const luminance = (hex: string): number => {
+  const normalized = hex.replace(/^#/, "");
+  const channel = (start: number): number => {
+    const value = parseInt(normalized.slice(start, start + 2), 16) / 255;
+    return value <= 0.03928
+      ? value / 12.92
+      : Math.pow((value + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+};

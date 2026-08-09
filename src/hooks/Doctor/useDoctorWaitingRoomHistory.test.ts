@@ -82,3 +82,36 @@ describe("useDoctorWaitingRoomHistory helpers", () => {
     });
   });
 });
+
+describe("el control ginecológico integral en el historial", () => {
+  it("🔴 el vínculo llega a la agenda, no se pierde en el mapeo", () => {
+    const link = {
+      role: "ULTRASOUND" as const,
+      counterpartType: "APPOINTMENT" as const,
+      counterpartId: 9539,
+      counterpartDoctorId: 388,
+      counterpartDoctorFirstName: "Victoria",
+      counterpartDoctorLastName: "Tudela",
+      counterpartDate: "2026-05-12",
+      counterpartHour: "10:20",
+      counterpartDescription: "Control Ginecológico Integral",
+      color: "#D946EF",
+    };
+
+    const agenda = toDoctorWaitingRoomHistoryAgenda({
+      ...response,
+      overturns: [{ ...response.overturns[0], integralCheckup: link }],
+    });
+
+    const ultrasound = agenda.find((item) => item.type === "overturn");
+    expect(ultrasound?.integralCheckup).toEqual(link);
+  });
+
+  it("un turno común queda con el vínculo en null, no en undefined", () => {
+    const agenda = toDoctorWaitingRoomHistoryAgenda(response);
+
+    for (const item of agenda) {
+      expect(item.integralCheckup).toBeNull();
+    }
+  });
+});
