@@ -83,6 +83,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
 import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
+import { IntegralCheckupTag } from '@/components/Appointments/IntegralCheckupTag';
+import type { IntegralCheckupLink } from '@/types/Appointment/Appointment';
 import { getArgentinaTodayDate } from '@/common/helpers/argentinaDate';
 
 // ============================================
@@ -362,6 +364,22 @@ const DoctorWaitingRoomPage = () => {
     return getConsultationTypeName(agendaItem);
   };
 
+  /**
+   * El vínculo del control para una entrada de la cola. La cola trae el flag
+   * y el color, pero con quién está compartido sale de la agenda del día, que
+   * ya lo tiene resuelto.
+   */
+  const getQueueEntryIntegralCheckup = (
+    entry: typeof waitingQueue[0],
+  ): IntegralCheckupLink | null => {
+    const agendaItem = agenda.find((item) =>
+      entry.overturnId
+        ? item.type === 'overturn' && item.id === entry.overturnId
+        : item.type === 'appointment' && item.id === entry.appointmentId,
+    );
+    return agendaItem?.integralCheckup ?? null;
+  };
+
   const handleQueueEntryAttend = (entry: typeof waitingQueue[0]) => {
     if (hasAttendingPatient) {
       return;
@@ -442,6 +460,10 @@ const DoctorWaitingRoomPage = () => {
                           {ctName}
                         </Badge>
                       ) : null;
+                    })()}
+                    {(() => {
+                      const link = getQueueEntryIntegralCheckup(entry);
+                      return link ? <IntegralCheckupTag link={link} /> : null;
                     })()}
                     <Badge className="bg-orange-100 text-orange-800">
                       En espera
@@ -552,6 +574,9 @@ const DoctorWaitingRoomPage = () => {
                             </Badge>
                           ) : null;
                         })()}
+                        {item.integralCheckup && (
+                          <IntegralCheckupTag link={item.integralCheckup} />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -717,16 +742,21 @@ const DoctorWaitingRoomPage = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {(() => {
-                              const ctName = getConsultationTypeName(item);
-                              return ctName ? (
-                                <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
-                                  {ctName}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">—</span>
-                              );
-                            })()}
+                            <div className="flex flex-col gap-1">
+                              {(() => {
+                                const ctName = getConsultationTypeName(item);
+                                return ctName ? (
+                                  <Badge variant="outline" className="w-fit bg-teal-50 text-teal-700 border-teal-300">
+                                    {ctName}
+                                  </Badge>
+                                ) : !item.integralCheckup ? (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                ) : null;
+                              })()}
+                              {item.integralCheckup && (
+                                <IntegralCheckupTag link={item.integralCheckup} />
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(item)}>

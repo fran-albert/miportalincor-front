@@ -5,6 +5,7 @@ import useUserRole from '@/hooks/useRoles';
 import {
   AppointmentFullResponseDto,
   AppointmentStatus,
+  IntegralCheckupLink,
   PatientBasicDto,
 } from '@/types/Appointment/Appointment';
 import { OverturnDetailedDto, OverturnStatus } from '@/types/Overturn/Overturn';
@@ -24,6 +25,11 @@ export interface AgendaItem {
   date: string;
   status: AgendaItemStatus;
   patient: PatientBasicDto | null;
+  /**
+   * La otra pata del control ginecológico integral, si el item es parte de
+   * uno. Se levanta acá para que la pantalla no tenga que castear `rawData`.
+   */
+  integralCheckup: IntegralCheckupLink | null;
   rawData: AppointmentFullResponseDto | OverturnDetailedDto;
 }
 
@@ -117,6 +123,7 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
       date: apt.date,
       status: apt.status,
       patient: apt.patient ?? null,
+      integralCheckup: apt.integralCheckup ?? null,
       rawData: apt,
     })),
     ...overturns.map((ot): AgendaItem => ({
@@ -126,6 +133,7 @@ export const useDoctorDayAgenda = (options?: UseDoctorDayAgendaOptions) => {
       date: ot.date,
       status: ot.status,
       patient: ot.patient ?? null,
+      integralCheckup: ot.integralCheckup ?? null,
       rawData: ot,
     })),
   ].sort((a, b) => a.hour.localeCompare(b.hour));
