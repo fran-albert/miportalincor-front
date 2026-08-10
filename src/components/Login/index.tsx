@@ -166,16 +166,20 @@ const LoginComponent = () => {
                           <FormLabel className="text-gray-700 font-medium">
                             D.N.I. o correo electrónico
                           </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          {/* El `div` va por fuera del `FormControl`: el id que
+                              genera shadcn tiene que caer en el `input`, si no
+                              el `FormLabel` apunta al div y la etiqueta nunca
+                              queda asociada al campo. */}
+                          <div className="relative">
+                            <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <FormControl>
                               <Input
                                 {...field}
                                 className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="Tu DNI sin puntos"
                               />
-                            </div>
-                          </FormControl>
+                            </FormControl>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -189,16 +193,16 @@ const LoginComponent = () => {
                           <FormLabel className="text-gray-700 font-medium">
                             Contraseña
                           </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <FormControl>
                               <PasswordInput
                                 {...field}
                                 className="pl-10 h-12 text-lg border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
                                 placeholder="Ingresa tu contraseña"
                               />
-                            </div>
-                          </FormControl>
+                            </FormControl>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
