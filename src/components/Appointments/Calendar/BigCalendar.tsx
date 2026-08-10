@@ -49,6 +49,7 @@ import {
   IntegralCheckupLink,
 } from "@/types/Appointment/Appointment";
 import { resolveIntegralCheckupEventColors } from "@/common/helpers/integral-checkup-style";
+import { buildPatientCoverageLabel } from "@/common/helpers/patient-coverage-label";
 import { IntegralCheckupNotice } from "../IntegralCheckupNotice";
 import {
   OverturnDetailedDto,
@@ -416,6 +417,10 @@ export const BigCalendar = ({
       if (currentView === "day") {
         const hourDay = format(event.start, "HH:mm");
         const endHourDay = format(event.end, "HH:mm");
+        const coverage = buildPatientCoverageLabel(
+          healthInsurance,
+          affiliationNumber,
+        );
         return (
           <div className="calendar-event-content">
             <p className="calendar-event-title">{event.title}</p>
@@ -424,9 +429,9 @@ export const BigCalendar = ({
               <span className="calendar-event-meta-separator">-</span>
               <span>{endHourDay}</span>
             </p>
-            {(patientDni || healthInsurance || consultationType) && (
+            {(patientDni || coverage || consultationType) && (
               <p className="calendar-event-extra">
-                {[patientDni, affiliationNumber ? `${healthInsurance} ${affiliationNumber}` : healthInsurance, consultationType]
+                {[patientDni, coverage, consultationType]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
