@@ -39,6 +39,7 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.PER_SESSION,
           unitPriceCents: "3000000",
           quantity: 3,
+          discountEligible: true,
         },
         {
           activityId: "psicologia",
@@ -46,6 +47,7 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.PER_SESSION,
           unitPriceCents: "2500000",
           quantity: 0,
+          discountEligible: true,
         },
         {
           activityId: "gimnasio",
@@ -53,6 +55,7 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.MONTHLY_FIXED,
           unitPriceCents: "3500000",
           quantity: 4,
+          discountEligible: false,
         },
       ],
       1000
@@ -86,6 +89,7 @@ describe("programMoney", () => {
           quantity: 4,
           coveredQuantity: 2,
           coveredUnitPriceCents: "1500000",
+          discountEligible: true,
         },
         {
           activityId: "psicologia",
@@ -93,6 +97,7 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.PER_SESSION,
           unitPriceCents: "3500000",
           quantity: 4,
+          discountEligible: true,
         },
       ],
       1000
@@ -119,6 +124,7 @@ describe("programMoney", () => {
           quantity: 4,
           coveredQuantity: 2,
           coveredUnitPriceCents: "1500000",
+          discountEligible: true,
         },
         {
           activityId: "psicologia",
@@ -126,12 +132,47 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.PER_SESSION,
           unitPriceCents: "3500000",
           quantity: 2,
+          discountEligible: true,
         },
       ],
       1000
     );
 
     expect(result.discountedTotalCents).toBe("14400000");
+  });
+
+  it("el descuento lo decide el rubro, no el tipo de arancel", () => {
+    const result = calculateProgramPricing(
+      [
+        {
+          activityId: "psicologia-mensual",
+          activityName: "Psicología mensual",
+          tariffType: ProgramTariffType.MONTHLY_FIXED,
+          unitPriceCents: "3000000",
+          quantity: 1,
+          discountEligible: true,
+        },
+        {
+          activityId: "gimnasio-sesion",
+          activityName: "Gimnasio por sesión",
+          tariffType: ProgramTariffType.PER_SESSION,
+          unitPriceCents: "1000000",
+          quantity: 2,
+          discountEligible: false,
+        },
+      ],
+      1000
+    );
+
+    expect(result.items[0]).toMatchObject({
+      discountBasisPoints: 1000,
+      discountedSubtotalCents: "2700000",
+    });
+    expect(result.items[1]).toMatchObject({
+      discountBasisPoints: 0,
+      discountedSubtotalCents: "2000000",
+    });
+    expect(result.discountedTotalCents).toBe("4700000");
   });
 
   it("rechaza más sesiones con cobertura que sesiones del mes", () => {
@@ -146,6 +187,7 @@ describe("programMoney", () => {
             quantity: 2,
             coveredQuantity: 3,
             coveredUnitPriceCents: "1500000",
+            discountEligible: true,
           },
         ],
         1000
@@ -161,6 +203,7 @@ describe("programMoney", () => {
           tariffType: ProgramTariffType.PER_SESSION,
           unitPriceCents: "1",
           quantity: 1,
+          discountEligible: true,
         },
       ],
       5000

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -59,6 +60,7 @@ export default function CreateActivityDialog({
       assignedProfessionalUserId: undefined,
       tariffType: ProgramTariffType.PER_SESSION,
       unitPricePesos: "",
+      discountEligible: true,
     },
   });
 
@@ -161,6 +163,25 @@ export default function CreateActivityDialog({
               ) : null}
             </div>
           </div>
+          <Controller
+            control={control}
+            name="discountEligible"
+            render={({ field }) => (
+              <label className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <Checkbox
+                  aria-label="El descuento del programa alcanza a esta actividad"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
+                <span className="text-sm text-slate-700">
+                  El descuento del programa alcanza a esta actividad
+                  <span className="mt-0.5 block text-xs text-slate-500">
+                    Se decide por rubro: nutrición y psicología sí, gimnasio no.
+                  </span>
+                </span>
+              </label>
+            )}
+          />
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>
             <Textarea

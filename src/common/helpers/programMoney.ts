@@ -70,6 +70,11 @@ export interface ProgramPricingCalculationInput {
   quantity: number;
   coveredQuantity?: number;
   coveredUnitPriceCents?: string;
+  /**
+   * El descuento del programa alcanza a esta línea. Se decide por rubro y llega
+   * resuelto desde afuera: el cálculo no lo deduce del tipo de arancel.
+   */
+  discountEligible: boolean;
 }
 
 export interface ProgramPricingCalculatedItem
@@ -156,10 +161,9 @@ export const calculateProgramPricing = (
     if (listSubtotalCents > MAX_UNSIGNED_BIGINT) {
       throw new Error(`El subtotal de ${input.activityName} excede el máximo admitido`);
     }
-    const effectiveDiscountBasisPoints =
-      input.tariffType === ProgramTariffType.MONTHLY_FIXED
-        ? 0
-        : discountBasisPoints;
+    const effectiveDiscountBasisPoints = input.discountEligible
+      ? discountBasisPoints
+      : 0;
     const discountAmountCents =
       (listSubtotalCents * BigInt(effectiveDiscountBasisPoints) + 5_000n) /
       10_000n;

@@ -78,6 +78,21 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
         <div className="text-gray-500">Calculando cumplimiento...</div>
       ) : compliance ? (
         <div className="space-y-4">
+          {compliance.recordsWithoutActivePlan ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+              <p className="text-sm font-semibold text-amber-900">
+                {compliance.recordsWithoutActivePlan}{" "}
+                {compliance.recordsWithoutActivePlan === 1
+                  ? "asistencia registrada sin plan vigente"
+                  : "asistencias registradas sin plan vigente"}
+              </p>
+              <p className="text-sm text-amber-800">
+                Sin plan vigente no hay sesiones esperadas contra las cuales
+                medir: cargá el plan del paciente en la pestaña Plan para que el
+                cumplimiento tenga sentido.
+              </p>
+            </div>
+          ) : null}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">
@@ -107,9 +122,18 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
             <Card key={ac.activityId}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{ac.activityName}</span>
+                  <span className="font-medium">
+                    {ac.activityName}
+                    {ac.recordsWithoutActivePlan ? (
+                      <span className="ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        {ac.recordsWithoutActivePlan} sin plan vigente
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="text-sm text-gray-500">
-                    {ac.attended}/{ac.expected} asistencias
+                    {ac.expected === 0
+                      ? `${ac.attended} asistencias, sin sesiones esperadas`
+                      : `${ac.attended}/${ac.expected} asistencias`}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">

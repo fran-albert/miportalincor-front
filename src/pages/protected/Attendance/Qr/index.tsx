@@ -148,6 +148,18 @@ const QrAttendancePage = () => {
                     ? `Tu asistencia de hoy a ${result.activityName} ya estaba registrada.`
                     : `Tu asistencia a ${result.activityName} quedó registrada.`}
                 </p>
+                {result.withoutActivePlan ? (
+                  // Avisar, no bloquear: la asistencia ya quedó registrada.
+                  <div className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left">
+                    <p className="text-base font-semibold text-amber-900">
+                      Todavía no tenés un plan cargado
+                    </p>
+                    <p className="text-sm text-amber-800">
+                      Tu asistencia quedó registrada igual. Comentáselo a tu
+                      profesional para que lo complete.
+                    </p>
+                  </div>
+                ) : null}
                 <p className="text-base text-gray-500">
                   Ya podés cerrar esta pantalla.
                 </p>
