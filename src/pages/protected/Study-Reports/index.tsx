@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StudyReportImagesGallery } from "@/components/StudyReport/StudyReportImagesGallery";
+import { applyStudyReportField } from "@/common/helpers/study-report-content";
 import { buildTemplateDefaults } from "./template-defaults.helpers";
 import type {
   StudyReportField,
@@ -266,10 +267,7 @@ function Editor({ item, templates, onClose }: EditorProps) {
   }, [content, hasUnsavedChanges, reportId, signed, templateKey]);
 
   const updateField = (fieldKey: string, value: string | number) => {
-    setContent((current) => ({
-      ...current,
-      [fieldKey]: Number.isNaN(value) ? "" : value,
-    }));
+    setContent((current) => applyStudyReportField(current, fieldKey, value));
     setHasUnsavedChanges(true);
   };
 
