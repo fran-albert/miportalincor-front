@@ -12,6 +12,12 @@ export interface ConsultationType {
   color?: string;
   isActive: boolean;
   displayOrder: number;
+  /**
+   * Subtipo de ecografía: lo declara el ABM (columna del catálogo) y es lo
+   * que hace que el tipo aparezca en el selector de recepción y viaje a la
+   * worklist del ecógrafo. Antes era una lista de IDs en una env del backend.
+   */
+  isEcoSubtype: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,6 +34,7 @@ export interface CreateConsultationTypeDto {
   color?: string;
   isActive?: boolean;
   displayOrder?: number;
+  isEcoSubtype?: boolean;
 }
 
 export type UpdateConsultationTypeDto = Partial<
