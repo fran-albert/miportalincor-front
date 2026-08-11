@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, Info, Pencil, Plus, Stethoscope } from "lucide-react";
+import { AlertTriangle, Pencil, Plus, Stethoscope } from "lucide-react";
 import { useMedicalEvaluation } from "@/hooks/Program/useMedicalEvaluation";
 import { useMeasurements } from "@/hooks/Program/useMeasurements";
 import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
@@ -157,18 +157,6 @@ export default function ClinicalIntakeTab({
                 </div>
               </div>
 
-              {completeness && completeness.missingRecommended.length > 0 && (
-                <Alert className="border-sky-200 bg-sky-50 text-sky-900">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Datos recomendados sin cargar</AlertTitle>
-                  <AlertDescription>
-                    {completeness.missingRecommended
-                      .map((field) => MedicalEvaluationFieldLabels[field])
-                      .join(" · ")}
-                    . No bloquean nada, pero le sirven al equipo que atiende.
-                  </AlertDescription>
-                </Alert>
-              )}
             </>
           )}
 
