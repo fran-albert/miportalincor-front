@@ -22,6 +22,8 @@ export const ScheduleTypeLabels: Record<ScheduleType, string> = {
   [ScheduleType.SPECIFIC_DATES]: "Fechas específicas",
 };
 
+import type { TherapeuticExerciseType } from "@/types/Program/ProgramClinicalIntake";
+
 export interface PlanActivityItem {
   activityId: string;
   assignedProfessionalUserId?: string;
@@ -32,6 +34,10 @@ export interface PlanActivityItem {
   daysOfWeek?: number[];
   /** Fechas YYYY-MM-DD, para SPECIFIC_DATES */
   specificDates?: string[];
+  /** Derivación clínica de la ficha de ingreso */
+  totalSessions?: number;
+  therapeuticGoal?: string;
+  exerciseTypes?: TherapeuticExerciseType[];
   notes?: string;
 }
 
@@ -50,6 +56,9 @@ export interface PlanActivityResponse {
   frequencyPeriod?: FrequencyPeriod;
   daysOfWeek?: number[];
   specificDates?: string[];
+  totalSessions?: number;
+  therapeuticGoal?: string;
+  exerciseTypes?: TherapeuticExerciseType[];
   notes?: string;
 }
 

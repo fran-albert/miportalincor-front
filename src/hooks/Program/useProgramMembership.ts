@@ -5,7 +5,7 @@ import { MemberRole } from "@/types/Program/ProgramMember";
 import { getProgramAccessCapabilities } from "@/common/helpers/programAccess";
 
 export const useProgramMembership = (programId: string) => {
-  const { session, isAdmin, isSecretary } = useRoles();
+  const { session, isAdmin, isSecretary, isDoctor } = useRoles();
   const membersState = useProgramMembers(programId);
 
   const currentMember = useMemo(
@@ -19,6 +19,7 @@ export const useProgramMembership = (programId: string) => {
   const capabilities = getProgramAccessCapabilities({
     isAdmin,
     isSecretary,
+    isDoctor,
     isProgramMember,
     isCoordinator,
   });
@@ -28,6 +29,7 @@ export const useProgramMembership = (programId: string) => {
     currentMember,
     isAdmin,
     isSecretary,
+    isDoctor,
     isProgramMember,
     isCoordinator,
     ...capabilities,
