@@ -11,6 +11,9 @@ const pricingFields = {
     .refine(isValidPesosInput, {
       message: "Ingresá un importe no negativo con hasta 2 decimales.",
     }),
+  // El descuento del programa se decide por rubro: nutrición y psicología sí,
+  // gimnasio no. Nada que ver con cómo se cobra la actividad.
+  discountEligible: z.boolean().default(true),
 };
 
 const optionalProfessionalUserId = z

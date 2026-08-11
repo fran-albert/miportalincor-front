@@ -37,6 +37,8 @@ const activity: ProgramActivity = {
   isActive: true,
   tariffType: ProgramTariffType.MONTHLY_FIXED,
   unitPriceCents: "3500000",
+  // El gimnasio no descuenta: es una decisión de rubro, no del tipo de arancel.
+  discountEligible: false,
 };
 
 describe("EditActivityDialog", () => {
@@ -69,6 +71,7 @@ describe("EditActivityDialog", () => {
           assignedProfessionalUserId: undefined,
           tariffType: ProgramTariffType.MONTHLY_FIXED,
           unitPriceCents: "3500000",
+          discountEligible: false,
         },
       })
     );

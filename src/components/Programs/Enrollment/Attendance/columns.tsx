@@ -37,6 +37,23 @@ export const getAttendanceColumns = (): ColumnDef<AttendanceRecord>[] => [
     },
   },
   {
+    accessorKey: "withoutActivePlan",
+    header: "Plan",
+    cell: ({ row }) =>
+      // Sin plan vigente no hay denominador: la asistencia cuenta, pero el
+      // cumplimiento no se puede medir hasta que se cargue el plan.
+      row.original.withoutActivePlan ? (
+        <Badge
+          variant="outline"
+          className="border-amber-300 bg-amber-50 text-amber-800"
+        >
+          Sin plan vigente
+        </Badge>
+      ) : (
+        <span className="text-slate-400">—</span>
+      ),
+  },
+  {
     accessorKey: "method",
     header: "Método",
     cell: ({ row }) => (

@@ -83,6 +83,18 @@ export default function MonthlyPlanEditor({
       ])
     )
   );
+  // El descuento se decide por rubro: cada línea dice si el % la alcanza, con
+  // el default que trae la actividad y editable antes de guardar.
+  const [discountEligibility, setDiscountEligibility] = useState<
+    Record<string, boolean>
+  >(() =>
+    Object.fromEntries(
+      plan.activities.map((activity, index) => [
+        quantityKey(activity.activityId, index),
+        activity.discountEligible !== false,
+      ])
+    )
+  );
   const hasDeletedSnapshot = plan.activities.some(
     (activity) => activity.activityId === undefined
   );
@@ -113,6 +125,11 @@ export default function MonthlyPlanEditor({
     const raw = quantities[quantityKey(activityId, index)] ?? "";
     return isValidQuantity(raw) ? Number(raw) : 0;
   };
+
+  const discountEligibleOf = (
+    activityId: string | undefined,
+    index: number
+  ): boolean => discountEligibility[quantityKey(activityId, index)] ?? true;
 
   // "Actualizar cantidades desde el plan" solo rellena el formulario: guardar
   // sigue siendo un acto aparte, y es lo único que puede mover la plata.
@@ -174,6 +191,7 @@ export default function MonthlyPlanEditor({
             ? 0
             : coveredQuantityOf(activity.activityId, index),
           coveredUnitPriceCents: activity.coveredUnitPriceCents,
+          discountEligible: discountEligibleOf(activity.activityId, index),
         })),
         plan.discountBasisPoints
       ),
@@ -183,6 +201,7 @@ export default function MonthlyPlanEditor({
       plan.discountBasisPoints,
       quantities,
       coveredQuantities,
+      discountEligibility,
       hasInvalidCoveredQuantity,
     ]
   );
@@ -205,6 +224,7 @@ export default function MonthlyPlanEditor({
         ...(activity.coverageAvailable
           ? { coveredQuantity: coveredQuantityOf(activity.activityId, index) }
           : {}),
+        discountEligible: discountEligibleOf(activity.activityId, index),
       })),
     });
   };
@@ -511,6 +531,23 @@ export default function MonthlyPlanEditor({
                         {calculated.discountBasisPoints / 100}%
                       </span>
                       − {formatCentsToArs(calculated.discountAmountCents)}
+                      <label className="mt-1 flex items-center justify-end gap-1.5 whitespace-normal text-xs text-slate-600">
+                        <Checkbox
+                          aria-label={`Aplicar el descuento a ${activity.activityName}`}
+                          checked={discountEligibleOf(
+                            activity.activityId,
+                            index
+                          )}
+                          disabled={hasDeletedSnapshot}
+                          onCheckedChange={(checked) =>
+                            setDiscountEligibility((current) => ({
+                              ...current,
+                              [key]: checked === true,
+                            }))
+                          }
+                        />
+                        Aplica descuento
+                      </label>
                     </>
                   ) : (
                     "—"
@@ -545,8 +582,9 @@ export default function MonthlyPlanEditor({
 
       <div className="flex flex-col gap-2 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <p className="text-xs text-slate-500">
-          Los precios y el descuento quedarán congelados para este mes. Guardar
-          no le avisa nada al paciente.
+          El descuento del programa se aplica solo a las líneas marcadas. Los
+          precios y el descuento quedarán congelados para este mes: guardar no
+          le avisa nada al paciente.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {plan.persisted &&

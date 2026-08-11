@@ -51,6 +51,7 @@ describe("CreateActivityDialog", () => {
         description: "",
         tariffType: ProgramTariffType.PER_SESSION,
         unitPriceCents: "3000000",
+        discountEligible: true,
       })
     );
   });

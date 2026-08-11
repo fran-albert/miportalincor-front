@@ -65,6 +65,8 @@ export interface ProgramMonthlyPlanItem {
   coveredSessionsPerMonth?: number;
   coverageQuotaExceeded: boolean;
   listSubtotalCents: string;
+  /** El descuento alcanza a esta línea. En un mes guardado es lo congelado. */
+  discountEligible: boolean;
   discountBasisPoints: number;
   discountAmountCents: string;
   discountedSubtotalCents: string;
@@ -114,6 +116,8 @@ export interface MonthlyPlanActivityQuantity {
   activityId: string;
   quantity: number;
   coveredQuantity?: number;
+  /** Si no se informa, manda la configuración por rubro de la actividad. */
+  discountEligible?: boolean;
 }
 
 export interface UpsertProgramMonthlyPlanDto {

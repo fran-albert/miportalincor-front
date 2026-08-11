@@ -17,6 +17,8 @@ export interface AttendanceRecord {
   markedByUserId: string;
   method: AttendanceMethod;
   attendedAt: string;
+  /** No había plan vigente esa fecha: la asistencia quedó sin denominador. */
+  withoutActivePlan?: boolean;
 }
 
 export interface ManualAttendanceDto {
@@ -28,6 +30,8 @@ export interface ManualAttendanceDto {
 export interface ComplianceRecord {
   date: string;
   method: AttendanceMethod;
+  /** No había plan vigente esa fecha. */
+  withoutActivePlan?: boolean;
 }
 
 export interface ActivityCompliance {
@@ -37,6 +41,8 @@ export interface ActivityCompliance {
   attended: number;
   compliance: number;
   records: ComplianceRecord[];
+  /** Cuántas de esas asistencias se marcaron sin plan vigente. */
+  recordsWithoutActivePlan?: number;
 }
 
 export interface ComplianceResponse {
@@ -44,4 +50,6 @@ export interface ComplianceResponse {
   period: { from: string; to: string };
   globalCompliance: number;
   activities: ActivityCompliance[];
+  /** Total de asistencias del período marcadas sin plan vigente. */
+  recordsWithoutActivePlan?: number;
 }

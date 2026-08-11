@@ -43,6 +43,7 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "9000000",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "900000",
       discountedSubtotalCents: "8100000",
@@ -59,6 +60,7 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "0",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "0",
       discountedSubtotalCents: "0",
@@ -75,6 +77,7 @@ const realCasePlan = (): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "3500000",
+      discountEligible: false,
       discountBasisPoints: 0,
       discountAmountCents: "0",
       discountedSubtotalCents: "3500000",
@@ -114,6 +117,7 @@ const coveragePlan = (psicologiaQuantity: number): ProgramMonthlyPlan => ({
       coveredSessionsPerMonth: 2,
       coverageQuotaExceeded: false,
       listSubtotalCents: "0",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "0",
       discountedSubtotalCents: "0",
@@ -129,6 +133,7 @@ const coveragePlan = (psicologiaQuantity: number): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "0",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "0",
       discountedSubtotalCents: "0",
@@ -159,9 +164,9 @@ describe("MonthlyPlanEditor", () => {
     await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
     expect(onSave).toHaveBeenCalledWith({
       activities: [
-        { activityId: "nutrition", quantity: 3 },
-        { activityId: "psychology", quantity: 0 },
-        { activityId: "gym", quantity: 4 },
+        { activityId: "nutrition", quantity: 3, discountEligible: true },
+        { activityId: "psychology", quantity: 0, discountEligible: true },
+        { activityId: "gym", quantity: 4, discountEligible: false },
       ],
     });
   });
@@ -186,9 +191,40 @@ describe("MonthlyPlanEditor", () => {
     await user.click(screen.getByRole("button", { name: "Guardar plan del mes" }));
     expect(onSave).toHaveBeenCalledWith({
       activities: [
-        { activityId: "nutrition", quantity: 3 },
-        { activityId: "psychology", quantity: 0 },
-        { activityId: "gym", quantity: 1 },
+        { activityId: "nutrition", quantity: 3, discountEligible: true },
+        { activityId: "psychology", quantity: 0, discountEligible: true },
+        { activityId: "gym", quantity: 1, discountEligible: false },
+      ],
+    });
+  });
+
+  it("el descuento se decide por línea y se puede cambiar antes de guardar", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    render(
+      <MonthlyPlanEditor plan={realCasePlan()} isSaving={false} onSave={onSave} />
+    );
+
+    // El gimnasio llega sin descuento por rubro, aunque el programa tenga 10%.
+    expect(
+      screen.getByLabelText("Aplicar el descuento a Gimnasio")
+    ).not.toBeChecked();
+    const nutricion = screen.getByLabelText("Aplicar el descuento a Nutrición");
+    expect(nutricion).toBeChecked();
+
+    // Sacarle el descuento a nutrición sube el total del mes: 81.000 -> 90.000.
+    await user.click(nutricion);
+    expect(screen.getAllByText("$ 125.000").length).toBeGreaterThan(0);
+
+    await user.click(
+      screen.getByRole("button", { name: "Guardar plan del mes" })
+    );
+    expect(onSave).toHaveBeenCalledWith({
+      activities: [
+        { activityId: "nutrition", quantity: 3, discountEligible: false },
+        { activityId: "psychology", quantity: 0, discountEligible: true },
+        { activityId: "gym", quantity: 4, discountEligible: false },
       ],
     });
   });
@@ -299,8 +335,13 @@ describe("MonthlyPlanEditor con cobertura de obra social", () => {
     );
     expect(onSave).toHaveBeenCalledWith({
       activities: [
-        { activityId: "nutrition", quantity: 4, coveredQuantity: 3 },
-        { activityId: "psychology", quantity: 0 },
+        {
+          activityId: "nutrition",
+          quantity: 4,
+          coveredQuantity: 3,
+          discountEligible: true,
+        },
+        { activityId: "psychology", quantity: 0, discountEligible: true },
       ],
     });
   });
@@ -378,6 +419,7 @@ const preloadedPlan = (): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "12000000",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "1200000",
       discountedSubtotalCents: "10800000",
@@ -395,6 +437,7 @@ const preloadedPlan = (): ProgramMonthlyPlan => ({
       coverageAvailable: false,
       coverageQuotaExceeded: false,
       listSubtotalCents: "0",
+      discountEligible: true,
       discountBasisPoints: 1000,
       discountAmountCents: "0",
       discountedSubtotalCents: "0",

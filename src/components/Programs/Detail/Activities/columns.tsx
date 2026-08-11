@@ -60,6 +60,23 @@ export const getActivityColumns = (
     ),
   },
   {
+    accessorKey: "discountEligible",
+    header: "Descuento",
+    cell: ({ row }) =>
+      row.original.discountEligible !== false ? (
+        <Badge
+          variant="outline"
+          className="border-emerald-300 bg-emerald-50 text-emerald-800"
+        >
+          Aplica
+        </Badge>
+      ) : (
+        <Badge variant="outline" className="border-slate-300 text-slate-600">
+          Sin descuento
+        </Badge>
+      ),
+  },
+  {
     accessorKey: "isActive",
     header: "Estado",
     cell: ({ row }) => (
