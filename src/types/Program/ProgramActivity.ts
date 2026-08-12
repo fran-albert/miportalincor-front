@@ -22,6 +22,8 @@ export interface ProgramActivity {
   isActive: boolean;
   tariffType?: ProgramTariffType;
   unitPriceCents?: string;
+  /** El descuento del programa alcanza a esta actividad (decisión por rubro). */
+  discountEligible: boolean;
   createdAt?: string;
 }
 
@@ -31,6 +33,7 @@ export interface CreateActivityDto {
   assignedProfessionalUserId?: string;
   tariffType: ProgramTariffType;
   unitPriceCents: string;
+  discountEligible?: boolean;
 }
 
 export interface UpdateActivityDto {
@@ -39,4 +42,5 @@ export interface UpdateActivityDto {
   assignedProfessionalUserId?: string;
   tariffType?: ProgramTariffType;
   unitPriceCents?: string;
+  discountEligible?: boolean;
 }

@@ -29,6 +29,7 @@ const activities: ProgramActivity[] = [
     isActive: true,
     tariffType: ProgramTariffType.PER_SESSION,
     unitPriceCents: "3000000",
+    discountEligible: true,
   },
 ];
 

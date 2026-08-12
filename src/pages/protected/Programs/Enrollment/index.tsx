@@ -14,6 +14,7 @@ import {
   TrendingUp,
   MessageSquareText,
   Banknote,
+  Stethoscope,
 } from "lucide-react";
 import {
   EnrollmentStatusLabels,
@@ -24,6 +25,9 @@ import AttendanceTab from "@/components/Programs/Enrollment/Attendance/Attendanc
 import ComplianceTab from "@/components/Programs/Enrollment/Compliance/ComplianceTab";
 import FollowUpTab from "@/components/Programs/Enrollment/FollowUp/FollowUpTab";
 import MonthlyPricingTab from "@/components/Programs/Enrollment/MonthlyPricing/MonthlyPricingTab";
+import ClinicalIntakeTab from "@/components/Programs/Enrollment/ClinicalIntake/ClinicalIntakeTab";
+import ContraindicationsAlert from "@/components/Programs/Enrollment/ClinicalIntake/ContraindicationsAlert";
+import { useMedicalEvaluation } from "@/hooks/Program/useMedicalEvaluation";
 
 const EnrollmentDetailPage = () => {
   const { programId, enrollmentId } = useParams<{
@@ -33,10 +37,14 @@ const EnrollmentDetailPage = () => {
   const { program } = useProgram(programId!);
   const { enrollment, isLoading } = useEnrollment(programId!, enrollmentId!);
   const { activities } = useProgramActivities(programId!);
-  const { isProgramMember, canManageMonthlyPricing } =
+  const { isProgramMember, canManageMonthlyPricing, canRegisterClinicalIntake } =
     useProgramMembership(programId!);
   const showClinicalTabs = isProgramMember;
   const showMonthlyPricing = canManageMonthlyPricing;
+  // La ficha clínica sólo existe en los programas que la declaran (DOLOR hoy).
+  // Los demás no ven ni la pestaña ni la alerta: nada nuevo aparece.
+  const showClinicalIntake = showClinicalTabs && Boolean(program?.clinicalIntakeEnabled);
+  const { evaluation } = useMedicalEvaluation(enrollmentId!, showClinicalIntake);
 
   if (isLoading) {
     return (
@@ -88,13 +96,32 @@ const EnrollmentDetailPage = () => {
           }
         />
 
+        {!showClinicalIntake ? null : (
+          <ContraindicationsAlert
+            contraindications={evaluation?.contraindications}
+            diagnosis={evaluation?.diagnosis}
+          />
+        )}
+
         <Tabs
-          defaultValue={showClinicalTabs ? "plan" : "attendance"}
+          defaultValue={
+            showClinicalIntake
+              ? "clinical-intake"
+              : showClinicalTabs
+                ? "plan"
+                : "attendance"
+          }
           className="w-full"
         >
           <TabsList
-            className={`grid w-full ${showClinicalTabs ? (showMonthlyPricing ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-4") : "grid-cols-2"}`}
+            className={`grid w-full ${showClinicalTabs ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" : "grid-cols-2"}`}
           >
+            {!showClinicalIntake ? null : (
+              <TabsTrigger value="clinical-intake" className="flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" />
+                Evaluación
+              </TabsTrigger>
+            )}
             {!showClinicalTabs ? null : (
               <TabsTrigger value="plan" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -134,6 +161,15 @@ const EnrollmentDetailPage = () => {
               </TabsTrigger>
             )}
           </TabsList>
+          {!showClinicalIntake ? null : (
+            <TabsContent value="clinical-intake" className="mt-6">
+              <ClinicalIntakeTab
+                enrollmentId={enrollmentId!}
+                activities={activities}
+                canRegisterClinicalIntake={canRegisterClinicalIntake}
+              />
+            </TabsContent>
+          )}
           {!showClinicalTabs ? null : (
             <TabsContent value="plan" className="mt-6">
               <PlanTab

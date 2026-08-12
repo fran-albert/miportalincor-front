@@ -74,6 +74,7 @@ export function ConsultationTypeDialog({
   const [color, setColor] = useState(nextPaletteColor);
   const [displayOrder, setDisplayOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
+  const [isEcoSubtype, setIsEcoSubtype] = useState(false);
 
   useEffect(() => {
     if (consultationType) {
@@ -83,6 +84,7 @@ export function ConsultationTypeDialog({
       setColor(consultationType.color ?? nextPaletteColor);
       setDisplayOrder(String(consultationType.displayOrder));
       setIsActive(consultationType.isActive);
+      setIsEcoSubtype(consultationType.isEcoSubtype ?? false);
       return;
     }
 
@@ -92,6 +94,7 @@ export function ConsultationTypeDialog({
     setColor(nextPaletteColor);
     setDisplayOrder("0");
     setIsActive(true);
+    setIsEcoSubtype(false);
   }, [consultationType, nextPaletteColor, open]);
 
   const handleSubmit = async () => {
@@ -142,6 +145,7 @@ export function ConsultationTypeDialog({
           color: normalizedColor,
           displayOrder: parsedOrder,
           isActive,
+          isEcoSubtype,
           ...scopeFields,
         };
         await updateType({ id: consultationType.id, dto });
@@ -154,6 +158,7 @@ export function ConsultationTypeDialog({
           color: normalizedColor,
           displayOrder: parsedOrder,
           isActive,
+          isEcoSubtype,
           ...scopeFields,
         };
         await createType(dto);
@@ -274,6 +279,22 @@ export function ConsultationTypeDialog({
               </p>
             </div>
             <Switch checked={isActive} onCheckedChange={setIsActive} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-1">
+              <Label htmlFor="consultation-type-eco-subtype" className="text-sm font-medium">
+                Es subtipo de ecografía
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Aparece en el selector de recepción y viaja a la worklist del ecógrafo.
+              </p>
+            </div>
+            <Switch
+              id="consultation-type-eco-subtype"
+              checked={isEcoSubtype}
+              onCheckedChange={setIsEcoSubtype}
+            />
           </div>
         </div>
 

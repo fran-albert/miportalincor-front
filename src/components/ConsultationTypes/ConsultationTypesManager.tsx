@@ -162,7 +162,12 @@ export function ConsultationTypesManager() {
                   <TableRow key={consultationType.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{consultationType.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{consultationType.name}</p>
+                          {consultationType.isEcoSubtype && (
+                            <Badge variant="outline">Subtipo de eco</Badge>
+                          )}
+                        </div>
                         {consultationType.description && (
                           <p className="max-w-md truncate text-sm text-muted-foreground">
                             {consultationType.description}

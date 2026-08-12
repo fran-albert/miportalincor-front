@@ -5,6 +5,8 @@ export interface Program {
   isActive: boolean;
   discountPercent: number;
   discountBasisPoints: number;
+  /** El programa lleva ficha clínica de ingreso y mide una métrica seriada. */
+  clinicalIntakeEnabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

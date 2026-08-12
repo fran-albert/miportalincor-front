@@ -11,6 +11,7 @@ import { EnrollmentStatus } from "@/types/Program/ProgramEnrollment";
 const mockUseProgram = vi.fn();
 const mockUseProgramMembership = vi.fn();
 const mockUseEnrollment = vi.fn();
+const mockUseMedicalEvaluation = vi.fn();
 
 vi.mock("@/hooks/Program/useProgram", () => ({
   useProgram: () => mockUseProgram(),
@@ -27,6 +28,17 @@ vi.mock("@/hooks/Program/useEnrollment", () => ({
 vi.mock("@/hooks/Program/useProgramActivities", () => ({
   useProgramActivities: () => ({ activities: [] }),
 }));
+
+vi.mock("@/hooks/Program/useMedicalEvaluation", () => ({
+  useMedicalEvaluation: () => mockUseMedicalEvaluation(),
+}));
+
+vi.mock(
+  "@/components/Programs/Enrollment/ClinicalIntake/ClinicalIntakeTab",
+  () => ({
+    default: () => <div>Contenido de la ficha de ingreso</div>,
+  })
+);
 
 vi.mock("@/components/PageHeader", () => ({
   PageHeader: ({ title }: { title: string }) => <h1>{title}</h1>,
@@ -87,6 +99,7 @@ const operatorMembership = {
   isProgramOperator: true,
   hasClinicalProgramAccess: false,
   canManageMonthlyPricing: false,
+  canRegisterClinicalIntake: false,
 };
 
 describe("acceso operativo no clínico a Programas", () => {
@@ -113,6 +126,12 @@ describe("acceso operativo no clínico a Programas", () => {
       isLoading: false,
     });
     mockUseProgramMembership.mockReturnValue(operatorMembership);
+    mockUseMedicalEvaluation.mockReturnValue({
+      evaluationDetail: undefined,
+      evaluation: null,
+      completeness: undefined,
+      isLoading: false,
+    });
   });
 
   afterEach(() => {
@@ -208,5 +227,95 @@ describe("acceso operativo no clínico a Programas", () => {
     expect(
       screen.getByRole("tab", { name: "Arancel mensual" })
     ).toBeInTheDocument();
+  });
+
+  it("no muestra la pestaña Evaluación en un programa sin ficha clínica", () => {
+    mockUseProgramMembership.mockReturnValue({
+      ...operatorMembership,
+      isProgramMember: true,
+      isProgramOperator: false,
+      hasClinicalProgramAccess: true,
+      canManageMonthlyPricing: true,
+    });
+
+    renderRoute(
+      "/programas/program-1/inscripciones/enrollment-1",
+      <EnrollmentDetailPage />
+    );
+
+    expect(screen.queryByRole("tab", { name: "Evaluación" })).toBeNull();
+    expect(screen.queryByText("Contenido de la ficha de ingreso")).toBeNull();
+  });
+
+  it("muestra Evaluación y las zonas a evitar cuando el programa lleva ficha clínica", () => {
+    mockUseProgram.mockReturnValue({
+      program: {
+        id: "program-dolor",
+        name: "Unidad Integral del Dolor",
+        isActive: true,
+        clinicalIntakeEnabled: true,
+      },
+      isLoading: false,
+    });
+    mockUseProgramMembership.mockReturnValue({
+      ...operatorMembership,
+      isProgramMember: true,
+      isProgramOperator: false,
+      hasClinicalProgramAccess: true,
+      canManageMonthlyPricing: true,
+      canRegisterClinicalIntake: true,
+    });
+    mockUseMedicalEvaluation.mockReturnValue({
+      evaluationDetail: undefined,
+      evaluation: {
+        contraindications: "Evitar impacto y flexión profunda de rodilla",
+        diagnosis: "Gonartrosis bilateral",
+      },
+      completeness: undefined,
+      isLoading: false,
+    });
+
+    renderRoute(
+      "/programas/program-dolor/inscripciones/enrollment-1",
+      <EnrollmentDetailPage />
+    );
+
+    expect(
+      screen.getByRole("tab", { name: "Evaluación" })
+    ).toBeInTheDocument();
+    // Las zonas a evitar se ven arriba de todo, en cualquier pestaña.
+    expect(
+      screen.getByText("Zonas a evitar / movimientos contraindicados")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Evitar impacto y flexión profunda de rodilla")
+    ).toBeInTheDocument();
+  });
+
+  it("no muestra el cartel de zonas a evitar si la ficha no las tiene cargadas", () => {
+    mockUseProgram.mockReturnValue({
+      program: {
+        id: "program-dolor",
+        name: "Unidad Integral del Dolor",
+        isActive: true,
+        clinicalIntakeEnabled: true,
+      },
+      isLoading: false,
+    });
+    mockUseProgramMembership.mockReturnValue({
+      ...operatorMembership,
+      isProgramMember: true,
+      isProgramOperator: false,
+      hasClinicalProgramAccess: true,
+    });
+
+    renderRoute(
+      "/programas/program-dolor/inscripciones/enrollment-1",
+      <EnrollmentDetailPage />
+    );
+
+    expect(
+      screen.queryByText("Zonas a evitar / movimientos contraindicados")
+    ).toBeNull();
   });
 });

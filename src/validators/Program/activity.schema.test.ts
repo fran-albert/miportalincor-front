@@ -23,4 +23,19 @@ describe("activity schemas", () => {
       expect(result.assignedProfessionalUserId).toBeUndefined();
     }
   );
+
+  it.each([CreateActivitySchema, UpdateActivitySchema])(
+    "por defecto la actividad queda alcanzada por el descuento",
+    (schema) => {
+      expect(schema.parse({ name: "Nutrición", ...pricing }).discountEligible)
+        .toBe(true);
+      expect(
+        schema.parse({
+          name: "Gimnasio",
+          discountEligible: false,
+          ...pricing,
+        }).discountEligible
+      ).toBe(false);
+    }
+  );
 });
