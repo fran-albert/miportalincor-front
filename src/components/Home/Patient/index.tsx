@@ -8,7 +8,6 @@ import {
   CalendarCheck,
   ClipboardList,
   FileText,
-  Sparkles,
   Syringe,
   User,
   X,
@@ -162,7 +161,6 @@ export default function PatientHomePage({ name }: { name: string }) {
         >
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-6 w-6" />
               <span className="text-lg font-medium opacity-90">{getGreeting()}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
