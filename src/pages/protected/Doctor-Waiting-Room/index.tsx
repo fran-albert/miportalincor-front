@@ -84,6 +84,11 @@ import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helper
 import { PageHeader } from '@/components/PageHeader';
 import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
 import { IntegralCheckupTag } from '@/components/Appointments/IntegralCheckupTag';
+import {
+  EcoSubtypeDialog,
+  type EcoSubtypeTarget,
+} from '@/components/Queue/EcoSubtypeDialog';
+import { useSetIntegralUltrasoundTypes } from '@/hooks/Appointments';
 import type { IntegralCheckupLink } from '@/types/Appointment/Appointment';
 import { getArgentinaTodayDate } from '@/common/helpers/argentinaDate';
 
@@ -205,6 +210,12 @@ const DoctorWaitingRoomPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  /**
+   * La consulta del control integral cuya ecografía la médica está indicando.
+   * `null` = diálogo cerrado.
+   */
+  const [ecoTarget, setEcoTarget] = useState<EcoSubtypeTarget | null>(null);
+  const setUltrasoundTypes = useSetIntegralUltrasoundTypes();
   const [historyPeriod, setHistoryPeriod] =
     useState<HistorySelectorValue>('today');
   const [historyDate, setHistoryDate] = useState(getArgentinaTodayDate());
@@ -581,6 +592,28 @@ const DoctorWaitingRoomPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* La ginecóloga indica la ecografía ACÁ, con la paciente
+                        delante: el tipo viaja a la otra pata del control y de
+                        ahí a la worklist, así el ecógrafo ya sabe qué estudio
+                        hacer cuando la paciente entra. */}
+                    {item.type === 'appointment' &&
+                      item.integralCheckup?.role === 'CONSULTATION' && (
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="border-pink-300 hover:bg-pink-100 text-pink-700 font-medium"
+                          onClick={() =>
+                            setEcoTarget({
+                              id: item.id,
+                              patientName: item.patient
+                                ? `${item.patient.lastName}, ${item.patient.firstName}`
+                                : undefined,
+                            })
+                          }
+                        >
+                          Indicar ecografía
+                        </Button>
+                      )}
                     <Button
                       size="lg"
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md"
@@ -880,6 +913,28 @@ const DoctorWaitingRoomPage = () => {
       >
         {renderHistory()}
       </motion.div>
+
+      {/* El mismo selector que usa recepción, en la escena de la médica. */}
+      <EcoSubtypeDialog
+        entry={ecoTarget}
+        title="¿Qué ecografía le indicás?"
+        description={
+          ecoTarget?.patientName
+            ? `Elegí el estudio para ${ecoTarget.patientName}. La ecografista lo va a ver ya definido y llega tipado al ecógrafo.`
+            : "Elegí el estudio. La ecografista lo va a ver ya definido y llega tipado al ecógrafo."
+        }
+        confirmLabel="Indicar"
+        isSaving={setUltrasoundTypes.isPending}
+        onCancel={() => setEcoTarget(null)}
+        onSkip={() => setEcoTarget(null)}
+        onConfirm={(consultationTypeIds) => {
+          if (!ecoTarget) return;
+          setUltrasoundTypes.mutate(
+            { consultationId: ecoTarget.id, consultationTypeIds },
+            { onSuccess: () => setEcoTarget(null) },
+          );
+        }}
+      />
     </div>
   );
 };

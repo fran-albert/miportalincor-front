@@ -146,6 +146,8 @@ export interface AppointmentResponseDto {
   durationMinutes?: number | null;
   // Control ginecológico integral
   linkedOverturnId?: number | null;
+  /** La otra pata cuando las dos son turnos reales (v2). */
+  linkedAppointmentId?: number | null;
   integralCheckup?: IntegralCheckupLink | null;
 }
 
@@ -172,7 +174,14 @@ export interface IntegralCheckupLink {
   counterpartDoctorLastName?: string;
   counterpartDate: string;
   counterpartHour: string;
+  /** El nombre REAL del catálogo: es lo que ven recepción y las médicas. */
   counterpartDescription: string;
+  /**
+   * Lo mismo con el nombre PÚBLICO: es lo único que se le puede mostrar a la
+   * paciente. Para los subtipos de ecografía dice "Ecografía" a secas — el
+   * subtipo lo indica la médica y la paciente no lo ve.
+   */
+  counterpartPublicDescription?: string;
   /**
    * El color del control, tal como lo define el catálogo. Viaja en el vínculo
    * porque un sobreturno no puede tener tipo de consulta.
@@ -180,11 +189,22 @@ export interface IntegralCheckupLink {
   color?: string;
 }
 
-/** Un día con el control integral disponible. */
+/**
+ * Un día con el control integral disponible.
+ *
+ * 🔴 Los dos horarios vienen del backend y NO se asume cuál va primero: en el
+ * circuito viejo la eco va antes de la consulta y en el nuevo, después. Quien
+ * los muestre tiene que ordenarlos por hora, nunca por el nombre del campo.
+ */
 export interface IntegralCheckupSlot {
   date: string;
   consultationHour: string;
   ultrasoundHour: string;
+  /**
+   * Cómo nombrar la ecografía frente a la paciente, cuando el catálogo lo
+   * impone. Si no viene, el portal usa su texto de siempre.
+   */
+  ultrasoundPublicLabel?: string;
 }
 
 /** Una sola reserva, dos momentos. */
@@ -195,8 +215,13 @@ export interface IntegralCheckupBooking {
     doctorId: number;
     date: string;
     hour: string;
+    /** Con el nombre público: "Ecografía" a secas en el circuito nuevo. */
     reason: string;
+    /** Sobreturno (circuito viejo) o turno real de la ecografista (nuevo). */
+    kind?: "OVERTURN" | "APPOINTMENT";
   };
+  /** True cuando la consulta va primero y la eco después. */
+  consultationFirst?: boolean;
 }
 
 export interface AppointmentDetailedDto {
@@ -211,6 +236,7 @@ export interface AppointmentDetailedDto {
   consultationType?: ConsultationTypeBasicDto | null;
   consultationTypes?: ConsultationTypeBasicDto[];
   linkedOverturnId?: number | null;
+  linkedAppointmentId?: number | null;
   integralCheckup?: IntegralCheckupLink | null;
   patient?: PatientBasicDto | null;
   doctor?: DoctorBasicDto | null;
@@ -228,8 +254,21 @@ export interface AppointmentFullResponseDto extends AppointmentResponseDto {
 export interface ConsultationTypeBasicDto {
   id: number;
   name: string;
+  /**
+   * Cómo se le muestra este tipo al PACIENTE. Vacío = se muestra `name`.
+   *
+   * 🔴 En pantallas de paciente usá `publicNameOf(type)`, nunca `name` a
+   * secas: los subtipos de ecografía de Incor traen "Ecografía" acá, porque
+   * el subtipo lo indica la médica y la paciente no lo ve.
+   */
+  publicName?: string | null;
   color?: string;
 }
+
+/** El nombre que le corresponde a un tipo según quién esté mirando. */
+export const publicNameOf = (
+  type: Pick<ConsultationTypeBasicDto, "name" | "publicName">,
+): string => type.publicName?.trim() || type.name;
 
 export interface CreateAppointmentDto {
   doctorId: number;

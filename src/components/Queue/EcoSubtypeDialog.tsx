@@ -18,11 +18,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEcoSubtypes } from "@/hooks/ConsultationType";
-import type { QueueEntry } from "@/types/Queue";
+
+/**
+ * Lo único que el diálogo necesita saber del turno.
+ *
+ * Se declara estructuralmente —y no como `QueueEntry`— porque el mismo
+ * selector lo usan dos escenas distintas: la secretaria, que lo tiene que
+ * llenar antes de llamar (entrada de cola), y la ginecóloga, que indica la
+ * ecografía del control integral desde su consulta y no tiene ninguna entrada
+ * de cola de la eco a mano. `QueueEntry` encaja acá sin castear.
+ */
+export interface EcoSubtypeTarget {
+  id: number;
+  patientName?: string;
+  doctorName?: string;
+}
 
 interface EcoSubtypeDialogProps {
-  /** Entrada de cola pendiente de subtipo; null = diálogo cerrado. */
-  entry: QueueEntry | null;
+  /** Turno pendiente de subtipo; null = diálogo cerrado. */
+  entry: EcoSubtypeTarget | null;
+  /** Título y bajada, cuando el contexto no es el de recepción. */
+  title?: string;
+  description?: string;
   /** Texto del botón de confirmar según la acción que sigue (llamar / pasar). */
   confirmLabel: string;
   onCancel: () => void;
@@ -48,6 +65,8 @@ const normalize = (value: string): string =>
  */
 export function EcoSubtypeDialog({
   entry,
+  title,
+  description,
   confirmLabel,
   onCancel,
   onConfirm,
@@ -101,12 +120,17 @@ export function EcoSubtypeDialog({
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>¿Qué ecografía se va a hacer?</DialogTitle>
+          <DialogTitle>{title ?? "¿Qué ecografía se va a hacer?"}</DialogTitle>
           <DialogDescription>
-            El turno de <span className="font-semibold">{entry?.patientName}</span>{" "}
-            con {entry?.doctorName} no tiene el tipo de ecografía definido.
-            Buscá y elegí uno o más (si el paciente se hace varias) para que el
-            estudio llegue al ecógrafo con los datos del paciente.
+            {description ?? (
+              <>
+                El turno de{" "}
+                <span className="font-semibold">{entry?.patientName}</span> con{" "}
+                {entry?.doctorName} no tiene el tipo de ecografía definido.
+                Buscá y elegí uno o más (si el paciente se hace varias) para que
+                el estudio llegue al ecógrafo con los datos del paciente.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 

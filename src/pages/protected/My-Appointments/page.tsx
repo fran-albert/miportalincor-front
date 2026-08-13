@@ -29,7 +29,8 @@ import { useAppointmentMutations } from "@/hooks/Appointments";
 import useUserRole from "@/hooks/useRoles";
 import {
   AppointmentFullResponseDto,
-  AppointmentStatus
+  AppointmentStatus,
+  publicNameOf
 } from "@/types/Appointment/Appointment";
 import {
   formatDateAR,
@@ -233,7 +234,11 @@ const MyAppointmentsPage = () => {
                           : undefined,
                       }}
                     >
-                      {consultationType.name}
+                      {/* 🔴 Nombre PÚBLICO: es la pantalla de la paciente, y
+                          los subtipos de ecografía no se le muestran (el
+                          subtipo lo indica la médica). Recepción y las médicas
+                          ven el nombre real en el turnero. */}
+                      {publicNameOf(consultationType)}
                     </Badge>
                   ))}
               </div>
