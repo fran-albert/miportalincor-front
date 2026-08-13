@@ -43,8 +43,8 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  HeartPulse,
   Loader2,
-  Sparkles,
   Stethoscope,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -518,7 +518,7 @@ export function RequestAppointmentDialog({
                         )}
                       >
                         <p className="flex items-center gap-1.5 text-sm font-medium">
-                          <Sparkles className="h-4 w-4 text-pink-600" />
+                          <HeartPulse className="h-4 w-4 text-pink-600" />
                           {INTEGRAL_CHECKUP_LABEL}
                         </p>
                         <p className="text-xs text-muted-foreground">

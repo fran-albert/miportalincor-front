@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 
 interface WelcomeHeroProps {
   name: string;
@@ -32,7 +31,6 @@ export const WelcomeHero = ({ name }: WelcomeHeroProps) => {
     >
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-6 w-6" />
           <span className="text-lg font-medium opacity-90">{getGreeting()}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">

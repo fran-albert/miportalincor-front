@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -51,7 +51,7 @@ export function IntegralCheckupTag({
           borderColor: colors.borderColor,
         }}
       >
-        <Sparkles className="mr-1 h-3 w-3" />
+        <HeartPulse className="mr-1 h-3 w-3" />
         {INTEGRAL_CHECKUP_SHORT_LABEL}
       </Badge>
       {showCounterpart && (

@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   INTEGRAL_CHECKUP_LABEL,
@@ -48,7 +48,7 @@ export function IntegralCheckupNotice({
       )}
     >
       <p className="flex items-center gap-1.5 text-sm font-semibold">
-        <Sparkles className="h-4 w-4 text-pink-600" />
+        <HeartPulse className="h-4 w-4 text-pink-600" />
         {compact ? INTEGRAL_CHECKUP_SHORT_LABEL : INTEGRAL_CHECKUP_LABEL}
       </p>
       <p className="mt-1 text-sm">
