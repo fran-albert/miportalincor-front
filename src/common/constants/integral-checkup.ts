@@ -15,6 +15,19 @@ export const INTEGRAL_CHECKUP_LABEL = "Control ginecológico integral";
 export const INTEGRAL_CHECKUP_SHORT_LABEL = "Control integral";
 
 /**
+ * Cómo se nombra la ecografía del control cuando el backend NO impone un
+ * nombre público.
+ *
+ * 🔴 Es el texto de siempre, y sigue siendo el default a propósito: mientras
+ * el circuito no cambie, esta pantalla dice exactamente lo que decía. Cuando
+ * el catálogo impone el nombre público —"Ecografía" a secas, porque el subtipo
+ * lo indica la médica y la paciente no lo ve— viene en
+ * `IntegralCheckupSlot.ultrasoundPublicLabel` y pisa a este.
+ */
+export const INTEGRAL_CHECKUP_ULTRASOUND_DEFAULT_LABEL =
+  "Ecografía ginecológica y mamaria";
+
+/**
  * El fucsia **vive en el catálogo**, no acá: sale del tipo de consulta
  * "Control Ginecológico Integral" y viaja en `integralCheckup.color` (y en
  * `colorControlIntegral` para la sala de espera), porque el sobreturno no

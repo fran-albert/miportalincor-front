@@ -52,6 +52,11 @@ import {
   INTEGRAL_CHECKUP_DOCTOR_ID,
   INTEGRAL_CHECKUP_LABEL,
 } from "@/common/constants/integral-checkup";
+import {
+  integralDaySummary,
+  integralMomentsInOrder,
+  integralOrderHint,
+} from "@/common/helpers/integral-checkup-moments";
 
 interface RequestAppointmentDialogProps {
   open: boolean;
@@ -522,7 +527,7 @@ export function RequestAppointmentDialog({
                           {INTEGRAL_CHECKUP_LABEL}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Consulta y ecografías en una sola visita, con dos
+                          Consulta y ecografía en una sola visita, con dos
                           profesionales.
                         </p>
                       </button>
@@ -618,16 +623,16 @@ export function RequestAppointmentDialog({
                                 {parsedDay ? formatLongDate(parsedDay) : day.date}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                Ecografía {day.ultrasoundHour} hs · Consulta{" "}
-                                {day.consultationHour} hs
+                                {integralDaySummary(day)}
                               </p>
                             </button>
                           );
                         })}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        La ecografía es 15 minutos antes de la consulta: en una
-                        sola visita te hacés las dos cosas.
+                        {integralDays.length > 0
+                          ? integralOrderHint(integralDays[0])
+                          : null}
                       </p>
                     </div>
                   )
@@ -784,18 +789,15 @@ export function RequestAppointmentDialog({
                       Ese día tenés dos momentos
                     </p>
                     <ol className="space-y-1 text-sm text-pink-900">
-                      <li>
-                        <span className="font-semibold">
-                          {selectedIntegralDay.ultrasoundHour} hs
-                        </span>{" "}
-                        — Ecografía ginecológica y mamaria
-                      </li>
-                      <li>
-                        <span className="font-semibold">
-                          {selectedIntegralDay.consultationHour} hs
-                        </span>{" "}
-                        — Consulta con {selectedDoctorLabel}
-                      </li>
+                      {integralMomentsInOrder(
+                        selectedIntegralDay,
+                        selectedDoctorLabel,
+                      ).map((moment) => (
+                        <li key={moment.kind}>
+                          <span className="font-semibold">{moment.hour} hs</span>{" "}
+                          — {moment.label}
+                        </li>
+                      ))}
                     </ol>
                     <p className="text-xs text-pink-800">
                       Si después cancelás o cambiás uno, se cancelan o se mueven

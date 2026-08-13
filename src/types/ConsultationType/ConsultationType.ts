@@ -4,6 +4,15 @@
 export interface ConsultationType {
   id: number;
   name: string;
+  /**
+   * Nombre para el PACIENTE. Vacío = ve el nombre real.
+   *
+   * Es la capacidad de catálogo que hace que la paciente lea "Ecografía" a
+   * secas mientras recepción, las médicas y la worklist siguen viendo
+   * "Ecografía Mamaria". No es un caso especial del control integral: se
+   * configura por tipo, desde el ABM.
+   */
+  publicName?: string | null;
   description?: string;
   scope?: "global" | "specialty" | "doctor";
   specialityId?: number | null;
@@ -26,6 +35,7 @@ export type ConsultationTypeResponseDto = ConsultationType;
 
 export interface CreateConsultationTypeDto {
   name: string;
+  publicName?: string | null;
   description?: string;
   scope?: "global" | "specialty" | "doctor";
   specialityId?: number | null;

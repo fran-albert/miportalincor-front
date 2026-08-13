@@ -45,7 +45,7 @@ describe("ConsultationTypeDialog — flag de subtipo de eco", () => {
       <ConsultationTypeDialog open onOpenChange={vi.fn()} consultationType={null} />,
     );
 
-    fireEvent.change(screen.getByLabelText(/nombre/i), {
+    fireEvent.change(screen.getByLabelText("Nombre *"), {
       target: { value: "Doppler renal" },
     });
     fireEvent.click(ecoSwitch());
@@ -62,7 +62,7 @@ describe("ConsultationTypeDialog — flag de subtipo de eco", () => {
       <ConsultationTypeDialog open onOpenChange={vi.fn()} consultationType={null} />,
     );
 
-    fireEvent.change(screen.getByLabelText(/nombre/i), {
+    fireEvent.change(screen.getByLabelText("Nombre *"), {
       target: { value: "Ergometría" },
     });
     fireEvent.click(screen.getByRole("button", { name: /crear tipo/i }));
