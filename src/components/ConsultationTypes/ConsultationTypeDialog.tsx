@@ -69,6 +69,7 @@ export function ConsultationTypeDialog({
   const nextPaletteColor = getNextPaletteColor(existingTypes.length);
 
   const [name, setName] = useState("");
+  const [publicName, setPublicName] = useState("");
   const [description, setDescription] = useState("");
   const [defaultDurationMinutes, setDefaultDurationMinutes] = useState("15");
   const [color, setColor] = useState(nextPaletteColor);
@@ -79,6 +80,7 @@ export function ConsultationTypeDialog({
   useEffect(() => {
     if (consultationType) {
       setName(consultationType.name);
+      setPublicName(consultationType.publicName ?? "");
       setDescription(consultationType.description ?? "");
       setDefaultDurationMinutes(String(consultationType.defaultDurationMinutes));
       setColor(consultationType.color ?? nextPaletteColor);
@@ -89,6 +91,7 @@ export function ConsultationTypeDialog({
     }
 
     setName("");
+    setPublicName("");
     setDescription("");
     setDefaultDurationMinutes("15");
     setColor(nextPaletteColor);
@@ -140,6 +143,9 @@ export function ConsultationTypeDialog({
       if (isEditing) {
         const dto: UpdateConsultationTypeDto = {
           name: trimmedName,
+          // Vacío = la paciente ve el nombre real. Se manda null y no
+          // undefined para poder BORRAR un nombre público ya cargado.
+          publicName: publicName.trim() || null,
           description: description.trim() || undefined,
           defaultDurationMinutes: parsedDuration,
           color: normalizedColor,
@@ -153,6 +159,9 @@ export function ConsultationTypeDialog({
       } else {
         const dto: CreateConsultationTypeDto = {
           name: trimmedName,
+          // Vacío = la paciente ve el nombre real. Se manda null y no
+          // undefined para poder BORRAR un nombre público ya cargado.
+          publicName: publicName.trim() || null,
           description: description.trim() || undefined,
           defaultDurationMinutes: parsedDuration,
           color: normalizedColor,
@@ -208,6 +217,27 @@ export function ConsultationTypeDialog({
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
+            <p className="text-sm text-muted-foreground">
+              El nombre real: lo ven recepción y las médicas, y es el que viaja
+              al ecógrafo y a los informes.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="consultation-type-public-name">
+              Nombre para el paciente
+            </Label>
+            <Input
+              id="consultation-type-public-name"
+              placeholder="Vacío: el paciente ve el nombre real"
+              value={publicName}
+              onChange={(event) => setPublicName(event.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              Lo único que ve el paciente al reservar. Los subtipos de
+              ecografía llevan &quot;Ecografía&quot;: el subtipo lo indica la
+              médica y el paciente no lo ve.
+            </p>
           </div>
 
           <div className="space-y-2">

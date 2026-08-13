@@ -35,3 +35,23 @@ export const requestIntegralAppointment = async (dto: {
 };
 
 export type { AppointmentResponseDto };
+
+/**
+ * La ginecóloga indica, en su consulta, qué ecografía se le hace a la
+ * paciente. El tipo viaja a la pata de la eco y de ahí a la worklist, así el
+ * ecógrafo ya sabe qué estudio hacer cuando la paciente entra.
+ *
+ * `consultationId` es el turno de la CONSULTA (la pata que la médica tiene
+ * delante), no el de la ecografía: el backend resuelve la otra pata por el
+ * vínculo.
+ */
+export const setIntegralUltrasoundTypes = async (
+  consultationId: number,
+  consultationTypeIds: number[],
+): Promise<AppointmentResponseDto> => {
+  const { data } = await apiTurnos.patch<AppointmentResponseDto>(
+    `appointments/${consultationId}/integral/ultrasound-types`,
+    { consultationTypeIds },
+  );
+  return data;
+};
