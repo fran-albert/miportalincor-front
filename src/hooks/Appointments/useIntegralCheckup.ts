@@ -5,6 +5,9 @@ import {
   setIntegralUltrasoundTypes,
 } from "@/api/Appointments/integral-checkup.action";
 import { useToast } from "@/hooks/use-toast";
+import { doctorAgendaKeys } from "@/hooks/Doctor/useDoctorDayAgenda";
+import { doctorWaitingQueueKeys } from "@/hooks/Doctor/useDoctorWaitingQueue";
+import { doctorQueueKeys } from "@/hooks/Queue/useDoctorQueue";
 import type { IntegralCheckupSlot } from "@/types/Appointment/Appointment";
 
 interface UseIntegralAvailableDaysOptions {
@@ -79,9 +82,13 @@ export const useSetIntegralUltrasoundTypes = () => {
       consultationTypeIds: number[];
     }) => setIntegralUltrasoundTypes(consultationId, consultationTypeIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["doctorWaitingRoom"] });
-      queryClient.invalidateQueries({ queryKey: ["queue"] });
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      // Las claves salen de los hooks que alimentan la sala de espera: el
+      // vinculo con el tipo indicado viaja en la agenda del dia y en la cola,
+      // asi que sin invalidar estas tres la tarjeta sigue mostrando el estado
+      // viejo hasta recargar la pagina.
+      queryClient.invalidateQueries({ queryKey: doctorAgendaKeys.all });
+      queryClient.invalidateQueries({ queryKey: doctorWaitingQueueKeys.all });
+      queryClient.invalidateQueries({ queryKey: doctorQueueKeys.all });
       toast({
         title: "Ecografía indicada",
         description:

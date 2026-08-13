@@ -597,23 +597,45 @@ const DoctorWaitingRoomPage = () => {
                         ahí a la worklist, así el ecógrafo ya sabe qué estudio
                         hacer cuando la paciente entra. */}
                     {item.type === 'appointment' &&
-                      item.integralCheckup?.role === 'CONSULTATION' && (
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="border-pink-300 hover:bg-pink-100 text-pink-700 font-medium"
-                          onClick={() =>
-                            setEcoTarget({
-                              id: item.id,
-                              patientName: item.patient
-                                ? `${item.patient.lastName}, ${item.patient.firstName}`
-                                : undefined,
-                            })
-                          }
-                        >
-                          Indicar ecografía
-                        </Button>
-                      )}
+                      item.integralCheckup?.role === 'CONSULTATION' &&
+                      (() => {
+                        // El nombre real de la otra pata dice si la eco ya
+                        // esta indicada: mientras es el generico coincide con
+                        // el nombre publico ("Ecografia"), y en cuanto la
+                        // ginecologa elige el estudio deja de coincidir.
+                        const real = item.integralCheckup.counterpartDescription;
+                        const publico =
+                          item.integralCheckup.counterpartPublicDescription;
+                        const yaIndicada = Boolean(publico && real !== publico);
+                        return (
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            className={
+                              yaIndicada
+                                ? 'border-pink-400 bg-pink-50 hover:bg-pink-100 text-pink-800 font-medium'
+                                : 'border-pink-300 hover:bg-pink-100 text-pink-700 font-medium'
+                            }
+                            onClick={() =>
+                              setEcoTarget({
+                                id: item.id,
+                                patientName: item.patient
+                                  ? `${item.patient.lastName}, ${item.patient.firstName}`
+                                  : undefined,
+                              })
+                            }
+                          >
+                            {yaIndicada ? (
+                              <>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                {real}
+                              </>
+                            ) : (
+                              'Indicar ecografía'
+                            )}
+                          </Button>
+                        );
+                      })()}
                     <Button
                       size="lg"
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md"
