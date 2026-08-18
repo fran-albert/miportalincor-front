@@ -10,27 +10,45 @@ import {
   OverturnStatusLabels,
   OverturnStatusColors
 } from "@/types/Overturn/Overturn";
+import {
+  PatientAppointmentStatusColors,
+  PatientAppointmentStatusLabels,
+  PatientOverturnStatusColors,
+  PatientOverturnStatusLabels
+} from "@/common/constants/patient-appointment-status";
+
+/**
+ * Quién está mirando el badge. El default es `staff` a propósito: los call
+ * sites del backoffice (turnero, tabla, sala de espera, agenda impresa, ficha
+ * del paciente) no se tocan y siguen renderizando exactamente lo de siempre.
+ * Sólo el portal del paciente pide `patient`.
+ */
+type StatusBadgeAudience = 'staff' | 'patient';
 
 interface StatusBadgeProps {
   status: AppointmentStatus | OverturnStatus;
   type?: 'appointment' | 'overturn';
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  audience?: StatusBadgeAudience;
 }
 
 export const StatusBadge = ({
   status,
   type = 'appointment',
   className,
-  size = 'md'
+  size = 'md',
+  audience = 'staff'
 }: StatusBadgeProps) => {
+  const isPatient = audience === 'patient';
+
   const label = type === 'appointment'
-    ? AppointmentStatusLabels[status as AppointmentStatus]
-    : OverturnStatusLabels[status as OverturnStatus];
+    ? (isPatient ? PatientAppointmentStatusLabels : AppointmentStatusLabels)[status as AppointmentStatus]
+    : (isPatient ? PatientOverturnStatusLabels : OverturnStatusLabels)[status as OverturnStatus];
 
   const colorClass = type === 'appointment'
-    ? AppointmentStatusColors[status as AppointmentStatus]
-    : OverturnStatusColors[status as OverturnStatus];
+    ? (isPatient ? PatientAppointmentStatusColors : AppointmentStatusColors)[status as AppointmentStatus]
+    : (isPatient ? PatientOverturnStatusColors : OverturnStatusColors)[status as OverturnStatus];
 
   const sizeClass = {
     sm: 'text-xs px-2 py-0.5',
