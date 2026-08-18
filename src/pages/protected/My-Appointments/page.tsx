@@ -23,6 +23,7 @@ import {
   INTEGRAL_CHECKUP_FALLBACK_COLOR,
   INTEGRAL_CHECKUP_SHORT_LABEL,
 } from "@/common/constants/integral-checkup";
+import { PATIENT_NO_CONFIRMATION_NEEDED_TEXT } from "@/common/constants/patient-appointment-status";
 import { eventColorsFromCatalogColor } from "@/common/helpers/integral-checkup-style";
 import { usePatientAppointments, useReschedulePatientAppointment } from "@/hooks/Appointments";
 import { useAppointmentMutations } from "@/hooks/Appointments";
@@ -51,6 +52,7 @@ import {
   CalendarCheck,
   CalendarX,
   CalendarDays,
+  CheckCircle2,
   Loader2,
   Plus
 } from "lucide-react";
@@ -165,6 +167,19 @@ const MyAppointmentsPage = () => {
       appointment.status === AppointmentStatus.CANCELLED_BY_SECRETARY;
     const showConsultationTypes = !isFinished && !isCancelled;
     const showActions = canReschedule(appointment) || canCancel(appointment);
+    /**
+     * La frase que hoy tendría que llegar por WhatsApp y no siempre llega (la
+     * confirmación es opcional por médico). Va sólo en turnos que están
+     * efectivamente reservados y todavía por venir: no en cancelados, no en
+     * finalizados, no en los que ya pasaron.
+     */
+    const showReservedNotice =
+      !isCancelled &&
+      !isFinished &&
+      !isAppointmentExpired(appointment) &&
+      !isTerminalStatus(appointment) &&
+      (appointment.status === AppointmentStatus.PENDING ||
+        appointment.status === AppointmentStatus.ASSIGNED_BY_SECRETARY);
 
     return (
       <Card
@@ -198,7 +213,7 @@ const MyAppointmentsPage = () => {
                     Finalizado
                   </Badge>
                 ) : (
-                  <StatusBadge status={appointment.status} />
+                  <StatusBadge status={appointment.status} audience="patient" />
                 )}
                 {appointment.integralCheckup && (
                   <Badge
@@ -272,6 +287,12 @@ const MyAppointmentsPage = () => {
                       {appointment.integralCheckup.counterpartHour} hs
                     </span>
                     , {appointment.integralCheckup.counterpartDescription}.
+                  </p>
+                )}
+                {showReservedNotice && (
+                  <p className="mt-2 flex items-start gap-1.5 text-sm text-green-700">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{PATIENT_NO_CONFIRMATION_NEEDED_TEXT}</span>
                   </p>
                 )}
               </div>
