@@ -7,13 +7,25 @@ import type {
 } from "@/types/Appointment/Appointment";
 
 /**
+ * Qué se le pide al backend cuando se listan los días del control.
+ *
+ * `excludeAppointmentId` es para REPROGRAMAR: el control que se está moviendo
+ * no se cuenta como ocupado, así el día donde ya está sigue apareciendo. Va el
+ * id del turno de la CONSULTA, que es el que ocupa el casillero.
+ */
+export interface IntegralAvailableDaysParams {
+  from?: string;
+  to?: string;
+  excludeAppointmentId?: number;
+}
+
+/**
  * Días con control ginecológico integral disponible. Los horarios los define
  * el backend (configuración de instancia): el front no los calcula.
  */
-export const getIntegralAvailableDays = async (params?: {
-  from?: string;
-  to?: string;
-}): Promise<IntegralCheckupSlot[]> => {
+export const getIntegralAvailableDays = async (
+  params?: IntegralAvailableDaysParams,
+): Promise<IntegralCheckupSlot[]> => {
   const { data } = await apiTurnos.get<IntegralCheckupSlot[]>(
     "appointments/patient/integral/available-days",
     { params },
@@ -42,10 +54,9 @@ export const requestIntegralAppointment = async (dto: {
  * dé la secretaria. Lo que cambia es que la respuesta trae el nombre REAL de
  * la ecografía, que a la paciente no se le manda.
  */
-export const getStaffIntegralAvailableDays = async (params?: {
-  from?: string;
-  to?: string;
-}): Promise<IntegralCheckupSlot[]> => {
+export const getStaffIntegralAvailableDays = async (
+  params?: IntegralAvailableDaysParams,
+): Promise<IntegralCheckupSlot[]> => {
   const { data } = await apiTurnos.get<IntegralCheckupSlot[]>(
     "appointments/integral/available-days",
     { params },

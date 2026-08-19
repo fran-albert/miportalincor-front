@@ -1,20 +1,14 @@
 import { useMemo, useState } from "react";
 import { HeartPulse, Loader2 } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { useStaffIntegralAvailableDays } from "@/hooks/Appointments";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import {
-  integralDaySummary,
-  integralStaffMomentsInOrder,
-} from "@/common/helpers/integral-checkup-moments";
-import { INTEGRAL_CHECKUP_LABEL } from "@/common/constants/integral-checkup";
+import { integralStaffMomentsInOrder } from "@/common/helpers/integral-checkup-moments";
 import type { IntegralCheckupSlot } from "@/types/Appointment/Appointment";
+import { IntegralCheckupDayPicker } from "../IntegralCheckupDayPicker";
 import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
 
 /**
@@ -41,18 +35,6 @@ export interface StaffIntegralCheckupFormProps {
     userName?: string;
   };
 }
-
-/** `2027-03-10` → `martes 10 de marzo de 2027`. */
-const formatLongDate = (date: string): string => {
-  const parsed = new Date(`${date}T12:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
 
 export const StaffIntegralCheckupForm = ({
   onSubmit,
@@ -118,55 +100,13 @@ export const StaffIntegralCheckupForm = ({
 
       <div className="space-y-2">
         <Label>Día *</Label>
-        {loadingDays ? (
-          <div className="space-y-2">
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-16 w-full" />
-          </div>
-        ) : isError ? (
-          <Alert variant="destructive">
-            <AlertTitle>No se pudieron cargar los días</AlertTitle>
-            <AlertDescription>
-              Volvé a intentar en unos segundos.
-            </AlertDescription>
-          </Alert>
-        ) : days.length === 0 ? (
-          <Alert>
-            <AlertTitle>Sin días disponibles</AlertTitle>
-            <AlertDescription>
-              Por ahora no hay fechas libres para el {INTEGRAL_CHECKUP_LABEL.toLowerCase()}.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="grid max-h-64 gap-2 overflow-y-auto pr-1">
-            {days.map((day) => (
-              <button
-                key={day.date}
-                type="button"
-                aria-pressed={selectedDate === day.date}
-                onClick={() => setSelectedDate(day.date)}
-                className={cn(
-                  "rounded-lg border p-3 text-left text-sm transition-colors",
-                  selectedDate === day.date
-                    ? "border-pink-500 bg-pink-50"
-                    : "hover:bg-muted/50",
-                )}
-              >
-                <span className="block font-medium capitalize">
-                  {formatLongDate(day.date)}
-                </span>
-                {/* 🔴 Las dos horas, en la fecha misma: la secretaria las ve
-                    sin tener que elegir el día para enterarse. Salen del
-                    backend y se ordenan por reloj — la separación entre la
-                    consulta y la eco no es un número fijo (el miércoles la
-                    consulta dura 20 minutos y el jueves 30). */}
-                <span className="block text-xs text-muted-foreground">
-                  {integralDaySummary(day)}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        <IntegralCheckupDayPicker
+          days={days}
+          isLoading={loadingDays}
+          isError={isError}
+          selectedDate={selectedDate}
+          onSelect={(day) => setSelectedDate(day.date)}
+        />
       </div>
 
       {/* Las dos patas resueltas, antes de confirmar. */}

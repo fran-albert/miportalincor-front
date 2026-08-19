@@ -18,14 +18,21 @@ import type {
 
 interface UseIntegralAvailableDaysOptions {
   enabled?: boolean;
+  /**
+   * El control que se está reprogramando, para que no se cuente a sí mismo
+   * como ocupado: sin esto, el día donde el control ya está desaparece de la
+   * lista. Es el id del turno de la CONSULTA (el que ocupa el casillero).
+   */
+  excludeAppointmentId?: number;
 }
 
 export const useIntegralAvailableDays = ({
   enabled = true,
+  excludeAppointmentId,
 }: UseIntegralAvailableDaysOptions = {}) => {
   const query = useQuery<IntegralCheckupSlot[]>({
-    queryKey: ["integralAvailableDays"],
-    queryFn: () => getIntegralAvailableDays(),
+    queryKey: ["integralAvailableDays", excludeAppointmentId ?? null],
+    queryFn: () => getIntegralAvailableDays({ excludeAppointmentId }),
     enabled,
     staleTime: 60 * 1000,
   });
@@ -44,10 +51,11 @@ export const useIntegralAvailableDays = ({
  */
 export const useStaffIntegralAvailableDays = ({
   enabled = true,
+  excludeAppointmentId,
 }: UseIntegralAvailableDaysOptions = {}) => {
   const query = useQuery<IntegralCheckupSlot[]>({
-    queryKey: ["staffIntegralAvailableDays"],
-    queryFn: () => getStaffIntegralAvailableDays(),
+    queryKey: ["staffIntegralAvailableDays", excludeAppointmentId ?? null],
+    queryFn: () => getStaffIntegralAvailableDays({ excludeAppointmentId }),
     enabled,
     staleTime: 60 * 1000,
   });
