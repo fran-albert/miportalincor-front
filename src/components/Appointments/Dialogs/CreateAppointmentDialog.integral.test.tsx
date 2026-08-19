@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -73,10 +74,12 @@ vi.mock("@/hooks/Toast/toast-context", () => ({
  */
 vi.mock("../Forms/CreateAppointmentForm", () => ({
   CreateAppointmentForm: ({
+    onSubmit,
     onDoctorChange,
     afterDoctorField,
     fieldsBelowDoctorOverride,
   }: {
+    onSubmit: (data: unknown, previewMeta: unknown) => Promise<void>;
     onDoctorChange?: (doctorId: number | undefined) => void;
     afterDoctorField?: React.ReactNode;
     fieldsBelowDoctorOverride?: React.ReactNode;
@@ -89,7 +92,27 @@ vi.mock("../Forms/CreateAppointmentForm", () => ({
         Elegir a otro médico
       </button>
       {afterDoctorField}
-      {fieldsBelowDoctorOverride ?? <div data-testid="campos-del-turno-comun" />}
+      {fieldsBelowDoctorOverride ?? (
+        <div data-testid="campos-del-turno-comun">
+          <button
+            type="button"
+            onClick={() =>
+              void onSubmit(
+                {
+                  doctorId: 388,
+                  patientId: 501,
+                  date: "2027-03-10",
+                  hour: "11:00",
+                  consultationTypeIds: [4],
+                },
+                {},
+              )
+            }
+          >
+            Confirmar el alta de siempre
+          </button>
+        </div>
+      )}
     </div>
   ),
 }));
@@ -260,5 +283,109 @@ describe("CreateAppointmentDialog · control integral", () => {
       });
     });
     expect(showSuccess).toHaveBeenCalled();
+  });
+});
+
+/**
+ * La modalidad se resetea cuando el diálogo se cierra, se cierre como se
+ * cierre.
+ *
+ * 🔴 El reset vivía en el `onOpenChange` de Radix, y los cierres que dispara
+ * el propio diálogo cuando el alta sale bien **no pasan por ahí**: la
+ * secretaria daba un control desde la agenda de la ginecóloga, el diálogo se
+ * cerraba solo y al volver a abrirlo la pantalla arrancaba en "Control
+ * Ginecológico Integral". El default es el turno común, siempre.
+ */
+describe("CreateAppointmentDialog · el diálogo vuelve a abrir en turno común", () => {
+  beforeEach(() => {
+    roles.mockReturnValue({
+      isPatient: false,
+      isDoctor: false,
+      isSecretary: true,
+      isAdmin: false,
+    });
+    config.mockReturnValue({
+      consultationDoctorId: 388,
+      ultrasoundDoctorId: 176,
+    });
+    createStaffIntegral.mockClear();
+    showSuccess.mockClear();
+  });
+
+  /** La agenda de la ginecóloga: el médico queda elegido entre aperturas. */
+  const Host = () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>
+          Abrir de nuevo
+        </button>
+        <CreateAppointmentDialog
+          open={open}
+          onOpenChange={setOpen}
+          fixedDoctorId={388}
+        />
+      </>
+    );
+  };
+
+  const abrirHost = async () => {
+    render(<Host />);
+    return userEvent.setup();
+  };
+
+  const reabrir = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole("button", { name: /abrir de nuevo/i }));
+  };
+
+  it("después de dar un control, vuelve a abrir en turno común", async () => {
+    const user = await abrirHost();
+
+    await user.click(screen.getByRole("button", { name: /la ginecóloga/i }));
+    await user.click(laModalidad()!);
+    await user.click(screen.getByRole("button", { name: /dar el control/i }));
+
+    await waitFor(() => expect(createStaffIntegral).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(screen.queryByTestId("alta-integral")).not.toBeInTheDocument(),
+    );
+
+    await reabrir(user);
+
+    expect(screen.getByTestId("campos-del-turno-comun")).toBeInTheDocument();
+    expect(screen.queryByTestId("alta-integral")).not.toBeInTheDocument();
+  });
+
+  it("y también después de crear un turno común, sin tocar nada más", async () => {
+    const user = await abrirHost();
+
+    await user.click(screen.getByRole("button", { name: /la ginecóloga/i }));
+    await user.click(laModalidad()!);
+    await user.click(screen.getByRole("button", { name: /turno común/i }));
+    await user.click(screen.getByRole("button", { name: /confirmar el alta de siempre/i }));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("alta-comun")).not.toBeInTheDocument(),
+    );
+
+    await reabrir(user);
+
+    expect(screen.getByTestId("campos-del-turno-comun")).toBeInTheDocument();
+  });
+
+  it("cerrando a mano sigue reseteando, como antes", async () => {
+    const user = await abrirHost();
+
+    await user.click(screen.getByRole("button", { name: /la ginecóloga/i }));
+    await user.click(laModalidad()!);
+    await user.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("alta-integral")).not.toBeInTheDocument(),
+    );
+
+    await reabrir(user);
+
+    expect(screen.getByTestId("campos-del-turno-comun")).toBeInTheDocument();
   });
 });

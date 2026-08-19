@@ -125,6 +125,21 @@ export const CreateAppointmentDialog = ({
     }
   }, [offersIntegralCheckup]);
 
+  /**
+   * 🔴 El diálogo cerrado vuelve al alta de siempre, **se cierre como se
+   * cierre**. El reset vivía en el `onOpenChange` de Radix y los tres cierres
+   * que dispara este mismo diálogo cuando el alta sale bien no pasan por ahí:
+   * dar un control desde la agenda de la ginecóloga dejaba la pantalla
+   * abriendo directo en el control la próxima vez. Es el patrón que ya usa
+   * `RequestAppointmentDialog` en el portal.
+   */
+  useEffect(() => {
+    if (!open) {
+      setIsGuestMode(false);
+      setModality("standard");
+    }
+  }, [open]);
+
   const handleIntegralSubmit = async (data: {
     patientId: number;
     date: string;
@@ -250,13 +265,7 @@ export const CreateAppointmentDialog = ({
   ) : null;
 
   return (
-    <Dialog open={open} onOpenChange={(value) => {
-      if (!value) {
-        setIsGuestMode(false);
-        setModality("standard");
-      }
-      setOpen(value);
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       {/* Solo mostrar trigger si no está en modo controlado */}
       {!isControlled && (
         <DialogTrigger asChild>
