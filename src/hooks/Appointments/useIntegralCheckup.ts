@@ -114,11 +114,22 @@ export const useCreateStaffIntegralAppointment = () => {
     mutationFn: (dto: { patientId: number; date: string }) =>
       createStaffIntegralAppointment(dto),
     onSuccess: () => {
-      // El control ocupa un casillero de las dos agendas: el turnero, la
-      // grilla de horarios libres y los días del control quedan viejos.
+      /**
+       * 🔴 El control **es** un alta de turnos: ocupa dos casilleros reales de
+       * dos agendas. Refresca todo lo que refresca el alta común
+       * (`useAppointmentMutations`) —si no, un control dado para HOY dejaba la
+       * cola del día y los listados de la paciente mostrando lo de antes— más
+       * lo suyo: los días del control, que acaban de perder un lugar.
+       */
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
       queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["waitingList"] });
+      queryClient.invalidateQueries({ queryKey: ["doctorTodayAppointments"] });
+      queryClient.invalidateQueries({ queryKey: ["patientAppointments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["patientAppointmentsByUserId"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
       queryClient.invalidateQueries({
         queryKey: ["staffIntegralAvailableDays"],
       });
