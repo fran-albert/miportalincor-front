@@ -2,6 +2,7 @@ import { apiTurnos } from "@/services/axiosConfig";
 import type {
   AppointmentResponseDto,
   IntegralCheckupBooking,
+  IntegralCheckupConfig,
   IntegralCheckupSlot,
 } from "@/types/Appointment/Appointment";
 
@@ -51,6 +52,25 @@ export const getStaffIntegralAvailableDays = async (params?: {
   );
   return data;
 };
+
+/**
+ * Quiénes ofrecen el control.
+ *
+ * 🔴 Lo que hace que el front **no cablee a la ginecóloga**. La secretaria
+ * elige el médico en el alta de turnos y la pantalla decide si mostrarle la
+ * modalidad comparando ese médico con lo que contesta el backend.
+ *
+ * Va aparte de los días disponibles a propósito: si se dedujera de ahí, con la
+ * agenda llena la respuesta sería `[]` y la modalidad desaparecería sin
+ * explicación, en vez de aparecer y decir "sin días disponibles".
+ */
+export const getIntegralCheckupConfig =
+  async (): Promise<IntegralCheckupConfig> => {
+    const { data } = await apiTurnos.get<IntegralCheckupConfig>(
+      "appointments/integral/config",
+    );
+    return data;
+  };
 
 /**
  * La secretaría da el control a una paciente.

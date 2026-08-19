@@ -89,6 +89,32 @@ describe("StaffIntegralCheckupForm", () => {
     return user;
   };
 
+  /**
+   * Lo que pidió Francisco el 19/08: que las fechas **indiquen el horario de
+   * la consulta y el horario de la ecografía**, sin tener que elegir una para
+   * enterarse. Las dos horas las manda el backend, ya resueltas al modo
+   * activo; acá se ordenan por reloj y se muestran.
+   */
+  it("cada fecha indica el horario de la consulta y el de la ecografía", async () => {
+    renderForm();
+
+    const dia = await screen.findByRole("button", { name: /10 de marzo/i });
+
+    expect(dia).toHaveTextContent("Consulta 10:20 hs");
+    expect(dia).toHaveTextContent("Ecografía 10:40 hs");
+  });
+
+  it("las horas de la fecha también salen del backend: si se invierten, las sigue", async () => {
+    days.mockReturnValue([VIEJO]);
+    renderForm();
+
+    const dia = await screen.findByRole("button", { name: /10 de marzo/i });
+
+    // El circuito viejo pone la eco antes: la fecha lo dice en ese orden sin
+    // que el front sepa en qué modo está.
+    expect(dia).toHaveTextContent("Ecografía 10:05 hs · Consulta 10:20 hs");
+  });
+
   it("muestra las dos patas resueltas, con hora y médica de cada una", async () => {
     renderForm();
     await elegirDiaYPaciente();

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createStaffIntegralAppointment,
   getIntegralAvailableDays,
+  getIntegralCheckupConfig,
   getStaffIntegralAvailableDays,
   requestIntegralAppointment,
   setIntegralUltrasoundTypes,
@@ -10,7 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { doctorAgendaKeys } from "@/hooks/Doctor/useDoctorDayAgenda";
 import { doctorWaitingQueueKeys } from "@/hooks/Doctor/useDoctorWaitingQueue";
 import { doctorQueueKeys } from "@/hooks/Queue/useDoctorQueue";
-import type { IntegralCheckupSlot } from "@/types/Appointment/Appointment";
+import type {
+  IntegralCheckupConfig,
+  IntegralCheckupSlot,
+} from "@/types/Appointment/Appointment";
 
 interface UseIntegralAvailableDaysOptions {
   enabled?: boolean;
@@ -50,6 +54,34 @@ export const useStaffIntegralAvailableDays = ({
 
   return {
     days: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
+};
+
+/**
+ * Quiénes ofrecen el control, según el backend.
+ *
+ * 🔴 Con esto la pantalla de turnos decide si mostrarle a la secretaria la
+ * modalidad del control después de elegir el médico. **El id no se cablea**:
+ * quién es la ginecóloga es config de instancia y la respuesta puede cambiar
+ * sin tocar el front.
+ *
+ * Es config, no disponibilidad: no cambia entre pantallas ni entre días, así
+ * que se cachea largo y no se invalida al reservar.
+ */
+export const useIntegralCheckupConfig = ({
+  enabled = true,
+}: UseIntegralAvailableDaysOptions = {}) => {
+  const query = useQuery<IntegralCheckupConfig>({
+    queryKey: ["integralCheckupConfig"],
+    queryFn: () => getIntegralCheckupConfig(),
+    enabled,
+    staleTime: 60 * 60 * 1000,
+  });
+
+  return {
+    config: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
   };

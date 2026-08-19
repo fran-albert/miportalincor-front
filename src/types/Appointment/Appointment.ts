@@ -219,6 +219,18 @@ export interface IntegralCheckupSlot {
   ultrasoundLabel?: string;
 }
 
+/**
+ * Quiénes ofrecen el control, tal como los declara el backend.
+ *
+ * 🔴 Es lo que le permite a la pantalla de turnos preguntar "¿este médico
+ * ofrece el control?" en vez de saberlo. Quién es la ginecóloga es config de
+ * instancia: acá no se cablea ningún id.
+ */
+export interface IntegralCheckupConfig {
+  consultationDoctorId: number;
+  ultrasoundDoctorId: number;
+}
+
 /** Una sola reserva, dos momentos. */
 export interface IntegralCheckupBooking {
   consultation: AppointmentResponseDto;

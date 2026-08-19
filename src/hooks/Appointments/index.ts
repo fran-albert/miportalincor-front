@@ -31,6 +31,7 @@ export { useReschedulePatientAppointment } from './useReschedulePatientAppointme
 export {
   useCreateStaffIntegralAppointment,
   useIntegralAvailableDays,
+  useIntegralCheckupConfig,
   useRequestIntegralAppointment,
   useSetIntegralUltrasoundTypes,
   useStaffIntegralAvailableDays,

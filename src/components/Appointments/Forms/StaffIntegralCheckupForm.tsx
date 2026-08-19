@@ -9,7 +9,10 @@ import { cn } from "@/lib/utils";
 import { useStaffIntegralAvailableDays } from "@/hooks/Appointments";
 import { useDoctors } from "@/hooks/Doctor/useDoctors";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import { integralStaffMomentsInOrder } from "@/common/helpers/integral-checkup-moments";
+import {
+  integralDaySummary,
+  integralStaffMomentsInOrder,
+} from "@/common/helpers/integral-checkup-moments";
 import { INTEGRAL_CHECKUP_LABEL } from "@/common/constants/integral-checkup";
 import type { IntegralCheckupSlot } from "@/types/Appointment/Appointment";
 import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
@@ -149,8 +152,16 @@ export const StaffIntegralCheckupForm = ({
                     : "hover:bg-muted/50",
                 )}
               >
-                <span className="font-medium capitalize">
+                <span className="block font-medium capitalize">
                   {formatLongDate(day.date)}
+                </span>
+                {/* 🔴 Las dos horas, en la fecha misma: la secretaria las ve
+                    sin tener que elegir el día para enterarse. Salen del
+                    backend y se ordenan por reloj — la separación entre la
+                    consulta y la eco no es un número fijo (el miércoles la
+                    consulta dura 20 minutos y el jueves 30). */}
+                <span className="block text-xs text-muted-foreground">
+                  {integralDaySummary(day)}
                 </span>
               </button>
             ))}

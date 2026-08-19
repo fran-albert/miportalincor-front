@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   useAppointmentMutations,
   useCreateGuestAppointment,
   useCreateStaffIntegralAppointment,
+  useIntegralCheckupConfig,
 } from "@/hooks/Appointments";
 import { StaffIntegralCheckupForm } from "../Forms/StaffIntegralCheckupForm";
 import { CreateAppointmentFormData } from "@/validators/Appointment/appointment.schema";
@@ -25,6 +26,7 @@ import { CalendarPlus, HeartPulse, Loader2, UserPlus } from "lucide-react";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import { AppointmentFullResponseDto } from "@/types/Appointment/Appointment";
 import { INTEGRAL_CHECKUP_LABEL } from "@/common/constants/integral-checkup";
+import { doctorOffersIntegralCheckup } from "@/common/helpers/integral-checkup-offer";
 import useUserRole from "@/hooks/useRoles";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +79,9 @@ export const CreateAppointmentDialog = ({
 }: CreateAppointmentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [modality, setModality] = useState<Modality>("standard");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>(
+    fixedDoctorId ?? defaultDoctorId,
+  );
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [canSubmitGuest, setCanSubmitGuest] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -95,8 +100,30 @@ export const CreateAppointmentDialog = ({
   // El control lo da secretaría (o administración). Un médico da sus turnos,
   // no el control de otras dos agendas.
   const { isSecretary, isAdmin } = useUserRole();
-  const offersIntegralCheckup = isSecretary || isAdmin;
+  const isStaff = isSecretary || isAdmin;
+
+  /**
+   * 🔴 Quién ofrece el control lo dice el BACKEND. Acá no hay ningún id de
+   * médica: la ginecóloga del control es config de instancia y se pregunta.
+   * Por eso la modalidad aparece recién después de elegir el médico —el
+   * recorrido que pidió Francisco el 19/08— y con cualquier otro médico el
+   * alta común queda exactamente como estaba.
+   */
+  const { config: integralConfig } = useIntegralCheckupConfig({
+    enabled: isStaff,
+  });
+  const offersIntegralCheckup =
+    isStaff && doctorOffersIntegralCheckup(integralConfig, selectedDoctorId);
   const isIntegral = offersIntegralCheckup && modality === "integral";
+
+  // Cambiar a un médico que no ofrece el control tiene que devolver el alta
+  // común: quedarse en el recorrido del control con otro médico elegido sería
+  // dar un control en la agenda equivocada.
+  useEffect(() => {
+    if (!offersIntegralCheckup) {
+      setModality("standard");
+    }
+  }, [offersIntegralCheckup]);
 
   const handleIntegralSubmit = async (data: {
     patientId: number;
@@ -185,6 +212,43 @@ export const CreateAppointmentDialog = ({
     }
   };
 
+  /**
+   * Las dos modalidades, chiquitas, justo debajo del médico. Aparecen solo
+   * cuando el médico elegido ofrece el control: con cualquier otro, esta
+   * pantalla es la de siempre.
+   */
+  const modalitySwitch = offersIntegralCheckup ? (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        aria-pressed={modality === "standard"}
+        onClick={() => setModality("standard")}
+        className={cn(
+          "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+          modality === "standard"
+            ? "border-greenPrimary bg-greenPrimary/5 text-greenPrimary"
+            : "text-muted-foreground hover:bg-muted/50",
+        )}
+      >
+        Turno común
+      </button>
+      <button
+        type="button"
+        aria-pressed={modality === "integral"}
+        onClick={() => setModality("integral")}
+        className={cn(
+          "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+          modality === "integral"
+            ? "border-pink-500 bg-pink-50 text-pink-900"
+            : "text-muted-foreground hover:bg-muted/50",
+        )}
+      >
+        <HeartPulse className="h-4 w-4 shrink-0 text-pink-600" />
+        {INTEGRAL_CHECKUP_LABEL}
+      </button>
+    </div>
+  ) : null;
+
   return (
     <Dialog open={open} onOpenChange={(value) => {
       if (!value) {
@@ -211,54 +275,9 @@ export const CreateAppointmentDialog = ({
             Complete los datos para agendar un nuevo turno
           </DialogDescription>
         </DialogHeader>
-        {offersIntegralCheckup && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              aria-pressed={modality === "standard"}
-              onClick={() => setModality("standard")}
-              className={cn(
-                "rounded-lg border p-3 text-left transition-colors",
-                modality === "standard"
-                  ? "border-greenPrimary bg-greenPrimary/5"
-                  : "hover:bg-muted/50",
-              )}
-            >
-              <p className="text-sm font-medium">Turno común</p>
-              <p className="text-xs text-muted-foreground">
-                El alta de siempre: médico, día y horario.
-              </p>
-            </button>
-            <button
-              type="button"
-              aria-pressed={modality === "integral"}
-              onClick={() => setModality("integral")}
-              className={cn(
-                "rounded-lg border p-3 text-left transition-colors",
-                modality === "integral"
-                  ? "border-pink-500 bg-pink-50"
-                  : "hover:bg-muted/50",
-              )}
-            >
-              <p className="flex items-center gap-1.5 text-sm font-medium">
-                <HeartPulse className="h-4 w-4 text-pink-600" />
-                {INTEGRAL_CHECKUP_LABEL}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Consulta y ecografía juntas. Elegís paciente y día; los
-                horarios los resuelve el sistema.
-              </p>
-            </button>
-          </div>
-        )}
         <div className="flex-1 min-h-0 overflow-y-auto pr-4">
-          {isIntegral ? (
-            <StaffIntegralCheckupForm
-              onSubmit={handleIntegralSubmit}
-              isLoading={createIntegral.isPending}
-              defaultPatient={defaultPatient}
-            />
-          ) : (
+          {/* El alta de turnos es UNA: el médico y la modalidad son los mismos
+              para los dos recorridos, y lo que cambia es lo que va debajo. */}
           <CreateAppointmentForm
             formRef={formRef}
             onSubmit={handleSubmit}
@@ -274,8 +293,18 @@ export const CreateAppointmentDialog = ({
             hideSubmitButton
             onGuestModeChange={setIsGuestMode}
             onCanSubmitGuestChange={handleCanSubmitGuestChange}
+            onDoctorChange={setSelectedDoctorId}
+            afterDoctorField={modalitySwitch}
+            fieldsBelowDoctorOverride={
+              isIntegral ? (
+                <StaffIntegralCheckupForm
+                  onSubmit={handleIntegralSubmit}
+                  isLoading={createIntegral.isPending}
+                  defaultPatient={defaultPatient}
+                />
+              ) : undefined
+            }
           />
-          )}
         </div>
         {/* El control trae su propio botón: lo que confirma no es un turno
             sino dos, y el texto lo tiene que decir. */}
