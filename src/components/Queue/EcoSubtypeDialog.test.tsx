@@ -6,9 +6,12 @@ import { EcoSubtypeDialog } from "./EcoSubtypeDialog";
 import type { QueueEntry } from "@/types/Queue";
 
 const mockUseEcoSubtypes = vi.fn();
+const mockUseIntegralCheckupEcos = vi.fn();
 vi.mock("@/hooks/ConsultationType", () => ({
   useEcoSubtypes: (options?: { enabled?: boolean }) =>
     mockUseEcoSubtypes(options) as unknown,
+  useIntegralCheckupEcos: (options?: { enabled?: boolean }) =>
+    mockUseIntegralCheckupEcos(options) as unknown,
 }));
 
 // cmdk llama scrollIntoView sobre el item activo; jsdom no lo implementa.
@@ -176,5 +179,50 @@ describe("EcoSubtypeDialog", () => {
 
     expect(screen.getByText(/PEREZ JUAN/)).toBeInTheDocument();
     expect(screen.getByText(/TORRI ANDREA/)).toBeInTheDocument();
+  });
+});
+
+/**
+ * El mismo selector, dos catálogos.
+ *
+ * Recepción indica el subtipo de cualquier eco: le sirven los 15 del catálogo.
+ * La ginecóloga indica la eco DEL CONTROL: le tienen que aparecer solo las que
+ * la clínica habilitó (6 hoy). No es cosmética — el endpoint rechaza las que
+ * no están habilitadas, así que ofrecerlas sería ofrecer un error.
+ */
+describe("EcoSubtypeDialog · catálogo del control integral", () => {
+  const delControl = [{ id: 21, name: "Ecografía Ginecológica" }];
+
+  it("con `scope=integralCheckup` ofrece solo las ecos del control", () => {
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: subtypes,
+      isLoading: false,
+    });
+    mockUseIntegralCheckupEcos.mockReturnValue({
+      ecoSubtypes: delControl,
+      isLoading: false,
+    });
+
+    renderDialog({ scope: "integralCheckup" });
+
+    expect(option(/ecografía ginecológica/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: /ecografia mamaria/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sin `scope` sigue ofreciendo todo el catálogo de ecos", () => {
+    mockUseEcoSubtypes.mockReturnValue({
+      ecoSubtypes: subtypes,
+      isLoading: false,
+    });
+    mockUseIntegralCheckupEcos.mockReturnValue({
+      ecoSubtypes: delControl,
+      isLoading: false,
+    });
+
+    renderDialog({});
+
+    expect(option(/ecografia mamaria/i)).toBeInTheDocument();
   });
 });

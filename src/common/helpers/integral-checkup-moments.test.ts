@@ -3,6 +3,7 @@ import {
   integralDaySummary,
   integralMomentsInOrder,
   integralOrderHint,
+  integralStaffMomentsInOrder,
 } from "./integral-checkup-moments";
 
 /**
@@ -107,5 +108,72 @@ describe("integralOrderHint", () => {
     );
     // El jueves la consulta dura 30': si el número estuviera cableado, mentiría.
     expect(integralOrderHint(NUEVO_JUEVES)).toContain("30 minutos después");
+  });
+});
+
+/**
+ * Los mismos dos momentos, pero como los ve **el personal**.
+ *
+ * Dos diferencias con la vista de la paciente, y las dos importan:
+ *  - la eco se nombra con el nombre REAL del catálogo (la secretaria no es la
+ *    paciente: si le mostramos "Ecografía" a secas no sabe qué está dando);
+ *  - cada momento dice qué médica lo atiende.
+ *
+ * Lo que NO cambia: el orden sale de las horas, no del nombre del campo.
+ */
+describe("integralStaffMomentsInOrder", () => {
+  const MEDICAS = {
+    consultationDoctorLabel: "Dra. Tudela",
+    ultrasoundDoctorLabel: "Dra. Torri",
+  };
+
+  it("con la consulta primero, la pone primera y nombra a cada médica", () => {
+    const momentos = integralStaffMomentsInOrder(
+      { ...NUEVO, ultrasoundLabel: "Ecografía" },
+      MEDICAS,
+    );
+
+    expect(momentos.map((m) => [m.hour, m.kind, m.doctorLabel])).toEqual([
+      ["10:20", "CONSULTATION", "Dra. Tudela"],
+      ["10:40", "ULTRASOUND", "Dra. Torri"],
+    ]);
+  });
+
+  it("con la eco antes, la pone primera", () => {
+    const momentos = integralStaffMomentsInOrder(
+      { ...VIEJO, ultrasoundLabel: "Ecografía Ginecológica, Ecografía Mamaria" },
+      MEDICAS,
+    );
+
+    expect(momentos.map((m) => m.kind)).toEqual([
+      "ULTRASOUND",
+      "CONSULTATION",
+    ]);
+  });
+
+  it("le muestra el nombre REAL de la eco, no el público", () => {
+    const momentos = integralStaffMomentsInOrder(
+      {
+        ...NUEVO,
+        ultrasoundPublicLabel: "Ecografía",
+        ultrasoundLabel: "Ecografía Ginecológica, Ecografía Mamaria",
+      },
+      MEDICAS,
+    );
+
+    expect(momentos.find((m) => m.kind === "ULTRASOUND")?.label).toBe(
+      "Ecografía Ginecológica, Ecografía Mamaria",
+    );
+  });
+
+  it("si el backend no manda el nombre real, no lo inventa", () => {
+    // Sin `ultrasoundLabel` el front NO cae al texto del portal: ese texto es
+    // el de la paciente y acá mentiría. Dice "Ecografía" a secas, que es lo
+    // único cierto sin preguntarle al catálogo.
+    const momentos = integralStaffMomentsInOrder(NUEVO, MEDICAS);
+
+    expect(momentos.find((m) => m.kind === "ULTRASOUND")?.label).toBe(
+      "Ecografía",
+    );
   });
 });
