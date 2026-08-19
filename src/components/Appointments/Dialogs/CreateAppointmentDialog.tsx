@@ -109,9 +109,10 @@ export const CreateAppointmentDialog = ({
    * recorrido que pidió Francisco el 19/08— y con cualquier otro médico el
    * alta común queda exactamente como estaba.
    */
-  const { config: integralConfig } = useIntegralCheckupConfig({
-    enabled: isStaff,
-  });
+  const { config: integralConfig, isError: integralConfigError } =
+    useIntegralCheckupConfig({
+      enabled: isStaff,
+    });
   const offersIntegralCheckup =
     isStaff && doctorOffersIntegralCheckup(integralConfig, selectedDoctorId);
   const isIntegral = offersIntegralCheckup && modality === "integral";
@@ -232,6 +233,16 @@ export const CreateAppointmentDialog = ({
    * cuando el médico elegido ofrece el control: con cualquier otro, esta
    * pantalla es la de siempre.
    */
+  /**
+   * 🔴 "No lo ofrece" y "no pude preguntarlo" no son lo mismo. Si
+   * `/integral/config` falla, `config` queda `undefined` y la modalidad no
+   * aparece: sin este aviso, un 500 se lee igual que "esta clínica no ofrece
+   * el control". Se muestra recién con un médico elegido —antes no hay nada
+   * que decir— y no bloquea nada: el turno común se da igual.
+   */
+  const showIntegralConfigError =
+    isStaff && integralConfigError && !!selectedDoctorId;
+
   const modalitySwitch = offersIntegralCheckup ? (
     <div className="grid grid-cols-2 gap-2">
       <button
@@ -262,6 +273,12 @@ export const CreateAppointmentDialog = ({
         {INTEGRAL_CHECKUP_LABEL}
       </button>
     </div>
+  ) : showIntegralConfigError ? (
+    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+      No pudimos consultar si este médico ofrece el{" "}
+      {INTEGRAL_CHECKUP_LABEL.toLowerCase()}. El turno común se puede dar
+      igual; para el control, volvé a abrir esta ventana en un rato.
+    </p>
   ) : null;
 
   return (

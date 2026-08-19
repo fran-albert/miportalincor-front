@@ -40,6 +40,9 @@ const createStaffIntegral = vi.fn().mockResolvedValue({
   ultrasound: { id: 2 },
 });
 
+/** Que `/integral/config` conteste con error (un 500, la red caída). */
+const configFalla = vi.fn(() => false);
+
 /** Lo que contesta el backend cuando le preguntan quién ofrece el control. */
 const config = vi.fn<
   () => { consultationDoctorId: number; ultrasoundDoctorId: number } | undefined
@@ -58,7 +61,11 @@ vi.mock("@/hooks/Appointments", () => ({
     mutateAsync: createStaffIntegral,
     isPending: false,
   }),
-  useIntegralCheckupConfig: () => ({ config: config() }),
+  useIntegralCheckupConfig: () => ({
+    config: config(),
+    isLoading: false,
+    isError: configFalla(),
+  }),
 }));
 
 const showSuccess = vi.fn();
@@ -149,6 +156,7 @@ describe("CreateAppointmentDialog · control integral", () => {
       consultationDoctorId: 388,
       ultrasoundDoctorId: 176,
     });
+    configFalla.mockReturnValue(false);
     createStaffIntegral.mockClear();
     showSuccess.mockClear();
   });
@@ -308,6 +316,7 @@ describe("CreateAppointmentDialog · el diálogo vuelve a abrir en turno común"
       consultationDoctorId: 388,
       ultrasoundDoctorId: 176,
     });
+    configFalla.mockReturnValue(false);
     createStaffIntegral.mockClear();
     showSuccess.mockClear();
   });
@@ -387,5 +396,77 @@ describe("CreateAppointmentDialog · el diálogo vuelve a abrir en turno común"
     await reabrir(user);
 
     expect(screen.getByTestId("campos-del-turno-comun")).toBeInTheDocument();
+  });
+});
+
+/**
+ * "No lo ofrece" y "no pude preguntarlo" no son lo mismo.
+ *
+ * 🔴 Si `/integral/config` falla, `config` queda `undefined` y la modalidad
+ * simplemente no aparece: un 500 se leía igual que *"esta clínica no ofrece el
+ * control"*, sin ningún aviso. La secretaria daba el turno común pensando que
+ * el control no existe.
+ */
+describe("CreateAppointmentDialog · cuando no se puede preguntar por el control", () => {
+  beforeEach(() => {
+    roles.mockReturnValue({
+      isPatient: false,
+      isDoctor: false,
+      isSecretary: true,
+      isAdmin: false,
+    });
+    config.mockReturnValue({
+      consultationDoctorId: 388,
+      ultrasoundDoctorId: 176,
+    });
+    configFalla.mockReturnValue(false);
+    createStaffIntegral.mockClear();
+    showSuccess.mockClear();
+  });
+
+  const abrirDialogo = async () => {
+    render(<CreateAppointmentDialog open onOpenChange={vi.fn()} />);
+    return userEvent.setup();
+  };
+
+  const elAviso = () =>
+    screen.queryByText(/no pudimos consultar si este médico ofrece/i);
+
+  it("lo dice, en vez de callarse", async () => {
+    configFalla.mockReturnValue(true);
+    config.mockReturnValue(undefined);
+    const user = await abrirDialogo();
+
+    await user.click(screen.getByRole("button", { name: /la ginecóloga/i }));
+
+    expect(elAviso()).toBeInTheDocument();
+  });
+
+  it("y el alta común sigue funcionando igual", async () => {
+    configFalla.mockReturnValue(true);
+    config.mockReturnValue(undefined);
+    const user = await abrirDialogo();
+
+    await user.click(screen.getByRole("button", { name: /la ginecóloga/i }));
+
+    expect(screen.getByTestId("campos-del-turno-comun")).toBeInTheDocument();
+    expect(laModalidad()).not.toBeInTheDocument();
+  });
+
+  it("no molesta antes de elegir el médico", async () => {
+    configFalla.mockReturnValue(true);
+    config.mockReturnValue(undefined);
+    await abrirDialogo();
+
+    expect(elAviso()).not.toBeInTheDocument();
+  });
+
+  it("un médico que efectivamente no lo ofrece no dispara ningún aviso", async () => {
+    const user = await abrirDialogo();
+
+    await user.click(screen.getByRole("button", { name: /otro médico/i }));
+
+    expect(elAviso()).not.toBeInTheDocument();
+    expect(laModalidad()).not.toBeInTheDocument();
   });
 });
