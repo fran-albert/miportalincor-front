@@ -74,15 +74,42 @@ interface DaysOptions {
 const staffDaysCalls: DaysOptions[] = [];
 const patientDaysCalls: DaysOptions[] = [];
 
-const esPaciente = vi.fn(() => false);
-vi.mock("@/hooks/useRoles", () => ({
-  default: () => ({
-    isPatient: esPaciente(),
-    isDoctor: false,
-    isSecretary: !esPaciente(),
-    isAdmin: false,
-  }),
+/** Los flags de rol, tal como los devuelve `useUserRole`. */
+interface RoleFlags {
+  isPatient: boolean;
+  isDoctor: boolean;
+  isSecretary: boolean;
+  isAdmin: boolean;
+}
+
+const SIN_ROLES: RoleFlags = {
+  isPatient: false,
+  isDoctor: false,
+  isSecretary: false,
+  isAdmin: false,
+};
+
+const roles = vi.fn<() => RoleFlags>(() => ({
+  ...SIN_ROLES,
+  isSecretary: true,
 }));
+
+const comoSecretaria = () =>
+  roles.mockReturnValue({ ...SIN_ROLES, isSecretary: true });
+const comoPaciente = () =>
+  roles.mockReturnValue({ ...SIN_ROLES, isPatient: true });
+const comoMedica = () => roles.mockReturnValue({ ...SIN_ROLES, isDoctor: true });
+/** Un rol que este front todavía no conoce (o una sesión sin roles). */
+const conRolDesconocido = () => roles.mockReturnValue({ ...SIN_ROLES });
+
+vi.mock("@/hooks/useRoles", () => ({
+  default: () => roles(),
+}));
+
+/** Que el listado del personal conteste con error (por ejemplo, un 403). */
+const staffFalla = vi.fn(() => false);
+const reintentarStaff = vi.fn();
+const reintentarPaciente = vi.fn();
 
 vi.mock("@/hooks/Appointments", () => ({
   useAvailableSlotsRange: () => ({
@@ -92,10 +119,12 @@ vi.mock("@/hooks/Appointments", () => ({
   }),
   useStaffIntegralAvailableDays: (options: DaysOptions = {}) => {
     staffDaysCalls.push(options);
+    const fallo = options.enabled !== false && staffFalla();
     return {
-      days: options.enabled === false ? [] : integralDays(),
+      days: options.enabled === false || fallo ? [] : integralDays(),
       isLoading: false,
-      isError: false,
+      isError: fallo,
+      refetch: reintentarStaff,
     };
   },
   useIntegralAvailableDays: (options: DaysOptions = {}) => {
@@ -104,6 +133,7 @@ vi.mock("@/hooks/Appointments", () => ({
       days: options.enabled === false ? [] : integralDays(),
       isLoading: false,
       isError: false,
+      refetch: reintentarPaciente,
     };
   },
 }));
@@ -177,7 +207,9 @@ describe("RescheduleAppointmentDialog · el error del backend se muestra", () =>
       { date: "2026-08-27", hour: "11:30" },
     ]);
     integralDays.mockReturnValue([DIA_ACTUAL, OTRO_DIA]);
-    esPaciente.mockReturnValue(false);
+    comoSecretaria();
+    staffFalla.mockReturnValue(false);
+    reintentarStaff.mockClear();
     staffDaysCalls.length = 0;
     patientDaysCalls.length = 0;
   });
@@ -298,7 +330,9 @@ describe("RescheduleAppointmentDialog · control integral", () => {
     showError.mockClear();
     showSuccess.mockClear();
     integralDays.mockReturnValue([DIA_ACTUAL, OTRO_DIA]);
-    esPaciente.mockReturnValue(false);
+    comoSecretaria();
+    staffFalla.mockReturnValue(false);
+    reintentarStaff.mockClear();
     staffDaysCalls.length = 0;
     patientDaysCalls.length = 0;
   });
@@ -443,12 +477,89 @@ describe("RescheduleAppointmentDialog · control integral", () => {
   it("en el portal de la paciente salen del endpoint de la paciente", () => {
     // 🔴 El endpoint del personal le contesta 403 a una paciente: cuál se
     // pregunta sale del rol, no del lugar donde se montó el diálogo.
-    esPaciente.mockReturnValue(true);
+    comoPaciente();
     abrirControl();
 
     expect(patientDaysCalls).toContainEqual(
       expect.objectContaining({ enabled: true }),
     );
     expect(staffDaysCalls.every((call) => call.enabled === false)).toBe(true);
+  });
+});
+
+/**
+ * Quién mira cuál de los dos listados de días.
+ *
+ * 🔴 Este diálogo vive en dos pantallas (el turnero y `/mis-turnos`) y hay
+ * **dos endpoints para cuatro roles**. Decidirlo por negación —"¿no es
+ * paciente?"— mandaba a la médica al listado de secretaría, que le contesta
+ * **403**: entraba a su agenda, apretaba Reprogramar y el listado quedaba
+ * muerto. Se decide por capacidad, con la lista del personal escrita en un
+ * solo lugar (`integralDaysSource`), y lo que el backend rechaza **se ve**.
+ */
+describe("RescheduleAppointmentDialog · de dónde salen los días", () => {
+  beforeEach(() => {
+    showError.mockClear();
+    integralDays.mockReturnValue([DIA_ACTUAL, OTRO_DIA]);
+    comoSecretaria();
+    staffFalla.mockReturnValue(false);
+    reintentarStaff.mockClear();
+    staffDaysCalls.length = 0;
+    patientDaysCalls.length = 0;
+  });
+
+  const abrirControl = () =>
+    render(
+      <RescheduleAppointmentDialog
+        open
+        onOpenChange={vi.fn()}
+        appointment={TURNO_COMUN}
+        onReschedule={vi.fn().mockResolvedValue(undefined)}
+        isRescheduling={false}
+        integralCheckup={VINCULO_CONSULTA}
+      />,
+    );
+
+  it("la médica mueve su control con el listado del personal", () => {
+    comoMedica();
+    abrirControl();
+
+    expect(staffDaysCalls).toContainEqual(
+      expect.objectContaining({ enabled: true }),
+    );
+    expect(patientDaysCalls.every((call) => call.enabled === false)).toBe(true);
+  });
+
+  it("un rol que el front no conoce NO cae en el listado del personal", () => {
+    // Antes esto se decidía por descarte (`!isPatient`): cualquier rol nuevo
+    // heredaba el endpoint de secretaría y su 403.
+    conRolDesconocido();
+    abrirControl();
+
+    expect(staffDaysCalls.every((call) => call.enabled === false)).toBe(true);
+  });
+
+  it("si el listado del personal falla, se ve el error y se puede reintentar", async () => {
+    comoMedica();
+    staffFalla.mockReturnValue(true);
+    abrirControl();
+    const user = userEvent.setup();
+
+    expect(
+      screen.getByText("No se pudieron cargar los días"),
+    ).toBeInTheDocument();
+
+    // Y no queda muerta: hay por dónde volver a pedirlo sin recargar.
+    await user.click(screen.getByRole("button", { name: /reintentar/i }));
+
+    expect(reintentarStaff).toHaveBeenCalled();
+  });
+
+  it("cuando falla no dice que no hay días: eso sería mentir", () => {
+    comoMedica();
+    staffFalla.mockReturnValue(true);
+    abrirControl();
+
+    expect(screen.queryByText("Sin días disponibles")).not.toBeInTheDocument();
   });
 });

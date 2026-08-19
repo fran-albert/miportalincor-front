@@ -37,6 +37,7 @@ import {
 } from "@/hooks/Appointments";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import useUserRole from "@/hooks/useRoles";
+import { integralDaysSource } from "@/common/helpers/integral-days-source";
 
 interface RescheduleAppointmentInfo {
   type?: "appointment" | "overturn";
@@ -131,20 +132,27 @@ export function RescheduleAppointmentDialog({
       ? currentAppointment.id
       : integralCheckup.counterpartId
     : undefined;
-  // 🔴 Cuál de los dos endpoints se pregunta sale del ROL: el del personal le
-  // contesta 403 a una paciente, y este mismo diálogo vive en las dos
-  // pantallas (el turnero y el portal).
-  const { isPatient } = useUserRole();
+  /**
+   * 🔴 Cuál de los dos listados se pregunta sale de la CAPACIDAD de quien
+   * mira, no de un rol negado: este diálogo vive en las dos pantallas (el
+   * turnero y el portal) y hay dos endpoints para cuatro roles. Preguntar
+   * "¿no es paciente?" mandaba a la médica al listado de secretaría, que le
+   * contesta 403 y le dejaba el listado muerto. Quiénes son "el personal"
+   * está escrito en un solo lugar: `integralDaysSource`.
+   */
+  const roles = useUserRole();
+  const daysSource = integralDaysSource(roles);
   const wantsIntegralDays = open && !!appointment && isIntegral;
   const staffIntegralDays = useStaffIntegralAvailableDays({
-    enabled: wantsIntegralDays && !isPatient,
+    enabled: wantsIntegralDays && daysSource === "staff",
     excludeAppointmentId: integralConsultationId,
   });
   const patientIntegralDays = useIntegralAvailableDays({
-    enabled: wantsIntegralDays && isPatient,
+    enabled: wantsIntegralDays && daysSource === "patient",
     excludeAppointmentId: integralConsultationId,
   });
-  const integralDays = isPatient ? patientIntegralDays : staffIntegralDays;
+  const integralDays =
+    daysSource === "patient" ? patientIntegralDays : staffIntegralDays;
   const availableDates = useMemo(
     () => Array.from(new Set(rangeSlots.map((slot) => slot.date))).sort(),
     [rangeSlots]
@@ -279,6 +287,7 @@ export function RescheduleAppointmentDialog({
                 selectedDate={dateStr ?? null}
                 onSelect={handleIntegralDaySelect}
                 currentDate={currentAppointment.date}
+                onRetry={() => void integralDays.refetch()}
               />
             </div>
           ) : (

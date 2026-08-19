@@ -1,4 +1,5 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { integralDaySummary } from "@/common/helpers/integral-checkup-moments";
@@ -34,6 +35,12 @@ export interface IntegralCheckupDayPickerProps {
    * para que quien mueve el turno vea dónde está parado.
    */
   currentDate?: string;
+  /**
+   * Volver a pedir el listado. Sin esto, un listado que falla (un 403, la red
+   * caída) deja la pantalla muerta: se lee el error y no hay por dónde salir
+   * más que recargando.
+   */
+  onRetry?: () => void;
 }
 
 /** `2027-03-10` → `martes 10 de marzo de 2027`. */
@@ -55,6 +62,7 @@ export const IntegralCheckupDayPicker = ({
   selectedDate,
   onSelect,
   currentDate,
+  onRetry,
 }: IntegralCheckupDayPickerProps) => {
   if (isLoading) {
     return (
@@ -69,7 +77,14 @@ export const IntegralCheckupDayPicker = ({
     return (
       <Alert variant="destructive">
         <AlertTitle>No se pudieron cargar los días</AlertTitle>
-        <AlertDescription>Volvé a intentar en unos segundos.</AlertDescription>
+        <AlertDescription className="space-y-2">
+          <p>Volvé a intentar en unos segundos.</p>
+          {onRetry && (
+            <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+              Reintentar
+            </Button>
+          )}
+        </AlertDescription>
       </Alert>
     );
   }

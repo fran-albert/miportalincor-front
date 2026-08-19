@@ -41,6 +41,9 @@ export const useIntegralAvailableDays = ({
     days: query.data ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
+    // Para que un listado que falla no deje la pantalla muerta: se puede
+    // volver a pedir sin recargar.
+    refetch: query.refetch,
   };
 };
 
@@ -64,6 +67,9 @@ export const useStaffIntegralAvailableDays = ({
     days: query.data ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
+    // Para que un listado que falla no deje la pantalla muerta: se puede
+    // volver a pedir sin recargar.
+    refetch: query.refetch,
   };
 };
 
