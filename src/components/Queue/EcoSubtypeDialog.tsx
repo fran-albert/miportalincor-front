@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useEcoSubtypes } from "@/hooks/ConsultationType";
+import { useEcoSubtypes, useIntegralCheckupEcos } from "@/hooks/ConsultationType";
 
 /**
  * Lo único que el diálogo necesita saber del turno.
@@ -34,9 +34,22 @@ export interface EcoSubtypeTarget {
   doctorName?: string;
 }
 
+/**
+ * De qué lista del catálogo salen las opciones.
+ *
+ *  - `catalog` (default): los subtipos de ecografía, que es lo que recepción
+ *    necesita para cualquier turno de eco.
+ *  - `integralCheckup`: solo las ecos que la clínica habilitó para el control
+ *    ginecológico integral. No es cosmética: el endpoint del control rechaza
+ *    las que no están habilitadas, así que ofrecerlas sería ofrecer un error.
+ */
+export type EcoSubtypeScope = "catalog" | "integralCheckup";
+
 interface EcoSubtypeDialogProps {
   /** Turno pendiente de subtipo; null = diálogo cerrado. */
   entry: EcoSubtypeTarget | null;
+  /** De qué lista salen las opciones. Ver `EcoSubtypeScope`. */
+  scope?: EcoSubtypeScope;
   /** Título y bajada, cuando el contexto no es el de recepción. */
   title?: string;
   description?: string;
@@ -65,6 +78,7 @@ const normalize = (value: string): string =>
  */
 export function EcoSubtypeDialog({
   entry,
+  scope = "catalog",
   title,
   description,
   confirmLabel,
@@ -74,8 +88,15 @@ export function EcoSubtypeDialog({
   isSaving,
 }: EcoSubtypeDialogProps) {
   const open = entry !== null;
+  const forIntegralCheckup = scope === "integralCheckup";
+  // Las dos consultas se declaran siempre (regla de hooks) pero solo una se
+  // habilita: la que no corresponde no pega a la red.
+  const catalogEcos = useEcoSubtypes({ enabled: open && !forIntegralCheckup });
+  const integralEcos = useIntegralCheckupEcos({
+    enabled: open && forIntegralCheckup,
+  });
   const { ecoSubtypes, isLoading, isFetching, error, refetch } =
-    useEcoSubtypes({ enabled: open });
+    forIntegralCheckup ? integralEcos : catalogEcos;
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [search, setSearch] = useState("");
 

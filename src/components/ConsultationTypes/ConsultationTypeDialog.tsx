@@ -76,6 +76,7 @@ export function ConsultationTypeDialog({
   const [displayOrder, setDisplayOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
   const [isEcoSubtype, setIsEcoSubtype] = useState(false);
+  const [isIntegralCheckupEco, setIsIntegralCheckupEco] = useState(false);
 
   useEffect(() => {
     if (consultationType) {
@@ -87,6 +88,7 @@ export function ConsultationTypeDialog({
       setDisplayOrder(String(consultationType.displayOrder));
       setIsActive(consultationType.isActive);
       setIsEcoSubtype(consultationType.isEcoSubtype ?? false);
+      setIsIntegralCheckupEco(consultationType.isIntegralCheckupEco ?? false);
       return;
     }
 
@@ -98,6 +100,7 @@ export function ConsultationTypeDialog({
     setDisplayOrder("0");
     setIsActive(true);
     setIsEcoSubtype(false);
+    setIsIntegralCheckupEco(false);
   }, [consultationType, nextPaletteColor, open]);
 
   const handleSubmit = async () => {
@@ -152,6 +155,7 @@ export function ConsultationTypeDialog({
           displayOrder: parsedOrder,
           isActive,
           isEcoSubtype,
+          isIntegralCheckupEco,
           ...scopeFields,
         };
         await updateType({ id: consultationType.id, dto });
@@ -168,6 +172,7 @@ export function ConsultationTypeDialog({
           displayOrder: parsedOrder,
           isActive,
           isEcoSubtype,
+          isIntegralCheckupEco,
           ...scopeFields,
         };
         await createType(dto);
@@ -324,6 +329,27 @@ export function ConsultationTypeDialog({
               id="consultation-type-eco-subtype"
               checked={isEcoSubtype}
               onCheckedChange={setIsEcoSubtype}
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-1">
+              <Label
+                htmlFor="consultation-type-integral-checkup-eco"
+                className="text-sm font-medium"
+              >
+                Se puede pedir en el control ginecológico integral
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                La ginecóloga la ve en su selector cuando indica la ecografía
+                del control. Sin esto, el sistema la rechaza aunque sea
+                ecografía.
+              </p>
+            </div>
+            <Switch
+              id="consultation-type-integral-checkup-eco"
+              checked={isIntegralCheckupEco}
+              onCheckedChange={setIsIntegralCheckupEco}
             />
           </div>
         </div>

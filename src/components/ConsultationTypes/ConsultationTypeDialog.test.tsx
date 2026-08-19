@@ -27,12 +27,15 @@ const buildType = (overrides: Partial<ConsultationType> = {}): ConsultationType 
   isActive: true,
   displayOrder: 0,
   isEcoSubtype: false,
+  isIntegralCheckupEco: false,
   createdAt: "2026-08-11T10:00:00Z",
   updatedAt: "2026-08-11T10:00:00Z",
   ...overrides,
 });
 
 const ecoSwitch = () => screen.getByRole("switch", { name: /subtipo de ecografía/i });
+const integralSwitch = () =>
+  screen.getByRole("switch", { name: /control ginecológico integral/i });
 
 describe("ConsultationTypeDialog — flag de subtipo de eco", () => {
   beforeEach(() => {
@@ -91,6 +94,74 @@ describe("ConsultationTypeDialog — flag de subtipo de eco", () => {
     expect(updateType).toHaveBeenCalledWith({
       id: 41,
       dto: expect.objectContaining({ isEcoSubtype: false }),
+    });
+  });
+});
+
+/**
+ * Qué ecografías puede pedir la ginecóloga en el control.
+ *
+ * Va por ABM y no por una lista en el código a propósito: la lista de Tudela
+ * son 6 hoy y va a cambiar. Con la lista en código cada cambio sería un
+ * deploy; con el flag, es un switch en esta pantalla.
+ */
+describe("ConsultationTypeDialog — flag del control integral", () => {
+  beforeEach(() => {
+    createType.mockReset().mockResolvedValue(buildType());
+    updateType.mockReset().mockResolvedValue(buildType());
+  });
+
+  it("marca una eco como solicitable en el control", async () => {
+    render(
+      <ConsultationTypeDialog open onOpenChange={vi.fn()} consultationType={null} />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Nombre *"), {
+      target: { value: "Ecografía Transvaginal" },
+    });
+    fireEvent.click(integralSwitch());
+    fireEvent.click(screen.getByRole("button", { name: /crear tipo/i }));
+
+    await waitFor(() => expect(createType).toHaveBeenCalled());
+    expect(createType).toHaveBeenCalledWith(
+      expect.objectContaining({ isIntegralCheckupEco: true }),
+    );
+  });
+
+  it("por defecto un tipo nuevo no se puede pedir en el control", async () => {
+    render(
+      <ConsultationTypeDialog open onOpenChange={vi.fn()} consultationType={null} />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Nombre *"), {
+      target: { value: "Ergometría" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /crear tipo/i }));
+
+    await waitFor(() => expect(createType).toHaveBeenCalled());
+    expect(createType).toHaveBeenCalledWith(
+      expect.objectContaining({ isIntegralCheckupEco: false }),
+    );
+  });
+
+  it("al editar arranca con el flag que ya tiene y se puede sacar de la lista", async () => {
+    render(
+      <ConsultationTypeDialog
+        open
+        onOpenChange={vi.fn()}
+        consultationType={buildType({ isIntegralCheckupEco: true })}
+      />,
+    );
+
+    expect(integralSwitch()).toBeChecked();
+
+    fireEvent.click(integralSwitch());
+    fireEvent.click(screen.getByRole("button", { name: /guardar cambios/i }));
+
+    await waitFor(() => expect(updateType).toHaveBeenCalled());
+    expect(updateType).toHaveBeenCalledWith({
+      id: 41,
+      dto: expect.objectContaining({ isIntegralCheckupEco: false }),
     });
   });
 });

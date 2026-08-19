@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  createStaffIntegralAppointment,
   getIntegralAvailableDays,
+  getStaffIntegralAvailableDays,
   requestIntegralAppointment,
   setIntegralUltrasoundTypes,
 } from "@/api/Appointments/integral-checkup.action";
@@ -29,6 +31,54 @@ export const useIntegralAvailableDays = ({
     isLoading: query.isLoading,
     isError: query.isError,
   };
+};
+
+/**
+ * Los días del control que ve el PERSONAL. Clave de caché propia: la respuesta
+ * no es la misma que la de la paciente (trae el nombre real de la eco), así
+ * que compartir la clave le filtraría el subtipo al portal.
+ */
+export const useStaffIntegralAvailableDays = ({
+  enabled = true,
+}: UseIntegralAvailableDaysOptions = {}) => {
+  const query = useQuery<IntegralCheckupSlot[]>({
+    queryKey: ["staffIntegralAvailableDays"],
+    queryFn: () => getStaffIntegralAvailableDays(),
+    enabled,
+    staleTime: 60 * 1000,
+  });
+
+  return {
+    days: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  };
+};
+
+/**
+ * La secretaría da el control: elige paciente y día, nada más.
+ *
+ * El aviso al usuario lo da quien la llama (el diálogo del turnero usa el
+ * mismo toast que el alta común), así el mensaje es el de esa pantalla.
+ */
+export const useCreateStaffIntegralAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (dto: { patientId: number; date: string }) =>
+      createStaffIntegralAppointment(dto),
+    onSuccess: () => {
+      // El control ocupa un casillero de las dos agendas: el turnero, la
+      // grilla de horarios libres y los días del control quedan viejos.
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doctorDashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["availableSlots"] });
+      queryClient.invalidateQueries({
+        queryKey: ["staffIntegralAvailableDays"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["integralAvailableDays"] });
+    },
+  });
 };
 
 export const useRequestIntegralAppointment = () => {

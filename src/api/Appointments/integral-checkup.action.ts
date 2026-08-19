@@ -34,6 +34,43 @@ export const requestIntegralAppointment = async (dto: {
   return data;
 };
 
+/**
+ * Los mismos días, pedidos por el PERSONAL.
+ *
+ * Es el mismo cálculo del backend: la grilla del control no cambia porque lo
+ * dé la secretaria. Lo que cambia es que la respuesta trae el nombre REAL de
+ * la ecografía, que a la paciente no se le manda.
+ */
+export const getStaffIntegralAvailableDays = async (params?: {
+  from?: string;
+  to?: string;
+}): Promise<IntegralCheckupSlot[]> => {
+  const { data } = await apiTurnos.get<IntegralCheckupSlot[]>(
+    "appointments/integral/available-days",
+    { params },
+  );
+  return data;
+};
+
+/**
+ * La secretaría da el control a una paciente.
+ *
+ * 🔴 Solo viajan la paciente y el día: **las horas no se eligen ni se mandan**.
+ * Las resuelve el backend con la grilla del modo activo, que es lo mismo que
+ * hace el portal. Si el front las mandara, habría dos formas de crear el
+ * control y cada una podría elegir distinto.
+ */
+export const createStaffIntegralAppointment = async (dto: {
+  patientId: number;
+  date: string;
+}): Promise<IntegralCheckupBooking> => {
+  const { data } = await apiTurnos.post<IntegralCheckupBooking>(
+    "appointments/integral",
+    dto,
+  );
+  return data;
+};
+
 export type { AppointmentResponseDto };
 
 /**

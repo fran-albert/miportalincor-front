@@ -936,9 +936,14 @@ const DoctorWaitingRoomPage = () => {
         {renderHistory()}
       </motion.div>
 
-      {/* El mismo selector que usa recepción, en la escena de la médica. */}
+      {/* El mismo selector que usa recepción, en la escena de la médica —pero
+          con la lista del control: son las ecos que la clínica habilitó para
+          el control integral, no los 15 subtipos del catálogo. La restricción
+          también está en el endpoint, así que ofrecer otra sería ofrecer un
+          error. */}
       <EcoSubtypeDialog
         entry={ecoTarget}
+        scope="integralCheckup"
         title="¿Qué ecografía le indicás?"
         description={
           ecoTarget?.patientName

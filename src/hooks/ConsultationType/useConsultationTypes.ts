@@ -4,6 +4,7 @@ import {
   getAllowedConsultationTypesByDoctor,
   getAllConsultationTypes,
   getEcoSubtypes,
+  getIntegralCheckupEcos,
   getOwnConsultationTypesByDoctor,
 } from "@/api/ConsultationType";
 
@@ -16,6 +17,8 @@ export const consultationTypeKeys = {
   ownByDoctor: (doctorId: number) =>
     [...consultationTypeKeys.all, 'own-by-doctor', doctorId] as const,
   ecoSubtypes: () => [...consultationTypeKeys.all, 'eco-subtypes'] as const,
+  integralCheckupEcos: () =>
+    [...consultationTypeKeys.all, 'integral-checkup-ecos'] as const,
 };
 
 /**
@@ -26,6 +29,30 @@ export const useEcoSubtypes = (options?: { enabled?: boolean }) => {
   const query = useQuery({
     queryKey: consultationTypeKeys.ecoSubtypes(),
     queryFn: getEcoSubtypes,
+    staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled ?? true,
+  });
+
+  return {
+    ecoSubtypes: query.data ?? [],
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    error: query.error,
+    refetch: query.refetch,
+  };
+};
+
+/**
+ * Las ecos que la ginecóloga puede pedir en el control integral.
+ *
+ * Clave propia y no la de `useEcoSubtypes`: son dos listas distintas del mismo
+ * catálogo y compartir la caché le mostraría a la médica los 15 subtipos, que
+ * es justo lo que este pliego vino a cerrar.
+ */
+export const useIntegralCheckupEcos = (options?: { enabled?: boolean }) => {
+  const query = useQuery({
+    queryKey: consultationTypeKeys.integralCheckupEcos(),
+    queryFn: getIntegralCheckupEcos,
     staleTime: 5 * 60 * 1000,
     enabled: options?.enabled ?? true,
   });
