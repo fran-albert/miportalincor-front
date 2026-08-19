@@ -103,6 +103,16 @@ export function ConsultationTypeDialog({
     setIsIntegralCheckupEco(false);
   }, [consultationType, nextPaletteColor, open]);
 
+  /**
+   * 🔴 "Se puede pedir en el control" es una propiedad de una **ecografía**:
+   * el switch solo existe si el tipo es subtipo de eco, y lo que viaja dice
+   * lo mismo que la pantalla. Un tipo que dejó de ser ecografía —o uno viejo
+   * mal marcado— no se guarda pedible en el control aunque el flag siga
+   * guardado en el estado.
+   */
+  const canBeIntegralCheckupEco = isEcoSubtype;
+  const integralCheckupEco = canBeIntegralCheckupEco && isIntegralCheckupEco;
+
   const handleSubmit = async () => {
     const trimmedName = name.trim();
     const parsedDuration = Number(defaultDurationMinutes);
@@ -155,7 +165,7 @@ export function ConsultationTypeDialog({
           displayOrder: parsedOrder,
           isActive,
           isEcoSubtype,
-          isIntegralCheckupEco,
+          isIntegralCheckupEco: integralCheckupEco,
           ...scopeFields,
         };
         await updateType({ id: consultationType.id, dto });
@@ -172,7 +182,7 @@ export function ConsultationTypeDialog({
           displayOrder: parsedOrder,
           isActive,
           isEcoSubtype,
-          isIntegralCheckupEco,
+          isIntegralCheckupEco: integralCheckupEco,
           ...scopeFields,
         };
         await createType(dto);
@@ -332,26 +342,30 @@ export function ConsultationTypeDialog({
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-1">
-              <Label
-                htmlFor="consultation-type-integral-checkup-eco"
-                className="text-sm font-medium"
-              >
-                Se puede pedir en el control ginecológico integral
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                La ginecóloga la ve en su selector cuando indica la ecografía
-                del control. Sin esto, el sistema la rechaza aunque sea
-                ecografía.
-              </p>
+          {/* Solo para ecografías: en cualquier otro tipo la opción no
+              significa nada y el sistema la rechaza. */}
+          {canBeIntegralCheckupEco && (
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-1">
+                <Label
+                  htmlFor="consultation-type-integral-checkup-eco"
+                  className="text-sm font-medium"
+                >
+                  Se puede pedir en el control ginecológico integral
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  La ginecóloga la ve en su selector cuando indica la ecografía
+                  del control. Sin esto, el sistema la rechaza aunque sea
+                  ecografía.
+                </p>
+              </div>
+              <Switch
+                id="consultation-type-integral-checkup-eco"
+                checked={integralCheckupEco}
+                onCheckedChange={setIsIntegralCheckupEco}
+              />
             </div>
-            <Switch
-              id="consultation-type-integral-checkup-eco"
-              checked={isIntegralCheckupEco}
-              onCheckedChange={setIsIntegralCheckupEco}
-            />
-          </div>
+          )}
         </div>
 
         <DialogFooter>
