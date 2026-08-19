@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -18,6 +18,23 @@ import type {
  * —ni error, ni cierre—, y no era exclusivo del control: cualquier rechazo
  * (solapamiento, médico ausente, feriado) se tragaba igual.
  */
+
+/**
+ * El reloj queda quieto: qué días se pueden ofrecer depende de "hoy", y las
+ * fechas de los fixtures son fijas. Solo se falsea `Date` —los timers de
+ * verdad los necesita `userEvent`—.
+ */
+const HOY = "2026-08-19";
+const MANANA = "2026-08-20";
+
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(`${HOY}T16:00:00`));
+});
+
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 const showError = vi.fn();
 const showSuccess = vi.fn();
@@ -561,5 +578,90 @@ describe("RescheduleAppointmentDialog · de dónde salen los días", () => {
     abrirControl();
 
     expect(screen.queryByText("Sin días disponibles")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Hasta dónde para atrás se puede mover un control.
+ *
+ * 🔴 El backend arma la lista de días **desde hoy**, y el listado la mostraba
+ * tal cual: miércoles 16:00, la secretaria reprogramaba y le ofrecía *"hoy —
+ * consulta 10:20 · ecografía 10:40"*. Confirmaba y el control quedaba a una
+ * hora que ya pasó. El camino común de este mismo diálogo no lo permite: el
+ * calendario deshabilita todo lo anterior a mañana. El mínimo es el mismo para
+ * los dos: sale del mismo valor, no de dos cuentas parecidas.
+ */
+describe("RescheduleAppointmentDialog · el control no se puede mover a hoy", () => {
+  const DIA_DE_HOY: IntegralCheckupSlot = {
+    date: HOY,
+    consultationHour: "10:20",
+    ultrasoundHour: "10:40",
+    consultationDoctorId: 388,
+    ultrasoundDoctorId: 176,
+  };
+
+  const DIA_DE_MANANA: IntegralCheckupSlot = {
+    date: MANANA,
+    consultationHour: "15:00",
+    ultrasoundHour: "15:30",
+    consultationDoctorId: 388,
+    ultrasoundDoctorId: 176,
+  };
+
+  beforeEach(() => {
+    comoSecretaria();
+    staffFalla.mockReturnValue(false);
+    staffDaysCalls.length = 0;
+    patientDaysCalls.length = 0;
+  });
+
+  const abrirControl = () =>
+    render(
+      <RescheduleAppointmentDialog
+        open
+        onOpenChange={vi.fn()}
+        appointment={TURNO_COMUN}
+        onReschedule={vi.fn().mockResolvedValue(undefined)}
+        isRescheduling={false}
+        integralCheckup={VINCULO_CONSULTA}
+      />,
+    );
+
+  /** El texto de los días que quedaron ofrecidos en pantalla. */
+  const diasOfrecidos = () =>
+    screen
+      .queryAllByRole("button")
+      .filter((boton) => boton.hasAttribute("aria-pressed"))
+      .map((boton) => boton.textContent ?? "");
+
+  const fragmento = (date: string) =>
+    new Date(`${date}T12:00:00`).toLocaleDateString("es-AR", {
+      day: "numeric",
+      month: "long",
+    });
+
+  it("aunque el backend lo mande, hoy no se ofrece", () => {
+    integralDays.mockReturnValue([DIA_DE_HOY, DIA_DE_MANANA, OTRO_DIA]);
+    abrirControl();
+
+    expect(
+      diasOfrecidos().some((texto) => texto.includes(fragmento(HOY))),
+    ).toBe(false);
+  });
+
+  it("mañana sí: el mínimo es el mismo que el del turno común", () => {
+    integralDays.mockReturnValue([DIA_DE_HOY, DIA_DE_MANANA, OTRO_DIA]);
+    abrirControl();
+
+    expect(
+      diasOfrecidos().some((texto) => texto.includes(fragmento(MANANA))),
+    ).toBe(true);
+  });
+
+  it("si lo único que quedaba era hoy, lo dice en vez de mostrarlo", () => {
+    integralDays.mockReturnValue([DIA_DE_HOY]);
+    abrirControl();
+
+    expect(screen.getByText("Sin días disponibles")).toBeInTheDocument();
   });
 });

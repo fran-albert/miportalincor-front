@@ -104,12 +104,21 @@ export function RescheduleAppointmentDialog({
   const useAvailabilityDrivenDates = itemType === "appointment" && !isIntegral;
   const effectiveDoctorId =
     currentAppointment.doctorId ?? currentAppointment.doctor?.userId ?? 0;
+  /**
+   * El primer día al que se puede mover un turno: mañana. Es UNO SOLO para
+   * los dos caminos —el común y el del control—, porque el problema es el
+   * mismo: hoy a las 16:00 no se puede reprogramar para hoy a las 10:20.
+   */
   const availabilityRangeStart = useMemo(() => {
     const base = new Date();
     base.setHours(0, 0, 0, 0);
     base.setDate(base.getDate() + 1);
     return base;
   }, []);
+  const minSelectableDate = useMemo(
+    () => format(availabilityRangeStart, "yyyy-MM-dd"),
+    [availabilityRangeStart]
+  );
   const availabilityRangeEnd = useMemo(
     () => addDays(availabilityRangeStart, 90),
     [availabilityRangeStart]
@@ -153,6 +162,15 @@ export function RescheduleAppointmentDialog({
   });
   const integralDays =
     daysSource === "patient" ? patientIntegralDays : staffIntegralDays;
+  /**
+   * El backend arma la lista de días del control **desde hoy**: si se mostrara
+   * tal cual, un miércoles a las 16:00 se podría mover el control a ese mismo
+   * miércoles 10:20. Se recorta con el mismo mínimo del camino común.
+   */
+  const selectableIntegralDays = useMemo(
+    () => integralDays.days.filter((day) => day.date >= minSelectableDate),
+    [integralDays.days, minSelectableDate]
+  );
   const availableDates = useMemo(
     () => Array.from(new Set(rangeSlots.map((slot) => slot.date))).sort(),
     [rangeSlots]
@@ -186,10 +204,6 @@ export function RescheduleAppointmentDialog({
     setSelectedDate(parseISO(`${day.date}T12:00:00`));
     setSelectedHour(integralHourFor(day));
   };
-
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
 
   /**
    * 🔴 Lo que el backend rechaza, el usuario lo lee.
@@ -281,7 +295,7 @@ export function RescheduleAppointmentDialog({
             <div className="space-y-2">
               <Label>Nuevo día</Label>
               <IntegralCheckupDayPicker
-                days={integralDays.days}
+                days={selectableIntegralDays}
                 isLoading={integralDays.isLoading}
                 isError={integralDays.isError}
                 selectedDate={dateStr ?? null}
@@ -344,7 +358,7 @@ export function RescheduleAppointmentDialog({
                       const normalized = new Date(date);
                       normalized.setHours(0, 0, 0, 0);
                       const dateKey = format(normalized, "yyyy-MM-dd");
-                      if (normalized < tomorrow) return true;
+                      if (normalized < availabilityRangeStart) return true;
                       if (!useAvailabilityDrivenDates) return false;
                       return !availableDateSet.has(dateKey);
                     }}
