@@ -108,6 +108,32 @@ interface CreateAppointmentFormProps {
   onGuestModeChange?: (isGuest: boolean) => void;
   /** Callback when guest submit availability changes */
   onCanSubmitGuestChange?: (canSubmit: boolean) => void;
+  /**
+   * Avisa qué médico está elegido, cada vez que cambia.
+   *
+   * Lo usa el diálogo para preguntarle al backend si ese médico ofrece el
+   * control ginecológico integral y, si lo ofrece, mostrar la modalidad justo
+   * debajo. El formulario no sabe nada del control: solo avisa.
+   */
+  onDoctorChange?: (doctorId: number | undefined) => void;
+  /**
+   * Se renderiza JUSTO debajo del médico y arriba del paciente.
+   *
+   * Ese lugar es el pedido de Francisco (19/08): primero se elige el médico y
+   * recién ahí aparecen las modalidades. Es un hueco genérico: el formulario
+   * no decide qué va adentro.
+   */
+  afterDoctorField?: React.ReactNode;
+  /**
+   * Reemplaza todo lo que va debajo del médico (paciente, fecha, tipos,
+   * horario y el botón interno) por otro recorrido.
+   *
+   * Es lo que permite que el control integral comparta el mismo médico y la
+   * misma modalidad, sin desmontar el formulario ni duplicar el selector de
+   * médico. Mientras está puesto, el alta común no se puede disparar: un Enter
+   * perdido no puede crear un turno con campos que ya no están en pantalla.
+   */
+  fieldsBelowDoctorOverride?: React.ReactNode;
 }
 
 export const CreateAppointmentForm = ({
@@ -127,6 +153,9 @@ export const CreateAppointmentForm = ({
   hideSubmitButton = false,
   onGuestModeChange,
   onCanSubmitGuestChange,
+  onDoctorChange,
+  afterDoctorField,
+  fieldsBelowDoctorOverride,
 }: CreateAppointmentFormProps) => {
   const [guestDni, setGuestDni] = useState<string | null>(null);
   const [guestFirstName, setGuestFirstName] = useState("");
@@ -245,6 +274,13 @@ export const CreateAppointmentForm = ({
     }
   }, [fixedHour, form]);
 
+  // El médico elegido, hacia arriba. Sale del `watch` y no del `onChange` del
+  // selector para que el caso del médico fijo (agenda de un profesional) avise
+  // igual: ahí no hay selector que dispare nada.
+  useEffect(() => {
+    onDoctorChange?.(watchDoctorId);
+  }, [watchDoctorId, onDoctorChange]);
+
   // Hour auto-clear is handled by TimeSlotSelect when slots change
 
   const handleSubmit = async (data: CreateAppointmentFormData) => {
@@ -325,7 +361,19 @@ export const CreateAppointmentForm = ({
 
   return (
     <Form {...form}>
-      <form ref={formRef} onSubmit={isGuestMode ? (e) => { e.preventDefault(); handleGuestSubmit(); } : form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form
+        ref={formRef}
+        onSubmit={
+          // Con otro recorrido puesto debajo del médico, el alta común no
+          // existe en pantalla: tampoco se puede disparar sin querer.
+          fieldsBelowDoctorOverride
+            ? (e) => e.preventDefault()
+            : isGuestMode
+              ? (e) => { e.preventDefault(); handleGuestSubmit(); }
+              : form.handleSubmit(handleSubmit)
+        }
+        className="space-y-4"
+      >
         {fixedDoctorId ? (
           <div className="space-y-2">
             <FormLabel>Medico</FormLabel>
@@ -364,6 +412,11 @@ export const CreateAppointmentForm = ({
           />
         )}
 
+        {/* El lugar de la modalidad: debajo del médico, arriba del paciente. */}
+        {afterDoctorField}
+
+        {fieldsBelowDoctorOverride ?? (
+          <>
         {/* Patient/Guest Selection */}
         {isGuestMode ? (
           <div className="space-y-3">
@@ -454,6 +507,11 @@ export const CreateAppointmentForm = ({
                     onCreateGuestClick={handleCreateGuestClick}
                     placeholder="Buscar paciente por DNI..."
                     defaultPatient={defaultPatient}
+                    // 🔴 Cambiar de modalidad y volver REMONTA este campo,
+                    // pero `patientId` vive en el formulario y no se
+                    // desmonta: sin esto la pantalla decía el placeholder y
+                    // el turno se creaba igual para la paciente de antes.
+                    selectedPatientPreview={selectedPatientSummary}
                     disabled={!!defaultPatient}
                     allowGuestCreation={allowGuestCreation && !!onGuestSubmit}
                   />
@@ -571,6 +629,8 @@ export const CreateAppointmentForm = ({
               {isGuestMode ? "Crear Turno Invitado" : "Crear Turno"}
             </Button>
           </div>
+        )}
+          </>
         )}
       </form>
     </Form>

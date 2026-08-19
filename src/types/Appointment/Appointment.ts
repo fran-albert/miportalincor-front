@@ -205,6 +205,30 @@ export interface IntegralCheckupSlot {
    * impone. Si no viene, el portal usa su texto de siempre.
    */
   ultrasoundPublicLabel?: string;
+  /**
+   * Las dos profesionales del control. Son config de instancia y las manda el
+   * backend: el front resuelve el nombre con el id, nunca los cablea.
+   */
+  consultationDoctorId?: number;
+  ultrasoundDoctorId?: number;
+  /**
+   * El nombre REAL de la ecografía en el catálogo. Viene SOLO en el endpoint
+   * del personal: la secretaria no es la paciente y necesita ver qué está
+   * dando. En el endpoint de la paciente no viaja.
+   */
+  ultrasoundLabel?: string;
+}
+
+/**
+ * Quiénes ofrecen el control, tal como los declara el backend.
+ *
+ * 🔴 Es lo que le permite a la pantalla de turnos preguntar "¿este médico
+ * ofrece el control?" en vez de saberlo. Quién es la ginecóloga es config de
+ * instancia: acá no se cablea ningún id.
+ */
+export interface IntegralCheckupConfig {
+  consultationDoctorId: number;
+  ultrasoundDoctorId: number;
 }
 
 /** Una sola reserva, dos momentos. */

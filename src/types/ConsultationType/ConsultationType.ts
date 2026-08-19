@@ -27,6 +27,14 @@ export interface ConsultationType {
    * worklist del ecógrafo. Antes era una lista de IDs en una env del backend.
    */
   isEcoSubtype: boolean;
+  /**
+   * Esta ecografía se puede solicitar en el control ginecológico integral.
+   *
+   * Flag aparte de `isEcoSubtype` a propósito: el catálogo tiene 15 subtipos
+   * de eco y la ginecóloga pide un puñado. Cuál es ese puñado se edita por
+   * ABM, sin deploy.
+   */
+  isIntegralCheckupEco: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +53,7 @@ export interface CreateConsultationTypeDto {
   isActive?: boolean;
   displayOrder?: number;
   isEcoSubtype?: boolean;
+  isIntegralCheckupEco?: boolean;
 }
 
 export type UpdateConsultationTypeDto = Partial<

@@ -29,7 +29,10 @@ export { useConvertGuest } from './useConvertGuest';
 export { useCreateGuestAppointment } from './useCreateGuestAppointment';
 export { useReschedulePatientAppointment } from './useReschedulePatientAppointment';
 export {
+  useCreateStaffIntegralAppointment,
   useIntegralAvailableDays,
+  useIntegralCheckupConfig,
   useRequestIntegralAppointment,
   useSetIntegralUltrasoundTypes,
+  useStaffIntegralAvailableDays,
 } from './useIntegralCheckup';

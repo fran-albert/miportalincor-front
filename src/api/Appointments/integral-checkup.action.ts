@@ -2,17 +2,30 @@ import { apiTurnos } from "@/services/axiosConfig";
 import type {
   AppointmentResponseDto,
   IntegralCheckupBooking,
+  IntegralCheckupConfig,
   IntegralCheckupSlot,
 } from "@/types/Appointment/Appointment";
+
+/**
+ * Qué se le pide al backend cuando se listan los días del control.
+ *
+ * `excludeAppointmentId` es para REPROGRAMAR: el control que se está moviendo
+ * no se cuenta como ocupado, así el día donde ya está sigue apareciendo. Va el
+ * id del turno de la CONSULTA, que es el que ocupa el casillero.
+ */
+export interface IntegralAvailableDaysParams {
+  from?: string;
+  to?: string;
+  excludeAppointmentId?: number;
+}
 
 /**
  * Días con control ginecológico integral disponible. Los horarios los define
  * el backend (configuración de instancia): el front no los calcula.
  */
-export const getIntegralAvailableDays = async (params?: {
-  from?: string;
-  to?: string;
-}): Promise<IntegralCheckupSlot[]> => {
+export const getIntegralAvailableDays = async (
+  params?: IntegralAvailableDaysParams,
+): Promise<IntegralCheckupSlot[]> => {
   const { data } = await apiTurnos.get<IntegralCheckupSlot[]>(
     "appointments/patient/integral/available-days",
     { params },
@@ -29,6 +42,61 @@ export const requestIntegralAppointment = async (dto: {
 }): Promise<IntegralCheckupBooking> => {
   const { data } = await apiTurnos.post<IntegralCheckupBooking>(
     "appointments/patient/integral",
+    dto,
+  );
+  return data;
+};
+
+/**
+ * Los mismos días, pedidos por el PERSONAL.
+ *
+ * Es el mismo cálculo del backend: la grilla del control no cambia porque lo
+ * dé la secretaria. Lo que cambia es que la respuesta trae el nombre REAL de
+ * la ecografía, que a la paciente no se le manda.
+ */
+export const getStaffIntegralAvailableDays = async (
+  params?: IntegralAvailableDaysParams,
+): Promise<IntegralCheckupSlot[]> => {
+  const { data } = await apiTurnos.get<IntegralCheckupSlot[]>(
+    "appointments/integral/available-days",
+    { params },
+  );
+  return data;
+};
+
+/**
+ * Quiénes ofrecen el control.
+ *
+ * 🔴 Lo que hace que el front **no cablee a la ginecóloga**. La secretaria
+ * elige el médico en el alta de turnos y la pantalla decide si mostrarle la
+ * modalidad comparando ese médico con lo que contesta el backend.
+ *
+ * Va aparte de los días disponibles a propósito: si se dedujera de ahí, con la
+ * agenda llena la respuesta sería `[]` y la modalidad desaparecería sin
+ * explicación, en vez de aparecer y decir "sin días disponibles".
+ */
+export const getIntegralCheckupConfig =
+  async (): Promise<IntegralCheckupConfig> => {
+    const { data } = await apiTurnos.get<IntegralCheckupConfig>(
+      "appointments/integral/config",
+    );
+    return data;
+  };
+
+/**
+ * La secretaría da el control a una paciente.
+ *
+ * 🔴 Solo viajan la paciente y el día: **las horas no se eligen ni se mandan**.
+ * Las resuelve el backend con la grilla del modo activo, que es lo mismo que
+ * hace el portal. Si el front las mandara, habría dos formas de crear el
+ * control y cada una podría elegir distinto.
+ */
+export const createStaffIntegralAppointment = async (dto: {
+  patientId: number;
+  date: string;
+}): Promise<IntegralCheckupBooking> => {
+  const { data } = await apiTurnos.post<IntegralCheckupBooking>(
+    "appointments/integral",
     dto,
   );
   return data;

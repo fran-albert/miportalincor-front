@@ -91,3 +91,52 @@ export const integralOrderHint = (slot: Slot): string => {
   const cuando = ecoPrimero ? "antes de" : "después de";
   return `La ecografía es ${diferencia} minutos ${cuando} la consulta: en una sola visita te hacés las dos cosas.`;
 };
+
+/** Un momento del control, tal como lo ve el PERSONAL. */
+export interface IntegralStaffMoment extends IntegralMoment {
+  /** Qué profesional atiende ese momento. */
+  doctorLabel: string;
+}
+
+type StaffSlot = Slot & Pick<IntegralCheckupSlot, "ultrasoundLabel">;
+
+interface StaffDoctorLabels {
+  consultationDoctorLabel: string;
+  ultrasoundDoctorLabel: string;
+}
+
+/**
+ * Los dos momentos del control **para el personal**, ordenados por hora.
+ *
+ * Dos diferencias con la vista de la paciente, y las dos son deliberadas:
+ *
+ *  1. La eco se nombra con el nombre REAL del catálogo (`ultrasoundLabel`).
+ *     La secretaria no es la paciente: si le mostráramos el nombre público
+ *     —"Ecografía" a secas— no sabría qué está dando. Si el backend no lo
+ *     manda, se dice "Ecografía" y listo: el texto del portal ("Ecografía
+ *     ginecológica y mamaria") es una promesa hacia la paciente y acá sería
+ *     una afirmación falsa sobre el catálogo.
+ *  2. Cada momento dice qué profesional lo atiende, con el nombre que resuelve
+ *     quien llama (los ids de las dos médicas vienen en el slot).
+ *
+ * Lo que NO cambia: el orden sale de las horas. Es la misma regla que hizo que
+ * el portal no mintiera cuando se invirtió el circuito.
+ */
+export const integralStaffMomentsInOrder = (
+  slot: StaffSlot,
+  { consultationDoctorLabel, ultrasoundDoctorLabel }: StaffDoctorLabels,
+): IntegralStaffMoment[] =>
+  [
+    {
+      hour: slot.ultrasoundHour,
+      label: slot.ultrasoundLabel?.trim() || "Ecografía",
+      kind: "ULTRASOUND" as const,
+      doctorLabel: ultrasoundDoctorLabel,
+    },
+    {
+      hour: slot.consultationHour,
+      label: "Consulta",
+      kind: "CONSULTATION" as const,
+      doctorLabel: consultationDoctorLabel,
+    },
+  ].sort((a, b) => a.hour.localeCompare(b.hour));

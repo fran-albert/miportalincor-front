@@ -19,6 +19,9 @@ import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Patient } from "@/types/Patient/Patient";
 
+/** Lo mínimo que hace falta para mostrar quién está elegido en el campo. */
+type SelectedPatientDisplay = Pick<Patient, "firstName" | "lastName">;
+
 interface PatientSelectWithGuestOptionProps {
   value?: number;
   onValueChange: (patientId: number) => void;
@@ -29,6 +32,22 @@ interface PatientSelectWithGuestOptionProps {
   disabled?: boolean;
   className?: string;
   defaultPatient?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    userName?: string;
+  };
+  /**
+   * La paciente que ya está elegida en el formulario, para cuando el buscador
+   * no la tiene entre los resultados de su búsqueda actual.
+   *
+   * 🔴 Sin esto, el campo derivaba lo que mostraba de su propio estado local:
+   * al remontarse (cambiar de modalidad y volver) mostraba el placeholder
+   * mientras el formulario seguía teniendo la paciente, y el turno se creaba
+   * para ella igual. Solo se usa si es la MISMA que tiene el formulario: lo
+   * que se ve sale siempre del `value`.
+   */
+  selectedPatientPreview?: {
     userId: number;
     firstName: string;
     lastName: string;
@@ -47,6 +66,7 @@ export const PatientSelectWithGuestOption = ({
   disabled = false,
   className,
   defaultPatient,
+  selectedPatientPreview,
   allowGuestCreation = true,
 }: PatientSelectWithGuestOptionProps) => {
   const [open, setOpen] = useState(false);
@@ -58,13 +78,24 @@ export const PatientSelectWithGuestOption = ({
   });
 
   // Memoize selected patient
-  const selectedPatient = useMemo(() => {
+  const selectedPatient = useMemo<SelectedPatientDisplay | undefined>(() => {
     if (defaultPatient) {
-      return defaultPatient as Patient;
+      return defaultPatient;
     }
     const fromSearch = patients?.find(p => Number(p.userId) === value);
-    return fromSearch || undefined;
-  }, [patients, value, defaultPatient]);
+    if (fromSearch) {
+      return fromSearch;
+    }
+    // Lo que muestra el campo sale del VALOR del formulario: la paciente ya
+    // elegida solo se muestra si es esa misma.
+    if (
+      selectedPatientPreview &&
+      Number(selectedPatientPreview.userId) === value
+    ) {
+      return selectedPatientPreview;
+    }
+    return undefined;
+  }, [patients, value, defaultPatient, selectedPatientPreview]);
 
   // Memoize the select handler
   const handleSelect = useCallback((patient: Patient) => {
