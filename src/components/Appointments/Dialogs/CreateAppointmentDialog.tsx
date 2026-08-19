@@ -229,11 +229,6 @@ export const CreateAppointmentDialog = ({
   };
 
   /**
-   * Las dos modalidades, chiquitas, justo debajo del médico. Aparecen solo
-   * cuando el médico elegido ofrece el control: con cualquier otro, esta
-   * pantalla es la de siempre.
-   */
-  /**
    * 🔴 "No lo ofrece" y "no pude preguntarlo" no son lo mismo. Si
    * `/integral/config` falla, `config` queda `undefined` y la modalidad no
    * aparece: sin este aviso, un 500 se lee igual que "esta clínica no ofrece
@@ -243,6 +238,11 @@ export const CreateAppointmentDialog = ({
   const showIntegralConfigError =
     isStaff && integralConfigError && !!selectedDoctorId;
 
+  /**
+   * Las dos modalidades, chiquitas, justo debajo del médico. Aparecen solo
+   * cuando el médico elegido ofrece el control: con cualquier otro, esta
+   * pantalla es la de siempre (o el aviso de arriba, si no se pudo preguntar).
+   */
   const modalitySwitch = offersIntegralCheckup ? (
     <div className="grid grid-cols-2 gap-2">
       <button
