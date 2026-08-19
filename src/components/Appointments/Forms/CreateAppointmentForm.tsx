@@ -507,6 +507,11 @@ export const CreateAppointmentForm = ({
                     onCreateGuestClick={handleCreateGuestClick}
                     placeholder="Buscar paciente por DNI..."
                     defaultPatient={defaultPatient}
+                    // 🔴 Cambiar de modalidad y volver REMONTA este campo,
+                    // pero `patientId` vive en el formulario y no se
+                    // desmonta: sin esto la pantalla decía el placeholder y
+                    // el turno se creaba igual para la paciente de antes.
+                    selectedPatientPreview={selectedPatientSummary}
                     disabled={!!defaultPatient}
                     allowGuestCreation={allowGuestCreation && !!onGuestSubmit}
                   />
