@@ -8,6 +8,7 @@ import {
   INTEGRAL_CHECKUP_SHORT_LABEL,
 } from '@/common/constants/integral-checkup';
 import { eventColorsFromCatalogColor } from '@/common/helpers/integral-checkup-style';
+import { getQueueEntryConsultationTypeLabels } from '@/common/helpers/queue-consultation-types';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -215,25 +216,9 @@ const formatQueueDocument = (document: unknown): string => {
   return formatDni(numericDocument);
 };
 
-const getConsultationTypeLabels = (entry: QueueEntry): string[] => {
-  const consultationTypes = entry.consultationTypes ?? [];
-  const labelsFromObjects = consultationTypes
-    .map((type) => (typeof type === 'string' ? type : type.name))
-    .filter((value): value is string => hasMeaningfulText(value));
-
-  const labels = [
-    ...(entry.consultationTypeNames ?? []),
-    ...labelsFromObjects,
-    entry.consultationType?.name,
-    entry.consultationTypeName,
-  ].filter((value): value is string => hasMeaningfulText(value));
-
-  return Array.from(new Set(labels));
-};
-
 const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: string } => {
   const consultationLabel =
-    getConsultationTypeLabels(entry).join(' · ') || entry.speciality;
+    getQueueEntryConsultationTypeLabels(entry).join(' · ') || entry.speciality;
 
   if (entry.appointmentType === 'ADMINISTRATIVE') {
     return {
@@ -261,7 +246,7 @@ const getQueueContextLabel = (entry: QueueEntry): string | null => {
   }
 
   const consultationLabel =
-    getConsultationTypeLabels(entry).join(' · ') || entry.speciality;
+    getQueueEntryConsultationTypeLabels(entry).join(' · ') || entry.speciality;
   const parts = [
     hasMeaningfulText(entry.doctorName) ? entry.doctorName : null,
     hasMeaningfulText(consultationLabel) ? consultationLabel : null,
@@ -288,7 +273,7 @@ const integralCheckupBadgeStyle = (
 };
 
 const ConsultationTypeBadges = ({ entry }: { entry: QueueEntry }) => {
-  const labels = getConsultationTypeLabels(entry);
+  const labels = getQueueEntryConsultationTypeLabels(entry);
 
   if (labels.length === 0 && !entry.necesitaSubtipoEco && !entry.esControlIntegral) {
     return null;
@@ -585,7 +570,7 @@ const QueueEntryDetailsDialog = ({
 
   const { entry, mode } = details;
   const attention = getAttentionLabels(entry);
-  const consultationTypeLabels = getConsultationTypeLabels(entry);
+  const consultationTypeLabels = getQueueEntryConsultationTypeLabels(entry);
   const waitTimeColors = getWaitingTimeColor(entry.waitingTimeMinutes);
   const isWaitingEntry = mode === 'waiting';
 

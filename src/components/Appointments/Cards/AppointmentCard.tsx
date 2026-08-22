@@ -18,10 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatDoctorName } from "@/common/helpers/helpers";
-import {
-  getAppointmentConsultationTypeSummary,
-  getAppointmentConsultationTypes,
-} from "@/common/helpers/appointment-consultation-types";
+import { getAppointmentConsultationTypes } from "@/common/helpers/appointment-consultation-types";
 
 interface AppointmentCardProps {
   appointment: AppointmentFullResponseDto;
@@ -83,8 +80,6 @@ export const AppointmentCard = ({
   };
 
   const consultationTypes = getAppointmentConsultationTypes(appointment);
-  const consultationTypeSummary = getAppointmentConsultationTypeSummary(appointment);
-  const primaryConsultationType = consultationTypes[0] ?? appointment.consultationType;
 
   if (compact) {
     return (
@@ -116,18 +111,22 @@ export const AppointmentCard = ({
               INVITADO
             </Badge>
           )}
-          {consultationTypeSummary && (
+          {/* Un chip por estudio: con dos o más, el `+N` no dejaba saber
+              cuál era el otro. */}
+          {consultationTypes.map((consultationType) => (
             <Badge
-              className="border text-xs"
+              key={consultationType.id}
+              className="border text-xs max-w-[12rem] truncate"
+              title={consultationType.name}
               style={{
-                backgroundColor: primaryConsultationType?.color ? `${primaryConsultationType.color}20` : undefined,
-                color: primaryConsultationType?.color || undefined,
-                borderColor: primaryConsultationType?.color || undefined,
+                backgroundColor: consultationType.color ? `${consultationType.color}20` : undefined,
+                color: consultationType.color || undefined,
+                borderColor: consultationType.color || undefined,
               }}
             >
-              {consultationTypeSummary}
+              {consultationType.name}
             </Badge>
-          )}
+          ))}
           <StatusBadge status={appointment.status} size="sm" />
           {showActions && (
             <DropdownMenu>

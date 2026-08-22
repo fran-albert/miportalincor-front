@@ -42,7 +42,7 @@ import {
 } from "@/common/helpers/timezone";
 import { formatDoctorName } from "@/common/helpers/helpers";
 import type { ApiError } from "@/types/Error/ApiError";
-import { getAppointmentConsultationTypes } from "@/common/helpers/appointment-consultation-types";
+import { getAppointmentConsultationTypeChips } from "@/common/helpers/appointment-consultation-types";
 import {
   Calendar,
   Clock,
@@ -158,7 +158,16 @@ const MyAppointmentsPage = () => {
   };
 
   const AppointmentCardPatient = ({ appointment }: { appointment: AppointmentFullResponseDto }) => {
-    const consultationTypes = getAppointmentConsultationTypes(appointment);
+    /**
+     * 🔴 Los chips de la PACIENTE: se nombran con el nombre público y se
+     * deduplican por eso mismo. Dos subtipos de eco distintos son un solo
+     * chip "Ecografía" — dos chips iguales serían ruido, y el subtipo no se
+     * le muestra a propósito (lo indica la médica).
+     */
+    const consultationTypes = getAppointmentConsultationTypeChips(
+      appointment,
+      publicNameOf,
+    );
     const doctorName = appointment.doctor ? formatDoctorName(appointment.doctor) : "Médico no especificado";
     const primarySpeciality = appointment.doctor?.specialities?.[0]?.name;
     const isFinished = shouldShowAsFinishedForPatient(appointment);
@@ -241,6 +250,7 @@ const MyAppointmentsPage = () => {
                       key={consultationType.id}
                       variant="outline"
                       className="text-xs"
+                      title={consultationType.label}
                       style={{
                         borderColor: consultationType.color || undefined,
                         color: consultationType.color || undefined,
@@ -249,11 +259,7 @@ const MyAppointmentsPage = () => {
                           : undefined,
                       }}
                     >
-                      {/* 🔴 Nombre PÚBLICO: es la pantalla de la paciente, y
-                          los subtipos de ecografía no se le muestran (el
-                          subtipo lo indica la médica). Recepción y las médicas
-                          ven el nombre real en el turnero. */}
-                      {publicNameOf(consultationType)}
+                      {consultationType.label}
                     </Badge>
                   ))}
               </div>
