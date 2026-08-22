@@ -147,3 +147,61 @@ describe("MyAppointmentsPage — vocabulario del paciente", () => {
     expect(screen.queryByText(/No hace falta confirmar/i)).not.toBeInTheDocument();
   });
 });
+
+describe("MyAppointmentsPage — un turno con varios estudios", () => {
+  beforeEach(() => {
+    mockUsePatientAppointments.mockReset();
+  });
+
+  it("🔴 un turno de dos estudios los nombra a los dos, sin +1", () => {
+    renderPage([
+      buildAppointment({
+        consultationTypes: [
+          { id: 1, name: "Ecocardiograma Doppler Color" },
+          { id: 2, name: "Ergometría" },
+        ],
+      }),
+    ]);
+
+    expect(screen.getByText("Ecocardiograma Doppler Color")).toBeInTheDocument();
+    expect(screen.getByText("Ergometría")).toBeInTheDocument();
+    expect(screen.queryByText(/\+\d/)).not.toBeInTheDocument();
+  });
+
+  it("🔴 dos subtipos de eco son UN solo chip 'Ecografía', no dos repetidos", () => {
+    renderPage([
+      buildAppointment({
+        consultationTypes: [
+          { id: 10, name: "Ecografía Mamaria", publicName: "Ecografía" },
+          { id: 11, name: "Ecografía Transvaginal", publicName: "Ecografía" },
+        ],
+      }),
+    ]);
+
+    expect(screen.getAllByText("Ecografía")).toHaveLength(1);
+  });
+
+  it("🔴 el subtipo real de la eco no se le filtra a la paciente", () => {
+    renderPage([
+      buildAppointment({
+        consultationTypes: [
+          { id: 10, name: "Ecografía Mamaria", publicName: "Ecografía" },
+          { id: 11, name: "Ecografía Transvaginal", publicName: "Ecografía" },
+        ],
+      }),
+    ]);
+
+    expect(screen.queryByText(/Mamaria/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Transvaginal/i)).not.toBeInTheDocument();
+  });
+
+  it("un turno de un solo estudio se ve igual que hoy", () => {
+    renderPage([
+      buildAppointment({
+        consultationTypes: [{ id: 2, name: "Ergometría" }],
+      }),
+    ]);
+
+    expect(screen.getAllByText("Ergometría")).toHaveLength(1);
+  });
+});

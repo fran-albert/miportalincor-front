@@ -60,9 +60,14 @@ import {
 import { formatDateForCalendar, formatTimeAR } from "@/common/helpers/timezone";
 import { formatDoctorName, parseBoolean } from "@/common/helpers/helpers";
 import {
+  getAppointmentConsultationTypeChips,
   getAppointmentConsultationTypeSummary,
   getAppointmentConsultationTypes,
 } from "@/common/helpers/appointment-consultation-types";
+import {
+  getConsultationTypeBadgeLabel,
+  hasRemoteConsultationType,
+} from "@/common/helpers/consultation-type-modality";
 import {
   getSpecialConsultationTypeFromNames,
   getSpecialConsultationTypeInfo,
@@ -199,30 +204,6 @@ interface BigCalendarProps {
   /** Whether to allow creating guest appointments (for doctors with self-manage) */
   allowGuestCreation?: boolean;
 }
-
-const isRemoteConsultation = (consultationType?: string) => {
-  if (!consultationType) return false;
-  const normalized = consultationType.toLowerCase();
-  return (
-    normalized.includes("remot") ||
-    normalized.includes("virtual") ||
-    normalized.includes("tele")
-  );
-};
-
-const getConsultationTypeBadgeLabel = (consultationType?: string) => {
-  if (!consultationType) return null;
-  const normalized = consultationType.trim().toLowerCase();
-  if (
-    normalized.includes("presencial") ||
-    normalized.includes("remot") ||
-    normalized.includes("virtual") ||
-    normalized.includes("tele")
-  ) {
-    return null;
-  }
-  return consultationType;
-};
 
 const calendarViewOptions: Array<{ value: View; label: string }> = [
   { value: "day", label: "Día" },
@@ -385,11 +366,18 @@ export const BigCalendar = ({
       const appointmentData = event.resource.data as AppointmentFullResponseDto | OverturnDetailedDto | undefined;
       const eventOrigin =
         type === "appointment" ? (appointmentData as AppointmentFullResponseDto | undefined)?.origin : undefined;
+      const consultationTypeNames = consultationTypes?.map(
+        (typeItem) => typeItem.name,
+      ) ?? [];
       const specialConsultationType = getSpecialConsultationTypeFromNames([
         consultationType,
-        ...(consultationTypes?.map((typeItem) => typeItem.name) ?? []),
+        ...consultationTypeNames,
       ]);
-      const showRemoteMarker = isRemoteConsultation(consultationType);
+      const showRemoteMarker = hasRemoteConsultationType(
+        consultationTypeNames.length > 0
+          ? consultationTypeNames
+          : [consultationType ?? ""],
+      );
       const showInPersonMarker = !!consultationType && !showRemoteMarker;
       const showNewMarker =
         event.resource.isGuest ||
@@ -1607,9 +1595,13 @@ export const BigCalendar = ({
     : selectedEventData?.patient?.userName;
   const selectedHealthInsurance = selectedEventData?.patient?.healthInsuranceName;
   const selectedAffiliationNumber = selectedEventData?.patient?.affiliationNumber;
-  const selectedConsultationTypeBadge = getConsultationTypeBadgeLabel(selectedEvent?.resource.consultationType);
   const selectedConsultationTypes = getAppointmentConsultationTypes(
     selectedAppointmentData
+  );
+  const selectedConsultationTypeBadge = getConsultationTypeBadgeLabel(
+    getAppointmentConsultationTypeChips(selectedAppointmentData).map(
+      (chip) => chip.label,
+    ),
   );
   const selectedSpecialConsultationType = getSpecialConsultationTypeFromNames([
     selectedEvent?.resource.consultationType,
@@ -2376,12 +2368,18 @@ export const BigCalendar = ({
                               </Badge>
                             )}
                             {(() => {
+                              const eventTypeNames =
+                                event.resource.consultationTypes?.map(
+                                  (typeItem) => typeItem.name,
+                                ) ?? [];
                               const specialType = getSpecialConsultationTypeFromNames([
                                 event.resource.consultationType,
-                                ...(event.resource.consultationTypes?.map((typeItem) => typeItem.name) ?? []),
+                                ...eventTypeNames,
                               ]);
                               const consultationBadge = getConsultationTypeBadgeLabel(
-                                event.resource.consultationType,
+                                eventTypeNames.length > 0
+                                  ? eventTypeNames
+                                  : [event.resource.consultationType ?? ""],
                               );
 
                               if (specialType) {

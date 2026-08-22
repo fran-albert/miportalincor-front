@@ -82,7 +82,9 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { slugify, formatWaitingTime, getWaitingTimeColor } from '@/common/helpers/helpers';
 import { PageHeader } from '@/components/PageHeader';
-import { getAppointmentConsultationTypeSummary } from '@/common/helpers/appointment-consultation-types';
+import { getAppointmentConsultationTypeChips } from '@/common/helpers/appointment-consultation-types';
+import { getQueueEntryConsultationTypeLabels } from '@/common/helpers/queue-consultation-types';
+import { ConsultationTypeChips } from '@/components/Appointments/ConsultationTypeChips';
 import { IntegralCheckupTag } from '@/components/Appointments/IntegralCheckupTag';
 import {
   EcoSubtypeDialog,
@@ -120,10 +122,14 @@ const getTypeColor = (type: AgendaItem['type']): string => {
     : 'bg-purple-100 text-purple-800 border-purple-300';
 };
 
-const getConsultationTypeName = (item: AgendaItem): string | null => {
-  if (item.type !== 'appointment') return null;
+/**
+ * Los estudios de un item de la agenda, uno por etiqueta. La médica tiene que
+ * poder leer los tres estudios del turno sin abrirlo: nunca un `+N`.
+ */
+const getConsultationTypeLabels = (item: AgendaItem): string[] => {
+  if (item.type !== 'appointment') return [];
   const apt = item.rawData as AppointmentFullResponseDto;
-  return getAppointmentConsultationTypeSummary(apt);
+  return getAppointmentConsultationTypeChips(apt).map((chip) => chip.label);
 };
 
 type HistorySelectorValue = 'today' | 'yesterday' | 'last7' | 'date';
@@ -361,18 +367,23 @@ const DoctorWaitingRoomPage = () => {
     return entry.overturnId ? 'overturn' : 'appointment';
   };
 
-  const getQueueEntryConsultationType = (entry: typeof waitingQueue[0]): string | null => {
-    if (entry.consultationTypeName) {
-      return entry.consultationTypeName;
+  const getQueueEntryConsultationTypes = (
+    entry: typeof waitingQueue[0],
+  ): string[] => {
+    // El backend ya manda el array completo; el singular quedó por
+    // compatibilidad y sólo nombra el primero.
+    const fromQueue = getQueueEntryConsultationTypeLabels(entry);
+    if (fromQueue.length > 0) {
+      return fromQueue;
     }
 
-    if (entry.overturnId) return null;
-    if (!entry.appointmentId) return null;
+    if (entry.overturnId) return [];
+    if (!entry.appointmentId) return [];
     const agendaItem = agenda.find(
       (item) => item.type === 'appointment' && item.id === entry.appointmentId
     );
-    if (!agendaItem) return null;
-    return getConsultationTypeName(agendaItem);
+    if (!agendaItem) return [];
+    return getConsultationTypeLabels(agendaItem);
   };
 
   /**
@@ -464,14 +475,9 @@ const DoctorWaitingRoomPage = () => {
                     <Badge variant="outline" className={getTypeColor(type)}>
                       {getTypeLabel(type)}
                     </Badge>
-                    {(() => {
-                      const ctName = getQueueEntryConsultationType(entry);
-                      return ctName ? (
-                        <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
-                          {ctName}
-                        </Badge>
-                      ) : null;
-                    })()}
+                    <ConsultationTypeChips
+                      labels={getQueueEntryConsultationTypes(entry)}
+                    />
                     {(() => {
                       const link = getQueueEntryIntegralCheckup(entry);
                       return link ? <IntegralCheckupTag link={link} /> : null;
@@ -573,18 +579,13 @@ const DoctorWaitingRoomPage = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-lg">{renderPatientName(item)}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <Badge variant="outline" className={getTypeColor(item.type)}>
                           {getTypeLabel(item.type)}
                         </Badge>
-                        {(() => {
-                          const ctName = getConsultationTypeName(item);
-                          return ctName ? (
-                            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-300">
-                              {ctName}
-                            </Badge>
-                          ) : null;
-                        })()}
+                        <ConsultationTypeChips
+                          labels={getConsultationTypeLabels(item)}
+                        />
                         {item.integralCheckup && (
                           <IntegralCheckupTag link={item.integralCheckup} />
                         )}
@@ -799,11 +800,9 @@ const DoctorWaitingRoomPage = () => {
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               {(() => {
-                                const ctName = getConsultationTypeName(item);
-                                return ctName ? (
-                                  <Badge variant="outline" className="w-fit bg-teal-50 text-teal-700 border-teal-300">
-                                    {ctName}
-                                  </Badge>
+                                const labels = getConsultationTypeLabels(item);
+                                return labels.length > 0 ? (
+                                  <ConsultationTypeChips labels={labels} narrow />
                                 ) : !item.integralCheckup ? (
                                   <span className="text-muted-foreground text-sm">—</span>
                                 ) : null;
