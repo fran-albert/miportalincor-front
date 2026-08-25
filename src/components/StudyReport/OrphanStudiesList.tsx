@@ -1,12 +1,61 @@
 import { useEffect, useState } from "react";
 import { ImageOff, ScanLine } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   getOrphanStudyImages,
   getOrphanStudyImagePreview,
 } from "@/api/StudyReport/study-report.actions";
+import { createRequestGate } from "@/common/helpers/request-gate";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
+
+/**
+ * Cuántas miniaturas salen a buscarse a la vez. Mismo número que usa la
+ * galería del editor (PREVIEW_CONCURRENCY): es el techo aunque un scroll
+ * rápido meta las 80 tarjetas en pantalla.
+ */
+const THUMBNAIL_CONCURRENCY = 4;
+
+/**
+ * Cuánto se adelanta la descarga respecto de lo que está en pantalla. Con la
+ * tarjeta rondando los 360 px de alto, 300 px es aproximadamente una tarjeta
+ * de anticipo: la miniatura suele estar cuando la ecografista llega a ella,
+ * sin bajar la lista entera.
+ */
+const THUMBNAIL_PREFETCH_MARGIN = "300px";
+
+const thumbnailGate = createRequestGate(THUMBNAIL_CONCURRENCY);
+
+/**
+ * Avisa cuándo el elemento entró en pantalla, una sola vez.
+ *
+ * Si el navegador no trae IntersectionObserver, se baja todo de entrada: peor
+ * en pedidos, pero la miniatura es lo único con lo que la ecografista
+ * reconoce su estudio y no puede faltar.
+ */
+const useInViewOnce = (enabled: boolean) => {
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const [inView, setInView] = useState(
+    () => typeof IntersectionObserver === "undefined",
+  );
+
+  useEffect(() => {
+    if (!enabled || inView || !node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) setInView(true);
+      },
+      { rootMargin: THUMBNAIL_PREFETCH_MARGIN },
+    );
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [enabled, inView, node]);
+
+  return { ref: setNode, inView };
+};
 
 /**
  * Fecha del estudio. `timeZone: "UTC"` como en el resto de la bandeja: la fecha
@@ -35,52 +84,66 @@ const imageCountLabel = (count: number): string =>
   count === 1 ? "1 imagen" : `${count} imágenes`;
 
 /**
- * La miniatura del estudio: la primera imagen del examen.
+ * La miniatura vive en el caché de react-query, no en estado local.
  *
- * Una sola por tarjeta, a propósito. La lista puede tener decenas de estudios
- * (88 acumulados el 24/08) y bajar todas las imágenes de cada uno la dejaría
- * inusable justo en el celular, que es donde se usa: la ecografista mira esto
- * de pie, con el equipo al lado. Para ver el resto está el diálogo de reclamo.
+ * Radix desmonta el contenido de la pestaña inactiva. Con la miniatura en
+ * useState + useEffect, cada vez que la ecografista iba a "Por informar" y
+ * volvía, las 80 tarjetas remontaban desde cero y disparaban 160 pedidos
+ * simultáneos: el navegador encolaba, varios fallaban y quedaban con el icono
+ * de "sin vista previa". Ese era el "desaparece la carga de imágenes".
+ *
+ * Cacheado, volver a la pestaña no pide nada: la URL sale del caché.
  */
+const orphanThumbnailQueryKey = (sourceInboxItemId: string) =>
+  ["study-reports", "orphans", "thumbnail", sourceInboxItemId] as const;
+
+/**
+ * Devuelve una object URL viva. A propósito NUNCA se revoca: el caché guarda
+ * la URL, así que revocarla en un cleanup dejaría la entrada cacheada
+ * apuntando a un blob muerto y la imagen se vería rota al volver. El costo es
+ * el blob en memoria hasta que se recargue la página, acotado por la cantidad
+ * de tarjetas que la ecografista llegó a mirar.
+ */
+const fetchOrphanThumbnail = async (
+  sourceInboxItemId: string,
+): Promise<string> => {
+  const instanceIds = await getOrphanStudyImages(sourceInboxItemId);
+  if (instanceIds.length === 0) {
+    throw new Error("El estudio no tiene imágenes en el PACS");
+  }
+  // Una sola imagen por tarjeta, a propósito: la lista puede tener decenas de
+  // estudios y bajar todas las imágenes de cada uno la dejaría inusable justo
+  // en el celular, que es donde se usa. Para ver el resto está el diálogo.
+  const blob = await getOrphanStudyImagePreview(
+    sourceInboxItemId,
+    instanceIds[0],
+  );
+  return URL.createObjectURL(blob);
+};
+
 const OrphanThumbnail = ({ study }: { study: OrphanStudy }) => {
-  const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  const { ref, inView } = useInViewOnce(study.hasImages);
+  const { data: url, isError } = useQuery({
+    queryKey: orphanThumbnailQueryKey(study.sourceInboxItemId),
+    queryFn: () =>
+      thumbnailGate(() => fetchOrphanThumbnail(study.sourceInboxItemId)),
+    // Sólo lo que está en pantalla: con 80 tarjetas, pedir todo de entrada era
+    // lo que tiraba las miniaturas abajo.
+    enabled: study.hasImages && inView,
+    // El estudio ya salió del ecógrafo: el blob no cambia nunca. Sin
+    // staleTime/gcTime infinitos, volver a la pestaña dispararía de nuevo los
+    // 160 pedidos que este fix viene a matar.
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
+  });
 
-  useEffect(() => {
-    if (!study.hasImages) return;
-    let active = true;
-    let objectUrl: string | null = null;
-
-    void (async () => {
-      try {
-        const instanceIds = await getOrphanStudyImages(
-          study.sourceInboxItemId,
-        );
-        if (!active || instanceIds.length === 0) {
-          if (active) setFailed(true);
-          return;
-        }
-        const blob = await getOrphanStudyImagePreview(
-          study.sourceInboxItemId,
-          instanceIds[0],
-        );
-        if (!active) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      } catch {
-        if (active) setFailed(true);
-      }
-    })();
-
-    return () => {
-      active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [study.sourceInboxItemId, study.hasImages]);
-
-  if (!study.hasImages || failed) {
+  if (!study.hasImages || isError) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-md bg-muted text-muted-foreground">
+      <div
+        ref={ref}
+        className="flex aspect-video w-full items-center justify-center rounded-md bg-muted text-muted-foreground"
+      >
         <ImageOff className="h-6 w-6" aria-hidden="true" />
         <span className="sr-only">Sin vista previa</span>
       </div>
@@ -88,11 +151,18 @@ const OrphanThumbnail = ({ study }: { study: OrphanStudy }) => {
   }
 
   if (!url) {
-    return <Skeleton className="aspect-video w-full rounded-md" />;
+    // El ref va en el div y no en Skeleton: Skeleton no reenvía refs, y sin un
+    // nodo observado la miniatura no se pediría nunca.
+    return (
+      <div ref={ref} className="aspect-video w-full">
+        <Skeleton className="h-full w-full rounded-md" />
+      </div>
+    );
   }
 
   return (
     <img
+      ref={ref}
       src={url}
       alt={`Primera imagen del estudio del ${formatStudyDate(study.studyDate)}`}
       className="aspect-video w-full rounded-md bg-black object-contain"

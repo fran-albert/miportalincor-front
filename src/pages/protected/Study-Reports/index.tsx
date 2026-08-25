@@ -43,7 +43,8 @@ import { StudyReportSplitPanel } from "@/components/StudyReport/StudyReportSplit
 import { OrphanStudiesList } from "@/components/StudyReport/OrphanStudiesList";
 import { ClaimOrphanDialog } from "@/components/StudyReport/ClaimOrphanDialog";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { PillTabsList, PillTabsTrigger } from "@/components/ui/pill-tabs";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
@@ -658,17 +659,15 @@ export default function StudyReportsPage() {
             value={tab}
             onValueChange={(value) => setTab(value as "mine" | "orphans")}
           >
-            <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
-              <TabsTrigger value="mine">Por informar</TabsTrigger>
-              <TabsTrigger value="orphans" className="group gap-1.5">
+            <PillTabsList>
+              <PillTabsTrigger value="mine">Por informar</PillTabsTrigger>
+              <PillTabsTrigger
+                value="orphans"
+                count={orphans.data?.length ?? 0}
+              >
                 Sin dueño
-                {(orphans.data?.length ?? 0) > 0 && (
-                  <Badge className="h-5 min-w-5 justify-center rounded-full bg-gray-100 px-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100">
-                    {orphans.data?.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
+              </PillTabsTrigger>
+            </PillTabsList>
 
             <TabsContent value="mine" className="mt-4">
               <div className="overflow-hidden sm:rounded-lg">

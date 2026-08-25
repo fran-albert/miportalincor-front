@@ -11,9 +11,10 @@
 // se hizo, qué nombre quedó cargado en el equipo y cuántas imágenes tiene.
 // ============================================================
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { OrphanStudiesList } from "./OrphanStudiesList";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
@@ -31,7 +32,80 @@ beforeAll(() => {
   URL.revokeObjectURL = vi.fn();
 });
 
-afterEach(() => vi.clearAllMocks());
+// ------------------------------------------------------------
+// jsdom no trae IntersectionObserver y la lista lo usa para bajar sólo las
+// miniaturas que la ecografista tiene a la vista. Este doble es la API del
+// navegador, no código nuestro: por defecto reporta todo como visible (que es
+// lo que ve un test de una sola tarjeta) y el test de scroll lo maneja a mano.
+// ------------------------------------------------------------
+interface ObservacionEnCurso {
+  elemento: Element;
+  callback: IntersectionObserverCallback;
+  observador: IntersectionObserver;
+}
+
+let observaciones: ObservacionEnCurso[] = [];
+let visibleAlObservar = true;
+
+class IntersectionObserverDoble {
+  readonly root = null;
+  readonly rootMargin = "";
+  readonly thresholds: number[] = [];
+
+  constructor(private readonly callback: IntersectionObserverCallback) {}
+
+  observe(elemento: Element): void {
+    const observacion: ObservacionEnCurso = {
+      elemento,
+      callback: this.callback,
+      observador: this as unknown as IntersectionObserver,
+    };
+    observaciones.push(observacion);
+    if (visibleAlObservar) mostrar(observacion);
+  }
+
+  unobserve(): void {}
+
+  disconnect(): void {
+    observaciones = observaciones.filter(
+      (observacion) => observacion.observador !== (this as unknown),
+    );
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+const mostrar = (observacion: ObservacionEnCurso): void => {
+  observacion.callback(
+    [
+      {
+        isIntersecting: true,
+        target: observacion.elemento,
+      } as IntersectionObserverEntry,
+    ],
+    observacion.observador,
+  );
+};
+
+/** Simula que la ecografista scrolleó hasta esas tarjetas. */
+const scrollearHasta = (cantidad: number): void => {
+  act(() => {
+    observaciones.slice(0, cantidad).forEach(mostrar);
+  });
+};
+
+beforeEach(() => {
+  observaciones = [];
+  visibleAlObservar = true;
+  vi.stubGlobal("IntersectionObserver", IntersectionObserverDoble);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
 
 const huerfano = (overrides: Partial<OrphanStudy> = {}): OrphanStudy => ({
   sourceInboxItemId: "item-1",
@@ -46,15 +120,32 @@ const huerfano = (overrides: Partial<OrphanStudy> = {}): OrphanStudy => ({
   ...overrides,
 });
 
+/**
+ * Un QueryClient nuevo por test: las miniaturas se cachean, así que
+ * compartirlo haría que un test viera la miniatura que bajó el anterior.
+ */
+const renderList = (props: {
+  studies: OrphanStudy[];
+  isLoading?: boolean;
+  onClaim?: (study: OrphanStudy) => void;
+}) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={client}>
+      <OrphanStudiesList
+        studies={props.studies}
+        isLoading={props.isLoading ?? false}
+        onClaim={props.onClaim ?? vi.fn()}
+      />
+    </QueryClientProvider>,
+  );
+};
+
 describe("OrphanStudiesList", () => {
   it("muestra los datos con los que la ecografista reconoce el estudio suyo", () => {
-    render(
-      <OrphanStudiesList
-        studies={[huerfano()]}
-        isLoading={false}
-        onClaim={vi.fn()}
-      />,
-    );
+    renderList({ studies: [huerfano()], onClaim: vi.fn() });
 
     expect(screen.getByText("24/08/2026")).toBeInTheDocument();
     expect(screen.getByText("MP")).toBeInTheDocument();
@@ -62,30 +153,18 @@ describe("OrphanStudiesList", () => {
   });
 
   it("avisa cuando el nombre que quedó cargado no sirve para identificar", () => {
-    render(
-      <OrphanStudiesList
-        studies={[huerfano()]}
-        isLoading={false}
-        onClaim={vi.fn()}
-      />,
-    );
+    renderList({ studies: [huerfano()], onClaim: vi.fn() });
 
     expect(screen.getByText(/Sin paciente identificado/i)).toBeInTheDocument();
   });
 
   it("muestra el nombre detectado cuando el equipo lo trajo completo", () => {
-    render(
-      <OrphanStudiesList
-        studies={[
+    renderList({ studies: [
           huerfano({
             detectedPatientName: "PERALTA MARTA",
             needsPatient: false,
           }),
-        ]}
-        isLoading={false}
-        onClaim={vi.fn()}
-      />,
-    );
+        ], onClaim: vi.fn() });
 
     expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
     expect(
@@ -96,13 +175,7 @@ describe("OrphanStudiesList", () => {
   it("reclama el estudio que la médica eligió", async () => {
     const onClaim = vi.fn();
     const user = userEvent.setup();
-    render(
-      <OrphanStudiesList
-        studies={[huerfano()]}
-        isLoading={false}
-        onClaim={onClaim}
-      />,
-    );
+    renderList({ studies: [huerfano()], onClaim: onClaim });
 
     await user.click(screen.getByRole("button", { name: /Es mío/i }));
 
@@ -112,9 +185,7 @@ describe("OrphanStudiesList", () => {
   });
 
   it("dice que no hay nada cuando la lista está vacía", () => {
-    render(
-      <OrphanStudiesList studies={[]} isLoading={false} onClaim={vi.fn()} />,
-    );
+    renderList({ studies: [] });
 
     expect(screen.getByText(/No hay estudios sin dueño/i)).toBeInTheDocument();
   });
@@ -123,13 +194,7 @@ describe("OrphanStudiesList", () => {
     getOrphanStudyImages.mockResolvedValue(["inst-1", "inst-2"]);
     getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
 
-    render(
-      <OrphanStudiesList
-        studies={[huerfano()]}
-        isLoading={false}
-        onClaim={vi.fn()}
-      />,
-    );
+    renderList({ studies: [huerfano()], onClaim: vi.fn() });
 
     await waitFor(() =>
       expect(getOrphanStudyImages).toHaveBeenCalledWith("item-1"),
@@ -143,15 +208,64 @@ describe("OrphanStudiesList", () => {
   });
 
   it("no sale a buscar imágenes de un estudio que no las tiene", async () => {
-    render(
-      <OrphanStudiesList
-        studies={[huerfano({ hasImages: false, imageCount: 0 })]}
-        isLoading={false}
-        onClaim={vi.fn()}
-      />,
-    );
+    renderList({ studies: [huerfano({ hasImages: false, imageCount: 0 })], onClaim: vi.fn() });
 
     await waitFor(() => expect(screen.getByText("MP")).toBeInTheDocument());
     expect(getOrphanStudyImages).not.toHaveBeenCalled();
+  });
+});
+
+// ============================================================
+// La avalancha de pedidos.
+//
+// El 25/08 había 80 estudios sin dueño. Cada tarjeta pide dos cosas (las
+// instancias del PACS y el preview de la primera): 160 pedidos simultáneos.
+// El navegador encola, varios se caen por timeout y la tarjeta queda con el
+// icono de "sin vista previa".
+//
+// La miniatura NO se puede sacar del listado: es lo único con lo que la
+// ecografista reconoce su estudio. Lo que se saca es el pedido de lo que no
+// está en pantalla.
+// ============================================================
+describe("OrphanStudiesList — no baja las 80 miniaturas de una", () => {
+  const lista = (cantidad: number): OrphanStudy[] =>
+    Array.from({ length: cantidad }, (_, indice) =>
+      huerfano({ sourceInboxItemId: `item-${indice + 1}` }),
+    );
+
+  it("no pide nada de las tarjetas que quedaron abajo del scroll", async () => {
+    visibleAlObservar = false;
+    getOrphanStudyImages.mockResolvedValue(["inst-1"]);
+    getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
+
+    renderList({ studies: lista(10) });
+
+    // Nada a la vista todavía: ni un pedido.
+    expect(getOrphanStudyImages).not.toHaveBeenCalled();
+
+    scrollearHasta(3);
+
+    await waitFor(() =>
+      expect(getOrphanStudyImagePreview).toHaveBeenCalledTimes(3),
+    );
+    expect(getOrphanStudyImages).toHaveBeenCalledTimes(3);
+    expect(getOrphanStudyImages).toHaveBeenCalledWith("item-1");
+    expect(getOrphanStudyImages).not.toHaveBeenCalledWith("item-4");
+  });
+
+  it("baja la miniatura recién cuando la tarjeta entra en pantalla", async () => {
+    visibleAlObservar = false;
+    getOrphanStudyImages.mockResolvedValue(["inst-1"]);
+    getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
+
+    renderList({ studies: lista(10) });
+    scrollearHasta(10);
+
+    await waitFor(() =>
+      expect(getOrphanStudyImages).toHaveBeenCalledTimes(10),
+    );
+    // getAllByRole dentro del waitFor: findAllByRole resuelve con la primera
+    // que aparezca y no probaría que llegaron las diez.
+    await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(10));
   });
 });
