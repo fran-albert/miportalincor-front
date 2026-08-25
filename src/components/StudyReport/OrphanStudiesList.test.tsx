@@ -152,10 +152,26 @@ describe("OrphanStudiesList", () => {
     expect(screen.getByText(/12 imágenes/)).toBeInTheDocument();
   });
 
-  it("avisa cuando el nombre que quedó cargado no sirve para identificar", () => {
+  // ------------------------------------------------------------
+  // El cartel decía "Sin paciente identificado" JUSTO DEBAJO del nombre de la
+  // paciente. Francisco lo miró en producción y preguntó "pero ese no es el
+  // paciente?? qué onda": la paciente existía y el cartel parecía decir que
+  // no. Lo que pasa es que el nombre no coincidió con el padrón, y lo que hay
+  // que hacer es elegir a la persona al reclamar el estudio.
+  // ------------------------------------------------------------
+  it("dice que el nombre no coincidió con el padrón, no que no haya paciente", () => {
     renderList({ studies: [huerfano()], onClaim: vi.fn() });
 
-    expect(screen.getByText(/Sin paciente identificado/i)).toBeInTheDocument();
+    expect(screen.getByText(/No coincide con el padrón/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Sin paciente identificado/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("dice qué tiene que hacer la ecografista con ese estudio", () => {
+    renderList({ studies: [huerfano()], onClaim: vi.fn() });
+
+    expect(screen.getByText(/elegilo al reclamar/i)).toBeInTheDocument();
   });
 
   it("muestra el nombre detectado cuando el equipo lo trajo completo", () => {
@@ -168,7 +184,7 @@ describe("OrphanStudiesList", () => {
 
     expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
     expect(
-      screen.queryByText(/Sin paciente identificado/i),
+      screen.queryByText(/No coincide con el padrón/i),
     ).not.toBeInTheDocument();
   });
 
