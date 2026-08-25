@@ -1,5 +1,5 @@
 import { apiIncorHC } from "@/services/axiosConfig";
-import type { MyStudyReportTemplateDetail, MyStudyReportTemplateSummary, StudyReport, StudyReportListItem, StudyReportSplitGroup, StudyReportTemplate, StudyReportViewerSession } from "@/types/StudyReport/StudyReport.types";
+import type { ClaimResult, MyStudyReportTemplateDetail, MyStudyReportTemplateSummary, OrphanStudy, StudyReport, StudyReportListItem, StudyReportSplitGroup, StudyReportTemplate, StudyReportViewerSession } from "@/types/StudyReport/StudyReport.types";
 
 export interface StudyReportAccessResponse {
   enabled: boolean;
@@ -22,3 +22,14 @@ export const discardStudyReport = async (reportId: string): Promise<void> => { a
 // No hay POST/PATCH/DELETE de plantillas ni acá ni en el backend, por decisión de la v1.
 export const getMyStudyReportTemplates = async (): Promise<MyStudyReportTemplateSummary[]> => (await apiIncorHC.get<MyStudyReportTemplateSummary[]>("/study-reports/my-templates")).data;
 export const getMyStudyReportTemplate = async (templateKey: string): Promise<MyStudyReportTemplateDetail> => (await apiIncorHC.get<MyStudyReportTemplateDetail>(`/study-reports/my-templates/${encodeURIComponent(templateKey)}`)).data;
+
+// ------------------------------------------------------- estudios sin dueño
+// Los exámenes que llegaron del ecógrafo sin AccessionNumber, o sea sin turno
+// que diga de quién son. La ecografista los reclama desde su bandeja, y puede
+// soltarlos si se equivocó.
+
+export const getOrphanStudies = async (days?: number): Promise<OrphanStudy[]> => (await apiIncorHC.get<OrphanStudy[]>("/study-reports/orphans", { params: days ? { days } : undefined })).data;
+export const getOrphanStudyImages = async (sourceInboxItemId: string): Promise<string[]> => (await apiIncorHC.get<{ instanceIds: string[] }>(`/study-reports/orphans/${sourceInboxItemId}/images`)).data.instanceIds;
+export const getOrphanStudyImagePreview = async (sourceInboxItemId: string, instanceId: string): Promise<Blob> => (await apiIncorHC.get<Blob>(`/study-reports/orphans/${sourceInboxItemId}/images/${encodeURIComponent(instanceId)}`, { responseType: "blob" })).data;
+export const claimOrphanStudy = async (sourceInboxItemId: string, patientUserId?: string): Promise<ClaimResult> => (await apiIncorHC.post(`/study-reports/orphans/${sourceInboxItemId}/claim`, patientUserId ? { patientUserId } : {})).data;
+export const releaseOrphanStudy = async (sourceInboxItemId: string): Promise<ClaimResult> => (await apiIncorHC.post(`/study-reports/orphans/${sourceInboxItemId}/release`)).data;

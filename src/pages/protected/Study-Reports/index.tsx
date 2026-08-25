@@ -6,10 +6,13 @@ import { Eye, FilePenLine, PenLine, RefreshCw, Save, Trash2, X } from "lucide-re
 import { toast } from "sonner";
 import {
   addStudyReportAddendum,
+  claimOrphanStudy,
   discardStudyReport,
   getMyStudyReports,
+  getOrphanStudies,
   getStudyReportTemplates,
   previewStudyReport,
+  releaseOrphanStudy,
   saveStudyReportDraft,
   signStudyReport,
   splitStudyReport,
@@ -37,8 +40,14 @@ import type {
   StudyReportTemplate,
 } from "@/types/StudyReport/StudyReport.types";
 import { StudyReportSplitPanel } from "@/components/StudyReport/StudyReportSplitPanel";
+import { OrphanStudiesList } from "@/components/StudyReport/OrphanStudiesList";
+import { ClaimOrphanDialog } from "@/components/StudyReport/ClaimOrphanDialog";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
+const orphansQueryKey = ["study-reports", "orphans"] as const;
 
 // timeZone UTC: la fecha llega como medianoche UTC; sin esto, en UTC-3 se
 // muestra el día anterior.
@@ -51,12 +60,14 @@ interface StudyReportColumnsProps {
   onOpen: (item: StudyReportListItem) => void;
   onSplit: (item: StudyReportListItem) => void;
   onDiscard: (item: StudyReportListItem) => void;
+  onRelease: (item: StudyReportListItem) => void;
 }
 
 const getStudyReportColumns = ({
   onOpen,
   onSplit,
   onDiscard,
+  onRelease,
 }: StudyReportColumnsProps): ColumnDef<StudyReportListItem>[] => [
   {
     accessorKey: "patientName",
@@ -84,15 +95,37 @@ const getStudyReportColumns = ({
   {
     accessorKey: "state",
     header: "Estado",
-    cell: ({ row }) =>
-      row.original.state === "SIN_EMPEZAR" ? "Sin empezar" : "Borrador",
+    cell: ({ row }) => (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span>
+          {row.original.state === "SIN_EMPEZAR" ? "Sin empezar" : "Borrador"}
+        </span>
+        {row.original.claimed && (
+          <Badge
+            variant="outline"
+            className="border-amber-300 bg-amber-50 text-amber-900"
+          >
+            Reclamado
+          </Badge>
+        )}
+      </div>
+    ),
   },
   {
     id: "actions",
     header: "",
     meta: { headerClassName: "text-right", cellClassName: "text-right" },
     cell: ({ row }) => (
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
+        {row.original.claimed && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onRelease(row.original)}
+          >
+            No es mío
+          </Button>
+        )}
         {row.original.state === "SIN_EMPEZAR" && (
           <Button
             size="sm"
@@ -483,10 +516,17 @@ function Editor({ item, templates, onClose }: EditorProps) {
 export default function StudyReportsPage() {
   const [active, setActive] = useState<StudyReportListItem | null>(null);
   const [splitItem, setSplitItem] = useState<StudyReportListItem | null>(null);
+  const [claimItem, setClaimItem] = useState<OrphanStudy | null>(null);
+  const [tab, setTab] = useState<"mine" | "orphans">("mine");
   const queryClient = useQueryClient();
   const reports = useQuery({
     queryKey: reportsQueryKey,
     queryFn: getMyStudyReports,
+  });
+  // Los estudios que llegaron del ecógrafo sin turno que diga de quién son.
+  const orphans = useQuery({
+    queryKey: orphansQueryKey,
+    queryFn: () => getOrphanStudies(),
   });
   const templates = useQuery({
     queryKey: ["study-reports", "templates"],
@@ -513,6 +553,41 @@ export default function StudyReportsPage() {
     },
     onError: () => toast.error("No se pudo descartar el borrador"),
   });
+  // Reclamar y soltar mueven el estudio ENTRE las dos listas, así que las dos
+  // se invalidan siempre: si sólo se refrescara una, la otra quedaría
+  // mostrando un estudio que ya no le corresponde.
+  const invalidateBoth = () => {
+    queryClient.invalidateQueries({ queryKey: reportsQueryKey });
+    queryClient.invalidateQueries({ queryKey: orphansQueryKey });
+  };
+  const claimMutation = useMutation({
+    mutationFn: (patientUserId: string | undefined) => {
+      if (!claimItem) throw new Error("No hay un estudio seleccionado");
+      return claimOrphanStudy(claimItem.sourceInboxItemId, patientUserId);
+    },
+    onSuccess: () => {
+      invalidateBoth();
+      setClaimItem(null);
+      setTab("mine");
+      toast.success("El estudio pasó a tus estudios por informar");
+    },
+    onError: () =>
+      toast.error(
+        "No se pudo reclamar el estudio. Puede que ya lo haya reclamado otra profesional.",
+      ),
+  });
+  const releaseMutation = useMutation({
+    mutationFn: (sourceInboxItemId: string) =>
+      releaseOrphanStudy(sourceInboxItemId),
+    onSuccess: () => {
+      invalidateBoth();
+      toast.success("El estudio volvió a la lista de sin dueño");
+    },
+    onError: () =>
+      toast.error(
+        "No se pudo soltar el estudio. Si ya tiene un informe firmado, se resuelve por el circuito habitual.",
+      ),
+  });
   const columns = useMemo(
     () =>
       getStudyReportColumns({
@@ -528,8 +603,17 @@ export default function StudyReportsPage() {
             discardMutation.mutate(item.report.id);
           }
         },
+        onRelease: (item) => {
+          if (
+            window.confirm(
+              "¿Soltar este estudio? Vuelve a la lista de estudios sin dueño y se pierde el borrador que hayas empezado.",
+            )
+          ) {
+            releaseMutation.mutate(item.sourceInboxItemId);
+          }
+        },
       }),
-    [discardMutation],
+    [discardMutation, releaseMutation],
   );
 
   if (active && templates.data) {
@@ -553,8 +637,11 @@ export default function StudyReportsPage() {
           actions={
             <Button
               variant="outline"
-              disabled={reports.isFetching}
-              onClick={() => void reports.refetch()}
+              disabled={reports.isFetching || orphans.isFetching}
+              onClick={() => {
+                void reports.refetch();
+                void orphans.refetch();
+              }}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Actualizar
@@ -567,21 +654,83 @@ export default function StudyReportsPage() {
             El editor no está habilitado para esta médica o no se pudo cargar la cola.
           </p>
         ) : (
-          <div className="overflow-hidden sm:rounded-lg">
-            <DataTable
-              columns={columns}
-              data={reports.data ?? []}
-              getRowId={(row) =>
-                `${row.sourceInboxItemId}-${row.report?.id ?? "new"}`
-              }
-              canAddUser={false}
-              isLoading={reports.isLoading}
-              isFetching={reports.isFetching}
-              showDataOnEmptySearch={true}
-            />
-          </div>
+          <Tabs
+            value={tab}
+            onValueChange={(value) => setTab(value as "mine" | "orphans")}
+          >
+            <TabsList className="h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
+              <TabsTrigger value="mine">Por informar</TabsTrigger>
+              <TabsTrigger value="orphans" className="group gap-1.5">
+                Sin dueño
+                {(orphans.data?.length ?? 0) > 0 && (
+                  <Badge className="h-5 min-w-5 justify-center rounded-full bg-gray-100 px-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100">
+                    {orphans.data?.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="mine" className="mt-4">
+              <div className="overflow-hidden sm:rounded-lg">
+                <DataTable
+                  columns={columns}
+                  data={reports.data ?? []}
+                  getRowId={(row) =>
+                    `${row.sourceInboxItemId}-${row.report?.id ?? "new"}`
+                  }
+                  canAddUser={false}
+                  isLoading={reports.isLoading}
+                  isFetching={reports.isFetching}
+                  showDataOnEmptySearch={true}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="orphans" className="mt-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Estudios que llegaron del ecógrafo sin turno cargado, así que no
+                aparecen en la cola de nadie. Si reconocés uno como tuyo,
+                reclamalo.
+              </p>
+              {orphans.isError ? (
+                <p className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                  No se pudo cargar la lista de estudios sin dueño.
+                </p>
+              ) : (
+                <OrphanStudiesList
+                  studies={orphans.data ?? []}
+                  isLoading={orphans.isLoading}
+                  onClaim={setClaimItem}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
         )}
       </main>
+      <Dialog
+        open={Boolean(claimItem)}
+        onOpenChange={(open) => {
+          if (!open && !claimMutation.isPending) setClaimItem(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>¿Este estudio es tuyo?</DialogTitle>
+            <DialogDescription>
+              Mirá las imágenes antes de confirmar: estos estudios llegaron sin
+              datos de quién los hizo.
+            </DialogDescription>
+          </DialogHeader>
+          {claimItem && (
+            <ClaimOrphanDialog
+              study={claimItem}
+              isPending={claimMutation.isPending}
+              onConfirm={(patientUserId) => claimMutation.mutate(patientUserId)}
+              onCancel={() => setClaimItem(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={Boolean(splitItem)}
         onOpenChange={(open) => {
