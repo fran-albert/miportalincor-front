@@ -556,3 +556,156 @@ describe("StudyReportsPage — estudios sin dueño", () => {
     expect(screen.queryByRole("button", { name: /No es mío/i })).not.toBeInTheDocument();
   });
 });
+
+// ============================================================
+// La miniatura tiene que sobrevivir al cambio de pestaña.
+//
+// Radix desmonta el contenido de la pestaña inactiva. Con la miniatura en
+// estado local + useEffect, volver a "Sin dueño" remonta cada tarjeta desde
+// cero y vuelve a pedir las dos llamadas (listado de instancias + preview).
+// Con 80 estudios eso es 160 pedidos cada vez que se toca la pestaña: el
+// navegador encola, varios fallan y quedan con el icono de "sin vista previa".
+// Ese es el "desaparece la carga de imagenes" que reporto Francisco el 25/08.
+// ============================================================
+describe("StudyReportsPage — la miniatura sin dueño sobrevive al cambio de pestaña", () => {
+  const conImagenes = {
+    sourceInboxItemId: "item-huerfano",
+    detectedPatientName: "MP",
+    detectedDni: null,
+    studyDate: "2026-08-24T00:00:00.000Z",
+    receivedAt: "2026-08-24T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: true,
+    needsPatient: false,
+  };
+
+  it("no vuelve a pedir la miniatura al volver a la pestaña, y la sigue mostrando", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([conImagenes]);
+    getOrphanStudyImages.mockResolvedValue(["inst-1", "inst-2"]);
+    getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
+
+    renderPage();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    expect(await screen.findByRole("img", { name: /Primera imagen/i })).toBeInTheDocument();
+    expect(getOrphanStudyImages).toHaveBeenCalledTimes(1);
+    expect(getOrphanStudyImagePreview).toHaveBeenCalledTimes(1);
+
+    // Ida a "Por informar" y vuelta: exactamente lo que hace la ecografista
+    // cuando revisa su cola y vuelve a la lista de sin dueño.
+    await userEvent.click(screen.getByRole("tab", { name: /Por informar/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+
+    expect(await screen.findByRole("img", { name: /Primera imagen/i })).toBeInTheDocument();
+    expect(getOrphanStudyImages).toHaveBeenCalledTimes(1);
+    expect(getOrphanStudyImagePreview).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ============================================================
+// Las pestañas tienen que verse como las de "Estudios recibidos".
+//
+// Francisco, 25/08, después de usar la pantalla en producción: "las tabs, que
+// sean por ejemplo las de estudios recibidos, con ese diseño". El TabsList ya
+// estaba igual, pero los triggers habían quedado planos y el contador de "Sin
+// dueño" se copió sin la inversión de colores: sobre la pestaña activa, en
+// verde, quedaba gris claro sobre verde.
+// ============================================================
+describe("StudyReportsPage — las pestañas usan el diseño del portal", () => {
+  const huerfanoSinImagenes = {
+    sourceInboxItemId: "item-huerfano",
+    detectedPatientName: "MP",
+    detectedDni: null,
+    studyDate: "2026-08-24T00:00:00.000Z",
+    receivedAt: "2026-08-24T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: false,
+    needsPatient: false,
+  };
+
+  const renderConHuerfanos = () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([huerfanoSinImagenes]);
+    renderPage();
+  };
+
+  it("las dos pestañas son la pastilla verde de Estudios recibidos", async () => {
+    renderConHuerfanos();
+
+    const porInformar = await screen.findByRole("tab", { name: /Por informar/i });
+    const sinDueno = screen.getByRole("tab", { name: /Sin dueño/i });
+
+    for (const pestana of [porInformar, sinDueno]) {
+      expect(pestana.className).toContain("rounded-lg");
+      expect(pestana.className).toContain("border-gray-200");
+      expect(pestana.className).toContain("bg-white");
+      expect(pestana.className).toContain("shadow-sm");
+      expect(pestana.className).toContain("hover:border-greenPrimary/40");
+      expect(pestana.className).toContain("data-[state=active]:bg-greenPrimary");
+      expect(pestana.className).toContain("data-[state=active]:text-white");
+    }
+  });
+
+  it("el contador de sin dueño se sigue leyendo con la pestaña activa", async () => {
+    renderConHuerfanos();
+
+    const contador = await screen.findByText("1");
+    expect(contador.className).toContain("group-data-[state=active]:bg-white");
+    expect(contador.className).toContain(
+      "group-data-[state=active]:text-greenPrimary",
+    );
+
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+
+    const activa = screen.getByRole("tab", { name: /Sin dueño/i });
+    expect(activa).toHaveAttribute("data-state", "active");
+    expect(activa.className).toContain("group");
+  });
+});
+
+// ============================================================
+// La otra mitad del caché: lo que SÍ tiene que volver a pedirse.
+//
+// Cachear para siempre una miniatura que falló dejaría la tarjeta con el
+// icono de "sin vista previa" hasta recargar la página, que es justo el
+// síntoma que se vino a arreglar.
+// ============================================================
+describe("StudyReportsPage — la miniatura que falló se reintenta", () => {
+  const conImagenes = {
+    sourceInboxItemId: "item-huerfano",
+    detectedPatientName: "MP",
+    detectedDni: null,
+    studyDate: "2026-08-24T00:00:00.000Z",
+    receivedAt: "2026-08-24T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: true,
+    needsPatient: false,
+  };
+
+  it("vuelve a intentar al volver a la pestaña si el PACS se cayó", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([conImagenes]);
+    getOrphanStudyImages.mockRejectedValueOnce(new Error("PACS caído"));
+    getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
+
+    renderPage();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    expect(await screen.findByText("Sin vista previa")).toBeInTheDocument();
+
+    getOrphanStudyImages.mockResolvedValue(["inst-1"]);
+    await userEvent.click(screen.getByRole("tab", { name: /Por informar/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+
+    expect(
+      await screen.findByRole("img", { name: /Primera imagen/i }),
+    ).toBeInTheDocument();
+  });
+});
