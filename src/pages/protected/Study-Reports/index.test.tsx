@@ -14,6 +14,11 @@ const getStudyReportImagePreview = vi.fn();
 const splitStudyReport = vi.fn();
 const previewStudyReport = vi.fn();
 const signStudyReport = vi.fn();
+const getOrphanStudies = vi.fn();
+const claimOrphanStudy = vi.fn();
+const releaseOrphanStudy = vi.fn();
+const getOrphanStudyImages = vi.fn();
+const getOrphanStudyImagePreview = vi.fn();
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getMyStudyReports: () => getMyStudyReports() as unknown,
@@ -29,6 +34,11 @@ vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getStudyReportInboxImages: (id: string) => getStudyReportImages(id) as unknown,
   getStudyReportInboxImagePreview: (id: string, instanceId: string) => getStudyReportImagePreview(id, instanceId) as unknown,
   splitStudyReport: (id: string, groups: unknown) => splitStudyReport(id, groups) as unknown,
+  getOrphanStudies: (days?: number) => getOrphanStudies(days) as unknown,
+  claimOrphanStudy: (id: string, patientUserId?: string) => claimOrphanStudy(id, patientUserId) as unknown,
+  releaseOrphanStudy: (id: string) => releaseOrphanStudy(id) as unknown,
+  getOrphanStudyImages: (id: string) => getOrphanStudyImages(id) as unknown,
+  getOrphanStudyImagePreview: (id: string, instanceId: string) => getOrphanStudyImagePreview(id, instanceId) as unknown,
 }));
 vi.mock("@/api/StudyReport/study-report-images.actions", () => ({
   getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
@@ -54,8 +64,14 @@ vi.mock("@/components/PageHeader", () => ({
     </div>
   ),
 }));
+// El diálogo de reclamo trae el buscador del padrón, que arrastra la config
+// del entorno entera: el doble tiene que cubrirla o el import se cae.
 vi.mock("@/config/environment", () => ({
-  environment: { API_INCOR_HC_URL: "https://api.test" },
+  environment: { API_INCOR_HC_URL: "https://api.test", NODE_ENV: "development" },
+  currentConfig: { enableLogging: false, enableDevTools: false },
+  isDevelopment: () => true,
+  isStaging: () => false,
+  isProduction: () => false,
 }));
 
 const renderPage = () => {
@@ -405,5 +421,138 @@ describe("StudyReportsPage — jerarquía del portal", () => {
     expect(screen.getByRole("heading", { name: "Mis estudios por informar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Actualizar" })).toBeInTheDocument();
     expect(await screen.findByRole("table")).toBeInTheDocument();
+  });
+});
+
+// ============================================================
+// Estudios sin dueño: la red para cuando la atención se hizo sin turno.
+//
+// El 24/08 Andrea Torri hizo una eco un día sin agenda abierta con una paciente
+// esperando el informe: el estudio salió del ecógrafo sin AccessionNumber y no
+// apareció en su cola. Tercera vez en el mes, 88 acumulados. Antes de esto la
+// única salida era pedir que lo rescataran con SQL contra producción.
+// ============================================================
+describe("StudyReportsPage — estudios sin dueño", () => {
+  const huerfano = {
+    sourceInboxItemId: "item-huerfano",
+    detectedPatientName: "MP",
+    detectedDni: null,
+    studyDate: "2026-08-24T00:00:00.000Z",
+    receivedAt: "2026-08-24T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: false,
+    needsPatient: false,
+  };
+
+  it("no mezcla los huérfanos con la cola de por informar", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([huerfano]);
+
+    renderPage();
+
+    // La pestaña por defecto es la cola de siempre: el circuito normal no
+    // cambió y lo primero que ve sigue siendo lo que tiene para informar.
+    expect(await screen.findByRole("table")).toBeInTheDocument();
+    expect(screen.queryByText("MP")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+
+    expect(await screen.findByText("MP")).toBeInTheDocument();
+  });
+
+  it("cuenta los huérfanos en la pestaña para que se note que hay algo", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([huerfano, { ...huerfano, sourceInboxItemId: "item-2" }]);
+
+    renderPage();
+
+    // El contador va en un Badge dentro del trigger, como en la bandeja de
+    // secretaría: el nombre accesible queda "Sin dueño 2".
+    expect(
+      await screen.findByRole("tab", { name: /Sin dueño\s*2/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("reclama el estudio y refresca las dos listas", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([huerfano]);
+    claimOrphanStudy.mockResolvedValue({
+      sourceInboxItemId: "item-huerfano",
+      claimedByDoctorId: "176",
+      claimedAt: "2026-08-24T12:00:00.000Z",
+      claimedPatientUserId: "5001",
+    });
+
+    renderPage();
+    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /Es mío/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /Sí, es mío/i }));
+
+    await waitFor(() =>
+      expect(claimOrphanStudy).toHaveBeenCalledWith("item-huerfano", undefined),
+    );
+    // La cola tiene que volver a pedirse: el estudio ahora está ahí.
+    await waitFor(() => expect(getMyStudyReports).toHaveBeenCalledTimes(2));
+  });
+
+  it("un estudio reclamado se puede soltar desde la cola, con confirmación", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-huerfano",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PERALTA MARTA",
+        patientDni: "40100204",
+        studyDate: "2026-08-24T00:00:00.000Z",
+        studyType: null,
+        splitLabel: null,
+        claimed: true,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+    releaseOrphanStudy.mockResolvedValue({
+      sourceInboxItemId: "item-huerfano",
+      claimedByDoctorId: null,
+      claimedAt: null,
+      claimedPatientUserId: null,
+    });
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /No es mío/i }));
+
+    expect(confirmar).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(releaseOrphanStudy).toHaveBeenCalledWith("item-huerfano"),
+    );
+    confirmar.mockRestore();
+  });
+
+  it("un estudio que llegó por su turno no ofrece soltarlo", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-20T00:00:00.000Z",
+        studyType: "Ecografia Renal",
+        splitLabel: null,
+        claimed: false,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: /Informar/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /No es mío/i })).not.toBeInTheDocument();
   });
 });
