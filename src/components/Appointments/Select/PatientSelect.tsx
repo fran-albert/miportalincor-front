@@ -37,6 +37,13 @@ interface PatientSelectProps {
    * soporta ambos). Opt-in a propósito: turnos sigue usando solo DNI.
    */
   searchMode?: "dni" | "dni-name";
+  /**
+   * Texto con el que abre la caja de búsqueda, para cuando quien llama ya
+   * sabe a quién se está buscando (por ejemplo, el nombre que el ecógrafo
+   * dejó cargado en un estudio sin dueño). Sólo siembra el valor inicial: a
+   * partir de ahí la caja es de quien la usa.
+   */
+  initialSearch?: string;
 }
 
 export const PatientSelect = ({
@@ -46,7 +53,8 @@ export const PatientSelect = ({
   disabled = false,
   className,
   defaultPatient,
-  searchMode = "dni"
+  searchMode = "dni",
+  initialSearch = ""
 }: PatientSelectProps) => {
   const [open, setOpen] = useState(false);
   const allowNameSearch = searchMode === "dni-name";
@@ -56,6 +64,7 @@ export const PatientSelect = ({
     enabled: true,
     debounceMs: 300,
     minSearchLength,
+    initialSearch,
   });
 
   // Memoize selected patient

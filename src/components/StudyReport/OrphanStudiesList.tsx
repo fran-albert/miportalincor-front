@@ -239,9 +239,16 @@ export const OrphanStudiesList = ({
                   DNI {study.detectedDni}
                 </p>
               )}
+              {/*
+                Decía "Sin paciente identificado" justo debajo del nombre de
+                la paciente, y se leía como una contradicción: el nombre está
+                ahí y la paciente existe. Lo que pasa es que ese nombre no
+                coincidió con el padrón — y lo que hay que hacer es elegir a
+                la persona al reclamar el estudio.
+              */}
               {study.needsPatient && (
-                <p className="mt-1 inline-flex rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-                  Sin paciente identificado
+                <p className="mt-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                  No coincide con el padrón — elegilo al reclamar
                 </p>
               )}
             </div>

@@ -31,12 +31,17 @@ vi.mock("@/api/StudyReport/study-report.actions", () => ({
 vi.mock("@/components/Appointments/Select/PatientSelect", () => ({
   PatientSelect: ({
     onValueChange,
+    initialSearch,
   }: {
     onValueChange: (patientId: number) => void;
+    initialSearch?: string;
   }) => (
-    <button type="button" onClick={() => onValueChange(5001)}>
-      Elegir a PERALTA MARTA
-    </button>
+    <div>
+      <span data-testid="busqueda-precargada">{initialSearch ?? ""}</span>
+      <button type="button" onClick={() => onValueChange(5001)}>
+        Elegir a PERALTA MARTA
+      </button>
+    </div>
   ),
 }));
 
@@ -126,5 +131,52 @@ describe("ClaimOrphanDialog", () => {
     renderDialog(huerfano({ needsPatient: false }), vi.fn(), true);
 
     expect(screen.getByRole("button", { name: /Sí, es mío/i })).toBeDisabled();
+  });
+});
+
+// ============================================================
+// El buscador arranca donde la ecografista ya está mirando.
+//
+// El diálogo MOSTRABA el nombre detectado y justo debajo un buscador vacío:
+// tenía que re-tipear a mano lo que ya tenía en pantalla, y encima traducir
+// "BARRAZA,ALBINA" a algo que el padrón entienda.
+// ============================================================
+describe("ClaimOrphanDialog — precarga del buscador", () => {
+  const precargado = () =>
+    screen.getByTestId("busqueda-precargada").textContent;
+
+  it("abre buscando por el nombre que quedó cargado en el equipo", () => {
+    renderDialog(huerfano({ detectedPatientName: "BARRAZA,ALBINA" }));
+
+    expect(precargado()).toBe("BARRAZA ALBINA");
+  });
+
+  it("normaliza el circunflejo de DICOM antes de buscar", () => {
+    renderDialog(huerfano({ detectedPatientName: "SILVANI^MARIA XIMENA" }));
+
+    expect(precargado()).toBe("SILVANI MARIA XIMENA");
+  });
+
+  it("no precarga nada cuando el nombre del equipo no sirve para buscar", () => {
+    // "MP" es de los casos que llegan sin nombre útil: precargarlo dejaría
+    // basura que hay que borrar antes de escribir.
+    renderDialog(huerfano({ detectedPatientName: "MP" }));
+
+    expect(precargado()).toBe("");
+  });
+
+  it("no precarga nada cuando el equipo no mandó nombre", () => {
+    renderDialog(huerfano({ detectedPatientName: null }));
+
+    expect(precargado()).toBe("");
+  });
+
+  it("no dice que el estudio llegó sin datos cuando sí traía un nombre", () => {
+    // El diálogo explicaba "llegó sin datos para identificar al paciente"
+    // justo arriba del nombre que el equipo sí había mandado.
+    renderDialog(huerfano({ detectedPatientName: "BARRAZA,ALBINA" }));
+
+    expect(screen.queryByText(/llegó sin datos/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/no coincide con.*padrón/i)).toBeInTheDocument();
   });
 });
