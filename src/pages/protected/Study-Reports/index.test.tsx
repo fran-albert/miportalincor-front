@@ -425,14 +425,14 @@ describe("StudyReportsPage — jerarquía del portal", () => {
 });
 
 // ============================================================
-// Estudios sin dueño: la red para cuando la atención se hizo sin turno.
+// Estudios sin asignar: la red para cuando la atención se hizo sin turno.
 //
 // El 24/08 Andrea Torri hizo una eco un día sin agenda abierta con una paciente
 // esperando el informe: el estudio salió del ecógrafo sin AccessionNumber y no
 // apareció en su cola. Tercera vez en el mes, 88 acumulados. Antes de esto la
 // única salida era pedir que lo rescataran con SQL contra producción.
 // ============================================================
-describe("StudyReportsPage — estudios sin dueño", () => {
+describe("StudyReportsPage — estudios sin asignar", () => {
   const huerfano = {
     sourceInboxItemId: "item-huerfano",
     detectedPatientName: "MP",
@@ -445,7 +445,7 @@ describe("StudyReportsPage — estudios sin dueño", () => {
     needsPatient: false,
   };
 
-  it("no mezcla los huérfanos con la cola de por informar", async () => {
+  it("no mezcla los estudios sin asignar con la cola de por informar", async () => {
     getMyStudyReports.mockResolvedValue([]);
     getStudyReportTemplates.mockResolvedValue([]);
     getOrphanStudies.mockResolvedValue([huerfano]);
@@ -457,12 +457,12 @@ describe("StudyReportsPage — estudios sin dueño", () => {
     expect(await screen.findByRole("table")).toBeInTheDocument();
     expect(screen.queryByText("MP")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
 
     expect(await screen.findByText("MP")).toBeInTheDocument();
   });
 
-  it("cuenta los huérfanos en la pestaña para que se note que hay algo", async () => {
+  it("cuenta los estudios sin asignar en la pestaña para que se note que hay algo", async () => {
     getMyStudyReports.mockResolvedValue([]);
     getStudyReportTemplates.mockResolvedValue([]);
     getOrphanStudies.mockResolvedValue([huerfano, { ...huerfano, sourceInboxItemId: "item-2" }]);
@@ -470,9 +470,9 @@ describe("StudyReportsPage — estudios sin dueño", () => {
     renderPage();
 
     // El contador va en un Badge dentro del trigger, como en la bandeja de
-    // secretaría: el nombre accesible queda "Sin dueño 2".
+    // secretaría: el nombre accesible queda "Sin asignar 2".
     expect(
-      await screen.findByRole("tab", { name: /Sin dueño\s*2/i }),
+      await screen.findByRole("tab", { name: /Sin asignar\s*2/i }),
     ).toBeInTheDocument();
   });
 
@@ -488,7 +488,7 @@ describe("StudyReportsPage — estudios sin dueño", () => {
     });
 
     renderPage();
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
     await userEvent.click(await screen.findByRole("button", { name: /Es mío/i }));
     await userEvent.click(await screen.findByRole("button", { name: /Sí, es mío/i }));
 
@@ -561,13 +561,13 @@ describe("StudyReportsPage — estudios sin dueño", () => {
 // La miniatura tiene que sobrevivir al cambio de pestaña.
 //
 // Radix desmonta el contenido de la pestaña inactiva. Con la miniatura en
-// estado local + useEffect, volver a "Sin dueño" remonta cada tarjeta desde
+// estado local + useEffect, volver a "Sin asignar" remonta cada tarjeta desde
 // cero y vuelve a pedir las dos llamadas (listado de instancias + preview).
 // Con 80 estudios eso es 160 pedidos cada vez que se toca la pestaña: el
 // navegador encola, varios fallan y quedan con el icono de "sin vista previa".
 // Ese es el "desaparece la carga de imagenes" que reporto Francisco el 25/08.
 // ============================================================
-describe("StudyReportsPage — la miniatura sin dueño sobrevive al cambio de pestaña", () => {
+describe("StudyReportsPage — la miniatura sin asignar sobrevive al cambio de pestaña", () => {
   const conImagenes = {
     sourceInboxItemId: "item-huerfano",
     detectedPatientName: "MP",
@@ -589,15 +589,15 @@ describe("StudyReportsPage — la miniatura sin dueño sobrevive al cambio de pe
 
     renderPage();
 
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
     expect(await screen.findByRole("img", { name: /Primera imagen/i })).toBeInTheDocument();
     expect(getOrphanStudyImages).toHaveBeenCalledTimes(1);
     expect(getOrphanStudyImagePreview).toHaveBeenCalledTimes(1);
 
     // Ida a "Por informar" y vuelta: exactamente lo que hace la ecografista
-    // cuando revisa su cola y vuelve a la lista de sin dueño.
+    // cuando revisa su cola y vuelve a la lista de sin asignar.
     await userEvent.click(screen.getByRole("tab", { name: /Por informar/i }));
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
 
     expect(await screen.findByRole("img", { name: /Primera imagen/i })).toBeInTheDocument();
     expect(getOrphanStudyImages).toHaveBeenCalledTimes(1);
@@ -638,9 +638,9 @@ describe("StudyReportsPage — las pestañas usan el diseño del portal", () => 
     renderConHuerfanos();
 
     const porInformar = await screen.findByRole("tab", { name: /Por informar/i });
-    const sinDueno = screen.getByRole("tab", { name: /Sin dueño/i });
+    const sinAsignar = screen.getByRole("tab", { name: /Sin asignar/i });
 
-    for (const pestana of [porInformar, sinDueno]) {
+    for (const pestana of [porInformar, sinAsignar]) {
       expect(pestana.className).toContain("rounded-lg");
       expect(pestana.className).toContain("border-gray-200");
       expect(pestana.className).toContain("bg-white");
@@ -651,7 +651,7 @@ describe("StudyReportsPage — las pestañas usan el diseño del portal", () => 
     }
   });
 
-  it("el contador de sin dueño se sigue leyendo con la pestaña activa", async () => {
+  it("el contador de sin asignar se sigue leyendo con la pestaña activa", async () => {
     renderConHuerfanos();
 
     const contador = await screen.findByText("1");
@@ -660,9 +660,9 @@ describe("StudyReportsPage — las pestañas usan el diseño del portal", () => 
       "group-data-[state=active]:text-greenPrimary",
     );
 
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
 
-    const activa = screen.getByRole("tab", { name: /Sin dueño/i });
+    const activa = screen.getByRole("tab", { name: /Sin asignar/i });
     expect(activa).toHaveAttribute("data-state", "active");
     expect(activa.className).toContain("group");
   });
@@ -697,15 +697,232 @@ describe("StudyReportsPage — la miniatura que falló se reintenta", () => {
 
     renderPage();
 
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
     expect(await screen.findByText("Sin vista previa")).toBeInTheDocument();
 
     getOrphanStudyImages.mockResolvedValue(["inst-1"]);
     await userEvent.click(screen.getByRole("tab", { name: /Por informar/i }));
-    await userEvent.click(screen.getByRole("tab", { name: /Sin dueño/i }));
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
 
     expect(
       await screen.findByRole("img", { name: /Primera imagen/i }),
     ).toBeInTheDocument();
+  });
+});
+
+// ============================================================
+// "Sin dueño" no va.
+//
+// Francisco, 25/08, mirando la pantalla en producción: «"Sin dueño" ese
+// nombre no va». Habla de estudios de pacientes reales, y "sin dueño" suena a
+// objeto perdido. El nombre es "Sin asignar": describe el estado real —el
+// estudio existe, todavía no se le asignó profesional— sin cargar a nadie.
+//
+// Se renombra SÓLO el texto que se ve. `orphans`/`OrphanStudiesList`/las rutas
+// siguen igual: renombrarlos no le cambia nada a la ecografista y arrastra
+// riesgo por toda la app.
+// ============================================================
+describe("StudyReportsPage — la pestaña se llama Sin asignar", () => {
+  const sinAsignar = {
+    sourceInboxItemId: "item-huerfano",
+    detectedPatientName: "MP",
+    detectedDni: null,
+    studyDate: "2026-08-24T00:00:00.000Z",
+    receivedAt: "2026-08-24T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: false,
+    needsPatient: false,
+  };
+
+  it("no dice 'sin dueño' en ningún texto de la pantalla", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-reclamado",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PERALTA MARTA",
+        patientDni: "40100204",
+        studyDate: "2026-08-24T00:00:00.000Z",
+        studyType: null,
+        splitLabel: null,
+        claimed: true,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([sinAsignar]);
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("tab", { name: /Sin asignar/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /Sin dueño/i }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: /Sin asignar/i }));
+    await screen.findByText("MP");
+
+    expect(document.body.textContent).not.toMatch(/sin due[ñn]o/i);
+  });
+
+  it("el cartel de error de la lista habla de estudios sin asignar", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockRejectedValue(new Error("backend caído"));
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: /Sin asignar/i }));
+
+    expect(
+      await screen.findByText(/No se pudo cargar la lista de estudios sin asignar/i),
+    ).toBeInTheDocument();
+  });
+
+  it("soltar un estudio dice que vuelve a la lista de sin asignar", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-huerfano",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PERALTA MARTA",
+        patientDni: "40100204",
+        studyDate: "2026-08-24T00:00:00.000Z",
+        studyType: null,
+        splitLabel: null,
+        claimed: true,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+    releaseOrphanStudy.mockResolvedValue({
+      sourceInboxItemId: "item-huerfano",
+      claimedByDoctorId: null,
+      claimedAt: null,
+      claimedPatientUserId: null,
+    });
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: /No es mío/i }));
+
+    expect(confirmar).toHaveBeenCalledWith(
+      expect.stringMatching(/estudios sin asignar/i),
+    );
+    confirmar.mockRestore();
+  });
+});
+
+// ============================================================
+// El buscador de "Sin asignar", visto desde la pantalla entera.
+//
+// Dos cosas que el filtro NO puede tocar:
+//
+// 1. El contador de la pestaña. Es el trabajo pendiente del centro —cuántos
+//    estudios quedaron sin asignar—, no el resultado de lo que una escribió.
+//    Si bajara al filtrar, la ecografista creería que se resolvieron solos.
+// 2. Reclamar y soltar. El filtro es una lupa sobre la lista, no un modo
+//    aparte: el circuito tiene que seguir funcionando igual con la búsqueda
+//    puesta.
+// ============================================================
+describe("StudyReportsPage — el buscador de sin asignar", () => {
+  const sinAsignar = (id: string, nombre: string, fecha: string) => ({
+    sourceInboxItemId: id,
+    detectedPatientName: nombre,
+    detectedDni: null,
+    studyDate: fecha,
+    receivedAt: "2026-08-20T11:05:00.000Z",
+    studySubtype: null,
+    imageCount: 4,
+    hasImages: false,
+    needsPatient: false,
+  });
+
+  const tres = [
+    sinAsignar("item-1", "PERALTA MARTA", "2026-08-20T00:00:00.000Z"),
+    sinAsignar("item-2", "GOMEZ ANA", "2026-08-21T00:00:00.000Z"),
+    sinAsignar("item-3", "SUAREZ JULIA", "2026-08-21T00:00:00.000Z"),
+  ];
+
+  it("el contador de la pestaña sigue mostrando el total, no lo filtrado", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue(tres);
+
+    renderPage();
+    await userEvent.click(
+      await screen.findByRole("tab", { name: /Sin asignar\s*3/i }),
+    );
+    await userEvent.type(screen.getByRole("searchbox"), "peralta");
+
+    // Una sola tarjeta a la vista...
+    expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
+    expect(screen.queryByText("GOMEZ ANA")).not.toBeInTheDocument();
+    // ...y la pestaña sigue diciendo 3.
+    expect(
+      screen.getByRole("tab", { name: /Sin asignar\s*3/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("reclamar sigue funcionando con el filtro puesto", async () => {
+    getMyStudyReports.mockResolvedValue([]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue(tres);
+    claimOrphanStudy.mockResolvedValue({
+      sourceInboxItemId: "item-2",
+      claimedByDoctorId: "176",
+      claimedAt: "2026-08-25T12:00:00.000Z",
+      claimedPatientUserId: null,
+    });
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: /Sin asignar/i }));
+    await userEvent.type(screen.getByRole("searchbox"), "gomez");
+
+    await userEvent.click(await screen.findByRole("button", { name: /Es mío/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /Sí, es mío/i }));
+
+    await waitFor(() =>
+      expect(claimOrphanStudy).toHaveBeenCalledWith("item-2", undefined),
+    );
+    await waitFor(() => expect(getMyStudyReports).toHaveBeenCalledTimes(2));
+  });
+
+  it("soltar sigue funcionando después de haber filtrado", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-reclamado",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PERALTA MARTA",
+        patientDni: "40100204",
+        studyDate: "2026-08-24T00:00:00.000Z",
+        studyType: null,
+        splitLabel: null,
+        claimed: true,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue(tres);
+    releaseOrphanStudy.mockResolvedValue({
+      sourceInboxItemId: "item-reclamado",
+      claimedByDoctorId: null,
+      claimedAt: null,
+      claimedPatientUserId: null,
+    });
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: /Sin asignar/i }));
+    await userEvent.type(screen.getByRole("searchbox"), "gomez");
+    await userEvent.click(screen.getByRole("tab", { name: /Por informar/i }));
+
+    await userEvent.click(await screen.findByRole("button", { name: /No es mío/i }));
+
+    await waitFor(() =>
+      expect(releaseOrphanStudy).toHaveBeenCalledWith("item-reclamado"),
+    );
+    confirmar.mockRestore();
   });
 });

@@ -1,7 +1,7 @@
 // ============================================================
 // El portero de pedidos.
 //
-// La lista de estudios sin dueño tenía 80 tarjetas el 25/08. Aunque sólo se
+// La lista de estudios sin asignar tenía 80 tarjetas el 25/08. Aunque sólo se
 // piden las que están a la vista, un scroll rápido de arriba a abajo las hace
 // entrar a todas en pantalla y volvería a mandar los 160 pedidos de una.
 // Este portero acota cuántos salen a la vez, como ya hace la galería del

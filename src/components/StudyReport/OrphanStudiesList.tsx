@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ImageOff, ScanLine } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ImageOff, ScanLine, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getOrphanStudyImages,
@@ -7,7 +7,9 @@ import {
 } from "@/api/StudyReport/study-report.actions";
 import { createRequestGate } from "@/common/helpers/request-gate";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { filterOrphanStudies } from "@/common/helpers/orphan-study-search";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 /**
@@ -189,6 +191,19 @@ export const OrphanStudiesList = ({
   isLoading,
   onClaim,
 }: OrphanStudiesListProps) => {
+  const [search, setSearch] = useState("");
+  /*
+    El filtro vive acá adentro y no en la página: así el contador de la
+    pestaña, que se calcula afuera con la lista completa, sigue mostrando el
+    total. Ese número es el trabajo pendiente del centro, no el resultado de
+    lo que una escribió en el buscador.
+  */
+  const visibles = useMemo(
+    () => filterOrphanStudies(studies, search),
+    [studies, search],
+  );
+  const buscando = search.trim().length > 0;
+
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -202,73 +217,129 @@ export const OrphanStudiesList = ({
   if (studies.length === 0) {
     return (
       <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-        No hay estudios sin dueño en este período. Los estudios de turnos
+        No hay estudios sin asignar en este período. Los estudios de turnos
         cargados llegan solos a &quot;Por informar&quot;.
       </p>
     );
   }
 
   return (
-    <ul className="grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
-      {studies.map((study) => {
-        const receivedTime = formatReceivedTime(study.receivedAt);
-        return (
-          <li
-            key={study.sourceInboxItemId}
-            className="flex flex-col gap-3 rounded-lg border bg-card p-3"
-          >
-            <OrphanThumbnail study={study} />
-
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-base font-semibold">
-                {formatStudyDate(study.studyDate)}
-              </span>
-              {receivedTime && (
-                <span className="text-sm text-muted-foreground">
-                  {receivedTime} h
-                </span>
-              )}
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate font-medium">
-                {study.detectedPatientName ?? "Sin nombre"}
-              </p>
-              {study.detectedDni && (
-                <p className="text-sm text-muted-foreground">
-                  DNI {study.detectedDni}
-                </p>
-              )}
-              {/*
-                Decía "Sin paciente identificado" justo debajo del nombre de
-                la paciente, y se leía como una contradicción: el nombre está
-                ahí y la paciente existe. Lo que pasa es que ese nombre no
-                coincidió con el padrón — y lo que hay que hacer es elegir a
-                la persona al reclamar el estudio.
-              */}
-              {study.needsPatient && (
-                <p className="mt-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-                  No coincide con el padrón — elegilo al reclamar
-                </p>
-              )}
-            </div>
-
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <ScanLine className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {imageCountLabel(study.imageCount)}
-              {study.studySubtype ? ` · ${study.studySubtype}` : ""}
+    <div className="space-y-3">
+      {/*
+        A todo el ancho en el celular, que es donde se usa: de pie, con el
+        equipo al lado y una mano sola. Recién en pantalla grande se acota,
+        porque un input de 1200 px no ayuda a nadie.
+      */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            className="w-full pl-9"
+            aria-label="Buscar por nombre o fecha"
+            placeholder="Buscar por nombre o fecha (20/08)"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        {buscando && visibles.length > 0 && (
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {visibles.length} de {studies.length}
             </p>
-
-            <Button
-              className="mt-auto w-full"
-              size="lg"
-              onClick={() => onClaim(study)}
-            >
-              Es mío
+            <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              Limpiar búsqueda
             </Button>
-          </li>
-        );
-      })}
-    </ul>
+          </div>
+        )}
+      </div>
+
+      {/*
+        Este vacío NO es el de más arriba. "No hay estudios sin asignar" es una
+        buena noticia —no quedó nada suelto—; éste es un callejón sin salida
+        del que hay que poder salir, y por eso trae el botón.
+      */}
+      {visibles.length === 0 ? (
+        <div className="rounded-md border border-dashed p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            No hay estudios que coincidan con «{search.trim()}». Probá con otra
+            parte del apellido, o con la fecha del estudio (20/08).
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => setSearch("")}
+          >
+            Limpiar búsqueda
+          </Button>
+        </div>
+      ) : (
+        <ul className="grid list-none gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
+          {visibles.map((study) => {
+            const receivedTime = formatReceivedTime(study.receivedAt);
+            return (
+              <li
+                key={study.sourceInboxItemId}
+                className="flex flex-col gap-3 rounded-lg border bg-card p-3"
+              >
+                <OrphanThumbnail study={study} />
+
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="text-base font-semibold">
+                    {formatStudyDate(study.studyDate)}
+                  </span>
+                  {receivedTime && (
+                    <span className="text-sm text-muted-foreground">
+                      {receivedTime} h
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {study.detectedPatientName ?? "Sin nombre"}
+                  </p>
+                  {study.detectedDni && (
+                    <p className="text-sm text-muted-foreground">
+                      DNI {study.detectedDni}
+                    </p>
+                  )}
+                  {/*
+                    Decía "Sin paciente identificado" justo debajo del nombre de
+                    la paciente, y se leía como una contradicción: el nombre está
+                    ahí y la paciente existe. Lo que pasa es que ese nombre no
+                    coincidió con el padrón — y lo que hay que hacer es elegir a
+                    la persona al reclamar el estudio.
+                  */}
+                  {study.needsPatient && (
+                    <p className="mt-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      No coincide con el padrón — elegilo al reclamar
+                    </p>
+                  )}
+                </div>
+
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <ScanLine className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {imageCountLabel(study.imageCount)}
+                  {study.studySubtype ? ` · ${study.studySubtype}` : ""}
+                </p>
+
+                <Button
+                  className="mt-auto w-full"
+                  size="lg"
+                  onClick={() => onClaim(study)}
+                >
+                  Es mío
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 };
