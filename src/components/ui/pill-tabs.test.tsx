@@ -3,7 +3,7 @@
 // El patrón de pestañas del portal, en un solo lugar.
 //
 // Vivía suelto en "Estudios recibidos" como una cadena de 400 caracteres de
-// clases. Cuando se construyó "Sin dueño" se copió a medias: quedó el badge
+// clases. Cuando se construyó "Sin asignar" se copió a medias: quedó el badge
 // pero sin la inversión de colores, así que el contador sobre la pestaña
 // activa era gris claro sobre verde. Copiar clases a mano ya produjo el bug;
 // el patrón vive acá.

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // ============================================================
-// La lista de estudios sin dueño.
+// La lista de estudios sin asignar.
 //
 // El 24/08 Andrea Torri hizo una eco un día sin agenda abierta: el estudio
 // llegó del ecógrafo sin AccessionNumber y no apareció en su cola. Había 88
@@ -203,7 +203,7 @@ describe("OrphanStudiesList", () => {
   it("dice que no hay nada cuando la lista está vacía", () => {
     renderList({ studies: [] });
 
-    expect(screen.getByText(/No hay estudios sin dueño/i)).toBeInTheDocument();
+    expect(screen.getByText(/No hay estudios sin asignar/i)).toBeInTheDocument();
   });
 
   it("baja la miniatura del PACS para el estudio que tiene imágenes", async () => {
@@ -234,7 +234,7 @@ describe("OrphanStudiesList", () => {
 // ============================================================
 // La avalancha de pedidos.
 //
-// El 25/08 había 80 estudios sin dueño. Cada tarjeta pide dos cosas (las
+// El 25/08 había 80 estudios sin asignar. Cada tarjeta pide dos cosas (las
 // instancias del PACS y el preview de la primera): 160 pedidos simultáneos.
 // El navegador encola, varios se caen por timeout y la tarjeta queda con el
 // icono de "sin vista previa".
@@ -283,5 +283,227 @@ describe("OrphanStudiesList — no baja las 80 miniaturas de una", () => {
     // getAllByRole dentro del waitFor: findAllByRole resuelve con la primera
     // que aparezca y no probaría que llegaron las diez.
     await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(10));
+  });
+});
+
+// ============================================================
+// El buscador.
+//
+// 25/08, 80 estudios en la pestaña. Francisco: "con 80 tarjetas, encontrar la
+// propia es scrollear a ojo". La ecografista acaba de hacer la eco y tiene a
+// la paciente esperando el informe: necesita llegar a SU tarjeta, no recorrer
+// la lista.
+//
+// Filtra en el cliente sobre lo ya cargado (la ventana de 60 días viene entera
+// en una respuesta): es instantáneo mientras escribe y no le suma un pedido al
+// backend.
+// ============================================================
+describe("OrphanStudiesList — el buscador", () => {
+  const conNombre = (
+    id: string,
+    nombre: string,
+    fecha = "2026-08-20T00:00:00.000Z",
+  ): OrphanStudy =>
+    huerfano({
+      sourceInboxItemId: id,
+      detectedPatientName: nombre,
+      studyDate: fecha,
+      hasImages: false,
+      needsPatient: false,
+    });
+
+  const buscador = () => screen.getByRole("searchbox");
+
+  it("filtra por una parte del apellido", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [
+        conNombre("a", "PERALTA MARTA"),
+        conNombre("b", "GOMEZ ANA"),
+        conNombre("c", "SUAREZ JULIA"),
+      ],
+    });
+
+    await user.type(buscador(), "peral");
+
+    expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
+    expect(screen.queryByText("GOMEZ ANA")).not.toBeInTheDocument();
+    expect(screen.queryByText("SUAREZ JULIA")).not.toBeInTheDocument();
+  });
+
+  it("no distingue mayúsculas ni acentos", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [conNombre("a", "PEÑA ROSA"), conNombre("b", "GOMEZ ANA")],
+    });
+
+    await user.type(buscador(), "pena");
+
+    expect(screen.getByText("PEÑA ROSA")).toBeInTheDocument();
+    expect(screen.queryByText("GOMEZ ANA")).not.toBeInTheDocument();
+  });
+
+  // La tarjeta dice "20/08/2026". Escribir "20/08" TIENE que encontrarla: es
+  // el caso que no puede fallar.
+  it("filtra por la fecha tal como se lee en la tarjeta", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [
+        conNombre("a", "PERALTA MARTA", "2026-08-20T00:00:00.000Z"),
+        conNombre("b", "GOMEZ ANA", "2026-08-21T00:00:00.000Z"),
+      ],
+    });
+
+    await user.type(buscador(), "20/08");
+
+    expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
+    expect(screen.queryByText("GOMEZ ANA")).not.toBeInTheDocument();
+  });
+
+  it("acepta el guión y la fecha ISO", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [
+        conNombre("a", "PERALTA MARTA", "2026-08-20T00:00:00.000Z"),
+        conNombre("b", "GOMEZ ANA", "2026-08-21T00:00:00.000Z"),
+      ],
+    });
+
+    await user.type(buscador(), "20-08");
+    expect(screen.queryByText("GOMEZ ANA")).not.toBeInTheDocument();
+
+    await user.clear(buscador());
+    await user.type(buscador(), "2026-08-21");
+    expect(screen.getByText("GOMEZ ANA")).toBeInTheDocument();
+    expect(screen.queryByText("PERALTA MARTA")).not.toBeInTheDocument();
+  });
+
+  // ------------------------------------------------------------
+  // Los dos vacíos NO significan lo mismo.
+  //
+  // "No hay estudios sin asignar" es una BUENA noticia: no quedó nada suelto.
+  // "No encontré nada con lo que escribiste" es un callejón sin salida del que
+  // hay que poder salir, y por eso trae el botón para limpiar la búsqueda.
+  // Mostrar el primero cuando pasa el segundo le haría creer que la lista se
+  // vació.
+  // ------------------------------------------------------------
+  it("cuando la búsqueda no encuentra nada lo dice por la búsqueda, no por la lista", async () => {
+    const user = userEvent.setup();
+    renderList({ studies: [conNombre("a", "PERALTA MARTA")] });
+
+    await user.type(buscador(), "zzz");
+
+    expect(screen.getByText(/No hay estudios que coincidan/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No hay estudios sin asignar/i)).not.toBeInTheDocument();
+  });
+
+  it("ofrece limpiar la búsqueda y al limpiarla vuelve la lista entera", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [conNombre("a", "PERALTA MARTA"), conNombre("b", "GOMEZ ANA")],
+    });
+
+    await user.type(buscador(), "zzz");
+    await user.click(screen.getByRole("button", { name: /Limpiar búsqueda/i }));
+
+    expect(screen.getByText("PERALTA MARTA")).toBeInTheDocument();
+    expect(screen.getByText("GOMEZ ANA")).toBeInTheDocument();
+    expect(buscador()).toHaveValue("");
+  });
+
+  it("con la lista vacía de verdad no muestra buscador, muestra la buena noticia", () => {
+    renderList({ studies: [] });
+
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.getByText(/No hay estudios sin asignar/i)).toBeInTheDocument();
+  });
+
+  it("dice cuántas está mostrando de cuántas para que no parezca que se perdieron", async () => {
+    const user = userEvent.setup();
+    renderList({
+      studies: [
+        conNombre("a", "PERALTA MARTA"),
+        conNombre("b", "GOMEZ ANA"),
+        conNombre("c", "SUAREZ JULIA"),
+      ],
+    });
+
+    await user.type(buscador(), "peral");
+
+    expect(screen.getByText(/1 de 3/i)).toBeInTheDocument();
+  });
+
+  // La pantalla se usa de pie, con el equipo al lado y el celular en la mano.
+  it("el buscador ocupa todo el ancho en el celular", () => {
+    renderList({ studies: [conNombre("a", "PERALTA MARTA")] });
+
+    expect(buscador().className).toContain("w-full");
+  });
+
+  it("reclamar sigue funcionando con el filtro puesto", async () => {
+    const onClaim = vi.fn();
+    const user = userEvent.setup();
+    renderList({
+      studies: [conNombre("a", "PERALTA MARTA"), conNombre("b", "GOMEZ ANA")],
+      onClaim,
+    });
+
+    await user.type(buscador(), "gomez");
+    await user.click(screen.getByRole("button", { name: /Es mío/i }));
+
+    expect(onClaim).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceInboxItemId: "b" }),
+    );
+  });
+});
+
+// ============================================================
+// El filtro no puede romper el lazy loading.
+//
+// Las miniaturas se bajan sólo cuando la tarjeta entra en pantalla, con tope
+// de 4 pedidos a la vez: eso es lo que arregló el "desaparece la carga de
+// imágenes" del 25/08. Al filtrar cambia QUÉ tarjetas están en pantalla — una
+// que estaba enterrada en el puesto 40 pasa a estar arriba de todo — y su
+// miniatura tiene que bajarse ahí, no quedarse en el esqueleto para siempre.
+// ============================================================
+describe("OrphanStudiesList — el filtro y las miniaturas", () => {
+  /**
+   * Lo que hace el navegador después de que el filtro reacomoda la lista:
+   * reporta como visibles las tarjetas que siguen montadas y ahora entran en
+   * pantalla. Las que el filtro sacó ya no están en el DOM y no se reportan.
+   */
+  const navegadorReportaLoQueQuedaEnPantalla = (): void => {
+    act(() => {
+      observaciones
+        .filter((observacion) => observacion.elemento.isConnected)
+        .forEach(mostrar);
+    });
+  };
+
+  it("baja la miniatura de la tarjeta que el filtro subió a la vista", async () => {
+    visibleAlObservar = false;
+    getOrphanStudyImages.mockResolvedValue(["inst-1"]);
+    getOrphanStudyImagePreview.mockResolvedValue(new Blob(["jpeg"]));
+
+    const user = userEvent.setup();
+    const estudios = Array.from({ length: 40 }, (_, indice) =>
+      huerfano({
+        sourceInboxItemId: `item-${indice + 1}`,
+        detectedPatientName: indice === 39 ? "PERALTA MARTA" : `PACIENTE ${indice}`,
+      }),
+    );
+    renderList({ studies: estudios });
+
+    // Enterrada en el puesto 40: sin scrollear no se pidió nada.
+    expect(getOrphanStudyImages).not.toHaveBeenCalled();
+
+    await user.type(screen.getByRole("searchbox"), "peralta");
+    navegadorReportaLoQueQuedaEnPantalla();
+
+    await waitFor(() =>
+      expect(getOrphanStudyImages).toHaveBeenCalledWith("item-40"),
+    );
+    // Y sólo la suya: las otras 39 ya no están en pantalla.
+    expect(getOrphanStudyImages).toHaveBeenCalledTimes(1);
   });
 });
