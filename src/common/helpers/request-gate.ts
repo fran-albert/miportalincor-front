@@ -1,7 +1,7 @@
 /**
  * Acota cuántos pedidos salen a la vez.
  *
- * Nace de la lista de estudios sin dueño: con 80 tarjetas en pantalla, cada
+ * Nace de la lista de estudios sin asignar: con 80 tarjetas en pantalla, cada
  * una pidiendo las instancias del PACS y el preview de la primera, eran 160
  * pedidos simultáneos. El navegador los encolaba, varios morían por timeout y
  * la tarjeta quedaba con el icono de "sin vista previa".

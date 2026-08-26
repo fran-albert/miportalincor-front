@@ -23,7 +23,7 @@ export const discardStudyReport = async (reportId: string): Promise<void> => { a
 export const getMyStudyReportTemplates = async (): Promise<MyStudyReportTemplateSummary[]> => (await apiIncorHC.get<MyStudyReportTemplateSummary[]>("/study-reports/my-templates")).data;
 export const getMyStudyReportTemplate = async (templateKey: string): Promise<MyStudyReportTemplateDetail> => (await apiIncorHC.get<MyStudyReportTemplateDetail>(`/study-reports/my-templates/${encodeURIComponent(templateKey)}`)).data;
 
-// ------------------------------------------------------- estudios sin dueño
+// ------------------------------------------------------- estudios sin asignar
 // Los exámenes que llegaron del ecógrafo sin AccessionNumber, o sea sin turno
 // que diga de quién son. La ecografista los reclama desde su bandeja, y puede
 // soltarlos si se equivocó.

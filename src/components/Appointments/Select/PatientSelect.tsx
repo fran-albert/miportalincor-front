@@ -40,7 +40,7 @@ interface PatientSelectProps {
   /**
    * Texto con el que abre la caja de búsqueda, para cuando quien llama ya
    * sabe a quién se está buscando (por ejemplo, el nombre que el ecógrafo
-   * dejó cargado en un estudio sin dueño). Sólo siembra el valor inicial: a
+   * dejó cargado en un estudio sin asignar). Sólo siembra el valor inicial: a
    * partir de ahí la caja es de quien la usa.
    */
   initialSearch?: string;

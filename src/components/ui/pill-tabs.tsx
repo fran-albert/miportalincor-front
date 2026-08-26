@@ -10,7 +10,7 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
  * colores para seguir leyéndose sobre el verde.
  *
  * Estaba suelto en "Estudios recibidos" como una cadena de clases larguísima.
- * Al construir "Sin dueño" se copió a medias —quedó el badge sin la inversión,
+ * Al construir "Sin asignar" se copió a medias —quedó el badge sin la inversión,
  * ilegible sobre la pestaña activa—, así que el patrón vive acá y las
  * pantallas lo usan en vez de repetir clases.
  */

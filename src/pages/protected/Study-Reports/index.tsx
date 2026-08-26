@@ -582,7 +582,7 @@ export default function StudyReportsPage() {
       releaseOrphanStudy(sourceInboxItemId),
     onSuccess: () => {
       invalidateBoth();
-      toast.success("El estudio volvió a la lista de sin dueño");
+      toast.success("El estudio volvió a la lista de sin asignar");
     },
     onError: () =>
       toast.error(
@@ -607,7 +607,7 @@ export default function StudyReportsPage() {
         onRelease: (item) => {
           if (
             window.confirm(
-              "¿Soltar este estudio? Vuelve a la lista de estudios sin dueño y se pierde el borrador que hayas empezado.",
+              "¿Soltar este estudio? Vuelve a la lista de estudios sin asignar y se pierde el borrador que hayas empezado.",
             )
           ) {
             releaseMutation.mutate(item.sourceInboxItemId);
@@ -665,7 +665,7 @@ export default function StudyReportsPage() {
                 value="orphans"
                 count={orphans.data?.length ?? 0}
               >
-                Sin dueño
+                Sin asignar
               </PillTabsTrigger>
             </PillTabsList>
 
@@ -693,7 +693,7 @@ export default function StudyReportsPage() {
               </p>
               {orphans.isError ? (
                 <p className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-                  No se pudo cargar la lista de estudios sin dueño.
+                  No se pudo cargar la lista de estudios sin asignar.
                 </p>
               ) : (
                 <OrphanStudiesList

@@ -3,7 +3,7 @@
 // Las pestañas de "Estudios recibidos" son el diseño de referencia del portal:
 // pastilla blanca con borde, verde institucional cuando está activa, y el
 // contador en un badge que invierte los colores para seguir leyéndose sobre el
-// verde. Francisco pidió el 25/08 que "Sin dueño" se vea igual.
+// verde. Francisco pidió el 25/08 que "Sin asignar" se vea igual.
 //
 // Este test es la red de no-regresión de esa pantalla: el patrón se extrajo a
 // un componente compartido y acá se verifica que "Estudios recibidos" quedó
