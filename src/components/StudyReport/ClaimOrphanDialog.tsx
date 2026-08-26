@@ -8,6 +8,7 @@ import { PatientSelect } from "@/components/Appointments/Select/PatientSelect";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { detectedNameToSearch } from "@/common/helpers/detected-patient-search";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const PREVIEW_CONCURRENCY = 4;
@@ -158,14 +159,21 @@ export const ClaimOrphanDialog = ({
         <div className="grid gap-1.5">
           <Label>Paciente</Label>
           <p className="text-sm text-muted-foreground">
-            El estudio llegó sin datos para identificar al paciente. Elegilo del
-            padrón.
+            El nombre que mandó el equipo no coincide con ningún paciente del
+            padrón. Buscalo y elegilo.
           </p>
+          {/*
+            Arranca buscando por el nombre detectado: es el mismo texto que la
+            ecografista tiene arriba en pantalla, y hacérselo re-tipear —
+            traduciendo "BARRAZA,ALBINA" a algo que el padrón entienda— era
+            trabajo puro.
+          */}
           <PatientSelect
             value={patientUserId}
             onValueChange={setPatientUserId}
             searchMode="dni-name"
             placeholder="Buscar por DNI o apellido"
+            initialSearch={detectedNameToSearch(study.detectedPatientName)}
           />
         </div>
       )}
