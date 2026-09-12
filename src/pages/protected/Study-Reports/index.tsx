@@ -49,6 +49,7 @@ import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
 const orphansQueryKey = ["study-reports", "orphans"] as const;
+const REPORTS_REFRESH_INTERVAL_MS = 15_000;
 
 // timeZone UTC: la fecha llega como medianoche UTC; sin esto, en UTC-3 se
 // muestra el día anterior.
@@ -523,6 +524,7 @@ export default function StudyReportsPage() {
   const reports = useQuery({
     queryKey: reportsQueryKey,
     queryFn: getMyStudyReports,
+    refetchInterval: active ? false : REPORTS_REFRESH_INTERVAL_MS,
   });
   // Los estudios que llegaron del ecógrafo sin turno que diga de quién son.
   const orphans = useQuery({
