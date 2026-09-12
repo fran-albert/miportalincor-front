@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import StudyReportsPage from "./index";
 
 const getMyStudyReports = vi.fn();
@@ -83,7 +83,14 @@ const renderPage = () => {
   );
 };
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.clearAllMocks();
+});
+
+beforeEach(() => {
+  getOrphanStudies.mockResolvedValue([]);
+});
 
 beforeAll(() => {
   URL.createObjectURL = vi.fn(() => "blob:study-report-image");
@@ -421,6 +428,70 @@ describe("StudyReportsPage — jerarquía del portal", () => {
     expect(screen.getByRole("heading", { name: "Mis estudios por informar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Actualizar" })).toBeInTheDocument();
     expect(await screen.findByRole("table")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Actualizar" }));
+    await waitFor(() => expect(getMyStudyReports).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("StudyReportsPage — refresco automático", () => {
+  it("refresca la lista cada 15 segundos y se detiene al abrir el editor", async () => {
+    vi.useFakeTimers();
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: {
+          id: "report-1",
+          templateKey: "renal",
+          content: {},
+          status: "BORRADOR",
+        },
+        state: "BORRADOR",
+        patientName: "PACIENTE PRUEBA",
+        patientDni: "30111222",
+        studyDate: "2026-07-20",
+        studyType: "Ecografía renal",
+        splitLabel: null,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([
+      {
+        key: "renal",
+        label: "Ecografía renal",
+        subtypeAliases: ["Ecografía renal"],
+        fields: [],
+      },
+    ]);
+    getStudyReportImages.mockResolvedValue([]);
+
+    const view = renderPage();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(getMyStudyReports).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(14_999);
+    });
+    expect(getMyStudyReports).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(getMyStudyReports).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(getMyStudyReports).toHaveBeenCalledTimes(2);
+
+    view.unmount();
   });
 });
 
