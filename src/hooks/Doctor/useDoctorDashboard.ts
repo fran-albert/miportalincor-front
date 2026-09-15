@@ -38,20 +38,29 @@ export const useDoctorDashboard = ({
     selectedWeekEnd,
   };
 
+  const queryKey = [
+    "doctorDashboard",
+    isOwnDashboard ? "me" : "doctor",
+    doctorId ?? "none",
+    dateFrom,
+    dateTo,
+    selectedWeekStart,
+    selectedWeekEnd,
+  ] as const;
+
   const query = useQuery<DoctorDashboardResponse>({
-    queryKey: [
-      "doctorDashboard",
-      isOwnDashboard ? "me" : "doctor",
-      doctorId ?? "none",
-      dateFrom,
-      dateTo,
-      selectedWeekStart,
-      selectedWeekEnd,
-    ],
-    queryFn: () =>
+    queryKey,
+    queryFn: ({ signal }) =>
       isOwnDashboard
-        ? getMyDashboard(params)
-        : getDoctorDashboardById(doctorId!, params),
+        ? getMyDashboard(params, signal)
+        : getDoctorDashboardById(doctorId!, params, signal),
+    placeholderData: (previousData, previousQuery) => {
+      const previousKey = previousQuery?.queryKey;
+      const isSameAgenda =
+        previousKey?.[1] === queryKey[1] && previousKey?.[2] === queryKey[2];
+
+      return isSameAgenda ? previousData : undefined;
+    },
     staleTime: 1000 * 60, // 1 minute
     enabled: enabled && (isOwnDashboard || !!doctorId),
   });

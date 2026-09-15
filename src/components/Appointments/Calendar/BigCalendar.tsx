@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Calendar, dateFnsLocalizer, View, SlotInfo, EventProps, type NavigateAction, type ViewProps, type ViewStatic } from "react-big-calendar";
-import { addDays, addMonths, addWeeks, endOfDay, endOfMonth, endOfWeek, format, getDay, isAfter, isBefore, isToday, parse, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
+import { addDays, addMonths, addWeeks, endOfWeek, format, getDay, isAfter, isBefore, isToday, parse, startOfDay, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
 import { es } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./BigCalendar.css";
@@ -86,6 +86,10 @@ import { PrintAgendaView } from "./PrintAgendaView";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
 import { Doctor } from "@/types/Doctor/Doctor";
+import {
+  getCalendarDateRange,
+  shouldSearchFirstAvailableDate,
+} from "./calendarDateRange";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -575,49 +579,36 @@ export const BigCalendar = ({
     }
   }, [autoFilterForDoctor, doctorProfileIndividual?.userId, propDoctorId]);
 
-  // Buscar el primer mes con disponibilidad para auto-navegar el calendario
+  const searchFirstAvailability = shouldSearchFirstAvailableDate(
+    autoFilterForDoctor,
+    selectedDoctorId,
+    isActive,
+  );
+
+  // Keep auto-navigation only in the doctor's own agenda. Secretary calendars
+  // open on the selected date and never start the six-month background search.
   const { firstAvailableDate, isSearching: isSearchingFirstDate } = useFirstAvailableDate({
     doctorId: selectedDoctorId,
     maxMonthsAhead: 6,
-    enabled: !!selectedDoctorId && isActive,
+    enabled: searchFirstAvailability,
   });
 
   // Auto-navegar al primer mes con disponibilidad cuando se encuentra
   useEffect(() => {
-    if (firstAvailableDate && selectedDoctorId) {
+    if (searchFirstAvailability && firstAvailableDate && selectedDoctorId) {
       setCurrentDate(firstAvailableDate);
     }
-  }, [firstAvailableDate, selectedDoctorId]);
+  }, [firstAvailableDate, searchFirstAvailability, selectedDoctorId]);
 
-  // Calculate date range for queries (calendar range with buffer)
+  // Query only what the active calendar view can render. Work week includes
+  // Saturday because the custom view reveals it when the doctor works that day.
   const dateRange = useMemo(() => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-    // Add buffer for week view
-    start.setDate(start.getDate() - 7);
-    end.setDate(end.getDate() + 7);
+    const { start, end } = getCalendarDateRange(currentView, currentDate, {
+      includeSaturdayInWorkWeek: true,
+    });
     return {
       dateFrom: formatDateForCalendar(start),
       dateTo: formatDateForCalendar(end),
-    };
-  }, [currentDate]);
-
-  // Calculate date range for available slots
-  const slotsDateRange = useMemo(() => {
-    if (currentView === "day") {
-      return { start: startOfDay(currentDate), end: endOfDay(currentDate) };
-    }
-    if (currentView === "month") {
-      return { start: startOfMonth(currentDate), end: endOfMonth(currentDate) };
-    }
-    if (currentView === "work_week") {
-      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-      return { start: weekStart, end: addDays(weekStart, 5) };
-    }
-    // For week/agenda
-    return {
-      start: startOfWeek(currentDate, { weekStartsOn: 1 }),
-      end: endOfWeek(currentDate, { weekStartsOn: 1 }),
     };
   }, [currentView, currentDate]);
 
@@ -635,8 +626,8 @@ export const BigCalendar = ({
     doctorId: selectedDoctorId,
     dateFrom: dateRange.dateFrom,
     dateTo: dateRange.dateTo,
-    selectedWeekStart: formatDateForCalendar(slotsDateRange.start),
-    selectedWeekEnd: formatDateForCalendar(slotsDateRange.end),
+    selectedWeekStart: dateRange.dateFrom,
+    selectedWeekEnd: dateRange.dateTo,
     isOwnDashboard: autoFilterForDoctor,
     enabled: !!selectedDoctorId && isActive,
   });
@@ -1547,7 +1538,8 @@ export const BigCalendar = ({
     [holidayDatesSet, absenceDatesSet]
   );
 
-  const isLoading = isDoctorAgendaLoading || isSearchingFirstDate;
+  const isLoading =
+    isDoctorAgendaLoading || (searchFirstAvailability && isSearchingFirstDate);
   const calendarTitle = useMemo(
     () => formatCalendarTitle(currentView, currentDate, includeSaturdayInWorkWeek),
     [currentDate, currentView, includeSaturdayInWorkWeek]

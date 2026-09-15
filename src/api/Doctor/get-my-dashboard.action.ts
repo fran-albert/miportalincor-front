@@ -31,21 +31,23 @@ export interface DoctorDashboardResponse {
 
 export const getDoctorDashboardById = async (
   doctorId: number,
-  params: DoctorDashboardParams
+  params: DoctorDashboardParams,
+  signal?: AbortSignal,
 ): Promise<DoctorDashboardResponse> => {
   const { data } = await apiTurnos.get<DoctorDashboardResponse>(
     `/doctors/${doctorId}/dashboard`,
-    { params }
+    { params, signal }
   );
   return data;
 };
 
 export const getMyDashboard = async (
-  params: DoctorDashboardParams
+  params: DoctorDashboardParams,
+  signal?: AbortSignal,
 ): Promise<DoctorDashboardResponse> => {
   const { data } = await apiTurnos.get<DoctorDashboardResponse>(
     "/doctors/me/dashboard",
-    { params }
+    { params, signal }
   );
   return data;
 };
