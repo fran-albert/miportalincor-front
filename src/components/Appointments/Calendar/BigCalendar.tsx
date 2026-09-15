@@ -90,6 +90,7 @@ import {
   getCalendarDateRange,
   shouldSearchFirstAvailableDate,
 } from "./calendarDateRange";
+import { shouldShowCalendarLoadingOverlay } from "./calendarLoadingState";
 
 // Configure date-fns localizer for Spanish
 const locales = { es };
@@ -622,6 +623,7 @@ export const BigCalendar = ({
     doctorAvailabilities,
     slotDuration,
     isLoading: isDoctorAgendaLoading,
+    isFetching: isDoctorAgendaFetching,
   } = useDoctorDashboard({
     doctorId: selectedDoctorId,
     dateFrom: dateRange.dateFrom,
@@ -1538,8 +1540,11 @@ export const BigCalendar = ({
     [holidayDatesSet, absenceDatesSet]
   );
 
-  const isLoading =
-    isDoctorAgendaLoading || (searchFirstAvailability && isSearchingFirstDate);
+  const isLoading = shouldShowCalendarLoadingOverlay({
+    isDashboardFetching: isDoctorAgendaFetching,
+    searchFirstAvailability,
+    isSearchingFirstDate,
+  });
   const calendarTitle = useMemo(
     () => formatCalendarTitle(currentView, currentDate, includeSaturdayInWorkWeek),
     [currentDate, currentView, includeSaturdayInWorkWeek]
@@ -1741,7 +1746,11 @@ export const BigCalendar = ({
             <div className={`google-calendar-scroll-shell is-${currentView}`}>
               <Card className="google-calendar-surface">
                 <CardContent className="p-0">
-                  <div className="relative google-calendar-board" style={{ height: calendarHeight, minHeight: "500px" }}>
+                  <div
+                    className="relative google-calendar-board"
+                    style={{ height: calendarHeight, minHeight: "500px" }}
+                    aria-busy={isLoading}
+                  >
                   <Calendar
                     localizer={localizer}
                     events={events}
@@ -1800,7 +1809,11 @@ export const BigCalendar = ({
                     }}
                   />
                   {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px]">
+                    <div
+                      className="absolute inset-0 z-20 flex items-center justify-center bg-white/60 pointer-events-auto backdrop-blur-[1px]"
+                      role="status"
+                      aria-label="Cargando agenda"
+                    >
                       <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
                     </div>
                   )}
