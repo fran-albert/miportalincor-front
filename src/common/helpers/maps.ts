@@ -61,6 +61,20 @@ export function getLatestDataValueByPossibleNames(
         })[0];
 }
 
+export function getLatestDataValueByDataTypeId(
+    dataValues: DataValue[],
+    dataTypeId: number
+): DataValue | undefined {
+    return [...dataValues]
+        .filter((dv) => Number(dv.dataType.id) === dataTypeId)
+        .sort((a, b) => {
+            const updatedDiff =
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            if (updatedDiff !== 0) return updatedDiff;
+            return b.id - a.id;
+        })[0];
+}
+
 export function getPreferredDataValueByPossibleNames(
     dataValues: DataValue[],
     names: string[]

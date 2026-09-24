@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapVisual } from './maps';
+import { getLatestDataValueByDataTypeId, mapVisual } from './maps';
 import { DataValue } from '@/types/Data-Value/Data-Value';
 
 // Helper para crear DataValue de prueba
@@ -198,5 +198,40 @@ describe('mapVisual', () => {
         notasVision: 'Sin observaciones',
       });
     });
+  });
+});
+
+describe('getLatestDataValueByDataTypeId', () => {
+  const withType = (
+    id: number,
+    dataTypeId: number,
+    category: string,
+    value: string,
+    updatedAt: string
+  ): DataValue =>
+    ({
+      id,
+      value,
+      updatedAt,
+      dataType: {
+        id: dataTypeId,
+        name: 'Electrocardiograma',
+        category,
+        dataType: 'STRING',
+      },
+    }) as unknown as DataValue;
+
+  it('no confunde el estudio subido con el resultado de General aunque se llamen igual', () => {
+    const estudio = withType(5353, 78, 'ESTUDIOS', 'FERNANDEZ_Electrocardiograma.pdf', '2026-09-21T23:28:41Z');
+
+    expect(getLatestDataValueByDataTypeId([estudio], 24)).toBeUndefined();
+  });
+
+  it('devuelve el más reciente del data type pedido', () => {
+    const estudio = withType(5353, 78, 'ESTUDIOS', 'FERNANDEZ_Electrocardiograma.pdf', '2026-09-24T21:00:00Z');
+    const viejo = withType(10, 24, 'GENERAL', 'viejo', '2026-09-20T10:00:00Z');
+    const nuevo = withType(11, 24, 'GENERAL', 'DENTRO DE LA NORMALIDAD', '2026-09-22T01:38:15Z');
+
+    expect(getLatestDataValueByDataTypeId([estudio, viejo, nuevo], 24)?.id).toBe(11);
   });
 });
