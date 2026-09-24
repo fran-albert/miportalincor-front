@@ -7,7 +7,10 @@ import { DataValue } from "@/types/Data-Value/Data-Value";
 import { useDataValuesMutations } from "@/hooks/Data-Values/useDataValuesMutations";
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import StageActionBar from "@/components/Pre-Occupational/StageActionBar";
-import { getLatestDataValueByPossibleNames } from "@/common/helpers/maps";
+import {
+  getLatestDataValueByDataTypeId,
+  getLatestDataValueByPossibleNames,
+} from "@/common/helpers/maps";
 import { getAllDataTypeByCategoriesLaboral } from "@/api/Data-Type/get-all-data-type-by-category.action";
 
 interface GeneralTabProps {
@@ -129,8 +132,8 @@ export default function GeneralTab({
       return allFields;
     };
 
-    const getExistingId = (name: string) =>
-      getLatestDataValueByPossibleNames(dataValues ?? [], [name])?.id;
+    const getExistingId = (dataTypeId: number) =>
+      getLatestDataValueByDataTypeId(dataValues ?? [], dataTypeId)?.id;
 
     const existingConclusionDataValue = getLatestDataValueByPossibleNames(
       dataValues ?? [],
@@ -144,7 +147,7 @@ export default function GeneralTab({
     const payloadItems = [
       ...resolvedMappedExams
         .map((exam) => ({
-          id: getExistingId(exam.label),
+          id: getExistingId(exam.dataTypeId),
           dataTypeId: exam.dataTypeId,
           value: formData.examResults[exam.id] || "",
         }))
