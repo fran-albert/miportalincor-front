@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { NutritionChart } from "../Chart";
 import { Badge } from "@/components/ui/badge";
 import CustomDatePicker from "@/components/Date-Picker";
+import { computeWeightChange } from "./weightChange";
+import { WeightChangeSummary } from "./WeightChangeSummary";
 interface Props {
   nutritionData: NutritionData[];
   startDate?: Date;
@@ -39,6 +41,11 @@ const WeightEvolutionCard = forwardRef<HTMLDivElement, Props>(
         return true;
       });
     }, [initialData, startDate, endDate]);
+
+    const weightChange = useMemo(
+      () => computeWeightChange(filteredData),
+      [filteredData]
+    );
 
     return (
       <Card className="overflow-hidden border-0 shadow-xl">
@@ -94,17 +101,22 @@ const WeightEvolutionCard = forwardRef<HTMLDivElement, Props>(
         </div>
         <CardContent>
           {filteredData.length > 0 ? (
-            <div className="mx-auto w-full max-w-2xl">
-              <div
-                ref={chartRef}
-                style={{ width: CAPTURE_WIDTH, height: CAPTURE_HEIGHT }}
-              >
-                <NutritionChart
-                  data={filteredData}
-                  width={CAPTURE_WIDTH}
-                  height={CAPTURE_HEIGHT}
-                />
+            <div className="flex flex-col items-center justify-center gap-6 lg:flex-row">
+              <div className="w-full max-w-2xl">
+                <div
+                  ref={chartRef}
+                  style={{ width: CAPTURE_WIDTH, height: CAPTURE_HEIGHT }}
+                >
+                  <NutritionChart
+                    data={filteredData}
+                    width={CAPTURE_WIDTH}
+                    height={CAPTURE_HEIGHT}
+                  />
+                </div>
               </div>
+              {weightChange && (
+                <WeightChangeSummary weightChange={weightChange} />
+              )}
             </div>
           ) : (
             <p className="text-center py-8">
