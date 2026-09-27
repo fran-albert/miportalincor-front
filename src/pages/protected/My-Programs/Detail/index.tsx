@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { format, parse, subDays } from "date-fns";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Calendar,
@@ -29,6 +29,14 @@ import {
   AttendanceMethodLabels,
 } from "@/types/Program/Attendance";
 import { formatScheduleLong } from "@/common/helpers/plan-schedule.helpers";
+import {
+  COMPLIANCE_RANGE_PRESETS,
+  ComplianceRangeKey,
+  DEFAULT_COMPLIANCE_RANGE,
+  formatCompliancePercent,
+  getComplianceRange,
+  getExtraSessions,
+} from "@/common/helpers/compliance-range.helpers";
 
 const getComplianceTone = (value: number) => {
   if (value >= 80) {
@@ -43,12 +51,6 @@ const getComplianceTone = (value: number) => {
     badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
   };
 };
-
-const RANGE_PRESETS = [
-  { key: "30", label: "Último mes", days: 30 },
-  { key: "90", label: "Últimos 3 meses", days: 90 },
-  { key: "365", label: "Último año", days: 365 },
-] as const;
 
 const formatSelectedDate = (value: string) =>
   format(parse(value, "yyyy-MM-dd", new Date()), "dd/MM/yyyy", {
@@ -84,17 +86,22 @@ const MyEnrollmentDetailPage = () => {
   const { currentPlan } = useCurrentPlan(enrollmentId!);
   const { records } = useAttendanceRecords(enrollmentId!);
 
-  const today = new Date();
-  const [rangeKey, setRangeKey] = useState<string>("30");
-  const [from, setFrom] = useState(format(subDays(today, 30), "yyyy-MM-dd"));
-  const [to, setTo] = useState(format(today, "yyyy-MM-dd"));
+  const [rangeKey, setRangeKey] = useState<ComplianceRangeKey>(
+    DEFAULT_COMPLIANCE_RANGE
+  );
+  const [from, setFrom] = useState(
+    () => getComplianceRange(DEFAULT_COMPLIANCE_RANGE).from
+  );
+  const [to, setTo] = useState(
+    () => getComplianceRange(DEFAULT_COMPLIANCE_RANGE).to
+  );
   const { compliance } = useCompliance(enrollmentId!, from, to);
 
-  const applyRange = (key: string, days: number) => {
-    const now = new Date();
+  const applyRange = (key: ComplianceRangeKey) => {
+    const range = getComplianceRange(key);
     setRangeKey(key);
-    setFrom(format(subDays(now, days), "yyyy-MM-dd"));
-    setTo(format(now, "yyyy-MM-dd"));
+    setFrom(range.from);
+    setTo(range.to);
   };
 
   const [showAllRecords, setShowAllRecords] = useState(false);
@@ -223,13 +230,13 @@ const MyEnrollmentDetailPage = () => {
         >
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
-              {RANGE_PRESETS.map((range) => (
+              {COMPLIANCE_RANGE_PRESETS.map((range) => (
                 <Button
                   key={range.key}
                   type="button"
                   variant={rangeKey === range.key ? "default" : "outline"}
                   className="h-11 rounded-full px-5 text-base"
-                  onClick={() => applyRange(range.key, range.days)}
+                  onClick={() => applyRange(range.key)}
                 >
                   {range.label}
                 </Button>
@@ -249,7 +256,7 @@ const MyEnrollmentDetailPage = () => {
                       </p>
                     </div>
                     <span className="text-2xl font-semibold text-slate-900">
-                      {Math.round(compliance.globalCompliance)}%
+                      {formatCompliancePercent(compliance.globalCompliance)}
                     </span>
                   </div>
 
@@ -284,13 +291,16 @@ const MyEnrollmentDetailPage = () => {
                               <p className="text-base text-slate-600">
                                 Hiciste {activity.attended} de{" "}
                                 {activity.expected}
+                                {getExtraSessions(activity) > 0
+                                  ? ` (${getExtraSessions(activity)} más de lo previsto)`
+                                  : ""}
                               </p>
                             </div>
                             <Badge
                               variant="outline"
                               className={cn("w-fit", activityTone.badgeClassName)}
                             >
-                              {Math.round(activity.compliance)}%
+                              {formatCompliancePercent(activity.compliance)}
                             </Badge>
                           </div>
 
