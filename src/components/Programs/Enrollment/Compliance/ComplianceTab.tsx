@@ -4,45 +4,49 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCompliance } from "@/hooks/Program/useCompliance";
-import { format, subDays } from "date-fns";
+import {
+  COMPLIANCE_RANGE_PRESETS,
+  ComplianceRangeKey,
+  DEFAULT_COMPLIANCE_RANGE,
+  formatCompliancePercent,
+  getComplianceRange,
+  getExtraSessions,
+} from "@/common/helpers/compliance-range.helpers";
 
 interface ComplianceTabProps {
   enrollmentId: string;
 }
 
-const RANGE_PRESETS = [
-  { key: "30", label: "Último mes", days: 30 },
-  { key: "90", label: "Últimos 3 meses", days: 90 },
-  { key: "365", label: "Último año", days: 365 },
-] as const;
-
 export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
-  const today = new Date();
-  const [preset, setPreset] = useState<string | null>("30");
-  const [from, setFrom] = useState(
-    format(subDays(today, 30), "yyyy-MM-dd")
+  const [preset, setPreset] = useState<ComplianceRangeKey | null>(
+    DEFAULT_COMPLIANCE_RANGE
   );
-  const [to, setTo] = useState(format(today, "yyyy-MM-dd"));
+  const [from, setFrom] = useState(
+    () => getComplianceRange(DEFAULT_COMPLIANCE_RANGE).from
+  );
+  const [to, setTo] = useState(
+    () => getComplianceRange(DEFAULT_COMPLIANCE_RANGE).to
+  );
   const { compliance, isLoading } = useCompliance(enrollmentId, from, to);
 
-  const applyPreset = (key: string, days: number) => {
-    const now = new Date();
+  const applyPreset = (key: ComplianceRangeKey) => {
+    const range = getComplianceRange(key);
     setPreset(key);
-    setFrom(format(subDays(now, days), "yyyy-MM-dd"));
-    setTo(format(now, "yyyy-MM-dd"));
+    setFrom(range.from);
+    setTo(range.to);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex gap-2">
-          {RANGE_PRESETS.map((range) => (
+          {COMPLIANCE_RANGE_PRESETS.map((range) => (
             <Button
               key={range.key}
               type="button"
               size="sm"
               variant={preset === range.key ? "default" : "outline"}
-              onClick={() => applyPreset(range.key, range.days)}
+              onClick={() => applyPreset(range.key)}
             >
               {range.label}
             </Button>
@@ -50,8 +54,11 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
         </div>
         <div className="flex items-end gap-4">
           <div className="space-y-1">
-            <Label className="text-sm">Desde</Label>
+            <Label htmlFor="compliance-from" className="text-sm">
+              Desde
+            </Label>
             <Input
+              id="compliance-from"
               type="date"
               value={from}
               onChange={(e) => {
@@ -61,8 +68,11 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-sm">Hasta</Label>
+            <Label htmlFor="compliance-to" className="text-sm">
+              Hasta
+            </Label>
             <Input
+              id="compliance-to"
               type="date"
               value={to}
               onChange={(e) => {
@@ -95,9 +105,7 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
           ) : null}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">
-                Cumplimiento Global
-              </CardTitle>
+              <CardTitle className="text-base">Cumplimiento Global</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
@@ -112,54 +120,66 @@ export default function ComplianceTab({ enrollmentId }: ComplianceTabProps) {
                   </div>
                 </div>
                 <span className="text-lg font-bold text-greenPrimary">
-                  {Math.round(compliance.globalCompliance)}%
+                  {formatCompliancePercent(compliance.globalCompliance)}
                 </span>
               </div>
             </CardContent>
           </Card>
 
-          {compliance.activities.map((ac) => (
-            <Card key={ac.activityId}>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">
-                    {ac.activityName}
-                    {ac.recordsWithoutActivePlan ? (
-                      <span className="ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
-                        {ac.recordsWithoutActivePlan} sin plan vigente
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {ac.expected === 0
-                      ? `${ac.attended} asistencias, sin sesiones esperadas`
-                      : `${ac.attended}/${ac.expected} asistencias`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <div className="h-3 w-full rounded-full bg-gray-200">
-                      <div
-                        className="h-3 rounded-full transition-all"
-                        style={{
-                          width: `${Math.min(ac.compliance, 100)}%`,
-                          backgroundColor:
-                            ac.compliance >= 80
-                              ? "#22c55e"
-                              : ac.compliance >= 50
-                                ? "#eab308"
-                                : "#ef4444",
-                        }}
-                      />
-                    </div>
+          {compliance.activities.map((ac) => {
+            const extraSessions = getExtraSessions(ac);
+            return (
+              <Card
+                key={ac.activityId}
+                data-testid={`compliance-activity-${ac.activityId}`}
+              >
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">
+                      {ac.activityName}
+                      {ac.recordsWithoutActivePlan ? (
+                        <span className="ml-2 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          {ac.recordsWithoutActivePlan} sin plan vigente
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {ac.expected === 0
+                        ? `${ac.attended} asistencias, sin sesiones esperadas`
+                        : `${ac.attended}/${ac.expected} asistencias`}
+                      {extraSessions > 0 ? (
+                        <span className="ml-2 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800">
+                          {extraSessions} más de lo previsto
+                        </span>
+                      ) : null}
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold w-12 text-right">
-                    {Math.round(ac.compliance)}%
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <div className="h-3 w-full rounded-full bg-gray-200">
+                        <div
+                          data-compliance-bar
+                          className="h-3 rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(ac.compliance, 100)}%`,
+                            backgroundColor:
+                              ac.compliance >= 80
+                                ? "#22c55e"
+                                : ac.compliance >= 50
+                                  ? "#eab308"
+                                  : "#ef4444",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold w-12 text-right">
+                      {formatCompliancePercent(ac.compliance)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card>
