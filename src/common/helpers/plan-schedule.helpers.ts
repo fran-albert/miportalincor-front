@@ -52,6 +52,19 @@ const formatDateAr = (isoDate: string): string => {
   return `${day}/${month}/${year}`;
 };
 
+/**
+ * Formatea una fecha calendario del plan ("YYYY-MM-DD": validFrom, validTo)
+ * como DD/MM/YYYY sin pasar por `Date`. `new Date("2026-09-02")` es medianoche
+ * UTC y en Argentina cae el 01/09: la pantalla mostraba la vigencia un día
+ * antes de lo guardado.
+ */
+export const formatPlanCalendarDate = (
+  value: string | null | undefined
+): string => {
+  if (!value) return "-";
+  return formatDateAr(value.slice(0, 10));
+};
+
 // Texto corto para badges: "3x Semanal" / "Lun, Mié y Vie" / "15/08/2026 (+2)"
 export const formatScheduleShort = (schedule: ScheduleLike): string => {
   switch (schedule.scheduleType) {

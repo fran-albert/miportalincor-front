@@ -7,10 +7,11 @@ import { useProgramMembership } from "@/hooks/Program/useProgramMembership";
 import { useCurrentPlan } from "@/hooks/Program/useCurrentPlan";
 import { usePlanVersions } from "@/hooks/Program/usePlanVersions";
 import { ProgramActivity } from "@/types/Program/ProgramActivity";
-import { formatScheduleShort } from "@/common/helpers/plan-schedule.helpers";
+import {
+  formatPlanCalendarDate,
+  formatScheduleShort,
+} from "@/common/helpers/plan-schedule.helpers";
 import CreatePlanVersionDialog from "./CreatePlanVersionDialog";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 interface PlanTabProps {
   programId: string;
@@ -58,9 +59,7 @@ export default function PlanTab({
               </CardTitle>
               <Badge variant="outline">
                 Desde{" "}
-                {format(new Date(currentPlan.validFrom), "dd/MM/yyyy", {
-                  locale: es,
-                })}
+                {formatPlanCalendarDate(currentPlan.validFrom)}
               </Badge>
             </div>
           </CardHeader>
@@ -104,20 +103,12 @@ export default function PlanTab({
                   <div className="flex items-center justify-between">
                     <span className="text-sm">
                       Versión {version.version} — Desde{" "}
-                      {format(
-                        new Date(version.validFrom),
-                        "dd/MM/yyyy",
-                        { locale: es }
-                      )}
+                      {formatPlanCalendarDate(version.validFrom)}
                     </span>
                     {version.validTo && (
                       <span className="text-xs text-gray-400">
                         Hasta{" "}
-                        {format(
-                          new Date(version.validTo),
-                          "dd/MM/yyyy",
-                          { locale: es }
-                        )}
+                        {formatPlanCalendarDate(version.validTo)}
                       </span>
                     )}
                   </div>

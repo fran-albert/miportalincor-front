@@ -28,7 +28,10 @@ import {
   AttendanceMethod,
   AttendanceMethodLabels,
 } from "@/types/Program/Attendance";
-import { formatScheduleLong } from "@/common/helpers/plan-schedule.helpers";
+import {
+  formatPlanCalendarDate,
+  formatScheduleLong,
+} from "@/common/helpers/plan-schedule.helpers";
 import {
   COMPLIANCE_RANGE_PRESETS,
   ComplianceRangeKey,
@@ -186,9 +189,7 @@ const MyEnrollmentDetailPage = () => {
                 </p>
                 <p className="text-sm text-slate-500">
                   Desde{" "}
-                  {format(new Date(currentPlan.validFrom), "dd/MM/yyyy", {
-                    locale: es,
-                  })}
+                  {formatPlanCalendarDate(currentPlan.validFrom)}
                 </p>
               </div>
 
