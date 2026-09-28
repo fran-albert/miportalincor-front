@@ -24,6 +24,12 @@ import { useEffect, useState } from "react";
 import { HealthInsuranceSelect } from "@/components/Select/HealthInsurace/select";
 import { z } from "zod";
 import { UpdatePatientSchema } from "@/validators/patient.schema";
+import {
+  DNI_FORMAT_MESSAGE,
+  getPatientUpdateError,
+  isValidDni,
+  normalizeDni,
+} from "@/common/helpers/patient-dni";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Patient } from "@/types/Patient/Patient";
 import { usePatientMutations } from "@/hooks/Patient/usePatientMutation";
@@ -47,7 +53,14 @@ import useUserRole from "@/hooks/useRoles";
 import ResetDefaultPasswordButton from "@/components/Button/Reset-Default-Password";
 import SfsSyncButton from "@/components/Patients/Profile/SfsSyncButton";
 
-type FormValues = z.infer<typeof UpdatePatientSchema>;
+// El DNI se muestra con puntos pero se valida y envia solo con digitos.
+const UpdatePatientProfileSchema = UpdatePatientSchema.extend({
+  userName: z
+    .string({ required_error: DNI_FORMAT_MESSAGE })
+    .refine(isValidDni, { message: DNI_FORMAT_MESSAGE }),
+});
+
+type FormValues = z.infer<typeof UpdatePatientProfileSchema>;
 
 interface PatientProfileComponentProps {
   patient: Patient;
@@ -59,11 +72,11 @@ function PatientProfileComponent({
   breadcrumbItems,
 }: PatientProfileComponentProps) {
   const { updatePatientMutation } = usePatientMutations();
-  const { promiseToast } = useToastContext();
+  const { promiseToast, showError } = useToastContext();
   const { isSecretary, isAdmin, isDoctor } = useUserRole();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(UpdatePatientSchema),
+    resolver: zodResolver(UpdatePatientProfileSchema),
     defaultValues: {
       firstName: patient?.firstName || "",
       lastName: patient?.lastName || "",
@@ -116,7 +129,6 @@ function PatientProfileComponent({
   const [startDate, setStartDate] = useState<Date | undefined>(() =>
     patient?.birthDate ? new Date(patient.birthDate.toString()) : undefined
   );
-  const removeDotsFromDni = (dni: string) => dni.replace(/\./g, "");
 
   const handleStateChange = (state: State) => {
     setSelectedState(state);
@@ -179,8 +191,7 @@ function PatientProfileComponent({
     }
   }, [patient, setValue]);
 
-  const onSubmit: SubmitHandler<FormValues> = async (formData) => {
-    const formattedUserName = removeDotsFromDni(formData.userName ?? "");
+  const savePatient: SubmitHandler<FormValues> = async (formData) => {
     const { address, ...rest } = formData;
     const addressToSend = {
       ...address,
@@ -202,94 +213,19 @@ function PatientProfileComponent({
     ];
     const dataToSend = {
       ...rest,
-      userName: formattedUserName,
-      address: addressToSend,
-      photo: patient.photo,
-      registeredById: patient.registeredById,
-      healthPlans: healthPlansToSend,
-      id: patient.id,
-      userId: patient.userId,
-      dni: patient.dni,
-      cuil: patient.cuil,
-      affiliationNumber: patient.affiliationNumber,
-      registrationDate: patient.registrationDate,
-      roles: patient.roles,
-      priority: patient.priority,
-      module: patient.module,
-      description: patient.description,
-      currentPassword: patient.currentPassword,
-      password: patient.password,
-      newPassword: patient.newPassword,
-      code: patient.code,
-      confirmPassword: patient.confirmPassword,
-      registeredByName: patient.registeredByName,
-    } as Patient;
-    try {
-      const patientCreationPromise = updatePatientMutation.mutateAsync({
-        id: patient?.id,
-        patient: dataToSend,
-      });
-
-      await promiseToast(patientCreationPromise, {
-        loading: {
-          title: "Actualizando paciente...",
-          description: "Por favor espera mientras procesamos tu solicitud",
-        },
-        success: {
-          title: "¡Paciente actualizado!",
-          description: "El paciente se ha actualizado exitosamente",
-        },
-        error: (error: unknown) => ({
-          title: "Error al actualizar paciente",
-          description:
-            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
-        }),
-      });
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error al actualizar el paciente", error);
-    }
-  };
-
-  const handleSave = async () => {
-    const isValid = await form.trigger();
-    if (!isValid) return;
-    const formattedUserName = removeDotsFromDni(form.getValues("userName") ?? "");
-    const { address, ...rest } = form.getValues();
-    const addressToSend = {
-      ...address,
-      id: patient?.address?.id,
-      city: {
-        ...selectedCity,
-        state: selectedState,
-      },
-    };
-    const healthPlansToSend = [
-      {
-        id: selectedHealthInsurance?.id,
-        name: selectedHealthInsurance?.name,
-        healthInsurance: {
-          id: selectedHealthInsurance?.id,
-          name: selectedHealthInsurance?.name,
-        },
-      },
-    ];
-    const dataToSend = {
-      ...rest,
-      userName: formattedUserName,
+      userName: normalizeDni(formData.userName),
       address: addressToSend,
       photo: patient.photo,
       registeredById: patient.registeredById,
       healthPlans: healthPlansToSend,
     } as Patient;
     try {
-      const patientCreationPromise = updatePatientMutation.mutateAsync({
+      const patientUpdatePromise = updatePatientMutation.mutateAsync({
         id: patient?.id,
         patient: dataToSend,
       });
 
-      await promiseToast(patientCreationPromise, {
+      await promiseToast(patientUpdatePromise, {
         loading: {
           title: "Actualizando datos del paciente",
           description: "Por favor espera mientras procesamos tu solicitud",
@@ -299,16 +235,32 @@ function PatientProfileComponent({
           description: "Los datos del paciente se actualizaron exitosamente",
         },
         error: (error: unknown) => ({
-          title: "Error al actualizar el paciente",
-          description:
-            (error as { response?: { data?: { message?: string } } }).response?.data?.message || "Ha ocurrido un error inesperado",
+          title: "No se guardaron los cambios",
+          description: getPatientUpdateError(error).message,
         }),
       });
 
       setIsEditing(false);
     } catch (error) {
-      console.error("Error al actualizar el paciente", error);
+      // El motivo queda junto al campo que hay que corregir (ej. DNI repetido)
+      // y el formulario sigue en edicion.
+      const { message, field } = getPatientUpdateError(error);
+      if (field) {
+        form.setError(field, { type: "server", message }, { shouldFocus: true });
+      }
     }
+  };
+
+  const handleSave = async () => {
+    const isValid = await form.trigger(undefined, { shouldFocus: true });
+    if (!isValid) {
+      showError(
+        "Revisá los datos marcados",
+        "Hay campos con errores. Corregilos y volvé a guardar.",
+      );
+      return;
+    }
+    await savePatient(form.getValues());
   };
 
   return (
@@ -386,7 +338,7 @@ function PatientProfileComponent({
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} id="profileForm">
+        <form onSubmit={form.handleSubmit(savePatient)} id="profileForm">
           {/* Avatar Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -526,6 +478,7 @@ function PatientProfileComponent({
                         <FormControl>
                           <Input
                             {...field}
+                            inputMode="numeric"
                             placeholder="Ingresar D.N.I..."
                             disabled={!isEditing}
                           />

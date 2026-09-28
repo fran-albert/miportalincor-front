@@ -7,11 +7,13 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { Patient } from '@/types/Patient/Patient';
 import React from 'react';
+import { AxiosError, AxiosHeaders } from 'axios';
 
 // --- Mocks ---
 
 const mockMutateAsync = vi.fn().mockResolvedValue({});
 const mockPromiseToast = vi.fn().mockImplementation((promise: Promise<unknown>) => promise);
+const mockShowError = vi.fn();
 
 vi.mock('@/hooks/Patient/usePatientMutation', () => ({
   usePatientMutations: () => ({
@@ -25,6 +27,7 @@ vi.mock('@/hooks/Patient/usePatientMutation', () => ({
 vi.mock('@/hooks/Toast/toast-context', () => ({
   useToastContext: () => ({
     promiseToast: mockPromiseToast,
+    showError: mockShowError,
   }),
 }));
 
@@ -326,6 +329,113 @@ describe('PatientProfileComponent', () => {
       renderComponent();
 
       expect(screen.getByDisplayValue('123456')).toBeInTheDocument();
+    });
+  });
+  describe('Corregir DNI', () => {
+    const conflict = (data: Record<string, unknown>) =>
+      new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, undefined, {
+        status: 409,
+        statusText: 'Conflict',
+        headers: {},
+        config: { headers: new AxiosHeaders() },
+        data,
+      });
+
+    const editDni = async (value: string) => {
+      const user = userEvent.setup();
+      renderComponent();
+      await user.click(screen.getByText('Editar Perfil'));
+      const dniInput = screen.getByPlaceholderText('Ingresar D.N.I...');
+      await user.clear(dniInput);
+      await user.type(dniInput, value);
+      return user;
+    };
+
+    it('muestra junto al DNI el motivo exacto del 409 (ficha activa)', async () => {
+      const message =
+        'El DNI 30111222 ya está cargado en otra ficha activa: Gomez, Juana. Puede ser un paciente duplicado: buscá ese DNI en Pacientes antes de seguir.';
+      mockMutateAsync.mockRejectedValueOnce(
+        conflict({ code: 'PATIENT_DNI_IN_USE', field: 'userName', message }),
+      );
+
+      const user = await editDni('30111222');
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      // Sigue en modo edicion para que pueda corregirlo.
+      expect(screen.getByText('Guardar Cambios')).toBeInTheDocument();
+    });
+
+    it('muestra el motivo del 409 de ficha dada de baja', async () => {
+      const message =
+        'El DNI 20181345 está reservado por una ficha dada de baja. No se puede usar hasta unificar las dos fichas: pedí la unificación a soporte indicando este DNI y el paciente que estás editando.';
+      mockMutateAsync.mockRejectedValueOnce(
+        conflict({ code: 'PATIENT_DNI_RESERVED_BY_DELETED_RECORD', message }),
+      );
+
+      const user = await editDni('20181345');
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+    });
+
+    it('el toast de error usa el mismo mensaje de la API', async () => {
+      const message = 'Ya existe un usuario con el email indicado';
+      mockMutateAsync.mockRejectedValueOnce(conflict({ message }));
+
+      const user = await editDni('12345678');
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      await vi.waitFor(() => expect(mockPromiseToast).toHaveBeenCalled());
+      const [, messages] = mockPromiseToast.mock.calls[0] as [
+        Promise<unknown>,
+        { error: (error: unknown) => { title: string; description?: string } },
+      ];
+      expect(messages.error(conflict({ message })).description).toBe(message);
+    });
+
+    it.each([
+      ['20.181.399', '20181399'],
+      ['20 181 399', '20181399'],
+    ])('envía "%s" normalizado como %s', async (typed, expected) => {
+      const user = await editDni(typed);
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      await vi.waitFor(() => expect(mockMutateAsync).toHaveBeenCalled());
+      const [{ patient }] = mockMutateAsync.mock.calls[0] as [
+        { patient: { userName: string } },
+      ];
+      expect(patient.userName).toBe(expected);
+    });
+
+    it('no envía un DNI inválido y avisa qué corregir', async () => {
+      const user = await editDni('1234');
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      expect(
+        await screen.findByText(
+          'El DNI debe tener entre 6 y 10 números, sin puntos ni espacios.',
+        ),
+      ).toBeInTheDocument();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+      expect(mockShowError).toHaveBeenCalledWith(
+        'Revisá los datos marcados',
+        'Hay campos con errores. Corregilos y volvé a guardar.',
+      );
+    });
+
+    it('no manda campos que la API rechaza (whitelist)', async () => {
+      const user = await editDni('20181399');
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      await vi.waitFor(() => expect(mockMutateAsync).toHaveBeenCalled());
+      const [{ patient }] = mockMutateAsync.mock.calls[0] as [
+        { patient: Record<string, unknown> },
+      ];
+      expect(patient.userName).toBe('20181399');
+      for (const forbidden of ['password', 'roles', 'dni', 'userId', 'registrationDate']) {
+        expect(patient).not.toHaveProperty(forbidden);
+      }
     });
   });
 });
