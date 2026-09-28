@@ -30,7 +30,9 @@ interface ToastContextType {
     promise: Promise<T>,
     messages: {
       loading: { title: string; description?: string };
-      success: { title: string; description?: string };
+      success:
+        | { title: string; description?: string }
+        | ((result: T) => { title: string; description?: string });
       error:
         | { title: string; description?: string }
         | ((error: ApiError) => { title: string; description?: string });

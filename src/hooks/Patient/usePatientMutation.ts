@@ -25,7 +25,11 @@ export const usePatientMutations = () => {
   const updatePatientMutation = useMutation({
     mutationFn: ({ id, patient }: { id: string; patient: UpdatePatientDto | Patient }) => updatePatient(id, patient as UpdatePatientDto),
     onSuccess: (patient, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['patient', variables.id] });
+      // El perfil se cachea por el userId numerico del slug y la mutacion
+      // recibe el UUID: se invalida todo 'patient' para que, por ejemplo, un
+      // DNI corregido no quede viejo en pantalla (y en "Restablecer contraseña").
+      queryClient.invalidateQueries({ queryKey: ['patient'] });
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       console.log("Patient updated", patient, variables, context);
     },
     onError: (error, variables, context) => {
