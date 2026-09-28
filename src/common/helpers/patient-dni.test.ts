@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { AxiosError, AxiosHeaders } from 'axios';
 import {
   DNI_FORMAT_MESSAGE,
+  getPatientSaveSuccessDescription,
   getPatientUpdateError,
   isValidDni,
   normalizeDni,
@@ -116,5 +117,44 @@ describe('getPatientUpdateError', () => {
     expect(getPatientUpdateError(apiError(500, {}))).toEqual({
       message: 'Ha ocurrido un error inesperado',
     });
+  });
+});
+
+describe('getPatientSaveSuccessDescription', () => {
+  it('DNI cambiado y clave restablecida', () => {
+    expect(
+      getPatientSaveSuccessDescription('20181354', {
+        userName: '20181345',
+        passwordResetToNewDni: true,
+      }),
+    ).toBe(
+      'DNI actualizado. El paciente ingresa con el DNI nuevo como usuario y como contraseña.',
+    );
+  });
+
+  it('DNI cambiado y conserva su clave', () => {
+    expect(
+      getPatientSaveSuccessDescription('20181354', {
+        userName: '20181345',
+        passwordResetToNewDni: false,
+      }),
+    ).toBe(
+      'DNI actualizado. El paciente ingresa con el DNI nuevo y conserva su contraseña.',
+    );
+  });
+
+  it('DNI sin cambios (aunque venga con puntos): mensaje de siempre', () => {
+    expect(
+      getPatientSaveSuccessDescription('20.181.354', {
+        userName: '20181354',
+        passwordResetToNewDni: false,
+      }),
+    ).toBe('Los datos del paciente se actualizaron exitosamente');
+  });
+
+  it('API vieja sin el campo: si cambio el DNI, no promete nada de la clave', () => {
+    expect(
+      getPatientSaveSuccessDescription('20181354', { userName: '20181345' }),
+    ).toBe('DNI actualizado. El paciente ingresa con el DNI nuevo.');
   });
 });

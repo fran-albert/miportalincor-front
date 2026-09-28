@@ -67,7 +67,9 @@ export const useToast = () => {
       promise: Promise<T>,
       messages: {
         loading: { title: string; description?: string }
-        success: { title: string; description?: string }
+        success:
+          | { title: string; description?: string }
+          | ((result: T) => { title: string; description?: string })
         error: { title: string; description?: string } | ((error: ApiError) => { title: string; description?: string })
       },
     ): Promise<T> => {
@@ -79,7 +81,10 @@ export const useToast = () => {
 
         // Remover loading y mostrar success
         removeToast(loadingId)
-        showSuccess(messages.success.title, messages.success.description)
+        // El texto de exito puede depender del resultado (ej. DNI corregido).
+        const successMessage =
+          typeof messages.success === "function" ? messages.success(result) : messages.success
+        showSuccess(successMessage.title, successMessage.description)
 
         return result
       } catch (error) {

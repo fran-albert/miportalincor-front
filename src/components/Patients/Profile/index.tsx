@@ -26,8 +26,10 @@ import { z } from "zod";
 import { UpdatePatientSchema } from "@/validators/patient.schema";
 import {
   DNI_FORMAT_MESSAGE,
+  getPatientSaveSuccessDescription,
   getPatientUpdateError,
   isValidDni,
+  type PatientSaveResult,
   normalizeDni,
 } from "@/common/helpers/patient-dni";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -230,10 +232,13 @@ function PatientProfileComponent({
           title: "Actualizando datos del paciente",
           description: "Por favor espera mientras procesamos tu solicitud",
         },
-        success: {
+        success: (saved: PatientSaveResult) => ({
           title: "Paciente actualizado",
-          description: "Los datos del paciente se actualizaron exitosamente",
-        },
+          description: getPatientSaveSuccessDescription(
+            patient.userName || patient.dni,
+            saved,
+          ),
+        }),
         error: (error: unknown) => ({
           title: "No se guardaron los cambios",
           description: getPatientUpdateError(error).message,

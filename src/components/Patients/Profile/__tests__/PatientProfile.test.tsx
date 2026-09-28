@@ -438,4 +438,67 @@ describe('PatientProfileComponent', () => {
       }
     });
   });
+  describe('Aviso de éxito al corregir el DNI', () => {
+    type SuccessMessage =
+      | { title: string; description?: string }
+      | ((result: unknown) => { title: string; description?: string });
+
+    const successDescriptionFor = async (
+      typedDni: string | null,
+      saved: Record<string, unknown>,
+    ) => {
+      mockMutateAsync.mockResolvedValueOnce(saved);
+      const user = userEvent.setup();
+      renderComponent();
+      await user.click(screen.getByText('Editar Perfil'));
+      if (typedDni !== null) {
+        const dniInput = screen.getByPlaceholderText('Ingresar D.N.I...');
+        await user.clear(dniInput);
+        await user.type(dniInput, typedDni);
+      }
+      await user.click(screen.getByText('Guardar Cambios'));
+
+      await vi.waitFor(() => expect(mockPromiseToast).toHaveBeenCalled());
+      const [, messages] = mockPromiseToast.mock.calls[0] as [
+        Promise<unknown>,
+        { success: SuccessMessage },
+      ];
+      const success =
+        typeof messages.success === 'function'
+          ? messages.success(saved)
+          : messages.success;
+      return success.description;
+    };
+
+    it('clave restablecida: DNI nuevo como usuario y como contraseña', async () => {
+      expect(
+        await successDescriptionFor('20181399', {
+          userName: '20181399',
+          passwordResetToNewDni: true,
+        }),
+      ).toBe(
+        'DNI actualizado. El paciente ingresa con el DNI nuevo como usuario y como contraseña.',
+      );
+    });
+
+    it('clave propia: DNI nuevo y conserva su contraseña', async () => {
+      expect(
+        await successDescriptionFor('20181399', {
+          userName: '20181399',
+          passwordResetToNewDni: false,
+        }),
+      ).toBe(
+        'DNI actualizado. El paciente ingresa con el DNI nuevo y conserva su contraseña.',
+      );
+    });
+
+    it('sin cambio de DNI: el mensaje de siempre', async () => {
+      expect(
+        await successDescriptionFor(null, {
+          userName: '12345678',
+          passwordResetToNewDni: false,
+        }),
+      ).toBe('Los datos del paciente se actualizaron exitosamente');
+    });
+  });
 });

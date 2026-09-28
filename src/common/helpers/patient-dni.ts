@@ -56,3 +56,39 @@ export const getPatientUpdateError = (error: unknown): PatientUpdateError => {
 
   return isDniError ? { message, field: "userName" } : { message };
 };
+
+export interface PatientSaveResult {
+  userName?: string;
+  dni?: string;
+  /** Lo devuelve PUT /patient/:id cuando cambia el DNI (feature 480). */
+  passwordResetToNewDni?: boolean;
+}
+
+export const DEFAULT_SAVE_SUCCESS =
+  "Los datos del paciente se actualizaron exitosamente";
+
+/**
+ * Texto del aviso de exito al guardar el perfil. Si cambio el DNI, le dice a
+ * la secretaria con que clave entra ahora el paciente.
+ */
+export const getPatientSaveSuccessDescription = (
+  previousDni: string | null | undefined,
+  saved: PatientSaveResult | null | undefined,
+): string => {
+  const before = normalizeDni(previousDni);
+  const after = normalizeDni(saved?.userName ?? saved?.dni);
+
+  if (!after || after === before) {
+    return DEFAULT_SAVE_SUCCESS;
+  }
+
+  if (saved?.passwordResetToNewDni === true) {
+    return "DNI actualizado. El paciente ingresa con el DNI nuevo como usuario y como contraseña.";
+  }
+
+  if (saved?.passwordResetToNewDni === false) {
+    return "DNI actualizado. El paciente ingresa con el DNI nuevo y conserva su contraseña.";
+  }
+
+  return "DNI actualizado. El paciente ingresa con el DNI nuevo.";
+};
