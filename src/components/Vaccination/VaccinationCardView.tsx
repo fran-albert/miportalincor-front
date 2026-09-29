@@ -188,7 +188,7 @@ export function VaccinationCardView({
     <div className="flex flex-col items-center px-6 py-12 text-center">
       <span
         aria-hidden="true"
-        className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-600"
+        className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-greenPrimary"
       >
         <Syringe className="h-6 w-6" />
       </span>
@@ -221,7 +221,7 @@ export function VaccinationCardView({
   );
 
   const headCell =
-    "whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-teal-900";
+    "whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600";
 
   return (
     <div className="space-y-4">
@@ -244,21 +244,21 @@ export function VaccinationCardView({
 
       <section
         aria-labelledby={titleId}
-        className="overflow-hidden rounded-2xl border border-teal-100 bg-teal-50/60 shadow-sm"
+        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
       >
         <VaccinationCardHeader
           titleId={titleId}
           patient={vaccinationCard.patient}
         />
 
-        <div className="mx-2 mb-2 overflow-hidden rounded-xl border border-teal-100 bg-white sm:mx-4 sm:mb-4">
+        <div className="border-t border-slate-200">
           {rows.length === 0 ? (
             renderEmptyState()
           ) : (
             <>
               <table className="hidden w-full text-sm md:table">
                 <caption className="sr-only">Vacunas aplicadas</caption>
-                <thead className="bg-teal-50">
+                <thead className="border-b border-slate-200 bg-slate-50">
                   <tr>
                     <th scope="col" className={`${headCell} text-left`}>
                       Vacuna
