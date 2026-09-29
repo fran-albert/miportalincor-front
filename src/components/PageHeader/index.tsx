@@ -7,6 +7,7 @@ interface PageHeaderProps {
     label: string;
     href?: string;
     icon?: React.ReactNode;
+    preserveCase?: boolean;
   }>;
   title: string;
   description?: string;
