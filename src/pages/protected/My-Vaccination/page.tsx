@@ -20,7 +20,7 @@ const MyVaccinationPage = () => {
         <title>Mi carnet de vacunacion</title>
         <meta
           name="description"
-          content="Consulta tu carnet de vacunacion y pendientes por calendario."
+          content="Consulta tu carnet de vacunación."
         />
       </Helmet>
 
@@ -28,7 +28,7 @@ const MyVaccinationPage = () => {
         <PageHeader
           breadcrumbItems={breadcrumbItems}
           title="Mi carnet de vacunacion"
-          description="Consulta vacunas aplicadas, pendientes y vencidas"
+          description="Tus vacunas aplicadas, de la más reciente a la más antigua"
           icon={<Syringe className="h-6 w-6" />}
         />
 

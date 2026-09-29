@@ -74,7 +74,7 @@ const PatientVaccinationPage = () => {
         <PageHeader
           breadcrumbItems={breadcrumbItems}
           title={`Vacunacion - ${patientName}`}
-          description="Consulta pendientes y registra vacunas aplicadas"
+          description="Vacunas aplicadas del paciente y carga de nuevas dosis"
           icon={<Syringe className="h-6 w-6" />}
           actions={
             <Link to={`/pacientes/${slug}`}>
