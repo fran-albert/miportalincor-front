@@ -29,6 +29,7 @@ import { VaccinationApplicationFormModal } from "./VaccinationApplicationFormMod
 import { VaccinationCalendarSection } from "./VaccinationCalendarSection";
 import { VaccinationCardHeader } from "./VaccinationCardHeader";
 import { VaccineIcon } from "./VaccineIcon";
+import { formatDoseLabel, getVaccineDescription } from "./vaccine-visuals";
 
 interface VaccinationCardViewProps {
   vaccinationCard: VaccinationCard;
@@ -131,7 +132,7 @@ export function VaccinationCardView({
 
   const renderActions = ({ application, vaccine }: CarnetRow) => {
     if (!isDoctor || !application.canEdit) return null;
-    const label = `${vaccine.name} ${application.doseLabel}`;
+    const label = `${vaccine.name} ${formatDoseLabel(application.doseLabel)}`;
 
     return (
       <div className="flex items-center justify-end gap-1">
@@ -159,23 +160,29 @@ export function VaccinationCardView({
     );
   };
 
-  const renderVaccineName = ({ application, vaccine }: CarnetRow) => (
-    <div className="flex items-center gap-3">
-      <VaccineIcon code={vaccine.code} />
-      <div className="min-w-0">
-        <p className="font-semibold text-slate-900">{vaccine.name}</p>
-        {vaccine.description && (
-          <p className="text-sm text-slate-500">{vaccine.description}</p>
-        )}
-        {application.observations && (
-          <p className="mt-1 text-sm text-slate-600">
-            <span className="font-medium">Observaciones:</span>{" "}
-            {application.observations}
-          </p>
-        )}
+  const renderVaccineName = ({ application, vaccine }: CarnetRow) => {
+    const description = getVaccineDescription(
+      vaccine.code,
+      vaccine.description
+    );
+    return (
+      <div className="flex items-center gap-3">
+        <VaccineIcon code={vaccine.code} />
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-900">{vaccine.name}</p>
+          {description && (
+            <p className="text-sm text-slate-500">{description}</p>
+          )}
+          {application.observations && (
+            <p className="mt-1 text-sm text-slate-600">
+              <span className="font-medium">Observaciones:</span>{" "}
+              {application.observations}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderEmptyState = () => (
     <div className="flex flex-col items-center px-6 py-12 text-center">
@@ -283,7 +290,7 @@ export function VaccinationCardView({
                         {formatVaccinationDate(row.application.appliedDate)}
                       </td>
                       <td className="px-4 py-3 text-center text-base text-slate-800">
-                        {row.application.doseLabel}
+                        {formatDoseLabel(row.application.doseLabel)}
                       </td>
                       <td className="px-4 py-3 uppercase text-slate-700">
                         {getDoctorName(row.application)}
@@ -322,7 +329,7 @@ export function VaccinationCardView({
                           Dosis
                         </dt>
                         <dd className="font-medium text-slate-900">
-                          {row.application.doseLabel}
+                          {formatDoseLabel(row.application.doseLabel)}
                         </dd>
                       </div>
                       <div className="col-span-2">

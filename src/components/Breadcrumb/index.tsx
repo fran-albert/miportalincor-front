@@ -15,6 +15,8 @@ interface BreadcrumbComponentProps {
     label: string;
     href?: string;
     icon?: React.ReactNode;
+    /** No capitalizar cada palabra: el texto ya viene bien escrito. */
+    preserveCase?: boolean;
   }>;
 }
 
@@ -37,13 +39,21 @@ const BreadcrumbComponent: React.FC<BreadcrumbComponentProps> = ({ items }) => {
                     >
                       {isFirst && <Home className="h-4 w-4" />}
                       {item.icon && !isFirst && item.icon}
-                      <span className="capitalize">{item.label}</span>
+                      <span
+                        className={item.preserveCase ? undefined : "capitalize"}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage className="flex items-center gap-2 text-sm font-semibold text-greenPrimary">
                     {item.icon && item.icon}
-                    <span className="capitalize">{item.label}</span>
+                    <span
+                      className={item.preserveCase ? undefined : "capitalize"}
+                    >
+                      {item.label}
+                    </span>
                   </BreadcrumbPage>
                 )}
               </BreadcrumbItem>

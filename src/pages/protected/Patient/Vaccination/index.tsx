@@ -47,7 +47,7 @@ const PatientVaccinationPage = () => {
       label: patientName,
       href: `/pacientes/${slug}`,
     },
-    { label: "Vacunacion" },
+    { label: "Vacunación" },
   ];
 
   if (isFirstLoadingPatient) {
@@ -63,17 +63,17 @@ const PatientVaccinationPage = () => {
   return (
     <>
       <Helmet>
-        <title>{`${patientName} - Carnet de vacunacion`}</title>
+        <title>{`${patientName} - Carnet de vacunación`}</title>
         <meta
           name="description"
-          content={`Carnet de vacunacion del paciente ${patient?.firstName}.`}
+          content={`Carnet de vacunación del paciente ${patient?.firstName}.`}
         />
       </Helmet>
 
       <div className="space-y-6 p-6">
         <PageHeader
           breadcrumbItems={breadcrumbItems}
-          title={`Vacunacion - ${patientName}`}
+          title={`Vacunación - ${patientName}`}
           description="Vacunas aplicadas del paciente y carga de nuevas dosis"
           icon={<Syringe className="h-6 w-6" />}
           actions={
@@ -100,7 +100,7 @@ const PatientVaccinationPage = () => {
           <Card className="border-red-200 bg-red-50">
             <CardContent className="py-4">
               <p className="text-red-600">
-                Hubo un error al cargar el carnet de vacunacion.
+                Hubo un error al cargar el carnet de vacunación.
               </p>
             </CardContent>
           </Card>
@@ -119,7 +119,7 @@ const PatientVaccinationPage = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-500">
-                No hay carnet de vacunacion disponible para este paciente.
+                No hay carnet de vacunación disponible para este paciente.
               </p>
             </CardContent>
           </Card>

@@ -11,13 +11,13 @@ const MyVaccinationPage = () => {
 
   const breadcrumbItems = [
     { label: "Inicio", href: "/inicio" },
-    { label: "Mi carnet de vacunacion" },
+    { label: "Mi carnet de vacunación", preserveCase: true },
   ];
 
   return (
     <>
       <Helmet>
-        <title>Mi carnet de vacunacion</title>
+        <title>Mi carnet de vacunación</title>
         <meta
           name="description"
           content="Consulta tu carnet de vacunación."
@@ -27,7 +27,7 @@ const MyVaccinationPage = () => {
       <div className="space-y-6 p-6">
         <PageHeader
           breadcrumbItems={breadcrumbItems}
-          title="Mi carnet de vacunacion"
+          title="Mi carnet de vacunación"
           description="Tus vacunas aplicadas, de la más reciente a la más antigua"
           icon={<Syringe className="h-6 w-6" />}
         />
@@ -36,7 +36,7 @@ const MyVaccinationPage = () => {
           <Card className="border-red-200 bg-red-50">
             <CardContent className="py-4">
               <p className="text-red-600">
-                Hubo un error al cargar tu carnet de vacunacion.
+                Hubo un error al cargar tu carnet de vacunación.
               </p>
             </CardContent>
           </Card>
@@ -55,7 +55,7 @@ const MyVaccinationPage = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-500">
-                No hay carnet de vacunacion disponible.
+                No hay carnet de vacunación disponible.
               </p>
             </CardContent>
           </Card>

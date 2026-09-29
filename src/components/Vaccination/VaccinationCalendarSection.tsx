@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { VaccinationCardItem } from "@/types/Vaccination/Vaccination";
 import { VaccineIcon } from "./VaccineIcon";
+import { formatDoseLabel } from "./vaccine-visuals";
 
 interface VaccinationCalendarSectionProps {
   overview: VaccinationCalendarOverview;
@@ -47,7 +48,7 @@ export function VaccinationCalendarSection({
       <VaccineIcon code={item.vaccine.code} size="sm" />
       <div className="min-w-0 flex-1">
         <p className="font-medium text-slate-900">{item.vaccine.name}</p>
-        <p className="text-sm text-slate-600">{item.doseLabel}</p>
+        <p className="text-sm text-slate-600">{formatDoseLabel(item.doseLabel)}</p>
       </div>
       <span
         className={cn(
@@ -64,7 +65,7 @@ export function VaccinationCalendarSection({
           variant="outline"
           size="sm"
           className="h-8"
-          aria-label={`Cargar ${item.vaccine.name} ${item.doseLabel}`}
+          aria-label={`Cargar ${item.vaccine.name} ${formatDoseLabel(item.doseLabel)}`}
           onClick={() => onAddFromCalendar(item.scheduleRuleId)}
         >
           <Plus aria-hidden="true" className="mr-1 h-3.5 w-3.5" />

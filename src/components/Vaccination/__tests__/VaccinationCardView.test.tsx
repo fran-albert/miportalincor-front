@@ -161,7 +161,7 @@ describe("VaccinationCardView", () => {
 
     const cells = within(getDataRows()[0]).getAllByRole("cell");
     expect(cells[0]).toHaveTextContent("Triple viral");
-    expect(cells[0]).toHaveTextContent("Sarampion, rubeola y paperas");
+    expect(cells[0]).toHaveTextContent("Sarampión, rubéola y paperas");
     expect(cells[0]).toHaveTextContent("Sin reacciones");
     expect(cells[1]).toHaveTextContent("28/09/2026");
     expect(cells[2]).toHaveTextContent("1ra dosis");
@@ -170,6 +170,14 @@ describe("VaccinationCardView", () => {
 
     expect(within(getDataRows()[2]).getAllByRole("cell")[3]).toHaveTextContent(
       "Carlos Gomez"
+    );
+  });
+
+  it("muestra la dosis bien escrita sin tocar el dato", () => {
+    render(<VaccinationCardView vaccinationCard={buildCard()} />);
+
+    expect(within(getDataRows()[1]).getAllByRole("cell")[2]).toHaveTextContent(
+      "Única dosis"
     );
   });
 
@@ -211,7 +219,7 @@ describe("VaccinationCardView", () => {
       within(table).getByRole("button", { name: "Editar Triple viral 1ra dosis" })
     ).toBeInTheDocument();
     expect(
-      within(table).getByRole("button", { name: "Eliminar VPH Unica dosis" })
+      within(table).getByRole("button", { name: "Eliminar VPH Única dosis" })
     ).toBeInTheDocument();
     expect(
       within(table).queryByRole("button", { name: /editar gripe/i })
@@ -229,7 +237,7 @@ describe("VaccinationCardView", () => {
 
     await user.click(
       within(screen.getByRole("table")).getByRole("button", {
-        name: "Eliminar VPH Unica dosis",
+        name: "Eliminar VPH Única dosis",
       })
     );
     await user.click(screen.getByRole("button", { name: "Eliminar" }));
@@ -334,7 +342,7 @@ describe("VaccinationCardView", () => {
     expect(within(calendar).getByText(/15\/01\/2031/)).toBeInTheDocument();
     expect(within(calendar).queryByText("Triple viral")).not.toBeInTheDocument();
     expect(
-      within(calendar).getByRole("button", { name: "Cargar VPH Unica dosis" })
+      within(calendar).getByRole("button", { name: "Cargar VPH Única dosis" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/vencid/i)).not.toBeInTheDocument();
   });
