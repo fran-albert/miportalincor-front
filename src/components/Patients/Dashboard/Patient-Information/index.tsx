@@ -15,12 +15,19 @@ import { calculateAge, formatDni } from "@/common/helpers/helpers";
 import { Patient } from "@/types/Patient/Patient";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import useRoles from "@/hooks/useRoles";
+import { SelfSignupBadge } from "@/components/Patients/SelfSignupBadge";
+import { isUnverifiedSelfSignup } from "@/components/Patients/self-signup";
+import { VerifySelfSignupDialog } from "@/components/Patients/SelfSignup/VerifySelfSignupDialog";
+import { DeactivateSelfSignupDialog } from "@/components/Patients/SelfSignup/DeactivateSelfSignupDialog";
 
 interface Props {
   patient: Patient;
 }
 
 const PatientInformation: React.FC<Props> = ({ patient }) => {
+  const { isSecretary, isAdmin } = useRoles();
+  const pendingVerification = isUnverifiedSelfSignup(patient);
   const initials = `${patient.firstName?.[0] || ""}${
     patient.lastName?.[0] || ""
   }`.toUpperCase();
@@ -55,6 +62,11 @@ const PatientInformation: React.FC<Props> = ({ patient }) => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-3">
                   {patient.firstName} {patient.lastName}
                 </h1>
+                {pendingVerification && (
+                  <div className="mb-3">
+                    <SelfSignupBadge />
+                  </div>
+                )}
 
                 {/* Información Específica */}
                 <div className="space-y-3">
@@ -142,6 +154,15 @@ const PatientInformation: React.FC<Props> = ({ patient }) => {
                       </div>
                     )}
                 </div>
+
+                {pendingVerification && (isSecretary || isAdmin) && (
+                  <div className="space-y-2" data-testid="self-signup-actions">
+                    <VerifySelfSignupDialog userId={patient.userId} />
+                    {isAdmin && (
+                      <DeactivateSelfSignupDialog userId={patient.userId} />
+                    )}
+                  </div>
+                )}
 
                 {/* Botón Ver Perfil */}
                 <Link

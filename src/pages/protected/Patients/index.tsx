@@ -1,8 +1,11 @@
 import { useSearchPatients } from "@/hooks/Patient/useSearchPatients";
 import { PatientsTable } from "@/components/Patients/Table/table";
 import { Helmet } from "react-helmet-async";
+import { useState } from "react";
 
 const PatientsComponent = () => {
+  const [onlySelfSignupUnverified, setOnlySelfSignupUnverified] =
+    useState(false);
   const {
     patients,
     isFetching,
@@ -15,6 +18,7 @@ const PatientsComponent = () => {
     prevPage,
   } = useSearchPatients({
     initialLimit: 10,
+    onlySelfSignupUnverified,
   });
 
   return (
@@ -32,6 +36,10 @@ const PatientsComponent = () => {
         totalPages={totalPages}
         onNextPage={nextPage}
         onPrevPage={prevPage}
+        onlySelfSignupUnverified={onlySelfSignupUnverified}
+        onToggleSelfSignupFilter={() =>
+          setOnlySelfSignupUnverified((current) => !current)
+        }
       />
     </>
   );

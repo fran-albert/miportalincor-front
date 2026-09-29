@@ -6,6 +6,8 @@ export interface SearchPatientsParams {
   search?: string;
   page?: number;
   limit?: number;
+  /** "self-unverified": solo autoregistrados que recepción no verificó. */
+  registration?: "self-unverified";
 }
 
 export interface PaginatedPatientsResponse {
@@ -21,12 +23,13 @@ export interface PaginatedPatientsResponse {
 export const searchPatients = async (
   params: SearchPatientsParams = {}
 ): Promise<PaginatedPatientsResponse> => {
-  const { search = "", page = 1, limit = 10 } = params;
+  const { search = "", page = 1, limit = 10, registration } = params;
 
   const queryParams = new URLSearchParams();
   if (search) queryParams.append("search", search);
   queryParams.append("page", page.toString());
   queryParams.append("limit", limit.toString());
+  if (registration) queryParams.append("registration", registration);
 
   const { data } = await apiIncorHC.get<PaginatedPatientsResponse>(
     `/patient/search?${queryParams.toString()}`
