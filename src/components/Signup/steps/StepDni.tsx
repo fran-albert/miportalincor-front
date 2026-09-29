@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError, Notice, StepFrame } from "../StepFrame";
 import { dniSchema, fieldErrors, normalizeDni } from "../signup.schemas";
-import { StepProps } from "../types";
+import { SignupFormData, StepProps } from "../types";
+import { withoutErrorsFor } from "../signup.utils";
 
 interface StepDniProps extends StepProps {
   /** El DNI vino con el link de la reserva: no se puede cambiar. */
@@ -25,13 +26,17 @@ export function StepDni({
   error,
 }: StepDniProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const change = (patch: Partial<SignupFormData>) => {
+    onChange(patch);
+    setErrors((current) => withoutErrorsFor(current, Object.keys(patch)));
+  };
 
   const handleNext = () => {
     const result = dniSchema.safeParse({ dni: data.dni });
     const nextErrors = fieldErrors(result);
     setErrors(nextErrors);
     if (result.success) {
-      onChange({ dni: result.data.dni });
+      change({ dni: result.data.dni });
       onNext();
     }
   };
@@ -72,7 +77,7 @@ export function StepDni({
             aria-invalid={Boolean(errors.dni)}
             aria-describedby="signup-dni-help"
             onChange={(event) =>
-              onChange({ dni: normalizeDni(event.target.value).slice(0, 8) })
+              change({ dni: normalizeDni(event.target.value).slice(0, 8) })
             }
             className={
               locked

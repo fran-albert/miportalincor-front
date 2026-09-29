@@ -177,6 +177,8 @@ describe("Paso 3: Obra social", () => {
 
     await userEvent.clear(screen.getByLabelText("Número de afiliado"));
     await userEvent.type(screen.getByLabelText("Número de afiliado"), "61234567801");
+    // Al corregir el campo, su error desaparece sin esperar a Siguiente.
+    expect(screen.queryByText(/Solo números, letras, guiones y barras/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     expect(onNext).toHaveBeenCalledTimes(1);
   });

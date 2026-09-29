@@ -15,7 +15,8 @@ import { State } from "@/types/State/State";
 import { FieldError, StepFrame } from "../StepFrame";
 import { SearchableList } from "../SearchableList";
 import { addressSchema, fieldErrors } from "../signup.schemas";
-import { StepProps } from "../types";
+import { SignupFormData, StepProps } from "../types";
+import { withoutErrorsFor } from "../signup.utils";
 
 const inputClass =
   "h-12 text-base border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary";
@@ -37,6 +38,10 @@ export function StepAddress({
   isLoadingCities,
 }: StepAddressProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const change = (patch: Partial<SignupFormData>) => {
+    onChange(patch);
+    setErrors((current) => withoutErrorsFor(current, Object.keys(patch)));
+  };
 
   const handleNext = () => {
     const result = addressSchema.safeParse({
@@ -67,7 +72,7 @@ export function StepAddress({
           value={data.stateId ? String(data.stateId) : ""}
           onValueChange={(value) => {
             const state = states.find((s) => String(s.id) === value);
-            onChange({
+            change({
               stateId: state ? state.id : null,
               stateName: state?.name ?? "",
               cityId: null,
@@ -113,7 +118,7 @@ export function StepAddress({
                 type="button"
                 variant="ghost"
                 className="text-greenPrimary hover:text-teal-700 shrink-0"
-                onClick={() => onChange({ cityId: null, cityName: "" })}
+                onClick={() => change({ cityId: null, cityName: "" })}
               >
                 Cambiar
               </Button>
@@ -128,7 +133,7 @@ export function StepAddress({
               invalid={Boolean(errors.cityId)}
               options={cities.map((c) => ({ id: c.id, label: c.name }))}
               onSelect={(option) =>
-                onChange({ cityId: option.id, cityName: option.label })
+                change({ cityId: option.id, cityName: option.label })
               }
             />
           )}
@@ -146,7 +151,7 @@ export function StepAddress({
             autoComplete="address-line1"
             value={data.street}
             aria-invalid={Boolean(errors.street)}
-            onChange={(event) => onChange({ street: event.target.value })}
+            onChange={(event) => change({ street: event.target.value })}
             className={inputClass}
           />
           <FieldError message={errors.street} />
@@ -160,7 +165,7 @@ export function StepAddress({
             inputMode="numeric"
             value={data.number}
             aria-invalid={Boolean(errors.number)}
-            onChange={(event) => onChange({ number: event.target.value })}
+            onChange={(event) => change({ number: event.target.value })}
             className={inputClass}
           />
           <FieldError message={errors.number} />
@@ -176,7 +181,7 @@ export function StepAddress({
           autoComplete="address-line2"
           placeholder="Ej: 2° B"
           value={data.description}
-          onChange={(event) => onChange({ description: event.target.value })}
+          onChange={(event) => change({ description: event.target.value })}
           className={inputClass}
         />
       </div>

@@ -11,7 +11,8 @@ import {
   fieldErrors,
   normalizeAffiliationNumber,
 } from "../signup.schemas";
-import { StepProps } from "../types";
+import { SignupFormData, StepProps } from "../types";
+import { withoutErrorsFor } from "../signup.utils";
 
 interface StepHealthInsuranceProps extends StepProps {
   insurances: SignupHealthInsurance[];
@@ -30,6 +31,10 @@ export function StepHealthInsurance({
   loadError,
 }: StepHealthInsuranceProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const change = (patch: Partial<SignupFormData>) => {
+    onChange(patch);
+    setErrors((current) => withoutErrorsFor(current, Object.keys(patch)));
+  };
   const selected = useMemo(
     () => insurances.find((i) => i.id === data.healthInsuranceId) ?? null,
     [insurances, data.healthInsuranceId]
@@ -37,7 +42,7 @@ export function StepHealthInsurance({
 
   const selectInsurance = (insurance: SignupHealthInsurance) => {
     const onlyPlan = insurance.plans.length === 1 ? insurance.plans[0] : null;
-    onChange({
+    change({
       healthInsuranceId: insurance.id,
       healthInsuranceName: insurance.name,
       requiresAffiliationNumber: insurance.requiresAffiliationNumber,
@@ -51,7 +56,7 @@ export function StepHealthInsurance({
   };
 
   const clearInsurance = () => {
-    onChange({
+    change({
       healthInsuranceId: null,
       healthInsuranceName: "",
       healthPlanId: null,
@@ -67,7 +72,7 @@ export function StepHealthInsurance({
     });
     setErrors(fieldErrors(result));
     if (result.success) {
-      onChange({
+      change({
         affiliationNumber: selected?.requiresAffiliationNumber
           ? normalizeAffiliationNumber(data.affiliationNumber)
           : "",
@@ -149,7 +154,7 @@ export function StepHealthInsurance({
                       type="button"
                       aria-pressed={active}
                       onClick={() =>
-                        onChange({ healthPlanId: plan.id, healthPlanName: plan.name })
+                        change({ healthPlanId: plan.id, healthPlanName: plan.name })
                       }
                       className={
                         active
@@ -179,7 +184,7 @@ export function StepHealthInsurance({
                 value={data.affiliationNumber}
                 aria-invalid={Boolean(errors.affiliationNumber)}
                 onChange={(event) =>
-                  onChange({ affiliationNumber: event.target.value })
+                  change({ affiliationNumber: event.target.value })
                 }
                 className="h-12 text-base border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary"
               />

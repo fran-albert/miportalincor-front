@@ -8,7 +8,8 @@ import {
   buildPasswordSchema,
   fieldErrors,
 } from "../signup.schemas";
-import { StepProps } from "../types";
+import { SignupFormData, StepProps } from "../types";
+import { withoutErrorsFor } from "../signup.utils";
 
 const inputClass =
   "h-12 text-base border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary";
@@ -34,6 +35,10 @@ export function StepPassword({
   nextLabel,
 }: StepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const change = (patch: Partial<SignupFormData>) => {
+    onChange(patch);
+    setErrors((current) => withoutErrorsFor(current, Object.keys(patch)));
+  };
 
   const handleNext = () => {
     const result = buildPasswordSchema(data.dni).safeParse({
@@ -62,7 +67,7 @@ export function StepPassword({
           autoComplete="new-password"
           value={data.password}
           aria-invalid={Boolean(errors.password)}
-          onChange={(event) => onChange({ password: event.target.value })}
+          onChange={(event) => change({ password: event.target.value })}
           className={inputClass}
         />
         <FieldError message={errors.password} />
@@ -77,7 +82,7 @@ export function StepPassword({
           autoComplete="new-password"
           value={data.confirmPassword}
           aria-invalid={Boolean(errors.confirmPassword)}
-          onChange={(event) => onChange({ confirmPassword: event.target.value })}
+          onChange={(event) => change({ confirmPassword: event.target.value })}
           className={inputClass}
         />
         <FieldError message={errors.confirmPassword} />

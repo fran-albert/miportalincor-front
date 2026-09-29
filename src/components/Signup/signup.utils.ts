@@ -23,3 +23,13 @@ export const readSignupTokenFromHash = (): string | null => {
   }
   return token && token.trim() ? token.trim() : null;
 };
+
+/** Saca los errores de los campos que el paciente acaba de corregir. */
+export const withoutErrorsFor = (
+  errors: Record<string, string>,
+  changedKeys: string[]
+): Record<string, string> => {
+  const next = { ...errors };
+  for (const key of changedKeys) delete next[key];
+  return next;
+};

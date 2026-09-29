@@ -7,7 +7,8 @@ import {
   maskBirthDateInput,
   personalSchema,
 } from "../signup.schemas";
-import { StepProps } from "../types";
+import { SignupFormData, StepProps } from "../types";
+import { withoutErrorsFor } from "../signup.utils";
 
 const inputClass =
   "h-12 text-base border-gray-300 focus:border-greenPrimary focus:ring-greenPrimary";
@@ -20,6 +21,10 @@ export function StepPersonal({
   nextLabel,
 }: StepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const change = (patch: Partial<SignupFormData>) => {
+    onChange(patch);
+    setErrors((current) => withoutErrorsFor(current, Object.keys(patch)));
+  };
 
   const handleNext = () => {
     const result = personalSchema.safeParse({
@@ -52,7 +57,7 @@ export function StepPersonal({
             autoComplete="given-name"
             value={data.firstName}
             aria-invalid={Boolean(errors.firstName)}
-            onChange={(event) => onChange({ firstName: event.target.value })}
+            onChange={(event) => change({ firstName: event.target.value })}
             className={inputClass}
           />
           <FieldError message={errors.firstName} />
@@ -66,7 +71,7 @@ export function StepPersonal({
             autoComplete="family-name"
             value={data.lastName}
             aria-invalid={Boolean(errors.lastName)}
-            onChange={(event) => onChange({ lastName: event.target.value })}
+            onChange={(event) => change({ lastName: event.target.value })}
             className={inputClass}
           />
           <FieldError message={errors.lastName} />
@@ -85,7 +90,7 @@ export function StepPersonal({
           placeholder="341 555 1234"
           value={data.phone}
           aria-invalid={Boolean(errors.phone)}
-          onChange={(event) => onChange({ phone: event.target.value })}
+          onChange={(event) => change({ phone: event.target.value })}
           className={inputClass}
         />
         <p className="text-sm text-gray-500">
@@ -105,7 +110,7 @@ export function StepPersonal({
           autoComplete="email"
           value={data.email}
           aria-invalid={Boolean(errors.email)}
-          onChange={(event) => onChange({ email: event.target.value })}
+          onChange={(event) => change({ email: event.target.value })}
           className={inputClass}
         />
         <p className="text-sm text-gray-500">
@@ -126,7 +131,7 @@ export function StepPersonal({
           value={data.birthDate}
           aria-invalid={Boolean(errors.birthDate)}
           onChange={(event) =>
-            onChange({ birthDate: maskBirthDateInput(event.target.value) })
+            change({ birthDate: maskBirthDateInput(event.target.value) })
           }
           className={inputClass}
         />
