@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import SpecialityPage from "./pages/protected/Specialities/page";
 import LoginPage from "./pages/auth/Login";
+import SignupPage from "./pages/auth/Signup";
 import HomePage from "./pages/protected/Home";
 import DoctorsComponent from "./pages/protected/Doctors";
 import PatientsComponent from "./pages/protected/Patients";
@@ -92,6 +93,9 @@ function App() {
       <Routes>
         {/* Rutas públicas (sin sidebar ni header) */}
         <Route path="/iniciar-sesion" element={<LoginPage />} />
+        {/* Alta autogestionada: pública; con #t=<token> viene precargada
+            desde la reserva de turno como invitado */}
+        <Route path="/registrarse" element={<SignupPage />} />
         <Route path="/restablecer-contraseña" element={<RequestEmailPassword />} />
         <Route path="/nueva-contraseña" element={<ResetPaswordPage />} />
         <Route path="/reset-password" element={<ResetPaswordPage />} />

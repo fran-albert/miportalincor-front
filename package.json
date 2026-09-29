@@ -17,7 +17,8 @@
     "start:prod": "npm run build && npm run preview",
     "test": "npx vitest",
     "test:run": "npx vitest run",
-    "test:coverage": "npx vitest run --coverage"
+    "test:coverage": "npx vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -89,6 +90,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.63.0",
     "@tanstack/eslint-plugin-query": "^5.53.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

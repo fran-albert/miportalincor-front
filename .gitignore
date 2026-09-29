@@ -34,3 +34,7 @@ dist-ssr
 *.sln
 *.sw?
 tsconfig.app.tsbuildinfo
+
+# Playwright
+test-results/
+playwright-report/
