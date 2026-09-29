@@ -4,6 +4,8 @@ import { Patient } from "@/types/Patient/Patient";
 import { ViewButton } from "@/components/Button/View/button";
 import { Link } from "react-router-dom";
 import DeletePatientDialog from "../Delete/DeletePatientDialog";
+import { SelfSignupBadge } from "../SelfSignupBadge";
+import { isUnverifiedSelfSignup } from "../self-signup";
 
 export const getColumns = (roles: {
   isSecretary: boolean;
@@ -37,6 +39,9 @@ export const getColumns = (roles: {
             >
               {row.original.email}
             </span>
+            {isUnverifiedSelfSignup(row.original) && (
+              <SelfSignupBadge className="mt-1 w-fit" />
+            )}
           </div>
         </Link>
       ),

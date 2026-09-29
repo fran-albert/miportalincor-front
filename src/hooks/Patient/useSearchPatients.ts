@@ -9,6 +9,8 @@ interface UseSearchPatientsOptions {
   enabled?: boolean;
   debounceMs?: number;
   minSearchLength?: number;
+  /** Filtro de recepción: solo autoregistrados sin verificar (sin buscar). */
+  onlySelfSignupUnverified?: boolean;
 }
 
 export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
@@ -19,6 +21,7 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     enabled = true,
     debounceMs = 300,
     minSearchLength = 1,
+    onlySelfSignupUnverified = false,
   } = options;
 
   const [search, setSearch] = useState(initialSearch);
@@ -35,6 +38,11 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     return () => clearTimeout(timer);
   }, [search, debounceMs]);
 
+  // Al prender o apagar el filtro de autoregistrados se vuelve a la página 1.
+  useEffect(() => {
+    setPage(1);
+  }, [onlySelfSignupUnverified]);
+
   const {
     isLoading,
     isError,
@@ -42,10 +50,27 @@ export const useSearchPatients = (options: UseSearchPatientsOptions = {}) => {
     data,
     isFetching,
   } = useQuery({
-    queryKey: ["patients-search", debouncedSearch, page, limit],
-    queryFn: () => searchPatients({ search: debouncedSearch, page, limit }),
+    queryKey: [
+      "patients-search",
+      debouncedSearch,
+      page,
+      limit,
+      onlySelfSignupUnverified,
+    ],
+    queryFn: () =>
+      searchPatients({
+        search: debouncedSearch,
+        page,
+        limit,
+        ...(onlySelfSignupUnverified
+          ? { registration: "self-unverified" as const }
+          : {}),
+      }),
     staleTime: 1000 * 60, // 1 minute
-    enabled: enabled && debouncedSearch.trim().length >= minSearchLength,
+    enabled:
+      enabled &&
+      (onlySelfSignupUnverified ||
+        debouncedSearch.trim().length >= minSearchLength),
   });
 
   const nextPage = () => {
