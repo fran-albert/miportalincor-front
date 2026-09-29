@@ -269,9 +269,11 @@ export function VaccinationCardView({
                     <th scope="col" className={`${headCell} text-center`}>
                       Dosis
                     </th>
-                    <th scope="col" className={`${headCell} text-left`}>
-                      Médico
-                    </th>
+                    {isDoctor && (
+                      <th scope="col" className={`${headCell} text-left`}>
+                        Médico
+                      </th>
+                    )}
                     <th scope="col" className={`${headCell} text-center`}>
                       Estado
                     </th>
@@ -292,9 +294,11 @@ export function VaccinationCardView({
                       <td className="px-4 py-3 text-center text-base text-slate-800">
                         {formatDoseLabel(row.application.doseLabel)}
                       </td>
-                      <td className="px-4 py-3 uppercase text-slate-700">
-                        {getDoctorName(row.application)}
-                      </td>
+                      {isDoctor && (
+                        <td className="px-4 py-3 uppercase text-slate-700">
+                          {getDoctorName(row.application)}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-center">
                         <AppliedStatus />
                       </td>
@@ -332,14 +336,16 @@ export function VaccinationCardView({
                           {formatDoseLabel(row.application.doseLabel)}
                         </dd>
                       </div>
-                      <div className="col-span-2">
-                        <dt className="text-xs font-medium uppercase text-slate-500">
-                          Médico
-                        </dt>
-                        <dd className="uppercase text-slate-800">
-                          {getDoctorName(row.application)}
-                        </dd>
-                      </div>
+                      {isDoctor && (
+                        <div className="col-span-2">
+                          <dt className="text-xs font-medium uppercase text-slate-500">
+                            Médico
+                          </dt>
+                          <dd className="uppercase text-slate-800">
+                            {getDoctorName(row.application)}
+                          </dd>
+                        </div>
+                      )}
                     </dl>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <AppliedStatus />

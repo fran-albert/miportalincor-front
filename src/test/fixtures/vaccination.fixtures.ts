@@ -25,7 +25,7 @@ interface BuildApplicationInput {
   appliedDate: string;
   canEdit?: boolean;
   observations?: string;
-  doctor?: { firstName: string; lastName: string };
+  doctor?: { firstName: string; lastName: string } | null;
   createdAt?: string;
 }
 
@@ -46,8 +46,9 @@ export const buildApplication = ({
   doseLabel,
   appliedDate,
   observations,
-  doctorUserId: "doctor-uuid",
-  doctor: { id: "doctor-uuid", ...doctor },
+  ...(doctor
+    ? { doctorUserId: "doctor-uuid", doctor: { id: "doctor-uuid", ...doctor } }
+    : {}),
   vaccine,
   canEdit,
   createdAt,

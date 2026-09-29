@@ -47,7 +47,8 @@ export interface VaccinationApplication {
   doseLabel: string;
   appliedDate: string;
   observations?: string;
-  doctorUserId: string;
+  /** No viene en la vista del paciente (my-card). */
+  doctorUserId?: string;
   doctor?: VaccinationDoctorInfo;
   vaccine?: VaccinationVaccine;
   canEdit: boolean;

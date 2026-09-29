@@ -123,8 +123,37 @@ describe("VaccinationCardView", () => {
     expect(screen.getByRole("img", { name: "Incor Centro Médico" })).toBeInTheDocument();
   });
 
-  it("usa encabezados de tabla reales", () => {
+  it("el paciente ve 4 columnas, sin la de medico", () => {
     render(<VaccinationCardView vaccinationCard={buildCard()} />);
+
+    const headers = within(screen.getByRole("table"))
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent);
+    expect(headers).toEqual([
+      "Vacuna",
+      "Fecha de aplicación",
+      "Dosis",
+      "Estado",
+    ]);
+    expect(within(getDataRows()[0]).getAllByRole("cell")).toHaveLength(4);
+  });
+
+  it("el paciente no tiene el medico en el DOM aunque venga en la respuesta", () => {
+    const { container } = render(
+      <VaccinationCardView vaccinationCard={buildCard()} />
+    );
+
+    // El paciente de este fixture se llama igual que la medica: se mira
+    // solo dentro de filas y tarjetas; "Carlos Gomez" no aparece en ningun lado.
+    expect(container).not.toHaveTextContent(/carlos gomez/i);
+    const rowsText = getDataRows().map((row) => row.textContent ?? "");
+    expect(rowsText.join(" ")).not.toMatch(/albert rolandi|gomez/i);
+    const mobile = screen.getByRole("list", { name: "Vacunas aplicadas" });
+    expect(mobile).not.toHaveTextContent(/albert rolandi|gomez|médico/i);
+  });
+
+  it("el medico ve la columna Medico y las acciones", () => {
+    render(<VaccinationCardView vaccinationCard={buildCard()} isDoctor />);
 
     const headers = within(screen.getByRole("table"))
       .getAllByRole("columnheader")
@@ -135,7 +164,32 @@ describe("VaccinationCardView", () => {
       "Dosis",
       "Médico",
       "Estado",
+      "Acciones",
     ]);
+  });
+
+  it("no se rompe si la API no manda doctor ni doctorUserId", () => {
+    const application = buildApplication({
+      id: "app-sin-medico",
+      vaccine: gripe,
+      doseLabel: "1ra dosis",
+      appliedDate: "2026-05-02",
+      doctor: null,
+    });
+    expect(application.doctor).toBeUndefined();
+    expect(application.doctorUserId).toBeUndefined();
+    const card = buildCard({ applications: [application], items: [] });
+
+    const { unmount } = render(<VaccinationCardView vaccinationCard={card} />);
+    expect(within(getDataRows()[0]).getAllByRole("cell")[1]).toHaveTextContent(
+      "02/05/2026"
+    );
+    unmount();
+
+    render(<VaccinationCardView vaccinationCard={card} isDoctor />);
+    expect(within(getDataRows()[0]).getAllByRole("cell")[3]).toHaveTextContent(
+      "Sin dato"
+    );
   });
 
   it("ordena las aplicadas por fecha, la mas reciente arriba", () => {
@@ -157,7 +211,7 @@ describe("VaccinationCardView", () => {
   });
 
   it("muestra en cada fila vacuna, aclaracion, fecha, dosis, medico y estado", () => {
-    render(<VaccinationCardView vaccinationCard={buildCard()} />);
+    render(<VaccinationCardView vaccinationCard={buildCard()} isDoctor />);
 
     const cells = within(getDataRows()[0]).getAllByRole("cell");
     expect(cells[0]).toHaveTextContent("Triple viral");
