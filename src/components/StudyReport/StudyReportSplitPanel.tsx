@@ -100,6 +100,8 @@ export const StudyReportSplitPanel = ({
     urls: {},
   });
   const nextKey = useRef(3);
+  const addedKey = useRef<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [groups, setGroups] = useState<SplitGroup[]>([
     { key: "g1", label: "", templateKey: defaultTemplateKey },
     { key: "g2", label: "", templateKey: defaultTemplateKey },
@@ -147,13 +149,16 @@ export const StudyReportSplitPanel = ({
 
   const validationError = useMemo(() => {
     if (!instanceIds) return "cargando";
-    for (const group of groups) {
+    // El mensaje nombra el informe que falta completar: con tres o más, "cada
+    // informe necesita…" no le dice a la médica cuál mirar.
+    for (const [index, group] of groups.entries()) {
+      const letter = groupLetter(index);
       const count = instanceIds.filter((id) => assignment[id] === group.key)
         .length;
       if (count === 0)
-        return "Cada informe debe tener al menos una imagen asignada.";
-      if (!group.label.trim()) return "Cada informe necesita un nombre.";
-      if (!group.templateKey) return "Cada informe necesita una plantilla.";
+        return `El informe ${letter} no tiene imágenes: tocá las miniaturas que le corresponden.`;
+      if (!group.label.trim()) return `Falta el nombre del informe ${letter}.`;
+      if (!group.templateKey) return `Falta la plantilla del informe ${letter}.`;
     }
     const labels = groups.map((group) => group.label.trim().toLowerCase());
     if (new Set(labels).size !== labels.length)
@@ -193,7 +198,17 @@ export const StudyReportSplitPanel = ({
       ...current,
       { key, label: "", templateKey: defaultTemplateKey },
     ]);
+    addedKey.current = key;
   };
+
+  // El informe recién agregado puede caer debajo del scroll de la lista: se
+  // lo trae a la vista para que se note que se sumó.
+  useEffect(() => {
+    if (!addedKey.current) return;
+    const card = cardRefs.current[addedKey.current];
+    addedKey.current = null;
+    card?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, [groups.length]);
 
   const removeGroup = (key: string) => {
     if (groups.length <= 2) return;
@@ -257,129 +272,172 @@ export const StudyReportSplitPanel = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <p className="text-sm text-muted-foreground">
         Todas las imágenes arrancan en A. Tocá una miniatura para pasarla al
         siguiente informe (A → B → C…); cada informe debe conservar al menos una
         imagen.
       </p>
 
-      <div className="grid max-h-[38vh] grid-cols-3 gap-2 overflow-y-auto pr-1 md:grid-cols-5">
-        {instanceIds.map((instanceId, index) => {
-          const key = assignment[instanceId] ?? groups[0].key;
-          const letterIndex = groups.findIndex((group) => group.key === key);
-          const url = previews.urls[instanceId];
-          return (
-            <button
-              key={instanceId}
-              type="button"
-              onClick={() => cycleImage(instanceId)}
-              className="relative overflow-hidden rounded-md border transition hover:ring-2 hover:ring-emerald-500"
-              title={`Imagen ${index + 1} — informe ${groupLetter(letterIndex)}`}
-            >
-              {url ? (
-                <img
-                  src={url}
-                  alt={`Imagen ${index + 1} para dividir`}
-                  className="aspect-square w-full object-cover"
-                />
-              ) : (
-                <span className="flex aspect-square items-center justify-center text-xs text-muted-foreground">
-                  Sin preview
-                </span>
-              )}
-              <span
-                className={cn(
-                  "absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white",
-                  colorOf(key),
-                )}
-              >
-                {groupLetter(letterIndex)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        {groups.map((group, index) => (
-          <div key={group.key} className="space-y-2 rounded-md border p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">
-                <span
-                  className={cn(
-                    "mr-2 rounded-full px-2 py-1 text-xs text-white",
-                    GROUP_COLORS[index % GROUP_COLORS.length],
-                  )}
-                >
-                  {groupLetter(index)}
-                </span>
-                {countOf(group.key)}{" "}
-                {countOf(group.key) === 1 ? "imagen" : "imágenes"}
-              </p>
-              {groups.length > 2 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeGroup(group.key)}
-                  title="Quitar este informe"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            <label className="grid gap-1 text-sm font-medium">
-              <span>Nombre del informe {groupLetter(index)}</span>
-              <Input
-                value={group.label}
-                onChange={(event) => setLabel(group.key, event.target.value)}
-                placeholder="Ej. Ginecológica"
-              />
-            </label>
-            <label className="grid gap-1 text-sm font-medium">
-              <span>Plantilla {groupLetter(index)}</span>
-              <select
-                className="h-10 rounded-md border bg-background px-3"
-                value={group.templateKey}
-                onChange={(event) => setTemplate(group.key, event.target.value)}
-              >
-                <option value="">Seleccionar plantilla</option>
-                {templates.map((template) => (
-                  <option key={template.key} value={template.key}>
-                    {template.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+      {/* Lo que crece (miniaturas e informes) hace scroll y el pie queda
+          afuera: "Confirmar división" se alcanza con cualquier cantidad de
+          informes y en cualquier pantalla. En pantallas anchas van lado a lado
+          y cada lista tiene su propio scroll; su alto sale del máximo del
+          diálogo (90vh) menos el encabezado, los títulos y el pie. Las filas
+          van en `auto-rows-max` para que una lista acotada haga scroll en vez
+          de aplastar su contenido. */}
+      <div
+        data-testid="split-scroll-area"
+        className="grid min-h-0 flex-1 auto-rows-max items-start gap-4 overflow-y-auto pr-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
+      >
+        <section className="space-y-2">
+          <div className="flex min-h-9 items-center">
+            <h3 className="text-sm font-semibold">
+              Imágenes ({instanceIds.length})
+            </h3>
           </div>
-        ))}
+          <div className="grid max-h-[38vh] auto-rows-max grid-cols-3 gap-2 overflow-y-auto pr-1 md:grid-cols-5 lg:max-h-[calc(90vh-18rem)] lg:grid-cols-4">
+            {instanceIds.map((instanceId, index) => {
+              const key = assignment[instanceId] ?? groups[0].key;
+              const letterIndex = groups.findIndex(
+                (group) => group.key === key,
+              );
+              const url = previews.urls[instanceId];
+              return (
+                <button
+                  key={instanceId}
+                  type="button"
+                  onClick={() => cycleImage(instanceId)}
+                  className="relative overflow-hidden rounded-md border transition hover:ring-2 hover:ring-emerald-500"
+                  title={`Imagen ${index + 1} — informe ${groupLetter(letterIndex)}`}
+                >
+                  {url ? (
+                    <img
+                      src={url}
+                      alt={`Imagen ${index + 1} para dividir`}
+                      className="aspect-square w-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex aspect-square items-center justify-center text-xs text-muted-foreground">
+                      Sin preview
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      "absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white",
+                      colorOf(key),
+                    )}
+                  >
+                    {groupLetter(letterIndex)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <div className="flex min-h-9 items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold">
+              Informes ({groups.length})
+            </h3>
+            {groups.length < MAX_GROUPS && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addGroup}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar informe
+              </Button>
+            )}
+          </div>
+          <div className="grid auto-rows-max gap-3 md:grid-cols-2 lg:max-h-[calc(90vh-18rem)] lg:grid-cols-1 lg:overflow-y-auto lg:pr-1">
+            {groups.map((group, index) => (
+              <div
+                key={group.key}
+                ref={(element) => {
+                  cardRefs.current[group.key] = element;
+                }}
+                className="space-y-2 rounded-md border p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold">
+                    <span
+                      className={cn(
+                        "mr-2 rounded-full px-2 py-1 text-xs text-white",
+                        GROUP_COLORS[index % GROUP_COLORS.length],
+                      )}
+                    >
+                      {groupLetter(index)}
+                    </span>
+                    {countOf(group.key)}{" "}
+                    {countOf(group.key) === 1 ? "imagen" : "imágenes"}
+                  </p>
+                  {groups.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeGroup(group.key)}
+                      title="Quitar este informe"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <label className="grid gap-1 text-sm font-medium">
+                  <span>Nombre del informe {groupLetter(index)}</span>
+                  <Input
+                    value={group.label}
+                    onChange={(event) =>
+                      setLabel(group.key, event.target.value)
+                    }
+                    placeholder="Ej. Ginecológica"
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium">
+                  <span>Plantilla {groupLetter(index)}</span>
+                  <select
+                    className="h-10 rounded-md border bg-background px-3"
+                    value={group.templateKey}
+                    onChange={(event) =>
+                      setTemplate(group.key, event.target.value)
+                    }
+                  >
+                    <option value="">Seleccionar plantilla</option>
+                    {templates.map((template) => (
+                      <option key={template.key} value={template.key}>
+                        {template.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {groups.length < MAX_GROUPS && (
-        <Button type="button" variant="outline" size="sm" onClick={addGroup}>
-          <Plus className="mr-2 h-4 w-4" />
-          Agregar informe
-        </Button>
-      )}
-
-      {validationError && validationError !== "cargando" && (
-        <p className="text-sm text-rose-700">{validationError}</p>
-      )}
-
-      <div className="flex justify-between gap-3 border-t pt-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t pt-3">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button
-          type="button"
-          disabled={Boolean(validationError) || isPending}
-          onClick={confirm}
-        >
-          {isPending
-            ? "Dividiendo…"
-            : `Confirmar división (${groups.length})`}
-        </Button>
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
+          {validationError && validationError !== "cargando" && (
+            <p className="text-sm text-rose-700">{validationError}</p>
+          )}
+          <Button
+            type="button"
+            disabled={Boolean(validationError) || isPending}
+            onClick={confirm}
+          >
+            {isPending
+              ? "Dividiendo…"
+              : `Confirmar división (${groups.length})`}
+          </Button>
+        </div>
       </div>
     </div>
   );

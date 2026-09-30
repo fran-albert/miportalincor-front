@@ -131,4 +131,41 @@ describe("StudyReportSplitPanel", () => {
       },
     ]);
   });
+
+  it("deja el pie fuera del área con scroll y dice qué informe falta completar", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <StudyReportSplitPanel
+          itemId="item-1"
+          templates={templates}
+          isPending={false}
+          onConfirm={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => expect(screen.getAllByRole("img")).toHaveLength(5));
+    await userEvent.click(screen.getByRole("button", { name: /agregar informe/i }));
+
+    // Miniaturas e informes viven en el área que hace scroll; "Confirmar
+    // división" y el motivo por el que no se habilita, no: si quedaran adentro,
+    // con tres informes el botón cae debajo de la pantalla (caso del 30/09).
+    const scrollArea = screen.getByTestId("split-scroll-area");
+    expect(scrollArea.className).toContain("overflow-y-auto");
+    expect(scrollArea).toContainElement(screen.getAllByRole("img")[0]);
+    expect(scrollArea).toContainElement(screen.getAllByRole("textbox")[2]);
+    const confirm = screen.getByRole("button", { name: "Confirmar división (3)" });
+    expect(scrollArea).not.toContainElement(confirm);
+    expect(confirm).toBeDisabled();
+
+    const labels = screen.getAllByRole("textbox");
+    await userEvent.type(labels[0], "Abdominal");
+    const missingImages = screen.getByText(/El informe B no tiene imágenes/);
+    expect(scrollArea).not.toContainElement(missingImages);
+
+    await userEvent.click(screen.getByRole("button", { name: /imagen 2 para dividir/i }));
+    expect(screen.getByText("Falta el nombre del informe B.")).toBeInTheDocument();
+  });
 });

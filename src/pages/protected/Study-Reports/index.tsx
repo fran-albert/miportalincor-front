@@ -738,7 +738,7 @@ export default function StudyReportsPage() {
           if (!open && !splitMutation.isPending) setSplitItem(null);
         }}
       >
-        <DialogContent className="max-w-5xl">
+        <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Dividir estudio en informes</DialogTitle>
           </DialogHeader>
