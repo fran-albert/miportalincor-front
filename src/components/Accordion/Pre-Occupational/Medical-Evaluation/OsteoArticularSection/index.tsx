@@ -20,14 +20,16 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
   onChange,
   onBatchChange,
 }) => {
-  // "Sin alteraciones" => no hay nada que describir: se bloquea y limpia la observación.
-  const handleEstadoChange = (
+  // El valor que no deja nada para describir bloquea y limpia la observación:
+  // "Sin alteraciones" (true) en MMSS, MMII y Columna; "No" (false) en Amputaciones.
+  const handleChoiceChange = (
     key: keyof Osteoarticular,
     obsKey: keyof Osteoarticular,
-    value: boolean | undefined
+    value: boolean | undefined,
+    clearsObsWhen: boolean
   ) => {
-    if (value === true && onBatchChange) {
-      onBatchChange({ [key]: true, [obsKey]: "" } as Partial<Osteoarticular>);
+    if (value === clearsObsWhen && onBatchChange) {
+      onBatchChange({ [key]: value, [obsKey]: "" } as Partial<Osteoarticular>);
     } else {
       onChange(key, value);
     }
@@ -49,12 +51,9 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
       label: "Columna",
       obsKey: "columnaObs" as const,
     },
-    {
-      key: "amputaciones" as const,
-      label: "Amputaciones",
-      obsKey: "amputacionesObs" as const,
-    },
   ];
+
+  const amputacionesObsDisabled = !isEditing || data.amputaciones !== true;
 
   return (
     <div className="space-y-4">
@@ -75,7 +74,7 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
                 positiveLabel="Sin alteraciones"
                 negativeLabel="Con hallazgos"
                 onChange={(value) =>
-                  handleEstadoChange(row.key, row.obsKey, value)
+                  handleChoiceChange(row.key, row.obsKey, value, true)
                 }
               />
               <NotesField
@@ -93,6 +92,33 @@ export const OsteoarticularSection: React.FC<OsteoarticularSectionProps> = ({
             </ClinicalBlock>
           );
         })}
+        {/* Amputaciones pregunta por presencia: true = tiene amputaciones, como lo imprime el informe. */}
+        <ClinicalBlock
+          title="Amputaciones"
+          description="Indicá si tiene amputaciones y detallalas si hace falta."
+        >
+          <BooleanChoiceField
+            idPrefix="amputaciones"
+            label="Presencia"
+            value={data.amputaciones}
+            disabled={!isEditing}
+            onChange={(value) =>
+              handleChoiceChange("amputaciones", "amputacionesObs", value, false)
+            }
+          />
+          <NotesField
+            id="amputacionesObs"
+            label="Observaciones"
+            value={data.amputacionesObs ?? ""}
+            disabled={amputacionesObsDisabled}
+            onChange={(value) => onChange("amputacionesObs", value)}
+            placeholder={
+              amputacionesObsDisabled
+                ? "Sin observaciones"
+                : "Detalle clínico o aclaraciones"
+            }
+          />
+        </ClinicalBlock>
       </div>
     </div>
   );

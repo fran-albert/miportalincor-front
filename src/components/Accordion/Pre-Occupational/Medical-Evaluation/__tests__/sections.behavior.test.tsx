@@ -566,5 +566,133 @@ describe("MedicalEvaluation clinical sections", () => {
       expectCall(onChange, "mmssSin", true);
       expect(getTypedFieldValue(onChange, "mmssObs")).toBe("Dolor");
     });
+
+    const emptyOsteo = {
+      mmssSin: undefined,
+      mmssObs: "",
+      mmiiSin: undefined,
+      mmiiObs: "",
+      columnaSin: undefined,
+      columnaObs: "",
+      amputaciones: undefined,
+      amputacionesObs: "",
+    };
+
+    it("pregunta por la presencia de amputaciones: No guarda false y limpia la observación", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      const onBatchChange = vi.fn();
+
+      render(
+        <OsteoarticularSection
+          isEditing
+          data={emptyOsteo}
+          onChange={onChange}
+          onBatchChange={onBatchChange}
+        />
+      );
+
+      const amputaciones = getSection("Amputaciones");
+      expect(
+        amputaciones.queryByRole("radio", { name: "Sin alteraciones" })
+      ).toBeNull();
+
+      await user.click(amputaciones.getByRole("radio", { name: "No" }));
+
+      expect(onBatchChange).toHaveBeenCalledWith({
+        amputaciones: false,
+        amputacionesObs: "",
+      });
+    });
+
+    it("con amputaciones Sí guarda true y habilita la observación", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+
+      const { rerender } = render(
+        <OsteoarticularSection
+          isEditing
+          data={emptyOsteo}
+          onChange={onChange}
+          onBatchChange={vi.fn()}
+        />
+      );
+
+      await user.click(
+        getSection("Amputaciones").getByRole("radio", { name: "Si" })
+      );
+      expectCall(onChange, "amputaciones", true);
+
+      rerender(
+        <OsteoarticularSection
+          isEditing
+          data={{ ...emptyOsteo, amputaciones: true }}
+          onChange={onChange}
+          onBatchChange={vi.fn()}
+        />
+      );
+      expect(
+        getSection("Amputaciones").getByLabelText("Observaciones")
+      ).toBeEnabled();
+
+      rerender(
+        <OsteoarticularSection
+          isEditing
+          data={{ ...emptyOsteo, amputaciones: false }}
+          onChange={onChange}
+          onBatchChange={vi.fn()}
+        />
+      );
+      expect(
+        getSection("Amputaciones").getByLabelText("Observaciones")
+      ).toBeDisabled();
+    });
+
+    it("un examen viejo con amputaciones false abre con No seleccionado", () => {
+      render(
+        <OsteoarticularSection
+          isEditing={false}
+          data={{ ...emptyOsteo, amputaciones: false }}
+          onChange={vi.fn()}
+        />
+      );
+
+      expect(
+        getSection("Amputaciones").getByRole("radio", { name: "No" })
+      ).toBeChecked();
+    });
+
+    it("MMSS, MMII y Columna siguen preguntando por el estado", async () => {
+      const user = userEvent.setup();
+      const onChange = vi.fn();
+      const onBatchChange = vi.fn();
+
+      render(
+        <OsteoarticularSection
+          isEditing
+          data={emptyOsteo}
+          onChange={onChange}
+          onBatchChange={onBatchChange}
+        />
+      );
+
+      for (const [title, key, obsKey] of [
+        ["MMSS", "mmssSin", "mmssObs"],
+        ["MMII", "mmiiSin", "mmiiObs"],
+        ["Columna", "columnaSin", "columnaObs"],
+      ] as const) {
+        await user.click(
+          getSection(title).getByRole("radio", { name: "Sin alteraciones" })
+        );
+        expect(onBatchChange).toHaveBeenCalledWith({
+          [key]: true,
+          [obsKey]: "",
+        });
+        await user.click(
+          getSection(title).getByRole("radio", { name: "Con hallazgos" })
+        );
+        expectCall(onChange, key, false);
+      }
+    });
   });
 });
