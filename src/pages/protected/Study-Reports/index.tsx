@@ -644,7 +644,7 @@ export default function StudyReportsPage() {
             { label: "Mis estudios por informar" },
           ]}
           title="Mis estudios por informar"
-          description="Ecografías con imágenes listas para informar."
+          description="Ecografías listas para informar, con o sin imágenes."
           icon={<FilePenLine className="h-6 w-6" />}
           actions={
             <Button
