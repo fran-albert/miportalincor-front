@@ -8,6 +8,7 @@ interface TotemActivitySummaryProps {
   scheduled: number;
   invited: number;
   administrative: number;
+  laboratory: number;
   unregistered: number;
   isLoading: boolean;
 }
@@ -49,6 +50,7 @@ export function TotemActivitySummary({
   scheduled,
   invited,
   administrative,
+  laboratory,
   unregistered,
   isLoading,
 }: TotemActivitySummaryProps) {
@@ -72,6 +74,7 @@ export function TotemActivitySummary({
             value={administrative}
             isLoading={isLoading}
           />
+          <Stat label="Laboratorio" value={laboratory} isLoading={isLoading} />
           <Stat
             label="DNI no encontrado"
             value={unregistered}

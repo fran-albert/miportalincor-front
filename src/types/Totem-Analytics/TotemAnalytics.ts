@@ -8,6 +8,8 @@ export interface TotemAnalyticsOverview {
   scheduled: number;
   invited: number;
   administrative: number;
+  /** Anuncios de laboratorio. Opcional: una API anterior no lo manda. */
+  laboratory?: number;
   unregistered: number;
 }
 
