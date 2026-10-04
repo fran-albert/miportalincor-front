@@ -110,6 +110,15 @@ const getStudyReportColumns = ({
             Reclamado
           </Badge>
         )}
+        {row.original.hasImages === false && (
+          <Badge
+            variant="outline"
+            className="border-slate-300 bg-slate-50 text-slate-700"
+            title="Se informa igual: las imágenes se suman solas cuando lleguen."
+          >
+            Sin imágenes
+          </Badge>
+        )}
       </div>
     ),
   },

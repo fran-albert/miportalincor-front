@@ -5,7 +5,7 @@ export type StudyReportFieldType = "text" | "number" | "select";
 export interface StudyReportField { key: string; label: string; type: StudyReportFieldType; required: boolean; options?: string[]; default?: string; }
 export interface StudyReportTemplate { key: string; label: string; subtypeAliases: string[]; fields: StudyReportField[]; }
 export interface StudyReport { id: string; templateKey: string; content: Record<string, unknown>; status: StudyReportStatus; signedAt?: string | null; }
-export interface StudyReportListItem { sourceInboxItemId: string; report: StudyReport | null; state: StudyReportState; patientName: string | null; patientDni: string | null; studyDate: string | null; studyType: string | null; splitLabel: string | null; claimed: boolean; }
+export interface StudyReportListItem { sourceInboxItemId: string; report: StudyReport | null; state: StudyReportState; patientName: string | null; patientDni: string | null; studyDate: string | null; studyType: string | null; splitLabel: string | null; claimed: boolean; /** Falso si el estudio se abrió desde el turno y todavía no llegaron las imágenes. Ausente (API anterior) = con imágenes. */ hasImages?: boolean; }
 
 /**
  * Un estudio que llegó del ecógrafo sin poder atribuirse a nadie.

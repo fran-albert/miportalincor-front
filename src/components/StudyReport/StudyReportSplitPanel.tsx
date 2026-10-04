@@ -147,18 +147,25 @@ export const StudyReportSplitPanel = ({
   const countOf = (key: string): number =>
     (instanceIds ?? []).filter((id) => assignment[id] === key).length;
 
+  // Un estudio abierto desde el turno todavía no tiene imágenes: se divide por
+  // informe igual, y cada uno ve las imágenes que lleguen después.
+  const withoutImages =
+    !loadError && instanceIds !== null && instanceIds.length === 0;
+
   const validationError = useMemo(() => {
     if (!instanceIds) return "cargando";
     // El mensaje nombra el informe que falta completar: con tres o más, "cada
     // informe necesita…" no le dice a la médica cuál mirar.
     for (const [index, group] of groups.entries()) {
       const letter = groupLetter(index);
-      const count = instanceIds.filter((id) => assignment[id] === group.key)
-        .length;
-      if (count === 0)
+      const count = instanceIds.filter(
+        (id) => assignment[id] === group.key,
+      ).length;
+      if (count === 0 && instanceIds.length > 0)
         return `El informe ${letter} no tiene imágenes: tocá las miniaturas que le corresponden.`;
       if (!group.label.trim()) return `Falta el nombre del informe ${letter}.`;
-      if (!group.templateKey) return `Falta la plantilla del informe ${letter}.`;
+      if (!group.templateKey)
+        return `Falta la plantilla del informe ${letter}.`;
     }
     const labels = groups.map((group) => group.label.trim().toLowerCase());
     if (new Set(labels).size !== labels.length)
@@ -251,14 +258,10 @@ export const StudyReportSplitPanel = ({
     );
   }
 
-  if (loadError || instanceIds.length === 0) {
+  if (loadError) {
     return (
       <div className="space-y-3 rounded-md border border-dashed p-5 text-sm text-muted-foreground">
-        <p>
-          {loadError
-            ? "No se pudieron cargar las imágenes para dividir."
-            : "Este estudio no tiene imágenes para dividir."}
-        </p>
+        <p>No se pudieron cargar las imágenes para dividir.</p>
         <Button type="button" variant="ghost" onClick={onCancel}>
           Volver
         </Button>
@@ -274,9 +277,9 @@ export const StudyReportSplitPanel = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <p className="text-sm text-muted-foreground">
-        Todas las imágenes arrancan en A. Tocá una miniatura para pasarla al
-        siguiente informe (A → B → C…); cada informe debe conservar al menos una
-        imagen.
+        {withoutImages
+          ? "Este estudio todavía no tiene imágenes. Armá un informe por cada estudio del turno; si las imágenes llegan después, cada informe las ve."
+          : "Todas las imágenes arrancan en A. Tocá una miniatura para pasarla al siguiente informe (A → B → C…); cada informe debe conservar al menos una imagen."}
       </p>
 
       {/* Lo que crece (miniaturas e informes) hace scroll y el pie queda
@@ -288,53 +291,58 @@ export const StudyReportSplitPanel = ({
           de aplastar su contenido. */}
       <div
         data-testid="split-scroll-area"
-        className="grid min-h-0 flex-1 auto-rows-max items-start gap-4 overflow-y-auto pr-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"
+        className={cn(
+          "grid min-h-0 flex-1 auto-rows-max items-start gap-4 overflow-y-auto pr-1",
+          !withoutImages && "lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]",
+        )}
       >
-        <section className="space-y-2">
-          <div className="flex min-h-9 items-center">
-            <h3 className="text-sm font-semibold">
-              Imágenes ({instanceIds.length})
-            </h3>
-          </div>
-          <div className="grid max-h-[38vh] auto-rows-max grid-cols-3 gap-2 overflow-y-auto pr-1 md:grid-cols-5 lg:max-h-[calc(90vh-18rem)] lg:grid-cols-4">
-            {instanceIds.map((instanceId, index) => {
-              const key = assignment[instanceId] ?? groups[0].key;
-              const letterIndex = groups.findIndex(
-                (group) => group.key === key,
-              );
-              const url = previews.urls[instanceId];
-              return (
-                <button
-                  key={instanceId}
-                  type="button"
-                  onClick={() => cycleImage(instanceId)}
-                  className="relative overflow-hidden rounded-md border transition hover:ring-2 hover:ring-emerald-500"
-                  title={`Imagen ${index + 1} — informe ${groupLetter(letterIndex)}`}
-                >
-                  {url ? (
-                    <img
-                      src={url}
-                      alt={`Imagen ${index + 1} para dividir`}
-                      className="aspect-square w-full object-cover"
-                    />
-                  ) : (
-                    <span className="flex aspect-square items-center justify-center text-xs text-muted-foreground">
-                      Sin preview
-                    </span>
-                  )}
-                  <span
-                    className={cn(
-                      "absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white",
-                      colorOf(key),
-                    )}
+        {!withoutImages && (
+          <section className="space-y-2">
+            <div className="flex min-h-9 items-center">
+              <h3 className="text-sm font-semibold">
+                Imágenes ({instanceIds.length})
+              </h3>
+            </div>
+            <div className="grid max-h-[38vh] auto-rows-max grid-cols-3 gap-2 overflow-y-auto pr-1 md:grid-cols-5 lg:max-h-[calc(90vh-18rem)] lg:grid-cols-4">
+              {instanceIds.map((instanceId, index) => {
+                const key = assignment[instanceId] ?? groups[0].key;
+                const letterIndex = groups.findIndex(
+                  (group) => group.key === key,
+                );
+                const url = previews.urls[instanceId];
+                return (
+                  <button
+                    key={instanceId}
+                    type="button"
+                    onClick={() => cycleImage(instanceId)}
+                    className="relative overflow-hidden rounded-md border transition hover:ring-2 hover:ring-emerald-500"
+                    title={`Imagen ${index + 1} — informe ${groupLetter(letterIndex)}`}
                   >
-                    {groupLetter(letterIndex)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+                    {url ? (
+                      <img
+                        src={url}
+                        alt={`Imagen ${index + 1} para dividir`}
+                        className="aspect-square w-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex aspect-square items-center justify-center text-xs text-muted-foreground">
+                        Sin preview
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white",
+                        colorOf(key),
+                      )}
+                    >
+                      {groupLetter(letterIndex)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="space-y-2">
           <div className="flex min-h-9 items-center justify-between gap-3">
@@ -372,8 +380,9 @@ export const StudyReportSplitPanel = ({
                     >
                       {groupLetter(index)}
                     </span>
-                    {countOf(group.key)}{" "}
-                    {countOf(group.key) === 1 ? "imagen" : "imágenes"}
+                    {withoutImages
+                      ? `Informe ${groupLetter(index)}`
+                      : `${countOf(group.key)} ${countOf(group.key) === 1 ? "imagen" : "imágenes"}`}
                   </p>
                   {groups.length > 2 && (
                     <Button
