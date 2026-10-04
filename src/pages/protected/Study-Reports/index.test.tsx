@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -602,6 +602,45 @@ describe("StudyReportsPage — estudios sin asignar", () => {
       expect(releaseOrphanStudy).toHaveBeenCalledWith("item-huerfano"),
     );
     confirmar.mockRestore();
+  });
+
+  it("un estudio abierto desde el turno avisa que todavía no tiene imágenes", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-turno",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE SIN IMAGENES",
+        patientDni: "30111222",
+        studyDate: "2026-10-07T00:00:00.000Z",
+        studyType: "Ecografía Abdominal",
+        splitLabel: null,
+        claimed: false,
+        hasImages: false,
+      },
+      {
+        sourceInboxItemId: "item-pacs",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE CON IMAGENES",
+        patientDni: "30111333",
+        studyDate: "2026-10-07T00:00:00.000Z",
+        studyType: "Ecografía Renal",
+        splitLabel: null,
+        claimed: false,
+        hasImages: true,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+
+    renderPage();
+
+    const sinImagenes = (await screen.findByText("PACIENTE SIN IMAGENES")).closest("tr")!;
+    const conImagenes = screen.getByText("PACIENTE CON IMAGENES").closest("tr")!;
+    expect(within(sinImagenes).getByText("Sin imágenes")).toBeInTheDocument();
+    expect(within(sinImagenes).getByRole("button", { name: /Informar/ })).toBeEnabled();
+    expect(within(conImagenes).queryByText("Sin imágenes")).not.toBeInTheDocument();
   });
 
   it("un estudio que llegó por su turno no ofrece soltarlo", async () => {

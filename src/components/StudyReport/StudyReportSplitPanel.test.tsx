@@ -86,6 +86,38 @@ describe("StudyReportSplitPanel", () => {
     ]);
   });
 
+  it("un estudio abierto desde el turno se divide sin imágenes", async () => {
+    vi.mocked(getStudyReportInboxImages).mockResolvedValue([]);
+    const onConfirm = vi.fn();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <StudyReportSplitPanel
+          itemId="item-turno"
+          templates={templates}
+          isPending={false}
+          onConfirm={onConfirm}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      await screen.findByText(/todavía no tiene imágenes/i),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole("img")).toHaveLength(0);
+    const labels = screen.getAllByRole("textbox");
+    await userEvent.type(labels[0], "Abdominal");
+    await userEvent.type(labels[1], "Renal");
+    await userEvent.click(screen.getByRole("button", { name: /confirmar división/i }));
+
+    expect(onConfirm).toHaveBeenCalledWith([
+      { assignedInstanceIds: [], templateKey: "gineco", label: "Abdominal" },
+      { assignedInstanceIds: [], templateKey: "gineco", label: "Renal" },
+    ]);
+    expect(getStudyReportInboxImagePreview).not.toHaveBeenCalled();
+  });
+
   it("permite dividir en tres informes agregando un grupo", async () => {
     const onConfirm = vi.fn();
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

@@ -110,6 +110,15 @@ const getStudyReportColumns = ({
             Reclamado
           </Badge>
         )}
+        {row.original.hasImages === false && (
+          <Badge
+            variant="outline"
+            className="border-slate-300 bg-slate-50 text-slate-700"
+            title="Se informa igual: las imágenes se suman solas cuando lleguen."
+          >
+            Sin imágenes
+          </Badge>
+        )}
       </div>
     ),
   },
@@ -635,7 +644,7 @@ export default function StudyReportsPage() {
             { label: "Mis estudios por informar" },
           ]}
           title="Mis estudios por informar"
-          description="Ecografías con imágenes listas para informar."
+          description="Ecografías listas para informar, con o sin imágenes."
           icon={<FilePenLine className="h-6 w-6" />}
           actions={
             <Button

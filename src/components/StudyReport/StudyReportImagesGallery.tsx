@@ -152,6 +152,10 @@ export const StudyReportImagesGallery = ({
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <ImageOff className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Sin imágenes para este estudio.</p>
+        <p className="max-w-xs text-xs text-muted-foreground">
+          Podés informar y firmar igual. Si las imágenes llegan después, se suman
+          solas al estudio.
+        </p>
       </div>
     );
   }
