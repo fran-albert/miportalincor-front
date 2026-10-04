@@ -1,7 +1,11 @@
 export type QueueStatus = 'WAITING' | 'CALLED' | 'ATTENDING' | 'COMPLETED' | 'NO_SHOW';
 
-export type AppointmentType = 'SCHEDULED_APPOINTMENT' | 'WALK_IN' | 'ADMINISTRATIVE';
-export type QueueCallDestination = 'RECEPCION' | 'VENTANILLA';
+export type AppointmentType =
+  | 'SCHEDULED_APPOINTMENT'
+  | 'WALK_IN'
+  | 'ADMINISTRATIVE'
+  | 'LABORATORY';
+export type QueueCallDestination = 'RECEPCION' | 'VENTANILLA' | 'LABORATORIO';
 
 export type QueueRegistrationResolutionType =
   | 'CREATED_NEW_PATIENT'

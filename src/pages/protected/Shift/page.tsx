@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Calendar, RefreshCcw, Users } from "lucide-react";
+import { Calendar, FlaskConical, RefreshCcw, Users } from "lucide-react";
 import {
   BigCalendar,
   CreateAppointmentDialog,
@@ -19,9 +19,11 @@ import "@/components/Appointments/Calendar/big-calendar.css";
 
 const ShiftsPage = () => {
   const queryClient = useQueryClient();
-  const { isDoctor, isAdmin, isSecretary } = useUserRole();
+  const { isDoctor, isAdmin, isSecretary, isLaboratory } = useUserRole();
   // Un médico que además es admin/secretaria opera la agenda completa, no solo la suya
   const isPureDoctor = isDoctor && !isAdmin && !isSecretary;
+  // El rol Laboratorio acota la vista a su cola aunque también sea Secretaria
+  const isLaboratoryOnly = isLaboratory && !isAdmin;
   const { canSelfManage, doctorId } = useCanSelfManageSchedule();
   const [isQuickBookOpen, setIsQuickBookOpen] = useState(false);
 
@@ -66,6 +68,28 @@ const ShiftsPage = () => {
       </Button>
     </div>
   );
+
+  if (isLaboratoryOnly) {
+    return (
+      <div className="min-w-0 space-y-6 overflow-x-hidden p-6">
+        <Helmet>
+          <title>Laboratorio</title>
+        </Helmet>
+
+        <PageHeader
+          breadcrumbItems={[
+            { label: "Inicio", href: "/inicio" },
+            { label: "Laboratorio" },
+          ]}
+          title="Laboratorio"
+          description="Pacientes anunciados en el tótem para extracción"
+          icon={<FlaskConical className="h-6 w-6" />}
+        />
+
+        <QueuePanel laboratoryOnly />
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0 space-y-6 overflow-x-hidden p-6">
