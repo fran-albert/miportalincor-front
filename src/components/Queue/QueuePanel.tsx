@@ -46,8 +46,6 @@ import {
   UserPlus,
   AlertTriangle,
   ArrowRightCircle,
-  ArrowLeft,
-  ArrowRight,
   Eye,
 } from 'lucide-react';
 import {
@@ -64,7 +62,12 @@ import {
 import { queueKeys } from '@/hooks/Queue';
 import { useAppointmentMutations } from '@/hooks/Appointments/useAppointmentMutations';
 import { EcoSubtypeDialog } from './EcoSubtypeDialog';
-import type { QueueEntry, QueueStatus, AppointmentType } from '@/types/Queue';
+import type {
+  QueueEntry,
+  QueueStatus,
+  AppointmentType,
+  QueueCallDestination,
+} from '@/types/Queue';
 import {
   formatDni,
   formatWaitingTime,
@@ -75,13 +78,16 @@ import { formatTimeAR } from '@/common/helpers/timezone';
 import { useToastContext } from '@/hooks/Toast/toast-context';
 import { QueuePatientRegistrationModal } from './QueuePatientRegistrationModal';
 import {
+  getCallDestinationOptions,
+  isLaboratoryEntry,
+  type CallDestinationOption,
+} from './call-destinations';
+import {
   findExactPatientByDocument,
   getApiErrorMessage,
   normalizeDocument,
   QUEUE_LINKED_TO_OTHER_PATIENT_MESSAGE,
 } from './patient-registration.helpers';
-
-type QueueCallDestination = 'RECEPCION' | 'VENTANILLA';
 
 const statusStyles: Record<QueueStatus, string> = {
   WAITING: 'bg-amber-100 text-amber-900 border-amber-200',
@@ -104,6 +110,7 @@ const appointmentTypeLabels: Record<AppointmentType, string> = {
   SCHEDULED_APPOINTMENT: 'Con turno',
   WALK_IN: 'Administrativo',
   ADMINISTRATIVE: 'Administrativo',
+  LABORATORY: 'Laboratorio',
 };
 
 const appointmentTypeBadgeStyles: Record<AppointmentType, string> = {
@@ -111,6 +118,7 @@ const appointmentTypeBadgeStyles: Record<AppointmentType, string> = {
     'border-[rgba(24,123,128,0.18)] bg-[rgba(24,123,128,0.08)] text-greenSecondary',
   WALK_IN: 'border-sky-200 bg-sky-50 text-sky-900',
   ADMINISTRATIVE: 'border-slate-200 bg-slate-100 text-slate-700',
+  LABORATORY: 'border-violet-200 bg-violet-50 text-violet-900',
 };
 
 const appointmentTypeRowStyles: Record<AppointmentType, string> = {
@@ -118,12 +126,14 @@ const appointmentTypeRowStyles: Record<AppointmentType, string> = {
     'border-l-2 border-l-greenPrimary/50 bg-[rgba(24,123,128,0.025)] hover:bg-[rgba(24,123,128,0.04)]',
   WALK_IN: 'border-l-2 border-l-sky-100 bg-white hover:bg-slate-50',
   ADMINISTRATIVE: 'border-l-2 border-l-slate-100 bg-white hover:bg-slate-50',
+  LABORATORY: 'border-l-2 border-l-violet-200 bg-white hover:bg-slate-50',
 };
 
 const waitingSortOrder: Record<AppointmentType, number> = {
   SCHEDULED_APPOINTMENT: 0,
   WALK_IN: 1,
   ADMINISTRATIVE: 2,
+  LABORATORY: 3,
 };
 
 const sectionCopy = {
@@ -135,32 +145,11 @@ const sectionCopy = {
     title: 'Administrativo',
     description: '',
   },
+  laboratory: {
+    title: 'Laboratorio',
+    description: 'Anunciados en el tótem para extracción, por orden de llegada.',
+  },
 } as const;
-
-const callDestinationOptions: Array<{
-  value: QueueCallDestination;
-  label: string;
-  Icon: typeof ArrowLeft;
-  variant: 'default' | 'outline';
-  className: string;
-}> = [
-  {
-    value: 'RECEPCION',
-    label: 'Recepción',
-    Icon: ArrowLeft,
-    variant: 'outline',
-    className:
-      'border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900',
-  },
-  {
-    value: 'VENTANILLA',
-    label: 'Ventanilla',
-    Icon: ArrowRight,
-    variant: 'default',
-    className:
-      'bg-greenPrimary text-white hover:bg-greenSecondary hover:text-white',
-  },
-];
 
 const hasMeaningfulText = (value: unknown): boolean => {
   if (value === null || value === undefined) return false;
@@ -178,7 +167,7 @@ const isUnregisteredEntry = (entry: QueueEntry) =>
 
 const canCorrectQueueDocument = (entry: QueueEntry) =>
   isUnregisteredEntry(entry) &&
-  entry.appointmentType === 'ADMINISTRATIVE' &&
+  (entry.appointmentType === 'ADMINISTRATIVE' || isLaboratoryEntry(entry)) &&
   entry.status !== 'COMPLETED' &&
   entry.status !== 'NO_SHOW';
 
@@ -231,6 +220,13 @@ const getAttentionLabels = (entry: QueueEntry): { primary: string; secondary?: s
     return {
       primary: 'Recepción',
       secondary: 'Administrativo',
+    };
+  }
+
+  if (isLaboratoryEntry(entry)) {
+    return {
+      primary: 'Laboratorio',
+      secondary: 'Extracción',
     };
   }
 
@@ -324,6 +320,8 @@ const formatServicePoint = (servicePoint?: string): string => {
       return 'Recepción';
     case 'VENTANILLA':
       return 'Ventanilla';
+    case 'LABORATORIO':
+      return 'Laboratorio';
     default:
       return servicePoint;
   }
@@ -338,6 +336,7 @@ const getServicePointBadgeClass = (servicePoint?: string): string => {
     case 'RECEPCION':
       return 'border-slate-300 bg-slate-100 text-slate-800';
     case 'VENTANILLA':
+    case 'LABORATORIO':
       return 'border-greenPrimary bg-greenPrimary text-white';
     default:
       return 'border-slate-200 bg-white text-slate-900';
@@ -489,10 +488,12 @@ const CompactPatientCell = ({
 };
 
 const CallDestinationButtons = ({
+  options,
   onCall,
   disabled,
   compact = false,
 }: {
+  options: CallDestinationOption[];
   onCall: (destination: QueueCallDestination) => void;
   disabled: boolean;
   compact?: boolean;
@@ -503,7 +504,7 @@ const CallDestinationButtons = ({
       compact ? 'flex-col xl:flex-row xl:justify-end' : 'flex-col sm:flex-row',
     )}
   >
-    {callDestinationOptions.map(({ value, label, Icon, variant, className }) => {
+    {options.map(({ value, label, Icon, variant, className }) => {
       const isReception = value === 'RECEPCION';
 
       return (
@@ -704,6 +705,7 @@ const QueueEntryDetailsDialog = ({
                 {isWaitingEntry ? (
                   <>
                     <CallDestinationButtons
+                      options={getCallDestinationOptions(entry)}
                       onCall={(servicePoint) => onCall(entry, servicePoint)}
                       disabled={isCalling}
                     />
@@ -758,7 +760,7 @@ const WaitingSection = ({
   loading: boolean;
   onOpenDetails: (entry: QueueEntry) => void;
 }) => (
-  <Card className="border-slate-200 shadow-sm">
+  <Card role="region" aria-label={title} className="border-slate-200 shadow-sm">
     <CardHeader className="pb-3">
       <CardTitle className="flex items-center gap-2 text-slate-900">
         <Users className="h-5 w-5 text-greenPrimary" />
@@ -879,7 +881,12 @@ const WaitingSection = ({
   </Card>
 );
 
-export const QueuePanel = () => {
+type QueuePanelProps = {
+  /** Vista del personal del laboratorio: solo su sector, sin recepción. */
+  laboratoryOnly?: boolean;
+};
+
+export const QueuePanel = ({ laboratoryOnly = false }: QueuePanelProps) => {
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useToastContext();
   const [registrationEntry, setRegistrationEntry] = useState<QueueEntry | null>(null);
@@ -890,7 +897,13 @@ export const QueuePanel = () => {
     useState<number | null>(null);
 
   const { data: waitingQueue, isLoading: loadingWaiting } = useWaitingQueue();
-  const { data: activeQueue } = useActiveQueue();
+  const { data: allActiveQueue } = useActiveQueue();
+  // La API ya recorta la cola al sector; el filtro de acá es la segunda línea.
+  const activeQueue = useMemo(
+    () =>
+      laboratoryOnly ? allActiveQueue?.filter(isLaboratoryEntry) : allActiveQueue,
+    [allActiveQueue, laboratoryOnly],
+  );
 
   const callSpecificMutation = useCallSpecificPatient();
   const { updateAppointment: updateAppointmentMutation } =
@@ -957,7 +970,11 @@ export const QueuePanel = () => {
   const prioritizedWaitingQueue = useMemo(() => {
     if (!waitingQueue) return [];
 
-    return [...waitingQueue].sort((a, b) => {
+    const visible = laboratoryOnly
+      ? waitingQueue.filter(isLaboratoryEntry)
+      : waitingQueue;
+
+    return [...visible].sort((a, b) => {
       const typeDiff = waitingSortOrder[a.appointmentType] - waitingSortOrder[b.appointmentType];
       if (typeDiff !== 0) return typeDiff;
 
@@ -971,7 +988,7 @@ export const QueuePanel = () => {
 
       return new Date(a.checkedInAt).getTime() - new Date(b.checkedInAt).getTime();
     });
-  }, [waitingQueue]);
+  }, [waitingQueue, laboratoryOnly]);
 
   const scheduledWaitingQueue = useMemo(
     () =>
@@ -984,8 +1001,15 @@ export const QueuePanel = () => {
   const unscheduledWaitingQueue = useMemo(
     () =>
       prioritizedWaitingQueue.filter(
-        (entry) => entry.appointmentType !== 'SCHEDULED_APPOINTMENT',
+        (entry) =>
+          entry.appointmentType !== 'SCHEDULED_APPOINTMENT' &&
+          !isLaboratoryEntry(entry),
       ),
+    [prioritizedWaitingQueue],
+  );
+
+  const laboratoryWaitingQueue = useMemo(
+    () => prioritizedWaitingQueue.filter(isLaboratoryEntry),
     [prioritizedWaitingQueue],
   );
 
@@ -1231,10 +1255,12 @@ export const QueuePanel = () => {
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-            Cola del Día
+            {laboratoryOnly ? 'Cola del Laboratorio' : 'Cola del Día'}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Cola organizada por prioridad y gestión.
+            {laboratoryOnly
+              ? 'Llamá a cada paciente por orden de llegada.'
+              : 'Cola organizada por prioridad y gestión.'}
           </p>
         </div>
 
@@ -1335,23 +1361,46 @@ export const QueuePanel = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      {laboratoryOnly ? (
         <WaitingSection
-          title={sectionCopy.scheduled.title}
-          description={sectionCopy.scheduled.description}
-          entries={scheduledWaitingQueue}
+          title={sectionCopy.laboratory.title}
+          description={sectionCopy.laboratory.description}
+          entries={laboratoryWaitingQueue}
           loading={loadingWaiting}
           onOpenDetails={handleOpenWaitingDetails}
         />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <WaitingSection
+            title={sectionCopy.scheduled.title}
+            description={sectionCopy.scheduled.description}
+            entries={scheduledWaitingQueue}
+            loading={loadingWaiting}
+            onOpenDetails={handleOpenWaitingDetails}
+          />
 
-        <WaitingSection
-          title={sectionCopy.unscheduled.title}
-          description={sectionCopy.unscheduled.description}
-          entries={unscheduledWaitingQueue}
-          loading={loadingWaiting}
-          onOpenDetails={handleOpenWaitingDetails}
-        />
-      </div>
+          <WaitingSection
+            title={sectionCopy.unscheduled.title}
+            description={sectionCopy.unscheduled.description}
+            entries={unscheduledWaitingQueue}
+            loading={loadingWaiting}
+            onOpenDetails={handleOpenWaitingDetails}
+          />
+
+          {/* Recepción ve al laboratorio solo cuando hay alguien esperando. */}
+          {laboratoryWaitingQueue.length > 0 && (
+            <div className="xl:col-span-2">
+              <WaitingSection
+                title={sectionCopy.laboratory.title}
+                description={sectionCopy.laboratory.description}
+                entries={laboratoryWaitingQueue}
+                loading={loadingWaiting}
+                onOpenDetails={handleOpenWaitingDetails}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <QueueEntryDetailsDialog
         details={detailsState}

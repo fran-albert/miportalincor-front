@@ -160,6 +160,7 @@ export function TotemReportDashboardContainer({
       scheduled: sumBy(visibleDailyItems, (item) => item.scheduled),
       invited: sumBy(visibleDailyItems, (item) => item.invited),
       administrative: sumBy(visibleDailyItems, (item) => item.administrative),
+      laboratory: sumBy(visibleDailyItems, (item) => item.laboratory ?? 0),
       unregistered: sumBy(visibleDailyItems, (item) => item.unregistered),
     }),
     [visibleDailyItems]
@@ -253,6 +254,7 @@ export function TotemReportDashboardContainer({
       ["Con turno", visibleOverview.scheduled],
       ["Invitados", visibleOverview.invited],
       ["Trámite administrativo", visibleOverview.administrative],
+      ["Laboratorio", visibleOverview.laboratory],
       ["DNI no encontrado", visibleOverview.unregistered],
       ["Resueltos", unregisteredFunnel.resolved],
       ["Pendientes", unregisteredFunnel.pending],
@@ -274,6 +276,7 @@ export function TotemReportDashboardContainer({
         "Con turno",
         "Invitados",
         "Administrativo",
+        "Laboratorio",
         "DNI no encontrado",
         "Resueltos",
         "Altas sistema",
@@ -288,6 +291,7 @@ export function TotemReportDashboardContainer({
           item.scheduled,
           item.invited,
           item.administrative,
+          item.laboratory ?? 0,
           item.unregistered,
           dailyResolvedMap.get(key) ?? 0,
           dailyRealUsersCreatedMap.get(key) ?? 0,
@@ -387,6 +391,7 @@ export function TotemReportDashboardContainer({
         scheduled={visibleOverview.scheduled}
         invited={visibleOverview.invited}
         administrative={visibleOverview.administrative}
+        laboratory={visibleOverview.laboratory}
         unregistered={visibleOverview.unregistered}
         isLoading={reportQuery.isLoading}
       />
@@ -590,6 +595,14 @@ export function TotemReportDashboardContainer({
                   />
                   <Line
                     type="monotone"
+                    dataKey="laboratory"
+                    name="Laboratorio"
+                    stroke="#7C3AED"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
                     dataKey="unregistered"
                     name="DNI no encontrado"
                     stroke={CHART_COLORS.orange}
@@ -625,6 +638,7 @@ export function TotemReportDashboardContainer({
                     <TableHead className="text-right">Con turno</TableHead>
                     <TableHead className="text-right">Invitados</TableHead>
                     <TableHead className="text-right">Administrativo</TableHead>
+                    <TableHead className="text-right">Laboratorio</TableHead>
                     <TableHead className="text-right">
                       <ColumnHint
                         label="DNI no encontrado"
@@ -678,6 +692,9 @@ export function TotemReportDashboardContainer({
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatNumber(item.administrative)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatNumber(item.laboratory ?? 0)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatNumber(item.unregistered)}
