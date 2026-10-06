@@ -248,11 +248,11 @@ const StudiesTimeline: React.FC<StudiesTimelineProps> = ({
     <div className="w-full space-y-6">
       {groups.map((group) => (
         <section key={group.key} className="w-full space-y-3">
-          <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-md border-b border-gray-200 bg-greenPrimary/10 px-2.5 py-2">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-greenPrimary">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 rounded-md border-b border-gray-200 bg-greenPrimary/10 px-2.5 py-3">
+            <h3 className="text-base font-bold uppercase tracking-widest text-greenPrimary md:text-lg">
               {group.label}
             </h3>
-            <span className="text-xs text-gray-500">
+            <span className="text-sm text-gray-500">
               {formatStudyCount(group.items.length)}
             </span>
           </div>

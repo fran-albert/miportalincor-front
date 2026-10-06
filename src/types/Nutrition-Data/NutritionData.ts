@@ -11,6 +11,7 @@ export interface NutritionData {
     height: number;
     targetWeight: number;
     observations: string;
+    waist?: number;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -27,6 +28,7 @@ export interface CreateNutritionDataDto {
     imc?: number;
     targetWeight?: number;
     observations?: string;
+    waist?: number;
 }
 
 export interface UpdateNutritionDataDto {
@@ -40,4 +42,5 @@ export interface UpdateNutritionDataDto {
     imc?: number;
     targetWeight?: number;
     observations?: string;
+    waist?: number;
 }
