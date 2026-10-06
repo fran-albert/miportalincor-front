@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
 const columns: { key: keyof NutritionData; label: string }[] = [
   { key: "date", label: "Fecha" },
   { key: "weight", label: "Peso (kg)" },
+  { key: "waist", label: "Cintura (cm)" },
   { key: "difference", label: "Diferencia" },
   { key: "fatPercentage", label: "% Grasa" },
   { key: "musclePercentage", label: "% Músculo" },
@@ -90,6 +91,7 @@ export function NutritionPdfDocument({
   patientSurname,
   logoSrc,
   chartSrc,
+  waistChartSrc,
   dateFrom,
   dateTo,
 }: {
@@ -98,6 +100,7 @@ export function NutritionPdfDocument({
   patientSurname: string;
   logoSrc?: string;
   chartSrc?: string;
+  waistChartSrc?: string;
   dateFrom?: string;
   dateTo?: string;
 }) {
@@ -195,6 +198,23 @@ export function NutritionPdfDocument({
 
             <View style={styles.chartContainer}>
               <Image src={chartSrc} style={styles.chartImage} />
+            </View>
+          </>
+        )}
+
+        {waistChartSrc && (
+          <>
+            <View style={styles.legendContainer}>
+              <View style={styles.legendItem}>
+                <View
+                  style={[styles.legendLine, { backgroundColor: '#8884d8' }]}
+                />
+                <Text>Cintura (cm)</Text>
+              </View>
+            </View>
+
+            <View style={styles.chartContainer}>
+              <Image src={waistChartSrc} style={styles.chartImage} />
             </View>
           </>
         )}

@@ -12,6 +12,7 @@ import { useNutritionDataMutations } from "@/hooks/Nutrition-Data/useNutritionDa
 import { useToastContext } from "@/hooks/Toast/toast-context";
 import ExcelUploader from "../Upload-Excel";
 import WeightEvolutionCard from "../Weight-Evolution";
+import WaistEvolutionCard from "../Waist-Evolution";
 import { pdf } from "@react-pdf/renderer";
 import { NutritionPdfDocument } from "../Pdf";
 import { format } from "date-fns";
@@ -47,6 +48,7 @@ const NutritionCard: React.FC<Props> = ({
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const chartRef = useRef<HTMLDivElement>(null);
+  const waistChartRef = useRef<HTMLDivElement>(null);
   const [pdfUrl, setPdfUrl] = useState<string>();
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [isAddingNewEntry, setIsAddingNewEntry] = useState(false);
@@ -166,6 +168,9 @@ const NutritionCard: React.FC<Props> = ({
         cacheBust: true,
         pixelRatio: 2,
       });
+      const waistImg = waistChartRef.current
+        ? await toPng(waistChartRef.current, { cacheBust: true, pixelRatio: 2 })
+        : undefined;
       const doc = (
         <NutritionPdfDocument
           data={nutritionData}
@@ -173,6 +178,7 @@ const NutritionCard: React.FC<Props> = ({
           patientSurname={userLastname}
           logoSrc="https://res.cloudinary.com/dfoqki8kt/image/upload/v1747680733/jzpshzgbcrtne9fbkhxm.png"
           chartSrc={img}
+          waistChartSrc={waistImg}
           dateFrom={startDate?.toLocaleDateString("es-AR") ?? "-"}
           dateTo={endDate?.toLocaleDateString("es-AR") ?? "-"}
         />
@@ -250,6 +256,13 @@ const NutritionCard: React.FC<Props> = ({
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
+      />
+
+      <WaistEvolutionCard
+        ref={waistChartRef}
+        nutritionData={nutritionData}
+        startDate={startDate}
+        endDate={endDate}
       />
     </>
   );

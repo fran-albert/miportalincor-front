@@ -124,11 +124,13 @@ export const NutritionTable: React.FC<Props> = ({
       "visceralFat",
       "imc",
       "targetWeight",
+      "waist",
     ]);
 
     // Función auxiliar para parsear el campo según su tipo
-    const parseValue = (): number | string => {
+    const parseValue = (): number | string | undefined => {
       if (name === "date") return value;
+      if (name === "waist" && value === "") return undefined;
       if (numericFields.has(name)) return Number(value);
       return value; // para observaciones y cualquier otro texto
     };
@@ -264,6 +266,7 @@ export const NutritionTable: React.FC<Props> = ({
     height: "w-20 md:w-24",
     imc: "w-20 md:w-24",
     targetWeight: "w-24 md:w-32",
+    waist: "w-20 md:w-24",
     observations: "w-[200px] md:w-[250px]",
     actions: "w-32 md:w-36",
   };
@@ -288,6 +291,9 @@ export const NutritionTable: React.FC<Props> = ({
               </TableHead>
               <TableHead className="hidden md:table-cell font-semibold text-teal-900">
                 Dif.
+              </TableHead>
+              <TableHead className="hidden md:table-cell font-semibold text-teal-900">
+                Cintura
               </TableHead>
 
               <TableHead className="hidden lg:table-cell font-semibold text-teal-900">
@@ -383,6 +389,24 @@ export const NutritionTable: React.FC<Props> = ({
                   />
                 ) : (
                   (entry.difference ?? 0).toFixed(1)
+                )}
+              </TableCell>
+
+              <TableCell className="hidden md:table-cell">
+                {editingId === entry.id ? (
+                  <Input
+                    type="number"
+                    name="waist"
+                    step={0.1}
+                    min={0}
+                    value={entry.waist ?? ""}
+                    onChange={(e) => handleInputChange(e, entry.id)}
+                    className="w-full text-sm p-1"
+                  />
+                ) : entry.waist != null ? (
+                  entry.waist.toFixed(1)
+                ) : (
+                  "—"
                 )}
               </TableCell>
 
@@ -598,6 +622,18 @@ export const NutritionTable: React.FC<Props> = ({
                 />
               </TableCell>
 
+              <TableCell className="hidden md:table-cell">
+                <Input
+                  type="number"
+                  name="waist"
+                  step={0.1}
+                  min={0}
+                  value={newEntry.waist ?? ""}
+                  onChange={handleInputChange}
+                  className="w-full text-sm p-1"
+                />
+              </TableCell>
+
               <TableCell className="hidden lg:table-cell">
                 <Input
                   type="number"
@@ -691,7 +727,7 @@ export const NutritionTable: React.FC<Props> = ({
           {selectedIds.length > 0 && (
             <tfoot>
               <tr>
-                <td colSpan={12} className="p-2">
+                <td colSpan={13} className="p-2">
                   <Button
                     onClick={handleDeleteSelected}
                     className="bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 shadow-sm"

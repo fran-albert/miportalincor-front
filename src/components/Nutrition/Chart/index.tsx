@@ -18,10 +18,20 @@ interface Props {
   data: NutritionData[];
   width?: number | string;
   height?: number | string;
+  metric?: "weight" | "waist";
 }
 
-export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height = 300 }) => {
-  const chartData = data.map((d) => ({
+export const NutritionChart: React.FC<Props> = ({
+  data,
+  width = "100%",
+  height = 300,
+  metric = "weight",
+}) => {
+  const isWaist = metric === "waist";
+  const unit = isWaist ? "cm" : "kg";
+  const axisLabel = isWaist ? "Cintura (cm)" : "Peso (kg)";
+  const source = isWaist ? data.filter((d) => d.waist != null) : data;
+  const chartData = source.map((d) => ({
     date: formatDateOnly(
       typeof d.date === "string"
         ? d.date.split("T")[0]
@@ -29,6 +39,7 @@ export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height =
     ),
     weight: d.weight,
     targetWeight: d.targetWeight,
+    waist: d.waist,
   }));
 
   return (
@@ -50,7 +61,7 @@ export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height =
         />
 
         <YAxis
-          label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft', offset: 10 }}
+          label={{ value: axisLabel, angle: -90, position: 'insideLeft', offset: 10 }}
           domain={["dataMin - 2", "dataMax + 2"]}
           axisLine={{ stroke: '#82ca9d', strokeWidth: 1 }}
           tickLine={{ stroke: '#82ca9d', strokeWidth: 1 }}
@@ -59,14 +70,14 @@ export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height =
         />
 
         <Tooltip
-          formatter={(value: number) => `${value.toFixed(1)} kg`}
+          formatter={(value: number) => `${value.toFixed(1)} ${unit}`}
           labelFormatter={(label: string) => `Fecha: ${label}`}
         />
 
         <Line
           type="monotone"
-          dataKey="weight"
-          name="Peso (kg)"
+          dataKey={isWaist ? "waist" : "weight"}
+          name={axisLabel}
           stroke="#8884d8"
           strokeWidth={4}
           dot={{ r: 5, strokeWidth: 2 }}
@@ -74,15 +85,17 @@ export const NutritionChart: React.FC<Props> = ({ data, width = "100%", height =
           strokeLinecap="round"
         />
 
-        <Line
-          type="monotone"
-          dataKey="targetWeight"
-          name="Peso objetivo"
-          stroke="#82ca9d"
-          strokeWidth={3}
-          dot={{ r: 5, strokeWidth: 2 }}
-          strokeDasharray="6 4"
-        />
+        {!isWaist && (
+          <Line
+            type="monotone"
+            dataKey="targetWeight"
+            name="Peso objetivo"
+            stroke="#82ca9d"
+            strokeWidth={3}
+            dot={{ r: 5, strokeWidth: 2 }}
+            strokeDasharray="6 4"
+          />
+        )}
       </LineChart>
     </ResponsiveContainer>
   );
