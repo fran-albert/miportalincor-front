@@ -11,6 +11,7 @@ import {
   getMyStudyReports,
   getOrphanStudies,
   getStudyReportTemplates,
+  markStudyNoShow,
   previewStudyReport,
   releaseOrphanStudy,
   saveStudyReportDraft,
@@ -49,7 +50,9 @@ import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const reportsQueryKey = ["study-reports", "mine"] as const;
 const orphansQueryKey = ["study-reports", "orphans"] as const;
-const REPORTS_REFRESH_INTERVAL_MS = 15_000;
+// Appointments avisa a historia en el momento en que recepción pasa a la
+// paciente a espera: con la pantalla abierta, el estudio aparece en 5 s.
+const REPORTS_REFRESH_INTERVAL_MS = 5_000;
 
 // timeZone UTC: la fecha llega como medianoche UTC; sin esto, en UTC-3 se
 // muestra el día anterior.
@@ -63,6 +66,7 @@ interface StudyReportColumnsProps {
   onSplit: (item: StudyReportListItem) => void;
   onDiscard: (item: StudyReportListItem) => void;
   onRelease: (item: StudyReportListItem) => void;
+  onNoShow: (item: StudyReportListItem) => void;
 }
 
 const getStudyReportColumns = ({
@@ -70,6 +74,7 @@ const getStudyReportColumns = ({
   onSplit,
   onDiscard,
   onRelease,
+  onNoShow,
 }: StudyReportColumnsProps): ColumnDef<StudyReportListItem>[] => [
   {
     accessorKey: "patientName",
@@ -137,6 +142,18 @@ const getStudyReportColumns = ({
             No es mío
           </Button>
         )}
+        {row.original.state === "SIN_EMPEZAR" &&
+          row.original.hasImages === false &&
+          !row.original.claimed && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onNoShow(row.original)}
+              title="La paciente no vino: el estudio sale de la lista sin informarse"
+            >
+              No vino
+            </Button>
+          )}
         {row.original.state === "SIN_EMPEZAR" && (
           <Button
             size="sm"
@@ -534,6 +551,9 @@ export default function StudyReportsPage() {
     queryKey: reportsQueryKey,
     queryFn: getMyStudyReports,
     refetchInterval: active ? false : REPORTS_REFRESH_INTERVAL_MS,
+    // Volver a la pestaña (después de llamar a la paciente en la cola)
+    // refresca en el acto, sin esperar el próximo intervalo.
+    refetchOnWindowFocus: true,
   });
   // Los estudios que llegaron del ecógrafo sin turno que diga de quién son.
   const orphans = useQuery({
@@ -556,6 +576,17 @@ export default function StudyReportsPage() {
       toast.success("Estudio dividido en informes");
     },
     onError: () => toast.error("No se pudo dividir el estudio"),
+  });
+  const noShowMutation = useMutation({
+    mutationFn: (sourceInboxItemId: string) => markStudyNoShow(sourceInboxItemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportsQueryKey });
+      toast.success("El estudio salió de la lista");
+    },
+    onError: () =>
+      toast.error(
+        "No se pudo sacar el estudio. Si ya empezaste el informe, descartá el borrador primero.",
+      ),
   });
   const discardMutation = useMutation({
     mutationFn: (reportId: string) => discardStudyReport(reportId),
@@ -624,8 +655,17 @@ export default function StudyReportsPage() {
             releaseMutation.mutate(item.sourceInboxItemId);
           }
         },
+        onNoShow: (item) => {
+          if (
+            window.confirm(
+              `¿${item.patientName ?? "La paciente"} no vino? El estudio sale de tu lista sin informarse.`,
+            )
+          ) {
+            noShowMutation.mutate(item.sourceInboxItemId);
+          }
+        },
       }),
-    [discardMutation, releaseMutation],
+    [discardMutation, releaseMutation, noShowMutation],
   );
 
   if (active && templates.data) {

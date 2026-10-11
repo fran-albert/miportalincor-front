@@ -17,6 +17,8 @@ export const previewStudyReport = async (reportId: string): Promise<Blob> => (aw
 export const signStudyReport = async (reportId: string): Promise<StudyReport> => (await apiIncorHC.post(`/study-reports/${reportId}/sign`)).data;
 export const addStudyReportAddendum = async (reportId: string, text: string): Promise<void> => { await apiIncorHC.post(`/study-reports/${reportId}/addendums`, { text }); };
 export const discardStudyReport = async (reportId: string): Promise<void> => { await apiIncorHC.delete(`/study-reports/${reportId}`); };
+// La paciente no vino: el estudio del turno sale de la cola sin informarse.
+export const markStudyNoShow = async (sourceInboxItemId: string): Promise<void> => { await apiIncorHC.post(`/study-reports/inbox/${sourceInboxItemId}/no-show`); };
 
 // "Mis plantillas" — SOLO LECTURA. El dueño sale del token: nunca se manda doctorId.
 // No hay POST/PATCH/DELETE de plantillas ni acá ni en el backend, por decisión de la v1.
