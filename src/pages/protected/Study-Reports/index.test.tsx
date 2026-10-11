@@ -19,6 +19,7 @@ const claimOrphanStudy = vi.fn();
 const releaseOrphanStudy = vi.fn();
 const getOrphanStudyImages = vi.fn();
 const getOrphanStudyImagePreview = vi.fn();
+const markStudyNoShow = vi.fn();
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getMyStudyReports: () => getMyStudyReports() as unknown,
@@ -39,6 +40,7 @@ vi.mock("@/api/StudyReport/study-report.actions", () => ({
   releaseOrphanStudy: (id: string) => releaseOrphanStudy(id) as unknown,
   getOrphanStudyImages: (id: string) => getOrphanStudyImages(id) as unknown,
   getOrphanStudyImagePreview: (id: string, instanceId: string) => getOrphanStudyImagePreview(id, instanceId) as unknown,
+  markStudyNoShow: (id: string) => markStudyNoShow(id) as unknown,
 }));
 vi.mock("@/api/StudyReport/study-report-images.actions", () => ({
   getStudyReportImages: (id: string) => getStudyReportImages(id) as unknown,
@@ -435,7 +437,7 @@ describe("StudyReportsPage — jerarquía del portal", () => {
 });
 
 describe("StudyReportsPage — refresco automático", () => {
-  it("refresca la lista cada 15 segundos y se detiene al abrir el editor", async () => {
+  it("refresca la lista cada 5 segundos y se detiene al abrir el editor", async () => {
     vi.useFakeTimers();
     getMyStudyReports.mockResolvedValue([
       {
@@ -472,7 +474,7 @@ describe("StudyReportsPage — refresco automático", () => {
     expect(getMyStudyReports).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(14_999);
+      await vi.advanceTimersByTimeAsync(4_999);
     });
     expect(getMyStudyReports).toHaveBeenCalledTimes(1);
 
@@ -641,6 +643,96 @@ describe("StudyReportsPage — estudios sin asignar", () => {
     expect(within(sinImagenes).getByText("Sin imágenes")).toBeInTheDocument();
     expect(within(sinImagenes).getByRole("button", { name: /Informar/ })).toBeEnabled();
     expect(within(conImagenes).queryByText("Sin imágenes")).not.toBeInTheDocument();
+  });
+
+  it("un estudio del turno sin empezar se puede sacar con 'No vino', con confirmación", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-turno",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE AUSENTE",
+        patientDni: "30111222",
+        studyDate: "2026-10-07T00:00:00.000Z",
+        studyType: "Ecografía Abdominal",
+        splitLabel: null,
+        claimed: false,
+        hasImages: false,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+    markStudyNoShow.mockResolvedValue(undefined);
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    renderPage();
+    const fila = (await screen.findByText("PACIENTE AUSENTE")).closest("tr")!;
+    await userEvent.click(within(fila).getByRole("button", { name: "No vino" }));
+
+    expect(confirmar).toHaveBeenCalledWith(
+      "¿PACIENTE AUSENTE no vino? El estudio sale de tu lista sin informarse.",
+    );
+    await waitFor(() => expect(markStudyNoShow).toHaveBeenCalledWith("item-turno"));
+    await waitFor(() => expect(getMyStudyReports).toHaveBeenCalledTimes(2));
+    confirmar.mockRestore();
+  });
+
+  it("si la médica cancela la confirmación, no se saca nada", async () => {
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-turno",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE AUSENTE",
+        patientDni: "30111222",
+        studyDate: "2026-10-07T00:00:00.000Z",
+        studyType: "Ecografía Abdominal",
+        splitLabel: null,
+        claimed: false,
+        hasImages: false,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+    const confirmar = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    renderPage();
+    const fila = (await screen.findByText("PACIENTE AUSENTE")).closest("tr")!;
+    await userEvent.click(within(fila).getByRole("button", { name: "No vino" }));
+
+    expect(markStudyNoShow).not.toHaveBeenCalled();
+    confirmar.mockRestore();
+  });
+
+  it("'No vino' solo aparece en estudios del turno sin empezar: no con imágenes, ni en borrador, ni reclamados", async () => {
+    const base = {
+      report: null,
+      state: "SIN_EMPEZAR",
+      patientDni: "30111222",
+      studyDate: "2026-10-07T00:00:00.000Z",
+      studyType: "Ecografía Abdominal",
+      splitLabel: null,
+      claimed: false,
+      hasImages: false,
+    };
+    getMyStudyReports.mockResolvedValue([
+      { ...base, sourceInboxItemId: "a", patientName: "CON IMAGENES", hasImages: true },
+      {
+        ...base,
+        sourceInboxItemId: "b",
+        patientName: "EN BORRADOR",
+        state: "BORRADOR",
+        report: { id: "r", templateKey: "x", content: {}, status: "BORRADOR" },
+      },
+      { ...base, sourceInboxItemId: "c", patientName: "RECLAMADO", claimed: true },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+    getOrphanStudies.mockResolvedValue([]);
+
+    renderPage();
+    await screen.findByText("CON IMAGENES");
+
+    expect(screen.queryByRole("button", { name: "No vino" })).not.toBeInTheDocument();
   });
 
   it("un estudio que llegó por su turno no ofrece soltarlo", async () => {
