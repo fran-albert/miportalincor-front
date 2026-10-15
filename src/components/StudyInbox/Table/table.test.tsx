@@ -11,20 +11,30 @@
 // ============================================================
 
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/hooks/Toast/toast-context";
 import { StudyInboxScreen } from "./table";
 
 const getStudyInbox = vi.fn();
 const getStudyInboxCounts = vi.fn();
+const getReceptionEcoItems = vi.fn();
 
 vi.mock("@/api/StudyInbox/get-study-inbox.action", () => ({
   getStudyInbox: (params: unknown) => getStudyInbox(params) as unknown,
 }));
 vi.mock("@/api/StudyInbox/get-study-inbox-counts.action", () => ({
   getStudyInboxCounts: () => getStudyInboxCounts() as unknown,
+}));
+vi.mock("@/api/StudyReport/reception-eco-images.actions", () => ({
+  getReceptionEcoItems: (params: unknown) =>
+    getReceptionEcoItems(params) as unknown,
+  getReceptionEcoItemImages: () => Promise.resolve([]),
+  getReceptionEcoImage: () => Promise.resolve(new Blob()),
+  uploadReceptionEcoImages: vi.fn(),
+  deleteReceptionEcoImage: vi.fn(),
 }));
 vi.mock("@/config/environment", () => ({
   environment: { API_INCOR_HC_URL: "https://api.test", NODE_ENV: "development" },
@@ -35,6 +45,7 @@ vi.mock("@/config/environment", () => ({
 }));
 
 afterEach(() => vi.clearAllMocks());
+beforeEach(() => getReceptionEcoItems.mockResolvedValue([]));
 
 const renderScreen = () => {
   const client = new QueryClient({
@@ -141,5 +152,43 @@ describe("StudyInboxScreen — pestañas", () => {
     );
     // El `group` tiene que estar en el trigger o la inversión nunca dispara.
     expect(contador.closest('[role="tab"]')?.className).toContain("group");
+  });
+
+  it("suma la pestaña de imágenes de ecos con las que esperan fotos y muestra su lista", async () => {
+    getStudyInbox.mockResolvedValue({ items: [], total: 0, page: 1, limit: 10 });
+    getStudyInboxCounts.mockResolvedValue({ counts: {} });
+    getReceptionEcoItems.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        patientName: "PEREZ ANA",
+        patientDni: "30111222",
+        studyDate: "2026-10-14T12:00:00.000Z",
+        studyType: "ECO ABDOMINAL",
+        doctorName: "Torri Andrea",
+        reportState: "FIRMADO",
+        reports: [{ id: "r1", splitLabel: null, status: "FIRMADO" }],
+        uploadedImageCount: 0,
+      },
+    ]);
+
+    renderScreen();
+
+    const pestaña = await screen.findByRole("tab", {
+      name: /Imágenes de ecos\s*1/i,
+    });
+    await userEvent.click(pestaña);
+
+    expect(await screen.findByText("PEREZ ANA")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Subir imágenes/i }),
+    ).toBeInTheDocument();
+    // La tabla de la bandeja no se muestra en esta pestaña.
+    expect(
+      screen.queryByPlaceholderText("Buscar por paciente..."),
+    ).not.toBeInTheDocument();
+    expect(getReceptionEcoItems).toHaveBeenCalledWith({
+      onlyWithoutImages: true,
+      search: "",
+    });
   });
 });

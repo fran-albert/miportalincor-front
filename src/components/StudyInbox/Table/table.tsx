@@ -10,6 +10,13 @@ import { StudyInboxItem, StudyInboxStatus } from "@/types/StudyInbox/StudyInbox.
 import { getColumns } from "./columns";
 import { ReviewDialog } from "../Dialogs/ReviewDialog";
 import { UploadPdfButton } from "../UploadPdfButton";
+import { EcoImagesPanel } from "../EcoImages/EcoImagesPanel";
+import { useReceptionEcoPendingCount } from "@/hooks/StudyReport/useReceptionEcoImages";
+
+// Pestaña que no es un estado de la bandeja: las ecografías informadas desde
+// el turno a las que recepción les sube las fotos del pendrive.
+const ECO_IMAGES_TAB = "ECO_IMAGENES";
+type InboxTab = StudyInboxStatus | typeof ECO_IMAGES_TAB;
 
 // showCount: solo las pestañas que piden trabajo muestran cuantos hay
 // pendientes; cargados/descartados son archivo y el numero no decide nada.
@@ -22,13 +29,16 @@ const TABS: { value: StudyInboxStatus; label: string; showCount: boolean }[] = [
 ];
 
 export const StudyInboxScreen = () => {
-  const [status, setStatus] = useState<StudyInboxStatus>("LISTO_PARA_CONFIRMAR");
+  const [tab, setTab] = useState<InboxTab>("LISTO_PARA_CONFIRMAR");
+  const showEcoImages = tab === ECO_IMAGES_TAB;
+  const status: StudyInboxStatus = showEcoImages ? "LISTO_PARA_CONFIRMAR" : tab;
   const [activeItem, setActiveItem] = useState<StudyInboxItem | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { items, isFetching, search, setSearch, page, totalPages, nextPage, prevPage } =
     useStudyInbox({ status, initialLimit: 10 });
   const { counts } = useStudyInboxCounts();
+  const ecoPendingCount = useReceptionEcoPendingCount();
 
   const columns = getColumns({
     onReview: (item) => {
@@ -52,7 +62,7 @@ export const StudyInboxScreen = () => {
         actions={<UploadPdfButton />}
       />
 
-      <Tabs value={status} onValueChange={(v) => setStatus(v as StudyInboxStatus)}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as InboxTab)}>
         <PillTabsList>
           {TABS.map((t) => (
             <PillTabsTrigger
@@ -63,27 +73,34 @@ export const StudyInboxScreen = () => {
               {t.label}
             </PillTabsTrigger>
           ))}
+          <PillTabsTrigger value={ECO_IMAGES_TAB} count={ecoPendingCount}>
+            Imágenes de ecos
+          </PillTabsTrigger>
         </PillTabsList>
       </Tabs>
 
-      <div className="overflow-hidden sm:rounded-lg">
-        <DataTable
-          columns={columns}
-          data={items}
-          searchPlaceholder="Buscar por paciente..."
-          showSearch={true}
-          searchQuery={search}
-          setSearch={setSearch}
-          useServerSideSearch={true}
-          showDataOnEmptySearch={true}
-          canAddUser={false}
-          isFetching={isFetching}
-          currentPage={page}
-          totalPages={totalPages}
-          onNextPage={nextPage}
-          onPrevPage={prevPage}
-        />
-      </div>
+      {showEcoImages ? (
+        <EcoImagesPanel />
+      ) : (
+        <div className="overflow-hidden sm:rounded-lg">
+          <DataTable
+            columns={columns}
+            data={items}
+            searchPlaceholder="Buscar por paciente..."
+            showSearch={true}
+            searchQuery={search}
+            setSearch={setSearch}
+            useServerSideSearch={true}
+            showDataOnEmptySearch={true}
+            canAddUser={false}
+            isFetching={isFetching}
+            currentPage={page}
+            totalPages={totalPages}
+            onNextPage={nextPage}
+            onPrevPage={prevPage}
+          />
+        </div>
+      )}
 
       <ReviewDialog
         item={activeItem}
