@@ -144,6 +144,27 @@ describe("Subir imágenes de una eco", () => {
     );
   });
 
+  it("después de subir una tanda desmarca el informe para que la siguiente elija el suyo", async () => {
+    renderDialog({
+      ...baseItem,
+      reports: [
+        { id: "r1", splitLabel: "dvc", status: "BORRADOR" },
+        { id: "r2", splitLabel: "abdomen", status: "BORRADOR" },
+      ],
+    });
+
+    await userEvent.upload(screen.getByTestId("eco-images-input"), [jpg()]);
+    await userEvent.click(screen.getByLabelText(/dvc/));
+    await userEvent.click(screen.getByRole("button", { name: "Subir 1 imagen" }));
+    await waitFor(() => expect(uploadReceptionEcoImages).toHaveBeenCalled());
+
+    await waitFor(() =>
+      expect(screen.getByLabelText(/dvc/)).not.toBeChecked(),
+    );
+    await userEvent.upload(screen.getByTestId("eco-images-input"), [jpg()]);
+    expect(screen.getByRole("button", { name: "Subir 1 imagen" })).toBeDisabled();
+  });
+
   it("descarta lo que no es imagen del ecógrafo", async () => {
     renderDialog(baseItem);
 
