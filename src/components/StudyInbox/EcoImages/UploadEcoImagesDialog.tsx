@@ -131,7 +131,13 @@ export const UploadEcoImagesDialog = ({
           files,
           reportIds: mustChooseReport ? reportIds : [],
         },
-        { onSuccess: () => setSelected([]) },
+        {
+          // Cada tanda elige su informe: no arrastrar la casilla a la siguiente.
+          onSuccess: () => {
+            setSelected([]);
+            setReportIds([]);
+          },
+        },
       );
     } catch {
       setRejected(["No se pudo preparar una de las imágenes. Probá de nuevo."]);
