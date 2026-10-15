@@ -154,7 +154,7 @@ export const UploadEcoImagesDialog = ({
               {[
                 item.patientName,
                 item.patientDni ? `DNI ${item.patientDni}` : null,
-                item.studyDate ? formatDateAR(item.studyDate) : null,
+                item.studyDate ? formatDateAR(item.studyDate.slice(0, 10)) : null,
                 item.doctorName,
               ]
                 .filter(Boolean)

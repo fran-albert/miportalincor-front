@@ -100,6 +100,12 @@ describe("Subir imágenes de una eco", () => {
     );
   });
 
+  it("muestra el día del estudio aunque la fecha llegue a medianoche UTC", () => {
+    renderDialog({ ...baseItem, studyDate: "2026-10-14T00:00:00.000Z" });
+
+    expect(screen.getByText(/14\/10\/2026/)).toBeInTheDocument();
+  });
+
   it("avisa que en un informe firmado van a la historia y el PDF no cambia", () => {
     renderDialog({
       ...baseItem,

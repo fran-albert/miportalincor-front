@@ -108,7 +108,7 @@ export const EcoImagesPanel = () => {
                 return (
                   <TableRow key={item.sourceInboxItemId}>
                     <TableCell className="whitespace-nowrap">
-                      {item.studyDate ? formatDateAR(item.studyDate) : "—"}
+                      {item.studyDate ? formatDateAR(item.studyDate.slice(0, 10)) : "—"}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
