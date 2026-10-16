@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import DeleteStudyDialog from "../Delete/dialog";
 import { PacsViewerButton } from "../PacsViewerButton";
+import { UploadedImagesButton } from "../UploadedImagesButton";
+import { StudiesWithURL } from "@/types/Study/Study";
 import { formatStudyCount, groupByMonthDesc } from "../studyGrouping";
 
 export interface TimelineStudy {
@@ -36,6 +38,8 @@ export interface TimelineStudy {
   externalInstitution?: string;
   signedDoctorId?: string;
   studyInstanceUID?: string | null;
+  /** Imágenes subidas por recepción que quedaron en la historia. */
+  ultrasoundImages?: StudiesWithURL["ultrasoundImages"];
 }
 
 interface StudiesTimelineProps {
@@ -201,6 +205,8 @@ const StudyRow: React.FC<{
             studyId={study.id}
             studyInstanceUID={study.studyInstanceUID}
           />
+
+          <UploadedImagesButton images={study.ultrasoundImages} />
 
           {showDelete && patientId && (
             <DeleteStudyDialog

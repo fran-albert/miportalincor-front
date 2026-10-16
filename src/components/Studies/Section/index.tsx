@@ -30,6 +30,7 @@ import { StudiesWithURL } from "@/types/Study/Study";
 import { getStudiesWithUrls } from "@/api/Study/get-studies-with-urls.action";
 import ExternalStudyDialog from "../Upload/external-study-dialog";
 import DeleteStudyDialog from "../Delete/dialog";
+import { UploadedImagesButton } from "../UploadedImagesButton";
 import useUserRole from "@/hooks/useRoles";
 import LabCard from "@/components/Laboratories/Card/card";
 import { useBlodTest } from "@/hooks/Blod-Test/useBlodTest";
@@ -254,17 +255,22 @@ const StudiesSection: React.FC<StudiesSectionProps> = ({
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 flex-shrink-0 hover:bg-greenPrimary/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewStudy(study);
-                        }}
-                      >
-                        <Eye className="h-4 w-4 text-greenPrimary" />
-                      </Button>
+                      <div className="flex flex-shrink-0 items-center gap-1">
+                        <UploadedImagesButton
+                          images={study.ultrasoundImages}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 flex-shrink-0 hover:bg-greenPrimary/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewStudy(study);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 text-greenPrimary" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );

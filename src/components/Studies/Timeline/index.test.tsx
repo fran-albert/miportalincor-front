@@ -209,6 +209,26 @@ describe("StudiesTimeline", () => {
     });
   });
 
+  it("muestra las imágenes subidas por recepción de una eco firmada", () => {
+    render(
+      <StudiesTimeline
+        studies={[
+          baseStudy({
+            ultrasoundImages: [
+              { id: 1, locationS3: "a.jpg", signedUrl: "https://x/a.jpg" },
+              { id: 2, locationS3: "b.jpg", signedUrl: "https://x/b.jpg" },
+            ],
+          }),
+          baseStudy({ id: 2, title: "Sin imágenes" }),
+        ]}
+      />
+    );
+
+    expect(
+      screen.getAllByRole("button", { name: /Imágenes \(2\)/ })
+    ).toHaveLength(1);
+  });
+
   it("muestra el estado vacío cuando no hay estudios", () => {
     render(<StudiesTimeline studies={[]} />);
     expect(screen.getByText("No hay estudios disponibles")).toBeInTheDocument();
