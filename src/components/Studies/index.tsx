@@ -59,6 +59,7 @@ interface Study {
   externalInstitution?: string;
   signedDoctorId?: string;
   studyInstanceUID?: string | null;
+  ultrasoundImages?: StudiesWithURL["ultrasoundImages"];
 }
 
 interface Laboratory {
@@ -138,6 +139,7 @@ const toTimelineStudy = (study: Study): TimelineStudy => ({
   externalInstitution: study.externalInstitution,
   signedDoctorId: study.signedDoctorId,
   studyInstanceUID: study.studyInstanceUID,
+  ultrasoundImages: study.ultrasoundImages,
 });
 
 export default function PatientStudies({

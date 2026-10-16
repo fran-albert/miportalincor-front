@@ -160,6 +160,7 @@ const transformStudiesToNewFormat = (studies: StudiesWithURL[]) => {
       externalInstitution: study.externalInstitution,
       signedDoctorId: study.signedDoctorId,
       studyInstanceUID: study.studyInstanceUID,
+      ultrasoundImages: study.ultrasoundImages,
     }));
 };
 
