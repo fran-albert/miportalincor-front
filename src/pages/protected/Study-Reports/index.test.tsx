@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import StudyReportsPage from "./index";
+import { clearImagePreviewCache } from "@/components/StudyReport/imagePreviewCache";
 
 const getMyStudyReports = vi.fn();
 const getStudyReportTemplates = vi.fn();
@@ -88,6 +89,7 @@ const renderPage = () => {
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  clearImagePreviewCache();
 });
 
 beforeEach(() => {
@@ -437,7 +439,7 @@ describe("StudyReportsPage — jerarquía del portal", () => {
 });
 
 describe("StudyReportsPage — refresco automático", () => {
-  it("refresca la lista cada 5 segundos y se detiene al abrir el editor", async () => {
+  it("refresca la lista cada 15 segundos y se detiene al abrir el editor", async () => {
     vi.useFakeTimers();
     getMyStudyReports.mockResolvedValue([
       {
@@ -474,7 +476,7 @@ describe("StudyReportsPage — refresco automático", () => {
     expect(getMyStudyReports).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(4_999);
+      await vi.advanceTimersByTimeAsync(14_999);
     });
     expect(getMyStudyReports).toHaveBeenCalledTimes(1);
 
@@ -493,6 +495,58 @@ describe("StudyReportsPage — refresco automático", () => {
     });
     expect(getMyStudyReports).toHaveBeenCalledTimes(2);
 
+    view.unmount();
+  });
+});
+
+describe("StudyReportsPage — refresco sin mover la lista", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // Audio de Andrea del 22/10: el refresco reemplazaba las filas por filas
+  // grises, la lista volvía arriba y no llegaba a elegir la paciente.
+  it("en el refresco de fondo la paciente sigue en pantalla", async () => {
+    vi.useFakeTimers();
+    getMyStudyReports.mockResolvedValue([
+      {
+        sourceInboxItemId: "item-1",
+        report: null,
+        state: "SIN_EMPEZAR",
+        patientName: "PACIENTE ABAJO",
+        patientDni: "30111222",
+        studyDate: "2026-10-15",
+        studyType: "Ecografía renal",
+        splitLabel: null,
+        claimed: false,
+      },
+    ]);
+    getStudyReportTemplates.mockResolvedValue([]);
+
+    const view = renderPage();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByText("PACIENTE ABAJO")).toBeInTheDocument();
+
+    let resolveRefresh: (value: unknown[]) => void = () => undefined;
+    getMyStudyReports.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000);
+    });
+    expect(getMyStudyReports).toHaveBeenCalledTimes(2);
+    // Mientras el refresco está en vuelo, la fila no se va.
+    expect(screen.getByText("PACIENTE ABAJO")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveRefresh([]);
+      await vi.advanceTimersByTimeAsync(0);
+    });
     view.unmount();
   });
 });

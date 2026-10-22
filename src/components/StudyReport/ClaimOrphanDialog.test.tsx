@@ -15,6 +15,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ClaimOrphanDialog } from "./ClaimOrphanDialog";
+import { clearImagePreviewCache } from "./imagePreviewCache";
+import { clearImagePreviewCache } from "./imagePreviewCache";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 
 const getOrphanStudyImages = vi.fn();
@@ -50,7 +52,10 @@ beforeAll(() => {
   URL.revokeObjectURL = vi.fn();
 });
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  clearImagePreviewCache();
+});
 
 const huerfano = (overrides: Partial<OrphanStudy> = {}): OrphanStudy => ({
   sourceInboxItemId: "item-1",

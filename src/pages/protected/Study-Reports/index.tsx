@@ -51,8 +51,9 @@ import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
 const reportsQueryKey = ["study-reports", "mine"] as const;
 const orphansQueryKey = ["study-reports", "orphans"] as const;
 // Appointments avisa a historia en el momento en que recepción pasa a la
-// paciente a espera: con la pantalla abierta, el estudio aparece en 5 s.
-const REPORTS_REFRESH_INTERVAL_MS = 5_000;
+// paciente a espera: con la pantalla abierta, el estudio aparece en 15 s.
+// Cada 5 s era demasiado: la médica no llegaba a elegir la paciente.
+const REPORTS_REFRESH_INTERVAL_MS = 15_000;
 
 // timeZone UTC: la fecha llega como medianoche UTC; sin esto, en UTC-3 se
 // muestra el día anterior.
@@ -730,7 +731,9 @@ export default function StudyReportsPage() {
                   }
                   canAddUser={false}
                   isLoading={reports.isLoading}
-                  isFetching={reports.isFetching}
+                  // Solo la primera carga muestra filas grises: en el refresco
+                  // de fondo la tabla reemplazaba la lista y volvía arriba.
+                  isFetching={reports.isFetching && !reports.data}
                   showDataOnEmptySearch={true}
                 />
               </div>

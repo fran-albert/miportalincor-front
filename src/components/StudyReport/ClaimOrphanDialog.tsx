@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { detectedNameToSearch } from "@/common/helpers/detected-patient-search";
 import type { OrphanStudy } from "@/types/StudyReport/StudyReport.types";
+import { getCachedImagePreview } from "./imagePreviewCache";
 
 const PREVIEW_CONCURRENCY = 4;
 
@@ -54,9 +55,9 @@ const OrphanGallery = ({ study }: { study: OrphanStudy }) => {
             const index = next;
             next += 1;
             try {
-              const blob = await getOrphanStudyImagePreview(
-                study.sourceInboxItemId,
-                instanceIds[index],
+              const instanceId = instanceIds[index];
+              const blob = await getCachedImagePreview(instanceId, () =>
+                getOrphanStudyImagePreview(study.sourceInboxItemId, instanceId),
               );
               const url = URL.createObjectURL(blob);
               if (!active) {
