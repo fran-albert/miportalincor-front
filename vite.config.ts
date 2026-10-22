@@ -1,12 +1,29 @@
 import path from "path";
 import react from "@vitejs/plugin-react";
-import { defineConfig, normalizePath } from "vite";
+import { defineConfig, normalizePath, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const pdfjsDistPath = path.dirname(require.resolve("pdfjs-dist/package.json"));
 const cMapsDir = normalizePath(path.join(pdfjsDistPath, "cmaps"));
+
+// Id del build: el commit en Vercel, la hora en un build local. El portal lo
+// compara con /version.json para avisar que hay una versión nueva.
+const appVersion =
+  process.env.VERCEL_GIT_COMMIT_SHA || `local-${new Date().toISOString()}`;
+
+const versionFilePlugin = (): Plugin => ({
+  name: "incor-version-file",
+  apply: "build",
+  generateBundle() {
+    this.emitFile({
+      type: "asset",
+      fileName: "version.json",
+      source: JSON.stringify({ version: appVersion }),
+    });
+  },
+});
 
 export default defineConfig(({ mode }) => {
   // Determinar configuración específica del entorno
@@ -21,9 +38,11 @@ export default defineConfig(({ mode }) => {
       __DEV__: isDevelopment,
       __STAGING__: isStaging,
       __PROD__: isProduction,
+      "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
     },
     plugins: [
       react(),
+      versionFilePlugin(),
       viteStaticCopy({
         targets: [
           {

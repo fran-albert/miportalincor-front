@@ -8,6 +8,7 @@ import { store } from "./store/store";
 import { HelmetProvider } from "react-helmet-async";
 import { Analytics } from "@vercel/analytics/react";
 import { ToastProvider } from "./hooks/Toast/toast-context.tsx";
+import { NewVersionBanner } from "./components/NewVersionBanner.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -16,6 +17,7 @@ createRoot(document.getElementById("root")!).render(
         <ToastProvider>
           <HelmetProvider>
             <App />
+            <NewVersionBanner />
             <Analytics />
           </HelmetProvider>
         </ToastProvider>
