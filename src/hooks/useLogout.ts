@@ -4,6 +4,7 @@ import { useState } from "react";
 import { logout } from "@/store/authSlice";
 import { apiIncorHC } from "@/services/axiosConfig";
 import { authStorage } from "@/utils/authStorage";
+import { clearImagePreviewCache } from "@/components/StudyReport/imagePreviewCache";
 
 export const useLogout = () => {
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ export const useLogout = () => {
     } finally {
       // Always clear local state
       authStorage.clearAll();
+      clearImagePreviewCache();
       dispatch(logout());
       setIsLoggingOut(false);
       navigate("/iniciar-sesion");

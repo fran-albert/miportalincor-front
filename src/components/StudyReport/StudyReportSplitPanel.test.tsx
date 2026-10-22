@@ -9,6 +9,7 @@ import {
 } from "@/api/StudyReport/study-report.actions";
 import type { StudyReportTemplate } from "@/types/StudyReport/StudyReport.types";
 import { StudyReportSplitPanel } from "./StudyReportSplitPanel";
+import { clearImagePreviewCache } from "./imagePreviewCache";
 
 vi.mock("@/api/StudyReport/study-report.actions", () => ({
   getStudyReportInboxImages: vi.fn(),
@@ -22,6 +23,7 @@ const templates: StudyReportTemplate[] = [
 
 describe("StudyReportSplitPanel", () => {
   beforeEach(() => {
+    clearImagePreviewCache();
     vi.clearAllMocks();
     vi.stubGlobal("URL", {
       createObjectURL: vi.fn((blob: Blob) => `blob:${blob.size}`),

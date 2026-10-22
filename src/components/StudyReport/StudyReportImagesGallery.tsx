@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getCachedImagePreview } from "./imagePreviewCache";
 
 const PREVIEW_CONCURRENCY = 4;
 
@@ -20,6 +21,7 @@ interface StudyReportImagesGalleryProps {
 interface GalleryImage {
   instanceId: string;
   url: string | null;
+  failed: boolean;
 }
 
 type GalleryState =
@@ -30,37 +32,33 @@ type GalleryState =
 interface PreviewLoadContext {
   isActive: () => boolean;
   createdUrls: string[];
+  onLoaded: (instanceId: string, url: string | null) => void;
 }
 
+// Cada miniatura se muestra apenas llega: con 13 imágenes y la conexión de la
+// clínica, esperar a la última dejaba "Cargando imágenes" más de un minuto.
 const loadPreviewImages = async (
   reportId: string,
   instanceIds: string[],
   context: PreviewLoadContext,
-): Promise<GalleryImage[]> => {
-  const images: GalleryImage[] = instanceIds.map((instanceId) => ({
-    instanceId,
-    url: null,
-  }));
+): Promise<void> => {
   let nextIndex = 0;
 
   const worker = async (): Promise<void> => {
     while (nextIndex < instanceIds.length) {
-      const index = nextIndex;
+      const instanceId = instanceIds[nextIndex];
       nextIndex += 1;
       try {
-        const blob = await getStudyReportImagePreview(
-          reportId,
-          instanceIds[index],
+        const blob = await getCachedImagePreview(instanceId, () =>
+          getStudyReportImagePreview(reportId, instanceId),
         );
+        if (!context.isActive()) continue;
         const url = URL.createObjectURL(blob);
-        if (!context.isActive()) {
-          URL.revokeObjectURL(url);
-          continue;
-        }
         context.createdUrls.push(url);
-        images[index] = { instanceId: instanceIds[index], url };
+        context.onLoaded(instanceId, url);
       } catch {
         // La miniatura individual puede fallar sin ocultar las demás imágenes.
+        if (context.isActive()) context.onLoaded(instanceId, null);
       }
     }
   };
@@ -69,7 +67,6 @@ const loadPreviewImages = async (
   await Promise.all(
     Array.from({ length: workerCount }, () => worker()),
   );
-  return images;
 };
 
 export const StudyReportImagesGallery = ({
@@ -88,6 +85,15 @@ export const StudyReportImagesGallery = ({
     const context: PreviewLoadContext = {
       isActive: () => active,
       createdUrls,
+      onLoaded: (instanceId, url) =>
+        setState((current) => ({
+          ...current,
+          images: current.images.map((image) =>
+            image.instanceId === instanceId
+              ? { instanceId, url, failed: url === null }
+              : image,
+          ),
+        })),
     };
     setSelectedIndex(null);
     setState({ status: "loading", images: [] });
@@ -100,8 +106,15 @@ export const StudyReportImagesGallery = ({
           setState({ status: "ready", images: [] });
           return;
         }
-        const images = await loadPreviewImages(reportId, instanceIds, context);
-        if (active) setState({ status: "ready", images });
+        setState({
+          status: "ready",
+          images: instanceIds.map((instanceId) => ({
+            instanceId,
+            url: null,
+            failed: false,
+          })),
+        });
+        await loadPreviewImages(reportId, instanceIds, context);
       } catch {
         if (active) setState({ status: "error", images: [] });
       }
@@ -195,6 +208,11 @@ export const StudyReportImagesGallery = ({
                     <Maximize2 className="h-5 w-5" aria-hidden="true" />
                   </span>
                 </Button>
+              ) : !image.failed ? (
+                <Skeleton
+                  className="aspect-square w-full rounded-lg"
+                  aria-label={`Cargando imagen ${index + 1}`}
+                />
               ) : (
                 <div className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
                   <ImageOff className="h-5 w-5" aria-hidden="true" />

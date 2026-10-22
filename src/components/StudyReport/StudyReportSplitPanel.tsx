@@ -8,6 +8,7 @@ import {
   getStudyReportInboxImagePreview,
   getStudyReportInboxImages,
 } from "@/api/StudyReport/study-report.actions";
+import { getCachedImagePreview } from "./imagePreviewCache";
 import type {
   StudyReportSplitGroup,
   StudyReportTemplate,
@@ -45,33 +46,34 @@ interface StudyReportSplitPanelProps {
 interface PreviewState {
   status: "loading" | "error" | "ready";
   urls: Record<string, string>;
+  failed: Record<string, true>;
 }
 
+// Cada miniatura aparece apenas llega, sin esperar a la última.
 const loadPreviews = async (
   itemId: string,
   instanceIds: string[],
   isActive: () => boolean,
   createdUrls: string[],
-): Promise<Record<string, string>> => {
-  const urls: Record<string, string> = {};
+  onLoaded: (instanceId: string, url: string | null) => void,
+): Promise<void> => {
   let nextIndex = 0;
 
   const worker = async (): Promise<void> => {
     while (nextIndex < instanceIds.length) {
-      const index = nextIndex;
+      const instanceId = instanceIds[nextIndex];
       nextIndex += 1;
-      const instanceId = instanceIds[index];
       try {
-        const blob = await getStudyReportInboxImagePreview(itemId, instanceId);
+        const blob = await getCachedImagePreview(instanceId, () =>
+          getStudyReportInboxImagePreview(itemId, instanceId),
+        );
+        if (!isActive()) continue;
         const url = URL.createObjectURL(blob);
-        if (!isActive()) {
-          URL.revokeObjectURL(url);
-          continue;
-        }
         createdUrls.push(url);
-        urls[instanceId] = url;
+        onLoaded(instanceId, url);
       } catch {
         // Una miniatura caída no bloquea el reparto del resto del estudio.
+        if (isActive()) onLoaded(instanceId, null);
       }
     }
   };
@@ -82,7 +84,6 @@ const loadPreviews = async (
       () => worker(),
     ),
   );
-  return urls;
 };
 
 export const StudyReportSplitPanel = ({
@@ -98,6 +99,7 @@ export const StudyReportSplitPanel = ({
   const [previews, setPreviews] = useState<PreviewState>({
     status: "loading",
     urls: {},
+    failed: {},
   });
   const nextKey = useRef(3);
   const addedKey = useRef<string | null>(null);
@@ -114,7 +116,7 @@ export const StudyReportSplitPanel = ({
     const createdUrls: string[] = [];
     setLoadError(false);
     setInstanceIds(null);
-    setPreviews({ status: "loading", urls: {} });
+    setPreviews({ status: "loading", urls: {}, failed: {} });
 
     const load = async (): Promise<void> => {
       try {
@@ -123,16 +125,18 @@ export const StudyReportSplitPanel = ({
         setInstanceIds(ids);
         // Todas arrancan en el primer informe.
         setAssignment(Object.fromEntries(ids.map((id) => [id, "g1"])));
-        if (ids.length === 0) {
-          setPreviews({ status: "ready", urls: {} });
-          return;
-        }
-        const urls = await loadPreviews(itemId, ids, () => active, createdUrls);
-        if (active) setPreviews({ status: "ready", urls });
+        setPreviews({ status: "ready", urls: {}, failed: {} });
+        await loadPreviews(itemId, ids, () => active, createdUrls, (id, url) =>
+          setPreviews((current) =>
+            url === null
+              ? { ...current, failed: { ...current.failed, [id]: true } }
+              : { ...current, urls: { ...current.urls, [id]: url } },
+          ),
+        );
       } catch {
         if (active) {
           setLoadError(true);
-          setPreviews({ status: "error", urls: {} });
+          setPreviews({ status: "error", urls: {}, failed: {} });
         }
       }
     };
@@ -324,10 +328,15 @@ export const StudyReportSplitPanel = ({
                         alt={`Imagen ${index + 1} para dividir`}
                         className="aspect-square w-full object-cover"
                       />
-                    ) : (
+                    ) : previews.failed[instanceId] ? (
                       <span className="flex aspect-square items-center justify-center text-xs text-muted-foreground">
                         Sin preview
                       </span>
+                    ) : (
+                      <Skeleton
+                        className="aspect-square w-full rounded-none"
+                        aria-label={`Cargando imagen ${index + 1}`}
+                      />
                     )}
                     <span
                       className={cn(
