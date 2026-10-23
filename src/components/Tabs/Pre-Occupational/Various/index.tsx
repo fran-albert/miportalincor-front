@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, Download, Trash2, File, Pencil, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collaborator } from "@/types/Collaborator/Collaborator";
@@ -52,6 +53,12 @@ const normalizeStudyName = (value: string) =>
     .trim();
 
 const EXCLUDED_STUDY_NAMES = ["preocupacional"];
+// Tipos a los que la API les estampa la firma pregrabada del médico al subir un PDF.
+const SIGNABLE_STUDY_NAMES = ["Electrocardiograma", "Ergometría"].map(
+  normalizeStudyName
+);
+const isSignableSection = (section: StudySection) =>
+  SIGNABLE_STUDY_NAMES.includes(normalizeStudyName(section.title));
 const TEST_TO_STUDY_SECTION: Record<string, string[]> = {
   "Glucemia en Ayuna": ["Laboratorios"],
   Hemograma: ["Laboratorios"],
@@ -151,6 +158,15 @@ export default function VariousTab({
 
   const [sections, setSections] = useState<StudySection[]>(initialSections);
   const [deletingIds, setDeletingIds] = useState<number[]>([]);
+  // Secciones firmables donde el usuario desmarcó "Inyectar firma" (el estudio ya viene firmado en papel).
+  const [skipSignatureSections, setSkipSignatureSections] = useState<string[]>(
+    []
+  );
+  const setInjectSignature = (sectionId: string, inject: boolean) => {
+    setSkipSignatureSections((prev) =>
+      inject ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
   const visibleSections =
     sections.length > 0
       ? sections
@@ -229,11 +245,20 @@ export default function VariousTab({
     formData.append("userName", collaborator.userName);
     formData.append("collaboratorId", String(collaborator.id));
     formData.append("medicalEvaluationId", String(medicalEvaluationId));
+    const skipSignature =
+      isSignableSection(section) && skipSignatureSections.includes(sectionId);
+    if (skipSignature) {
+      formData.append("skipSignature", "true");
+    }
 
     uploadStudyMutation.mutate(
       { collaboratorId: collaborator.id, formData },
       {
-        onSettled: () => clearFileInput(sectionId),
+        onSettled: () => {
+          clearFileInput(sectionId);
+          // El caso normal es con firma: después de cada subida vuelve a quedar marcado.
+          setInjectSignature(sectionId, true);
+        },
       }
     );
   };
@@ -386,6 +411,31 @@ export default function VariousTab({
                 className="hidden"
                 disabled={!isEditing}
               />
+              {isSignableSection(section) && (
+                <div className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                  <Checkbox
+                    id={`inject-signature-${section.id}`}
+                    checked={!skipSignatureSections.includes(section.id)}
+                    onCheckedChange={(checked) =>
+                      setInjectSignature(section.id, checked === true)
+                    }
+                    disabled={!isEditing}
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor={`inject-signature-${section.id}`}
+                    className={cn(
+                      "cursor-pointer text-xs leading-5 text-slate-600",
+                      !isEditing && "cursor-not-allowed opacity-50"
+                    )}
+                  >
+                    <span className="font-medium text-slate-700">
+                      Inyectar firma de la Dra.
+                    </span>{" "}
+                    Desmarcalo si el estudio ya viene firmado en papel.
+                  </label>
+                </div>
+              )}
             </div>
           </section>
         ))}
