@@ -40,7 +40,7 @@ describe("getVaccineVisual", () => {
   });
 
   it("usa un default para codigos nuevos o vacios", () => {
-    expect(getVaccineVisual("covid_19")).toBe(DEFAULT_VACCINE_VISUAL);
+    expect(getVaccineVisual("fiebre_amarilla")).toBe(DEFAULT_VACCINE_VISUAL);
     expect(getVaccineVisual(undefined)).toBe(DEFAULT_VACCINE_VISUAL);
     expect(DEFAULT_VACCINE_VISUAL.icon).toBe(Syringe);
   });
@@ -70,8 +70,8 @@ describe("getVaccineDescription", () => {
   });
 
   it("si el codigo no esta en el mapa, muestra la descripcion de la API", () => {
-    expect(getVaccineDescription("covid_19", "SARS-CoV-2")).toBe("SARS-CoV-2");
-    expect(getVaccineDescription("covid_19", undefined)).toBeUndefined();
+    expect(getVaccineDescription("fiebre_amarilla", "Fiebre amarilla")).toBe("Fiebre amarilla");
+    expect(getVaccineDescription("fiebre_amarilla", undefined)).toBeUndefined();
   });
 });
 

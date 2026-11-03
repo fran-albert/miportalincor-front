@@ -351,14 +351,14 @@ describe("VaccinationCardView", () => {
     expect(screen.queryByText(/calendario/i)).not.toBeInTheDocument();
   });
 
-  it("al medico de un adulto le aclara que el calendario cargado es el infantil", () => {
+  it("al medico de un adulto le aclara que no quedan dosis del calendario infantil", () => {
     render(
       <VaccinationCardView vaccinationCard={buildAdultCard()} isDoctor />
     );
 
     expect(screen.queryByText(/vencid/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/el calendario cargado es el infantil/i)
+      screen.getByText(/no quedan dosis del calendario infantil/i)
     ).toBeInTheDocument();
   });
 

@@ -42,6 +42,7 @@ import {
   VaccinationApplicationFormValues,
   VaccinationApplicationSchema,
 } from "@/validators/vaccination.schema";
+import { formatDoseLabel } from "./vaccine-visuals";
 
 interface VaccinationApplicationFormModalProps {
   isOpen: boolean;
@@ -131,6 +132,11 @@ export function VaccinationApplicationFormModal({
   const isLoading =
     createApplicationMutation.isPending || updateApplicationMutation.isPending;
 
+  const selectedRuleId = form.watch("scheduleRuleId");
+  const selectedRule = catalog?.scheduleRules.find(
+    (rule) => rule.id === selectedRuleId
+  );
+
   return (
     <Dialog
       open={isOpen}
@@ -145,7 +151,7 @@ export function VaccinationApplicationFormModal({
             {isEditing ? "Editar vacuna" : "Cargar vacuna"}
           </DialogTitle>
           <DialogDescription>
-            Selecciona la vacuna del calendario y registra la fecha aplicada.
+            Elegí la vacuna y la dosis, y registrá la fecha en que se aplicó.
           </DialogDescription>
         </DialogHeader>
 
@@ -177,7 +183,7 @@ export function VaccinationApplicationFormModal({
                             <SelectLabel>{vaccine.name}</SelectLabel>
                             {rules.map((rule) => (
                               <SelectItem key={rule.id} value={rule.id}>
-                                {rule.doseLabel}
+                                {formatDoseLabel(rule.doseLabel)}
                               </SelectItem>
                             ))}
                           </SelectGroup>
@@ -185,6 +191,11 @@ export function VaccinationApplicationFormModal({
                       })}
                     </SelectContent>
                   </Select>
+                  {selectedRule?.notes && (
+                    <p className="text-sm text-slate-600">
+                      {selectedRule.notes}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

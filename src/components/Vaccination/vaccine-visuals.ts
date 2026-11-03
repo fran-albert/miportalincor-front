@@ -89,6 +89,35 @@ const VACCINE_VISUALS: Record<string, VaccineVisual> = {
   vph: { icon: Dna, badgeClassName: "bg-fuchsia-100 text-fuchsia-700",
     description: "Virus del papiloma humano",
   },
+  neumococo_polisacarida_23: {
+    icon: Bug,
+    badgeClassName: "bg-green-100 text-green-700",
+    description: "Enfermedad neumocócica (Pneumo 23)",
+  },
+  doble_bacteriana: {
+    icon: Shield,
+    badgeClassName: "bg-blue-100 text-blue-700",
+    description: "Difteria y tétanos",
+  },
+  vsr: { icon: Wind, badgeClassName: "bg-sky-100 text-sky-700",
+    description: "Virus sincicial respiratorio",
+  },
+  fiebre_hemorragica_argentina: {
+    icon: Thermometer,
+    badgeClassName: "bg-red-100 text-red-700",
+    description: "Fiebre hemorrágica argentina",
+  },
+  covid_19: { icon: ShieldPlus, badgeClassName: "bg-slate-100 text-slate-700",
+    description: "COVID-19",
+  },
+  herpes_zoster: {
+    icon: Sparkles,
+    badgeClassName: "bg-purple-100 text-purple-700",
+    description: "Herpes zóster",
+  },
+  dengue: { icon: Bug, badgeClassName: "bg-orange-100 text-orange-700",
+    description: "Dengue",
+  },
 };
 
 export const getVaccineVisual = (code?: string | null): VaccineVisual => {
