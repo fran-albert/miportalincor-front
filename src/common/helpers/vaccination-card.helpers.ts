@@ -47,10 +47,12 @@ export const getVaccinationCalendarOverview = (
   items: VaccinationCardItem[]
 ): VaccinationCalendarOverview => {
   const withoutApplication = items.filter((item) => !item.application);
-  const dueNow = withoutApplication
+  // Una dosis repetible (antigripal anual) vuelve a "pending" aunque ya tenga
+  // una aplicación: por eso se filtra por estado y no por registro.
+  const dueNow = items
     .filter((item) => item.status === "pending")
     .sort(byRecommendedDate);
-  const upcoming = withoutApplication
+  const upcoming = items
     .filter((item) => item.status === "upcoming")
     .sort(byRecommendedDate);
 

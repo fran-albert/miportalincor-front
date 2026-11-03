@@ -108,6 +108,41 @@ describe("getVaccinationCalendarOverview", () => {
     expect(overview.withoutRecordCount).toBe(27);
   });
 
+  it("vuelve a listar la antigripal anual cuando paso un año, y no lista las vacunas por indicacion", () => {
+    const items = [
+      buildItem({
+        scheduleRuleId: "r-gripe-adultos",
+        vaccine: gripe,
+        doseLabel: "Dosis anual adultos",
+        status: "pending",
+        repeatable: true,
+        repeatIntervalMonths: 12,
+        nextDueDate: "2026-04-20",
+        recommendedDate: "2015-05-10",
+        application: buildApplication({
+          id: "app-gripe-2025",
+          vaccine: gripe,
+          doseLabel: "Dosis anual adultos",
+          appliedDate: "2025-04-20",
+        }),
+      }),
+      buildItem({
+        scheduleRuleId: "r-dengue",
+        vaccine: buildVaccine("dengue", "Dengue"),
+        doseLabel: "1ra dosis",
+        status: "optional",
+      }),
+    ];
+
+    const overview = getVaccinationCalendarOverview(items);
+
+    expect(overview.dueNow.map((item) => item.scheduleRuleId)).toEqual([
+      "r-gripe-adultos",
+    ]);
+    expect(overview.upcoming).toEqual([]);
+    expect(overview.withoutRecordCount).toBe(0);
+  });
+
   it("para un chico separa lo que corresponde ahora de lo proximo, sin listar las vencidas", () => {
     const items = [
       buildItem({

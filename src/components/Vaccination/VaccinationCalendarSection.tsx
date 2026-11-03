@@ -34,8 +34,8 @@ export function VaccinationCalendarSection({
 
     return (
       <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        El calendario cargado es el infantil: por la edad del paciente no quedan
-        dosis por calendario.
+        Por la edad del paciente no quedan dosis del calendario infantil. Las
+        vacunas de adultos se cargan desde «Cargar vacuna».
       </p>
     );
   }
@@ -59,7 +59,9 @@ export function VaccinationCalendarSection({
         )}
       >
         {isDueNow
-          ? "Corresponde ahora"
+          ? item.application
+            ? "Corresponde de nuevo"
+            : "Corresponde ahora"
           : `Desde ${formatVaccinationDate(item.recommendedDate)}`}
       </span>
       {isDoctor && canAddApplications && (

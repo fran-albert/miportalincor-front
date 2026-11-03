@@ -2,7 +2,9 @@ export type VaccinationCardStatus =
   | "applied"
   | "pending"
   | "overdue"
-  | "upcoming";
+  | "upcoming"
+  /** Sin edad recomendada (vacunas de adultos por indicación). */
+  | "optional";
 
 export interface VaccinationVaccine {
   id: string;
@@ -20,6 +22,9 @@ export interface VaccinationScheduleRule {
   doseLabel: string;
   recommendedAgeMonths?: number | null;
   overdueAgeMonths?: number | null;
+  /** Se puede aplicar más de una vez (antigripal anual, dT cada 10 años). */
+  repeatable?: boolean;
+  repeatIntervalMonths?: number | null;
   sortOrder: number;
   notes?: string;
   active: boolean;
@@ -65,6 +70,10 @@ export interface VaccinationCardItem {
   overdueAgeMonths?: number | null;
   recommendedDate?: string;
   overdueDate?: string;
+  repeatable?: boolean;
+  repeatIntervalMonths?: number | null;
+  /** Dosis repetible: fecha en que vuelve a corresponder. */
+  nextDueDate?: string;
   status: VaccinationCardStatus;
   notes?: string;
   application?: VaccinationApplication;
