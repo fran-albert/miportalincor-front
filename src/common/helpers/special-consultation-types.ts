@@ -1,4 +1,4 @@
-export type SpecialConsultationTypeKind = "MAPA" | "HOLTER";
+export type SpecialConsultationTypeKind = "MAPA" | "HOLTER" | "AMPA";
 
 export interface SpecialConsultationTypeInfo {
   kind: SpecialConsultationTypeKind;
@@ -34,6 +34,16 @@ const SPECIAL_CONSULTATION_TYPES: Record<
     eventTextColor: "#4c1d95",
     eventBorderColor: "#7c3aed",
   },
+  AMPA: {
+    kind: "AMPA",
+    label: "AMPA",
+    badgeClassName:
+      "border-green-600 bg-green-50 text-green-800 font-bold shadow-sm",
+    markerClassName: "is-special-ampa",
+    eventBackgroundColor: "#dcfce7",
+    eventTextColor: "#14532d",
+    eventBorderColor: "#16a34a",
+  },
 };
 
 const normalizeConsultationTypeName = (value: string) =>
@@ -59,6 +69,13 @@ export const getSpecialConsultationTypeInfo = (
 
   if (normalized.includes("holter")) {
     return SPECIAL_CONSULTATION_TYPES.HOLTER;
+  }
+
+  if (
+    /^ampa(?![a-z])/.test(normalized) ||
+    normalized.includes("automonitoreo")
+  ) {
+    return SPECIAL_CONSULTATION_TYPES.AMPA;
   }
 
   return null;

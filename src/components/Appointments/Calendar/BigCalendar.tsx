@@ -1909,6 +1909,10 @@ export const BigCalendar = ({
                   <span className="google-calendar-legend-marker-badge is-special-holter">HOLTER</span>
                   <span>Holter</span>
                 </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-badge is-special-ampa">AMPA</span>
+                  <span>AMPA</span>
+                </div>
               </div>
             </div>
           </div>
