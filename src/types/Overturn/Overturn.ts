@@ -77,6 +77,13 @@ export const OPERATIONAL_OVERTURN_TRANSITIONS: Record<OverturnStatus, OverturnSt
 // RESPONSE DTOs
 // ============================================
 
+/** Lo que la API devuelve del tipo de consulta de un sobreturno. */
+export interface OverturnConsultationType {
+  id: number;
+  name: string;
+  color?: string | null;
+}
+
 export interface OverturnResponseDto {
   id: number;
   doctorId: number;
@@ -93,6 +100,9 @@ export interface OverturnResponseDto {
   reason?: string;
   /** Turno de consulta del mismo control ginecológico integral. */
   linkedAppointmentId?: number | null;
+  /** Estudio / tipo de consulta del sobreturno (opcional, uno solo). */
+  consultationTypeId?: number | null;
+  consultationType?: OverturnConsultationType | null;
   createdBy: number;
   createdAt: string;
 }
@@ -113,6 +123,7 @@ export interface CreateOverturnDto {
   date: string;
   hour: string;
   reason?: string;
+  consultationTypeId?: number;
 }
 
 export interface UpdateOverturnDto {
@@ -122,6 +133,8 @@ export interface UpdateOverturnDto {
   hour?: string;
   reason?: string;
   status?: OverturnStatus;
+  /** `null` quita el tipo; omitirlo lo deja como está. */
+  consultationTypeId?: number | null;
 }
 
 export interface UpdateOverturnStatusDto {

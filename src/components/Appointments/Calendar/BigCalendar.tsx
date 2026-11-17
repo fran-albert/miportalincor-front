@@ -82,6 +82,7 @@ import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
 import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
 import { EditConsultationTypeDialog, EditConsultationTypeTarget } from "../Dialogs/EditConsultationTypeDialog";
+import { resolveCalendarEventBaseColors } from "./calendarEventColors";
 import { PrintAgendaView } from "./PrintAgendaView";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
@@ -880,6 +881,7 @@ export const BigCalendar = ({
           patientDni,
           healthInsurance: ot.patient?.healthInsuranceName,
           affiliationNumber: ot.patient?.affiliationNumber,
+          consultationType: ot.consultationType?.name ?? undefined,
           integralCheckup: ot.integralCheckup ?? null,
         },
       };
@@ -1234,52 +1236,14 @@ export const BigCalendar = ({
       ...(event.resource.consultationTypes?.map((typeItem) => typeItem.name) ?? []),
     ]);
 
-    let backgroundColor = "#fef3c7";
-    let textColor = "#92400e";
-    let borderColor = "#facc15";
-
-    if (isOverturn) {
-      backgroundColor = "#feefc3";
-      textColor = "#9a3412";
-      borderColor = "#f59e0b";
-    } else {
-      switch (status) {
-        case AppointmentStatus.PENDING:
-        case AppointmentStatus.REQUESTED_BY_PATIENT:
-        case AppointmentStatus.ASSIGNED_BY_SECRETARY:
-          backgroundColor = "#fef3c7";
-          textColor = "#92400e";
-          borderColor = "#facc15";
-          break;
-        case AppointmentStatus.WAITING:
-          backgroundColor = "#d9f2e3";
-          textColor = "#166534";
-          borderColor = "#34a853";
-          break;
-        case AppointmentStatus.ATTENDING:
-          backgroundColor = "#dbeafe";
-          textColor = "#1d4ed8";
-          borderColor = "#4285f4";
-          break;
-        case AppointmentStatus.COMPLETED:
-          backgroundColor = "#eceff1";
-          textColor = "#475569";
-          borderColor = "#94a3b8";
-          break;
-        case AppointmentStatus.CANCELLED_BY_PATIENT:
-        case AppointmentStatus.CANCELLED_BY_SECRETARY:
-          backgroundColor = "#fee2e2";
-          textColor = "#b91c1c";
-          borderColor = "#f87171";
-          break;
-      }
-    }
-
-    if (specialConsultationType && !isOverturn) {
-      backgroundColor = specialConsultationType.eventBackgroundColor;
-      textColor = specialConsultationType.eventTextColor;
-      borderColor = specialConsultationType.eventBorderColor;
-    }
+    // Turnos y sobreturnos con tipo especial (MAPA/HOLTER/AMPA) toman el
+    // color del estudio; el sobreturno conserva el marcador ⚡ en el título.
+    let { backgroundColor, textColor, borderColor } =
+      resolveCalendarEventBaseColors({
+        isOverturn,
+        status,
+        specialConsultationType,
+      });
 
     // El control ginecológico integral se pinta en fucsia, con prioridad sobre
     // el color del tipo de consulta y también para la pata que es sobreturno
