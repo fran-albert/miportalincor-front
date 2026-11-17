@@ -492,8 +492,18 @@
   font-weight: 800;
 }
 
+.google-calendar-origin-pill.is-special-ampa,
+.calendar-event-marker-badge.is-special-ampa,
+.google-calendar-legend-marker-badge.is-special-ampa {
+  background: #dcfce7;
+  color: #14532d;
+  border: 1px solid #16a34a;
+  font-weight: 800;
+}
+
 .google-calendar-event.is-special-mapa,
-.google-calendar-event.is-special-holter {
+.google-calendar-event.is-special-holter,
+.google-calendar-event.is-special-ampa {
   outline: 1px solid rgba(15, 23, 42, 0.08);
 }
 

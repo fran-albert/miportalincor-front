@@ -166,6 +166,12 @@ export const OverturnCard = ({
               </span>
             </div>
 
+            {overturn.consultationType && (
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Estudio:</span> {overturn.consultationType.name}
+              </div>
+            )}
+
             {overturn.reason && (
               <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
                 <span className="font-medium">Motivo:</span> {overturn.reason}

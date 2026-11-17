@@ -11,6 +11,7 @@ export interface CreateGuestOverturnDto {
   guestPhone: string;
   guestEmail?: string;
   reason?: string;
+  consultationTypeId?: number;
 }
 
 // Backend DTO format
@@ -24,6 +25,7 @@ interface BackendGuestOverturnDto {
   phone: string;
   email?: string;
   reason?: string;
+  consultationTypeId?: number;
 }
 
 export const createGuestOverturn = async (
@@ -41,6 +43,7 @@ export const createGuestOverturn = async (
     // Only include email if it has a value
     ...(dto.guestEmail && dto.guestEmail.trim() !== '' && { email: dto.guestEmail }),
     ...(dto.reason && dto.reason.trim() !== '' && { reason: dto.reason }),
+    ...(dto.consultationTypeId !== undefined && { consultationTypeId: dto.consultationTypeId }),
   };
   const { data } = await apiTurnos.post<OverturnResponseDto>('overturns/guest', backendDto);
   return data;

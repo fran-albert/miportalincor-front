@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DoctorSelect } from "../Select/DoctorSelect";
 import { PatientSelectWithGuestOption } from "../Select/PatientSelectWithGuestOption";
+import { ConsultationTypeSelect } from "../Select/ConsultationTypeSelect";
 import {
   CreateOverturnSchema,
   CreateOverturnFormData
@@ -31,6 +32,7 @@ export interface GuestOverturnData {
   date: string;
   hour: string;
   reason?: string;
+  consultationTypeId?: number;
   guestDocumentNumber: string;
   guestFirstName: string;
   guestLastName: string;
@@ -81,6 +83,7 @@ export const CreateOverturnForm = ({
       date: defaultDate || getTodayDateAR(),
       hour: "",
       reason: "",
+      consultationTypeId: undefined,
     },
   });
 
@@ -117,6 +120,7 @@ export const CreateOverturnForm = ({
     const date = form.getValues("date");
     const hour = form.getValues("hour");
     const reason = form.getValues("reason");
+    const consultationTypeId = form.getValues("consultationTypeId");
 
     if (!doctorId || !date || !hour) return;
 
@@ -125,6 +129,7 @@ export const CreateOverturnForm = ({
       date,
       hour,
       reason,
+      ...(consultationTypeId !== undefined && { consultationTypeId }),
       guestDocumentNumber: guestDni,
       guestFirstName,
       guestLastName,
@@ -288,6 +293,26 @@ export const CreateOverturnForm = ({
                   type="time"
                   {...field}
                   placeholder="HH:MM"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="consultationTypeId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Estudio / tipo de consulta</FormLabel>
+              <FormControl>
+                <ConsultationTypeSelect
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  doctorId={fixedDoctorId ?? watchDoctorId}
+                  requireDoctorSelection
+                  placeholder="Sin especificar (opcional)"
                 />
               </FormControl>
               <FormMessage />

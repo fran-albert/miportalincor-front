@@ -86,6 +86,9 @@ export const CreateOverturnSchema = z.object({
   reason: z.string()
     .max(500, 'El motivo no puede exceder los 500 caracteres')
     .optional(),
+
+  /** Estudio / tipo de consulta (opcional, uno solo): pinta el sobreturno en la agenda. */
+  consultationTypeId: z.number().int().positive().optional(),
 });
 
 export type CreateOverturnFormData = z.infer<typeof CreateOverturnSchema>;

@@ -57,6 +57,9 @@ export const CreateOverturnDialog = ({
         date: data.date,
         hour: data.hour,
         reason: data.reason,
+        ...(data.consultationTypeId !== undefined && {
+          consultationTypeId: data.consultationTypeId,
+        }),
       });
       showSuccess("Sobreturno creado", "El sobreturno se creo correctamente");
       setOpen(false);
@@ -74,6 +77,9 @@ export const CreateOverturnDialog = ({
         date: data.date,
         hour: data.hour,
         reason: data.reason,
+        ...(data.consultationTypeId !== undefined && {
+          consultationTypeId: data.consultationTypeId,
+        }),
         guestDocumentNumber: data.guestDocumentNumber,
         guestFirstName: data.guestFirstName,
         guestLastName: data.guestLastName,

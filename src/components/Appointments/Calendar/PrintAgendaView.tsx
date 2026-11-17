@@ -126,6 +126,7 @@ export const PrintAgendaView = ({
         patientDni: isGuest ? ot.guestDocumentNumber : ot.patient?.userName,
         healthInsurance: isGuest ? undefined : ot.patient?.healthInsuranceName,
         affiliationNumber: isGuest ? undefined : ot.patient?.affiliationNumber,
+        consultationType: ot.consultationType?.name ?? undefined,
         status: ot.status,
         statusLabel: OverturnStatusLabels[ot.status as OverturnStatus] || ot.status,
         type: "overturn",
