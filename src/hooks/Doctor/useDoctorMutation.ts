@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createDoctor } from "@/api/Doctor/create-doctor.action";
 import { updateDoctor } from "@/api/Doctor/update-doctor.action";
-import { deleteDoctor } from "@/api/Doctor/delete-doctor.action";
 import {
   convertPatientToDoctor,
   ConvertPatientToDoctorDto,
@@ -69,17 +68,6 @@ export const useDoctorMutations = () => {
     },
   });
 
-  const deleteDoctorMutation = useMutation({
-    mutationFn: (id: string) => deleteDoctor(id),
-    onSuccess: (doctor, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["doctors"] });
-      console.log("ok", doctor, variables, context);
-    },
-    onError: (error, variables, context) => {
-      console.log("Error deleting patient", error, variables, context);
-    },
-  });
-
   const convertPatientToDoctorMutation = useMutation({
     mutationFn: ({
       userName,
@@ -101,7 +89,6 @@ export const useDoctorMutations = () => {
   return {
     addDoctorMutation,
     updateDoctorMutation,
-    deleteDoctorMutation,
     uploadSelloMutation,
     uploadSignatureMutation,
     convertPatientToDoctorMutation,

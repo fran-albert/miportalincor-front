@@ -23,6 +23,7 @@ import {
   CalendarCheck,
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   ChevronDown,
   ClipboardList,
   Clock,
@@ -162,6 +163,14 @@ const catalogoItems: SidebarNavItem[] = [
     url: "/admin/feriados",
     icon: CalendarDays,
     allowedRoles: PERMISSIONS.HOLIDAYS,
+  },
+  {
+    // El admin llega por Sistema → Configuración; esta entrada es para la secretaria
+    title: "Tipos de estudio",
+    url: "/configuracion",
+    icon: CalendarRange,
+    allowedRoles: PERMISSIONS.CONSULTATION_TYPES,
+    strictRoles: true,
   },
 ];
 

@@ -250,7 +250,7 @@ function App() {
           <Route
             path="/configuracion"
             element={
-              <Private_Routes allowedRoles={["Administrador"]}>
+              <Private_Routes allowedRoles={["Administrador", "Secretaria"]}>
                 <SettingsPage />
               </Private_Routes>
             }

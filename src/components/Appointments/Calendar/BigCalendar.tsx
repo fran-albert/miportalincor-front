@@ -48,7 +48,8 @@ import {
   AppointmentStatusTransitionContext,
   IntegralCheckupLink,
 } from "@/types/Appointment/Appointment";
-import { resolveIntegralCheckupEventColors } from "@/common/helpers/integral-checkup-style";
+import { eventColorsFromCatalogColor, resolveIntegralCheckupEventColors } from "@/common/helpers/integral-checkup-style";
+import { INTEGRAL_CHECKUP_FALLBACK_COLOR, INTEGRAL_CHECKUP_LABEL } from "@/common/constants/integral-checkup";
 import { buildPatientCoverageLabel } from "@/common/helpers/patient-coverage-label";
 import { IntegralCheckupNotice } from "../IntegralCheckupNotice";
 import {
@@ -82,7 +83,11 @@ import { CreateOverturnDialog } from "../Dialogs/CreateOverturnDialog";
 import { CreateAbsenceDialog } from "../Dialogs/CreateAbsenceDialog";
 import { RescheduleAppointmentDialog } from "../Dialogs/RescheduleAppointmentDialog";
 import { EditConsultationTypeDialog, EditConsultationTypeTarget } from "../Dialogs/EditConsultationTypeDialog";
-import { resolveCalendarEventBaseColors } from "./calendarEventColors";
+import {
+  formatIntegralCheckupDayBadge,
+  resolveCalendarEventBaseColors,
+  summarizeIntegralCheckupsByDay,
+} from "./calendarEventColors";
 import { PrintAgendaView } from "./PrintAgendaView";
 import { AbsenceLabels, DoctorAbsenceResponseDto } from "@/types/Doctor-Absence/Doctor-Absence";
 import { DoctorAvailabilityResponseDto, RecurrenceType, WeekDays } from "@/types/DoctorAvailability/DoctorAvailability";
@@ -551,18 +556,47 @@ export const BigCalendar = ({
     date: Date;
     label: string;
     onDrillDown?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  }) => (
-    <div className="google-calendar-month-date-stack">
-      <button
-        type="button"
-        className={`google-calendar-month-date ${isToday(date) ? "is-today" : ""}`}
-        onClick={onDrillDown}
-      >
-        {label}
-      </button>
-      {renderAvailabilityIndicator(date, "month")}
-    </div>
-  );
+  }) => {
+    const integralSummary = integralCheckupsByDay.get(formatDateForCalendar(date));
+    const integralColors = integralSummary
+      ? eventColorsFromCatalogColor(integralSummary.color || INTEGRAL_CHECKUP_FALLBACK_COLOR)
+      : null;
+    const integralDescription = integralSummary
+      ? integralSummary.count > 1
+        ? `${INTEGRAL_CHECKUP_LABEL}: ${integralSummary.count} turnos este día`
+        : INTEGRAL_CHECKUP_LABEL
+      : "";
+
+    return (
+      <div className="google-calendar-month-date-stack">
+        <div className="google-calendar-month-date-row">
+          <button
+            type="button"
+            className={`google-calendar-month-date ${isToday(date) ? "is-today" : ""}`}
+            onClick={onDrillDown}
+          >
+            {label}
+          </button>
+          {integralSummary && integralColors && (
+            <span
+              className="calendar-event-marker-badge is-special-integral google-calendar-month-integral-badge"
+              style={{
+                backgroundColor: integralColors.backgroundColor,
+                color: integralColors.textColor,
+                borderColor: integralColors.borderColor,
+              }}
+              title={integralDescription}
+              aria-label={integralDescription}
+              role="img"
+            >
+              {formatIntegralCheckupDayBadge(integralSummary.count)}
+            </span>
+          )}
+        </div>
+        {renderAvailabilityIndicator(date, "month")}
+      </div>
+    );
+  };
 
   const { data: doctorProfileIndividual } = useMyDoctorProfile({
     enabled: autoFilterForDoctor,
@@ -1184,6 +1218,13 @@ export const BigCalendar = ({
     }
     return [...absenceEvents, ...appointmentEvents, ...overturnEvents, ...blockedSlotEvents];
   }, [showAvailableSlots, absenceEvents, appointmentEvents, overturnEvents, availableSlotEvents, blockedSlotEvents, isHydratingDoctorAgenda]);
+
+  // Días con control ginecológico integral, para marcarlos en la vista de mes
+  // aunque el turno quede escondido detrás de "+N más".
+  const integralCheckupsByDay = useMemo(
+    () => summarizeIntegralCheckupsByDay(events),
+    [events],
+  );
 
   // Get color for event based on status
   const getEventStyle = useCallback((event: CalendarEvent) => {
@@ -1876,6 +1917,10 @@ export const BigCalendar = ({
                 <div className="google-calendar-legend-item">
                   <span className="google-calendar-legend-marker-badge is-special-ampa">AMPA</span>
                   <span>AMPA</span>
+                </div>
+                <div className="google-calendar-legend-item">
+                  <span className="google-calendar-legend-marker-badge is-special-integral">Integral</span>
+                  <span>Control ginecológico integral</span>
                 </div>
               </div>
             </div>

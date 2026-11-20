@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { resolveCalendarEventBaseColors } from "./calendarEventColors";
+import {
+  formatIntegralCheckupDayBadge,
+  resolveCalendarEventBaseColors,
+  summarizeIntegralCheckupsByDay,
+} from "./calendarEventColors";
 import { getSpecialConsultationTypeInfo } from "@/common/helpers/special-consultation-types";
-import { AppointmentStatus } from "@/types/Appointment/Appointment";
+import { AppointmentStatus, IntegralCheckupLink } from "@/types/Appointment/Appointment";
 import { OverturnStatus } from "@/types/Overturn/Overturn";
 
 /**
@@ -105,5 +109,106 @@ describe("resolveCalendarEventBaseColors", () => {
         specialConsultationType: holter,
       }).backgroundColor,
     ).toBe(holter!.eventBackgroundColor);
+  });
+});
+
+/**
+ * La directora quiere ver en la vista de mes qué días tienen control
+ * ginecológico integral sin abrir cada día: la marca tiene que salir aunque
+ * el turno quede escondido detrás de "+N más".
+ */
+describe("summarizeIntegralCheckupsByDay", () => {
+  const link = (color?: string): IntegralCheckupLink => ({
+    role: "CONSULTATION",
+    counterpartType: "OVERTURN",
+    counterpartId: 1,
+    counterpartDoctorId: 2,
+    counterpartDate: "2027-01-13",
+    counterpartHour: "08:45",
+    counterpartDescription: "Ecografía ginecológica y mamaria",
+    color,
+  });
+
+  const at = (date: string, hour: string) => new Date(`${date}T${hour}:00`);
+
+  it("cuenta turnos y sobreturnos integrales del mismo día", () => {
+    const summary = summarizeIntegralCheckupsByDay([
+      {
+        start: at("2027-01-13", "09:00"),
+        resource: {
+          type: "appointment",
+          status: AppointmentStatus.PENDING,
+          integralCheckup: link("#D946EF"),
+        },
+      },
+      {
+        start: at("2027-01-13", "08:45"),
+        resource: {
+          type: "overturn",
+          status: OverturnStatus.PENDING,
+          integralCheckup: link(),
+        },
+      },
+    ]);
+
+    expect(summary.get("2027-01-13")).toEqual({ count: 2, color: "#D946EF" });
+  });
+
+  it("no cuenta los integrales cancelados", () => {
+    const summary = summarizeIntegralCheckupsByDay([
+      {
+        start: at("2027-01-13", "09:00"),
+        resource: {
+          type: "appointment",
+          status: AppointmentStatus.CANCELLED_BY_PATIENT,
+          integralCheckup: link(),
+        },
+      },
+      {
+        start: at("2027-01-13", "08:45"),
+        resource: {
+          type: "overturn",
+          status: OverturnStatus.CANCELLED_BY_SECRETARY,
+          integralCheckup: link(),
+        },
+      },
+    ]);
+
+    expect(summary.has("2027-01-13")).toBe(false);
+  });
+
+  it("no marca turnos comunes ni otros días", () => {
+    const summary = summarizeIntegralCheckupsByDay([
+      {
+        start: at("2026-12-30", "10:00"),
+        resource: {
+          type: "appointment",
+          status: AppointmentStatus.PENDING,
+          integralCheckup: link(),
+        },
+      },
+      {
+        start: at("2027-01-13", "10:00"),
+        resource: { type: "appointment", status: AppointmentStatus.PENDING, integralCheckup: null },
+      },
+      {
+        start: at("2027-01-14", "10:00"),
+        resource: { type: "overturn", status: OverturnStatus.PENDING },
+      },
+      {
+        start: at("2027-01-15", "10:00"),
+        resource: { type: "available", integralCheckup: link() },
+      },
+    ]);
+
+    expect([...summary.keys()]).toEqual(["2026-12-30"]);
+    expect(summary.get("2026-12-30")).toEqual({ count: 1, color: null });
+  });
+});
+
+describe("formatIntegralCheckupDayBadge", () => {
+  it("dice Integral si hay uno y suma la cantidad si hay más", () => {
+    expect(formatIntegralCheckupDayBadge(1)).toBe("Integral");
+    expect(formatIntegralCheckupDayBadge(3)).toBe("Integral ×3");
   });
 });

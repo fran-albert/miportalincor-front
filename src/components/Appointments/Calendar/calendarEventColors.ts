@@ -1,5 +1,6 @@
 import { SpecialConsultationTypeInfo } from "@/common/helpers/special-consultation-types";
-import { AppointmentStatus } from "@/types/Appointment/Appointment";
+import { formatDateForCalendar } from "@/common/helpers/timezone";
+import { AppointmentStatus, IntegralCheckupLink } from "@/types/Appointment/Appointment";
 import { OverturnStatus } from "@/types/Overturn/Overturn";
 
 export interface CalendarEventColors {
@@ -66,3 +67,51 @@ export const resolveCalendarEventBaseColors = ({
     borderColor: specialConsultationType.eventBorderColor,
   };
 };
+
+export interface IntegralCheckupDayEvent {
+  start: Date;
+  resource: {
+    type: string;
+    status?: AppointmentStatus | OverturnStatus;
+    integralCheckup?: IntegralCheckupLink | null;
+  };
+}
+
+export interface IntegralCheckupDaySummary {
+  count: number;
+  /** El color del catálogo del primer control del día, si vino del backend. */
+  color: string | null;
+}
+
+/**
+ * Qué días del mes tienen al menos un control ginecológico integral vigente,
+ * para marcarlos en la celda aunque el turno quede escondido en "+N más".
+ *
+ * Usa la misma regla que el fucsia del bloque: es integral por estar
+ * vinculado (`integralCheckup`), sea turno o sobreturno. Los cancelados no
+ * cuentan: que haya sido integral no puede hacer creer que ese día hay uno.
+ */
+export const summarizeIntegralCheckupsByDay = (
+  events: IntegralCheckupDayEvent[],
+): Map<string, IntegralCheckupDaySummary> => {
+  const summaries = new Map<string, IntegralCheckupDaySummary>();
+
+  for (const event of events) {
+    const { type, status, integralCheckup } = event.resource;
+    if (type !== "appointment" && type !== "overturn") continue;
+    if (!integralCheckup) continue;
+    if (status && CANCELLED_STATUSES.has(status)) continue;
+
+    const key = formatDateForCalendar(event.start);
+    const current = summaries.get(key);
+    summaries.set(key, {
+      count: (current?.count ?? 0) + 1,
+      color: current?.color ?? integralCheckup.color ?? null,
+    });
+  }
+
+  return summaries;
+};
+
+export const formatIntegralCheckupDayBadge = (count: number): string =>
+  count > 1 ? `Integral ×${count}` : "Integral";
