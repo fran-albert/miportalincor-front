@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { formatDni } from "@/common/helpers/helpers";
 import {
   registerPublicQrAttendance,
   PublicQrAttendanceResponse,
@@ -33,6 +34,7 @@ const QrAttendancePage = () => {
     null
   );
   const [errorMessage, setErrorMessage] = useState("");
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const canSubmit = dni.length >= 6 && status !== "loading";
 
@@ -48,7 +50,9 @@ const QrAttendancePage = () => {
       const err = error as {
         response?: { status?: number; data?: { message?: string } };
       };
-      if (err?.response?.status === 429) {
+      const rateLimited = err?.response?.status === 429;
+      setIsRateLimited(rateLimited);
+      if (rateLimited) {
         setErrorMessage(
           "Hiciste demasiados intentos. Esperá un minuto y volvé a probar."
         );
@@ -170,13 +174,30 @@ const QrAttendancePage = () => {
               <div className="flex flex-col items-center gap-4 py-4">
                 <XCircle className="h-20 w-20 text-red-500" />
                 <p className="text-lg text-gray-700">{errorMessage}</p>
+                {/* Solo lo que tipeó el paciente: la API no dice nada de la
+                    persona a propósito, para no revelar quién está inscripto. */}
+                <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                  <p className="text-base text-gray-600">DNI ingresado</p>
+                  <p
+                    className="text-3xl font-bold tracking-wider text-gray-900"
+                    data-testid="qr-attendance-typed-dni"
+                  >
+                    {formatDni(dni)}
+                  </p>
+                </div>
+                {!isRateLimited && (
+                  <p className="text-base text-gray-600">
+                    Revisá que esté bien escrito y volvé a intentar.
+                  </p>
+                )}
                 <Button
                   size="lg"
                   variant="outline"
                   className="h-14 w-full text-lg"
                   onClick={() => {
+                    // El DNI queda cargado para corregir un dígito sin
+                    // tipearlo todo de nuevo.
                     setStatus("idle");
-                    setDni("");
                   }}
                 >
                   Volver a intentar
