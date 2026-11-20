@@ -501,6 +501,14 @@
   font-weight: 800;
 }
 
+.calendar-event-marker-badge.is-special-integral,
+.google-calendar-legend-marker-badge.is-special-integral {
+  background: #f4c8fa;
+  color: #1f2937;
+  border: 1px solid #d946ef;
+  font-weight: 800;
+}
+
 .google-calendar-event.is-special-mapa,
 .google-calendar-event.is-special-holter,
 .google-calendar-event.is-special-ampa {
@@ -879,6 +887,17 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+}
+
+.google-calendar-month-date-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.google-calendar-month-integral-badge {
+  white-space: nowrap;
 }
 
 .google-calendar-availability-pill {
