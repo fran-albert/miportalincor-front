@@ -28,6 +28,8 @@ export const PERMISSIONS = {
 
   // Administración del Sistema
   SETTINGS: [Role.ADMINISTRADOR],
+  // La secretaria entra a Configuración pero solo ve los tipos de estudio
+  CONSULTATION_TYPES: [Role.SECRETARIA],
   SYSTEM_USERS: [Role.ADMINISTRADOR],
   SECRETARIES: [Role.ADMINISTRADOR],
   ROLE_MANAGEMENT: [Role.ADMINISTRADOR],
@@ -74,6 +76,7 @@ export const STRICT_PERMISSIONS = [
   'DOCTOR_WAITING_ROOM',
   'STUDY_REPORTS',
   'MY_SETTINGS',
+  'CONSULTATION_TYPES',
   'MY_STUDIES',
   'MY_APPOINTMENTS',
   'MY_PRESCRIPTION_REQUESTS',

@@ -4,6 +4,10 @@ import { DataTable } from "@/components/Table/table";
 import useRoles from "@/hooks/useRoles";
 import { PageHeader } from "@/components/PageHeader";
 import { Stethoscope } from "lucide-react";
+import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import InactiveDoctorsList from "../Inactive/InactiveDoctorsList";
 
 interface DoctorsTableProps {
   doctors: Doctor[];
@@ -29,6 +33,9 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
   onPrevPage,
 }) => {
   const { isSecretary, isDoctor, isAdmin } = useRoles();
+  const canManageDoctors = isSecretary || isAdmin;
+  const [showInactive, setShowInactive] = useState(false);
+  const isInactiveView = canManageDoctors && showInactive;
 
   const doctorColumns = getColumns(prefetchDoctors, {
     isSecretary,
@@ -44,32 +51,54 @@ export const DoctorsTable: React.FC<DoctorsTableProps> = ({
     <div className="space-y-6 p-6">
       <PageHeader
         breadcrumbItems={breadcrumbItems}
-        title="Lista de Médicos"
-        description="Administra el equipo médico y sus especialidades"
+        title={isInactiveView ? "Médicos desactivados" : "Lista de Médicos"}
+        description={
+          isInactiveView
+            ? "No ingresan ni aparecen en agendas. Su historia clínica se sigue viendo."
+            : "Administra el equipo médico y sus especialidades"
+        }
         icon={<Stethoscope className="h-6 w-6" />}
-        badge={doctors.length}
+        badge={isInactiveView ? undefined : doctors.length}
+        actions={
+          canManageDoctors ? (
+            <div className="flex items-center gap-2 rounded-md border bg-white px-3 py-2">
+              <Switch
+                id="ver-desactivados"
+                checked={showInactive}
+                onCheckedChange={setShowInactive}
+              />
+              <Label htmlFor="ver-desactivados" className="cursor-pointer text-sm">
+                Ver desactivados
+              </Label>
+            </div>
+          ) : undefined
+        }
       />
-      <div className="overflow-hidden sm:rounded-lg">
-        <DataTable
-          columns={doctorColumns}
-          data={doctors}
-          searchPlaceholder="Buscar médicos..."
-          showSearch={true}
-          searchQuery={searchQuery}
-          setSearch={setSearch}
-          useServerSideSearch={true}
-          addLinkPath="/medicos/agregar"
-          isLoading={isLoading}
-          addLinkText="Agregar Médico"
-          canAddUser={isSecretary || isAdmin}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onNextPage={onNextPage}
-          onPrevPage={onPrevPage}
-          clientPageSize={100}
-          showDataOnEmptySearch={true}
-        />
-      </div>
+      {isInactiveView ? (
+        <InactiveDoctorsList />
+      ) : (
+        <div className="overflow-hidden sm:rounded-lg">
+          <DataTable
+            columns={doctorColumns}
+            data={doctors}
+            searchPlaceholder="Buscar médicos..."
+            showSearch={true}
+            searchQuery={searchQuery}
+            setSearch={setSearch}
+            useServerSideSearch={true}
+            addLinkPath="/medicos/agregar"
+            isLoading={isLoading}
+            addLinkText="Agregar Médico"
+            canAddUser={isSecretary || isAdmin}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onNextPage={onNextPage}
+            onPrevPage={onPrevPage}
+            clientPageSize={100}
+            showDataOnEmptySearch={true}
+          />
+        </div>
+      )}
     </div>
   );
 };
