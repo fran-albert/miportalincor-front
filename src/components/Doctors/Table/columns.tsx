@@ -4,7 +4,7 @@ import { Doctor } from "@/types/Doctor/Doctor";
 import { formatDni, formatMatricula } from "@/common/helpers/helpers";
 import { ViewButton } from "@/components/Button/View/button";
 import { Link } from "react-router-dom";
-import DeleteDoctorDialog from "../Delete/DeleteDoctorDialog";
+import DeactivateDoctorDialog from "../Deactivate/DeactivateDoctorDialog";
 
 export const getColumns = (
   prefetchDoctors: (id: string) => void,
@@ -126,7 +126,11 @@ export const getColumns = (
                 text="Ver Medico"
                 path="medicos"
               />
-              <DeleteDoctorDialog idDoctor={row.original.id || String(row.original.userId)} />
+              <DeactivateDoctorDialog
+                doctorId={row.original.id || String(row.original.userId)}
+                legacyUserId={row.original.userId}
+                doctorName={`${row.original.lastName}, ${row.original.firstName}`}
+              />
             </>
           )}
           {roles.isDoctor && (
